@@ -1,11 +1,6 @@
-import io.netty.util.ReferenceCountUtil.release
-import org.gradle.internal.impldep.com.amazonaws.util.IOUtils.release
-import org.gradle.kotlin.dsl.release
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
-
-import java.util.Properties
 import java.io.FileInputStream
+import java.util.Properties
 
 val keystoreProperties = Properties()
 
