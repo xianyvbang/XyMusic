@@ -1,0 +1,2518 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 11,
+    "identityHash": "f4ddd91114d90ed6f2b7cfdccb6ff4b5",
+    "entities": [
+      {
+        "tableName": "xy_music",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`itemId` TEXT NOT NULL, `pic` TEXT, `name` TEXT NOT NULL, `musicUrl` TEXT NOT NULL, `album` TEXT NOT NULL, `albumName` TEXT, `genreIds` TEXT, `connectionId` INTEGER NOT NULL, `artists` TEXT, `artistIds` TEXT, `albumArtist` TEXT, `albumArtistIds` TEXT, `year` INTEGER, `playedCount` INTEGER NOT NULL, `ifFavorite` INTEGER NOT NULL, `ifLyric` INTEGER NOT NULL, `lyric` TEXT, `path` TEXT, `bitRate` INTEGER, `sampleRate` INTEGER, `bitDepth` INTEGER, `size` INTEGER, `runTimeTicks` INTEGER, `container` TEXT, `codec` TEXT, `createTime` INTEGER NOT NULL, PRIMARY KEY(`itemId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "itemId",
+            "columnName": "itemId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pic",
+            "columnName": "pic",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "musicUrl",
+            "columnName": "musicUrl",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "album",
+            "columnName": "album",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "albumName",
+            "columnName": "albumName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "genreIds",
+            "columnName": "genreIds",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "artists",
+            "columnName": "artists",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "artistIds",
+            "columnName": "artistIds",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "albumArtist",
+            "columnName": "albumArtist",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "albumArtistIds",
+            "columnName": "albumArtistIds",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "year",
+            "columnName": "year",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "playedCount",
+            "columnName": "playedCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ifFavorite",
+            "columnName": "ifFavorite",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ifLyric",
+            "columnName": "ifLyric",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lyric",
+            "columnName": "lyric",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "path",
+            "columnName": "path",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "bitRate",
+            "columnName": "bitRate",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "sampleRate",
+            "columnName": "sampleRate",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "bitDepth",
+            "columnName": "bitDepth",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "size",
+            "columnName": "size",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "runTimeTicks",
+            "columnName": "runTimeTicks",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "container",
+            "columnName": "container",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "codec",
+            "columnName": "codec",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createTime",
+            "columnName": "createTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "itemId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_xy_music_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_xy_music_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "xy_album",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`itemId` TEXT NOT NULL, `pic` TEXT, `name` TEXT NOT NULL, `artists` TEXT, `artistIds` TEXT, `genreIds` TEXT, `connectionId` INTEGER NOT NULL, `year` INTEGER, `premiereDate` INTEGER, `ifFavorite` INTEGER NOT NULL, `ifPlaylist` INTEGER NOT NULL, `musicCount` INTEGER NOT NULL, `createTime` INTEGER NOT NULL, PRIMARY KEY(`itemId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "itemId",
+            "columnName": "itemId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pic",
+            "columnName": "pic",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "artists",
+            "columnName": "artists",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "artistIds",
+            "columnName": "artistIds",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "genreIds",
+            "columnName": "genreIds",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "year",
+            "columnName": "year",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "premiereDate",
+            "columnName": "premiereDate",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "ifFavorite",
+            "columnName": "ifFavorite",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ifPlaylist",
+            "columnName": "ifPlaylist",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "musicCount",
+            "columnName": "musicCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createTime",
+            "columnName": "createTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "itemId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_xy_album_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_xy_album_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "xy_lyric",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`musicId` TEXT NOT NULL, `lyric` TEXT NOT NULL, `connectionId` INTEGER NOT NULL, PRIMARY KEY(`musicId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "musicId",
+            "columnName": "musicId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lyric",
+            "columnName": "lyric",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "musicId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_xy_lyric_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_xy_lyric_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "xy_settings",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cacheUpperLimit` TEXT NOT NULL, `ifDesktopLyrics` INTEGER NOT NULL, `doubleSpeed` REAL NOT NULL, `connectionId` INTEGER, `ifEnableAlbumHistory` INTEGER NOT NULL, `autoBackups` INTEGER NOT NULL, `themeType` TEXT NOT NULL, `isDynamic` INTEGER NOT NULL, `ifHandleAudioFocus` INTEGER NOT NULL, `languageType` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cacheUpperLimit",
+            "columnName": "cacheUpperLimit",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ifDesktopLyrics",
+            "columnName": "ifDesktopLyrics",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "doubleSpeed",
+            "columnName": "doubleSpeed",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "ifEnableAlbumHistory",
+            "columnName": "ifEnableAlbumHistory",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "autoBackups",
+            "columnName": "autoBackups",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "themeType",
+            "columnName": "themeType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isDynamic",
+            "columnName": "isDynamic",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ifHandleAudioFocus",
+            "columnName": "ifHandleAudioFocus",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "languageType",
+            "columnName": "languageType",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "skip_time",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `albumId` TEXT NOT NULL, `headTime` INTEGER NOT NULL, `endTime` INTEGER NOT NULL, `connectionId` INTEGER NOT NULL, FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "albumId",
+            "columnName": "albumId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "headTime",
+            "columnName": "headTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endTime",
+            "columnName": "endTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_skip_time_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_skip_time_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "remote_current",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `nextKey` INTEGER, `prevKey` INTEGER, `total` INTEGER NOT NULL, `connectionId` INTEGER NOT NULL, `createTime` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nextKey",
+            "columnName": "nextKey",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "prevKey",
+            "columnName": "prevKey",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "total",
+            "columnName": "total",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createTime",
+            "columnName": "createTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_remote_current_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_remote_current_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "search_history",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `searchQuery` TEXT NOT NULL, `connectionId` INTEGER NOT NULL, `createTime` INTEGER NOT NULL, FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "searchQuery",
+            "columnName": "searchQuery",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createTime",
+            "columnName": "createTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_search_history_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_search_history_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "progress",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`musicId` TEXT NOT NULL, `musicName` TEXT NOT NULL, `albumId` TEXT NOT NULL, `progress` INTEGER NOT NULL, `progressPercentage` INTEGER NOT NULL, `index` INTEGER NOT NULL, `connectionId` INTEGER NOT NULL, `createTime` INTEGER NOT NULL, PRIMARY KEY(`musicId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "musicId",
+            "columnName": "musicId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "musicName",
+            "columnName": "musicName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "albumId",
+            "columnName": "albumId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "progress",
+            "columnName": "progress",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "progressPercentage",
+            "columnName": "progressPercentage",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "index",
+            "columnName": "index",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createTime",
+            "columnName": "createTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "musicId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_progress_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_progress_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "xy_artist",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`artistId` TEXT NOT NULL, `pic` TEXT, `describe` TEXT, `name` TEXT, `sortName` TEXT, `connectionId` INTEGER NOT NULL, `musicCount` INTEGER, `albumCount` INTEGER, `selectChat` TEXT NOT NULL, `indexNumber` INTEGER NOT NULL, `ifFavorite` INTEGER NOT NULL, PRIMARY KEY(`artistId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "artistId",
+            "columnName": "artistId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pic",
+            "columnName": "pic",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "describe",
+            "columnName": "describe",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sortName",
+            "columnName": "sortName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "musicCount",
+            "columnName": "musicCount",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "albumCount",
+            "columnName": "albumCount",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "selectChat",
+            "columnName": "selectChat",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "indexNumber",
+            "columnName": "indexNumber",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ifFavorite",
+            "columnName": "ifFavorite",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "artistId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_xy_artist_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_xy_artist_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "xy_enable_progress",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`albumId` TEXT NOT NULL, `ifEnableAlbumHistory` INTEGER NOT NULL, `connectionId` INTEGER NOT NULL, PRIMARY KEY(`albumId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "albumId",
+            "columnName": "albumId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ifEnableAlbumHistory",
+            "columnName": "ifEnableAlbumHistory",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "albumId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_xy_enable_progress_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_xy_enable_progress_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "xy_library",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `collectionType` TEXT NOT NULL, `connectionId` INTEGER NOT NULL, `name` TEXT NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "collectionType",
+            "columnName": "collectionType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_xy_library_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_xy_library_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "xy_player",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `connectionId` INTEGER, `dataType` TEXT NOT NULL, `musicId` TEXT NOT NULL, `headTime` INTEGER NOT NULL, `endTime` INTEGER NOT NULL, `playerType` TEXT NOT NULL, `pageNum` INTEGER NOT NULL, `ifSkip` INTEGER NOT NULL, `albumId` TEXT NOT NULL, `artistId` TEXT, FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "dataType",
+            "columnName": "dataType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "musicId",
+            "columnName": "musicId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "headTime",
+            "columnName": "headTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endTime",
+            "columnName": "endTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "playerType",
+            "columnName": "playerType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pageNum",
+            "columnName": "pageNum",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ifSkip",
+            "columnName": "ifSkip",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "albumId",
+            "columnName": "albumId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "artistId",
+            "columnName": "artistId",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_xy_player_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_xy_player_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "xy_connection_config",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `serverId` TEXT NOT NULL, `serverName` TEXT NOT NULL, `serverVersion` TEXT NOT NULL, `deviceId` TEXT NOT NULL, `name` TEXT NOT NULL, `address` TEXT NOT NULL, `type` TEXT NOT NULL, `userId` TEXT NOT NULL, `username` TEXT NOT NULL, `accessToken` TEXT, `currentPassword` TEXT NOT NULL, `iv` TEXT NOT NULL, `key` TEXT NOT NULL, `ifEnable` INTEGER NOT NULL, `libraryId` TEXT, `extendInfo` TEXT, `lastLoginTime` INTEGER NOT NULL, `updateTime` INTEGER NOT NULL, `createTime` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "serverId",
+            "columnName": "serverId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "serverName",
+            "columnName": "serverName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "serverVersion",
+            "columnName": "serverVersion",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deviceId",
+            "columnName": "deviceId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "address",
+            "columnName": "address",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "userId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "username",
+            "columnName": "username",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "accessToken",
+            "columnName": "accessToken",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "currentPassword",
+            "columnName": "currentPassword",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "iv",
+            "columnName": "iv",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "key",
+            "columnName": "key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ifEnable",
+            "columnName": "ifEnable",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "libraryId",
+            "columnName": "libraryId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "extendInfo",
+            "columnName": "extendInfo",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "lastLoginTime",
+            "columnName": "lastLoginTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updateTime",
+            "columnName": "updateTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createTime",
+            "columnName": "createTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "xy_era_item",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `era` INTEGER NOT NULL, `years` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "era",
+            "columnName": "era",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "years",
+            "columnName": "years",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "xy_genre",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`itemId` TEXT NOT NULL, `pic` TEXT NOT NULL, `name` TEXT NOT NULL, `connectionId` INTEGER NOT NULL, `createTime` INTEGER NOT NULL, PRIMARY KEY(`itemId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "itemId",
+            "columnName": "itemId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pic",
+            "columnName": "pic",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createTime",
+            "columnName": "createTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "itemId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_xy_genre_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_xy_genre_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "AlbumMusic",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`albumId` TEXT NOT NULL, `musicId` TEXT NOT NULL, `connectionId` INTEGER NOT NULL, `index` INTEGER NOT NULL, `cachedAt` INTEGER NOT NULL, PRIMARY KEY(`albumId`, `musicId`, `connectionId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`albumId`) REFERENCES `xy_album`(`itemId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "albumId",
+            "columnName": "albumId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "musicId",
+            "columnName": "musicId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "index",
+            "columnName": "index",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cachedAt",
+            "columnName": "cachedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "albumId",
+            "musicId",
+            "connectionId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_AlbumMusic_albumId",
+            "unique": false,
+            "columnNames": [
+              "albumId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_AlbumMusic_albumId` ON `${TABLE_NAME}` (`albumId`)"
+          },
+          {
+            "name": "index_AlbumMusic_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_AlbumMusic_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          },
+          {
+            "name": "index_AlbumMusic_musicId",
+            "unique": false,
+            "columnNames": [
+              "musicId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_AlbumMusic_musicId` ON `${TABLE_NAME}` (`musicId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "xy_album",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "albumId"
+            ],
+            "referencedColumns": [
+              "itemId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "ArtistAlbum",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`artistId` TEXT NOT NULL, `albumId` TEXT NOT NULL, `connectionId` INTEGER NOT NULL, `index` INTEGER NOT NULL, `cachedAt` INTEGER NOT NULL, PRIMARY KEY(`artistId`, `albumId`, `connectionId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`artistId`) REFERENCES `xy_artist`(`artistId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "artistId",
+            "columnName": "artistId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "albumId",
+            "columnName": "albumId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "index",
+            "columnName": "index",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cachedAt",
+            "columnName": "cachedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "artistId",
+            "albumId",
+            "connectionId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_ArtistAlbum_albumId",
+            "unique": false,
+            "columnNames": [
+              "albumId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ArtistAlbum_albumId` ON `${TABLE_NAME}` (`albumId`)"
+          },
+          {
+            "name": "index_ArtistAlbum_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ArtistAlbum_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          },
+          {
+            "name": "index_ArtistAlbum_artistId",
+            "unique": false,
+            "columnNames": [
+              "artistId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ArtistAlbum_artistId` ON `${TABLE_NAME}` (`artistId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "xy_artist",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "artistId"
+            ],
+            "referencedColumns": [
+              "artistId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "ArtistMusic",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`artistId` TEXT NOT NULL, `musicId` TEXT NOT NULL, `connectionId` INTEGER NOT NULL, `index` INTEGER NOT NULL, `cachedAt` INTEGER NOT NULL, PRIMARY KEY(`artistId`, `musicId`, `connectionId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`artistId`) REFERENCES `xy_artist`(`artistId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "artistId",
+            "columnName": "artistId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "musicId",
+            "columnName": "musicId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "index",
+            "columnName": "index",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cachedAt",
+            "columnName": "cachedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "artistId",
+            "musicId",
+            "connectionId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_ArtistMusic_musicId",
+            "unique": false,
+            "columnNames": [
+              "musicId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ArtistMusic_musicId` ON `${TABLE_NAME}` (`musicId`)"
+          },
+          {
+            "name": "index_ArtistMusic_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ArtistMusic_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          },
+          {
+            "name": "index_ArtistMusic_artistId",
+            "unique": false,
+            "columnNames": [
+              "artistId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ArtistMusic_artistId` ON `${TABLE_NAME}` (`artistId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "xy_artist",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "artistId"
+            ],
+            "referencedColumns": [
+              "artistId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "FavoriteMusic",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`musicId` TEXT NOT NULL, `connectionId` INTEGER NOT NULL, `index` INTEGER NOT NULL, `cachedAt` INTEGER NOT NULL, PRIMARY KEY(`musicId`, `connectionId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "musicId",
+            "columnName": "musicId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "index",
+            "columnName": "index",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cachedAt",
+            "columnName": "cachedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "musicId",
+            "connectionId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_FavoriteMusic_musicId",
+            "unique": false,
+            "columnNames": [
+              "musicId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_FavoriteMusic_musicId` ON `${TABLE_NAME}` (`musicId`)"
+          },
+          {
+            "name": "index_FavoriteMusic_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_FavoriteMusic_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "GenreAlbum",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`genreId` TEXT NOT NULL, `albumId` TEXT NOT NULL, `connectionId` INTEGER NOT NULL, `index` INTEGER NOT NULL, `cachedAt` INTEGER NOT NULL, PRIMARY KEY(`albumId`, `genreId`, `connectionId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`genreId`) REFERENCES `xy_genre`(`itemId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "genreId",
+            "columnName": "genreId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "albumId",
+            "columnName": "albumId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "index",
+            "columnName": "index",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cachedAt",
+            "columnName": "cachedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "albumId",
+            "genreId",
+            "connectionId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_GenreAlbum_albumId",
+            "unique": false,
+            "columnNames": [
+              "albumId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_GenreAlbum_albumId` ON `${TABLE_NAME}` (`albumId`)"
+          },
+          {
+            "name": "index_GenreAlbum_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_GenreAlbum_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          },
+          {
+            "name": "index_GenreAlbum_genreId",
+            "unique": false,
+            "columnNames": [
+              "genreId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_GenreAlbum_genreId` ON `${TABLE_NAME}` (`genreId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "xy_genre",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "genreId"
+            ],
+            "referencedColumns": [
+              "itemId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "HomeAlbum",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`albumId` TEXT NOT NULL, `connectionId` INTEGER NOT NULL, `index` INTEGER NOT NULL, `cachedAt` INTEGER NOT NULL, PRIMARY KEY(`albumId`, `connectionId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "albumId",
+            "columnName": "albumId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "index",
+            "columnName": "index",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cachedAt",
+            "columnName": "cachedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "albumId",
+            "connectionId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_HomeAlbum_albumId",
+            "unique": false,
+            "columnNames": [
+              "albumId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_HomeAlbum_albumId` ON `${TABLE_NAME}` (`albumId`)"
+          },
+          {
+            "name": "index_HomeAlbum_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_HomeAlbum_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "HomeMusic",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`musicId` TEXT NOT NULL, `connectionId` INTEGER NOT NULL, `index` INTEGER NOT NULL, `cachedAt` INTEGER NOT NULL, PRIMARY KEY(`musicId`, `connectionId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "musicId",
+            "columnName": "musicId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "index",
+            "columnName": "index",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cachedAt",
+            "columnName": "cachedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "musicId",
+            "connectionId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_HomeMusic_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_HomeMusic_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          },
+          {
+            "name": "index_HomeMusic_musicId",
+            "unique": false,
+            "columnNames": [
+              "musicId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_HomeMusic_musicId` ON `${TABLE_NAME}` (`musicId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "MaximumPlayMusic",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`musicId` TEXT NOT NULL, `connectionId` INTEGER NOT NULL, `index` INTEGER NOT NULL, `cachedAt` INTEGER NOT NULL, PRIMARY KEY(`musicId`, `connectionId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "musicId",
+            "columnName": "musicId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "index",
+            "columnName": "index",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cachedAt",
+            "columnName": "cachedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "musicId",
+            "connectionId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_MaximumPlayMusic_musicId",
+            "unique": false,
+            "columnNames": [
+              "musicId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_MaximumPlayMusic_musicId` ON `${TABLE_NAME}` (`musicId`)"
+          },
+          {
+            "name": "index_MaximumPlayMusic_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_MaximumPlayMusic_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "NewestAlbum",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`albumId` TEXT NOT NULL, `connectionId` INTEGER NOT NULL, `index` INTEGER NOT NULL, `cachedAt` INTEGER NOT NULL, PRIMARY KEY(`albumId`, `connectionId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "albumId",
+            "columnName": "albumId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "index",
+            "columnName": "index",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cachedAt",
+            "columnName": "cachedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "albumId",
+            "connectionId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_NewestAlbum_albumId",
+            "unique": false,
+            "columnNames": [
+              "albumId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_NewestAlbum_albumId` ON `${TABLE_NAME}` (`albumId`)"
+          },
+          {
+            "name": "index_NewestAlbum_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_NewestAlbum_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "NewestMusic",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`musicId` TEXT NOT NULL, `connectionId` INTEGER NOT NULL, `index` INTEGER NOT NULL, `cachedAt` INTEGER NOT NULL, PRIMARY KEY(`musicId`, `connectionId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "musicId",
+            "columnName": "musicId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "index",
+            "columnName": "index",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cachedAt",
+            "columnName": "cachedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "musicId",
+            "connectionId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_NewestMusic_musicId",
+            "unique": false,
+            "columnNames": [
+              "musicId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_NewestMusic_musicId` ON `${TABLE_NAME}` (`musicId`)"
+          },
+          {
+            "name": "index_NewestMusic_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_NewestMusic_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "PlayHistoryMusic",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`musicId` TEXT NOT NULL, `connectionId` INTEGER NOT NULL, `index` INTEGER NOT NULL, `cachedAt` INTEGER NOT NULL, PRIMARY KEY(`musicId`, `connectionId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "musicId",
+            "columnName": "musicId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "index",
+            "columnName": "index",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cachedAt",
+            "columnName": "cachedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "musicId",
+            "connectionId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_PlayHistoryMusic_musicId",
+            "unique": false,
+            "columnNames": [
+              "musicId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_PlayHistoryMusic_musicId` ON `${TABLE_NAME}` (`musicId`)"
+          },
+          {
+            "name": "index_PlayHistoryMusic_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_PlayHistoryMusic_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "PlaylistMusic",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`playlistId` TEXT NOT NULL, `musicId` TEXT NOT NULL, `connectionId` INTEGER NOT NULL, `index` INTEGER NOT NULL, `cachedAt` INTEGER NOT NULL, PRIMARY KEY(`playlistId`, `musicId`, `connectionId`, `index`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`playlistId`) REFERENCES `xy_album`(`itemId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "playlistId",
+            "columnName": "playlistId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "musicId",
+            "columnName": "musicId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "index",
+            "columnName": "index",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cachedAt",
+            "columnName": "cachedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "playlistId",
+            "musicId",
+            "connectionId",
+            "index"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_PlaylistMusic_musicId",
+            "unique": false,
+            "columnNames": [
+              "musicId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_PlaylistMusic_musicId` ON `${TABLE_NAME}` (`musicId`)"
+          },
+          {
+            "name": "index_PlaylistMusic_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_PlaylistMusic_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          },
+          {
+            "name": "index_PlaylistMusic_playlistId",
+            "unique": false,
+            "columnNames": [
+              "playlistId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_PlaylistMusic_playlistId` ON `${TABLE_NAME}` (`playlistId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "xy_album",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "playlistId"
+            ],
+            "referencedColumns": [
+              "itemId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "PlayQueueMusic",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`musicId` TEXT NOT NULL, `connectionId` INTEGER NOT NULL, `index` INTEGER NOT NULL, `cachedAt` INTEGER NOT NULL, PRIMARY KEY(`musicId`, `connectionId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "musicId",
+            "columnName": "musicId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "index",
+            "columnName": "index",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cachedAt",
+            "columnName": "cachedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "musicId",
+            "connectionId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_PlayQueueMusic_musicId",
+            "unique": false,
+            "columnNames": [
+              "musicId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_PlayQueueMusic_musicId` ON `${TABLE_NAME}` (`musicId`)"
+          },
+          {
+            "name": "index_PlayQueueMusic_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_PlayQueueMusic_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "xy_data_count",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`connectionId` INTEGER NOT NULL, `musicCount` INTEGER NOT NULL, `albumCount` INTEGER NOT NULL, `artistCount` INTEGER NOT NULL, `playlistCount` INTEGER NOT NULL, `genreCount` INTEGER NOT NULL, `favoriteCount` INTEGER NOT NULL, `createTime` INTEGER NOT NULL, PRIMARY KEY(`connectionId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "musicCount",
+            "columnName": "musicCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "albumCount",
+            "columnName": "albumCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "artistCount",
+            "columnName": "artistCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "playlistCount",
+            "columnName": "playlistCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "genreCount",
+            "columnName": "genreCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "favoriteCount",
+            "columnName": "favoriteCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createTime",
+            "columnName": "createTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "connectionId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_xy_data_count_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_xy_data_count_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "PlayHistoryAlbum",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`albumId` TEXT NOT NULL, `connectionId` INTEGER NOT NULL, `index` INTEGER NOT NULL, `cachedAt` INTEGER NOT NULL, PRIMARY KEY(`albumId`, `connectionId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "albumId",
+            "columnName": "albumId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "index",
+            "columnName": "index",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cachedAt",
+            "columnName": "cachedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "albumId",
+            "connectionId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_PlayHistoryAlbum_albumId",
+            "unique": false,
+            "columnNames": [
+              "albumId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_PlayHistoryAlbum_albumId` ON `${TABLE_NAME}` (`albumId`)"
+          },
+          {
+            "name": "index_PlayHistoryAlbum_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_PlayHistoryAlbum_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "MaximumPlayAlbum",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`albumId` TEXT NOT NULL, `connectionId` INTEGER NOT NULL, `index` INTEGER NOT NULL, `cachedAt` INTEGER NOT NULL, PRIMARY KEY(`albumId`, `connectionId`), FOREIGN KEY(`connectionId`) REFERENCES `xy_connection_config`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "albumId",
+            "columnName": "albumId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connectionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "index",
+            "columnName": "index",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cachedAt",
+            "columnName": "cachedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "albumId",
+            "connectionId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_MaximumPlayAlbum_albumId",
+            "unique": false,
+            "columnNames": [
+              "albumId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_MaximumPlayAlbum_albumId` ON `${TABLE_NAME}` (`albumId`)"
+          },
+          {
+            "name": "index_MaximumPlayAlbum_connectionId",
+            "unique": false,
+            "columnNames": [
+              "connectionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_MaximumPlayAlbum_connectionId` ON `${TABLE_NAME}` (`connectionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "xy_connection_config",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connectionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f4ddd91114d90ed6f2b7cfdccb6ff4b5')"
+    ]
+  }
+}

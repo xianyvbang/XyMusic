@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.Xybbzapp" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.App.Xybbzapp" parent="Theme.SplashScreen.IconBackground">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_screen</item>
+        <!-- Set a white background behind the splash screen icon. -->
+<!--        <item name="windowSplashScreenIconBackgroundColor">@android:color/white</item>-->
+        <item name="postSplashScreenTheme">@style/Theme.Xybbzapp</item>
+    </style>
+
+    <style name="Theme.AppTheme.Xybbzapp" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_screen</item>
+        <!-- Set a white background behind the splash screen icon. -->
+        <!--        <item name="windowSplashScreenIconBackgroundColor">@android:color/white</item>-->
+        <item name="postSplashScreenTheme">@style/Theme.Xybbzapp</item>
+    </style>
+</resources>

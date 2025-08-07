@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Salted Fish Listening to Songs</string>
+    <string name="notification_content_title">Unable to resume playback</string>
+    <string name="notification_content_text">If the play button is still present on the media notification, press it, otherwise open the app to start playback and reconnect the session to the controller</string>
+    <string name="notification_channel_name">Unable to resume playback</string>
+    <string name="exo_download_notification_channel_name">download</string>
+    <string name="home">front page</string>
+    <string name="music">music</string>
+    <string name="artist">artist</string>
+    <string name="album">album</string>
+    <string name="setting">set up</string>
+    <string name="search">search</string>
+    <string name="httpInput">Server input box icon</string>
+    <string name="server">Server address</string>
+    <string name="serverSetting">%1$sServer settings</string>
+</resources>
