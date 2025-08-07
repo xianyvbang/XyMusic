@@ -1,4 +1,19 @@
+import io.netty.util.ReferenceCountUtil.release
+import org.gradle.internal.impldep.com.amazonaws.util.IOUtils.release
+import org.gradle.kotlin.dsl.release
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+
+import java.util.Properties
+import java.io.FileInputStream
+
+val keystoreProperties = Properties()
+
+// 尝试读取 keystore.properties，如果不存在（例如本地未配置），就跳过
+val keystorePropertiesFile = rootProject.file("app/keystore.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
 
 plugins {
     alias(libs.plugins.android.application)
@@ -26,9 +41,22 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            // 只有在配置文件存在时才设置
+            if (keystoreProperties.isNotEmpty()) {
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.findByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
