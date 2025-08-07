@@ -28,7 +28,7 @@ jobs:
         uses: timheuer/base64-to-file@v1
         with:
           fileName: 'keystore.jks'
-          encodedString: ${{ secrets.SIGNING_KEY }}
+          encodedString: ${{ secrets.KEYSTORE_BASE64 }}
 
       - name: Create signing config
         run: |
