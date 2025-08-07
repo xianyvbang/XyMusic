@@ -103,7 +103,7 @@ fun NewSearchScreen(
                         }
                     },
                     textStyle = MaterialTheme.typography.bodySmall,
-                    placeholder = { XyItemTextLarge(text = "搜索番剧 / UP主 / 视频") },
+                    placeholder = { XyItemTextLarge(text = "搜索音乐 / 专辑 / 艺术家") },
                     leadingIcon = {
                         Icon(
                             Icons.Rounded.Search,
