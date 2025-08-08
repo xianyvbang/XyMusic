@@ -167,6 +167,7 @@ class JellyfinDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
+                prefetchDistance = 0,
                 enablePlaceholders = true
             ), remoteMediator = JellyfinAlbumRemoteMediator(
                 sortType = sortType,

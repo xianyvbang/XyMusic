@@ -111,9 +111,10 @@ class JellyfinAlbumRemoteMediator(
 
             val yearsInt = years?.split(',')?.map { it.toInt() }
 
+
             val response = jellyfinDatasourceServer.getAlbumList(
                 startIndex = loadKey * state.config.pageSize,
-                pageSize = state.config.pageSize,
+                pageSize = if (loadKey == 0) state.config.initialLoadSize else state.config.pageSize,
                 sortBy = sortType.sortType?.let { listOf(sortType.sortType) },
                 sortOrder = sortType.order?.let { listOf(sortType.order) },
                 isFavorite = ifFavorite,
@@ -129,7 +130,7 @@ class JellyfinAlbumRemoteMediator(
                 remoteKeyDao.insertOrReplace(
                     RemoteCurrent(
                         id = remoteId,
-                        nextKey = loadKey,
+                        nextKey = if (loadKey == 0) state.config.initialLoadSize / state.config.pageSize else loadKey,
                         total = response.totalRecordCount,
                         connectionId = connectionId
                     )
@@ -160,7 +161,8 @@ class JellyfinAlbumRemoteMediator(
     }
 
     override suspend fun initialize(): InitializeAction {
-        val cacheTimeout = TimeUnit.MILLISECONDS.convert(Constants.PAGE_TIME_FAILURE, TimeUnit.MINUTES)
+        val cacheTimeout =
+            TimeUnit.MILLISECONDS.convert(Constants.PAGE_TIME_FAILURE, TimeUnit.MINUTES)
         return if (System.currentTimeMillis() - (remoteKeyDao.remoteKeyById(remoteId)?.createTime
                 ?: 0) <= cacheTimeout
         ) {

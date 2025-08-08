@@ -1,7 +1,7 @@
 package cn.xybbz.ui.screens
 
 
-import android.util.Log
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -11,7 +11,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -111,7 +110,7 @@ fun AlbumScreen(
                 }
             })
         SwipeRefreshVerticalGridListComponent(
-            modifier = Modifier,
+            modifier = Modifier.fillMaxSize(),
             collectAsLazyPagingItems = albumPageListItems
         ) {
             items(
@@ -122,6 +121,7 @@ fun AlbumScreen(
                     modifier = Modifier,
                     onItem = { albumPageListItems[index] },
                     onRouter = {
+                        //取消刷新
                         navController.navigate(
                             RouterConstants.AlbumInfo(
                                 it,
