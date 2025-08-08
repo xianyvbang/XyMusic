@@ -94,5 +94,21 @@ enum class DataSourceType(
         ifDelete = true,
         ifArtistFavorite = true,
         ifSelectOneYear = true
+    ),
+
+
+    PLEX(
+        describe = "PLEX媒体服务器",
+        title = "Plex",
+        port = 32400,
+        ifSelectProtocolType = true,
+        options = listOf("http://", "https://"),
+        code = "4",
+        version = "4.1.1.0",
+        ifShowSelect = true,
+        ifShowCount = true,
+        ifDelete = true,
+        ifArtistFavorite = false,
+        ifSelectOneYear = false
     )
 }

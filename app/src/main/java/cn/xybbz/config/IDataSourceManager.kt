@@ -16,6 +16,7 @@ import cn.xybbz.api.client.emby.EmbyDatasourceServer
 import cn.xybbz.api.client.jellyfin.JellyfinDatasourceServer
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
 import cn.xybbz.api.client.navidrome.NavidromeDatasourceServer
+import cn.xybbz.api.client.plex.PlexDatasourceServer
 import cn.xybbz.api.client.subsonic.SubsonicDatasourceServer
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.state.ClientLoginInfoState
@@ -59,6 +60,7 @@ class IDataSourceManager(
     private val subsonicDatasourceServer: SubsonicDatasourceServer,
     private val navidromeDatasourceServer: NavidromeDatasourceServer,
     private val embyDatasourceServer: EmbyDatasourceServer,
+    private val plexDatasourceServer: PlexDatasourceServer,
     private val connectionConfigServer: ConnectionConfigServer,
     private val alarmConfig: AlarmConfig,
     private val favoriteRepository: FavoriteRepository
@@ -210,6 +212,10 @@ class IDataSourceManager(
 
             DataSourceType.EMBY -> {
                 dataSourceServer = embyDatasourceServer
+            }
+
+            DataSourceType.PLEX -> {
+                dataSourceServer = plexDatasourceServer
             }
         }
         Log.i("=====", "数据源切换完成")

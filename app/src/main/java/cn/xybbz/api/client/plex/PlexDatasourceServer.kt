@@ -1,0 +1,475 @@
+package cn.xybbz.api.client.plex
+
+import android.content.Context
+import androidx.paging.PagingData
+import cn.xybbz.api.client.IDataSourceParentServer
+import cn.xybbz.api.client.data.AllResponse
+import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
+import cn.xybbz.common.enums.MusicTypeEnum
+import cn.xybbz.common.enums.SortTypeEnum
+import cn.xybbz.config.ConnectionConfigServer
+import cn.xybbz.entity.api.LoginSuccessData
+import cn.xybbz.entity.data.SearchData
+import cn.xybbz.entity.data.file.backup.ExportPlaylistData
+import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.data.album.XyAlbum
+import cn.xybbz.localdata.data.artist.XyArtist
+import cn.xybbz.localdata.data.genre.XyGenre
+import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.enums.DataSourceType
+import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import cn.xybbz.ui.components.LrcEntry
+import kotlinx.coroutines.flow.Flow
+import okhttp3.OkHttpClient
+
+class PlexDatasourceServer(
+    private val db: DatabaseClient,
+    private val application: Context,
+    private val connectionConfigServer: ConnectionConfigServer,
+    private val plexApiClient: PlexApiClient
+) : IDataSourceParentServer(
+    db,
+    connectionConfigServer,
+    application
+) {
+    /**
+     * 获得当前数据源类型
+     */
+    override fun getDataSourceType(): DataSourceType {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 登录功能
+     */
+    override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 连通性检测
+     */
+    override suspend fun postPingSystem(): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 创建连接客户端
+     * @param [address] 地址
+     */
+    override suspend fun createApiClient(
+        address: String,
+        deviceId: String,
+        username: String,
+        password: String
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 创建歌单
+     */
+    override suspend fun createPlaylist(name: String): String? {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获得艺术家列表
+     */
+    override suspend fun getArtistList(
+        startIndex: Int,
+        pageSize: Int,
+        isFavorite: Boolean?,
+        search: String?
+    ): AllResponse<XyArtist> {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 根据艺术家id获得专辑列表
+     */
+    override suspend fun selectArtistsByIds(artistIds: List<String>): List<XyArtist> {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 根据艺术家获得音乐列表
+     */
+    override suspend fun selectMusicListByArtistServer(
+        artistId: String,
+        pageSize: Int,
+        startIndex: Int
+    ): AllResponse<XyMusic> {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获得专辑列表数据
+     */
+    override fun selectAlbumFlowList(
+        sortType: SortTypeEnum?,
+        ifFavorite: Boolean?,
+        years: String?
+    ): Flow<PagingData<XyAlbum>> {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获得音乐列表数据
+     */
+    override fun selectMusicFlowList(
+        sortType: SortTypeEnum?,
+        ifFavorite: Boolean?,
+        years: String?
+    ): Flow<PagingData<XyMusic>> {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获得艺术家
+     */
+    override fun selectArtistFlowList(
+        ifFavorite: Boolean?,
+        selectChat: String?
+    ): Flow<PagingData<XyArtist>> {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 搜索音乐,艺术家,专辑
+     */
+    override suspend fun searchAll(search: String): SearchData {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获得专辑或歌单内音乐列表
+     * @param [sortType] 排序类型
+     * @param [ifFavorite] 是否收藏筛选
+     * @param [years] 筛选年代数据
+     * @param [itemId] 专辑id
+     * @param [dataType] 数据类型
+     * @return [Flow<PagingData<XyMusic>>]
+     */
+    override fun selectMusicListByParentId(
+        sortType: SortTypeEnum?,
+        ifFavorite: Boolean?,
+        years: String?,
+        itemId: String,
+        dataType: MusicDataTypeEnum
+    ): Flow<PagingData<XyMusic>> {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 将项目标记为收藏
+     * @param [itemId] 专辑/音乐id
+     */
+    override suspend fun markFavoriteItem(
+        itemId: String,
+        dataType: MusicTypeEnum
+    ): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 取消项目收藏
+     * @param [itemId] 专辑/音乐id
+     */
+    override suspend fun unmarkFavoriteItem(
+        itemId: String,
+        dataType: MusicTypeEnum
+    ): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获得专辑,艺术家,音频,歌单数量
+     */
+    override suspend fun getDataInfoCount(connectionId: Long) {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 删除数据
+     * @param [musicId] 需要删除数据的id
+     * @return true->删除成功,false->删除失败
+     */
+    override suspend fun removeById(musicId: String): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 批量删除数据
+     * 按 ID 删除
+     * @param [musicIds] 需要删除数据的
+     * @return [Boolean?]
+     */
+    override suspend fun removeByIds(musicIds: List<String>): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获得专辑信息
+     * @param [albumId] 专辑id
+     * @return 专辑+艺术家信息
+     */
+    override suspend fun selectAlbumInfoById(
+        albumId: String,
+        dataType: MusicDataTypeEnum
+    ): XyAlbum? {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 按 ID 选择音乐信息
+     * @param [itemId] 音乐唯一标识
+     * @return [XyMusic?]
+     */
+    override suspend fun selectMusicInfoById(itemId: String): XyMusic? {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 根据音乐获得歌词信息
+     * @param [music] 音乐id
+     * @return 返回歌词列表
+     */
+    override suspend fun getMusicLyricList(music: XyMusic): List<LrcEntry>? {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 根据艺术家获得专辑列表
+     */
+    override fun selectAlbumListByArtistId(artistId: String): Flow<PagingData<XyAlbum>> {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 根据艺术家获得音乐列表
+     */
+    override fun selectMusicListByArtistId(artistId: String): Flow<PagingData<XyMusic>> {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获得随机音乐
+     */
+    override suspend fun getRandomMusicList(
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyMusic>? {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获取歌单列表
+     */
+    override suspend fun getPlaylists(): List<XyAlbum>? {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 新增或修改歌单
+     */
+    override suspend fun importPlaylist(playlistData: ExportPlaylistData): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 编辑歌单名称
+     * @param [id] ID
+     * @param [name] 姓名
+     */
+    override suspend fun editPlaylistName(id: String, name: String): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 删除歌单
+     * @param [id] ID
+     */
+    override suspend fun removePlaylist(id: String): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 保存自建歌单中的音乐
+     * @param [playlistId] 歌单id
+     * @param [musicIds] 音乐id集合
+     * @param [pic] 自建歌单图片
+     */
+    override suspend fun saveMusicPlaylist(
+        playlistId: String,
+        musicIds: List<String>,
+        pic: String?
+    ): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 删除自建歌单中的音乐
+     * @param [playlistId] 歌单id
+     * @param [musicIds] 音乐id集合
+     */
+    override suspend fun removeMusicPlaylist(
+        playlistId: String,
+        musicIds: List<String>
+    ): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 根据id获得艺术家信息
+     * @param [artistId] 艺术家id
+     * @return [List<ArtistItem>?] 艺术家信息
+     */
+    override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获得媒体库列表
+     */
+    override suspend fun selectMediaLibrary() {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获得最近播放音乐或专辑
+     */
+    override suspend fun playRecordMusicOrAlbumList() {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获得最多播放
+     */
+    override suspend fun getMostPlayerMusicList() {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获得最新专辑
+     */
+    override suspend fun getNewestAlbumList() {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获得收藏歌曲列表
+     */
+    override fun selectFavoriteMusicFlowList(): Flow<PagingData<XyMusic>> {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获得流派列表
+     */
+    override suspend fun selectGenresPage(): Flow<PagingData<XyGenre>> {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获得流派详情
+     */
+    override suspend fun getGenreById(genreId: String): XyGenre? {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获得流派内音乐列表/或者专辑
+     * todo 试一下能不能查询到专辑
+     * @param [genreId] 流派id
+     */
+    override fun selectAlbumListByGenreId(genreId: String): Flow<PagingData<XyAlbum>> {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获得歌曲列表
+     */
+    override suspend fun getMusicList(
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyMusic>? {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 根据专辑获得歌曲列表
+     */
+    override suspend fun getMusicListByAlbumId(
+        albumId: String,
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyMusic>? {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 根据艺术家获得歌曲列表
+     */
+    override suspend fun getMusicListByArtistId(
+        artistId: String,
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyMusic>? {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获得收藏歌曲列表
+     */
+    override suspend fun getMusicListByFavorite(
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyMusic>? {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获得OkHttpClient
+     */
+    override fun getOkhttpClient(): OkHttpClient {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 设置token
+     */
+    override fun setToken() {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 上报播放状态
+     */
+    override suspend fun reportPlaying(
+        musicId: String,
+        playSessionId: String,
+        isPaused: Boolean,
+        positionTicks: Long?
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 上报播放进度
+     */
+    override suspend fun reportProgress(
+        musicId: String,
+        playSessionId: String,
+        positionTicks: Long?
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 获得播放连接
+     */
+    override suspend fun getMusicPlayUrl(musicId: String): String {
+        TODO("Not yet implemented")
+    }
+}
