@@ -31,6 +31,18 @@ jobs:
           filePath: './app'
           encodedString: ${{ secrets.KEYSTORE_BASE64 }}
 
+      - name: Debug keystore existence
+        run: |
+          echo "Workspace: $(pwd)"
+          ls -la ./app
+          if [ -f "./app/keystore.jks" ]; then
+            echo "✅ Keystore exists!"
+          else
+            echo "❌ Keystore is missing!"
+            exit 1
+          fi
+      
+
       - name: Create signing config
         run: |
           cat >> ./app/keystore.properties <<EOF
