@@ -166,9 +166,10 @@ class JellyfinDatasourceServer(
     ): Flow<PagingData<XyAlbum>> {
         return Pager(
             config = PagingConfig(
-                pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 0,
-                enablePlaceholders = true
+                pageSize = 1000,  // 每一页个数
+                prefetchDistance = 5,
+                enablePlaceholders = true,
+                initialLoadSize = 40
             ), remoteMediator = JellyfinAlbumRemoteMediator(
                 sortType = sortType,
                 ifFavorite = ifFavorite,

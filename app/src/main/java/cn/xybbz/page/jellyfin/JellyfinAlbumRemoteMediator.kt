@@ -1,5 +1,6 @@
 package cn.xybbz.page.jellyfin
 
+import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
@@ -47,7 +48,6 @@ class JellyfinAlbumRemoteMediator(
         state: PagingState<Int, XyAlbum>
     ): MediatorResult {
         return try {
-
             val loadKey: Int = when (loadType) {
                 LoadType.REFRESH -> 0
                 LoadType.PREPEND -> return MediatorResult.Success(
@@ -114,7 +114,7 @@ class JellyfinAlbumRemoteMediator(
 
             val response = jellyfinDatasourceServer.getAlbumList(
                 startIndex = loadKey * state.config.pageSize,
-                pageSize = if (loadKey == 0) state.config.initialLoadSize else state.config.pageSize,
+                pageSize = state.config.pageSize,
                 sortBy = sortType.sortType?.let { listOf(sortType.sortType) },
                 sortOrder = sortType.order?.let { listOf(sortType.order) },
                 isFavorite = ifFavorite,
@@ -130,7 +130,7 @@ class JellyfinAlbumRemoteMediator(
                 remoteKeyDao.insertOrReplace(
                     RemoteCurrent(
                         id = remoteId,
-                        nextKey = if (loadKey == 0) state.config.initialLoadSize / state.config.pageSize else loadKey,
+                        nextKey = loadKey,
                         total = response.totalRecordCount,
                         connectionId = connectionId
                     )
