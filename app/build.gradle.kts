@@ -149,6 +149,7 @@ dependencies {
     implementation(libs.google.hilt)
     ksp(libs.google.hilt.compiler)
     implementation(libs.google.hilt.navigation)
+    implementation(libs.jellyfin.media3.ffmpeg)
 
     //UI的module
     implementation(project(path = ":ui"))

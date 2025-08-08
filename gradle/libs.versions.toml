@@ -76,6 +76,9 @@ google-hilt = { module = "com.google.dagger:hilt-android", version.ref = "hilt" 
 google-hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
 google-hilt-navigation = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltConmpose" }
 
+jellyfin-media3-ffmpeg = {module = "org.jellyfin.media3:media3-ffmpeg-decoder",version = "1.8.0+1"}
+
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
