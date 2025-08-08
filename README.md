@@ -16,17 +16,25 @@
 ## 使用开源项目
 
 [SaltUI](https://github.com/Moriafly/SaltUI)
+
 [Media3](https://github.com/androidx/media)
+
 [Coil](https://github.com/coil-kt/coil)
+
 [Moshi](https://github.com/square/moshi)
+
 [DialogX](https://github.com/kongzue/DialogX)
+
 [Retrofit](https://github.com/square/retrofit)
+
 [OkHttp](https://github.com/square/okhttp)
+
 [Room](https://github.com/androidx/androidx/tree/androidx-main/room)
 
 ## 使用的免费图片
 
 [歌曲列表默认封面 作者: OpenClipart-Vectors](https://pixabay.com/zh/vectors/cd-music-audio-notes-mp3-sound-158817/)
+
 [播放详情默认图片 作者: OpenClipart-Vectors](https://pixabay.com/zh/vectors/disc-record-retro-vinyl-audio-158357/)
 
 ## 支持服务及版本
