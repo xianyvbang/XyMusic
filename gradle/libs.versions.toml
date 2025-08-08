@@ -25,7 +25,7 @@ runtime = "1.8.3"
 squareup = "3.0.0"
 workRuntimeKtxVersion = "2.10.2"
 constraintlayoutVersion = "1.1.1"
-hilt = "2.56.2"
+hilt = "2.57"
 hiltConmpose = "1.2.0"
 okhttp = "5.1.0"
 
