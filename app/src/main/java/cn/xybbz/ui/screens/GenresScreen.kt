@@ -32,7 +32,7 @@ import cn.xybbz.viewmodel.GenresViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GenresScreen(
-    modifier:Modifier = Modifier,
+    modifier: Modifier = Modifier,
     genresViewModel: GenresViewModel = hiltViewModel<GenresViewModel>()
 ) {
 
@@ -51,31 +51,33 @@ fun GenresScreen(
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
             title = {
-            Text(
-                text = "流派",
-                fontWeight = FontWeight.W900
-            )
-        }, navigationIcon = {
-            IconButton(onClick = composeClick { navController.popBackStack() }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "返回数据中心"
+                Text(
+                    text = "流派",
+                    fontWeight = FontWeight.W900
                 )
-            }
-        })
+            }, navigationIcon = {
+                IconButton(onClick = composeClick { navController.popBackStack() }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "返回数据中心"
+                    )
+                }
+            })
 
 
         SwipeRefreshVerticalGridListComponent(
             modifier = Modifier.fillMaxSize(),
             collectAsLazyPagingItems = genreLazyPagingItems,
         ) {
-            items(genreLazyPagingItems.itemCount,
+            items(
+                genreLazyPagingItems.itemCount,
                 key = genreLazyPagingItems.itemKey { item -> item.itemId },
                 contentType = genreLazyPagingItems.itemContentType { it.name }
             ) { index ->
                 genreLazyPagingItems[index]?.let { genre ->
                     MusicGenreCardComponent(
                         onItem = { genre },
+                        enabled = it,
                         onRouter = {
                             navController.navigate(RouterConstants.GenreInfo(genre.itemId))
                         }

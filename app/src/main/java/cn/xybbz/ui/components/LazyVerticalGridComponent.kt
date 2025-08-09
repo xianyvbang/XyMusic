@@ -44,7 +44,7 @@ fun <T : Any> SwipeRefreshVerticalGridListComponent(
     modifier: Modifier = Modifier,
     lazyGridState: LazyGridState = rememberLazyGridState(),
     collectAsLazyPagingItems: LazyPagingItems<T>,
-    content: LazyGridScope.() -> Unit
+    content: LazyGridScope.(Boolean) -> Unit
 ) {
 
     val isRefreshing by remember {
@@ -91,7 +91,9 @@ fun <T : Any> SwipeRefreshVerticalGridListComponent(
             lazyGridState = lazyGridState,
             onIsLoading = { isLoading },
             onIfNotData = { ifNotData },
-            content = content
+            content = {
+                content.invoke(this, isRefreshing)
+            }
         )
     }
 

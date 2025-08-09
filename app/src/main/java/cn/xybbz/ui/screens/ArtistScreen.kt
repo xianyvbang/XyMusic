@@ -1,7 +1,6 @@
 package cn.xybbz.ui.screens
 
 
-import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -122,7 +121,8 @@ fun ArtistScreen(
                     artistListPaging[index]?.let { artist ->
                         MusicArtistCardComponent(
                             modifier = Modifier,
-                            onItem = { artist }
+                            onItem = { artist },
+                            enabled = it
                         ) {
                             navController.navigate(RouterConstants.ArtistInfo(it))
                         }

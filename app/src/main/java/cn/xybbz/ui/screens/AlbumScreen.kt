@@ -1,6 +1,7 @@
 package cn.xybbz.ui.screens
 
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
@@ -16,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -83,6 +85,7 @@ fun AlbumScreen(
             topVerticalColor = Color(0xFF196473),
             bottomVerticalColor = Color(0xFF60318C)
         )
+            .background(brush = Brush.radialGradient())
     ) {
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
@@ -120,7 +123,7 @@ fun AlbumScreen(
                 MusicAlbumCardComponent(
                     modifier = Modifier,
                     onItem = { albumPageListItems[index] },
-                    enabled = true,
+                    enabled = !it,
                     onRouter = {
                         //取消刷新
                         navController.navigate(
