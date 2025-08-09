@@ -52,6 +52,7 @@ fun MusicCardComponent(
     artistName: String? = null,
     model: Any?,
     imageSize: Dp? = null,
+    enabled: Boolean = true,
     brush: Brush = Brush.linearGradient(
         colors = listOf(Color(0xff3b82f6), Color(0xff8b5cf6)),
         start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
@@ -72,6 +73,7 @@ fun MusicCardComponent(
             modifier = modifier
                 .fillMaxWidth()
                 .aspectRatio(1F),
+            enabled = enabled,
             shape = shape,
             colors = CardDefaults.cardColors(containerColor = Color.Transparent),
             onClick = composeClick {
@@ -93,9 +95,12 @@ fun MusicCardComponent(
             }
         }
         Spacer(modifier = Modifier.height(3.dp))
-        XyItemTextButton(modifier = Modifier, text = name, sub = artistName ?: "", onClick = {
-            onRouter(id)
-        })
+        XyItemTextButton(
+            modifier = Modifier, text = name, sub = artistName ?: "",
+            enabled = enabled,
+            onClick = {
+                onRouter(id)
+            })
     }
 }
 
