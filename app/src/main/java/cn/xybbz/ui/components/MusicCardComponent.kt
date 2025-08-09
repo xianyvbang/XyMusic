@@ -161,6 +161,7 @@ fun MusicAlbumCardComponent(
     onItem: () -> XyAlbum?,
     imageSize: Dp? = null,
     imageUrl: String? = onItem()?.pic,
+    enabled: Boolean = true,
     shape: Shape = CardDefaults.shape,
     onRouter: (String) -> Unit,
 ) {
@@ -176,6 +177,7 @@ fun MusicAlbumCardComponent(
         artistName = album?.artists ?: "未知艺术家",
         imageSize = imageSize,
         model = imageUrl,
+        enabled = enabled,
         shape = shape,
         onRouter = onRouter
     )

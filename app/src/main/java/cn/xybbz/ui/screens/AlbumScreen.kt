@@ -120,6 +120,7 @@ fun AlbumScreen(
                 MusicAlbumCardComponent(
                     modifier = Modifier,
                     onItem = { albumPageListItems[index] },
+                    enabled = true,
                     onRouter = {
                         //取消刷新
                         navController.navigate(
