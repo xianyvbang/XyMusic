@@ -85,7 +85,6 @@ fun AlbumScreen(
             topVerticalColor = Color(0xFF196473),
             bottomVerticalColor = Color(0xFF60318C)
         )
-            .background(brush = Brush.radialGradient())
     ) {
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
