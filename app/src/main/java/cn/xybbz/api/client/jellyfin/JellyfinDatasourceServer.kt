@@ -164,10 +164,9 @@ class JellyfinDatasourceServer(
     ): Flow<PagingData<XyAlbum>> {
         return Pager(
             config = PagingConfig(
-                pageSize = 1000,  // 每一页个数
-                prefetchDistance = 5,
-                enablePlaceholders = true,
-                initialLoadSize = 40
+                pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ), remoteMediator = JellyfinAlbumRemoteMediator(
                 sortType = sortType,
                 ifFavorite = ifFavorite,
@@ -192,8 +191,8 @@ class JellyfinDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ), remoteMediator = JellyfinMusicRemoteMediator(
                 sortType = sortType,
                 db = db,
@@ -338,8 +337,8 @@ class JellyfinDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = ALBUM_MUSIC_LIST_PAGE_SIZE,  // 每一页个数
-//                    prefetchDistance = ALBUM_MUSIC_LIST_PAGE_SIZE, // 距离下一页请求的距离
-                initialLoadSize = ALBUM_MUSIC_LIST_PAGE_SIZE,  // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ), remoteMediator = JellyfinAlbumOrPlaylistMusicListRemoteMediator(
                 itemId = itemId,
                 sortType = sortType,
@@ -551,8 +550,8 @@ class JellyfinDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = ALBUM_MUSIC_LIST_PAGE_SIZE,  // 每一页个数
-                prefetchDistance = 0, // 距离下一页请求的距离
-                initialLoadSize = ALBUM_MUSIC_LIST_PAGE_SIZE  // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ), remoteMediator = JellyfinArtistAlbumListRemoteMediator(
                 artistId = artistId,
                 jellyfinDatasourceServer = this,
@@ -574,8 +573,8 @@ class JellyfinDatasourceServer(
         return Pager(
             PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ), remoteMediator = ArtistMusicListRemoteMediator(
                 artistId = artistId,
                 datasourceServer = this,
@@ -1004,8 +1003,8 @@ class JellyfinDatasourceServer(
         return Pager(
             PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ),
             remoteMediator = JellyfinFavoriteMusicRemoteMediator(
                 jellyfinDatasourceServer = this,
@@ -1025,8 +1024,8 @@ class JellyfinDatasourceServer(
         return Pager(
             PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ),
             remoteMediator = JellyfinGenresRemoteMediator(
                 jellyfinDatasourceServer = this,
@@ -1116,8 +1115,8 @@ class JellyfinDatasourceServer(
         return Pager(
             PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ),
             remoteMediator = JellyfinGenreAlbumListRemoteMediator(
                 genreId = genreId,

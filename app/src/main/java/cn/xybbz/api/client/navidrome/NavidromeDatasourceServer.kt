@@ -188,7 +188,8 @@ class NavidromeDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                enablePlaceholders = true
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ), remoteMediator = NavidromeAlbumRemoteMediator(
                 sortType = sortType,
                 ifFavorite = ifFavorite,
@@ -215,8 +216,8 @@ class NavidromeDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ), remoteMediator = NavidromeMusicRemoteMediator(
                 sortType = sortType,
                 db = db,
@@ -366,7 +367,8 @@ class NavidromeDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = ALBUM_MUSIC_LIST_PAGE_SIZE,  // 每一页个数
-                initialLoadSize = ALBUM_MUSIC_LIST_PAGE_SIZE,  // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ),
             remoteMediator = NavidromeAlbumOrPlaylistMusicListRemoteMediator(
                 itemId = itemId,
@@ -591,8 +593,8 @@ class NavidromeDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = ALBUM_MUSIC_LIST_PAGE_SIZE,  // 每一页个数
-                prefetchDistance = 0, // 距离下一页请求的距离
-                initialLoadSize = ALBUM_MUSIC_LIST_PAGE_SIZE  // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ), remoteMediator = NavidromeArtistAlbumListRemoteMediator(
                 artistId = artistId,
                 navidromeDatasourceServer = this,
@@ -614,8 +616,8 @@ class NavidromeDatasourceServer(
         return Pager(
             PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ), remoteMediator = ArtistMusicListRemoteMediator(
                 artistId = artistId,
                 datasourceServer = this,
@@ -891,8 +893,8 @@ class NavidromeDatasourceServer(
         return Pager(
             PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ),
             remoteMediator = NavidromeFavoriteMusicRemoteMediator(
                 navidromeDatasourceServer = this,
@@ -912,8 +914,8 @@ class NavidromeDatasourceServer(
         return Pager(
             PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ), remoteMediator = NavidromeGenresRemoteMediator(
                 navidromeDatasourceServer = this,
                 db = db,
@@ -941,8 +943,8 @@ class NavidromeDatasourceServer(
         return Pager(
             PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ),
             remoteMediator = NavidromeGenreAlbumListRemoteMediator(
                 genreId = genreId,

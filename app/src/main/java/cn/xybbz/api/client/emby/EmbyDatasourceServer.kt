@@ -238,6 +238,8 @@ class EmbyDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
                 enablePlaceholders = true
             ), remoteMediator = EmbyAlbumRemoteMediator(
                 sortType = sortType,
@@ -265,8 +267,8 @@ class EmbyDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE
             ), remoteMediator = EmbyMusicRemoteMediator(
                 sortType = sortType,
                 db = db,
@@ -415,8 +417,8 @@ class EmbyDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = ALBUM_MUSIC_LIST_PAGE_SIZE,  // 每一页个数
-//                    prefetchDistance = ALBUM_MUSIC_LIST_PAGE_SIZE, // 距离下一页请求的距离
-                initialLoadSize = ALBUM_MUSIC_LIST_PAGE_SIZE,  // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ), remoteMediator = EmbyAlbumOrPlaylistMusicListRemoteMediator(
                 itemId = itemId,
                 sortType = sortType,
@@ -645,8 +647,8 @@ class EmbyDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = ALBUM_MUSIC_LIST_PAGE_SIZE,  // 每一页个数
-                prefetchDistance = 0, // 距离下一页请求的距离
-                initialLoadSize = ALBUM_MUSIC_LIST_PAGE_SIZE  // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ), remoteMediator = EmbyArtistAlbumListRemoteMediator(
                 artistId = artistId,
                 embyDatasourceServer = this,
@@ -969,8 +971,8 @@ class EmbyDatasourceServer(
         return Pager(
             PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ),
             remoteMediator = EmbyFavoriteMusicRemoteMediator(
                 embyDatasourceServer = this,
@@ -990,8 +992,8 @@ class EmbyDatasourceServer(
         return Pager(
             PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ),
             remoteMediator = EmbyGenresRemoteMediator(
                 embyDatasourceServer = this,
@@ -1027,8 +1029,8 @@ class EmbyDatasourceServer(
         return Pager(
             PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ),
             remoteMediator = EmbyGenreAlbumListRemoteMediator(
                 genreId = genreId,
