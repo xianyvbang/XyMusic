@@ -103,6 +103,7 @@ fun <T : Any> SwipeRefreshVerticalGridListComponent(
 @Composable
 fun <T : Any> VerticalGridListComponent(
     modifier: Modifier = Modifier,
+    lazyGridState: LazyGridState = rememberLazyGridState(),
     collectAsLazyPagingItems: LazyPagingItems<T>,
     content: LazyGridScope.() -> Unit
 ) {
@@ -131,7 +132,7 @@ fun <T : Any> VerticalGridListComponent(
         }
     }
 
-    val lazyGridState = rememberLazyGridState()
+
 
     LazyVerticalGridComponent(
         modifier = modifier,
