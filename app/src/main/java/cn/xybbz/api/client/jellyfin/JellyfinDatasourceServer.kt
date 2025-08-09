@@ -29,7 +29,6 @@ import cn.xybbz.api.enums.jellyfin.ItemFields
 import cn.xybbz.api.enums.jellyfin.ItemFilter
 import cn.xybbz.api.enums.jellyfin.ItemSortBy
 import cn.xybbz.api.enums.jellyfin.MediaProtocol
-import cn.xybbz.api.enums.jellyfin.MediaStreamProtocol
 import cn.xybbz.api.enums.jellyfin.MediaStreamType
 import cn.xybbz.api.enums.jellyfin.MediaType
 import cn.xybbz.api.enums.jellyfin.PlayMethod
@@ -70,7 +69,6 @@ import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
 import java.time.ZoneId
 import java.time.ZoneOffset
-import java.util.UUID
 
 /**
  * Jellyfin api客户端管理
@@ -1097,7 +1095,7 @@ class JellyfinDatasourceServer(
                 )
             )
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "播放上报失败",e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "播放上报失败", e)
         }
     }
 
@@ -1377,7 +1375,7 @@ class JellyfinDatasourceServer(
             )
             allResponse
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获取歌单失败",e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取歌单失败", e)
             AllResponse<XyAlbum>(items = emptyList(), 0, 0)
         }
     }
@@ -1454,35 +1452,7 @@ class JellyfinDatasourceServer(
         val mediaStreamLyric =
             mediaSourceInfo?.mediaStreams?.find { it.type == MediaStreamType.LYRIC }
 
-        val audioUrl = jellyfinApiClient.createAudioUrl(
-            itemId = item.id,
-            deviceId = jellyfinApiClient.deviceId,
-            userId = connectionConfigServer.getUserId(),
-            playSessionId = UUID.randomUUID().toString(),
-            maxStreamingBitrate = 140000000,
-            container = listOf(
-                "opus",
-                "webm|opus",
-                "mp3",
-                "aac",
-                "m4a|aac",
-                "m4b|aac",
-                "flac",
-                "webma",
-                "webm|webma",
-                "wav",
-                "ogg",
-                "wma"
-            ),
-            transcodingContainer = "aac",
-            transcodingProtocol = MediaStreamProtocol.HLS,
-            audioCodec = "aac",
-            startTimeTicks = 0,
-            enableRedirection = true,
-            enableRemoteMedia = true,
-        )
-
-//        val audioUrl = getMusicPlayUrl(item.id)
+        val audioUrl = getMusicPlayUrl(item.id)
 
         return XyMusic(
             itemId = item.id,
