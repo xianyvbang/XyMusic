@@ -52,6 +52,7 @@ fun MusicCardComponent(
     artistName: String? = null,
     model: Any?,
     imageSize: Dp? = null,
+    enabled: Boolean = true,
     brush: Brush = Brush.linearGradient(
         colors = listOf(Color(0xff3b82f6), Color(0xff8b5cf6)),
         start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
@@ -72,6 +73,7 @@ fun MusicCardComponent(
             modifier = modifier
                 .fillMaxWidth()
                 .aspectRatio(1F),
+            enabled = enabled,
             shape = shape,
             colors = CardDefaults.cardColors(containerColor = Color.Transparent),
             onClick = composeClick {
@@ -93,9 +95,12 @@ fun MusicCardComponent(
             }
         }
         Spacer(modifier = Modifier.height(3.dp))
-        XyItemTextButton(modifier = Modifier, text = name, sub = artistName ?: "", onClick = {
-            onRouter(id)
-        })
+        XyItemTextButton(
+            modifier = Modifier, text = name, sub = artistName ?: "",
+            enabled = enabled,
+            onClick = {
+                onRouter(id)
+            })
     }
 }
 
@@ -156,6 +161,7 @@ fun MusicAlbumCardComponent(
     onItem: () -> XyAlbum?,
     imageSize: Dp? = null,
     imageUrl: String? = onItem()?.pic,
+    enabled: Boolean = true,
     shape: Shape = CardDefaults.shape,
     onRouter: (String) -> Unit,
 ) {
@@ -171,6 +177,7 @@ fun MusicAlbumCardComponent(
         artistName = album?.artists ?: "未知艺术家",
         imageSize = imageSize,
         model = imageUrl,
+        enabled = enabled,
         shape = shape,
         onRouter = onRouter
     )
@@ -182,6 +189,7 @@ fun MusicArtistCardComponent(
     modifier: Modifier = Modifier,
     onItem: () -> XyArtist?,
     imageSize: Dp? = null,
+    enabled: Boolean = true,
     shape: Shape = CircleShape,
     onRouter: (String) -> Unit,
 ) {
@@ -201,6 +209,7 @@ fun MusicArtistCardComponent(
             start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
             end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
         ),
+        enabled = enabled,
         shape = shape,
         onRouter = onRouter
     )
@@ -238,6 +247,7 @@ fun MusicGenreCardComponent(
     modifier: Modifier = Modifier,
     onItem: () -> XyGenre,
     imageSize: Dp? = null,
+    enabled: Boolean = true,
     shape: Shape = CardDefaults.shape,
     onRouter: (String) -> Unit,
 ) {
@@ -252,6 +262,7 @@ fun MusicGenreCardComponent(
         name = genre.name,
         imageSize = imageSize,
         model = genre.pic,
+        enabled = enabled,
         shape = shape,
         onRouter = onRouter
     )

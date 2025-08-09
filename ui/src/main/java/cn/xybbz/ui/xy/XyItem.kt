@@ -987,6 +987,7 @@ fun XyItemTextButton(
     modifier: Modifier = Modifier,
     text: String,
     sub: String,
+    enabled: Boolean = true,
     onClick: (() -> Unit)? = null
 ) {
     XyItemText(
@@ -994,6 +995,7 @@ fun XyItemTextButton(
             .then(modifier)
             .fillMaxWidth()
             .debounceClickable(
+                enabled = enabled,
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) {

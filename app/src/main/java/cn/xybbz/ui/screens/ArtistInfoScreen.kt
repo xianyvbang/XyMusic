@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -105,6 +106,7 @@ fun ArtistInfoScreen(
     val navController = LocalNavController.current
     val lazyListState1 = rememberLazyListState()
     val lazyListState = rememberLazyListState()
+    val lazyGridState = rememberLazyGridState()
     val scrollOffset = remember { mutableStateOf(0f) }
     val favoriteList by artistInfoViewModel.favoriteRepository.favoriteMap.collectAsState()
 
@@ -124,6 +126,22 @@ fun ArtistInfoScreen(
                 val newOffset = scrollOffset.value + delta
                 scrollOffset.value = newOffset.coerceIn(-400f, 0f) // 控制头图最大滑动范围
                 return Offset.Zero
+            }
+        }
+    }
+
+    val scrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(
+                available: Offset,
+                source: NestedScrollSource,
+            ): Offset {
+                return if (available.y > 0) Offset.Zero else Offset(
+                    x = 0f,
+                    y = if (horPagerState.currentPage == 1) -lazyGridState.dispatchRawDelta(-available.y) else -lazyListState1.dispatchRawDelta(
+                        -available.y
+                    )
+                )
             }
         }
     }
@@ -287,7 +305,8 @@ fun ArtistInfoScreen(
             LazyColumn(
                 state = lazyListState1,
                 modifier = Modifier
-                    .fillMaxSize(),
+                    .fillMaxSize()
+                    .nestedScroll(scrollConnection),
                 contentPadding = PaddingValues(
                     top = DefaultImageHeight - TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
                         .calculateTopPadding()
@@ -346,7 +365,10 @@ fun ArtistInfoScreen(
                                                 onMusicData = { music },
                                                 onIfFavorite = {
                                                     if (favoriteList.containsKey(music.itemId)) {
-                                                        favoriteList.getOrDefault(music.itemId, false)
+                                                        favoriteList.getOrDefault(
+                                                            music.itemId,
+                                                            false
+                                                        )
                                                     } else {
                                                         music.ifFavoriteStatus
                                                     }

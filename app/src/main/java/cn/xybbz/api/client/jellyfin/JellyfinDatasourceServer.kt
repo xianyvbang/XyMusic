@@ -29,7 +29,6 @@ import cn.xybbz.api.enums.jellyfin.ItemFields
 import cn.xybbz.api.enums.jellyfin.ItemFilter
 import cn.xybbz.api.enums.jellyfin.ItemSortBy
 import cn.xybbz.api.enums.jellyfin.MediaProtocol
-import cn.xybbz.api.enums.jellyfin.MediaStreamProtocol
 import cn.xybbz.api.enums.jellyfin.MediaStreamType
 import cn.xybbz.api.enums.jellyfin.MediaType
 import cn.xybbz.api.enums.jellyfin.PlayMethod
@@ -70,7 +69,6 @@ import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
 import java.time.ZoneId
 import java.time.ZoneOffset
-import java.util.UUID
 
 /**
  * Jellyfin api客户端管理
@@ -167,7 +165,8 @@ class JellyfinDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                enablePlaceholders = true
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ), remoteMediator = JellyfinAlbumRemoteMediator(
                 sortType = sortType,
                 ifFavorite = ifFavorite,
@@ -192,8 +191,8 @@ class JellyfinDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ), remoteMediator = JellyfinMusicRemoteMediator(
                 sortType = sortType,
                 db = db,
@@ -338,8 +337,8 @@ class JellyfinDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = ALBUM_MUSIC_LIST_PAGE_SIZE,  // 每一页个数
-//                    prefetchDistance = ALBUM_MUSIC_LIST_PAGE_SIZE, // 距离下一页请求的距离
-                initialLoadSize = ALBUM_MUSIC_LIST_PAGE_SIZE,  // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ), remoteMediator = JellyfinAlbumOrPlaylistMusicListRemoteMediator(
                 itemId = itemId,
                 sortType = sortType,
@@ -551,8 +550,8 @@ class JellyfinDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = ALBUM_MUSIC_LIST_PAGE_SIZE,  // 每一页个数
-                prefetchDistance = 0, // 距离下一页请求的距离
-                initialLoadSize = ALBUM_MUSIC_LIST_PAGE_SIZE  // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ), remoteMediator = JellyfinArtistAlbumListRemoteMediator(
                 artistId = artistId,
                 jellyfinDatasourceServer = this,
@@ -574,8 +573,8 @@ class JellyfinDatasourceServer(
         return Pager(
             PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ), remoteMediator = ArtistMusicListRemoteMediator(
                 artistId = artistId,
                 datasourceServer = this,
@@ -1004,8 +1003,8 @@ class JellyfinDatasourceServer(
         return Pager(
             PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ),
             remoteMediator = JellyfinFavoriteMusicRemoteMediator(
                 jellyfinDatasourceServer = this,
@@ -1025,8 +1024,8 @@ class JellyfinDatasourceServer(
         return Pager(
             PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ),
             remoteMediator = JellyfinGenresRemoteMediator(
                 jellyfinDatasourceServer = this,
@@ -1095,7 +1094,7 @@ class JellyfinDatasourceServer(
                 )
             )
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "播放上报失败",e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "播放上报失败", e)
         }
     }
 
@@ -1116,8 +1115,8 @@ class JellyfinDatasourceServer(
         return Pager(
             PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ),
             remoteMediator = JellyfinGenreAlbumListRemoteMediator(
                 genreId = genreId,
@@ -1375,7 +1374,7 @@ class JellyfinDatasourceServer(
             )
             allResponse
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获取歌单失败",e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取歌单失败", e)
             AllResponse<XyAlbum>(items = emptyList(), 0, 0)
         }
     }
@@ -1452,35 +1451,7 @@ class JellyfinDatasourceServer(
         val mediaStreamLyric =
             mediaSourceInfo?.mediaStreams?.find { it.type == MediaStreamType.LYRIC }
 
-        val audioUrl = jellyfinApiClient.createAudioUrl(
-            itemId = item.id,
-            deviceId = jellyfinApiClient.deviceId,
-            userId = connectionConfigServer.getUserId(),
-            playSessionId = UUID.randomUUID().toString(),
-            maxStreamingBitrate = 140000000,
-            container = listOf(
-                "opus",
-                "webm|opus",
-                "mp3",
-                "aac",
-                "m4a|aac",
-                "m4b|aac",
-                "flac",
-                "webma",
-                "webm|webma",
-                "wav",
-                "ogg",
-                "wma"
-            ),
-            transcodingContainer = "aac",
-            transcodingProtocol = MediaStreamProtocol.HLS,
-            audioCodec = "aac",
-            startTimeTicks = 0,
-            enableRedirection = true,
-            enableRemoteMedia = true,
-        )
-
-//        val audioUrl = getMusicPlayUrl(item.id)
+        val audioUrl = getMusicPlayUrl(item.id)
 
         return XyMusic(
             itemId = item.id,

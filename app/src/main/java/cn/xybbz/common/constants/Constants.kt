@@ -30,6 +30,16 @@ object Constants {
     const val UI_LIST_PAGE = 100
 
     /**
+     * 初始化加载数据大小
+     */
+    const val UI_INIT_LIST_PAGE = 40
+
+    /**
+     * 预加载距离-距离底部多少item加载下一页
+     */
+    const val UI_PREFETCH_DISTANCE = 5
+
+    /**
      * 歌词位置放大
      */
     const val LYRICS_AMPLIFICATION = 10000L

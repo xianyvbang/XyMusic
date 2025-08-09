@@ -158,7 +158,8 @@ class SubsonicDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                enablePlaceholders = true
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ),
             remoteMediator = AlbumRemoteMediator(
                 sortType = sortType,
@@ -185,8 +186,8 @@ class SubsonicDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             )
         ) {
             db.musicDao.selectHomeMusicListPage()
@@ -274,7 +275,8 @@ class SubsonicDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = ALBUM_MUSIC_LIST_PAGE_SIZE,  // 每一页个数
-                initialLoadSize = ALBUM_MUSIC_LIST_PAGE_SIZE,  // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ),
             remoteMediator = SubsonicAlbumOrPlaylistMusicListRemoteMediator(
                 itemId = itemId,
@@ -410,8 +412,8 @@ class SubsonicDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = ALBUM_MUSIC_LIST_PAGE_SIZE,  // 每一页个数
-                prefetchDistance = 0, // 距离下一页请求的距离
-                initialLoadSize = ALBUM_MUSIC_LIST_PAGE_SIZE  // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             )
         ) {
             db.albumDao.selectArtistAlbumListPage(
@@ -428,8 +430,8 @@ class SubsonicDatasourceServer(
         return Pager(
             config = PagingConfig(
                 pageSize = ALBUM_MUSIC_LIST_PAGE_SIZE,  // 每一页个数
-                prefetchDistance = 0, // 距离下一页请求的距离
-                initialLoadSize = ALBUM_MUSIC_LIST_PAGE_SIZE  // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ),
             remoteMediator = ArtistMusicListRemoteMediator(
                 artistId = artistId,
@@ -792,8 +794,8 @@ class SubsonicDatasourceServer(
         return Pager(
             PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ),
             remoteMediator = FavoriteMusicRemoteMediator(
                 subsonicDatasourceServer = this,
@@ -867,8 +869,8 @@ class SubsonicDatasourceServer(
         return Pager(
             PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ), remoteMediator = SubsonicGenresRemoteMediator(
                 subsonicDatasourceServer = this,
                 db = db,
@@ -895,8 +897,8 @@ class SubsonicDatasourceServer(
         return Pager(
             PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
-                prefetchDistance = 2, // 距离下一页请求的距离
-                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+                initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+                prefetchDistance = Constants.UI_PREFETCH_DISTANCE,
             ),
             remoteMediator = SubsonicGenreAlbumListRemoteMediator(
                 genreId = genreId,

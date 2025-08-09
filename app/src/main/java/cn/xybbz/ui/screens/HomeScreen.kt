@@ -411,7 +411,10 @@ fun HomeScreen(
                             imageVector = Icons.Rounded.Album,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
-                                navHostController.navigate(RouterConstants.Album)
+                                navHostController.navigate(RouterConstants.Album){
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
                             },
                             brush = Brush.linearGradient(
                                 colors = listOf(Color(0xffec4899), Color(0xffa855f7)),
