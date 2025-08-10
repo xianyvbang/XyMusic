@@ -77,24 +77,25 @@ abstract class IDataSourceParentServer(
                 username = clientLoginInfoReq.username,
                 password = clientLoginInfoReq.password
             )
-            try {
-                val postPingSystem = postPingSystem()
-                if (postPingSystem) {
-                    Log.i("=====", "是否连通: $postPingSystem")
-                    emit(ClientLoginInfoState.ConnectionSuccess)
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                when (e) {
-                    is UnauthorizedException -> {
-                        throw e
+            if (getDataSourceType().ifInputUrl)
+                try {
+                    val postPingSystem = postPingSystem()
+                    if (postPingSystem) {
+                        Log.i("=====", "是否连通: $postPingSystem")
+                        emit(ClientLoginInfoState.ConnectionSuccess)
                     }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    when (e) {
+                        is UnauthorizedException -> {
+                            throw e
+                        }
 
-                    else -> {
-                        throw ConnectionException()
+                        else -> {
+                            throw ConnectionException()
+                        }
                     }
                 }
-            }
 
             //获得服务端信息
             val responseData =
@@ -247,7 +248,7 @@ abstract class IDataSourceParentServer(
             )
 
         }.flowOn(Dispatchers.IO).catch {
-            Log.e(Constants.LOG_ERROR_PREFIX, "自动登录异常 ${it.message}",it)
+            Log.e(Constants.LOG_ERROR_PREFIX, "自动登录异常 ${it.message}", it)
             connectionConfigServer.updateLoginStates(true)
             when (it) {
                 is SocketTimeoutException -> {
@@ -409,7 +410,7 @@ abstract class IDataSourceParentServer(
             }
             return tmpXyArtists
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "根据id集合获得艺术家信息集合失败",e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "根据id集合获得艺术家信息集合失败", e)
             emptyList()
         }
 

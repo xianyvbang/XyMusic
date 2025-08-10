@@ -223,44 +223,45 @@ fun ConnectionScreen(
                 ScreenType.INPUT_DATA -> {
                     LazyColumnComponent {
                         item {
-                            OutlinedTextField(
-                                value = connectionViewModel.address,
-                                modifier = Modifier
-                                    .background(Color.Transparent)
-                                    .fillMaxWidth(),
-                                onValueChange = {
-                                    connectionViewModel.setAddressData(it)
-                                },
-                                singleLine = true,
-                                shape = RoundedCornerShape(5.dp),
-                                colors = TextFieldDefaults.colors(
-                                    unfocusedContainerColor = Color.Transparent,
-                                    focusedContainerColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.LightGray,
-                                    focusedIndicatorColor = Color.LightGray,
-                                    focusedLabelColor = Color.LightGray,
-                                    unfocusedLabelColor = Color.LightGray,
-                                    cursorColor = Color.White,
-                                    disabledContainerColor = Color.Transparent
-                                ),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                                enabled = true,
-                                label = { Text(stringResource(R.string.server)) },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Http,
-                                        contentDescription = stringResource(R.string.httpInput)
-                                    )
-                                },
-                                placeholder = {
-                                    Text(text = "http://")
-                                },
-                                isError = connectionViewModel.address.isBlank() && isLoad,
-                                supportingText = {
-                                    if (connectionViewModel.address.isBlank() && isLoad)
-                                        Text(text = "${stringResource(R.string.server)}不能为空")
-                                },
-                            )
+                            if (connectionViewModel.dataSourceType?.ifInputUrl == true)
+                                OutlinedTextField(
+                                    value = connectionViewModel.address,
+                                    modifier = Modifier
+                                        .background(Color.Transparent)
+                                        .fillMaxWidth(),
+                                    onValueChange = {
+                                        connectionViewModel.setAddressData(it)
+                                    },
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(5.dp),
+                                    colors = TextFieldDefaults.colors(
+                                        unfocusedContainerColor = Color.Transparent,
+                                        focusedContainerColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.LightGray,
+                                        focusedIndicatorColor = Color.LightGray,
+                                        focusedLabelColor = Color.LightGray,
+                                        unfocusedLabelColor = Color.LightGray,
+                                        cursorColor = Color.White,
+                                        disabledContainerColor = Color.Transparent
+                                    ),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                                    enabled = true,
+                                    label = { Text(stringResource(R.string.server)) },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Http,
+                                            contentDescription = stringResource(R.string.httpInput)
+                                        )
+                                    },
+                                    placeholder = {
+                                        Text(text = "http://")
+                                    },
+                                    isError = connectionViewModel.address.isBlank() && isLoad,
+                                    supportingText = {
+                                        if (connectionViewModel.address.isBlank() && isLoad)
+                                            Text(text = "${stringResource(R.string.server)}不能为空")
+                                    },
+                                )
                         }
                         item {
                             OutlinedTextField(
@@ -358,15 +359,17 @@ fun ConnectionScreen(
                                         isLoad = true
                                         if (!connectionViewModel.isInputError()) {
                                             //判断是否有开头和结尾的端口号
-                                            if (!connectionViewModel.isHttpStartAndPortEnd()){
+                                            if (!connectionViewModel.isHttpStartAndPortEnd()) {
                                                 connectionViewModel.createTmpAddress()
                                                 connectionViewModel.clearError()
                                                 connectionViewModel.clearLoginStatus()
                                                 ifSelectDataSource = ScreenType.SELECT_ADDRESS
-                                            }else {
+                                            } else {
                                                 ifSelectDataSource = ScreenType.SELECT_ADDRESS
                                                 coroutineScope.launch {
-                                                    connectionViewModel.setTmpAddressData(connectionViewModel.address)
+                                                    connectionViewModel.setTmpAddressData(
+                                                        connectionViewModel.address
+                                                    )
                                                     connectionViewModel.inputAddress()
                                                 }
                                             }

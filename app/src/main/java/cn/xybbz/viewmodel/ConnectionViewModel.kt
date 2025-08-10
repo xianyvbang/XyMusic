@@ -80,7 +80,7 @@ class ConnectionViewModel @Inject constructor(
             return
         }
 
-        if (address.isBlank()) {
+        if (address.isBlank() && dataSourceType?.ifInputUrl == true) {
             return
         }
 
@@ -103,46 +103,46 @@ class ConnectionViewModel @Inject constructor(
                 loginStatus = it
                 when (it) {
                     is ClientLoginInfoState.Connected -> {
-                        Log.i("=====","连接中")
+                        Log.i("=====", "连接中")
                     }
 
                     is ClientLoginInfoState.ConnectionSuccess -> {
                         //路由跳转,根据id跳转
-                        Log.i("=====","服务端连接成功")
+                        Log.i("=====", "服务端连接成功")
                     }
 
                     is ClientLoginInfoState.ConnectError -> {
                         errorMessage = "服务端接错误"
-                        Log.i("=====","服务端连接错误")
+                        Log.i("=====", "服务端连接错误")
                         loading = false
                     }
 
                     ClientLoginInfoState.ServiceTimeOutState -> {
                         errorMessage = "服务端连接超时"
-                        Log.i("=====","服务端连接超时")
+                        Log.i("=====", "服务端连接超时")
                         loading = false
                     }
 
                     is ClientLoginInfoState.ErrorState -> {
                         errorMessage = it.error.message.toString()
-                        Log.i("=====",it.error.message.toString())
+                        Log.i("=====", it.error.message.toString())
                         loading = false
                     }
 
                     ClientLoginInfoState.SelectServer -> {
                         errorMessage = "未选择连接"
-                        Log.i("=====","未选择连接")
+                        Log.i("=====", "未选择连接")
                         loading = false
                     }
 
                     ClientLoginInfoState.UnauthorizedErrorState -> {
                         errorMessage = "登录失败,账号或密码错误"
-                        Log.i("=====","权限报错")
+                        Log.i("=====", "权限报错")
                         loading = false
                     }
 
                     ClientLoginInfoState.UserLoginSuccess -> {
-                        Log.i("=====","登陆成功")
+                        Log.i("=====", "登陆成功")
                         loading = false
                         //存储数据
 
@@ -202,7 +202,7 @@ class ConnectionViewModel @Inject constructor(
      * 判断是否已经选择或已经输入必须输入
      */
     fun isInputError(): Boolean {
-        return address.isBlank() || username.isBlank()
+        return (address.isBlank() || username.isBlank()) && dataSourceType?.ifInputUrl == true
     }
 
     fun createTmpAddress() {
@@ -230,7 +230,7 @@ class ConnectionViewModel @Inject constructor(
      * 判断输入的链接是否是以http://或者http://开头,结尾是否有端口号
      */
     fun isHttpStartAndPortEnd(): Boolean {
-        return URLUtil.isNetworkUrl(address) && isEndPort(address)
+        return (URLUtil.isNetworkUrl(address) && isEndPort(address)) || dataSourceType?.ifInputUrl == false
     }
 
     /**

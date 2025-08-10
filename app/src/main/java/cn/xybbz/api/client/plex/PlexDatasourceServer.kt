@@ -8,7 +8,6 @@ import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.AllResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
-import cn.xybbz.api.client.jellyfin.data.toLogin
 import cn.xybbz.api.client.plex.data.toPlexLogin
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
@@ -55,17 +54,25 @@ class PlexDatasourceServer(
                 clientLoginInfoReq.toPlexLogin()
             )
         Log.i("=====", "返回响应值: $responseData")
-        plexApiClient.updateAccessToken(responseData.accessToken)
+        plexApiClient.updateAccessToken(responseData.authToken)
         setToken()
         val systemInfo = plexApiClient.userApi()
             .getSystemInfo("https://plex.tv/api/v2/resources?includeHttps=1&includeRelay=1")
         Log.i("=====", "服务器信息 $systemInfo")
+
+        createApiClient(
+            systemInfo.connections[0].address,
+            systemInfo.device ?: "",
+            clientLoginInfoReq.username,
+            clientLoginInfoReq.password
+        )
+        //todo 在这里调用postPingSystem 因为plex的ping服务器需要token
         return LoginSuccessData(
-            userId = responseData.user?.id,
-            accessToken = responseData.accessToken,
-            serverId = responseData.serverId,
-            serverName = systemInfo.serverName,
-            version = systemInfo.version
+            userId = responseData.id,
+            accessToken = responseData.authToken,
+            serverId = responseData.uuid,
+            serverName = systemInfo.ownerID,
+            version = systemInfo.platformVersion
         )
     }
 
@@ -73,7 +80,7 @@ class PlexDatasourceServer(
      * 连通性检测
      */
     override suspend fun postPingSystem(): Boolean {
-        TODO("Not yet implemented")
+        return true
     }
 
     /**

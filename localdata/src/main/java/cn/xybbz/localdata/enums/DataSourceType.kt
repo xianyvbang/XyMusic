@@ -34,7 +34,9 @@ enum class DataSourceType(
     //是否支持删除功能
     val ifDelete: Boolean,
     //是否艺术家可以进行收藏筛选
-    val ifArtistFavorite: Boolean
+    val ifArtistFavorite: Boolean,
+    //是否显示需要服务端地址
+    val ifInputUrl: Boolean = true
 ) {
 
     JELLYFIN(
@@ -109,6 +111,7 @@ enum class DataSourceType(
         ifShowCount = true,
         ifDelete = true,
         ifArtistFavorite = false,
-        ifSelectOneYear = false
+        ifSelectOneYear = false,
+        ifInputUrl = false
     )
 }

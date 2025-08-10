@@ -4,9 +4,9 @@ import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.jellyfin.data.AuthenticateResponse
 import cn.xybbz.api.client.jellyfin.data.LoginRequest
 import cn.xybbz.api.client.jellyfin.data.PlaybackStartInfo
-import cn.xybbz.api.client.jellyfin.data.SystemInfoResponse
 import cn.xybbz.api.client.plex.data.PlexLoginRequest
 import cn.xybbz.api.client.plex.data.PlexLoginResponse
+import cn.xybbz.api.client.plex.data.PlexSystemInfoResponse
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -19,7 +19,6 @@ import retrofit2.http.Url
 interface PlexUserApi : BaseApi {
 
     /**
-     *
      * 按名称进行身份验证
      * @param [LoginRequest]
      * @return [AuthenticateResponse]
@@ -39,11 +38,10 @@ interface PlexUserApi : BaseApi {
     suspend fun postPingSystem(): Response<ResponseBody>
 
     /**
-     *
      * 获得服务端信息
      */
     @GET
-    suspend fun getSystemInfo(@Url fullUrl: String): SystemInfoResponse
+    suspend fun getSystemInfo(@Url fullUrl: String): PlexSystemInfoResponse
 
     /**
      * 上报正在播放音乐
