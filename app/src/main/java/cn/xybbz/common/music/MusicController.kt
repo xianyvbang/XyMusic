@@ -18,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.media3.common.C
+import androidx.media3.common.FileTypes
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.MimeTypes
@@ -615,17 +616,13 @@ class MusicController(
             .build()
         favoriteRepository.toggleBoolean(musicExtend.itemId, musicExtend.ifFavoriteStatus)
         val normalizeMimeType =
-            MimeTypes.normalizeMimeType(MimeTypes.BASE_TYPE_AUDIO + "/${musicExtend.codec}")
-        val codec = normalizeMimeType.replace(MimeTypes.BASE_TYPE_AUDIO + "/", "")
-        var audioMediaMimeType = MimeTypes.getAudioMediaMimeType(codec)
-        if (codec != musicExtend.codec) {
-            audioMediaMimeType = normalizeMimeType
-        }
-
+            MimeTypes.normalizeMimeType(MimeTypes.BASE_TYPE_AUDIO + "/${musicExtend.container}")
 
         return mediaItemBuilder.setMediaId(musicExtend.itemId)
             .setMediaMetadata(mediaMetadata)
-//            .setMimeType(audioMediaMimeType ?: MimeTypes.APPLICATION_M3U8)
+            .setMimeType(
+                if (FileTypes.inferFileTypeFromMimeType(normalizeMimeType) != -1) normalizeMimeType else MimeTypes.APPLICATION_M3U8
+            )
             .setTag(musicExtend)
             .build()
     }
