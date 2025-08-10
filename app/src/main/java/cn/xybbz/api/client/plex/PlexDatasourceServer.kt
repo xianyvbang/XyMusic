@@ -1,10 +1,15 @@
 package cn.xybbz.api.client.plex
 
 import android.content.Context
+import android.os.Build
+import android.util.Log
 import androidx.paging.PagingData
+import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.AllResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
+import cn.xybbz.api.client.jellyfin.data.toLogin
+import cn.xybbz.api.client.plex.data.toPlexLogin
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.config.ConnectionConfigServer
@@ -32,18 +37,36 @@ class PlexDatasourceServer(
     connectionConfigServer,
     application
 ) {
+
     /**
      * 获得当前数据源类型
      */
     override fun getDataSourceType(): DataSourceType {
-        TODO("Not yet implemented")
+        return DataSourceType.PLEX
     }
 
     /**
      * 登录功能
      */
     override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
-        TODO("Not yet implemented")
+        val responseData =
+            plexApiClient.userApi().authenticateByName(
+                "https://plex.tv/api/v2/users/signin",
+                clientLoginInfoReq.toPlexLogin()
+            )
+        Log.i("=====", "返回响应值: $responseData")
+        plexApiClient.updateAccessToken(responseData.accessToken)
+        setToken()
+        val systemInfo = plexApiClient.userApi()
+            .getSystemInfo("https://plex.tv/api/v2/resources?includeHttps=1&includeRelay=1")
+        Log.i("=====", "服务器信息 $systemInfo")
+        return LoginSuccessData(
+            userId = responseData.user?.id,
+            accessToken = responseData.accessToken,
+            serverId = responseData.serverId,
+            serverName = systemInfo.serverName,
+            version = systemInfo.version
+        )
     }
 
     /**
@@ -63,7 +86,19 @@ class PlexDatasourceServer(
         username: String,
         password: String
     ) {
-        TODO("Not yet implemented")
+        val packageManager = application.packageManager
+        val packageName = application.packageName
+        val packageInfo = packageManager.getPackageInfo(packageName, 0)
+        val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
+        val appName = packageManager.getApplicationLabel(applicationInfo).toString()
+        val versionName = packageInfo.versionName
+        val versionCode = packageInfo.longVersionCode
+        plexApiClient.createApiClient(
+            appName, deviceId, "${versionName}.${versionCode}", Build.BRAND, Build.MODEL
+        )
+        //提前写入没有sessionToken的Authenticate请求头,不然登录请求都会报错
+        setToken()
+        plexApiClient.setRetrofitData(address)
     }
 
     /**
@@ -440,7 +475,8 @@ class PlexDatasourceServer(
      * 设置token
      */
     override fun setToken() {
-        TODO("Not yet implemented")
+        TokenServer.setTokenData(plexApiClient.getToken())
+        TokenServer.setHeaderMapData(plexApiClient.getHeadersMapData())
     }
 
     /**

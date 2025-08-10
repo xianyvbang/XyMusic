@@ -1,6 +1,8 @@
 package cn.xybbz.api.client.plex
 
 import cn.xybbz.api.client.DefaultApiClient
+import cn.xybbz.api.client.emby.service.EmbyUserApi
+import cn.xybbz.api.client.plex.service.PlexUserApi
 import cn.xybbz.api.constants.ApiConstants
 
 class PlexApiClient : DefaultApiClient() {
@@ -41,6 +43,9 @@ class PlexApiClient : DefaultApiClient() {
         get() = ApiConstants.PLEX_AUTHORIZATION
 
 
+    private lateinit var plexUserApi: PlexUserApi
+
+
     /**
      * 创建 API 客户端
      * @param [clientName] 客户名称
@@ -52,9 +57,9 @@ class PlexApiClient : DefaultApiClient() {
      */
     fun createApiClient(
         clientName: String,
+        clientId: String,
         clientVersion: String,
         deviceName: String,
-        clientId: String,
         deviceModel: String
     ): PlexApiClient {
         this.clientId = clientId
@@ -76,7 +81,7 @@ class PlexApiClient : DefaultApiClient() {
     /**
      * 获得token
      */
-    override fun getToken(): String {
+    public override fun getToken(): String {
         return this.accessToken ?: ""
     }
 
@@ -94,6 +99,16 @@ class PlexApiClient : DefaultApiClient() {
         headerMap.put(ApiConstants.PLEX_DEVICE_NAME,deviceName)
         headerMap.put(ApiConstants.PLEX_DEVICE,deviceModel)
         return headerMap
+    }
+
+    /**
+     * 获得用户接口服务
+     */
+    override fun userApi(restart: Boolean): PlexUserApi {
+        if (!this::plexUserApi.isInitialized) {
+            plexUserApi = instance().create(PlexUserApi::class.java)
+        }
+        return plexUserApi
     }
 
 
