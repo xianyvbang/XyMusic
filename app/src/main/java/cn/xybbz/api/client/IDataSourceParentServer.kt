@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.room.Transaction
+import androidx.room.withTransaction
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.data.AllResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
@@ -144,18 +145,22 @@ abstract class IDataSourceParentServer(
                 deviceId = deviceId
             )
 
-            val connectionId = if (clientLoginInfoReq.connectionId != null) {
-                db.connectionConfigDao.update(connectionConfig)
-                clientLoginInfoReq.connectionId!!
-            } else {
-                db.connectionConfigDao.save(connectionConfig)
+
+            db.withTransaction {
+                val connectionId = if (clientLoginInfoReq.connectionId != null) {
+                    db.connectionConfigDao.update(connectionConfig)
+                    clientLoginInfoReq.connectionId!!
+                } else {
+                    db.connectionConfigDao.save(connectionConfig)
+                }
+                connectionConfigServer.setConnectionConfigData(connectionConfig.copy(id = connectionId))
+                connectionConfigServer.updateLoginStates(true)
+                MessageUtils.sendDismiss()
+                setToken()
+                setServerOkHttpClient()
+                initFavoriteData()
             }
-            connectionConfigServer.setConnectionConfigData(connectionConfig.copy(id = connectionId))
-            connectionConfigServer.updateLoginStates(true)
-            MessageUtils.sendDismiss()
-            setToken()
-            setServerOkHttpClient()
-            initFavoriteData()
+
             emit(ClientLoginInfoState.UserLoginSuccess)
         }.flowOn(Dispatchers.IO).catch {
             it.printStackTrace()
