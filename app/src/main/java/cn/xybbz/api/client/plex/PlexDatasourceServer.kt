@@ -99,7 +99,10 @@ class PlexDatasourceServer(
         )
         //提前写入没有sessionToken的Authenticate请求头,不然登录请求都会报错
         setToken()
-        plexApiClient.setRetrofitData("http://localhost")
+        if (address.isBlank())
+            plexApiClient.setRetrofitData("http://localhost")
+        else
+            plexApiClient.setRetrofitData(address)
     }
 
     /**

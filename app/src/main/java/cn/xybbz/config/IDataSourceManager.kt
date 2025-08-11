@@ -266,7 +266,12 @@ class IDataSourceManager(
      * 获得资源地址
      */
     override suspend fun getResources(clientLoginInfoReq: ClientLoginInfoReq): List<ResourceData> {
-        return dataSourceServer.getResources(clientLoginInfoReq)
+        return try {
+             dataSourceServer.getResources(clientLoginInfoReq)
+        }catch (e: Exception){
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得服务器资源失败", e)
+            emptyList()
+        }
     }
 
     /**
