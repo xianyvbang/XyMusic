@@ -59,7 +59,7 @@ abstract class IDataSourceParentServer(
         return flow {
             Log.i("=====", "输入的地址: ${clientLoginInfoReq.address}")
             emit(ClientLoginInfoState.Connected(clientLoginInfoReq.address))
-            var deviceId = UUID.randomUUID().toString()
+            var deviceId = getDeviceId()
             var connectionConfig: ConnectionConfig? = null
             clientLoginInfoReq.connectionId?.let {
                 connectionConfig = db.connectionConfigDao.selectById(it)
@@ -191,6 +191,13 @@ abstract class IDataSourceParentServer(
     abstract suspend fun postPingSystem(): Boolean
 
     /**
+     * 获得设备id
+     */
+    open fun getDeviceId(): String {
+        return UUID.randomUUID().toString()
+    }
+
+    /**
      * 创建连接客户端
      * @param [address] 地址
      */
@@ -242,7 +249,10 @@ abstract class IDataSourceParentServer(
                         username = connectionConfig.username,
                         password = password,
                         address = address,
-                        connectionId = connectionConfig.id
+                        connectionId = connectionConfig.id,
+                        serverVersion = connectionConfig.serverVersion,
+                        serverName = connectionConfig.serverName,
+                        serverId = connectionConfig.serverId
                     )
                 )
             )

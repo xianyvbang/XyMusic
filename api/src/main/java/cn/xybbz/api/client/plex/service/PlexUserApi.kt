@@ -41,7 +41,7 @@ interface PlexUserApi : BaseApi {
      * 获得服务端信息
      */
     @GET
-    suspend fun getSystemInfo(@Url fullUrl: String): PlexSystemInfoResponse
+    suspend fun getSystemInfo(@Url fullUrl: String): List<PlexSystemInfoResponse>
 
     /**
      * 上报正在播放音乐

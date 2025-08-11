@@ -38,5 +38,5 @@ data class Connection(
     val uri: String,
     val local: Boolean,
     val relay: Boolean,
-    val iPv6: Boolean
+    val iPv6: Boolean?
 )

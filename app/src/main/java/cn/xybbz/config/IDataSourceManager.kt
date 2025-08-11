@@ -29,6 +29,7 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.favorite.FavoriteRepository
+import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.file.backup.ExportPlaylistData
 import cn.xybbz.localdata.config.DatabaseClient
@@ -259,6 +260,13 @@ class IDataSourceManager(
         loading = true
         Log.i("=====", "开始登录.............")
         return dataSourceServer.autoLogin()
+    }
+
+    /**
+     * 获得资源地址
+     */
+    override suspend fun getResources(clientLoginInfoReq: ClientLoginInfoReq): List<ResourceData> {
+        return dataSourceServer.getResources(clientLoginInfoReq)
     }
 
     /**

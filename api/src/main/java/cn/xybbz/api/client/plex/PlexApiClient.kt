@@ -1,8 +1,9 @@
 package cn.xybbz.api.client.plex
 
 import cn.xybbz.api.client.DefaultApiClient
-import cn.xybbz.api.client.emby.service.EmbyUserApi
+import cn.xybbz.api.client.jellyfin.encodeUrlParameter
 import cn.xybbz.api.client.plex.service.PlexUserApi
+import cn.xybbz.api.client.plex.service.PlexUserViewsApi
 import cn.xybbz.api.constants.ApiConstants
 
 class PlexApiClient : DefaultApiClient() {
@@ -10,7 +11,9 @@ class PlexApiClient : DefaultApiClient() {
     /**
      * 客户端编码
      */
-    private var clientId:String = ""
+    var clientId: String = ""
+        private set
+
     /**
      * 应用名称
      */
@@ -37,6 +40,30 @@ class PlexApiClient : DefaultApiClient() {
     private var accessToken: String? = null
 
     /**
+     * 用户id
+     */
+    var userId: String? = null
+        private set
+
+    /**
+     * 服务端版本信息
+     */
+    var serverVersion: String? = null
+        private set
+
+    /**
+     * 服务编码
+     */
+    var serverId: String? = null
+        private set
+
+    /**
+     * 服务端名称
+     */
+    var serverName: String? = null
+        private set
+
+    /**
      * token的header名称
      */
     override val tokenHeaderName: String
@@ -44,6 +71,7 @@ class PlexApiClient : DefaultApiClient() {
 
 
     private lateinit var plexUserApi: PlexUserApi
+    private lateinit var plexUserViewsApi: PlexUserViewsApi
 
 
     /**
@@ -79,6 +107,21 @@ class PlexApiClient : DefaultApiClient() {
     }
 
     /**
+     * 更新用户id
+     */
+    fun updateServerInfo(
+        userId: String? = null,
+        serverVersion: String? = null,
+        serverId: String? = null,
+        serverName: String? = null
+    ) {
+        this.userId = userId
+        this.serverVersion = serverVersion
+        this.serverId = serverId
+        this.serverName = serverName
+    }
+
+    /**
      * 获得token
      */
     public override fun getToken(): String {
@@ -91,13 +134,13 @@ class PlexApiClient : DefaultApiClient() {
      */
     fun getHeadersMapData(): Map<String, String> {
         val headerMap = mutableMapOf<String, String>()
-        headerMap.put(ApiConstants.PLEX_CLIENT_IDENTIFIER,clientId)
-        headerMap.put(ApiConstants.PLEX_PRODUCT,clientName)
-        headerMap.put(ApiConstants.PLEX_VERSION,clientVersion)
-        headerMap.put(ApiConstants.PLEX_PLATFORM,"Android")
-        headerMap.put(ApiConstants.PLEX_PROVIDES,"player")
-        headerMap.put(ApiConstants.PLEX_DEVICE_NAME,deviceName)
-        headerMap.put(ApiConstants.PLEX_DEVICE,deviceModel)
+        headerMap.put(ApiConstants.PLEX_CLIENT_IDENTIFIER, clientId.encodeUrlParameter())
+        headerMap.put(ApiConstants.PLEX_PRODUCT, clientName.encodeUrlParameter())
+        headerMap.put(ApiConstants.PLEX_VERSION, clientVersion.encodeUrlParameter())
+        headerMap.put(ApiConstants.PLEX_PLATFORM, "Android")
+        headerMap.put(ApiConstants.PLEX_PROVIDES, "player")
+        headerMap.put(ApiConstants.PLEX_DEVICE_NAME, deviceName.encodeUrlParameter())
+        headerMap.put(ApiConstants.PLEX_DEVICE, deviceModel.encodeUrlParameter())
         return headerMap
     }
 
@@ -111,6 +154,15 @@ class PlexApiClient : DefaultApiClient() {
         return plexUserApi
     }
 
+    /**
+     * 用户视图信息
+     */
+    override fun userViewsApi(restart: Boolean): PlexUserViewsApi {
+        if (!this::plexUserViewsApi.isInitialized) {
+            plexUserViewsApi = instance().create(PlexUserViewsApi::class.java)
+        }
+        return plexUserViewsApi
+    }
 
     /**
      * 清空数据

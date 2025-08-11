@@ -4,21 +4,26 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.paging.PagingData
+import androidx.room.withTransaction
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.AllResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
 import cn.xybbz.api.client.plex.data.toPlexLogin
+import cn.xybbz.api.enums.jellyfin.CollectionType
+import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.entity.api.LoginSuccessData
+import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.file.backup.ExportPlaylistData
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
+import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -48,31 +53,15 @@ class PlexDatasourceServer(
      * 登录功能
      */
     override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
-        val responseData =
-            plexApiClient.userApi().authenticateByName(
-                "https://plex.tv/api/v2/users/signin",
-                clientLoginInfoReq.toPlexLogin()
-            )
-        Log.i("=====", "返回响应值: $responseData")
-        plexApiClient.updateAccessToken(responseData.authToken)
-        setToken()
-        val systemInfo = plexApiClient.userApi()
-            .getSystemInfo("https://plex.tv/api/v2/resources?includeHttps=1&includeRelay=1")
-        Log.i("=====", "服务器信息 $systemInfo")
-
-        createApiClient(
-            systemInfo.connections[0].address,
-            systemInfo.device ?: "",
-            clientLoginInfoReq.username,
-            clientLoginInfoReq.password
-        )
         //todo 在这里调用postPingSystem 因为plex的ping服务器需要token
+        //todo login改成只ping
+        postPingSystem()
         return LoginSuccessData(
-            userId = responseData.id,
-            accessToken = responseData.authToken,
-            serverId = responseData.uuid,
-            serverName = systemInfo.ownerID,
-            version = systemInfo.platformVersion
+            userId = plexApiClient.userId,
+            accessToken = plexApiClient.getToken(),
+            serverId = clientLoginInfoReq.serverId,
+            serverName = clientLoginInfoReq.serverName,
+            version = clientLoginInfoReq.serverVersion
         )
     }
 
@@ -81,6 +70,13 @@ class PlexDatasourceServer(
      */
     override suspend fun postPingSystem(): Boolean {
         return true
+    }
+
+    /**
+     * 获得设备id
+     */
+    override fun getDeviceId(): String {
+        return plexApiClient.clientId.ifBlank { super.getDeviceId() }
     }
 
     /**
@@ -96,16 +92,70 @@ class PlexDatasourceServer(
         val packageManager = application.packageManager
         val packageName = application.packageName
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
-        val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
-        val appName = packageManager.getApplicationLabel(applicationInfo).toString()
         val versionName = packageInfo.versionName
         val versionCode = packageInfo.longVersionCode
         plexApiClient.createApiClient(
-            appName, deviceId, "${versionName}.${versionCode}", Build.BRAND, Build.MODEL
+            "Xy Music", deviceId, "${versionName}.${versionCode}", Build.BRAND, Build.MODEL
         )
         //提前写入没有sessionToken的Authenticate请求头,不然登录请求都会报错
         setToken()
-        plexApiClient.setRetrofitData(address)
+        plexApiClient.setRetrofitData("http://localhost")
+    }
+
+    /**
+     * 获得资源地址
+     */
+    override suspend fun getResources(clientLoginInfoReq: ClientLoginInfoReq): List<ResourceData> {
+        createApiClient(address = "", deviceId = getDeviceId(), username = "", "")
+        val responseData =
+            plexApiClient.userApi().authenticateByName(
+                "https://plex.tv/api/v2/users/signin",
+                clientLoginInfoReq.toPlexLogin()
+            )
+        Log.i("=====", "返回响应值: $responseData")
+        plexApiClient.updateAccessToken(responseData.authToken)
+        plexApiClient.updateServerInfo(userId = responseData.id)
+        setToken()
+        val systemInfo = plexApiClient.userApi()
+            .getSystemInfo("https://plex.tv/api/v2/resources?includeHttps=1&includeRelay=1")
+        Log.i("=====", "服务器信息 $systemInfo")
+
+        if (systemInfo.isEmpty()) {
+            throw ConnectionException()
+        }
+
+        val resourceData = systemInfo.flatMap { infoResponse ->
+            infoResponse.connections.flatMap { connection ->
+                val tmpResourceData = mutableListOf<ResourceData>()
+                val ipv4Data = ResourceData(
+                    infoResponse.name,
+                    infoResponse.product,
+                    "http://${connection.address}:${connection.port}"
+                )
+                tmpResourceData.add(ipv4Data)
+
+                if (connection.iPv6 != null) {
+                    val ipv6Data = ResourceData(
+                        infoResponse.name,
+                        infoResponse.product,
+                        "http://[${connection.address}]:${connection.port}"
+                    )
+                    tmpResourceData.add(ipv6Data)
+                }
+
+                val resourceData = ResourceData(
+                    name = infoResponse.name,
+                    infoResponse.product,
+                    connection.uri
+                )
+
+                tmpResourceData.add(resourceData)
+                tmpResourceData
+            }
+        }
+
+        return resourceData
+
     }
 
     /**
@@ -375,7 +425,25 @@ class PlexDatasourceServer(
      * 获得媒体库列表
      */
     override suspend fun selectMediaLibrary() {
-        TODO("Not yet implemented")
+        db.withTransaction {
+            db.libraryDao.remove()
+            val viewLibrary = plexApiClient.userViewsApi().getUserViews()
+            //存储历史记录
+            val libraries =
+                viewLibrary.mediaContainer.directory.filter { it.type == CollectionType.MUSIC }
+                    .map {
+                        XyLibrary(
+                            id = it.uuid,
+                            collectionType = it.type.toString(),
+                            name = it.title,
+                            connectionId = connectionConfigServer.getConnectionId()
+                        )
+                    }
+            if (libraries.isNotEmpty()) {
+                db.libraryDao.saveBatch(libraries)
+            }
+        }
+
     }
 
     /**
@@ -475,7 +543,7 @@ class PlexDatasourceServer(
      * 获得OkHttpClient
      */
     override fun getOkhttpClient(): OkHttpClient {
-        TODO("Not yet implemented")
+        return plexApiClient.apiOkHttpClient
     }
 
     /**

@@ -14,6 +14,7 @@ import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.config.IDataSourceManager
 import cn.xybbz.config.SettingsConfig
+import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.enums.DataSourceType
@@ -49,6 +50,9 @@ class ConnectionViewModel @Inject constructor(
         private set
 
     var tmpAddressList = mutableStateListOf<String>()
+        private set
+
+    var tmpPlexInfo by mutableStateOf<List<ResourceData>>(emptyList())
         private set
 
     /**
@@ -274,5 +278,28 @@ class ConnectionViewModel @Inject constructor(
      */
     fun clearLoginStatus() {
         loginStatus = null
+    }
+
+    suspend fun getResources() {
+        if (_dataSourceManager.dataSourceType == null) {
+            _dataSourceManager.switchDataSource(dataSourceType)
+            val clientLoginInfoReq =
+                ClientLoginInfoReq(
+                    address = tmpAddress,
+                    username = username,
+                    password = password
+                )
+            val resources = _dataSourceManager.getResources(clientLoginInfoReq)
+            //
+
+            tmpPlexInfo = resources
+        }
+    }
+
+    /**
+     * 更新登陆loading状态
+     */
+    fun updateLoading(loading: Boolean){
+        this.loading = loading
     }
 }
