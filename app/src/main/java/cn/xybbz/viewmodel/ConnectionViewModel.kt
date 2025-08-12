@@ -43,10 +43,10 @@ class ConnectionViewModel @Inject constructor(
     var address by mutableStateOf("")
         private set
 
-    var username by mutableStateOf("")
+    var username by mutableStateOf("liu893043230@gmail.com")
         private set
 
-    var password by mutableStateOf("")
+    var password by mutableStateOf("Liu893043230!")
         private set
 
     var tmpAddressList = mutableStateListOf<String>()
@@ -281,6 +281,7 @@ class ConnectionViewModel @Inject constructor(
     }
 
     suspend fun getResources() {
+        errorMessage = ""
         if (_dataSourceManager.dataSourceType == null) {
             _dataSourceManager.switchDataSource(dataSourceType)
             val clientLoginInfoReq =
@@ -289,10 +290,13 @@ class ConnectionViewModel @Inject constructor(
                     username = username,
                     password = password
                 )
-            val resources = _dataSourceManager.getResources(clientLoginInfoReq)
-            //
+            try {
+                val resources = _dataSourceManager.getResources(clientLoginInfoReq)
+                tmpPlexInfo = resources
+            }catch (e: Exception){
+                errorMessage = e.message?:""
+            }
 
-            tmpPlexInfo = resources
         }
     }
 

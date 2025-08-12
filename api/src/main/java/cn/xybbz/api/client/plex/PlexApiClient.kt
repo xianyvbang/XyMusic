@@ -2,6 +2,8 @@ package cn.xybbz.api.client.plex
 
 import cn.xybbz.api.client.DefaultApiClient
 import cn.xybbz.api.client.jellyfin.encodeUrlParameter
+import cn.xybbz.api.client.plex.service.PlexItemApi
+import cn.xybbz.api.client.plex.service.PlexPlaylistsApi
 import cn.xybbz.api.client.plex.service.PlexUserApi
 import cn.xybbz.api.client.plex.service.PlexUserViewsApi
 import cn.xybbz.api.constants.ApiConstants
@@ -72,6 +74,8 @@ class PlexApiClient : DefaultApiClient() {
 
     private lateinit var plexUserApi: PlexUserApi
     private lateinit var plexUserViewsApi: PlexUserViewsApi
+    private lateinit var plexItemApi: PlexItemApi
+    private lateinit var plexPlaylistsApi: PlexPlaylistsApi
 
 
     /**
@@ -148,7 +152,7 @@ class PlexApiClient : DefaultApiClient() {
      * 获得用户接口服务
      */
     override fun userApi(restart: Boolean): PlexUserApi {
-        if (!this::plexUserApi.isInitialized) {
+        if (!this::plexUserApi.isInitialized || restart) {
             plexUserApi = instance().create(PlexUserApi::class.java)
         }
         return plexUserApi
@@ -158,10 +162,40 @@ class PlexApiClient : DefaultApiClient() {
      * 用户视图信息
      */
     override fun userViewsApi(restart: Boolean): PlexUserViewsApi {
-        if (!this::plexUserViewsApi.isInitialized) {
+        if (!this::plexUserViewsApi.isInitialized || restart) {
             plexUserViewsApi = instance().create(PlexUserViewsApi::class.java)
         }
         return plexUserViewsApi
+    }
+
+    /**
+     * 音乐,专辑,艺术家相关接口
+     */
+    override fun itemApi(restart: Boolean): PlexItemApi {
+        if (!this::plexItemApi.isInitialized || restart) {
+            plexItemApi = instance().create(PlexItemApi::class.java)
+        }
+        return plexItemApi
+    }
+
+    /**
+     * 播放列表接口
+     */
+    override fun playlistsApi(restart: Boolean): PlexPlaylistsApi {
+        if (!this::plexPlaylistsApi.isInitialized || restart) {
+            plexPlaylistsApi = instance().create(PlexPlaylistsApi::class.java)
+        }
+        return plexPlaylistsApi
+    }
+
+
+    /**
+     * 获取图像URL
+     * [plexFileUrl] plex文件路径
+     */
+    fun getImageUrl(plexFileUrl: String, width: Int = 297, height: Int = 297): String {
+        val tmpPlexFileUrl = "${plexFileUrl}?X-Plex-Token=${accessToken}".encodeUrlParameter()
+        return "${baseUrl}/photo/:/transcode?width=${width}&height=${height}&url=${tmpPlexFileUrl}&minSize=1&upscale=1&X-Plex-Token=${accessToken}"
     }
 
     /**

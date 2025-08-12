@@ -270,7 +270,7 @@ class IDataSourceManager(
              dataSourceServer.getResources(clientLoginInfoReq)
         }catch (e: Exception){
             Log.e(Constants.LOG_ERROR_PREFIX, "获得服务器资源失败", e)
-            emptyList()
+           throw e
         }
     }
 

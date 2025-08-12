@@ -9,9 +9,19 @@ import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.AllResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
+import cn.xybbz.api.client.plex.data.ImageType
+import cn.xybbz.api.client.plex.data.Metadatum
+import cn.xybbz.api.client.plex.data.PlaylistMetadatum
 import cn.xybbz.api.client.plex.data.toPlexLogin
 import cn.xybbz.api.enums.jellyfin.CollectionType
+import cn.xybbz.api.enums.jellyfin.ItemFilter
+import cn.xybbz.api.enums.jellyfin.ItemSortBy
+import cn.xybbz.api.enums.jellyfin.SortOrder
+import cn.xybbz.api.enums.plex.PlexListType
+import cn.xybbz.api.enums.plex.PlexSortOrder
+import cn.xybbz.api.enums.plex.PlexSortType
 import cn.xybbz.api.exception.ConnectionException
+import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.config.ConnectionConfigServer
@@ -30,6 +40,7 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.ui.components.LrcEntry
 import kotlinx.coroutines.flow.Flow
 import okhttp3.OkHttpClient
+import java.time.ZoneId
 
 class PlexDatasourceServer(
     private val db: DatabaseClient,
@@ -95,7 +106,7 @@ class PlexDatasourceServer(
         val versionName = packageInfo.versionName
         val versionCode = packageInfo.longVersionCode
         plexApiClient.createApiClient(
-            "Xy Music", deviceId, "${versionName}.${versionCode}", Build.BRAND, Build.MODEL
+            "XyMusic", deviceId, "${versionName}.${versionCode}", Build.BRAND, Build.MODEL
         )
         //提前写入没有sessionToken的Authenticate请求头,不然登录请求都会报错
         setToken()
@@ -362,7 +373,13 @@ class PlexDatasourceServer(
      * 获取歌单列表
      */
     override suspend fun getPlaylists(): List<XyAlbum>? {
-        TODO("Not yet implemented")
+        return db.withTransaction {
+            val response = getPlaylistsServer(0, 10000)
+            db.albumDao.removePlaylist()
+            response.items?.let {
+                saveBatchAlbum(it, MusicDataTypeEnum.PLAYLIST, true)
+            }
+        }
     }
 
     /**
@@ -433,8 +450,8 @@ class PlexDatasourceServer(
             val viewLibrary = plexApiClient.userViewsApi().getUserViews()
             //存储历史记录
             val libraries =
-                viewLibrary.mediaContainer.directory.filter { it.type == CollectionType.MUSIC }
-                    .map {
+                viewLibrary.mediaContainer?.directory?.filter { it.type == CollectionType.MUSIC }
+                    ?.map {
                         XyLibrary(
                             id = it.uuid,
                             collectionType = it.type.toString(),
@@ -442,7 +459,7 @@ class PlexDatasourceServer(
                             connectionId = connectionConfigServer.getConnectionId()
                         )
                     }
-            if (libraries.isNotEmpty()) {
+            if (!libraries.isNullOrEmpty()) {
                 db.libraryDao.saveBatch(libraries)
             }
         }
@@ -460,7 +477,18 @@ class PlexDatasourceServer(
      * 获得最多播放
      */
     override suspend fun getMostPlayerMusicList() {
-        TODO("Not yet implemented")
+        val musicList = getServerMusicList(
+            startIndex = 0,
+            pageSize = Constants.MIN_PAGE,
+            filters = listOf(ItemFilter.IS_PLAYED),
+            sortBy = listOf(ItemSortBy.PLAY_COUNT),
+            sortOrder = listOf(SortOrder.DESCENDING)
+        ).items
+        if (musicList.isNotEmpty())
+            db.withTransaction {
+                db.musicDao.removeByType(MusicDataTypeEnum.MAXIMUM_PLAY)
+                saveBatchMusic(musicList, dataType = MusicDataTypeEnum.MAXIMUM_PLAY)
+            }
     }
 
     /**
@@ -586,4 +614,231 @@ class PlexDatasourceServer(
     override suspend fun getMusicPlayUrl(musicId: String): String {
         TODO("Not yet implemented")
     }
+
+    /**
+     * 获取歌单列表
+     */
+    suspend fun getPlaylistsServer(startIndex: Int, pageSize: Int): AllResponse<XyAlbum> {
+        return try {
+            val playlists =
+                plexApiClient.playlistsApi()
+                    .getPlaylists()
+            val allResponse = AllResponse(
+                items = playlists.mediaContainer?.let { response ->
+                    response.metadata?.let {
+                        convertToPlaylists(
+                            it
+                        )
+                    }
+                },
+                totalRecordCount = playlists.mediaContainer?.metadata?.size ?: 0,
+                startIndex = startIndex
+            )
+            allResponse
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取歌单失败", e)
+            AllResponse(items = emptyList(), 0, 0)
+        }
+    }
+
+
+    /**
+     * 首页音乐数据接口
+     * 获取音乐列表
+     * @param [pageSize] 页面大小
+     * @param [startIndex] 页码
+     * @param [albumId] 专辑 ID
+     * @return [Response<ItemResponse>]
+     */
+    /*suspend fun getServerMusicList(
+        startIndex: Int,
+        pageSize: Int,
+        albumId: String? = null,
+        artistId: String? = null,
+        genreId: String? = null,
+        isFavorite: Boolean? = null,
+        search: String? = null,
+        sortBy: SortType = SortType.TITLE,
+        sortOrder: PlexSortOrder = PlexSortOrder.ASCENDING
+    ): AllResponse<XyMusic> {
+        val response =
+            plexApiClient.itemApi().getSongs(
+                start = startIndex,
+                pageSize = pageSize,
+                order = sortOrder,
+                sort = sortBy,
+                title = search,
+                starred = isFavorite,
+                genreId = genreId,
+                albumId = albumId,
+                artistId = artistId
+            )
+        return AllResponse(
+            items = response.data?.let { convertToMusicList(it, false) },
+            totalRecordCount = response.totalCount ?: 0,
+            startIndex = startIndex
+        )
+    }*/
+
+    suspend fun getServerMusicList(
+        plexListType: PlexListType,
+        startIndex: Int,
+        pageSize: Int,
+        search: String? = null,
+        sortBy: PlexSortType,
+        sortOrder: PlexSortOrder = PlexSortOrder.ASCENDING
+    ): AllResponse<XyMusic> {
+        val response =
+            plexApiClient.itemApi().getSongs(
+                sectionKey = connectionConfigServer.libraryId!!,
+                selectType = plexListType.toString(),
+                start = startIndex,
+                pageSize = pageSize,
+                sort = "$sortBy:$sortOrder",
+                title = search,
+            )
+        return AllResponse(
+            items = response.data?.let { convertToMusicList(it, false) },
+            totalRecordCount = response.totalCount ?: 0,
+            startIndex = startIndex
+        )
+    }
+
+
+    /**
+     * 将ItemResponse转换成XyAlbum
+     */
+    /*fun convertToAlbumList(item: List<ItemResponse>, ifPlaylist: Boolean = false): List<XyAlbum> {
+        return item.map { album ->
+            convertToAlbum(album, ifPlaylist)
+        }
+    }*/
+
+    /**
+     * 将ItemResponse转换成XyAlbum
+     */
+    /*fun convertToAlbum(album: ItemResponse, ifPlaylist: Boolean = false): XyAlbum {
+        val itemImageUrl =
+            if (!album.imageTags.isNullOrEmpty()) plexApiClient.createImageUrl(
+                itemId = album.id,
+                imageType = ImageType.PRIMARY,
+                fillWidth = 297,
+                fillHeight = 297,
+                quality = 96,
+                tag = album.imageTags?.get(ImageType.PRIMARY)
+            )
+            else null
+        return XyAlbum(
+            itemId = album.id,
+            pic = itemImageUrl,
+            name = album.name
+                ?: if (ifPlaylist) Constants.UNKNOWN_PLAYLIST else Constants.UNKNOWN_ALBUM,
+            connectionId = connectionConfigServer.getConnectionId(),
+            artistIds = album.albumArtists?.joinToString(Constants.ARTIST_DELIMITER) { it.id },
+            artists = album.albumArtists?.joinToString(Constants.ARTIST_DELIMITER) { it.name.toString() }
+                ?: Constants.UNKNOWN_ARTIST,
+            year = album.productionYear,
+            premiereDate = album.premiereDate?.atZone(ZoneOffset.ofHours(8))?.toInstant()
+                ?.toEpochMilli(),
+            genreIds = album.genreItems?.joinToString(Constants.ARTIST_DELIMITER) { it.id },
+            ifFavorite = album.userData?.isFavorite == true,
+            ifPlaylist = ifPlaylist,
+            createTime = album.dateCreated?.atZone(ZoneId.systemDefault())?.toEpochSecond() ?: 0L,
+            musicCount = album.songCount?.toLong() ?: 0L
+        )
+    }*/
+
+
+    /**
+     * 将PlaylistItemData3转换成XyAlbum
+     */
+    fun convertToPlaylists(playlists: List<PlaylistMetadatum>): List<XyAlbum> {
+        return playlists.map { playlist ->
+            convertToPlaylist(playlist)
+        }
+    }
+
+    /**
+     * 将PlaylistItemData转换成XyAlbum
+     */
+    fun convertToPlaylist(playlist: PlaylistMetadatum): XyAlbum {
+        return XyAlbum(
+            itemId = playlist.ratingKey,
+            pic = playlist.composite?.let { plexApiClient.getImageUrl(it) },
+            name = playlist.title ?: "未知歌单",
+            connectionId = connectionConfigServer.getConnectionId(),
+            ifFavorite = false,
+            ifPlaylist = true,
+            musicCount = playlist.leafCount ?: 0
+        )
+    }
+
+
+    /**
+     * 将ItemResponse换成XyMusic
+     */
+    suspend fun convertToMusicList(item: List<Metadatum>): List<XyMusic> {
+        return item.map { music ->
+            convertToMusic(
+                music
+            )
+        }
+    }
+
+    //ItemResponse转换XyMusic
+    suspend fun convertToMusic(item: Metadatum): XyMusic {
+        val itemImageUrl = item.image?.let { images ->
+            val image = images.findLast { it.type == ImageType.CoverPoster }
+            image?.let {
+                plexApiClient.getImageUrl(
+                    image.url,
+                )
+            }
+
+        }
+
+
+        //获得音乐信息
+        val part = item.media?.get(0)?.part?.get(0)
+        val mediaSourceInfo =
+            part?.stream?.find { it.streamType == 2L }
+
+        val mediaStreamLyric =
+            part?.stream?.find { it.streamType == 4L }
+
+
+        val audioUrl = getMusicPlayUrl(item.ratingKey)
+
+        return XyMusic(
+            itemId = item.ratingKey,
+            pic = itemImageUrl,
+            name = item.title,
+            musicUrl = audioUrl,
+            album = item.albumId.toString(),
+            albumName = item.album,
+            connectionId = connectionConfigServer.getConnectionId(),
+            artists = item.artistItems?.joinToString(Constants.ARTIST_DELIMITER) { artist -> artist.name.toString() },
+            artistIds = item.artistItems?.joinToString(Constants.ARTIST_DELIMITER) { artist -> artist.id },
+            albumArtist = item.albumArtists?.joinToString(Constants.ARTIST_DELIMITER) { artist -> artist.name.toString() }
+                ?: Constants.UNKNOWN_ARTIST,
+            albumArtistIds = item.albumArtists?.joinToString(Constants.ARTIST_DELIMITER) { artist -> artist.id },
+            createTime = item.addedAt,
+            year = item.parentYear,
+            playedCount = 0,
+            ifFavoriteStatus = item.collection?.any { it.tag == "收藏" } == true,
+            ifLyric = mediaStreamLyric != null,
+            path = part?.file,
+            bitRate = mediaSourceInfo?.bitrate ?: 0,
+            sampleRate = mediaSourceInfo?.samplingRate,
+            bitDepth = mediaSourceInfo?.bitDepth,
+            size = part?.size,
+            runTimeTicks = part?.duration,
+            container = part?.container,
+            codec = mediaSourceInfo?.codec,
+            lyric = "",
+            genreIds = ""
+        )
+    }
+
+
 }
