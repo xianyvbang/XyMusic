@@ -73,9 +73,6 @@ class MainViewModel @Inject constructor(
         getEnableProgressMapData()
         //初始化年代数据
         initEraData()
-        //获得媒体库
-        selectMediaLibrary()
-
         musicControllerInit()
     }
 
@@ -535,19 +532,6 @@ class MainViewModel @Inject constructor(
      */
     private suspend fun getEraList() {
         eraItemList = db.eraItemDao.selectList()
-    }
-
-    /**
-     * 获得媒体库
-     */
-    private fun selectMediaLibrary() {
-        viewModelScope.launch {
-            connectionConfigServer.loginStateFlow.collect { bool ->
-                if (bool) {
-                    dataSourceManager.selectMediaLibrary()
-                }
-            }
-        }
     }
 
     /**

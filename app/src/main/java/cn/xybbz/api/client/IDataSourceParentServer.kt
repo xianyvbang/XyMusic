@@ -156,10 +156,11 @@ abstract class IDataSourceParentServer(
                     db.connectionConfigDao.save(connectionConfig)
                 }
                 connectionConfigServer.setConnectionConfigData(connectionConfig.copy(id = connectionId))
-                connectionConfigServer.updateLoginStates(true)
-                MessageUtils.sendDismiss()
                 setToken()
+                selectMediaLibrary()
+                MessageUtils.sendDismiss()
                 setServerOkHttpClient()
+                connectionConfigServer.updateLoginStates(true)
                 initFavoriteData()
             }
 

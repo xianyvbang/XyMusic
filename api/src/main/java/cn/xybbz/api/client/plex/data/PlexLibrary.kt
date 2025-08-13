@@ -17,5 +17,6 @@ data class Directory(
     val title: String,
     val type: CollectionType,
     val uuid: String,
+    val key: String,
     val createdAt: Long
 )

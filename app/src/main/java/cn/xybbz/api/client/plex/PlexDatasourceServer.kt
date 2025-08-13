@@ -14,9 +14,6 @@ import cn.xybbz.api.client.plex.data.Metadatum
 import cn.xybbz.api.client.plex.data.PlaylistMetadatum
 import cn.xybbz.api.client.plex.data.toPlexLogin
 import cn.xybbz.api.enums.jellyfin.CollectionType
-import cn.xybbz.api.enums.jellyfin.ItemFilter
-import cn.xybbz.api.enums.jellyfin.ItemSortBy
-import cn.xybbz.api.enums.jellyfin.SortOrder
 import cn.xybbz.api.enums.plex.PlexListType
 import cn.xybbz.api.enums.plex.PlexSortOrder
 import cn.xybbz.api.enums.plex.PlexSortType
@@ -40,7 +37,6 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.ui.components.LrcEntry
 import kotlinx.coroutines.flow.Flow
 import okhttp3.OkHttpClient
-import java.time.ZoneId
 
 class PlexDatasourceServer(
     private val db: DatabaseClient,
@@ -453,7 +449,7 @@ class PlexDatasourceServer(
                 viewLibrary.mediaContainer?.directory?.filter { it.type == CollectionType.MUSIC }
                     ?.map {
                         XyLibrary(
-                            id = it.uuid,
+                            id = it.key,
                             collectionType = it.type.toString(),
                             name = it.title,
                             connectionId = connectionConfigServer.getConnectionId()
@@ -461,6 +457,16 @@ class PlexDatasourceServer(
                     }
             if (!libraries.isNullOrEmpty()) {
                 db.libraryDao.saveBatch(libraries)
+                //将id写入到lib中
+                val librariesList = db.libraryDao.selectListByDataSourceType()
+                if (librariesList.isNotEmpty()) {
+                    val library = librariesList[0]
+                    db.connectionConfigDao.updateLibraryId(
+                        libraryId = library.id,
+                        connectionId = connectionConfigServer.getConnectionId()
+                    )
+                    connectionConfigServer.updateLibraryId(library.id)
+                }
             }
         }
 
@@ -478,13 +484,14 @@ class PlexDatasourceServer(
      */
     override suspend fun getMostPlayerMusicList() {
         val musicList = getServerMusicList(
+            plexListType = PlexListType.all,
             startIndex = 0,
             pageSize = Constants.MIN_PAGE,
-            filters = listOf(ItemFilter.IS_PLAYED),
-            sortBy = listOf(ItemSortBy.PLAY_COUNT),
-            sortOrder = listOf(SortOrder.DESCENDING)
+            sortBy = PlexSortType.VIEWCOUNT,
+            sortOrder = PlexSortOrder.DESCENDING,
+            params = mapOf(Pair("viewCount>>0", ""))
         ).items
-        if (musicList.isNotEmpty())
+        if (!musicList.isNullOrEmpty())
             db.withTransaction {
                 db.musicDao.removeByType(MusicDataTypeEnum.MAXIMUM_PLAY)
                 saveBatchMusic(musicList, dataType = MusicDataTypeEnum.MAXIMUM_PLAY)
@@ -686,7 +693,8 @@ class PlexDatasourceServer(
         pageSize: Int,
         search: String? = null,
         sortBy: PlexSortType,
-        sortOrder: PlexSortOrder = PlexSortOrder.ASCENDING
+        sortOrder: PlexSortOrder = PlexSortOrder.ASCENDING,
+        params: Map<String, String>? = null
     ): AllResponse<XyMusic> {
         val response =
             plexApiClient.itemApi().getSongs(
@@ -696,10 +704,11 @@ class PlexDatasourceServer(
                 pageSize = pageSize,
                 sort = "$sortBy:$sortOrder",
                 title = search,
+                params = params
             )
         return AllResponse(
-            items = response.data?.let { convertToMusicList(it, false) },
-            totalRecordCount = response.totalCount ?: 0,
+            items = response.mediaContainer?.metadata?.let { convertToMusicList(it) },
+            totalRecordCount = response.mediaContainer?.totalSize ?: 0,
             startIndex = startIndex
         )
     }
@@ -814,14 +823,13 @@ class PlexDatasourceServer(
             pic = itemImageUrl,
             name = item.title,
             musicUrl = audioUrl,
-            album = item.albumId.toString(),
-            albumName = item.album,
+            album = item.parentRatingKey.toString(),
+            albumName = item.parentTitle,
             connectionId = connectionConfigServer.getConnectionId(),
-            artists = item.artistItems?.joinToString(Constants.ARTIST_DELIMITER) { artist -> artist.name.toString() },
-            artistIds = item.artistItems?.joinToString(Constants.ARTIST_DELIMITER) { artist -> artist.id },
-            albumArtist = item.albumArtists?.joinToString(Constants.ARTIST_DELIMITER) { artist -> artist.name.toString() }
-                ?: Constants.UNKNOWN_ARTIST,
-            albumArtistIds = item.albumArtists?.joinToString(Constants.ARTIST_DELIMITER) { artist -> artist.id },
+            artists = item.grandparentTitle,
+            artistIds = item.grandparentRatingKey,
+            albumArtist = item.grandparentTitle ?: Constants.UNKNOWN_ARTIST,
+            albumArtistIds = item.grandparentRatingKey,
             createTime = item.addedAt,
             year = item.parentYear,
             playedCount = 0,

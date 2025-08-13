@@ -475,7 +475,7 @@ fun ConnectionScreen(
                                                             address = item.addressUrl,
                                                             select = index == connectionViewModel.selectUrlIndex,
                                                             onClick = {
-                                                                connectionViewModel.setSelectUrlIndexData(
+                                                                connectionViewModel.setSelectInfoIndexData(
                                                                     index
                                                                 )
                                                             })

@@ -256,6 +256,15 @@ class ConnectionViewModel @Inject constructor(
     }
 
     /**
+     * 设置
+     */
+    fun setSelectInfoIndexData(selectInfoIndex: Int) {
+        this.selectUrlIndex = selectInfoIndex
+        if (tmpPlexInfo.isNotEmpty())
+            tmpAddress = tmpPlexInfo[selectInfoIndex].addressUrl
+    }
+
+    /**
      * 设置临时地址
      */
     fun setTmpAddressData(address: String) {
