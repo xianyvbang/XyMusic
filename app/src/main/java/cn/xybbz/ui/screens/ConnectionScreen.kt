@@ -490,6 +490,12 @@ fun ConnectionScreen(
                                             modifier = Modifier.width(width = 150.dp),
                                             onClick = {
                                                 coroutineScope.launch {
+                                                    connectionViewModel.setSelectInfoIndexData(
+                                                        connectionViewModel.selectUrlIndex
+                                                    )
+                                                    connectionViewModel.setSelectUrlIndexData(
+                                                        connectionViewModel.selectUrlIndex
+                                                    )
                                                     connectionViewModel.inputAddress()
                                                 }
                                             }) {

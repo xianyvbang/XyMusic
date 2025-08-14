@@ -37,6 +37,7 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.ui.components.LrcEntry
 import kotlinx.coroutines.flow.Flow
 import okhttp3.OkHttpClient
+import java.util.UUID
 
 class PlexDatasourceServer(
     private val db: DatabaseClient,
@@ -63,6 +64,25 @@ class PlexDatasourceServer(
         //todo 在这里调用postPingSystem 因为plex的ping服务器需要token
         //todo login改成只ping
         postPingSystem()
+        return LoginSuccessData(
+            userId = plexApiClient.userId,
+            accessToken = plexApiClient.getToken(),
+            serverId = clientLoginInfoReq.serverId,
+            serverName = clientLoginInfoReq.serverName,
+            version = clientLoginInfoReq.serverVersion
+        )
+    }
+
+    private suspend fun plexLogin(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
+        val responseData =
+            plexApiClient.userApi().authenticateByName(
+                "https://plex.tv/api/v2/users/signin",
+                clientLoginInfoReq.toPlexLogin()
+            )
+        Log.i("=====", "返回响应值: $responseData")
+        plexApiClient.updateAccessToken(responseData.authToken)
+        plexApiClient.updateServerInfo(userId = responseData.id)
+        setToken()
         return LoginSuccessData(
             userId = plexApiClient.userId,
             accessToken = plexApiClient.getToken(),
@@ -140,7 +160,11 @@ class PlexDatasourceServer(
                 val ipv4Data = ResourceData(
                     infoResponse.name,
                     infoResponse.product,
-                    "http://${connection.address}:${connection.port}"
+                    "http://${connection.address}:${connection.port}",
+                    serverVersion = infoResponse.platformVersion ?: "",
+                    serverName = infoResponse.name,
+                    serverId = UUID.randomUUID().toString()
+
                 )
                 tmpResourceData.add(ipv4Data)
 
@@ -148,7 +172,10 @@ class PlexDatasourceServer(
                     val ipv6Data = ResourceData(
                         infoResponse.name,
                         infoResponse.product,
-                        "http://[${connection.address}]:${connection.port}"
+                        "http://[${connection.address}]:${connection.port}",
+                        serverVersion = infoResponse.platformVersion ?: "",
+                        serverName = infoResponse.name,
+                        serverId = UUID.randomUUID().toString()
                     )
                     tmpResourceData.add(ipv6Data)
                 }
@@ -156,7 +183,10 @@ class PlexDatasourceServer(
                 val resourceData = ResourceData(
                     name = infoResponse.name,
                     infoResponse.product,
-                    connection.uri
+                    connection.uri,
+                    serverVersion = infoResponse.platformVersion ?: "",
+                    serverName = infoResponse.name,
+                    serverId = UUID.randomUUID().toString()
                 )
 
                 tmpResourceData.add(resourceData)

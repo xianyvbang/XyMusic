@@ -55,6 +55,8 @@ class ConnectionViewModel @Inject constructor(
     var tmpPlexInfo by mutableStateOf<List<ResourceData>>(emptyList())
         private set
 
+    private var plexInfo by mutableStateOf<ResourceData?>(null)
+
     /**
      * 临时地址
      */
@@ -100,7 +102,8 @@ class ConnectionViewModel @Inject constructor(
                 ClientLoginInfoReq(
                     address = tmpAddress,
                     username = username,
-                    password = password
+                    password = password,
+                    serverId = plexInfo.serverId
                 )
             _dataSourceManager.addClientAndLogin(clientLoginInfoReq)?.onEach {
                 Log.i("=====", "数据获取${it}")
@@ -161,7 +164,7 @@ class ConnectionViewModel @Inject constructor(
                 val connectionConfig = ConnectionConfig(
                     serverId = "0",
                     name = dataSourceType.title,
-                    address = tmpAddressList[selectUrlIndex],
+                    address = tmpAddress,
                     type = dataSourceType,
                     username = username,
                     currentPassword = encryptAES.aesData,
@@ -260,8 +263,11 @@ class ConnectionViewModel @Inject constructor(
      */
     fun setSelectInfoIndexData(selectInfoIndex: Int) {
         this.selectUrlIndex = selectInfoIndex
-        if (tmpPlexInfo.isNotEmpty())
+        if (tmpPlexInfo.isNotEmpty()) {
+            plexInfo = tmpPlexInfo[selectInfoIndex]
             tmpAddress = tmpPlexInfo[selectInfoIndex].addressUrl
+        }
+
     }
 
     /**
@@ -302,8 +308,8 @@ class ConnectionViewModel @Inject constructor(
             try {
                 val resources = _dataSourceManager.getResources(clientLoginInfoReq)
                 tmpPlexInfo = resources
-            }catch (e: Exception){
-                errorMessage = e.message?:""
+            } catch (e: Exception) {
+                errorMessage = e.message ?: ""
             }
 
         }
@@ -312,7 +318,7 @@ class ConnectionViewModel @Inject constructor(
     /**
      * 更新登陆loading状态
      */
-    fun updateLoading(loading: Boolean){
+    fun updateLoading(loading: Boolean) {
         this.loading = loading
     }
 }
