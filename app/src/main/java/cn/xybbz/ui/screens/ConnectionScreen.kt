@@ -432,8 +432,13 @@ fun ConnectionScreen(
                                         modifier = Modifier.width(width = 150.dp),
                                         onClick = {
                                             isLoad = false
+                                            connectionViewModel.clearError()
+                                            connectionViewModel.clearLoginStatus()
                                             connectionViewModel.setSelectUrlIndexData(0)
-                                            ifSelectDataSource = ScreenType.INPUT_DATA
+                                            if (connectionViewModel.dataSourceType?.ifInputUrl == true){
+                                                ifSelectDataSource = ScreenType.INPUT_DATA
+                                            }
+
                                         }) {
                                         Text(text = "重新连接")
                                     }

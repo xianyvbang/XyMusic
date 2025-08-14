@@ -63,6 +63,7 @@ class PlexDatasourceServer(
     override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
         //todo 在这里调用postPingSystem 因为plex的ping服务器需要token
         //todo login改成只ping
+        plexLogin(clientLoginInfoReq)
         postPingSystem()
         return LoginSuccessData(
             userId = plexApiClient.userId,
@@ -137,15 +138,7 @@ class PlexDatasourceServer(
      */
     override suspend fun getResources(clientLoginInfoReq: ClientLoginInfoReq): List<ResourceData> {
         createApiClient(address = "", deviceId = getDeviceId(), username = "", "")
-        val responseData =
-            plexApiClient.userApi().authenticateByName(
-                "https://plex.tv/api/v2/users/signin",
-                clientLoginInfoReq.toPlexLogin()
-            )
-        Log.i("=====", "返回响应值: $responseData")
-        plexApiClient.updateAccessToken(responseData.authToken)
-        plexApiClient.updateServerInfo(userId = responseData.id)
-        setToken()
+        plexLogin(clientLoginInfoReq)
         val systemInfo = plexApiClient.userApi()
             .getSystemInfo("https://plex.tv/api/v2/resources?includeHttps=1&includeRelay=1")
         Log.i("=====", "服务器信息 $systemInfo")
@@ -476,7 +469,7 @@ class PlexDatasourceServer(
             val viewLibrary = plexApiClient.userViewsApi().getUserViews()
             //存储历史记录
             val libraries =
-                viewLibrary.mediaContainer?.directory?.filter { it.type == CollectionType.MUSIC }
+                viewLibrary.mediaContainer?.directory?.filter { it.type == CollectionType.MUSIC ||  it.type == CollectionType.ARTIST }
                     ?.map {
                         XyLibrary(
                             id = it.key,

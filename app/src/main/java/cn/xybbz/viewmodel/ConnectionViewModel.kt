@@ -103,7 +103,9 @@ class ConnectionViewModel @Inject constructor(
                     address = tmpAddress,
                     username = username,
                     password = password,
-                    serverId = plexInfo.serverId
+                    serverId = plexInfo?.serverId,
+                    serverVersion = plexInfo?.serverVersion,
+                    serverName = plexInfo?.serverName
                 )
             _dataSourceManager.addClientAndLogin(clientLoginInfoReq)?.onEach {
                 Log.i("=====", "数据获取${it}")

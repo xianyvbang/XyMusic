@@ -60,7 +60,7 @@ enum class CollectionType(
     TV("tv"),
 
     @Json(name = "artist")
-    artist("artist")
+    ARTIST("artist")
     ;
 
     /**
