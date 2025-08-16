@@ -9,11 +9,11 @@ import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.AllResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
-import cn.xybbz.api.client.plex.data.ImageType
 import cn.xybbz.api.client.plex.data.Metadatum
 import cn.xybbz.api.client.plex.data.PlaylistMetadatum
 import cn.xybbz.api.client.plex.data.toPlexLogin
-import cn.xybbz.api.enums.jellyfin.CollectionType
+import cn.xybbz.api.enums.plex.ImageType
+import cn.xybbz.api.enums.plex.MetadatumType
 import cn.xybbz.api.enums.plex.PlexListType
 import cn.xybbz.api.enums.plex.PlexSortOrder
 import cn.xybbz.api.enums.plex.PlexSortType
@@ -469,7 +469,7 @@ class PlexDatasourceServer(
             val viewLibrary = plexApiClient.userViewsApi().getUserViews()
             //存储历史记录
             val libraries =
-                viewLibrary.mediaContainer?.directory?.filter { it.type == CollectionType.MUSIC ||  it.type == CollectionType.ARTIST }
+                viewLibrary.mediaContainer?.directory?.filter { it.type == MetadatumType.Artist }
                     ?.map {
                         XyLibrary(
                             id = it.key,

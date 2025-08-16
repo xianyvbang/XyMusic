@@ -1,5 +1,7 @@
 package cn.xybbz.api.client.plex.data
 
+import cn.xybbz.api.enums.plex.HasThumbnail
+import cn.xybbz.api.enums.plex.ImageType
 import com.squareup.moshi.Json
 
 data class PlexLibraryItemResponse(
@@ -144,25 +146,6 @@ data class Extras(
     val size: Long? = null
 )
 
-/**
- * Setting that indicates if seasons are set to hidden for the show. (-1 = Library default,
- * 0 = Hide, 1 = Show).
- */
-enum class FlattenSeasons(val value: String) {
-    FlattenSeasons1("1"),
-    The0("0"),
-    The1("-1");
-
-    companion object {
-        public fun fromValue(value: String): FlattenSeasons = when (value) {
-            "1" -> FlattenSeasons1
-            "0" -> The0
-            "-1" -> The1
-            else -> throw IllegalArgumentException()
-        }
-    }
-}
-
 data class Genre(
     /**
      * The unique identifier for the genre.
@@ -189,22 +172,6 @@ data class Image(
     val url: String
 )
 
-enum class ImageType(val value: String) {
-    Background("background"),
-    ClearLogo("clearLogo"),
-    CoverPoster("coverPoster"),
-    Snapshot("snapshot");
-
-    companion object {
-        public fun fromValue(value: String): ImageType = when (value) {
-            "background" -> Background
-            "clearLogo" -> ClearLogo
-            "coverPoster" -> CoverPoster
-            "snapshot" -> Snapshot
-            else -> throw IllegalArgumentException()
-        }
-    }
-}
 
 /**
  * The folder path for the media item.
@@ -669,21 +636,7 @@ data class Stream(
     val title: String? = null
 )
 
-/**
- * Indicates if the part has a thumbnail.
- */
-enum class HasThumbnail(val value: String) {
-    The0("0"),
-    The1("1");
 
-    companion object {
-        public fun fromValue(value: String): HasThumbnail = when (value) {
-            "0" -> The0
-            "1" -> The1
-            else -> throw IllegalArgumentException()
-        }
-    }
-}
 
 data class Producer(
     /**
@@ -802,38 +755,6 @@ data class Similar(
     val tag: String
 )
 
-/**
- * The type of media content in the Plex library. This can represent videos, music, or
- * photos.
- */
-enum class MetadatumType(val value: String) {
-    Album("album"),
-    Artist("artist"),
-    Collection("collection"),
-    Episode("episode"),
-    Movie("movie"),
-    Photo("photo"),
-    Photoalbum("photoalbum"),
-    Season("season"),
-    Show("show"),
-    Track("track");
-
-    companion object {
-        public fun fromValue(value: String): MetadatumType = when (value) {
-            "album" -> Album
-            "artist" -> Artist
-            "collection" -> Collection
-            "episode" -> Episode
-            "movie" -> Movie
-            "photo" -> Photo
-            "photoalbum" -> Photoalbum
-            "season" -> Season
-            "show" -> Show
-            "track" -> Track
-            else -> throw IllegalArgumentException()
-        }
-    }
-}
 
 data class UltraBlurColors(
     val bottomLeft: String,

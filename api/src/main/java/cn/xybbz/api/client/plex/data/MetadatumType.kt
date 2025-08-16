@@ -1,5 +1,7 @@
 package cn.xybbz.api.client.plex.data
 
+import cn.xybbz.api.enums.plex.FlattenSeasons
+import cn.xybbz.api.enums.plex.MetadatumType
 import com.squareup.moshi.Json
 
 /**
@@ -8,7 +10,7 @@ import com.squareup.moshi.Json
  *
  * Unknown
  */
-data class Metadatum (
+data class Metadatum(
     val type: MetadatumType,
 
     /**
@@ -31,7 +33,7 @@ data class Metadatum (
     /**
      * A URL‐friendly version of the media title.
      */
-    val slug: String,
+    val slug: String? = null,
 
     /**
      * The studio that produced the media item.
@@ -46,12 +48,12 @@ data class Metadatum (
     /**
      * The banner image URL for the media item.
      */
-    val banner: String,
+    val banner: String? = null,
 
     /**
      * The sort title used for ordering media items.
      */
-    val titleSort: String,
+    val titleSort: String? = null,
 
     /**
      * The content rating for the media item.
@@ -67,12 +69,12 @@ data class Metadatum (
      * The critic rating for the media item.
      */
     @param:Json(name = "rating")
-    val metadatumRating: Double,
+    val metadatumRating: Double? = null,
 
     /**
      * The audience rating for the media item.
      */
-    val audienceRating: Double,
+    val audienceRating: Double? = null,
 
     /**
      * The release year of the media item.
@@ -82,7 +84,7 @@ data class Metadatum (
     /**
      * A brief tagline for the media item.
      */
-    val tagline: String,
+    val tagline: String? = null,
 
     /**
      * The thumbnail image URL for the media item.
@@ -92,17 +94,17 @@ data class Metadatum (
     /**
      * The art image URL for the media item.
      */
-    val art: String,
+    val art: String? = null,
 
     /**
      * The theme URL for the media item.
      */
-    val theme: String,
+    val theme: String? = null,
 
     /**
      * The index position of the media item.
      */
-    val index: Long,
+    val index: Long? = null,
 
     /**
      * The number of leaf items (end nodes) under this media item.
@@ -117,12 +119,12 @@ data class Metadatum (
     /**
      * The number of child items associated with this media item.
      */
-    val childCount: Long,
+    val childCount: Long? = null,
 
     /**
      * The total number of seasons (for TV shows).
      */
-    val seasonCount: Long,
+    val seasonCount: Long? = null,
 
     /**
      * The duration of the media item in milliseconds.
