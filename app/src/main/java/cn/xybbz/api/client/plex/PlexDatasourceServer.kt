@@ -37,8 +37,11 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.ui.components.LrcEntry
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.supervisorScope
 import okhttp3.OkHttpClient
+import java.net.SocketTimeoutException
 import java.time.ZoneOffset
 import java.util.UUID
 
@@ -315,7 +318,101 @@ class PlexDatasourceServer(
      * 获得专辑,艺术家,音频,歌单数量
      */
     override suspend fun getDataInfoCount(connectionId: Long) {
-        TODO("Not yet implemented")
+        var album: Int? = null
+        var artist: Int? = null
+        var music: Int? = null
+        var playlist: Int? = null
+        var genres: Int? = null
+        var favorite: Int? = null
+        supervisorScope {
+            val album = async {
+                album = try {
+                    getAlbumList(pageSize = 1, startIndex = 0).mediaContainer?.totalSize
+                } catch (e: SocketTimeoutException) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载专辑数量超时", e)
+                    null
+                } catch (e: Exception) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载专辑数量报错", e)
+                    null
+                }
+
+            }
+
+            val artist = async {
+                artist = try {
+                    getArtistList(startIndex = 0, pageSize = 0).totalRecordCount
+                } catch (e: SocketTimeoutException) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载艺术家数量超时", e)
+                    null
+
+                } catch (e: Exception) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载艺术家数量报错", e)
+                    null
+                }
+            }
+
+            val music = async {
+                music = try {
+                    getServerMusicList(startIndex = 0, pageSize = 0).mediaContainer?.totalSize
+                } catch (e: SocketTimeoutException) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载音乐数量超时", e)
+                    null
+
+                } catch (e: Exception) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载音乐数量报错", e)
+                    null
+                }
+            }
+
+            val playlist = async {
+                playlist = try {
+                    getPlaylistsServer(0, 0).totalRecordCount
+                } catch (e: SocketTimeoutException) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载歌单数量超时", e)
+                    null
+
+                } catch (e: Exception) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载歌单数量报错", e)
+                    null
+                }
+
+            }
+
+            val genres = async {
+                genres = try {
+                    val response = getGenreList(
+                        startIndex = 0,
+                        pageSize = 0,
+                    )
+                    response.totalRecordCount
+                } catch (e: Exception) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载流派数量报错", e)
+                    null
+                }
+            }
+
+            val favorite = async {
+                favorite = try {
+                    val response = getServerMusicList(
+                        startIndex = 0, pageSize = 0, isFavorite = true
+                    )
+                    response.totalRecordCount
+                } catch (e: Exception) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载收藏数量报错", e)
+                    null
+                }
+
+            }
+
+            album.await()
+            artist.await()
+            music.await()
+            playlist.await()
+            genres.await()
+            favorite.await()
+        }
+
+        updateOrSaveDataInfoCount(music, album, artist, playlist, genres, favorite)
     }
 
     /**
@@ -502,7 +599,25 @@ class PlexDatasourceServer(
      * 获得最近播放音乐或专辑
      */
     override suspend fun playRecordMusicOrAlbumList() {
-        TODO("Not yet implemented")
+        val albumList = getAlbumList(
+            plexListType = PlexListType.all,
+            type = 9,
+            startIndex = 0,
+            pageSize = Constants.MIN_PAGE,
+            sortBy = PlexSortType.LAST_VIEWED_AT,
+            sortOrder = PlexSortOrder.DESCENDING
+        )
+        albumList.mediaContainer?.metadata?.let { albums ->
+            db.withTransaction {
+                db.albumDao.removeByType(MusicDataTypeEnum.NEWEST)
+                saveBatchAlbum(
+                    convertToAlbumList(
+                        albums
+                    ), MusicDataTypeEnum.NEWEST
+                )
+
+            }
+        }
     }
 
     /**
@@ -529,7 +644,7 @@ class PlexDatasourceServer(
      * 获得最新专辑
      */
     override suspend fun getNewestAlbumList() {
-        val albumList = getServerMusicList(
+        val albumList = getAlbumList(
             plexListType = PlexListType.all,
             type = 9,
             startIndex = 0,
@@ -736,12 +851,12 @@ class PlexDatasourceServer(
     }*/
 
     suspend fun getServerMusicList(
-        plexListType: PlexListType,
+        plexListType: PlexListType = PlexListType.all,
         type: Int = 10,
         startIndex: Int,
         pageSize: Int,
         search: String? = null,
-        sortBy: PlexSortType,
+        sortBy: PlexSortType = PlexSortType.ARTIST_TITLE_SORT,
         sortOrder: PlexSortOrder = PlexSortOrder.ASCENDING,
         params: Map<String, String>? = null
     ): PlexResponse<PlexLibraryItemResponse> {
@@ -754,9 +869,37 @@ class PlexDatasourceServer(
                 pageSize = pageSize,
                 sort = "$sortBy:$sortOrder",
                 title = search,
-                params = params?: mapOf(Pair("1","1"))
+                params = params ?: mapOf(Pair("1", "1"))
             )
         return response
+    }
+
+
+    /**
+     * 获得专辑列表
+     */
+    suspend fun getAlbumList(
+        plexListType: PlexListType = PlexListType.all,
+        type: Int = 9,
+        startIndex: Int,
+        pageSize: Int,
+        search: String? = null,
+        sortBy: PlexSortType = PlexSortType.TITLE_SORT,
+        sortOrder: PlexSortOrder = PlexSortOrder.ASCENDING,
+        params: Map<String, String>? = null
+    ): PlexResponse<PlexLibraryItemResponse> {
+        val albumResponse = plexApiClient.itemApi().getSongs(
+            sectionKey = connectionConfigServer.libraryId!!,
+            type = type,
+            selectType = plexListType.toString(),
+            start = startIndex,
+            pageSize = pageSize,
+            sort = "$sortBy:$sortOrder",
+            title = search,
+            params = params ?: mapOf(Pair("1", "1"))
+        )
+
+        return albumResponse
     }
 
 

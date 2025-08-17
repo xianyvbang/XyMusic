@@ -668,11 +668,11 @@ class IDataSourceManager(
         try {
             dataSourceServer.playRecordMusicOrAlbumList()
         } catch (e: SocketTimeoutException) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "音乐播放历史更新超时", e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐更新超时", e)
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "音乐播放历史更新失败", e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐更新失败", e)
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "音乐播放历史更新未知错误失败", e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐未知错误失败", e)
         }
     }
 

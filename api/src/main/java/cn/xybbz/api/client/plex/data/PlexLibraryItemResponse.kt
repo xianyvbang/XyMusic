@@ -147,11 +147,6 @@ data class Extras(
 )
 
 data class Genre(
-    /**
-     * The unique identifier for the genre.
-     * NOTE: This is different for each Plex server and is not globally unique.
-     */
-    val id: Long,
 
     /**
      * The genre name of this media-item
@@ -635,7 +630,6 @@ data class Stream(
      */
     val title: String? = null
 )
-
 
 
 data class Producer(
