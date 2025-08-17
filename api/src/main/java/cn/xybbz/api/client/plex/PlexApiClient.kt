@@ -198,6 +198,20 @@ class PlexApiClient : DefaultApiClient() {
         return "${baseUrl}/photo/:/transcode?width=${width}&height=${height}&url=${tmpPlexFileUrl}&minSize=1&upscale=1&X-Plex-Token=${accessToken}"
     }
 
+    fun createAudioUrl(
+        trackMediaPartKey: String,
+    ): String {
+        return getAudioStreamUrl(
+            trackMediaPartKey = trackMediaPartKey
+        )
+    }
+
+    private fun getAudioStreamUrl(
+        trackMediaPartKey: String,
+    ): String {
+        return "${baseUrl}/${trackMediaPartKey}?X-Plex-Platform=Android&X-Plex-Token=${accessToken}"
+    }
+
     /**
      * 清空数据
      */

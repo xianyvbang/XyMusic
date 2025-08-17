@@ -3,6 +3,8 @@ package cn.xybbz.api.client.plex.data
 import cn.xybbz.api.enums.plex.FlattenSeasons
 import cn.xybbz.api.enums.plex.MetadatumType
 import com.squareup.moshi.Json
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 /**
  * The available images for this media item
@@ -79,7 +81,7 @@ data class Metadatum(
     /**
      * The release year of the media item.
      */
-    val year: Long? = null,
+    val year: Int? = null,
 
     /**
      * A brief tagline for the media item.
@@ -89,7 +91,7 @@ data class Metadatum(
     /**
      * The thumbnail image URL for the media item.
      */
-    val thumb: String,
+    val thumb: String? = null,
 
     /**
      * The art image URL for the media item.
@@ -129,12 +131,12 @@ data class Metadatum(
     /**
      * The duration of the media item in milliseconds.
      */
-    val duration: Long,
+    val duration: Long? = null,
 
     /**
      * The original release date of the media item.
      */
-    val originallyAvailableAt: String? = null,
+    val originallyAvailableAt: LocalDate? = null,
 
     val addedAt: Long,
 
