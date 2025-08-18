@@ -440,7 +440,7 @@ abstract class IDataSourceParentServer(
     }
 
     /**
-     * 根据艺术家id获得专辑列表
+     * 根据艺术家id获得艺术家列表
      */
     abstract suspend fun selectArtistsByIds(artistIds: List<String>): List<XyArtist>
 

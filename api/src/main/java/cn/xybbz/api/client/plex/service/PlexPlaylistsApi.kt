@@ -1,7 +1,6 @@
 package cn.xybbz.api.client.plex.service
 
 import cn.xybbz.api.base.BaseApi
-import cn.xybbz.api.client.navidrome.data.NavidromeCreatePlaylistResponse
 import cn.xybbz.api.client.navidrome.data.PlaylistAddMusicsUpdateRequest
 import cn.xybbz.api.client.navidrome.data.PlaylistAddMusicsUpdateResponse
 import cn.xybbz.api.client.navidrome.data.PlaylistItemData
@@ -26,11 +25,12 @@ import retrofit2.http.Query
 
 interface PlexPlaylistsApi : BaseApi {
 
-    @POST("/api/playlist")
+    @POST("/playlists")
     suspend fun createPlaylist(
-        @Query("name") name: String? = null,
-        @Query("public") public: Boolean = false
-    ): NavidromeCreatePlaylistResponse?
+        @Query("title") title: String,
+        @Query("type") type: String = PlexPlaylistType.AUDIO.toString(),
+        @Query("public") smart: Int = 1,
+    ): PlexResponse<PlexPlaylistResponse>
 
     @PUT("/api/playlist/{playlistId}")
     suspend fun updatePlaylist(

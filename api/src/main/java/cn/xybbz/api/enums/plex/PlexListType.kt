@@ -25,8 +25,10 @@ import com.squareup.moshi.JsonClass
  * albums: Items categorized by album.
  */
 @JsonClass(generateAdapter = false)
-enum class PlexListType (val serialName: String){
-    all("all")
+enum class PlexListType(val serialName: String) {
+    all("all"),
+    genre("genre"),
+    collections("collections")
 
 
     ;

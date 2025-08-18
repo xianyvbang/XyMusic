@@ -31,7 +31,9 @@ enum class PlexSortType(private val sortName: String) {
     RANDOM("random"),
 
     @Json(name = "artist.titleSort")
-    ARTIST_TITLE_SORT("artist.titleSort")
+    ARTIST_TITLE_SORT("artist.titleSort"),
+    @Json(name = "ratingCount")
+    RATING_COUNT("ratingCount")
     ;
 
     override fun toString(): String {

@@ -1,8 +1,12 @@
 package cn.xybbz.api.client.plex
 
 import android.content.Context
+import android.icu.text.Transliterator
 import android.os.Build
 import android.util.Log
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.room.withTransaction
 import cn.xybbz.api.TokenServer
@@ -23,6 +27,7 @@ import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
+import cn.xybbz.common.utils.CharUtils
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.entity.api.LoginSuccessData
 import cn.xybbz.entity.data.ResourceData
@@ -36,6 +41,7 @@ import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import cn.xybbz.page.emby.EmbyAlbumRemoteMediator
 import cn.xybbz.ui.components.LrcEntry
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
@@ -201,7 +207,9 @@ class PlexDatasourceServer(
      * 创建歌单
      */
     override suspend fun createPlaylist(name: String): String? {
-        TODO("Not yet implemented")
+        return plexApiClient.playlistsApi().createPlaylist(
+            title = name
+        ).mediaContainer?.metadata?.get(0)?.ratingKey
     }
 
     /**
@@ -213,14 +221,36 @@ class PlexDatasourceServer(
         isFavorite: Boolean?,
         search: String?
     ): AllResponse<XyArtist> {
-        TODO("Not yet implemented")
+        val response = plexApiClient.itemApi().getSongs(
+            sectionKey = connectionConfigServer.libraryId!!,
+            type = 8,
+            selectType = PlexListType.all.toString(),
+            start = startIndex,
+            pageSize = pageSize,
+            title = search,
+            params = mapOf(Pair("1", "1"))
+        )
+
+        val artistList = response.mediaContainer?.metadata?.let {
+            convertToArtistList(it)
+        }
+        return AllResponse(
+            items = artistList,
+            totalRecordCount = response.mediaContainer?.totalSize ?: 0,
+            startIndex = startIndex
+        )
     }
 
     /**
-     * 根据艺术家id获得专辑列表
+     * 根据艺术家id获得艺术家列表
      */
     override suspend fun selectArtistsByIds(artistIds: List<String>): List<XyArtist> {
-        TODO("Not yet implemented")
+        val items = artistIds.mapNotNull {
+            plexApiClient.itemApi().getArtistInfo(
+                sectionKey = it
+            ).mediaContainer?.metadata
+        }.flatMap { it }
+        return convertToArtistList(items)
     }
 
     /**
@@ -231,18 +261,47 @@ class PlexDatasourceServer(
         pageSize: Int,
         startIndex: Int
     ): AllResponse<XyMusic> {
-        TODO("Not yet implemented")
+        val response =
+            getServerMusicList(
+                plexListType = PlexListType.all,
+                type = null,
+                startIndex = startIndex,
+                pageSize = pageSize,
+                artistId = artistId,
+                sortBy = PlexSortType.RATING_COUNT
+            )
+        return AllResponse(
+            items = response.mediaContainer?.metadata?.let { convertToMusicList(it) } ?: listOf(),
+            totalRecordCount = response.mediaContainer?.totalSize ?: 0,
+            startIndex = startIndex
+        )
     }
 
     /**
      * 获得专辑列表数据
      */
+    @OptIn(ExperimentalPagingApi::class)
     override fun selectAlbumFlowList(
         sortType: SortTypeEnum?,
         ifFavorite: Boolean?,
         years: String?
     ): Flow<PagingData<XyAlbum>> {
-        TODO("Not yet implemented")
+        return Pager(
+            config = PagingConfig(
+                pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
+                enablePlaceholders = true
+            ), remoteMediator = EmbyAlbumRemoteMediator(
+                sortType = sortType,
+                ifFavorite = ifFavorite,
+                years = years,
+                dataSource = getDataSourceType(),
+                db = db,
+                embyDatasourceServer = this,
+                connectionId = connectionConfigServer.getConnectionId()
+            )
+        ) {
+            db.albumDao.selectHomeAlbumListPage()
+        }.flow
     }
 
     /**
@@ -380,11 +439,10 @@ class PlexDatasourceServer(
 
             val genres = async {
                 genres = try {
-                    val response = getGenreList(
+                    getGenreList(
                         startIndex = 0,
                         pageSize = 0,
-                    )
-                    response.totalRecordCount
+                    ).mediaContainer?.totalSize
                 } catch (e: Exception) {
                     Log.e(Constants.LOG_ERROR_PREFIX, "加载流派数量报错", e)
                     null
@@ -393,10 +451,9 @@ class PlexDatasourceServer(
 
             val favorite = async {
                 favorite = try {
-                    val response = getServerMusicList(
-                        startIndex = 0, pageSize = 0, isFavorite = true
-                    )
-                    response.totalRecordCount
+                    getFavoriteMusicList(
+                        startIndex = 0, pageSize = 0,
+                    ).mediaContainer?.totalSize
                 } catch (e: Exception) {
                     Log.e(Constants.LOG_ERROR_PREFIX, "加载收藏数量报错", e)
                     null
@@ -852,12 +909,13 @@ class PlexDatasourceServer(
 
     suspend fun getServerMusicList(
         plexListType: PlexListType = PlexListType.all,
-        type: Int = 10,
+        type: Int? = 10,
         startIndex: Int,
         pageSize: Int,
         search: String? = null,
-        sortBy: PlexSortType = PlexSortType.ARTIST_TITLE_SORT,
-        sortOrder: PlexSortOrder = PlexSortOrder.ASCENDING,
+        sortBy: PlexSortType? = PlexSortType.ARTIST_TITLE_SORT,
+        sortOrder: PlexSortOrder? = PlexSortOrder.ASCENDING,
+        artistId: String? = null,
         params: Map<String, String>? = null
     ): PlexResponse<PlexLibraryItemResponse> {
         val response =
@@ -869,6 +927,7 @@ class PlexDatasourceServer(
                 pageSize = pageSize,
                 sort = "$sortBy:$sortOrder",
                 title = search,
+                artistId = artistId,
                 params = params ?: mapOf(Pair("1", "1"))
             )
         return response
@@ -900,6 +959,69 @@ class PlexDatasourceServer(
         )
 
         return albumResponse
+    }
+
+
+    /**
+     * 获得流派列表
+     * @param [pageSize] 限制
+     * @param [startIndex] 启动索引
+     * @param [filters] 过滤器
+     * @param [search] 搜索
+     * @param [sortBy] 排序方式
+     * @param [sortOrder] 排序订单
+     * @return [Response<ItemResponse>]
+     */
+    suspend fun getGenreList(
+        plexListType: PlexListType = PlexListType.genre,
+        type: Int = 8,
+        startIndex: Int,
+        pageSize: Int,
+        search: String? = null,
+        sortBy: PlexSortType = PlexSortType.TITLE_SORT,
+        sortOrder: PlexSortOrder = PlexSortOrder.ASCENDING,
+        params: Map<String, String>? = null
+    ): PlexResponse<PlexLibraryItemResponse> {
+        val genreResponse = plexApiClient.itemApi().getSongs(
+            sectionKey = connectionConfigServer.libraryId!!,
+            type = type,
+            selectType = plexListType.toString(),
+            start = startIndex,
+            pageSize = pageSize,
+            sort = "$sortBy:$sortOrder",
+            title = search,
+            params = params ?: mapOf(Pair("1", "1"))
+        )
+
+        return genreResponse
+    }
+
+
+    suspend fun getFavoriteMusicList(
+        plexListType: PlexListType = PlexListType.collections,
+        startIndex: Int,
+        pageSize: Int,
+        params: Map<String, String>? = null
+    ): PlexResponse<PlexLibraryItemResponse> {
+
+        val favoriteCollections = plexApiClient.itemApi().getSongs(
+            sectionKey = connectionConfigServer.libraryId!!,
+            selectType = plexListType.toString(),
+            start = 0,
+            pageSize = 1000,
+            params = params ?: mapOf(Pair("1", "1"))
+        )
+
+        val collectionIds =
+            favoriteCollections.mediaContainer?.metadata?.find { it.subtype == MetadatumType.Track.value }?.ratingKey
+
+        val response =
+            plexApiClient.itemApi().getFavoriteSongs(
+                sectionKey = collectionIds!!,
+                start = startIndex,
+                pageSize = pageSize,
+            )
+        return response
     }
 
 
@@ -1036,5 +1158,57 @@ class PlexDatasourceServer(
         )
     }
 
+
+    /**
+     * 根据BaseItemDto组装艺术家名单
+     * @param [items] 项目
+     * @return [List<ArtistItem>]
+     */
+    fun convertToArtistList(items: List<Metadatum>): List<XyArtist> {
+        val xyArtists = items.mapIndexed { index, item ->
+            convertToArtist(item, index)
+        }
+        return xyArtists
+    }
+
+    /**
+     * 将ArtistID3转换成XyArtist
+     */
+    fun convertToArtist(
+        artist: Metadatum,
+        indexNumber: Int,
+    ): XyArtist {
+        val artistImageUrl =
+            artist.image?.let { images ->
+                val image = images.findLast { it.type == ImageType.CoverPoster }
+                image?.let {
+                    plexApiClient.getImageUrl(
+                        image.url,
+                    )
+                }
+
+            }
+
+        val transliterator = Transliterator.getInstance("Han-Latin")
+        val result =
+            if (artist.title.isBlank()) null else transliterator.transliterate(
+                artist.title
+            )
+        val shortNameStart = if (!result.isNullOrBlank()) result[0] else '#'
+        val selectChat =
+            if (!CharUtils.isEnglishLetter(shortNameStart)) "#" else shortNameStart.toString()
+                .lowercase()
+
+        return XyArtist(
+            artistId = artist.ratingKey,
+            name = artist.title,
+            pic = artistImageUrl,
+            connectionId = connectionConfigServer.getConnectionId(),
+            describe = artist.summary,
+            selectChat = selectChat,
+            ifFavorite = artist.collection?.any { it.tag == "收藏" } == true,
+            indexNumber = indexNumber
+        )
+    }
 
 }
