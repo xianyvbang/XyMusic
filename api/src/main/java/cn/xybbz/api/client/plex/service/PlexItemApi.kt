@@ -24,6 +24,9 @@ interface PlexItemApi : BaseApi {
         @Query("X-Plex-Container-Start") start: Int,
         @Query("X-Plex-Container-Size") pageSize: Int,
         @Query("artist.id") artistId: String? = null,
+        @Query("album.id") albumId: String? = null,
+        @Query("album.collection") albumCollection: String? = null,
+        @Query("track.collection") trackCollection: String? = null,
         @QueryMap params: Map<String, String>? = null
     ): PlexResponse<PlexLibraryItemResponse>
 

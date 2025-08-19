@@ -25,6 +25,7 @@ import cn.xybbz.api.enums.plex.PlexSortOrder
 import cn.xybbz.api.enums.plex.PlexSortType
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.constants.Constants.ALBUM_MUSIC_LIST_PAGE_SIZE
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
@@ -41,7 +42,11 @@ import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import cn.xybbz.page.emby.EmbyAlbumRemoteMediator
+import cn.xybbz.page.all.ArtistRemoteMediator
+import cn.xybbz.page.plex.PlexAlbumOrPlaylistMusicListRemoteMediator
+import cn.xybbz.page.plex.PlexAlbumRemoteMediator
+import cn.xybbz.page.plex.PlexFavoriteMusicRemoteMediator
+import cn.xybbz.page.plex.PlexMusicRemoteMediator
 import cn.xybbz.ui.components.LrcEntry
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
@@ -61,6 +66,13 @@ class PlexDatasourceServer(
     connectionConfigServer,
     application
 ) {
+
+    private var musicFavoriteCollectionId: String? = null
+    private var albumFavoriteCollectionId: String? = null
+    private var artistFavoriteCollectionId: String? = null
+
+    //服务器信息
+    private var machineIdentifier: String? = null
 
     /**
      * 获得当前数据源类型
@@ -109,6 +121,15 @@ class PlexDatasourceServer(
      * 连通性检测
      */
     override suspend fun postPingSystem(): Boolean {
+        try {
+            val postPingSystem = plexApiClient.userApi().postPingSystem()
+            //获得machineIdentifier
+            machineIdentifier = postPingSystem.mediaContainer?.machineIdentifier
+        } catch (e: Exception) {
+            Log.i(Constants.LOG_ERROR_PREFIX, "ping服务器失败", e)
+            return false
+        }
+
         return true
     }
 
@@ -261,19 +282,13 @@ class PlexDatasourceServer(
         pageSize: Int,
         startIndex: Int
     ): AllResponse<XyMusic> {
-        val response =
-            getServerMusicList(
-                plexListType = PlexListType.all,
-                type = null,
-                startIndex = startIndex,
-                pageSize = pageSize,
-                artistId = artistId,
-                sortBy = PlexSortType.RATING_COUNT
-            )
-        return AllResponse(
-            items = response.mediaContainer?.metadata?.let { convertToMusicList(it) } ?: listOf(),
-            totalRecordCount = response.mediaContainer?.totalSize ?: 0,
-            startIndex = startIndex
+        return getServerMusicList(
+            plexListType = PlexListType.all,
+            type = null,
+            startIndex = startIndex,
+            pageSize = pageSize,
+            artistId = artistId,
+            sortBy = PlexSortType.RATING_COUNT
         )
     }
 
@@ -290,13 +305,13 @@ class PlexDatasourceServer(
             config = PagingConfig(
                 pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
                 enablePlaceholders = true
-            ), remoteMediator = EmbyAlbumRemoteMediator(
+            ), remoteMediator = PlexAlbumRemoteMediator(
                 sortType = sortType,
                 ifFavorite = ifFavorite,
                 years = years,
                 dataSource = getDataSourceType(),
                 db = db,
-                embyDatasourceServer = this,
+                plexDatasourceServer = this,
                 connectionId = connectionConfigServer.getConnectionId()
             )
         ) {
@@ -307,29 +322,111 @@ class PlexDatasourceServer(
     /**
      * 获得音乐列表数据
      */
+    @OptIn(ExperimentalPagingApi::class)
     override fun selectMusicFlowList(
         sortType: SortTypeEnum?,
         ifFavorite: Boolean?,
         years: String?
     ): Flow<PagingData<XyMusic>> {
-        TODO("Not yet implemented")
+        return Pager(
+            config = PagingConfig(
+                pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
+                prefetchDistance = 2, // 距离下一页请求的距离
+                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+            ), remoteMediator = PlexMusicRemoteMediator(
+                sortType = sortType,
+                db = db,
+                plexDatasourceServer = this,
+                ifFavorite = ifFavorite,
+                connectionId = connectionConfigServer.getConnectionId()
+            )
+        ) {
+            db.musicDao.selectHomeMusicListPage()
+        }.flow
     }
 
     /**
      * 获得艺术家
      */
+    @OptIn(ExperimentalPagingApi::class)
     override fun selectArtistFlowList(
         ifFavorite: Boolean?,
         selectChat: String?
     ): Flow<PagingData<XyArtist>> {
-        TODO("Not yet implemented")
+        return Pager(
+            config = PagingConfig(
+                pageSize = Constants.PAGE_SIZE_ALL,  // 每一页个数
+                enablePlaceholders = true
+            ), remoteMediator = ArtistRemoteMediator(
+                db = db,
+                datasourceServer = this,
+                ifFavorite = ifFavorite,
+                dataSource = getDataSourceType(),
+                connectionId = connectionConfigServer.getConnectionId()
+            )
+        ) {
+            db.artistDao.selectListPagingSource(selectChat)
+        }.flow
     }
 
     /**
      * 搜索音乐,艺术家,专辑
      */
     override suspend fun searchAll(search: String): SearchData {
-        TODO("Not yet implemented")
+        val searchData = supervisorScope {
+            val searchData = SearchData()
+            val album = async {
+                searchData.albums = try {
+                    val albumList = searchAlbumFlowList(search)
+                    db.albumDao.saveDataBatch(albumList)
+                    albumList
+                } catch (e: SocketTimeoutException) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载专辑超时", e)
+                    null
+                } catch (e: Exception) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载专辑报错", e)
+                    null
+                }
+
+            }
+
+            val artist = async {
+                searchData.artists = try {
+                    val artistList = searchArtistFlowList(search)
+                    saveBatchArtist(artistList)
+                    artistList
+                } catch (e: SocketTimeoutException) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载艺术家超时", e)
+                    null
+                } catch (e: Exception) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载艺术家报错", e)
+                    null
+                }
+
+            }
+
+            val music = async {
+                searchData.musics = try {
+                    val musicList = searchMusicFlowList(search)
+                    db.musicDao.saveDataBatch(musicList)
+                    musicList
+                } catch (e: SocketTimeoutException) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载音乐超时", e)
+                    null
+                } catch (e: Exception) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载音乐报错", e)
+                    null
+                }
+
+            }
+
+            album.await()
+            artist.await()
+            music.await()
+            searchData
+        }
+
+        return searchData
     }
 
     /**
@@ -341,6 +438,7 @@ class PlexDatasourceServer(
      * @param [dataType] 数据类型
      * @return [Flow<PagingData<XyMusic>>]
      */
+    @OptIn(ExperimentalPagingApi::class)
     override fun selectMusicListByParentId(
         sortType: SortTypeEnum?,
         ifFavorite: Boolean?,
@@ -348,7 +446,27 @@ class PlexDatasourceServer(
         itemId: String,
         dataType: MusicDataTypeEnum
     ): Flow<PagingData<XyMusic>> {
-        TODO("Not yet implemented")
+        return Pager(
+            config = PagingConfig(
+                pageSize = ALBUM_MUSIC_LIST_PAGE_SIZE,  // 每一页个数
+//                    prefetchDistance = ALBUM_MUSIC_LIST_PAGE_SIZE, // 距离下一页请求的距离
+                initialLoadSize = ALBUM_MUSIC_LIST_PAGE_SIZE,  // 第一次加载数量，如果不设置的话是 pageSize * 2
+            ), remoteMediator = PlexAlbumOrPlaylistMusicListRemoteMediator(
+                itemId = itemId,
+                sortType = sortType,
+                ifFavorite = ifFavorite,
+                years = years,
+                plexDatasourceServer = this,
+                db = db,
+                dataType = dataType,
+                connectionId = connectionConfigServer.getConnectionId()
+            )
+        ) {
+            if (dataType == MusicDataTypeEnum.ALBUM)
+                db.musicDao.selectAlbumMusicListPage(albumId = itemId)
+            else
+                db.musicDao.selectPlaylistMusicListPage(playlistId = itemId)
+        }.flow
     }
 
     /**
@@ -359,7 +477,92 @@ class PlexDatasourceServer(
         itemId: String,
         dataType: MusicTypeEnum
     ): Boolean {
-        TODO("Not yet implemented")
+        //查询收藏合集是否存在,如果不存在则查询
+        var collectionId: String? = null
+        when (dataType) {
+            MusicTypeEnum.MUSIC -> {
+                if (musicFavoriteCollectionId == null) {
+                    //查询合集
+                    val musicCollection = plexApiClient.userLibraryApi()
+                        .getCollection(title = Constants.PLEX_MUSIC_COLLECTION_TITLE)
+                    if (musicCollection.mediaContainer?.metadata.isNullOrEmpty()) {
+                        val collectionResponse = plexApiClient.userLibraryApi().addCollection(
+                            sectionId = connectionConfigServer.libraryId!!
+                        )
+                        musicFavoriteCollectionId =
+                            collectionResponse.mediaContainer?.metadata?.get(0)?.index
+                    } else {
+                        musicFavoriteCollectionId =
+                            musicCollection.mediaContainer?.metadata?.get(0)?.index
+                    }
+                    if (musicFavoriteCollectionId == null) {
+                        return false
+                    }
+                }
+                collectionId = musicFavoriteCollectionId
+            }
+
+            MusicTypeEnum.ALBUM -> {
+                if (albumFavoriteCollectionId == null) {
+                    //查询合集
+                    val albumCollection = plexApiClient.userLibraryApi()
+                        .getCollection(subtype = 9, title = Constants.PLEX_ALBUM_COLLECTION_TITLE)
+                    if (albumCollection.mediaContainer?.metadata.isNullOrEmpty()) {
+                        val collectionResponse = plexApiClient.userLibraryApi().addCollection(
+                            sectionId = connectionConfigServer.libraryId!!
+                        )
+                        albumFavoriteCollectionId =
+                            collectionResponse.mediaContainer?.metadata?.get(0)?.index
+                    } else {
+                        albumFavoriteCollectionId =
+                            albumCollection.mediaContainer?.metadata?.get(0)?.index
+                    }
+                    if (albumFavoriteCollectionId == null) {
+                        return false
+                    }
+                }
+                collectionId = albumFavoriteCollectionId
+            }
+
+            MusicTypeEnum.ARTIST -> {
+                if (artistFavoriteCollectionId == null) {
+                    //查询合集
+                    val albumCollection = plexApiClient.userLibraryApi()
+                        .getCollection(subtype = 9, title = Constants.PLEX_ARTIST_COLLECTION_TITLE)
+                    if (albumCollection.mediaContainer?.metadata.isNullOrEmpty()) {
+                        val collectionResponse = plexApiClient.userLibraryApi().addCollection(
+                            sectionId = connectionConfigServer.libraryId!!
+                        )
+                        artistFavoriteCollectionId =
+                            collectionResponse.mediaContainer?.metadata?.get(0)?.index
+                    } else {
+                        artistFavoriteCollectionId =
+                            albumCollection.mediaContainer?.metadata?.get(0)?.index
+                    }
+                    if (artistFavoriteCollectionId == null) {
+                        return false
+                    }
+                }
+
+                collectionId = artistFavoriteCollectionId
+            }
+        }
+
+        if (collectionId == null) {
+            return false
+        }
+
+        plexApiClient.userLibraryApi()
+            .markFavoriteItem(
+                collectionId = collectionId,
+                uri = "server://${machineIdentifier}/com.plexapp.plugins.library/library/metadata/${itemId}"
+            )
+        db.musicDao.updateFavoriteByItemId(
+            true,
+            itemId,
+            connectionConfigServer.getConnectionId()
+        )
+        return true
     }
 
     /**
@@ -386,7 +589,7 @@ class PlexDatasourceServer(
         supervisorScope {
             val album = async {
                 album = try {
-                    getAlbumList(pageSize = 1, startIndex = 0).mediaContainer?.totalSize
+                    getAlbumList(pageSize = 0, startIndex = 0).totalRecordCount
                 } catch (e: SocketTimeoutException) {
                     Log.e(Constants.LOG_ERROR_PREFIX, "加载专辑数量超时", e)
                     null
@@ -412,7 +615,7 @@ class PlexDatasourceServer(
 
             val music = async {
                 music = try {
-                    getServerMusicList(startIndex = 0, pageSize = 0).mediaContainer?.totalSize
+                    getServerMusicList(startIndex = 0, pageSize = 0).totalRecordCount
                 } catch (e: SocketTimeoutException) {
                     Log.e(Constants.LOG_ERROR_PREFIX, "加载音乐数量超时", e)
                     null
@@ -664,13 +867,11 @@ class PlexDatasourceServer(
             sortBy = PlexSortType.LAST_VIEWED_AT,
             sortOrder = PlexSortOrder.DESCENDING
         )
-        albumList.mediaContainer?.metadata?.let { albums ->
+        albumList.items?.let { albums ->
             db.withTransaction {
                 db.albumDao.removeByType(MusicDataTypeEnum.NEWEST)
                 saveBatchAlbum(
-                    convertToAlbumList(
-                        albums
-                    ), MusicDataTypeEnum.NEWEST
+                    albums, MusicDataTypeEnum.NEWEST
                 )
 
             }
@@ -687,14 +888,15 @@ class PlexDatasourceServer(
             pageSize = Constants.MIN_PAGE,
             sortBy = PlexSortType.VIEWCOUNT,
             sortOrder = PlexSortOrder.DESCENDING,
-            params = mapOf(Pair("viewCount>>0", ""))
+            params = mapOf(Pair("viewCount>>=0", ""))
         )
-        val musicList = response.mediaContainer?.metadata?.let { convertToMusicList(it) }
-        if (!musicList.isNullOrEmpty())
+        response.items?.let { musicList ->
             db.withTransaction {
                 db.musicDao.removeByType(MusicDataTypeEnum.MAXIMUM_PLAY)
                 saveBatchMusic(musicList, dataType = MusicDataTypeEnum.MAXIMUM_PLAY)
             }
+        }
+
     }
 
     /**
@@ -709,13 +911,11 @@ class PlexDatasourceServer(
             sortBy = PlexSortType.ADDED_AT,
             sortOrder = PlexSortOrder.DESCENDING
         )
-        albumList.mediaContainer?.metadata?.let { albums ->
+        albumList.items?.let { albums ->
             db.withTransaction {
                 db.albumDao.removeByType(MusicDataTypeEnum.NEWEST)
                 saveBatchAlbum(
-                    convertToAlbumList(
-                        albums
-                    ), MusicDataTypeEnum.NEWEST
+                    albums, MusicDataTypeEnum.NEWEST
                 )
 
             }
@@ -726,8 +926,22 @@ class PlexDatasourceServer(
     /**
      * 获得收藏歌曲列表
      */
+    @OptIn(ExperimentalPagingApi::class)
     override fun selectFavoriteMusicFlowList(): Flow<PagingData<XyMusic>> {
-        TODO("Not yet implemented")
+        return Pager(
+            PagingConfig(
+                pageSize = Constants.UI_LIST_PAGE,  // 每一页个数
+                prefetchDistance = 2, // 距离下一页请求的距离
+                initialLoadSize = Constants.UI_LIST_PAGE // 第一次加载数量，如果不设置的话是 pageSize * 2
+            ),
+            remoteMediator = PlexFavoriteMusicRemoteMediator(
+                plexDatasourceServer = this,
+                db = db,
+                connectionId = connectionConfigServer.getConnectionId()
+            )
+        ) {
+            db.musicDao.selectFavoriteMusicListPage()
+        }.flow
     }
 
     /**
@@ -916,8 +1130,10 @@ class PlexDatasourceServer(
         sortBy: PlexSortType? = PlexSortType.ARTIST_TITLE_SORT,
         sortOrder: PlexSortOrder? = PlexSortOrder.ASCENDING,
         artistId: String? = null,
+        albumId: String? = null,
+        ifFavorite: Boolean? = null,
         params: Map<String, String>? = null
-    ): PlexResponse<PlexLibraryItemResponse> {
+    ): AllResponse<XyMusic> {
         val response =
             plexApiClient.itemApi().getSongs(
                 sectionKey = connectionConfigServer.libraryId!!,
@@ -928,9 +1144,15 @@ class PlexDatasourceServer(
                 sort = "$sortBy:$sortOrder",
                 title = search,
                 artistId = artistId,
+                albumId = albumId,
+                trackCollection = if (ifFavorite == true) musicFavoriteCollectionId else null,
                 params = params ?: mapOf(Pair("1", "1"))
             )
-        return response
+        return AllResponse(
+            items = response.mediaContainer?.metadata?.let { convertToMusicList(it) },
+            totalRecordCount = response.mediaContainer?.totalSize ?: 0,
+            startIndex = startIndex
+        )
     }
 
 
@@ -945,8 +1167,9 @@ class PlexDatasourceServer(
         search: String? = null,
         sortBy: PlexSortType = PlexSortType.TITLE_SORT,
         sortOrder: PlexSortOrder = PlexSortOrder.ASCENDING,
+        ifFavorite: Boolean? = null,
         params: Map<String, String>? = null
-    ): PlexResponse<PlexLibraryItemResponse> {
+    ): AllResponse<XyAlbum> {
         val albumResponse = plexApiClient.itemApi().getSongs(
             sectionKey = connectionConfigServer.libraryId!!,
             type = type,
@@ -955,10 +1178,18 @@ class PlexDatasourceServer(
             pageSize = pageSize,
             sort = "$sortBy:$sortOrder",
             title = search,
+            albumCollection = if (ifFavorite == true) albumFavoriteCollectionId else null,
             params = params ?: mapOf(Pair("1", "1"))
         )
 
-        return albumResponse
+        return AllResponse(
+            items = albumResponse.mediaContainer?.metadata?.let {
+                convertToAlbumList(
+                    it
+                )
+            }, totalRecordCount = albumResponse.mediaContainer?.totalSize ?: 0,
+            startIndex = startIndex
+        )
     }
 
 
@@ -1024,6 +1255,85 @@ class PlexDatasourceServer(
         return response
     }
 
+
+    /**
+     * 获得专辑或歌单的音乐列表
+     */
+    suspend fun getMusicListByAlbumOrPlaylist(
+        startIndex: Int,
+        pageSize: Int,
+        itemId: String,
+        dataType: MusicDataTypeEnum,
+        ifFavorite: Boolean? = null,
+        sortBy: PlexSortType? = PlexSortType.ARTIST_TITLE_SORT,
+        sortOrder: PlexSortOrder? = PlexSortOrder.ASCENDING,
+        params: Map<String, String>? = null,
+        artistId: String? = null
+    ): AllResponse<XyMusic> {
+        if (dataType == MusicDataTypeEnum.ALBUM) {
+            //存储歌曲数据
+            return getServerMusicList(
+                startIndex = startIndex,
+                pageSize = pageSize,
+                albumId = itemId,
+                ifFavorite = ifFavorite,
+                sortBy = sortBy,
+                sortOrder = sortOrder,
+                params = params,
+                artistId = artistId
+            )
+        } else {
+            //存储歌曲数据
+            val playlistMusicList =
+                plexApiClient.playlistsApi().getPlaylistMusicList(
+                    playlistId = itemId,
+                    start = startIndex,
+                    pageSize = pageSize,
+                    sort = "$sortBy:$sortOrder",
+                    trackCollection = if (ifFavorite == true) musicFavoriteCollectionId else null,
+                    params = params ?: mapOf(Pair("1", "1")),
+                    artistId = artistId
+                )
+
+            return AllResponse(
+                items = playlistMusicList.mediaContainer?.metadata?.let { convertToMusicList(it) },
+                totalRecordCount = playlistMusicList.mediaContainer?.totalSize ?: 0,
+                startIndex = startIndex
+            )
+        }
+    }
+
+
+    /**
+     * 搜索专辑
+     * @param [search] 搜索内容
+     */
+    suspend fun searchAlbumFlowList(search: String): List<XyAlbum> {
+        return getAlbumList(
+            pageSize = Constants.UI_LIST_PAGE, startIndex = 0, search = search
+        ).items ?: emptyList()
+    }
+
+    /**
+     * 搜索音乐
+     * @param [search] 搜索内容
+     */
+    suspend fun searchMusicFlowList(search: String): List<XyMusic> {
+        return getServerMusicList(
+            pageSize = ALBUM_MUSIC_LIST_PAGE_SIZE, startIndex = 0, search = search
+        ).items ?: emptyList()
+    }
+
+    /**
+     * 搜索艺术家
+     * @param [searchQuery] 搜索查询
+     * @return [Flow<PagingData<ArtistItem>>?]
+     */
+    suspend fun searchArtistFlowList(searchQuery: String): List<XyArtist> {
+        val response =
+            getArtistList(startIndex = 0, pageSize = Constants.UI_LIST_PAGE, search = searchQuery)
+        return response.items ?: emptyList()
+    }
 
     /**
      * 将ItemResponse转换成XyAlbum

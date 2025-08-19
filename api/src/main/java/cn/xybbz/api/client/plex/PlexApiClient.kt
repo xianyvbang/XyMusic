@@ -5,6 +5,7 @@ import cn.xybbz.api.client.jellyfin.encodeUrlParameter
 import cn.xybbz.api.client.plex.service.PlexItemApi
 import cn.xybbz.api.client.plex.service.PlexPlaylistsApi
 import cn.xybbz.api.client.plex.service.PlexUserApi
+import cn.xybbz.api.client.plex.service.PlexUserLibraryApi
 import cn.xybbz.api.client.plex.service.PlexUserViewsApi
 import cn.xybbz.api.constants.ApiConstants
 
@@ -76,6 +77,7 @@ class PlexApiClient : DefaultApiClient() {
     private lateinit var plexUserViewsApi: PlexUserViewsApi
     private lateinit var plexItemApi: PlexItemApi
     private lateinit var plexPlaylistsApi: PlexPlaylistsApi
+    private lateinit var plexUserLibraryApi: PlexUserLibraryApi
 
 
     /**
@@ -188,6 +190,15 @@ class PlexApiClient : DefaultApiClient() {
         return plexPlaylistsApi
     }
 
+    /**
+     *用户资源接口服务
+     */
+    override fun userLibraryApi(restart: Boolean): PlexUserLibraryApi {
+        if (!this::plexUserLibraryApi.isInitialized || restart) {
+            plexUserLibraryApi = instance().create(PlexUserLibraryApi::class.java)
+        }
+        return plexUserLibraryApi
+    }
 
     /**
      * 获取图像URL

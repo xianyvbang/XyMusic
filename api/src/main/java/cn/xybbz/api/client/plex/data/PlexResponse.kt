@@ -1,7 +1,5 @@
 package cn.xybbz.api.client.plex.data
 
-import cn.xybbz.api.client.data.AllResponse
-import cn.xybbz.api.client.jellyfin.data.Response
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 

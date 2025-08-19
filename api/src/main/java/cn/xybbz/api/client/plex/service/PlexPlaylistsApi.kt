@@ -6,15 +6,12 @@ import cn.xybbz.api.client.navidrome.data.PlaylistAddMusicsUpdateResponse
 import cn.xybbz.api.client.navidrome.data.PlaylistItemData
 import cn.xybbz.api.client.navidrome.data.PlaylistRemoveMusicsUpdateResponse
 import cn.xybbz.api.client.navidrome.data.PlaylistUpdateRequest
-import cn.xybbz.api.client.navidrome.data.SongItem
+import cn.xybbz.api.client.plex.data.PlexLibraryItemResponse
 import cn.xybbz.api.client.plex.data.PlexPlaylistResponse
 import cn.xybbz.api.client.plex.data.PlexResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicPlaylistResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
-import cn.xybbz.api.enums.navidrome.OrderType
-import cn.xybbz.api.enums.navidrome.SortType
 import cn.xybbz.api.enums.plex.PlexPlaylistType
-import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -22,6 +19,7 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.QueryMap
 
 interface PlexPlaylistsApi : BaseApi {
 
@@ -66,13 +64,16 @@ interface PlexPlaylistsApi : BaseApi {
         @Query("id") id: List<String>
     ): PlaylistRemoveMusicsUpdateResponse
 
-    @GET("/api/playlist/{playlistId}/tracks")
+    @GET("/playlists/{playlistId}/items")
     suspend fun getPlaylistMusicList(
         @Path("playlistId") playlistId: String,
-        @Query("_start") start: Int,
-        @Query("_end") end: Int,
-        @Query("_order") order: OrderType = OrderType.ASC,
-        @Query("_sort") sort: SortType = SortType.TITLE,
-        @Query("missing") missing: Boolean? = null
-    ): Response<List<SongItem>>
+        @Query("type") type: Int? = 10,
+        @Query("X-Plex-Container-Start") start: Int,
+        @Query("X-Plex-Container-Size") pageSize: Int,
+        @Query("artist.id") artistId: String? = null,
+        @Query("album.id") albumId: String? = null,
+        @Query("sort") sort: String? = null,
+        @Query("track.collection") trackCollection: String? = null,
+        @QueryMap params: Map<String, String>? = null
+    ):  PlexResponse<PlexLibraryItemResponse>
 }

@@ -106,7 +106,7 @@ data class Metadatum(
     /**
      * The index position of the media item.
      */
-    val index: Long? = null,
+    val index: String? = null,
 
     /**
      * The number of leaf items (end nodes) under this media item.
