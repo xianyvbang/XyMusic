@@ -6,7 +6,7 @@ import cn.xybbz.api.client.plex.data.ItemInfoResponse
 import cn.xybbz.api.client.plex.data.PlexResponse
 import cn.xybbz.api.enums.plex.PlexSortOrder
 import cn.xybbz.api.enums.plex.PlexSortType
-import retrofit2.http.GET
+import retrofit2.http.DELETE
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -53,11 +53,11 @@ interface PlexUserLibraryApi : BaseApi {
      * 取消标记喜欢物品
      * @return [FavoriteResponse]
      */
-    @GET("/rest/unstar")
+    @DELETE("/library/collections/{collectionId}/children/{musicId}")
     suspend fun unmarkFavoriteItem(
-        @Query("id") id: List<String>? = null,
-        @Query("albumId") albumId: List<String>? = null,
-        @Query("artistId") artistId: List<String>? = null
-    ): FavoriteResponse
+        @Path("collectionId") collectionId: String,
+        @Path("musicId") musicId: String,
+        @Query("excludeAllLeaves") excludeAllLeaves: Int? = 1
+    ): PlexResponse<ItemInfoResponse>
 
 }

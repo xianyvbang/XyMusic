@@ -478,7 +478,7 @@ class PlexDatasourceServer(
         dataType: MusicTypeEnum
     ): Boolean {
         //查询收藏合集是否存在,如果不存在则查询
-        var collectionId: String? = null
+        var collectionId: String?
         when (dataType) {
             MusicTypeEnum.MUSIC -> {
                 if (musicFavoriteCollectionId == null) {
@@ -573,7 +573,66 @@ class PlexDatasourceServer(
         itemId: String,
         dataType: MusicTypeEnum
     ): Boolean {
-        TODO("Not yet implemented")
+        var collectionId: String?
+        when (dataType) {
+            MusicTypeEnum.MUSIC -> {
+                if (musicFavoriteCollectionId == null) {
+                    //查询合集
+                    val musicCollection = plexApiClient.userLibraryApi()
+                        .getCollection(title = Constants.PLEX_MUSIC_COLLECTION_TITLE)
+                    musicFavoriteCollectionId =
+                        musicCollection.mediaContainer?.metadata?.get(0)?.index
+                    if (musicFavoriteCollectionId == null) {
+                        return true
+                    }
+                }
+                collectionId = musicFavoriteCollectionId
+            }
+
+            MusicTypeEnum.ALBUM -> {
+                if (albumFavoriteCollectionId == null) {
+                    //查询合集
+                    val albumCollection = plexApiClient.userLibraryApi()
+                        .getCollection(subtype = 9, title = Constants.PLEX_ALBUM_COLLECTION_TITLE)
+                    albumFavoriteCollectionId =
+                        albumCollection.mediaContainer?.metadata?.get(0)?.index
+                    if (albumFavoriteCollectionId == null) {
+                        return true
+                    }
+                }
+                collectionId = albumFavoriteCollectionId
+            }
+
+            MusicTypeEnum.ARTIST -> {
+                if (artistFavoriteCollectionId == null) {
+                    //查询合集
+                    val albumCollection = plexApiClient.userLibraryApi()
+                        .getCollection(subtype = 9, title = Constants.PLEX_ARTIST_COLLECTION_TITLE)
+                    artistFavoriteCollectionId =
+                        albumCollection.mediaContainer?.metadata?.get(0)?.index
+                    if (artistFavoriteCollectionId == null) {
+                        return true
+                    }
+                }
+
+                collectionId = artistFavoriteCollectionId
+            }
+        }
+
+        if (collectionId == null) {
+            return true
+        }
+
+        plexApiClient.userLibraryApi().unmarkFavoriteItem(
+            musicId = itemId,
+            collectionId = collectionId
+        )
+        db.musicDao.updateFavoriteByItemId(
+            false,
+            itemId,
+            connectionConfigServer.getConnectionId()
+        )
+        return false
     }
 
     /**
