@@ -3,6 +3,8 @@ package cn.xybbz.api.client.plex
 import cn.xybbz.api.client.DefaultApiClient
 import cn.xybbz.api.client.jellyfin.encodeUrlParameter
 import cn.xybbz.api.client.plex.service.PlexItemApi
+import cn.xybbz.api.client.plex.service.PlexLibraryApi
+import cn.xybbz.api.client.plex.service.PlexLyricsApi
 import cn.xybbz.api.client.plex.service.PlexPlaylistsApi
 import cn.xybbz.api.client.plex.service.PlexUserApi
 import cn.xybbz.api.client.plex.service.PlexUserLibraryApi
@@ -78,6 +80,8 @@ class PlexApiClient : DefaultApiClient() {
     private lateinit var plexItemApi: PlexItemApi
     private lateinit var plexPlaylistsApi: PlexPlaylistsApi
     private lateinit var plexUserLibraryApi: PlexUserLibraryApi
+    private lateinit var plexLibraryApi: PlexLibraryApi
+    private lateinit var plexLyricsApi: PlexLyricsApi
 
 
     /**
@@ -198,6 +202,26 @@ class PlexApiClient : DefaultApiClient() {
             plexUserLibraryApi = instance().create(PlexUserLibraryApi::class.java)
         }
         return plexUserLibraryApi
+    }
+
+    /**
+     * 资源接口
+     */
+    override fun libraryApi(restart: Boolean): PlexLibraryApi {
+        if (!this::plexLibraryApi.isInitialized || restart) {
+            plexLibraryApi = instance().create(PlexLibraryApi::class.java)
+        }
+        return plexLibraryApi
+    }
+
+    /**
+     * 歌词接口
+     */
+    override fun lyricsApi(restart: Boolean): PlexLyricsApi {
+        if (!this::plexLyricsApi.isInitialized || restart) {
+            plexLyricsApi = instance().create(PlexLyricsApi::class.java)
+        }
+        return plexLyricsApi
     }
 
     /**

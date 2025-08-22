@@ -35,7 +35,7 @@ enum class DataSourceType(
     val ifDelete: Boolean,
     //是否艺术家可以进行收藏筛选
     val ifArtistFavorite: Boolean,
-    //是否显示需要服务端地址
+    //是否需要输入需要服务端地址
     val ifInputUrl: Boolean = true
 ) {
 
@@ -110,8 +110,8 @@ enum class DataSourceType(
         ifShowSelect = true,
         ifShowCount = true,
         ifDelete = true,
-        ifArtistFavorite = false,
-        ifSelectOneYear = false,
+        ifArtistFavorite = true,
+        ifSelectOneYear = true,
         ifInputUrl = false
     )
 }

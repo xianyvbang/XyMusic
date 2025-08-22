@@ -5,12 +5,9 @@ import cn.xybbz.api.client.navidrome.data.PlaylistAddMusicsUpdateRequest
 import cn.xybbz.api.client.navidrome.data.PlaylistAddMusicsUpdateResponse
 import cn.xybbz.api.client.navidrome.data.PlaylistItemData
 import cn.xybbz.api.client.navidrome.data.PlaylistRemoveMusicsUpdateResponse
-import cn.xybbz.api.client.navidrome.data.PlaylistUpdateRequest
 import cn.xybbz.api.client.plex.data.PlexLibraryItemResponse
 import cn.xybbz.api.client.plex.data.PlexPlaylistResponse
 import cn.xybbz.api.client.plex.data.PlexResponse
-import cn.xybbz.api.client.subsonic.data.SubsonicPlaylistResponse
-import cn.xybbz.api.client.subsonic.data.SubsonicResponse
 import cn.xybbz.api.enums.plex.PlexPlaylistType
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -30,10 +27,10 @@ interface PlexPlaylistsApi : BaseApi {
         @Query("public") smart: Int = 1,
     ): PlexResponse<PlexPlaylistResponse>
 
-    @PUT("/api/playlist/{playlistId}")
+    @PUT("/playlists/{playlistId}")
     suspend fun updatePlaylist(
         @Path("playlistId") playlistId: String,
-        @Body playlistUpdateRequest: PlaylistUpdateRequest
+        @Query("title") title: String
     ): PlaylistItemData
 
     @DELETE("/api/playlist/{playlistId}")
@@ -44,13 +41,15 @@ interface PlexPlaylistsApi : BaseApi {
     @GET("/playlists")
     suspend fun getPlaylists(
         @Query("plexPlaylistType") order: PlexPlaylistType = PlexPlaylistType.AUDIO,
-        @Query("smart") smart: Int? = null
+        @Query("smart") smart: Int? = null,
+        @Query("X-Plex-Container-Start") start: Int,
+        @Query("X-Plex-Container-Size") pageSize: Int
     ): PlexResponse<PlexPlaylistResponse>
 
-    @GET("/rest/getPlaylist")
+    @GET("/playlists/{playlistId}")
     suspend fun getPlaylistById(
-        @Query("id") id: String
-    ): SubsonicResponse<SubsonicPlaylistResponse>
+        @Query("playlistId") id: String
+    ): PlexResponse<PlexPlaylistResponse>
 
     @POST("/api/playlist/{playlistId}/tracks")
     suspend fun addPlaylistMusics(
@@ -75,5 +74,5 @@ interface PlexPlaylistsApi : BaseApi {
         @Query("sort") sort: String? = null,
         @Query("track.collection") trackCollection: String? = null,
         @QueryMap params: Map<String, String>? = null
-    ):  PlexResponse<PlexLibraryItemResponse>
+    ): PlexResponse<PlexLibraryItemResponse>
 }

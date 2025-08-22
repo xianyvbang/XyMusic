@@ -42,17 +42,8 @@ interface PlexItemApi : BaseApi {
     ): PlexResponse<PlexLibraryItemResponse>
 
 
-    @GET("/library/metadata/{sectionKey}/children")
-    suspend fun getAlbumByArtist(
-        @Path("sectionKey") sectionKey: String,
-        @Query("excludeAllLeaves") excludeAllLeaves: Int = 1,
-        @Query("X-Plex-Container-Start") start: Int,
-        @Query("X-Plex-Container-Size") pageSize: Int
-    ): PlexResponse<PlexLibraryItemResponse>
-
-
     @GET("/library/metadata/{sectionKey}")
-    suspend fun getArtistInfo(
+    suspend fun getLibraryInfo(
         @Path("sectionKey") sectionKey: String,
         @Query("includeConcerts") includeConcerts: Int = 1,
         @Query("includeExtras") includeExtras: Int = 1,
