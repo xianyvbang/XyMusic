@@ -1,15 +1,12 @@
 package cn.xybbz.api.client.plex.service
 
 import cn.xybbz.api.base.BaseApi
-import cn.xybbz.api.client.navidrome.data.PlaylistAddMusicsUpdateRequest
-import cn.xybbz.api.client.navidrome.data.PlaylistAddMusicsUpdateResponse
 import cn.xybbz.api.client.navidrome.data.PlaylistItemData
 import cn.xybbz.api.client.navidrome.data.PlaylistRemoveMusicsUpdateResponse
 import cn.xybbz.api.client.plex.data.PlexLibraryItemResponse
 import cn.xybbz.api.client.plex.data.PlexPlaylistResponse
 import cn.xybbz.api.client.plex.data.PlexResponse
 import cn.xybbz.api.enums.plex.PlexPlaylistType
-import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -33,7 +30,7 @@ interface PlexPlaylistsApi : BaseApi {
         @Query("title") title: String
     ): PlaylistItemData
 
-    @DELETE("/api/playlist/{playlistId}")
+    @DELETE("/playlists/{playlistId}")
     suspend fun deletePlaylist(
         @Query("playlistId") playlistId: String
     )
@@ -51,16 +48,16 @@ interface PlexPlaylistsApi : BaseApi {
         @Query("playlistId") id: String
     ): PlexResponse<PlexPlaylistResponse>
 
-    @POST("/api/playlist/{playlistId}/tracks")
+    @PUT("/playlists/{playlistId}/items")
     suspend fun addPlaylistMusics(
         @Path("playlistId") playlistId: String,
-        @Body playlistAddMusicsRequest: PlaylistAddMusicsUpdateRequest
-    ): PlaylistAddMusicsUpdateResponse
+        @Query("uri") uri: String
+    ): PlexResponse<PlexPlaylistResponse>
 
-    @DELETE("/api/playlist/{playlistId}/tracks")
+    @DELETE("/playlists/{playlistId}/items/{itemId}")
     suspend fun removePlaylistMusics(
         @Path("playlistId") playlistId: String,
-        @Query("id") id: List<String>
+        @Path("itemId") itemId: String
     ): PlaylistRemoveMusicsUpdateResponse
 
     @GET("/playlists/{playlistId}/items")

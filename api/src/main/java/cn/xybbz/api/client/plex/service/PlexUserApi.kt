@@ -7,9 +7,11 @@ import cn.xybbz.api.client.plex.data.PlexLoginRequest
 import cn.xybbz.api.client.plex.data.PlexLoginResponse
 import cn.xybbz.api.client.plex.data.PlexPingSystemResponse
 import cn.xybbz.api.client.plex.data.PlexSystemInfoResponse
+import cn.xybbz.api.enums.plex.PlayState
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Query
 import retrofit2.http.Url
 
 interface PlexUserApi : BaseApi {
@@ -38,4 +40,15 @@ interface PlexUserApi : BaseApi {
      */
     @GET
     suspend fun getSystemInfo(@Url fullUrl: String): List<PlexSystemInfoResponse>
+
+
+    /**
+     * 上报正在播放音乐
+     */
+    @GET("/:/timeline")
+    suspend fun playing(
+        @Query("ratingKey") ratingKey: String,
+        @Query("time") time: Long,
+        @Query("state") state: PlayState
+    )
 }

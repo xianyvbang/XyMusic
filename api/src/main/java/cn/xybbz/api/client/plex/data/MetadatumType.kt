@@ -4,7 +4,6 @@ import cn.xybbz.api.enums.plex.FlattenSeasons
 import cn.xybbz.api.enums.plex.MetadatumType
 import com.squareup.moshi.Json
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 /**
  * The available images for this media item
@@ -378,5 +377,8 @@ data class Metadatum(
     val similar: List<Similar>? = null,
 
     @param:Json(name = "Writer")
-    val writer: List<Writer>? = null
+    val writer: List<Writer>? = null,
+
+    @param:Json(name = "playlistItemID")
+    val playlistItemID:String? = null
 )

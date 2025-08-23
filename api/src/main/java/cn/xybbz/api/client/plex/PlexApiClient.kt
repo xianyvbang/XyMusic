@@ -68,6 +68,18 @@ class PlexApiClient : DefaultApiClient() {
     var serverName: String? = null
         private set
 
+
+    var musicFavoriteCollectionId: String? = null
+        private set
+    var albumFavoriteCollectionId: String? = null
+        private set
+    var artistFavoriteCollectionId: String? = null
+        private set
+
+    //服务器信息
+    var machineIdentifier: String? = null
+        private set
+
     /**
      * token的header名称
      */
@@ -155,6 +167,34 @@ class PlexApiClient : DefaultApiClient() {
     }
 
     /**
+     * 更新musicFavoriteCollectionId
+     */
+    fun updateMusicFavoriteCollectionId(musicFavoriteCollectionId: String?) {
+        this.musicFavoriteCollectionId = musicFavoriteCollectionId
+    }
+
+    /**
+     * 更新albumFavoriteCollectionId
+     */
+    fun updateAlbumFavoriteCollectionId(albumFavoriteCollectionId: String?) {
+        this.albumFavoriteCollectionId = albumFavoriteCollectionId
+    }
+
+    /**
+     * 更新artistFavoriteCollectionId
+     */
+    fun updateArtistFavoriteCollectionId(artistFavoriteCollectionId: String?) {
+        this.artistFavoriteCollectionId = artistFavoriteCollectionId
+    }
+
+    /**
+     * 更新machineIdentifier
+     */
+    fun updateMachineIdentifier(machineIdentifier: String?) {
+        this.machineIdentifier = machineIdentifier
+    }
+
+    /**
      * 获得用户接口服务
      */
     override fun userApi(restart: Boolean): PlexUserApi {
@@ -239,6 +279,16 @@ class PlexApiClient : DefaultApiClient() {
         return getAudioStreamUrl(
             trackMediaPartKey = trackMediaPartKey
         )
+    }
+
+    fun createMusicUri(itemId: String): String {
+        return "server://${machineIdentifier}/com.plexapp.plugins.library/library/metadata/${itemId}"
+    }
+
+    fun createMusicUri(itemIds: List<String>): String {
+        return "server://${machineIdentifier}/com.plexapp.plugins.library/library/metadata/${
+            itemIds.joinToString(",") { it }
+        }"
     }
 
     private fun getAudioStreamUrl(

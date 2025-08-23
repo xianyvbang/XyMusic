@@ -134,6 +134,10 @@ data class XyMusic(
      */
     val codec: String? = "",
     /**
+     * 播放列表Id
+     */
+    val playlistItemId:String?,
+    /**
      * 创建时间
      */
     val createTime: Long = System.currentTimeMillis()
