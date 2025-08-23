@@ -21,7 +21,10 @@ data class ClientLoginInfoReq(
     @param:Json(name = "Pw")
     val password: String,
     val address: String,
-    val connectionId: Long? = null
+    val connectionId: Long? = null,
+    val serverVersion: String? = null,
+    val serverName: String? = null,
+    val serverId: String? = null
 ) : AuthenticateRequest
 
 @JsonClass(generateAdapter = true)

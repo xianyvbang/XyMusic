@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.room.Transaction
+import androidx.room.withTransaction
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.data.AllResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
@@ -59,7 +60,7 @@ abstract class IDataSourceParentServer(
         return flow {
             Log.i("=====", "输入的地址: ${clientLoginInfoReq.address}")
             emit(ClientLoginInfoState.Connected(clientLoginInfoReq.address))
-            var deviceId = UUID.randomUUID().toString()
+            var deviceId = getDeviceId()
             var connectionConfig: ConnectionConfig? = null
             clientLoginInfoReq.connectionId?.let {
                 connectionConfig = db.connectionConfigDao.selectById(it)
@@ -77,24 +78,25 @@ abstract class IDataSourceParentServer(
                 username = clientLoginInfoReq.username,
                 password = clientLoginInfoReq.password
             )
-            try {
-                val postPingSystem = postPingSystem()
-                if (postPingSystem) {
-                    Log.i("=====", "是否连通: $postPingSystem")
-                    emit(ClientLoginInfoState.ConnectionSuccess)
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                when (e) {
-                    is UnauthorizedException -> {
-                        throw e
+            if (getDataSourceType().ifInputUrl)
+                try {
+                    val postPingSystem = postPingSystem()
+                    if (postPingSystem) {
+                        Log.i("=====", "是否连通: $postPingSystem")
+                        emit(ClientLoginInfoState.ConnectionSuccess)
                     }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    when (e) {
+                        is UnauthorizedException -> {
+                            throw e
+                        }
 
-                    else -> {
-                        throw ConnectionException()
+                        else -> {
+                            throw ConnectionException()
+                        }
                     }
                 }
-            }
 
             //获得服务端信息
             val responseData =
@@ -143,18 +145,23 @@ abstract class IDataSourceParentServer(
                 deviceId = deviceId
             )
 
-            val connectionId = if (clientLoginInfoReq.connectionId != null) {
-                db.connectionConfigDao.update(connectionConfig)
-                clientLoginInfoReq.connectionId!!
-            } else {
-                db.connectionConfigDao.save(connectionConfig)
+
+            db.withTransaction {
+                val connectionId = if (clientLoginInfoReq.connectionId != null) {
+                    db.connectionConfigDao.update(connectionConfig)
+                    clientLoginInfoReq.connectionId!!
+                } else {
+                    db.connectionConfigDao.save(connectionConfig)
+                }
+                connectionConfigServer.setConnectionConfigData(connectionConfig.copy(id = connectionId))
+                setToken()
+                selectMediaLibrary()
+                MessageUtils.sendDismiss()
+                setServerOkHttpClient()
+                connectionConfigServer.updateLoginStates(true)
+                initFavoriteData()
             }
-            connectionConfigServer.setConnectionConfigData(connectionConfig.copy(id = connectionId))
-            connectionConfigServer.updateLoginStates(true)
-            MessageUtils.sendDismiss()
-            setToken()
-            setServerOkHttpClient()
-            initFavoriteData()
+
             emit(ClientLoginInfoState.UserLoginSuccess)
         }.flowOn(Dispatchers.IO).catch {
             it.printStackTrace()
@@ -188,6 +195,13 @@ abstract class IDataSourceParentServer(
      * 连通性检测
      */
     abstract suspend fun postPingSystem(): Boolean
+
+    /**
+     * 获得设备id
+     */
+    open fun getDeviceId(): String {
+        return UUID.randomUUID().toString()
+    }
 
     /**
      * 创建连接客户端
@@ -241,13 +255,16 @@ abstract class IDataSourceParentServer(
                         username = connectionConfig.username,
                         password = password,
                         address = address,
-                        connectionId = connectionConfig.id
+                        connectionId = connectionConfig.id,
+                        serverVersion = connectionConfig.serverVersion,
+                        serverName = connectionConfig.serverName,
+                        serverId = connectionConfig.serverId
                     )
                 )
             )
 
         }.flowOn(Dispatchers.IO).catch {
-            Log.e(Constants.LOG_ERROR_PREFIX, "自动登录异常 ${it.message}",it)
+            Log.e(Constants.LOG_ERROR_PREFIX, "自动登录异常 ${it.message}", it)
             connectionConfigServer.updateLoginStates(true)
             when (it) {
                 is SocketTimeoutException -> {
@@ -409,7 +426,7 @@ abstract class IDataSourceParentServer(
             }
             return tmpXyArtists
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "根据id集合获得艺术家信息集合失败",e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "根据id集合获得艺术家信息集合失败", e)
             emptyList()
         }
 
@@ -423,7 +440,7 @@ abstract class IDataSourceParentServer(
     }
 
     /**
-     * 根据艺术家id获得专辑列表
+     * 根据艺术家id获得艺术家列表
      */
     abstract suspend fun selectArtistsByIds(artistIds: List<String>): List<XyArtist>
 

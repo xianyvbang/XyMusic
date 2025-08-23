@@ -14,6 +14,7 @@ import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.config.IDataSourceManager
 import cn.xybbz.config.SettingsConfig
+import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.enums.DataSourceType
@@ -42,14 +43,19 @@ class ConnectionViewModel @Inject constructor(
     var address by mutableStateOf("")
         private set
 
-    var username by mutableStateOf("")
+    var username by mutableStateOf("liu893043230@gmail.com")
         private set
 
-    var password by mutableStateOf("")
+    var password by mutableStateOf("Liu893043230!")
         private set
 
     var tmpAddressList = mutableStateListOf<String>()
         private set
+
+    var tmpPlexInfo by mutableStateOf<List<ResourceData>>(emptyList())
+        private set
+
+    private var plexInfo by mutableStateOf<ResourceData?>(null)
 
     /**
      * 临时地址
@@ -80,7 +86,7 @@ class ConnectionViewModel @Inject constructor(
             return
         }
 
-        if (address.isBlank()) {
+        if (address.isBlank() && dataSourceType?.ifInputUrl == true) {
             return
         }
 
@@ -96,53 +102,56 @@ class ConnectionViewModel @Inject constructor(
                 ClientLoginInfoReq(
                     address = tmpAddress,
                     username = username,
-                    password = password
+                    password = password,
+                    serverId = plexInfo?.serverId,
+                    serverVersion = plexInfo?.serverVersion,
+                    serverName = plexInfo?.serverName
                 )
             _dataSourceManager.addClientAndLogin(clientLoginInfoReq)?.onEach {
                 Log.i("=====", "数据获取${it}")
                 loginStatus = it
                 when (it) {
                     is ClientLoginInfoState.Connected -> {
-                        Log.i("=====","连接中")
+                        Log.i("=====", "连接中")
                     }
 
                     is ClientLoginInfoState.ConnectionSuccess -> {
                         //路由跳转,根据id跳转
-                        Log.i("=====","服务端连接成功")
+                        Log.i("=====", "服务端连接成功")
                     }
 
                     is ClientLoginInfoState.ConnectError -> {
                         errorMessage = "服务端接错误"
-                        Log.i("=====","服务端连接错误")
+                        Log.i("=====", "服务端连接错误")
                         loading = false
                     }
 
                     ClientLoginInfoState.ServiceTimeOutState -> {
                         errorMessage = "服务端连接超时"
-                        Log.i("=====","服务端连接超时")
+                        Log.i("=====", "服务端连接超时")
                         loading = false
                     }
 
                     is ClientLoginInfoState.ErrorState -> {
                         errorMessage = it.error.message.toString()
-                        Log.i("=====",it.error.message.toString())
+                        Log.i("=====", it.error.message.toString())
                         loading = false
                     }
 
                     ClientLoginInfoState.SelectServer -> {
                         errorMessage = "未选择连接"
-                        Log.i("=====","未选择连接")
+                        Log.i("=====", "未选择连接")
                         loading = false
                     }
 
                     ClientLoginInfoState.UnauthorizedErrorState -> {
                         errorMessage = "登录失败,账号或密码错误"
-                        Log.i("=====","权限报错")
+                        Log.i("=====", "权限报错")
                         loading = false
                     }
 
                     ClientLoginInfoState.UserLoginSuccess -> {
-                        Log.i("=====","登陆成功")
+                        Log.i("=====", "登陆成功")
                         loading = false
                         //存储数据
 
@@ -157,7 +166,7 @@ class ConnectionViewModel @Inject constructor(
                 val connectionConfig = ConnectionConfig(
                     serverId = "0",
                     name = dataSourceType.title,
-                    address = tmpAddressList[selectUrlIndex],
+                    address = tmpAddress,
                     type = dataSourceType,
                     username = username,
                     currentPassword = encryptAES.aesData,
@@ -202,7 +211,7 @@ class ConnectionViewModel @Inject constructor(
      * 判断是否已经选择或已经输入必须输入
      */
     fun isInputError(): Boolean {
-        return address.isBlank() || username.isBlank()
+        return (address.isBlank() || username.isBlank()) && dataSourceType?.ifInputUrl == true
     }
 
     fun createTmpAddress() {
@@ -230,7 +239,7 @@ class ConnectionViewModel @Inject constructor(
      * 判断输入的链接是否是以http://或者http://开头,结尾是否有端口号
      */
     fun isHttpStartAndPortEnd(): Boolean {
-        return URLUtil.isNetworkUrl(address) && isEndPort(address)
+        return (URLUtil.isNetworkUrl(address) && isEndPort(address)) || dataSourceType?.ifInputUrl == false
     }
 
     /**
@@ -249,6 +258,18 @@ class ConnectionViewModel @Inject constructor(
         this.selectUrlIndex = selectUrlIndex
         if (tmpAddressList.isNotEmpty())
             tmpAddress = tmpAddressList[selectUrlIndex]
+    }
+
+    /**
+     * 设置
+     */
+    fun setSelectInfoIndexData(selectInfoIndex: Int) {
+        this.selectUrlIndex = selectInfoIndex
+        if (tmpPlexInfo.isNotEmpty()) {
+            plexInfo = tmpPlexInfo[selectInfoIndex]
+            tmpAddress = tmpPlexInfo[selectInfoIndex].addressUrl
+        }
+
     }
 
     /**
@@ -274,5 +295,32 @@ class ConnectionViewModel @Inject constructor(
      */
     fun clearLoginStatus() {
         loginStatus = null
+    }
+
+    suspend fun getResources() {
+        errorMessage = ""
+        if (_dataSourceManager.dataSourceType == null) {
+            _dataSourceManager.switchDataSource(dataSourceType)
+            val clientLoginInfoReq =
+                ClientLoginInfoReq(
+                    address = tmpAddress,
+                    username = username,
+                    password = password
+                )
+            try {
+                val resources = _dataSourceManager.getResources(clientLoginInfoReq)
+                tmpPlexInfo = resources
+            } catch (e: Exception) {
+                errorMessage = e.message ?: ""
+            }
+
+        }
+    }
+
+    /**
+     * 更新登陆loading状态
+     */
+    fun updateLoading(loading: Boolean) {
+        this.loading = loading
     }
 }

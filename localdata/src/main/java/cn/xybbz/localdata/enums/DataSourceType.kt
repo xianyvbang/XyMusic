@@ -34,7 +34,9 @@ enum class DataSourceType(
     //是否支持删除功能
     val ifDelete: Boolean,
     //是否艺术家可以进行收藏筛选
-    val ifArtistFavorite: Boolean
+    val ifArtistFavorite: Boolean,
+    //是否需要输入需要服务端地址
+    val ifInputUrl: Boolean = true
 ) {
 
     JELLYFIN(
@@ -94,5 +96,22 @@ enum class DataSourceType(
         ifDelete = true,
         ifArtistFavorite = true,
         ifSelectOneYear = true
+    ),
+
+
+    PLEX(
+        describe = "PLEX媒体服务器",
+        title = "Plex",
+        port = 32400,
+        ifSelectProtocolType = true,
+        options = listOf("http://", "https://"),
+        code = "4",
+        version = "4.1.1.0",
+        ifShowSelect = true,
+        ifShowCount = true,
+        ifDelete = true,
+        ifArtistFavorite = true,
+        ifSelectOneYear = true,
+        ifInputUrl = false
     )
 }

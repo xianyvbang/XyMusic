@@ -826,4 +826,10 @@ interface XyMusicDao {
      */
     @Query("delete from playlistmusic where playlistId = :playlistId and musicId in (:musicIds) and connectionId = (select connectionId from xy_settings)")
     suspend fun removeByPlaylistMusicByMusicId(playlistId: String, musicIds: List<String>)
+
+    /**
+     * 根据音乐id删除数据
+     */
+    @Query("delete from playlistmusic where playlistId = :playlistId and musicId = :musicId and connectionId = (select connectionId from xy_settings)")
+    suspend fun removeByPlaylistMusicByMusicId(playlistId: String, musicId: String)
 }

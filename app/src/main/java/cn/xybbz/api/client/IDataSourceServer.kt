@@ -5,6 +5,7 @@ import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
 import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
+import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.file.backup.ExportPlaylistData
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -35,6 +36,13 @@ interface IDataSourceServer {
      * @return [Flow<ClientLoginInfoState>?]
      */
     suspend fun autoLogin(): Flow<ClientLoginInfoState>?
+
+    /**
+     * 获得资源地址
+     */
+    suspend fun getResources(clientLoginInfoReq: ClientLoginInfoReq): List<ResourceData> {
+        return emptyList()
+    }
 
     /**
      * 获得专辑列表数据

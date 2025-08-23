@@ -9,4 +9,5 @@ val DataSourceType.img: Int
         DataSourceType.SUBSONIC -> R.drawable.subsonic_logo
         DataSourceType.NAVIDROME -> R.drawable.navidrome_icon
         DataSourceType.EMBY -> R.drawable.emby_logo_24
+        DataSourceType.PLEX -> R.drawable.plex_logos
     }

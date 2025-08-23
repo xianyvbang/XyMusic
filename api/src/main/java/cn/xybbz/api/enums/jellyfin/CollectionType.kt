@@ -49,6 +49,18 @@ enum class CollectionType(
 
     @Json(name = "folders")
     FOLDERS("folders"),
+
+    @Json(name = "otherVideos")
+    OTHER_VIDEOS("otherVideos"),
+
+    @Json(name = "people")
+    PEOPLE("people"),
+
+    @Json(name = "tv")
+    TV("tv"),
+
+    @Json(name = "artist")
+    ARTIST("artist")
     ;
 
     /**

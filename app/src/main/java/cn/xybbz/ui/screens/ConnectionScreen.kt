@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -50,6 +51,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
@@ -60,6 +62,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import cn.xybbz.R
@@ -71,6 +74,7 @@ import cn.xybbz.ui.components.LazyColumnComponent
 import cn.xybbz.ui.components.LazyColumnNotComponent
 import cn.xybbz.ui.components.LazyColumnNotHorizontalComponent
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.ItemTrailingArrowRight
 import cn.xybbz.ui.xy.XyColumn
@@ -80,6 +84,7 @@ import cn.xybbz.ui.xy.XyItemTextLarge
 import cn.xybbz.ui.xy.XyItemTextPadding
 import cn.xybbz.ui.xy.XyLoadingItem
 import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.xy.XyRowHeightSmall
 import cn.xybbz.ui.xy.XySmallImage
 import cn.xybbz.viewmodel.ConnectionViewModel
 import coil.ImageLoader
@@ -223,44 +228,45 @@ fun ConnectionScreen(
                 ScreenType.INPUT_DATA -> {
                     LazyColumnComponent {
                         item {
-                            OutlinedTextField(
-                                value = connectionViewModel.address,
-                                modifier = Modifier
-                                    .background(Color.Transparent)
-                                    .fillMaxWidth(),
-                                onValueChange = {
-                                    connectionViewModel.setAddressData(it)
-                                },
-                                singleLine = true,
-                                shape = RoundedCornerShape(5.dp),
-                                colors = TextFieldDefaults.colors(
-                                    unfocusedContainerColor = Color.Transparent,
-                                    focusedContainerColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.LightGray,
-                                    focusedIndicatorColor = Color.LightGray,
-                                    focusedLabelColor = Color.LightGray,
-                                    unfocusedLabelColor = Color.LightGray,
-                                    cursorColor = Color.White,
-                                    disabledContainerColor = Color.Transparent
-                                ),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                                enabled = true,
-                                label = { Text(stringResource(R.string.server)) },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Http,
-                                        contentDescription = stringResource(R.string.httpInput)
-                                    )
-                                },
-                                placeholder = {
-                                    Text(text = "http://")
-                                },
-                                isError = connectionViewModel.address.isBlank() && isLoad,
-                                supportingText = {
-                                    if (connectionViewModel.address.isBlank() && isLoad)
-                                        Text(text = "${stringResource(R.string.server)}不能为空")
-                                },
-                            )
+                            if (connectionViewModel.dataSourceType?.ifInputUrl == true)
+                                OutlinedTextField(
+                                    value = connectionViewModel.address,
+                                    modifier = Modifier
+                                        .background(Color.Transparent)
+                                        .fillMaxWidth(),
+                                    onValueChange = {
+                                        connectionViewModel.setAddressData(it)
+                                    },
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(5.dp),
+                                    colors = TextFieldDefaults.colors(
+                                        unfocusedContainerColor = Color.Transparent,
+                                        focusedContainerColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.LightGray,
+                                        focusedIndicatorColor = Color.LightGray,
+                                        focusedLabelColor = Color.LightGray,
+                                        unfocusedLabelColor = Color.LightGray,
+                                        cursorColor = Color.White,
+                                        disabledContainerColor = Color.Transparent
+                                    ),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                                    enabled = true,
+                                    label = { Text(stringResource(R.string.server)) },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Http,
+                                            contentDescription = stringResource(R.string.httpInput)
+                                        )
+                                    },
+                                    placeholder = {
+                                        Text(text = "http://")
+                                    },
+                                    isError = connectionViewModel.address.isBlank() && isLoad,
+                                    supportingText = {
+                                        if (connectionViewModel.address.isBlank() && isLoad)
+                                            Text(text = "${stringResource(R.string.server)}不能为空")
+                                    },
+                                )
                         }
                         item {
                             OutlinedTextField(
@@ -356,20 +362,31 @@ fun ConnectionScreen(
                                     modifier = Modifier.width(width = 150.dp),
                                     onClick = {
                                         isLoad = true
-                                        if (!connectionViewModel.isInputError()) {
-                                            //判断是否有开头和结尾的端口号
-                                            if (!connectionViewModel.isHttpStartAndPortEnd()){
+                                        if (connectionViewModel.dataSourceType?.ifInputUrl == false) {
+                                            coroutineScope.launch {
+                                                ifSelectDataSource = ScreenType.SELECT_ADDRESS
+                                                connectionViewModel.updateLoading(true)
+                                                connectionViewModel.getResources()
+                                            }.invokeOnCompletion {
+                                                connectionViewModel.updateLoading(false)
+                                            }
+                                        } else if (!connectionViewModel.isInputError()) {
+                                            if (!connectionViewModel.isHttpStartAndPortEnd()) {
                                                 connectionViewModel.createTmpAddress()
                                                 connectionViewModel.clearError()
                                                 connectionViewModel.clearLoginStatus()
                                                 ifSelectDataSource = ScreenType.SELECT_ADDRESS
-                                            }else {
+                                            } else {
                                                 ifSelectDataSource = ScreenType.SELECT_ADDRESS
                                                 coroutineScope.launch {
-                                                    connectionViewModel.setTmpAddressData(connectionViewModel.address)
+                                                    connectionViewModel.setTmpAddressData(
+                                                        connectionViewModel.address
+                                                    )
                                                     connectionViewModel.inputAddress()
                                                 }
                                             }
+                                        } else {
+                                            //todo 这里需要增加提示
                                         }
                                     }
                                 ) {
@@ -415,8 +432,13 @@ fun ConnectionScreen(
                                         modifier = Modifier.width(width = 150.dp),
                                         onClick = {
                                             isLoad = false
+                                            connectionViewModel.clearError()
+                                            connectionViewModel.clearLoginStatus()
                                             connectionViewModel.setSelectUrlIndexData(0)
-                                            ifSelectDataSource = ScreenType.INPUT_DATA
+                                            if (connectionViewModel.dataSourceType?.ifInputUrl == true){
+                                                ifSelectDataSource = ScreenType.INPUT_DATA
+                                            }
+
                                         }) {
                                         Text(text = "重新连接")
                                     }
@@ -427,18 +449,43 @@ fun ConnectionScreen(
                                 item {
                                     XyColumnNotHorizontalPadding(backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest) {
                                         connectionViewModel.dataSourceType?.let {
-                                            LazyColumnNotComponent(modifier = Modifier.height(200.dp)) {
-                                                itemsIndexed(connectionViewModel.tmpAddressList) { index, item ->
-                                                    XyItemTextCheckSelectHeightSmall(
-                                                        text = item,
-                                                        select = index == connectionViewModel.selectUrlIndex,
-                                                        onClick = {
-                                                            connectionViewModel.setSelectUrlIndexData(
-                                                                index
-                                                            )
-                                                        })
+                                            if (connectionViewModel.tmpAddressList.isNotEmpty())
+                                                LazyColumnNotComponent(
+                                                    modifier = Modifier.height(
+                                                        200.dp
+                                                    )
+                                                ) {
+                                                    itemsIndexed(connectionViewModel.tmpAddressList) { index, item ->
+                                                        XyItemTextCheckSelectHeightSmall(
+                                                            text = item,
+                                                            select = index == connectionViewModel.selectUrlIndex,
+                                                            onClick = {
+                                                                connectionViewModel.setSelectUrlIndexData(
+                                                                    index
+                                                                )
+                                                            })
+                                                    }
                                                 }
-                                            }
+
+                                            if (connectionViewModel.tmpPlexInfo.isNotEmpty())
+                                                LazyColumnNotComponent(
+                                                    modifier = Modifier.height(
+                                                        200.dp
+                                                    )
+                                                ) {
+                                                    itemsIndexed(connectionViewModel.tmpPlexInfo) { index, item ->
+                                                        PlexResourceItem(
+                                                            text = item.name,
+                                                            serverName = item.product,
+                                                            address = item.addressUrl,
+                                                            select = index == connectionViewModel.selectUrlIndex,
+                                                            onClick = {
+                                                                connectionViewModel.setSelectInfoIndexData(
+                                                                    index
+                                                                )
+                                                            })
+                                                    }
+                                                }
                                         }
                                     }
                                 }
@@ -448,6 +495,12 @@ fun ConnectionScreen(
                                             modifier = Modifier.width(width = 150.dp),
                                             onClick = {
                                                 coroutineScope.launch {
+                                                    connectionViewModel.setSelectInfoIndexData(
+                                                        connectionViewModel.selectUrlIndex
+                                                    )
+                                                    connectionViewModel.setSelectUrlIndexData(
+                                                        connectionViewModel.selectUrlIndex
+                                                    )
                                                     connectionViewModel.inputAddress()
                                                 }
                                             }) {
@@ -563,3 +616,51 @@ fun SelectImage(modifier: Modifier = Modifier, onDataSource: () -> DataSourceTyp
 }
 
 internal val SelectImageSize = 55.dp
+
+
+@Composable
+fun PlexResourceItem(
+    modifier: Modifier = Modifier,
+    text: String,
+    serverName: String,
+    address: String,
+    select: Boolean,
+    onClick: (() -> Unit)? = null
+) {
+    XyRowHeightSmall(
+        modifier = modifier
+            .clip(RoundedCornerShape(XyTheme.dimens.corner))
+            .debounceClickable { onClick?.invoke() },
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.Start
+        ) {
+            Text(
+                text = text,
+                maxLines = 1,
+                color = MaterialTheme.colorScheme.onSurface,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = serverName,
+                maxLines = 1,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.titleSmall
+            )
+            Text(
+                text = address,
+                maxLines = 1,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.titleSmall
+            )
+        }
+        if (select)
+            Icon(imageVector = Icons.Rounded.Check, contentDescription = "选中${text}")
+    }
+}

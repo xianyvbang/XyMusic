@@ -16,6 +16,7 @@ import cn.xybbz.api.client.emby.EmbyDatasourceServer
 import cn.xybbz.api.client.jellyfin.JellyfinDatasourceServer
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
 import cn.xybbz.api.client.navidrome.NavidromeDatasourceServer
+import cn.xybbz.api.client.plex.PlexDatasourceServer
 import cn.xybbz.api.client.subsonic.SubsonicDatasourceServer
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.state.ClientLoginInfoState
@@ -28,6 +29,7 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.favorite.FavoriteRepository
+import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.file.backup.ExportPlaylistData
 import cn.xybbz.localdata.config.DatabaseClient
@@ -59,6 +61,7 @@ class IDataSourceManager(
     private val subsonicDatasourceServer: SubsonicDatasourceServer,
     private val navidromeDatasourceServer: NavidromeDatasourceServer,
     private val embyDatasourceServer: EmbyDatasourceServer,
+    private val plexDatasourceServer: PlexDatasourceServer,
     private val connectionConfigServer: ConnectionConfigServer,
     private val alarmConfig: AlarmConfig,
     private val favoriteRepository: FavoriteRepository
@@ -211,6 +214,10 @@ class IDataSourceManager(
             DataSourceType.EMBY -> {
                 dataSourceServer = embyDatasourceServer
             }
+
+            DataSourceType.PLEX -> {
+                dataSourceServer = plexDatasourceServer
+            }
         }
         Log.i("=====", "数据源切换完成")
     }
@@ -253,6 +260,18 @@ class IDataSourceManager(
         loading = true
         Log.i("=====", "开始登录.............")
         return dataSourceServer.autoLogin()
+    }
+
+    /**
+     * 获得资源地址
+     */
+    override suspend fun getResources(clientLoginInfoReq: ClientLoginInfoReq): List<ResourceData> {
+        return try {
+             dataSourceServer.getResources(clientLoginInfoReq)
+        }catch (e: Exception){
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得服务器资源失败", e)
+           throw e
+        }
     }
 
     /**
@@ -649,11 +668,11 @@ class IDataSourceManager(
         try {
             dataSourceServer.playRecordMusicOrAlbumList()
         } catch (e: SocketTimeoutException) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "音乐播放历史更新超时", e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐更新超时", e)
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "音乐播放历史更新失败", e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐更新失败", e)
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "音乐播放历史更新未知错误失败", e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐未知错误失败", e)
         }
     }
 

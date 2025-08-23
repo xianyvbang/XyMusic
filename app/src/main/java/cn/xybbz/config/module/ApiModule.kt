@@ -5,6 +5,7 @@ import cn.xybbz.api.client.ImageApiClient
 import cn.xybbz.api.client.emby.EmbyApiClient
 import cn.xybbz.api.client.jellyfin.JellyfinApiClient
 import cn.xybbz.api.client.navidrome.NavidromeApiClient
+import cn.xybbz.api.client.plex.PlexApiClient
 import cn.xybbz.api.client.subsonic.SubsonicApiClient
 import dagger.Module
 import dagger.Provides
@@ -25,7 +26,7 @@ class ApiModule {
 
     @Singleton
     @Provides
-    fun subsonicApiClient():SubsonicApiClient{
+    fun subsonicApiClient(): SubsonicApiClient {
         val subsonicApiClient = SubsonicApiClient()
         return subsonicApiClient
     }
@@ -46,7 +47,14 @@ class ApiModule {
 
     @Singleton
     @Provides
-    fun cacheApiClient():CacheApiClient{
+    fun plexApiClient(): PlexApiClient {
+        val plexApiClient = PlexApiClient()
+        return plexApiClient
+    }
+
+    @Singleton
+    @Provides
+    fun cacheApiClient(): CacheApiClient {
         val cacheApiClient = CacheApiClient()
         return cacheApiClient
     }

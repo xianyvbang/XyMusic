@@ -9,6 +9,8 @@ import cn.xybbz.api.client.jellyfin.JellyfinApiClient
 import cn.xybbz.api.client.jellyfin.JellyfinDatasourceServer
 import cn.xybbz.api.client.navidrome.NavidromeApiClient
 import cn.xybbz.api.client.navidrome.NavidromeDatasourceServer
+import cn.xybbz.api.client.plex.PlexApiClient
+import cn.xybbz.api.client.plex.PlexDatasourceServer
 import cn.xybbz.api.client.subsonic.SubsonicApiClient
 import cn.xybbz.api.client.subsonic.SubsonicDatasourceServer
 import cn.xybbz.config.ConnectionConfigServer
@@ -92,6 +94,23 @@ class DataSourceModule {
     }
 
 
+    @Singleton
+    @Provides
+    fun plexDatasourceServer(
+        db: DatabaseClient,
+        connectionConfigServer: ConnectionConfigServer,
+        plexApiClient: PlexApiClient,
+        @ApplicationContext application: Context
+    ): PlexDatasourceServer {
+        return PlexDatasourceServer(
+            db,
+            application,
+            connectionConfigServer,
+            plexApiClient
+        )
+    }
+
+
     @OptIn(UnstableApi::class)
     @Singleton
     @Provides
@@ -102,6 +121,7 @@ class DataSourceModule {
         subsonicDataSourceServer: SubsonicDatasourceServer,
         navidromeDatasourceServer: NavidromeDatasourceServer,
         embyDatasourceServer: EmbyDatasourceServer,
+        plexDatasourceServer: PlexDatasourceServer,
         connectionConfigServer: ConnectionConfigServer,
         alarmConfig: AlarmConfig,
         favoriteRepository: FavoriteRepository
@@ -113,6 +133,7 @@ class DataSourceModule {
             subsonicDataSourceServer,
             navidromeDatasourceServer,
             embyDatasourceServer,
+            plexDatasourceServer,
             connectionConfigServer,
             alarmConfig,
             favoriteRepository

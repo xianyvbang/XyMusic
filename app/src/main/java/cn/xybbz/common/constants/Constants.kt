@@ -149,4 +149,19 @@ object Constants {
      * log日志前缀
      */
     const val LOG_ERROR_PREFIX = "error"
+
+    /**
+     * plex音乐收藏collection的名称
+     */
+    const val PLEX_MUSIC_COLLECTION_TITLE = "咸鱼音乐音乐收藏"
+
+    /**
+     * plex专辑收藏collection的名称
+     */
+    const val PLEX_ALBUM_COLLECTION_TITLE = "咸鱼音乐专辑收藏"
+
+    /**
+     * plex艺术家收藏collection的名称
+     */
+    const val PLEX_ARTIST_COLLECTION_TITLE = "咸鱼音乐艺术家收藏"
 }
