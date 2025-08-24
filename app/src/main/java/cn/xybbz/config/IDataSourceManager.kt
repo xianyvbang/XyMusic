@@ -540,7 +540,7 @@ class IDataSourceManager(
     }
 
     /**
-     * 新增或修改歌单
+     * 导入歌单
      */
     override suspend fun importPlaylist(playlistData: ExportPlaylistData): Boolean {
         return OperationTipUtils.operationTipNotToBlock(

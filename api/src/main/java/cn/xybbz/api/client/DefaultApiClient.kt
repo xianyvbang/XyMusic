@@ -8,6 +8,7 @@ import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.constants.ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
 import cn.xybbz.api.okhttp.LoggingInterceptor
 import cn.xybbz.api.okhttp.NetWorkInterceptor
+import cn.xybbz.api.okhttp.plex.PlexQueryInterceptor
 import cn.xybbz.api.okhttp.subsonic.SubsonicNetworkStatusInterceptor
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -81,6 +82,7 @@ abstract class DefaultApiClient : ApiConfig {
             .connectTimeout(DEFAULT_TIMEOUT_MILLISECONDS, TimeUnit.MILLISECONDS)
             .readTimeout(DEFAULT_TIMEOUT_MILLISECONDS, TimeUnit.MILLISECONDS)
             .writeTimeout(DEFAULT_TIMEOUT_MILLISECONDS, TimeUnit.MILLISECONDS)
+            .addNetworkInterceptor(PlexQueryInterceptor())
             .addNetworkInterceptor(LoggingInterceptor())
             .addNetworkInterceptor(SubsonicNetworkStatusInterceptor(ifSubsonic = {ifSubsonic}))
             // 可以添加其他配置，比如连接超时、读写超时等

@@ -693,8 +693,8 @@ class EmbyDatasourceServer(
         pageNum: Int
     ): List<XyMusic>? {
         return getServerMusicList(
-            pageNum * pageSize,
-            pageSize,
+            startIndex = pageNum * pageSize,
+            pageSize = pageSize,
             sortBy = listOf(ItemSortBy.RANDOM)
         ).items
     }
@@ -711,7 +711,7 @@ class EmbyDatasourceServer(
     }
 
     /**
-     * 新增或修改歌单
+     * 导入歌单
      */
     override suspend fun importPlaylist(playlistData: ExportPlaylistData): Boolean {
         val playlists = playlistData.playlist
@@ -1329,7 +1329,7 @@ class EmbyDatasourceServer(
             )
             allResponse
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获取歌单失败",e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取歌单失败", e)
             AllResponse<XyAlbum>(items = emptyList(), 0, 0)
         }
     }
@@ -1465,32 +1465,32 @@ class EmbyDatasourceServer(
 
         val mediaStreamLyric =
             mediaSourceInfo?.mediaStreams?.find { it.type == MediaStreamType.LYRIC }
-    /*    val audioUrl = embyApiClient.createAudioUrl(
-            itemId = item.id,
-            deviceId = embyApiClient.deviceId,
-            userId = connectionConfigServer.getUserId(),
-            maxStreamingBitrate = 140000000,
-            container = listOf(
-                "opus",
-                "webm|opus",
-                "mp3",
-                "aac",
-                "m4a|aac",
-                "m4b|aac",
-                "flac",
-                "webma",
-                "webm|webma",
-                "wav",
-                "ogg",
-                "wma"
-            ),
-            transcodingContainer = "aac",
-            transcodingProtocol = MediaStreamProtocol.HLS,
-            audioCodec = "aac",
-            startTimeTicks = 0,
-            enableRedirection = true,
-            enableRemoteMedia = true,
-        )*/
+        /*    val audioUrl = embyApiClient.createAudioUrl(
+                itemId = item.id,
+                deviceId = embyApiClient.deviceId,
+                userId = connectionConfigServer.getUserId(),
+                maxStreamingBitrate = 140000000,
+                container = listOf(
+                    "opus",
+                    "webm|opus",
+                    "mp3",
+                    "aac",
+                    "m4a|aac",
+                    "m4b|aac",
+                    "flac",
+                    "webma",
+                    "webm|webma",
+                    "wav",
+                    "ogg",
+                    "wma"
+                ),
+                transcodingContainer = "aac",
+                transcodingProtocol = MediaStreamProtocol.HLS,
+                audioCodec = "aac",
+                startTimeTicks = 0,
+                enableRedirection = true,
+                enableRemoteMedia = true,
+            )*/
 
 
         val audioUrl = getMusicPlayUrl(item.id)
@@ -1523,7 +1523,8 @@ class EmbyDatasourceServer(
                 .divide(BigDecimal(10000), BigDecimal.ROUND_UP).toLong(),
             container = mediaSourceInfo?.container,
             codec = mediaStream?.codec,
-            lyric = ""
+            lyric = "",
+            playlistItemId = item.id
         )
     }
 

@@ -27,8 +27,7 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = false)
 enum class PlexListType(val serialName: String) {
     all("all"),
-    genre("genre"),
-    collections("collections")
+    genre("genre")
 
 
     ;

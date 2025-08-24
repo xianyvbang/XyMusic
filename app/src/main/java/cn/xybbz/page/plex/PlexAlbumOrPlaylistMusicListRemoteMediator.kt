@@ -109,13 +109,8 @@ class PlexAlbumOrPlaylistMusicListRemoteMediator(
                 ifFavorite = ifFavorite,
                 sortBy = sortType.sortType,
                 sortOrder = sortType.order,
-                params = if (yearsInt.isNullOrEmpty()) null else mapOf(
-                    pairs = arrayOf(
-                        Pair(
-                            "year>=${yearsInt[0]}",
-                            ""
-                        ), Pair("year<=${yearsInt[yearsInt.size - 1]}", "")
-                    )
+                years = if (yearsInt.isNullOrEmpty()) null else listOf(
+                    ">>=${yearsInt[0]}", "<<=${yearsInt[yearsInt.size - 1]}"
                 ),
                 itemId = itemId,
                 dataType = dataType

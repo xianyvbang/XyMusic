@@ -514,7 +514,7 @@ class SubsonicDatasourceServer(
     }
 
     /**
-     * 新增或修改歌单
+     * 导入歌单
      */
     override suspend fun importPlaylist(playlistData: ExportPlaylistData): Boolean {
         val playlists = playlistData.playlist
@@ -1131,7 +1131,8 @@ class SubsonicDatasourceServer(
             container = music.suffix,
             codec = music.suffix,
             ifLyric = false,
-            lyric = ""
+            lyric = "",
+            playlistItemId = music.id
         )
     }
 

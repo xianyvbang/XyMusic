@@ -28,18 +28,9 @@ interface PlexItemApi : BaseApi {
         @Query("genre") genreId: String? = null,
         @Query("album.collection") albumCollection: String? = null,
         @Query("track.collection") trackCollection: String? = null,
-        @QueryMap params: Map<String, String>? = null
-    ): PlexResponse<PlexLibraryItemResponse>
-
-
-    @GET("/library/collections/{sectionKey}/collections")
-    suspend fun getFavoriteSongs(
-        @Path("sectionKey") sectionKey: String,
-        @Query("includeCollections") includeCollections: Int = 1,
-        @Query("includeMeta") includeMeta: Int = 1,
-        @Query("includeExternalMedia") includeExternalMedia: Int = 1,
-        @Query("X-Plex-Container-Start") start: Int,
-        @Query("X-Plex-Container-Size") pageSize: Int
+        @Query("year", encoded = false) year: List<String>? = null,
+        @Query("album.year", encoded = false) albumYear: List<String>? = null,
+        @QueryMap(encoded = false) params: Map<String, String>? = null
     ): PlexResponse<PlexLibraryItemResponse>
 
 

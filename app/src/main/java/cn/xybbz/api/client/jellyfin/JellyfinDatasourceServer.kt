@@ -696,8 +696,8 @@ class JellyfinDatasourceServer(
      */
     override suspend fun getRandomMusicList(pageSize: Int, pageNum: Int): List<XyMusic>? {
         return getServerMusicList(
-            pageNum * pageSize,
-            pageSize,
+            startIndex = pageNum * pageSize,
+            pageSize = pageSize,
             sortBy = listOf(ItemSortBy.RANDOM)
         ).items
     }
@@ -781,7 +781,7 @@ class JellyfinDatasourceServer(
 
 
     /**
-     * 新增或修改歌单
+     * 导入歌单
      */
     override suspend fun importPlaylist(playlistData: ExportPlaylistData): Boolean {
         val playlists = playlistData.playlist
@@ -1481,7 +1481,8 @@ class JellyfinDatasourceServer(
                 .divide(BigDecimal(10000), BigDecimal.ROUND_UP).toLong(),
             container = mediaSourceInfo?.container,
             codec = mediaStream?.codec,
-            lyric = ""
+            lyric = "",
+            playlistItemId = item.id
         )
     }
 

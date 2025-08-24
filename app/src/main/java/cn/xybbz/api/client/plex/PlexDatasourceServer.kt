@@ -15,8 +15,6 @@ import cn.xybbz.api.client.data.AllResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
 import cn.xybbz.api.client.plex.data.Metadatum
 import cn.xybbz.api.client.plex.data.PlaylistMetadatum
-import cn.xybbz.api.client.plex.data.PlexLibraryItemResponse
-import cn.xybbz.api.client.plex.data.PlexResponse
 import cn.xybbz.api.client.plex.data.toPlexLogin
 import cn.xybbz.api.enums.plex.ImageType
 import cn.xybbz.api.enums.plex.MetadatumType
@@ -123,6 +121,7 @@ class PlexDatasourceServer(
     override suspend fun postPingSystem(): Boolean {
         try {
             val postPingSystem = plexApiClient.userApi().postPingSystem()
+            Log.i("=====", postPingSystem.toString())
             //获得machineIdentifier
             plexApiClient.updateMachineIdentifier(postPingSystem.mediaContainer?.machineIdentifier)
         } catch (e: Exception) {
@@ -483,7 +482,10 @@ class PlexDatasourceServer(
                 if (plexApiClient.musicFavoriteCollectionId == null) {
                     //查询合集
                     val musicCollection = plexApiClient.userLibraryApi()
-                        .getCollection(title = Constants.PLEX_MUSIC_COLLECTION_TITLE)
+                        .getCollection(
+                            connectionConfigServer.libraryId!!,
+                            title = Constants.PLEX_MUSIC_COLLECTION_TITLE
+                        )
                     if (musicCollection.mediaContainer?.metadata.isNullOrEmpty()) {
                         val collectionResponse = plexApiClient.userLibraryApi().addCollection(
                             sectionId = connectionConfigServer.libraryId!!
@@ -511,7 +513,11 @@ class PlexDatasourceServer(
                 if (plexApiClient.albumFavoriteCollectionId == null) {
                     //查询合集
                     val albumCollection = plexApiClient.userLibraryApi()
-                        .getCollection(subtype = 9, title = Constants.PLEX_ALBUM_COLLECTION_TITLE)
+                        .getCollection(
+                            connectionConfigServer.libraryId!!,
+                            subtype = 9,
+                            title = Constants.PLEX_ALBUM_COLLECTION_TITLE
+                        )
                     if (albumCollection.mediaContainer?.metadata.isNullOrEmpty()) {
                         val collectionResponse = plexApiClient.userLibraryApi().addCollection(
                             sectionId = connectionConfigServer.libraryId!!
@@ -539,7 +545,11 @@ class PlexDatasourceServer(
                 if (plexApiClient.artistFavoriteCollectionId == null) {
                     //查询合集
                     val albumCollection = plexApiClient.userLibraryApi()
-                        .getCollection(subtype = 9, title = Constants.PLEX_ARTIST_COLLECTION_TITLE)
+                        .getCollection(
+                            connectionConfigServer.libraryId!!,
+                            subtype = 8,
+                            title = Constants.PLEX_ARTIST_COLLECTION_TITLE
+                        )
                     if (albumCollection.mediaContainer?.metadata.isNullOrEmpty()) {
                         val collectionResponse = plexApiClient.userLibraryApi().addCollection(
                             sectionId = connectionConfigServer.libraryId!!
@@ -598,7 +608,10 @@ class PlexDatasourceServer(
                 if (plexApiClient.musicFavoriteCollectionId == null) {
                     //查询合集
                     val musicCollection = plexApiClient.userLibraryApi()
-                        .getCollection(title = Constants.PLEX_MUSIC_COLLECTION_TITLE)
+                        .getCollection(
+                            connectionConfigServer.libraryId!!,
+                            title = Constants.PLEX_MUSIC_COLLECTION_TITLE
+                        )
                     plexApiClient.updateMusicFavoriteCollectionId(
                         musicCollection.mediaContainer?.metadata?.get(
                             0
@@ -616,7 +629,11 @@ class PlexDatasourceServer(
                 if (plexApiClient.albumFavoriteCollectionId == null) {
                     //查询合集
                     val albumCollection = plexApiClient.userLibraryApi()
-                        .getCollection(subtype = 9, title = Constants.PLEX_ALBUM_COLLECTION_TITLE)
+                        .getCollection(
+                            connectionConfigServer.libraryId!!,
+                            subtype = 9,
+                            title = Constants.PLEX_ALBUM_COLLECTION_TITLE
+                        )
                     plexApiClient.updateAlbumFavoriteCollectionId(
                         albumCollection.mediaContainer?.metadata?.get(
                             0
@@ -634,7 +651,11 @@ class PlexDatasourceServer(
                 if (plexApiClient.artistFavoriteCollectionId == null) {
                     //查询合集
                     val albumCollection = plexApiClient.userLibraryApi()
-                        .getCollection(subtype = 9, title = Constants.PLEX_ARTIST_COLLECTION_TITLE)
+                        .getCollection(
+                            connectionConfigServer.libraryId!!,
+                            subtype = 8,
+                            title = Constants.PLEX_ARTIST_COLLECTION_TITLE
+                        )
                     plexApiClient.updateArtistFavoriteCollectionId(
                         albumCollection.mediaContainer?.metadata?.get(
                             0
@@ -746,7 +767,7 @@ class PlexDatasourceServer(
                 favorite = try {
                     getFavoriteMusicList(
                         startIndex = 0, pageSize = 0,
-                    ).mediaContainer?.totalSize
+                    ).totalRecordCount
                 } catch (e: Exception) {
                     Log.e(Constants.LOG_ERROR_PREFIX, "加载收藏数量报错", e)
                     null
@@ -1121,13 +1142,25 @@ class PlexDatasourceServer(
         )
         albumList.items?.let { albums ->
             db.withTransaction {
-                db.albumDao.removeByType(MusicDataTypeEnum.NEWEST)
+                db.albumDao.removeByType(MusicDataTypeEnum.PLAY_HISTORY)
                 saveBatchAlbum(
-                    albums, MusicDataTypeEnum.NEWEST
+                    albums, MusicDataTypeEnum.PLAY_HISTORY
                 )
 
             }
         }
+
+        val musicList = getServerMusicList(
+            startIndex = 0,
+            pageSize = Constants.MIN_PAGE,
+            sortBy = PlexSortType.LAST_VIEWED_AT,
+            sortOrder = PlexSortOrder.DESCENDING
+        ).items
+        if (!musicList.isNullOrEmpty())
+            db.withTransaction {
+                db.musicDao.removeByType(MusicDataTypeEnum.PLAY_HISTORY)
+                saveBatchMusic(musicList, MusicDataTypeEnum.PLAY_HISTORY)
+            }
     }
 
     /**
@@ -1435,6 +1468,7 @@ class PlexDatasourceServer(
         artistId: String? = null,
         albumId: String? = null,
         ifFavorite: Boolean? = null,
+        years: List<String>? = null,
         params: Map<String, String>? = null
     ): AllResponse<XyMusic> {
         val response =
@@ -1449,6 +1483,7 @@ class PlexDatasourceServer(
                 artistId = artistId,
                 albumId = albumId,
                 trackCollection = if (ifFavorite == true) plexApiClient.musicFavoriteCollectionId else null,
+                year = years,
                 params = params ?: mapOf(Pair("1", "1"))
             )
         return AllResponse(
@@ -1473,6 +1508,7 @@ class PlexDatasourceServer(
         ifFavorite: Boolean? = null,
         artistId: String? = null,
         genreId: String? = null,
+        albumYear: List<String>? = null,
         params: Map<String, String>? = null
     ): AllResponse<XyAlbum> {
         val albumResponse = plexApiClient.itemApi().getSongs(
@@ -1486,6 +1522,7 @@ class PlexDatasourceServer(
             artistId = artistId,
             genreId = genreId,
             albumCollection = if (ifFavorite == true) plexApiClient.albumFavoriteCollectionId else null,
+            albumYear = albumYear,
             params = params ?: mapOf(Pair("1", "1"))
         )
 
@@ -1539,30 +1576,38 @@ class PlexDatasourceServer(
 
 
     suspend fun getFavoriteMusicList(
-        plexListType: PlexListType = PlexListType.collections,
         startIndex: Int,
         pageSize: Int,
-        params: Map<String, String>? = null
-    ): PlexResponse<PlexLibraryItemResponse> {
+    ): AllResponse<XyMusic> {
 
-        val favoriteCollections = plexApiClient.itemApi().getSongs(
-            sectionKey = connectionConfigServer.libraryId!!,
-            selectType = plexListType.toString(),
-            start = 0,
-            pageSize = 1000,
-            params = params ?: mapOf(Pair("1", "1"))
-        )
+        val musicCollection = plexApiClient.userLibraryApi()
+            .getCollection(
+                connectionConfigServer.libraryId!!,
+                title = Constants.PLEX_MUSIC_COLLECTION_TITLE
+            )
 
-        val collectionIds =
-            favoriteCollections.mediaContainer?.metadata?.find { it.subtype == MetadatumType.Track.value }?.ratingKey
+        val collectionId =
+            musicCollection.mediaContainer?.metadata?.get(0)?.ratingKey
 
-        val response =
-            plexApiClient.itemApi().getFavoriteSongs(
-                sectionKey = collectionIds!!,
+        return if (collectionId.isNullOrBlank()) {
+
+            AllResponse(
+                items = null,
+                totalRecordCount = 0,
+                startIndex = startIndex
+            )
+        } else {
+            val favoriteSongs = plexApiClient.userLibraryApi().getFavoriteSongs(
+                sectionKey = collectionId,
                 start = startIndex,
                 pageSize = pageSize,
             )
-        return response
+            AllResponse(
+                items = favoriteSongs.mediaContainer?.metadata?.let { convertToMusicList(it) },
+                totalRecordCount = favoriteSongs.mediaContainer?.totalSize ?: 0,
+                startIndex = startIndex
+            )
+        }
     }
 
 
@@ -1578,6 +1623,7 @@ class PlexDatasourceServer(
         sortBy: PlexSortType? = PlexSortType.ARTIST_TITLE_SORT,
         sortOrder: PlexSortOrder? = PlexSortOrder.ASCENDING,
         params: Map<String, String>? = null,
+        years: List<String>? = null,
         artistId: String? = null
     ): AllResponse<XyMusic> {
         if (dataType == MusicDataTypeEnum.ALBUM) {
@@ -1590,7 +1636,8 @@ class PlexDatasourceServer(
                 sortBy = sortBy,
                 sortOrder = sortOrder,
                 params = params,
-                artistId = artistId
+                artistId = artistId,
+                years = years
             )
         } else {
             //存储歌曲数据
@@ -1602,6 +1649,7 @@ class PlexDatasourceServer(
                     sort = "$sortBy:$sortOrder",
                     trackCollection = if (ifFavorite == true) plexApiClient.musicFavoriteCollectionId else null,
                     params = params ?: mapOf(Pair("1", "1")),
+                    year = years,
                     artistId = artistId
                 )
 
@@ -1680,7 +1728,7 @@ class PlexDatasourceServer(
                 ?.toInstant()
                 ?.toEpochMilli(),
             genreIds = album.genre?.joinToString(Constants.ARTIST_DELIMITER) { it.tag },
-            ifFavorite = album.collection?.any { it.tag == "收藏" } == true,
+            ifFavorite = album.collection?.any { it.tag == Constants.PLEX_ALBUM_COLLECTION_TITLE } == true,
             ifPlaylist = false,
             createTime = album.addedAt,
             musicCount = album.childCount ?: 0
@@ -1763,7 +1811,7 @@ class PlexDatasourceServer(
             createTime = item.addedAt,
             year = item.parentYear,
             playedCount = 0,
-            ifFavoriteStatus = item.collection?.any { it.tag == "收藏" } == true,
+            ifFavoriteStatus = item.collection?.any { it.tag == Constants.PLEX_MUSIC_COLLECTION_TITLE } == true,
             ifLyric = mediaStreamLyric != null,
             lyric = mediaStreamLyric?.id.toString(),
             path = part?.file,
@@ -1827,7 +1875,7 @@ class PlexDatasourceServer(
             connectionId = connectionConfigServer.getConnectionId(),
             describe = artist.summary,
             selectChat = selectChat,
-            ifFavorite = artist.collection?.any { it.tag == "收藏" } == true,
+            ifFavorite = artist.collection?.any { it.tag == Constants.PLEX_ARTIST_COLLECTION_TITLE } == true,
             indexNumber = indexNumber,
         )
     }

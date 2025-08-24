@@ -174,7 +174,7 @@ interface IDataSourceServer {
     suspend fun addPlaylist(name: String): Boolean
 
     /**
-     * 新增或修改歌单
+     * 导入歌单
      */
     suspend fun importPlaylist(playlistData: ExportPlaylistData): Boolean
 

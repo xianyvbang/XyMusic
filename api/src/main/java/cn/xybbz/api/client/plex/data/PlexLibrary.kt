@@ -15,8 +15,8 @@ data class PlexLibrary(
 @JsonClass(generateAdapter = true)
 data class Directory(
     val title: String,
-    val type: MetadatumType,
-    val uuid: String,
+    val type: MetadatumType? = null,
+    val uuid: String?= null,
     val key: String,
-    val createdAt: Long
+    val createdAt: Long? = null
 )

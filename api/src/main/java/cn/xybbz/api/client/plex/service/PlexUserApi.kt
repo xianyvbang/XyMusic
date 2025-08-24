@@ -8,6 +8,7 @@ import cn.xybbz.api.client.plex.data.PlexLoginResponse
 import cn.xybbz.api.client.plex.data.PlexPingSystemResponse
 import cn.xybbz.api.client.plex.data.PlexSystemInfoResponse
 import cn.xybbz.api.enums.plex.PlayState
+import okhttp3.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -32,7 +33,7 @@ interface PlexUserApi : BaseApi {
      * POST PING系统
      * @return [String]
      */
-    @POST("/")
+    @GET("/")
     suspend fun postPingSystem(): PlexPingSystemResponse
 
     /**

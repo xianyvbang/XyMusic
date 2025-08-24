@@ -647,7 +647,7 @@ class NavidromeDatasourceServer(
      */
     override suspend fun getRandomMusicList(pageSize: Int, pageNum: Int): List<XyMusic>? {
         val randomSongs = getServerMusicList(
-            startIndex = 0,
+            startIndex = pageSize * pageNum,
             pageSize = pageSize,
             sortBy = SortType.RANDOM,
         )
@@ -669,7 +669,7 @@ class NavidromeDatasourceServer(
     }
 
     /**
-     * 新增或修改歌单
+     * 导入歌单
      */
     override suspend fun importPlaylist(playlistData: ExportPlaylistData): Boolean {
         val playlists = playlistData.playlist
@@ -935,7 +935,6 @@ class NavidromeDatasourceServer(
 
     /**
      * 获得流派内音乐列表/或者专辑
-     * todo 试一下能不能查询到专辑
      * @param [genreId] 流派id
      */
     @OptIn(ExperimentalPagingApi::class)
@@ -1230,7 +1229,7 @@ class NavidromeDatasourceServer(
             )
             allResponse
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获取歌单失败",e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取歌单失败", e)
             AllResponse(items = emptyList(), 0, 0)
         }
     }
@@ -1412,7 +1411,8 @@ class NavidromeDatasourceServer(
             container = music.suffix,
             codec = music.suffix,
             ifLyric = !music.lyrics.isNullOrBlank(),
-            lyric = music.lyrics
+            lyric = music.lyrics,
+            playlistItemId = music.id
         )
     }
 

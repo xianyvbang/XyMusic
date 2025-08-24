@@ -10,6 +10,8 @@ import cn.xybbz.api.client.plex.service.PlexUserApi
 import cn.xybbz.api.client.plex.service.PlexUserLibraryApi
 import cn.xybbz.api.client.plex.service.PlexUserViewsApi
 import cn.xybbz.api.constants.ApiConstants
+import cn.xybbz.api.okhttp.plex.PlexQueryInterceptor
+import okhttp3.OkHttpClient
 
 class PlexApiClient : DefaultApiClient() {
 
@@ -120,6 +122,15 @@ class PlexApiClient : DefaultApiClient() {
         return this
     }
 
+
+    /**
+     * 获得okhttp客户端
+     */
+    /*override fun getOkHttpClient(): OkHttpClient {
+        val okHttpClient = super.getOkHttpClient()
+        okHttpClient.newBuilder().addNetworkInterceptor(PlexQueryInterceptor())
+        return okHttpClient
+    }*/
 
     /**
      * 更新token信息

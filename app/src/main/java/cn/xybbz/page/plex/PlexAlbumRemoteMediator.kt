@@ -120,13 +120,8 @@ class PlexAlbumRemoteMediator(
                 sortBy = sortType.sortType,
                 sortOrder = sortType.order,
                 ifFavorite = ifFavorite,
-                params = if (yearsInt.isNullOrEmpty()) null else mapOf(
-                    pairs = arrayOf(
-                        Pair(
-                            "year>=${yearsInt[0]}",
-                            ""
-                        ), Pair("year<=${yearsInt[yearsInt.size - 1]}", "")
-                    )
+                albumYear = if (yearsInt.isNullOrEmpty()) null else listOf(
+                    ">>=${yearsInt[0] -1}", "<<=${yearsInt[yearsInt.size - 1] + 1}"
                 )
             )
 

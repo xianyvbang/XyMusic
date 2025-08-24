@@ -350,6 +350,16 @@ fun HomeScreen(
                             )
                         }
 
+
+                    IconButton(onClick = {
+                        homeViewModel._dataSourceManager.initDataSource()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Rounded.Refresh,
+                            contentDescription = "刷新登录"
+                        )
+                    }
+
                     IconButton(onClick = {
                         navHostController.navigate(RouterConstants.Setting)
                     }) {
