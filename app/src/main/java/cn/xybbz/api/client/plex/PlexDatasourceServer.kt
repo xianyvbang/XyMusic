@@ -1722,7 +1722,7 @@ class PlexDatasourceServer(
             name = album.title,
             connectionId = connectionConfigServer.getConnectionId(),
             artistIds = album.parentRatingKey.toString(),
-            artists = album.parentRatingKey.toString(),
+            artists = album.parentTitle.toString(),
             year = album.year,
             premiereDate = album.originallyAvailableAt?.atStartOfDay(ZoneOffset.ofHours(8))
                 ?.toInstant()
@@ -1794,7 +1794,7 @@ class PlexDatasourceServer(
             part?.stream?.find { it.streamType == 4L }
 
 
-        val audioUrl = getMusicPlayUrl(part?.id.toString())
+        val audioUrl = getMusicPlayUrl(part?.key.toString())
 
         return XyMusic(
             itemId = item.ratingKey,

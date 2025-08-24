@@ -305,7 +305,7 @@ class PlexApiClient : DefaultApiClient() {
     private fun getAudioStreamUrl(
         trackMediaPartKey: String,
     ): String {
-        return "${baseUrl}/${trackMediaPartKey}?X-Plex-Platform=Android&X-Plex-Token=${accessToken}"
+        return "${baseUrl}${trackMediaPartKey}?X-Plex-Platform=Android&X-Plex-Token=${accessToken}"
     }
 
     /**
