@@ -10,8 +10,6 @@ import cn.xybbz.api.client.plex.service.PlexUserApi
 import cn.xybbz.api.client.plex.service.PlexUserLibraryApi
 import cn.xybbz.api.client.plex.service.PlexUserViewsApi
 import cn.xybbz.api.constants.ApiConstants
-import cn.xybbz.api.okhttp.plex.PlexQueryInterceptor
-import okhttp3.OkHttpClient
 
 class PlexApiClient : DefaultApiClient() {
 
@@ -73,9 +71,17 @@ class PlexApiClient : DefaultApiClient() {
 
     var musicFavoriteCollectionId: String? = null
         private set
+    var musicFavoriteCollectionIndex: Int? = null
+        private set
+
     var albumFavoriteCollectionId: String? = null
         private set
+    var albumFavoriteCollectionIndex: Int? = null
+        private set
+
     var artistFavoriteCollectionId: String? = null
+        private set
+    var artistFavoriteCollectionIndex: Int? = null
         private set
 
     //服务器信息
@@ -180,22 +186,34 @@ class PlexApiClient : DefaultApiClient() {
     /**
      * 更新musicFavoriteCollectionId
      */
-    fun updateMusicFavoriteCollectionId(musicFavoriteCollectionId: String?) {
+    fun updateMusicFavoriteCollectionId(
+        musicFavoriteCollectionId: String?,
+        musicFavoriteCollectionIndex: Int?
+    ) {
         this.musicFavoriteCollectionId = musicFavoriteCollectionId
+        this.musicFavoriteCollectionIndex = musicFavoriteCollectionIndex
     }
 
     /**
      * 更新albumFavoriteCollectionId
      */
-    fun updateAlbumFavoriteCollectionId(albumFavoriteCollectionId: String?) {
+    fun updateAlbumFavoriteCollectionId(
+        albumFavoriteCollectionId: String?,
+        albumFavoriteCollectionIndex: Int?
+    ) {
         this.albumFavoriteCollectionId = albumFavoriteCollectionId
+        this.albumFavoriteCollectionIndex = albumFavoriteCollectionIndex
     }
 
     /**
      * 更新artistFavoriteCollectionId
      */
-    fun updateArtistFavoriteCollectionId(artistFavoriteCollectionId: String?) {
+    fun updateArtistFavoriteCollectionId(
+        artistFavoriteCollectionId: String?,
+        artistFavoriteCollectionIndex: Int?
+    ) {
         this.artistFavoriteCollectionId = artistFavoriteCollectionId
+        this.artistFavoriteCollectionIndex = artistFavoriteCollectionIndex
     }
 
     /**

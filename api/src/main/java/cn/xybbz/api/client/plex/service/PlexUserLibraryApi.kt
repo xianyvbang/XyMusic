@@ -21,6 +21,7 @@ interface PlexUserLibraryApi : BaseApi {
      */
     @POST("/library/collections")
     suspend fun addCollection(
+        @Query("title")title:String,
         @Query("type") type: Int? = 10,
         @Query("smart") smart: String? = "0",
         @Query("sectionId") sectionId: String? = null

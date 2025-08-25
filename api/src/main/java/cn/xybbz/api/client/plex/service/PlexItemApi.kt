@@ -26,8 +26,8 @@ interface PlexItemApi : BaseApi {
         @Query("artist.id") artistId: String? = null,
         @Query("album.id") albumId: String? = null,
         @Query("genre") genreId: String? = null,
-        @Query("album.collection") albumCollection: String? = null,
-        @Query("track.collection") trackCollection: String? = null,
+        @Query("album.collection") albumCollection: Int? = null,
+        @Query("track.collection") trackCollection: Int? = null,
         @Query("year", encoded = false) year: List<String>? = null,
         @Query("album.year", encoded = false) albumYear: List<String>? = null,
         @QueryMap(encoded = false) params: Map<String, String>? = null

@@ -105,7 +105,7 @@ data class Metadatum(
     /**
      * The index position of the media item.
      */
-    val index: String? = null,
+    val index: Int? = null,
 
     /**
      * The number of leaf items (end nodes) under this media item.
@@ -380,5 +380,5 @@ data class Metadatum(
     val writer: List<Writer>? = null,
 
     @param:Json(name = "playlistItemID")
-    val playlistItemID:String? = null
+    val playlistItemID: String? = null
 )

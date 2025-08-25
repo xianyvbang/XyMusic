@@ -69,7 +69,7 @@ interface PlexPlaylistsApi : BaseApi {
         @Query("artist.id") artistId: String? = null,
         @Query("album.id") albumId: String? = null,
         @Query("sort") sort: String? = null,
-        @Query("track.collection") trackCollection: String? = null,
+        @Query("track.collection") trackCollection: Int? = null,
         @Query("year", encoded = false) year: List<String>? = null,
         @QueryMap params: Map<String, String>? = null
     ): PlexResponse<PlexLibraryItemResponse>
