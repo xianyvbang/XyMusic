@@ -316,17 +316,22 @@ class MainViewModel @Inject constructor(
      */
     private fun loadPlayerList() {
         viewModelScope.launch {
-            val musicList = db.musicDao.selectPlayQueueMusicList()
-            if (dataSourceManager.dataSourceType != null) {
-                val player =
-                    db.playerDao.selectPlayerByDataSource()
-                if (musicList.isNotEmpty()) {
-                    viewModelScope.launch {
-                        musicPlayContext.initPlayList(
-                            musicList = musicList,
-                            player = player
-                        )
-                        musicController.pause()
+
+            connectionConfigServer.loginStateFlow.collect {
+                if (it){
+                    val musicList = db.musicDao.selectPlayQueueMusicList()
+                    if (dataSourceManager.dataSourceType != null) {
+                        val player =
+                            db.playerDao.selectPlayerByDataSource()
+                        if (musicList.isNotEmpty()) {
+                            viewModelScope.launch {
+                                musicPlayContext.initPlayList(
+                                    musicList = musicList,
+                                    player = player
+                                )
+                                musicController.pause()
+                            }
+                        }
                     }
                 }
             }
