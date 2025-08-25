@@ -2,7 +2,6 @@ package cn.xybbz.common.utils
 
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
-import cn.xybbz.common.music.CacheController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.IDataSourceManager
 import cn.xybbz.localdata.data.connection.ConnectionConfig
@@ -18,7 +17,7 @@ object DataSourceChangeUtils {
         dataSourceManager: IDataSourceManager,
         musicController: MusicController
     ) {
-        dataSourceManager.changeDataSource(connectionConfig)
         musicController.clearPlayerList()
+        dataSourceManager.changeDataSource(connectionConfig)
     }
 }

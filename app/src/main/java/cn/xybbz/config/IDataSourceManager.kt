@@ -506,6 +506,7 @@ class IDataSourceManager(
      */
     override suspend fun release() {
         dataSourceServer.release()
+        setDataSourceTypeFun(null)
         //取消定时任务
         alarmConfig.cancelAllAlarm()
         connectionConfigServer.setConnectionConfigData(null)

@@ -681,6 +681,7 @@ class MusicController(
      */
     fun clearPlayerList() {
         pause()
+        cacheController.cancelAllCache()
         mediaController?.clearMediaItems()
         originMusicList = emptyList()
         musicCurrentPositionMap.clear()

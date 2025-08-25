@@ -275,7 +275,7 @@ fun ConnectionConfigInfoScreen(
                     SettingParentItemComponent(
                         title = "删除连接",
                         onClick = {
-                            if (connectionConfigInfoViewModel._connectionConfigServer.connectionConfig?.id == connectionId) {
+                            if (connectionConfigInfoViewModel._connectionConfigServer.getConnectionId() == connectionId) {
                                 MessageUtils.sendPopTip(
                                     "当前连接无法删除",
                                     backgroundColor = android.graphics.Color.RED

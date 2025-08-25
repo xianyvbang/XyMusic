@@ -233,14 +233,9 @@ class MemoryManagementViewModel @Inject constructor(
             databaseSize = "0B"
 
             //取消缓存
-            cacheController.cancelAllCache()
-            dataSourceManager.release()
-            //取消定时任务
-            alarmConfig.cancelAllAlarm()
-            dataSourceManager.setDataSourceTypeFun(null)
-            settingsConfig.setSettingsData()
-            connectionConfigServer.setConnectionConfigData(null)
             musicController.clearPlayerList()
+            dataSourceManager.release()
+            settingsConfig.setSettingsData()
         }
     }
 

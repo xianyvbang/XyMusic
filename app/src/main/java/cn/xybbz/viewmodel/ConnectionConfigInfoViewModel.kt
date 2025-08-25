@@ -3,7 +3,6 @@ package cn.xybbz.viewmodel
 import android.graphics.Color
 import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,11 +11,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import cn.xybbz.api.TokenServer
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.DatabaseUtils
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.IDataSourceManager
+import cn.xybbz.config.SettingsConfig
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.library.XyLibrary
@@ -33,6 +34,8 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
     private val dataSourceManager: IDataSourceManager,
     private val connectionConfigServer: ConnectionConfigServer,
     private val db: DatabaseClient,
+    private val musicController: MusicController,
+    private val settingsConfig: SettingsConfig
 ) : ViewModel() {
 
     @AssistedFactory
@@ -130,11 +133,23 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
     suspend fun removeThisConnection() {
 
         if (connectionConfigServer.connectionConfig?.id == connectionId) {
-            MessageUtils.sendPopTip("当前连接无法删除", backgroundColor = Color.RED)
+            //如果当前链接是最后链接,则直接删除数据里的数据
+            val connectionCount = db.connectionConfigDao.selectCount()
+            if (connectionCount == 0) {
+                DatabaseUtils.clearDatabaseByConnectionConfig(
+                    db,
+                    connectionId
+                )
+                musicController.clearPlayerList()
+                dataSourceManager.release()
+                settingsConfig.setSettingsData()
+            } else {
+                MessageUtils.sendPopTip("当前连接无法删除", backgroundColor = Color.RED)
+            }
         } else {
             DatabaseUtils.clearDatabaseByConnectionConfig(
                 db,
-                connectionId.toLong()
+                connectionId
             )
         }
 
@@ -201,10 +216,10 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
         viewModelScope.launch {
             TokenServer.setBaseUrlData(baseUrl = tmpAddress)
             //更新所有数据使得列表失效
-            db.albumDao.updateUrlByConnectionId(address,tmpAddress)
-            db.musicDao.updateUrlByConnectionId(address,tmpAddress)
-            db.artistDao.updateUrlByConnectionId(address,tmpAddress)
-            db.genreDao.updateUrlByConnectionId(address,tmpAddress)
+            db.albumDao.updateUrlByConnectionId(address, tmpAddress)
+            db.musicDao.updateUrlByConnectionId(address, tmpAddress)
+            db.artistDao.updateUrlByConnectionId(address, tmpAddress)
+            db.genreDao.updateUrlByConnectionId(address, tmpAddress)
 
             address = tmpAddress
             db.connectionConfigDao.updateAddress(

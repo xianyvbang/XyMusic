@@ -201,6 +201,7 @@ class CacheController(
         cacheTask.forEach { (_, u) ->
             u.cancel()
         }
+        cacheTask.clear()
     }
 
     /**
