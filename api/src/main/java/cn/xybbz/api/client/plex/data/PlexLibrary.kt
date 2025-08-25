@@ -7,7 +7,7 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class PlexLibrary(
     @param:Json(name = "Directory")
-    val directory: List<Directory>,
+    val directory: List<Directory>? = null,
     @param:Json(name = "size")
     override val size: Int
 ) : PlexParentResponse(size)
@@ -16,7 +16,7 @@ data class PlexLibrary(
 data class Directory(
     val title: String,
     val type: MetadatumType? = null,
-    val uuid: String?= null,
+    val uuid: String? = null,
     val key: String,
     val createdAt: Long? = null
 )

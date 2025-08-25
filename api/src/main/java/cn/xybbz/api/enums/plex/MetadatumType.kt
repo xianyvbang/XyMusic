@@ -29,7 +29,10 @@ enum class MetadatumType(val value: String) {
     @Json(name = "show")
     Show("show"),
     @Json(name = "track")
-    Track("track");
+    Track("track"),
+    @Json(name = "genre")
+    Genre("genre")
+    ;
 
     override fun toString(): String {
         return value
