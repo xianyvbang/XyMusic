@@ -13,6 +13,7 @@ import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.AllResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
+import cn.xybbz.api.client.plex.data.Directory
 import cn.xybbz.api.client.plex.data.Metadatum
 import cn.xybbz.api.client.plex.data.PlaylistMetadatum
 import cn.xybbz.api.client.plex.data.toPlexLogin
@@ -1386,13 +1387,7 @@ class PlexDatasourceServer(
      * 获得流派详情
      */
     override suspend fun getGenreById(genreId: String): XyGenre? {
-        var genre = db.genreDao.selectById(genreId)
-        if (genre == null) {
-            val queryResult =
-                plexApiClient.itemApi().getLibraryInfo(genreId)
-            genre = queryResult.mediaContainer?.metadata?.get(0)?.let { convertToGenre(it) }
-        }
-        return genre
+        return db.genreDao.selectById(genreId)
     }
 
     /**
@@ -1680,27 +1675,23 @@ class PlexDatasourceServer(
      */
     //todo getSongs这里返回值可能有问题可能有别的需要测试
     suspend fun getGenreList(
-        plexListType: PlexListType = PlexListType.genre,
         type: Int = 9,
         startIndex: Int,
         pageSize: Int,
         search: String? = null,
         sortBy: PlexSortType = PlexSortType.TITLE_SORT,
         sortOrder: PlexSortOrder = PlexSortOrder.ASCENDING,
-        params: Map<String, String>? = null
     ): AllResponse<XyGenre> {
-        val genreResponse = plexApiClient.itemApi().getSongs(
+        val genreResponse = plexApiClient.itemApi().getGenres(
             sectionKey = connectionConfigServer.libraryId!!,
             type = type,
-            selectType = plexListType.toString(),
             start = startIndex,
             pageSize = pageSize,
             sort = "$sortBy:$sortOrder",
             title = search,
-            params = params ?: mapOf(Pair("1", "1"))
         )
         return AllResponse(
-            items = genreResponse.mediaContainer?.metadata?.let { convertToGenreList(it) },
+            items = genreResponse.mediaContainer?.directory?.let { convertToGenreList(it) },
             totalRecordCount = genreResponse.mediaContainer?.totalSize ?: 0,
             startIndex = startIndex
         )
@@ -2017,7 +2008,7 @@ class PlexDatasourceServer(
     /**
      * 将Genre转换成XyGenre
      */
-    fun convertToGenreList(genres: List<Metadatum>): List<XyGenre> {
+    fun convertToGenreList(genres: List<Directory>): List<XyGenre> {
         return genres.map {
             convertToGenre(it)
         }
@@ -2026,22 +2017,12 @@ class PlexDatasourceServer(
     /**
      * 将Genre转换成XyGenre
      */
-    fun convertToGenre(genre: Metadatum): XyGenre {
-        val itemImageUrl = genre.image?.let { images ->
-            val image = images.findLast { it.type == ImageType.CoverPoster }
-            image?.let {
-                plexApiClient.getImageUrl(
-                    image.url,
-                )
-            }
-
-        }
+    fun convertToGenre(genre: Directory): XyGenre {
         return XyGenre(
-            itemId = genre.ratingKey,
-            pic = itemImageUrl ?: "",
+            itemId = genre.key,
+            pic = "",
             name = genre.title,
-            connectionId = connectionConfigServer.getConnectionId(),
-            createTime = genre.addedAt,
+            connectionId = connectionConfigServer.getConnectionId()
         )
     }
 

@@ -2,6 +2,7 @@ package cn.xybbz.api.client.plex.service
 
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.plex.data.ItemInfoResponse
+import cn.xybbz.api.client.plex.data.PlexLibrary
 import cn.xybbz.api.client.plex.data.PlexLibraryItemResponse
 import cn.xybbz.api.client.plex.data.PlexResponse
 import retrofit2.http.GET
@@ -52,4 +53,15 @@ interface PlexItemApi : BaseApi {
         @Query("asyncRefreshAnalysis") asyncRefreshAnalysis: Int = 1,
         @Query("asyncRefreshLocalMediaAgent") asyncRefreshLocalMediaAgent: Int = 1,
     ): PlexResponse<ItemInfoResponse>
+
+
+    @GET("/library/sections/{sectionKey}/genre")
+    suspend fun getGenres(
+        @Path("sectionKey") sectionKey: String,
+        @Query("type") type: Int? = 10,
+        @Query("sort") sort: String? = null,
+        @Query("title") title: String? = null,
+        @Query("X-Plex-Container-Start") start: Int? = null,
+        @Query("X-Plex-Container-Size") pageSize: Int? = null
+    ): PlexResponse<PlexLibrary>
 }
