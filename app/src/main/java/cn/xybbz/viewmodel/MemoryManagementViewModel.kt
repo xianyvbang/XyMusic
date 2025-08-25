@@ -15,6 +15,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import androidx.room.withTransaction
 import cn.xybbz.common.music.CacheController
+import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.IDataSourceManager
 import cn.xybbz.config.SettingsConfig
@@ -34,6 +35,7 @@ class MemoryManagementViewModel @Inject constructor(
     private val alarmConfig: AlarmConfig,
     private val dataSourceManager: IDataSourceManager,
     private val connectionConfigServer: ConnectionConfigServer,
+    private val musicController: MusicController
 ) : ViewModel() {
 
     var cacheSize by mutableStateOf("0B")
@@ -238,6 +240,7 @@ class MemoryManagementViewModel @Inject constructor(
             dataSourceManager.setDataSourceTypeFun(null)
             settingsConfig.setSettingsData()
             connectionConfigServer.setConnectionConfigData(null)
+            musicController.clearPlayerList()
         }
     }
 
