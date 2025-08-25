@@ -9,8 +9,10 @@ data class PlexLibrary(
     @param:Json(name = "Directory")
     val directory: List<Directory>? = null,
     @param:Json(name = "size")
-    override val size: Int
-) : PlexParentResponse(size)
+    override val size: Int,
+    @param:Json(name = "totalSize")
+    override val totalSize: Int? = null
+) : PlexParentResponse(size, totalSize = totalSize)
 
 @JsonClass(generateAdapter = true)
 data class Directory(
