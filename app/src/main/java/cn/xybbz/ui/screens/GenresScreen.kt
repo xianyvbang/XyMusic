@@ -77,7 +77,7 @@ fun GenresScreen(
                 genreLazyPagingItems[index]?.let { genre ->
                     MusicGenreCardComponent(
                         onItem = { genre },
-                        enabled = it,
+                        enabled = !it,
                         onRouter = {
                             navController.navigate(RouterConstants.GenreInfo(genre.itemId))
                         }
