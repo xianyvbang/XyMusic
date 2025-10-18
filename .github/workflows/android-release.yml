@@ -1,0 +1,70 @@
+name: Build Android Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # 只有打 tag 时才触发（例如 v1.0.0）
+
+jobs:
+  build:
+    name: Build Release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 200
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Decode keystore
+        uses: timheuer/base64-to-file@v1
+        with:
+          fileName: 'keystore.jks'
+          fileDir: './app/'
+          encodedString: ${{ secrets.KEYSTORE_BASE64 }}
+
+      - name: Debug keystore existence
+        run: |
+          echo "Workspace: $(pwd)"
+          ls -la ./app
+          if [ -f "./app/keystore.jks" ]; then
+            echo "✅ Keystore exists!"
+          else
+            echo "❌ Keystore is missing!"
+            exit 1
+          fi
+      
+
+      - name: Create signing config
+        run: |
+          cat >> ./app/keystore.properties <<EOF
+          storeFile=keystore.jks
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          EOF
+
+      - name: Grant execute permission to gradlew
+        run: chmod +x ./gradlew
+
+      - name: Build release APK
+        run: ./gradlew assembleRelease
+
+      - name: Create Release and Tag
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.ref }}
+          files: |
+            app/build/outputs/**/*.apk

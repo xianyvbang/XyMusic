@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!--targetSdk34开始需要添加此权限-->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+    <!--    悬浮窗-->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!--    精准定时任务权限-->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+<!--    安装apk的权限-->
+
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+
+    <application
+        android:name=".XyApplication"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_salted_fish_icon"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_salted_fish_icon_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Xybbzapp"
+        android:usesCleartextTraffic="true">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.App.Xybbzapp">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
+
+        <!--android 10开始，需要指定foregroundServiceType-->
+        <service
+            android:name="cn.xybbz.common.music.ExampleLibraryPlaybackService"
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback"
+            android:permission="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK">
+            <!--如果需要兼容低版本，需要添加此intent-filter-->
+            <intent-filter>
+                <!--                <action android:name="androidx.media3.session.MediaSessionService" />-->
+                <action android:name="androidx.media3.session.MediaLibraryService" />
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+        </service>
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <receiver
+            android:name=".config.service.alert.AlertService"
+            android:exported="false" />
+
+
+        <receiver
+            android:name=".config.service.ReportReceiver"
+            android:exported="false" />
+        <!--        <service android:name=".ui.components.FloatingWindowComponent"/>-->
+    </application>
+
+</manifest>

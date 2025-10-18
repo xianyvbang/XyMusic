@@ -1,0 +1,41 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # 根模块（常用于插件、kotlin、classpath 依赖）
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+
+  # app 模块
+  - package-ecosystem: "gradle"
+    directory: "/app"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+
+  # ui 模块
+  - package-ecosystem: "gradle"
+    directory: "/ui"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+
+  # api 模块
+  - package-ecosystem: "gradle"
+    directory: "/api"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+      
+  # localdata 模块
+  - package-ecosystem: "gradle"
+    directory: "/localdata"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10

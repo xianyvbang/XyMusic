@@ -1,0 +1,393 @@
+<resources>
+    <string name="app_name">咸鱼听歌</string>
+    <string name="add_or_switch_data_sources">新增或切换数据源</string>
+    <string name="notification_content_title">无法恢复播放</string>
+    <string name="notification_content_text">如果媒体通知上仍存在播放按钮，请按下它，否则请打开应用程序开始播放，并将会话重新连接到控制器</string>
+    <string name="notification_channel_name">无法恢复播放</string>
+    <string name="exo_download_notification_channel_name">下载</string>
+    <string name="home">首页</string>
+    <string name="music">音乐</string>
+    <string name="genres">流派</string>
+    <string name="search">搜索</string>
+    <string name="httpInput">服务端输入框图标</string>
+    <string name="server">服务端地址</string>
+
+    <!--关于页面-->
+    <string name="about">关于</string>
+    <string name="app_icon_info">APP图标</string>
+    <string name="current_version">当前版本</string>
+    <string name="check_updates">检查更新</string>
+    <string name="latest_version">最新版本</string>
+    <string name="new_version_detected">检测到新版本</string>
+    <string name="get_latest_version">正在获取最新版本,请稍等</string>
+    <string name="get_latest_version_success">获取最新版本成功</string>
+    <string name="get_latest_version_fail">获取最新版本失败</string>
+    <string name="new_version_download">有新版本下载可更新</string>
+    <string name="version_number">版本号</string>
+    <string name="current_download_progress">当前下载进度</string>
+    <string name="download_failed">下载失败</string>
+    <string name="cancel_download">取消下载</string>
+    <string name="download_install">下载并安装</string>
+    <string name="close">关闭</string>
+    <string name="problem_feedback">问题反馈</string>
+    <string name="function_not_implemented">功能未实现</string>
+    <string name="official_website">官网</string>
+    <string name="no_official_website_yet">暂无官网</string>
+
+
+    <!-- 通用-->
+    <string name="return_setting_screen">返回设置</string>
+    <string name="return_home">返回首页</string>
+    <string name="return_album_page">返回专辑列表</string>
+    <string name="back_to_genres_list">返回流派列表</string>
+    <string name="back">返回</string>
+    <string name="username">用户名</string>
+    <string name="password">密码</string>
+    <string name="all_media_libraries">全部媒体库</string>
+
+    <!--    专辑详情-->
+    <string name="album">专辑</string>
+    <string name="playlist">歌单</string>
+    <string name="open_operation_menu">打开操作菜单</string>
+    <string name="import_playlist">导入歌单</string>
+    <string name="import_playlist_hint">导入歌单会根据歌曲名称和歌手到服务中进行匹配,可能造成数据不准确,请导入后仔细查验,导入歌单也会同步在服务端创建歌单</string>
+    <string name="import_info">导入</string>
+    <string name="select_all">全选</string>
+    <string name="deselect_all">取消全选</string>
+    <string name="pause_playback">暂停播放</string>
+    <string name="resume_playback">继续播放</string>
+    <string name="start_playback">开始播放</string>
+    <string name="close_selection">关闭选择</string>
+    <string name="delete_playback_history">删除播放历史</string>
+    <string name="select">选择</string>
+    <string name="album_cover">专辑封面</string>
+    <string name="favorite_added">已收藏</string>
+    <string name="favorite_removed">未收藏</string>
+    <string name="enable_playback_history">开启存储播放历史</string>
+    <string name="export_playlist">导出歌单</string>
+    <string name="rename_playlist">重命名歌单</string>
+    <string name="delete_playlist">删除歌单</string>
+    <string name="modify_playlist_name">修改歌单名称</string>
+    <string name="confirm_delete_playlist">确定要删除 $s 吗?</string>
+
+    <!--    艺术家详情-->
+    <string name="no_description">暂无简介</string>
+    <string name="artist_cover">艺术家封面</string>
+    <!--艺术家-->
+    <string name="artist">艺术家</string>
+    <string name="get_all_artists">获取所有艺术家</string>
+    <string name="get_favorite_artists">只获取收藏艺术家</string>
+    <!--    缓存设置页面-->
+    <string name="music_cache_limit_title">音乐缓存上限</string>
+    <string name="current_auto_cache_limit">当前自动设置缓存上限为%s</string>
+    <string name="auto_cache_limit_description">
+       自动设置缓存上限是根据手机可用内存,自动调节音乐缓存上限.\n\n缓存上限自动设置计算规则:\n1.可用存储空间大于100G,音乐缓存上限为16G.\n2.可用空间大于50G,小于等于100G,音乐缓存上限为8G.\n3.可用空间大于10G,小于等于50G,音乐缓存上限为4G.\n4.可用空间小于等于10G,音乐缓存上限为2G.
+   </string>
+
+    <!--    链接设置-->
+    <string name="connection_info">连接信息</string>
+    <string name="user_settings">用户设置</string>
+    <string name="copy_success">复制成功</string>
+    <string name="media_library_management">媒体库管理</string>
+    <string name="music_library">音乐库</string>
+    <string name="connection_address">链接地址</string>
+    <string name="set_alias">设置别名</string>
+    <string name="delete_connection">删除连接</string>
+    <string name="cannot_delete_current_connection">当前连接无法删除</string>
+    <string name="warning">注意</string>
+    <string name="confirm_delete_connection">确定要删除当前连接信息吗?</string>
+
+    <!--链接管理页面-->
+    <string name="connection_settings_list">连接设置列表</string>
+    <string name="view_connection_info">查看%s中的信息</string>
+    <!--链接页面-->
+    <string name="server_connection">服务器连接</string>
+    <string name="connect_to_service">连接到%s</string>
+    <string name="select_protocol">选择您要使用的协议连接到您的音乐库</string>
+    <string name="server_cannot_be_empty">服务端地址不能为空</string>
+    <string name="username_cannot_be_empty">用户名不能为空</string>
+    <string name="connect">连接</string>
+    <string name="reselect">重新选择</string>
+    <string name="logging_in">登录中…</string>
+    <string name="login_failed">登录失败</string>
+    <string name="reconnect">重新连接</string>
+    <string name="connection_successful">连接成功</string>
+    <string name="connection_success_image">连接成功动图</string>
+    <string name="enter_page">进入页面</string>
+    <string name="no_music_service_selected">未选择音乐服务</string>
+    <string name="music_service">音乐服务</string>
+    <string name="selected_item">选中%s</string>
+    <string name="please_enter_required_content">请输入必填内容</string>
+    <string name="back_to_input_credentials">返回输入</string>
+    <!--收藏页面-->
+    <string name="my_favorites">我的收藏</string>
+
+    <!--首页-->
+
+    <string name="open_add_or_switch_data_sources">打开新增或切换数据源菜单</string>
+    <string name="add_connection">添加连接</string>
+    <string name="connection_link">链接</string>
+    <string name="icon">的图标</string>
+    <string name="login_exception_info">登陆异常信息</string>
+    <string name="refresh_login">刷新登录</string>
+    <string name="open_settings_page_button">打开设置页面按钮</string>
+    <string name="search_page_switch_button">搜索页面切换按钮</string>
+    <string name="all_music">所有音乐</string>
+    <string name="favorite">收藏</string>
+    <string name="most_played">最多播放</string>
+    <string name="random_play">随机播放</string>
+    <string name="list_loop">列表循环</string>
+    <string name="latest_albums">最新专辑</string>
+    <string name="recently_played_albums">最近播放专辑</string>
+    <string name="recently_played_music">最近播放音乐</string>
+    <string name="playlists">歌单</string>
+    <string name="create_playlist">创建歌单</string>
+    <string name="refresh_playlist">刷新歌单</string>
+    <string name="open_playlist_operations_popup">打开歌单操作弹窗</string>
+    <string name="new_playlist">新建歌单</string>
+    <string name="no_playlists">暂无歌单</string>
+    <string name="no_data">暂无数据</string>
+
+    <!--界面设置-->
+    <string name="interface_settings">界面设置</string>
+    <string name="interface_screen">界面</string>
+    <string name="reset">重置</string>
+    <string name="single_color_setting">是否进行单一颜色设定</string>
+    <string name="global_gradient_setting">是否切换为全局统一渐变色</string>
+    <string name="global_gradient_colors">全局渐变色</string>
+    <string name="home_background_gradient">首页背景渐变色</string>
+    <string name="music_list_background_gradient">音乐列表页背景渐变色</string>
+    <string name="album_list_background_gradient">专辑列表背景渐变色</string>
+    <string name="album_detail_background_gradient">专辑详情背景渐变色</string>
+    <string name="artist_list_background_gradient">艺术家列表背景渐变色</string>
+    <string name="artist_detail_background_gradient">艺术家详情背景渐变色</string>
+    <string name="favorite_list_background_gradient">收藏列表背景渐变色</string>
+    <string name="genre_list_background_gradient">流派列表背景渐变色</string>
+    <string name="genre_detail_background_gradient">流派详情背景渐变色</string>
+    <string name="settings_page_background_gradient">设置页面背景渐变色</string>
+    <string name="about_page_background_gradient">关于页面背景渐变色</string>
+    <string name="connection_management_background_gradient">链接管理页面背景渐变色</string>
+    <string name="connection_detail_background_gradient">链接详情页面背景渐变色</string>
+    <string name="search_page_background_gradient">搜索页面背景渐变色</string>
+    <string name="cache_limit_setting_background_gradient">缓存大小设置页面背景渐变色</string>
+    <string name="language_switching_background_gradient">切换语言页面背景渐变色</string>
+    <string name="storage_management_background_gradient">存储管理页面背景渐变色</string>
+    <string name="bottom_player_gradient">底部播放栏渐变色</string>
+    <string name="bottom_sheet_gradient">底部弹出菜单渐变色</string>
+    <string name="dialog_gradient">弹窗渐变色</string>
+    <string name="error_dialog_gradient">异常/告警弹窗渐变色</string>
+    <string name="select_library_background_gradient">选择媒体库页面背景渐变色</string>
+    <string name="player_default_background_color">播放页默认背景色</string>
+
+    <!--    语言页面-->
+    <string name="language">语言</string>
+    <string name="selected_language">已选择语言</string>
+    <string name="available_languages">可选择语言</string>
+    <!--    存储管理页面-->
+    <string name="storage_management">存储管理</string>
+    <string name="audio_cache">音频缓存</string>
+    <string name="audio_cache_description">缓存音频数据,清理后无法本地播放</string>
+    <string name="temporary_cache">临时缓存</string>
+    <string name="temporary_cache_description">临时缓存是使用过程中产生的临时缓存，清理临时缓存不会影响应用的使用</string>
+    <string name="database_data">数据库数据</string>
+    <string name="database_data_description">存储音频、专辑、艺术家、歌单详细信息，清理后会重新从服务端进行获取</string>
+    <string name="essential_data">必要数据</string>
+    <string name="essential_data_description">包含应用运行所需的必要文件，这部分数据不能清理</string>
+    <string name="clear">清除</string>
+    <string name="confirm_delete_database">确定要删除数据库数据吗?</string>
+
+    <!--    搜索页面-->
+    <string name="search_music_album_artist">搜索音乐 / 专辑 / 艺术家</string>
+    <string name="search_box_icon">搜索框图标</string>
+    <string name="search_history">搜索历史</string>
+    <string name="loading">加载中...</string>
+    <string name="no_more_data">已经到底了</string>
+    <!--媒体库选择-->
+    <string name="media_library_selection">媒体库选择</string>
+    <string name="back_to_connection_info">返回连接信息页面</string>
+    <!--    设置页面-->
+    <string name="settings">设置</string>
+    <string name="playback">播放</string>
+    <string name="prioritize_local_data">优先获取本地数据播放</string>
+    <string name="cache_limit">缓存上限</string>
+    <string name="album_playback_history">专辑播放历史</string>
+    <string name="allow_simultaneous_playback">允许与其他应用同时播放</string>
+    <string name="song_cache_location">歌曲缓存位置</string>
+    <string name="connection_management">连接管理</string>
+    <string name="more">更多</string>
+
+    <string name="connection_address_cannot_be_empty">链接地址不能为空</string>
+    <string name="alias_cannot_be_empty">别名不能为空</string>
+
+    <string name="single_loop">单曲循环</string>
+    <string name="shuffle_play">随机播放</string>
+    <string name="decade_suffix">年代</string>
+
+    <string name="timer_close_message">定时关闭</string>
+    <string name="cancel_timer_close_message">已取消定时关闭</string>
+    <string name="trigger_time_prefix">触发时间</string>
+
+    <string name="song_tab">歌曲</string>
+    <string name="lyrics_tab">歌词</string>
+
+    <string name="no_lyrics">暂无字幕</string>
+
+    <string name="add_to_playlist">加入歌单</string>
+    <string name="songs_count_suffix">首歌</string>
+
+    <string name="cancel">取消</string>
+    <string name="confirm">确定</string>
+
+
+    <string name="playlist_export_failed">歌单导出失败</string>
+    <string name="playlist_info_empty">歌单信息为空</string>
+    <string name="playlist_export_success">歌单导出成功</string>
+    <string name="please_select_export_format">请选择导出歌单的格式</string>
+    <string name="playlist_import_failed">导出歌单失败</string>
+    <string name="unknown_playlist">未知歌单</string>
+
+    <string name="reached_bottom">已经到底了</string>
+    <string name="retry">请重试</string>
+    <string name="request_failed_check_network">请求失败，请检查网络</string>
+    <string name="retry_button">重试</string>
+
+    <string name="empty_info" />
+
+    <string name="skip_head_tail">跳过头尾</string>
+    <string name="timer_close">定时关闭</string>
+    <string name="double_speed">倍速播放</string>
+    <string name="play_next">下一首播放</string>
+    <string name="share_song">分享歌曲</string>
+    <string name="song_info">歌曲信息</string>
+    <string name="delete_permanently">永久删除</string>
+    <string name="delete_warning">注意!!会同步删除服务端中文件</string>
+    <string name="exact_alarm_permission_granted">已开启精确闹钟权限</string>
+    <string name="exact_alarm_permission_not_granted">未开启精确闹钟权限</string>
+    <string name="timer_close_title">定时关闭</string>
+    <string name="timer_close_subtitle">定时关闭需要申请精准闹钟权限才能使用</string>
+    <string name="apply_permission">申请权限</string>
+    <string name="custom_timer_close">自定义定时关闭事件</string>
+    <string name="max_24_hours">最大设置24小时</string>
+    <string name="countdown_prefix">倒计时: </string>
+    <string name="timer_close_disabled">关闭</string>
+    <string name="custom_timer_suffix">分钟后</string>
+    <string name="timer_close_custom">自定义</string>
+    <string name="close_after_playback">播放完后关闭</string>
+    <string name="double_speed_title">倍速播放</string>
+    <string name="skip_head_tail_title">跳过头尾</string>
+    <string name="skip_head_prefix">跳过片头</string>
+    <string name="skip_tail_prefix">跳过片尾</string>
+    <string name="song_info_title">歌曲信息</string>
+    <string name="title">标题</string>
+    <string name="album_artist">专辑艺术家</string>
+    <string name="media_source">媒体来源</string>
+    <string name="duration">时长</string>
+    <string name="bitrate">比特率</string>
+    <string name="kbps">kbps</string>
+    <string name="sample_rate">采样率</string>
+    <string name="bit_depth">位深</string>
+    <string name="bit">bit</string>
+    <string name="size">大小</string>
+    <string name="format">格式</string>
+    <string name="play_path">播放路径</string>
+    <string name="actual_path">实际路径</string>
+    <string name="add_time">添加时间</string>
+    <string name="artist_list_title">歌手</string>
+    <string name="fifteen_minutes">15分钟</string>
+    <string name="thirty_minutes">30分钟</string>
+    <string name="forty_five_minutes">45分钟</string>
+    <string name="sixty_minutes">60分钟</string>
+    <string name="playback_speed">播放速度</string>
+    <string name="normal">正常</string>
+
+    <string name="unknown_artist">未知艺术家</string>
+    <string name="cover_suffix">的封面</string>
+    <string name="other_operations_button_suffix">的其他操作按钮</string>
+
+    <string name="current_playlist">当前播放列表</string>
+    <string name="playing">播放中</string>
+    <string name="remove_from_playlist">从播放列表删除音乐</string>
+
+    <string name="close_player_screen">关闭播放页面</string>
+    <string name="previous_track">上一首</string>
+    <string name="next_track">下一首</string>
+    <string name="music_list">音乐列表</string>
+    <string name="pause">暂停中</string>
+    <string name="play">播放中</string>
+    <string name="favorite_button">收藏按钮</string>
+
+    <string name="delete_prefix">删除</string>
+    <string name="no_search_history">暂无查询</string>
+
+    <string name="select_sort_method">选择排序方式</string>
+    <string name="cancel_favorite_filter">取消收藏筛选</string>
+    <string name="get_favorite_music">获取收藏音乐</string>
+    <string name="era_filter">年代筛选</string>
+    <string name="year_filter">年份筛选</string>
+    <string name="sort_method">排序方式</string>
+    <string name="year_selection">年份选择</string>
+    <string name="can_cancel_favorite_filter">已经进行收藏筛选</string>
+    <string name="can_get_favorite_music">已经取消收藏筛选</string>
+    <string name="enter_settings">进入$s设置</string>
+
+
+    <string name="please_select">请选择</string>
+    <string name="play_selected">播放选中</string>
+    <string name="unfavorite">取消收藏</string>
+    <string name="music_cover">音乐封面</string>
+    <string name="music_remove_from_playlist">从歌单中删除</string>
+
+    <string name="server_connection_error">服务端连接错误</string>
+    <string name="server_connection_timeout">服务端连接超时</string>
+    <string name="no_connection_selected">未选择连接</string>
+    <string name="login_failed_no_token">登陆失败,无法获取令牌</string>
+    <string name="login_success">登陆成功</string>
+    <string name="get_server_resources_failed">获得服务器资源失败</string>
+    <string name="creating_playlist">正在创建…</string>
+    <string name="create_playlist_success">创建成功</string>
+    <string name="create_playlist_failed">创建失败</string>
+    <string name="importing_playlist">正在导入…</string>
+    <string name="import_playlist_success">导入歌单成功</string>
+    <string name="import_playlist_failed">导入歌单失败</string>
+    <string name="editing_playlist_name">正在修改歌单名称…</string>
+    <string name="edit_playlist_name_success">歌单名称修改成功</string>
+    <string name="edit_playlist_name_failed">歌单名称修改失败</string>
+    <string name="deleting_playlist">正在删除歌单…</string>
+    <string name="delete_playlist_success">删除歌单成功</string>
+    <string name="delete_playlist_failed">删除歌单失败</string>
+    <string name="adding_music_to_playlist">正在添加音乐到歌单…</string>
+    <string name="add_music_to_playlist_success">添加音乐到歌单成功</string>
+    <string name="add_music_to_playlist_failed">添加音乐到歌单失败</string>
+    <string name="removing_music_from_playlist">正在删除歌单中的音乐…</string>
+    <string name="remove_music_from_playlist_success">删除歌单中的音乐成功</string>
+    <string name="remove_music_from_playlist_failed">删除歌单中的音乐失败</string>
+    <string name="deleting">正在删除</string>
+    <string name="delete_success">删除成功</string>
+    <string name="delete_failed">删除失败</string>
+
+    <string name="unknown_music">未知音乐</string>
+    <string name="unknown_album">未知专辑</string>
+    <string name="plex_music_collection_title">咸鱼音乐音乐收藏</string>
+    <string name="plex_album_collection_title">咸鱼音乐专辑收藏</string>
+    <string name="plex_artist_collection_title">咸鱼音乐艺术家收藏</string>
+
+    <string name="cancel_selection">关闭选择功能</string>
+    <string name="open_selection_function">打开选择功能</string>
+    <string name="open_sort_and_filter_menu">打开排序和筛选菜单</string>
+
+    <string name="sort_by_create_time_asc">按创建时间排序</string>
+    <string name="sort_by_create_time_desc">按创建时间倒序</string>
+    <string name="sort_by_music_name_asc">按歌曲名称排序</string>
+    <string name="sort_by_music_name_desc">按歌曲名称倒序</string>
+    <string name="sort_by_album_name_asc">按专辑名称排序</string>
+    <string name="sort_by_album_name_desc">按专辑名倒序</string>
+    <string name="sort_by_artist_name_asc">按艺术家排序</string>
+    <string name="sort_by_artist_name_desc">按艺术家倒序</string>
+    <string name="sort_by_premiere_date_asc">按发行时间正序</string>
+    <string name="sort_by_premiere_date_desc">按发行时间倒叙</string>
+    <string name="add_to_next_play_success">成功添加到下一首播放</string>
+    <string name="server_version_too_low">服务端版本过低(%s),支持的最低版本: %s</string>
+    <string name="server_version_cannot_be_obtained">服务端版本无法获取</string>
+    <string name="plex_resource_error">获得Plex资源地址失败</string>
+
+</resources>
