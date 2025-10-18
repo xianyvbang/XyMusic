@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "cn.xybbz.ui"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 34
