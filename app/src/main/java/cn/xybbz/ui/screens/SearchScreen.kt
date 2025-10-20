@@ -260,7 +260,10 @@ fun SearchResultScreen(
     LazyColumnNotComponent(
         modifier = Modifier
             .padding(top = XyTheme.dimens.outerVerticalPadding)
-            .fillMaxSize()
+            .fillMaxSize(),
+        contentPadding = PaddingValues(
+            vertical = XyTheme.dimens.outerVerticalPadding,
+        )
     ) {
 
         if (onLoadingState()) {
@@ -273,10 +276,10 @@ fun SearchResultScreen(
         } else {
             if (artistList.isNotEmpty()) {
                 item {
-                    XyItemTitle(text = stringResource(R.string.artist), fontSize = 18.sp)
+                    XyItemTitle(text = stringResource(R.string.artist), fontSize = 18.sp,)
                 }
                 item {
-                    LazyRowComponent(modifier = Modifier.padding(start = XyTheme.dimens.innerHorizontalPadding)) {
+                    LazyRowComponent() {
                         items(artistList, key = { it.artistId }) { artist ->
                             MusicArtistCardComponent(
                                 onItem = { artist },
@@ -294,7 +297,7 @@ fun SearchResultScreen(
                     XyItemTitle(text = stringResource(R.string.album), fontSize = 18.sp)
                 }
                 item {
-                    LazyRowComponent(modifier = Modifier.padding(start = XyTheme.dimens.innerHorizontalPadding)) {
+                    LazyRowComponent() {
                         items(albumList, key = { it.itemId }) { album ->
                             MusicAlbumCardComponent(
                                 onItem = { album },

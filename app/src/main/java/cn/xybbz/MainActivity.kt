@@ -1,7 +1,9 @@
 package cn.xybbz
 
 import android.content.Context
+import android.content.res.Configuration
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -32,12 +34,13 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+        Log.d("MainActivity", "调用两次")
         DialogX.init(this)
         //启动页面
         installSplashScreen()
         super.onCreate(savedInstanceState)
 
-
+        Thread.dumpStack() // 打印调用栈
         /* Thread.setDefaultUncaughtExceptionHandler { _, throwable ->
              // 在这里处理异常，可以进行日志记录或其他操作
              throwable.printStackTrace()
@@ -69,6 +72,12 @@ class MainActivity : ComponentActivity() {
         }
 
     }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        Log.d("MainActivity", "Configuration changed: $newConfig")
+    }
+
 
     override fun attachBaseContext(newBase: Context?) {
         // 绑定语种
