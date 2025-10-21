@@ -61,7 +61,7 @@ class SettingsConfig(
             this@SettingsConfig.languageType = this@SettingsConfig.get().languageType
             this@SettingsConfig.cacheUpperLimit = this@SettingsConfig.get().cacheUpperLimit
             Log.i("api", "动态设置数据--读取配置")
-            setDefaultLanguage(this@SettingsConfig.languageType, applicationContext)
+//            setDefaultLanguage(this@SettingsConfig.languageType, applicationContext)
         }
         val packageManager = applicationContext.packageManager
         val packageName = applicationContext.packageName

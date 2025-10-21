@@ -1,7 +1,6 @@
 package cn.xybbz
 
 import android.content.Context
-import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -71,11 +70,6 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        Log.d("MainActivity", "Configuration changed: $newConfig")
     }
 
 

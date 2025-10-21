@@ -155,3 +155,4 @@ list.forEach {
 //                    })
 //            })
 //    )
+// acticity 的重新创建 https://developer.android.com/guide/topics/resources/runtime-changes?hl=zh-cn&_gl=1*1u12l7*_up*MQ..*_ga*NzczOTg1Mjc5LjE3NjEwMTUxMDE.*_ga_6HH9YJMN9M*czE3NjEwMTUxMDEkbzEkZzAkdDE3NjEwMTUxMDEkajYwJGwwJGg1NzY2NTkwNzc.#react-changes-compose

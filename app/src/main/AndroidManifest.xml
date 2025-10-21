@@ -34,7 +34,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
-            android:configChanges="orientation|screenSize|locale"
+            android:configChanges="locale|layoutDirection"
             android:theme="@style/Theme.App.Xybbzapp">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
