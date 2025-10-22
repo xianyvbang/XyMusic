@@ -340,7 +340,7 @@
     <string name="server_connection_error">服务端连接错误</string>
     <string name="server_connection_timeout">服务端连接超时</string>
     <string name="no_connection_selected">未选择连接</string>
-    <string name="login_failed_no_token">登陆失败,无法获取令牌</string>
+    <string name="login_failed_no_token">登陆失败,账号或密码错误</string>
     <string name="login_success">登陆成功</string>
     <string name="get_server_resources_failed">获得服务器资源失败</string>
     <string name="creating_playlist">正在创建…</string>
