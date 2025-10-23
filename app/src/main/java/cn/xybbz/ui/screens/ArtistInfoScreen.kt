@@ -180,9 +180,9 @@ fun ArtistInfoScreen(
                                 .height(DefaultImageHeight),
                             model = artistInfoViewModel.artistInfoData?.pic,
                             contentDescription = stringResource(R.string.artist_cover),
-                            fallback = painterResource(R.drawable.image_placeholder),
-                            placeholder = painterResource(R.drawable.image_placeholder),
-                            error = painterResource(R.drawable.image_placeholder),
+                            fallback = painterResource(R.drawable.artrist_info),
+                            placeholder = painterResource(R.drawable.artrist_info),
+                            error = painterResource(R.drawable.artrist_info),
                             alpha = (topBarAlpha - 1) * -1
                         )
                         Column(

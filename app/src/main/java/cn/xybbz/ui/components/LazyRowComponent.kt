@@ -12,11 +12,8 @@ import cn.xybbz.ui.theme.XyTheme
 fun LazyRowComponent(modifier: Modifier = Modifier, content: LazyListScope.() -> Unit) {
     LazyRow(
         modifier = modifier,
-        contentPadding = PaddingValues(
-            horizontal = XyTheme.dimens.outerVerticalPadding,
-            vertical = XyTheme.dimens.outerHorizontalPadding
-        ),
-        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.innerVerticalPadding),
+        contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2),
     ){
         content()
     }

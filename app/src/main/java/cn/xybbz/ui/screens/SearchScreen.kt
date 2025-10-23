@@ -68,6 +68,7 @@ import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyItemTextLarge
 import cn.xybbz.ui.xy.XyItemTitle
+import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.SearchViewModel
 
 
@@ -260,10 +261,7 @@ fun SearchResultScreen(
     LazyColumnNotComponent(
         modifier = Modifier
             .padding(top = XyTheme.dimens.outerVerticalPadding)
-            .fillMaxSize(),
-        contentPadding = PaddingValues(
-            vertical = XyTheme.dimens.outerVerticalPadding,
-        )
+            .fillMaxSize()
     ) {
 
         if (onLoadingState()) {
@@ -276,7 +274,13 @@ fun SearchResultScreen(
         } else {
             if (artistList.isNotEmpty()) {
                 item {
-                    XyItemTitle(text = stringResource(R.string.artist), fontSize = 18.sp,)
+                    XyRow{
+                        XyItemTitle(
+                            text = stringResource(R.string.artist),
+                            fontSize = 18.sp,
+                        )
+                    }
+
                 }
                 item {
                     LazyRowComponent() {
@@ -294,7 +298,9 @@ fun SearchResultScreen(
 
             if (albumList.isNotEmpty()) {
                 item {
-                    XyItemTitle(text = stringResource(R.string.album), fontSize = 18.sp)
+                    XyRow{
+                        XyItemTitle(text = stringResource(R.string.album), fontSize = 18.sp)
+                    }
                 }
                 item {
                     LazyRowComponent() {
@@ -317,7 +323,9 @@ fun SearchResultScreen(
 
             if (musicList.isNotEmpty()) {
                 item {
-                    XyItemTitle(text = stringResource(R.string.music), fontSize = 18.sp)
+                    XyRow{
+                        XyItemTitle(text = stringResource(R.string.music), fontSize = 18.sp)
+                    }
                 }
                 itemsIndexed(musicList, key = { _, music -> music.itemId }) { index, music ->
                     MusicItemComponent(
