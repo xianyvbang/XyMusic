@@ -138,6 +138,10 @@ data class XyMusic(
      */
     val playlistItemId: String?,
     /**
+     * 最近播放时间
+     */
+    val lastPlayedDate: Long = 0,
+    /**
      * 创建时间
      */
     val createTime: Long = System.currentTimeMillis()

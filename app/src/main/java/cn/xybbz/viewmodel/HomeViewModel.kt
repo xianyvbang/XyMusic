@@ -79,6 +79,13 @@ class HomeViewModel @OptIn(UnstableApi::class)
         private set
 
     /**
+     * 随机音乐
+     */
+    var randomMusicList by mutableStateOf<List<XyMusic>>(emptyList())
+        private set
+
+
+    /**
      * 歌单列表
      */
     var playlists by mutableStateOf(listOf<XyAlbum>())
