@@ -686,9 +686,9 @@ class IDataSourceManager(
     /**
      * 获得最近播放音乐
      */
-    override suspend fun playRecordMusicOrAlbumList() {
+    override suspend fun playRecordMusicOrAlbumList(pageSize: Int) {
         try {
-            dataSourceServer.playRecordMusicOrAlbumList()
+            dataSourceServer.playRecordMusicOrAlbumList(pageSize)
         } catch (e: SocketTimeoutException) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐更新超时", e)
         } catch (e: Exception) {

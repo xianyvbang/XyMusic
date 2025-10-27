@@ -1,5 +1,7 @@
 package cn.xybbz.config.recommender
 
+import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.common.constants.Constants
 import cn.xybbz.localdata.data.music.XyMusic
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +25,7 @@ data class RecommenderConfig(
  * 但生成过程会先缩小候选集以避免对整个库遍历。
  */
 class DailyRecommender(
-    private val repo: SongRepository,
+    private val repo: IDataSourceManager,
     private val recentHistory: RecentHistoryCache,
     private val config: RecommenderConfig = RecommenderConfig()
 ) {
@@ -31,18 +33,25 @@ class DailyRecommender(
 
     suspend fun generate(): List<XyMusic> = withContext(ioScope.coroutineContext) {
         // 1) 拉取必要数据（最近播放用于画像）
-        val recentPlays = repo.getRecentPlays(limit = 1000)
+        val recentPlays = repo.getPlayRecordMusicList(pageSize = Constants.ALBUM_MUSIC_LIST_PAGE)
 
         // 2) 构建用户画像（artist/genre 权重）
-        val (artistPrefs, genrePrefs) = buildUserProfile(recentPlays)
+        val (artistPrefs: Map<String, Double>, genrePrefs) = buildUserProfile(recentPlays)
 
         // 3) 构建候选集（根据 artist/genre top + 部分随机采样）
         val candidates = buildCandidateSet(artistPrefs, genrePrefs)
 
         // 4) 从候选集评分并排序（混合得分）
         val scored = candidates.map { song ->
+
+
             val prefScore =
-                (artistPrefs[song.artist] ?: 0.0) * 0.7 + (genrePrefs[song.genre] ?: 0.0) * 0.3
+                (song.artistIds?.map { artistId ->
+                    val artistPref = artistPrefs[artistId.toString()]
+                    (artistPref ?: 0.0) * 0.7
+                }?.sum() ?: 0.0) * 0.7 + (song.genreIds?.map { genreId ->
+                    genrePrefs[genreId.toString()] ?: 0.0
+                }?.sum() ?: 0.0) * 0.3
             val contentSim = estimateContentSimilarity(song, candidates) // 简单标签相似度，轻量
             val randomFactor = 1.0 + Random.nextDouble(-0.08, 0.12) // 小扰动
             val finalScore = (0.65 * prefScore + 0.25 * contentSim + 0.10) * randomFactor
@@ -65,8 +74,7 @@ class DailyRecommender(
         }
 
         // To avoid multiple suspend calls in filter, get snapshot once:
-        val recentSnapshot = recentHistory.snapshot()
-        val finalFiltered = filtered.filterNot { recentSnapshot.contains(it.id) }
+        val finalFiltered = filtered.filterNot { recentHistory.contains(it.itemId) }
 
         // Exploration: reserve some slots for exploration (unseen / low-score)
         val n = config.recommendCount
@@ -76,14 +84,14 @@ class DailyRecommender(
         val exploit = finalFiltered.take(exploitCount)
         // exploration pool: items not in recent plays and low pref (or never played)
         val explorationPool = candidates.filter { c ->
-            !recentSnapshot.contains(c.id) &&
-                    recentPlays.none { it.id == c.id } // never in recent plays -> good exploration candidate
+            !recentHistory.contains(c.itemId) &&
+                    recentPlays.none { it.itemId == c.itemId } // never in recent plays -> good exploration candidate
         }.shuffled().take(exploreCount)
 
         val result = (exploit + explorationPool).distinct().take(n)
 
         // 更新 recentHistory（异步安全）
-        recentHistory.addAll(result.map { it.id })
+        recentHistory.addAll(result.map { it.itemId })
 
         return@withContext result
     }
@@ -138,14 +146,24 @@ class DailyRecommender(
         val topGenres =
             genrePrefs.entries.sortedByDescending { it.value }.take(6).map { it.key }.toSet()
 
-        val byArtists = repo.getSongsByArtists(topArtists, limitPerArtist = 200) // each artist 取部分
-        val byGenres = repo.getSongsByGenres(topGenres, limitPerGenre = 300)
+        val byArtists = repo.getMusicListByArtistIds(
+            topArtists.toList(),
+            pageNum = 0,
+            pageSize = 200
+        )?:emptyList() // each artist 取部分
+        val byGenres = repo.selectMusicListByGenreIds(
+            topGenres.toList(),
+            pageNum = 0,
+            pageSize = 300
+        )?:emptyList()
 
         // 补充：如果候选少，随机从全库取一部分（分页）
-        val seed = (byArtists + byGenres).distinct().toMutableList()
-        if (seed.size < 300) {
-            val all = repo.getAllSongs()
-            seed.addAll(all.shuffled().take(500))
+        val seed = byArtists.union(byGenres).toMutableList()
+        if (seed.isEmpty() || seed.size < 300) {
+            val all = repo.getRandomMusicList(pageNum = 0, pageSize = 500)
+            all?.let {randomMusics ->
+                seed.addAll(randomMusics)
+            }
         }
 
         // 限制最大候选数以控制计算量
@@ -169,4 +187,6 @@ class DailyRecommender(
         val maxPossible = (pool.size - 1) * 0.6
         return if (maxPossible <= 0) 0.0 else score / maxPossible
     }
+
+
 }

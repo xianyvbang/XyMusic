@@ -592,12 +592,12 @@ class SubsonicDatasourceServer @Inject constructor(
     /**
      * 获得最近播放音乐或专辑
      */
-    override suspend fun playRecordMusicOrAlbumList() {
+    override suspend fun playRecordMusicOrAlbumList(pageSize: Int) {
         //subsonic只有最近播放专辑
         //插入最新播放专辑
         val albumList = subsonicApiClient.itemApi().getAlbumList2(
             type = AlbumType.RECENT,
-            size = Constants.MIN_PAGE,
+            size = pageSize,
             offset = 0,
             musicFolderId = connectionConfigServer.libraryId
         ).subsonicResponse.albumList2?.album

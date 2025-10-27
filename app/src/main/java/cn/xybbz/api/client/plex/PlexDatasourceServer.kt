@@ -1097,12 +1097,12 @@ class PlexDatasourceServer @Inject constructor(
     /**
      * 获得最近播放音乐或专辑
      */
-    override suspend fun playRecordMusicOrAlbumList() {
+    override suspend fun playRecordMusicOrAlbumList(pageSize: Int) {
         val albumList = getServerAlbumList(
             plexListType = PlexListType.all,
             type = 9,
             startIndex = 0,
-            pageSize = Constants.MIN_PAGE,
+            pageSize = pageSize,
             sortBy = PlexSortType.LAST_VIEWED_AT,
             sortOrder = PlexSortOrder.DESCENDING
         )

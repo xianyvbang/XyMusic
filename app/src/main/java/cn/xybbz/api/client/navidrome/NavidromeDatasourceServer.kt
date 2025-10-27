@@ -492,7 +492,10 @@ class NavidromeDatasourceServer @Inject constructor(
     /**
      * 导入歌单
      */
-    override suspend fun importPlaylist(playlistData: PlaylistParser.Playlist, playlistId: String): Boolean {
+    override suspend fun importPlaylist(
+        playlistData: PlaylistParser.Playlist,
+        playlistId: String
+    ): Boolean {
 
         val musicList = playlistData.musicList.mapNotNull {
             try {
@@ -516,13 +519,18 @@ class NavidromeDatasourceServer @Inject constructor(
         )
 
         val serverMusicMap = serverMusicList.items?.groupBy { it.itemId }
-        if (musicList.isNotEmpty()){
+        if (musicList.isNotEmpty()) {
             //去重后的列表
             val removeDuplicatesMusicList = musicList.mapNotNull {
                 if (serverMusicMap?.containsKey(it.itemId) == true) null else it
             }
-            if (removeDuplicatesMusicList.isNotEmpty()){
-                saveBatchMusic(removeDuplicatesMusicList, MusicDataTypeEnum.PLAYLIST,null,playlistId)
+            if (removeDuplicatesMusicList.isNotEmpty()) {
+                saveBatchMusic(
+                    removeDuplicatesMusicList,
+                    MusicDataTypeEnum.PLAYLIST,
+                    null,
+                    playlistId
+                )
                 val pic = if (removeDuplicatesMusicList.isNotEmpty()) musicList[0].pic else null
                 saveMusicPlaylist(
                     playlistId = playlistId,
@@ -646,23 +654,21 @@ class NavidromeDatasourceServer @Inject constructor(
     /**
      * 获得最近播放音乐或专辑
      */
-    override suspend fun playRecordMusicOrAlbumList() {
+    override suspend fun playRecordMusicOrAlbumList(pageSize: Int) {
         //只有最近播放专辑
         //插入最新播放专辑
-        val albumList = getServerAlbumList(
+        val musicList = getServerMusicList(
             startIndex = 0,
-            pageSize = Constants.MIN_PAGE,
-            orderType = OrderType.DESC,
-            sortBy = SortType.PLAY_DATE,
-            recentlyPlayed = true
+            pageSize = pageSize,
+            sortOrder = OrderType.DESC,
+            sortBy = SortType.PLAY_DATE
         )
-        albumList.items?.let {
+        musicList.items?.let {
             db.withTransaction {
-                db.albumDao.removeByType(MusicDataTypeEnum.PLAY_HISTORY)
-                saveBatchAlbum(it, MusicDataTypeEnum.PLAY_HISTORY)
+                db.musicDao.removeByType(MusicDataTypeEnum.PLAY_HISTORY)
+                saveBatchMusic(it, MusicDataTypeEnum.PLAY_HISTORY)
             }
         }
-
     }
 
     /**

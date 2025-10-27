@@ -13,6 +13,7 @@ import cn.xybbz.localdata.dao.music.XyMusicDao
 import cn.xybbz.localdata.dao.player.XyPlayerDao
 import cn.xybbz.localdata.dao.progress.EnableProgressDao
 import cn.xybbz.localdata.dao.progress.ProgressDao
+import cn.xybbz.localdata.dao.recommend.XyRecentHistoryDao
 import cn.xybbz.localdata.dao.remote.RemoteCurrentDao
 import cn.xybbz.localdata.dao.search.SearchHistoryDao
 import cn.xybbz.localdata.dao.setting.SettingsDao
@@ -46,6 +47,7 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.player.XyPlayer
 import cn.xybbz.localdata.data.progress.EnableProgress
 import cn.xybbz.localdata.data.progress.Progress
+import cn.xybbz.localdata.data.recommend.XyRecentHistory
 import cn.xybbz.localdata.data.remote.RemoteCurrent
 import cn.xybbz.localdata.data.search.SearchHistory
 import cn.xybbz.localdata.data.setting.SkipTime
@@ -61,7 +63,8 @@ import cn.xybbz.localdata.data.setting.XySettings
         FavoriteMusic::class, GenreAlbum::class, HomeAlbum::class, HomeMusic::class,
         MaximumPlayMusic::class, NewestAlbum::class, NewestMusic::class, PlayHistoryMusic::class,
         PlaylistMusic::class, PlayQueueMusic::class, XyDataCount::class, PlayHistoryAlbum::class,
-        MaximumPlayAlbum::class, FavoriteAlbum::class, FavoriteArtist::class, XyBackgroundConfig::class],
+        MaximumPlayAlbum::class, FavoriteAlbum::class, FavoriteArtist::class, XyBackgroundConfig::class,
+        XyRecentHistory::class],
     exportSchema = true
 )
 abstract class DatabaseClient : RoomDatabase() {
@@ -98,6 +101,8 @@ abstract class DatabaseClient : RoomDatabase() {
 
     val backgroundConfigDao: XyBackgroundConfigDao by lazy { createXyBackgroundConfigDao() }
 
+    val recentHistoryDao: XyRecentHistoryDao by lazy { createXyRecentHistoryDao() }
+
 
     abstract fun createMusicDao(): XyMusicDao
 
@@ -130,5 +135,7 @@ abstract class DatabaseClient : RoomDatabase() {
     abstract fun createXyDataCountDao(): XyDataCountDao
 
     abstract fun createXyBackgroundConfigDao(): XyBackgroundConfigDao
+
+    abstract fun createXyRecentHistoryDao(): XyRecentHistoryDao
 
 }

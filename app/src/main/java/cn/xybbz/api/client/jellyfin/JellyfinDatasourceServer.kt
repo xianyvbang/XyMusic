@@ -563,10 +563,10 @@ class JellyfinDatasourceServer @Inject constructor(
     /**
      * 获得最近播放音乐
      */
-    override suspend fun playRecordMusicOrAlbumList() {
+    override suspend fun playRecordMusicOrAlbumList(pageSize: Int) {
         val musicList = getServerMusicList(
             startIndex = 0,
-            pageSize = Constants.MIN_PAGE,
+            pageSize = pageSize,
             filters = listOf(ItemFilter.IS_PLAYED),
             sortBy = listOf(ItemSortBy.DATE_PLAYED),
             sortOrder = listOf(SortOrder.DESCENDING)

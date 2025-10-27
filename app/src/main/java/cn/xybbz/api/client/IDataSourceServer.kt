@@ -4,6 +4,7 @@ import androidx.paging.PagingData
 import cn.xybbz.api.client.data.AllResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
 import cn.xybbz.api.state.ClientLoginInfoState
+import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.PlaylistParser
@@ -233,7 +234,12 @@ interface IDataSourceServer {
     /**
      * 获得最近播放音乐或专辑
      */
-    suspend fun playRecordMusicOrAlbumList()
+    suspend fun playRecordMusicOrAlbumList(pageSize: Int = Constants.MIN_PAGE)
+
+    /**
+     * 获得最近播放音乐列表
+     */
+    suspend fun getPlayRecordMusicList(pageSize: Int = Constants.MIN_PAGE): List<XyMusic>
 
     /**
      * 获得最多播放
@@ -267,6 +273,16 @@ interface IDataSourceServer {
     fun selectAlbumListByGenreId(genreId: String): Flow<PagingData<XyAlbum>>
 
     /**
+     * 获得流派内音乐列表/或者专辑
+     * @param [genreIds] 流派id
+     */
+    fun selectMusicListByGenreIds(
+        genreIds: List<String>,
+        pageNum: Int,
+        pageSize: Int
+    ): List<XyMusic>?
+
+    /**
      * 获得歌曲列表
      */
     suspend fun getMusicList(
@@ -288,6 +304,15 @@ interface IDataSourceServer {
      */
     suspend fun getMusicListByArtistId(
         artistId: String,
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyMusic>?
+
+    /**
+     * 根据艺术家列表获得歌曲列表
+     */
+    suspend fun getMusicListByArtistIds(
+        artistIds: List<String>,
         pageSize: Int,
         pageNum: Int
     ): List<XyMusic>?
