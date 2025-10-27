@@ -699,6 +699,13 @@ class IDataSourceManager(
     }
 
     /**
+     * 获得最近播放音乐列表
+     */
+    override suspend fun getPlayRecordMusicList(pageSize: Int): List<XyMusic> {
+        TODO("Not yet implemented")
+    }
+
+    /**
      * 获得艺术家信息
      */
     override suspend fun selectArtistInfoByIds(artistIds: List<String>): List<XyArtist>? {
@@ -776,6 +783,18 @@ class IDataSourceManager(
     }
 
     /**
+     * 获得流派内音乐列表/或者专辑
+     * @param [genreIds] 流派id
+     */
+    override fun selectMusicListByGenreIds(
+        genreIds: List<String>,
+        pageNum: Int,
+        pageSize: Int
+    ): List<XyMusic>? {
+        TODO("Not yet implemented")
+    }
+
+    /**
      * 获得歌曲列表
      */
     override suspend fun getMusicList(
@@ -829,6 +848,17 @@ class IDataSourceManager(
             Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据报错", e)
             null
         }
+    }
+
+    /**
+     * 根据艺术家列表获得歌曲列表
+     */
+    override suspend fun getMusicListByArtistIds(
+        artistIds: List<String>,
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyMusic>? {
+        TODO("Not yet implemented")
     }
 
     /**
