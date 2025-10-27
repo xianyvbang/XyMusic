@@ -522,6 +522,22 @@ interface XyMusicDao {
     ): Flow<List<XyMusic>>
 
     /**
+     * 获得播放历史的limit条数据
+     */
+    @Query(
+        """
+        select mi.* from PlayHistoryMusic phm
+        inner join xy_music mi on phm.musicId = mi.itemId
+        inner join xy_settings xs on mi.connectionId = xs.connectionId and phm.connectionId = xs.connectionId
+        order by `index`
+        limit :limit
+    """
+    )
+    suspend fun selectPlayHistoryMusicList(
+        limit: Int
+    ): List<XyMusic>
+
+    /**
      * 获得播放列表的数据
      */
     @Query(

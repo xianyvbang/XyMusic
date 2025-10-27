@@ -234,7 +234,7 @@ interface IDataSourceServer {
     /**
      * 获得最近播放音乐或专辑
      */
-    suspend fun playRecordMusicOrAlbumList(pageSize: Int = Constants.MIN_PAGE)
+    suspend fun playRecordMusicOrAlbumList(pageSize: Int = Constants.ALBUM_MUSIC_LIST_PAGE)
 
     /**
      * 获得最近播放音乐列表
@@ -274,10 +274,10 @@ interface IDataSourceServer {
 
     /**
      * 获得流派内音乐列表/或者专辑
-     * @param [genreIds] 流派id
+     * @param [genres] 流派id
      */
     fun selectMusicListByGenreIds(
-        genreIds: List<String>,
+        genres: List<String>,
         pageNum: Int,
         pageSize: Int
     ): List<XyMusic>?

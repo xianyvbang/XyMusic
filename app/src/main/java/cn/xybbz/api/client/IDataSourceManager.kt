@@ -784,10 +784,10 @@ class IDataSourceManager(
 
     /**
      * 获得流派内音乐列表/或者专辑
-     * @param [genreIds] 流派id
+     * @param [genres] 流派名称
      */
     override fun selectMusicListByGenreIds(
-        genreIds: List<String>,
+        genres: List<String>,
         pageNum: Int,
         pageSize: Int
     ): List<XyMusic>? {
