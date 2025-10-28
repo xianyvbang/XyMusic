@@ -45,9 +45,9 @@ interface NavidromeItemApi : BaseApi {
         @Query("title") title: String? = null,
         @Query("missing") missing: Boolean? = null,
         @Query("starred") starred: Boolean? = null,
-        @Query("genre_id") genreId: String? = null,
+        @Query("genre_id") genreIds: List<String>? = null,
         @Query("album_id") albumId: String? = null,
-        @Query("artist_id") artistId: String? = null,
+        @Query("artist_id") artistIds: List<String>? = null,
         @Query("year") year: Int? = null
     ): Response<List<SongItem>>
 

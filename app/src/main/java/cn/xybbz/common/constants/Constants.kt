@@ -114,6 +114,11 @@ object Constants {
     const val SLASH_DELIMITER = "/"
 
     /**
+     * 竖线分隔符 '|'
+     */
+    const val VERTICAL_DELIMITER = "|"
+
+    /**
      * Subsonic的playlist的id后缀
      */
     const val SUBSONIC_PLAYLIST_SUFFIX = "playlist"

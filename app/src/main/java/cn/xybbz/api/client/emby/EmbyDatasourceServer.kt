@@ -206,7 +206,7 @@ class EmbyDatasourceServer @Inject constructor(
             getServerMusicList(
                 startIndex = startIndex,
                 pageSize = pageSize,
-                artistId = artistId
+                artistIds = listOf(artistId)
             )
         return response
     }
@@ -773,6 +773,21 @@ class EmbyDatasourceServer @Inject constructor(
     }
 
     /**
+     * 获得流派内音乐列表/或者专辑
+     * @param [genreIds] 流派id
+     */
+    override suspend fun selectMusicListByGenreIds(
+        genreIds: List<String>,
+        pageSize: Int
+    ): List<XyMusic>? {
+        return getServerMusicList(
+            startIndex = 0,
+            pageSize = pageSize,
+            genreIds = genreIds
+        ).items
+    }
+
+    /**
      * 获得歌曲列表
      */
     override suspend fun getMusicList(
@@ -833,11 +848,25 @@ class EmbyDatasourceServer @Inject constructor(
             val homeMusicList = getServerMusicList(
                 pageSize,
                 pageNum * pageSize,
-                artistId = artistId
+                artistIds = listOf(artistId)
             )
             selectMusicList = homeMusicList.items
         }
         return selectMusicList
+    }
+
+    /**
+     * 根据艺术家列表获得歌曲列表
+     */
+    override suspend fun getMusicListByArtistIds(
+        artistIds: List<String>,
+        pageSize: Int
+    ): List<XyMusic>? {
+        return getServerMusicList(
+            startIndex = 0,
+            pageSize = pageSize,
+            artistIds = artistIds
+        ).items
     }
 
     /**
@@ -1053,20 +1082,21 @@ class EmbyDatasourceServer @Inject constructor(
         startIndex: Int,
         pageSize: Int,
         albumId: String? = null,
-        artistId: String? = null,
+        artistIds: List<String>? = null,
         isFavorite: Boolean? = null,
         search: String? = null,
         sortBy: List<ItemSortBy>? = null,
         sortOrder: List<SortOrder>? = null,
         filters: List<ItemFilter>? = null,
         years: List<Int>? = null,
+        genreIds: List<String>? = null,
         parentId: String? = null,
         path: String? = null,
     ): AllResponse<XyMusic> {
         val response = embyApiClient.itemApi().getUserItems(
             userId = connectionConfigServer.getUserId(),
             itemRequest = ItemRequest(
-                artistIds = artistId?.let { listOf(it) },
+                artistIds = artistIds,
                 limit = pageSize,
                 startIndex = startIndex,
                 sortBy = sortBy ?: listOf(ItemSortBy.SORT_NAME),
@@ -1083,6 +1113,7 @@ class EmbyDatasourceServer @Inject constructor(
                 ),
                 searchTerm = search,
                 imageTypeLimit = 1,
+                genreIds = genreIds,
                 years = years,
                 albumIds = albumId?.let { listOf(albumId) },
                 parentId = if (parentId.isNullOrBlank()) connectionConfigServer.libraryId else parentId,

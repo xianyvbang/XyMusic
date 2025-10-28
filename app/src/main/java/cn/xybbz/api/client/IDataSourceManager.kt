@@ -702,7 +702,7 @@ class IDataSourceManager(
      * 获得最近播放音乐列表
      */
     override suspend fun getPlayRecordMusicList(pageSize: Int): List<XyMusic> {
-        TODO("Not yet implemented")
+        return dataSourceServer.getPlayRecordMusicList(pageSize)
     }
 
     /**
@@ -784,14 +784,18 @@ class IDataSourceManager(
 
     /**
      * 获得流派内音乐列表/或者专辑
-     * @param [genres] 流派名称
+     * @param [genreIds] 流派名称
      */
-    override fun selectMusicListByGenreIds(
-        genres: List<String>,
-        pageNum: Int,
+    override suspend fun selectMusicListByGenreIds(
+        genreIds: List<String>,
         pageSize: Int
     ): List<XyMusic>? {
-        TODO("Not yet implemented")
+        return try {
+             dataSourceServer.getPlayRecordMusicList(pageSize)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得流派内音乐列表失败", e)
+            null
+        }
     }
 
     /**
@@ -855,10 +859,14 @@ class IDataSourceManager(
      */
     override suspend fun getMusicListByArtistIds(
         artistIds: List<String>,
-        pageSize: Int,
-        pageNum: Int
+        pageSize: Int
     ): List<XyMusic>? {
-        TODO("Not yet implemented")
+        return try {
+             dataSourceServer.getMusicListByArtistIds(artistIds, pageSize)
+        }catch (e: Exception){
+            Log.e(Constants.LOG_ERROR_PREFIX, "根据艺术家列表获得歌曲列表失败", e)
+            null
+        }
     }
 
     /**

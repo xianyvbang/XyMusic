@@ -1118,7 +1118,7 @@ class PlexDatasourceServer @Inject constructor(
 
         val musicList = getServerMusicList(
             startIndex = 0,
-            pageSize = Constants.MIN_PAGE,
+            pageSize = pageSize,
             sortBy = PlexSortType.LAST_VIEWED_AT,
             sortOrder = PlexSortOrder.DESCENDING
         ).items
@@ -1179,6 +1179,21 @@ class PlexDatasourceServer @Inject constructor(
      */
     override suspend fun getGenreById(genreId: String): XyGenre? {
         return db.genreDao.selectById(genreId)
+    }
+
+    /**
+     * 获得流派内音乐列表/或者专辑
+     * @param [genreIds] 流派id
+     */
+    override suspend fun selectMusicListByGenreIds(
+        genreIds: List<String>,
+        pageSize: Int
+    ): List<XyMusic>? {
+        return getServerMusicList(
+            startIndex = 0,
+            pageSize = pageSize,
+            genreIds = genreIds,
+        ).items
     }
 
     /**
@@ -1247,6 +1262,20 @@ class PlexDatasourceServer @Inject constructor(
             selectMusicList = homeMusicList.items
         }
         return selectMusicList
+    }
+
+    /**
+     * 根据艺术家列表获得歌曲列表
+     */
+    override suspend fun getMusicListByArtistIds(
+        artistIds: List<String>,
+        pageSize: Int
+    ): List<XyMusic>? {
+        return getServerMusicList(
+            startIndex = 0,
+            pageSize = pageSize,
+            artistId = artistIds.joinToString(Constants.ARTIST_DELIMITER) { it }
+        ).items
     }
 
     /**
@@ -1356,9 +1385,7 @@ class PlexDatasourceServer @Inject constructor(
             ifFavorite = isFavorite,
             sortBy = sortType.sortType,
             sortOrder = sortType.order,
-            years = if (years.isNullOrEmpty()) null else listOf(
-                ">>=${years[0] - 1}", "<<=${years[years.size - 1] - 1}"
-            ),
+            albumDecade = if (years.isNullOrEmpty()) null else (years[0] / 10 * 10).toString(),
             itemId = parentId,
             dataType = dataType
         )
@@ -1390,11 +1417,9 @@ class PlexDatasourceServer @Inject constructor(
             sortBy = sortType.sortType,
             sortOrder = sortType.order,
             ifFavorite = isFavorite,
-            albumYear = if (years.isNullOrEmpty()) null else listOf(
-                ">>=${years[0] - 1}", "<<=${years[years.size - 1] + 1}"
-            ),
+            albumDecade = if (years.isNullOrEmpty()) null else (years[0] / 10 * 10).toString(),
             artistId = artistId,
-            genreId = genreId
+            genreIds = genreId?.let { listOf(genreId) }
         )
         return response
     }
@@ -1457,9 +1482,7 @@ class PlexDatasourceServer @Inject constructor(
             sortBy = sortType.sortType,
             sortOrder = sortType.order,
             ifFavorite = isFavorite,
-            years = if (years.isNullOrEmpty()) null else listOf(
-                ">>=${years[0] - 1}", "<<=${years[years.size - 1] + 1}"
-            )
+            albumDecade = if (years.isNullOrEmpty()) null else (years[0] / 10 * 10).toString()
         )
         return response
     }
@@ -1508,8 +1531,9 @@ class PlexDatasourceServer @Inject constructor(
         sortOrder: PlexSortOrder? = PlexSortOrder.ASCENDING,
         artistId: String? = null,
         albumId: String? = null,
+        genreIds: List<String>? = null,
         ifFavorite: Boolean? = null,
-        years: List<String>? = null,
+        albumDecade: String? = null,
         artistTitle: String? = null,
         params: Map<String, String>? = null
     ): AllResponse<XyMusic> {
@@ -1525,8 +1549,9 @@ class PlexDatasourceServer @Inject constructor(
                 artistId = artistId,
                 albumId = albumId,
                 trackCollection = if (ifFavorite == true) plexApiClient.musicFavoriteCollectionIndex else null,
-                year = years,
+                albumDecade = albumDecade,
                 artistTitle = artistTitle,
+                genreIds = genreIds?.joinToString(Constants.ARTIST_DELIMITER) { it },
                 params = params ?: mapOf(Pair("1", "1"))
             )
         return AllResponse(
@@ -1550,8 +1575,8 @@ class PlexDatasourceServer @Inject constructor(
         sortOrder: PlexSortOrder = PlexSortOrder.ASCENDING,
         ifFavorite: Boolean? = null,
         artistId: String? = null,
-        genreId: String? = null,
-        albumYear: List<String>? = null,
+        genreIds: List<String>? = null,
+        albumDecade: String? = null,
         params: Map<String, String>? = null
     ): AllResponse<XyAlbum> {
         val albumResponse = plexApiClient.itemApi().getSongs(
@@ -1563,9 +1588,9 @@ class PlexDatasourceServer @Inject constructor(
             sort = "$sortBy:$sortOrder",
             title = search,
             artistId = artistId,
-            genreId = genreId,
+            genreIds = genreIds?.joinToString(Constants.ARTIST_DELIMITER) { it },
             albumCollection = if (ifFavorite == true) plexApiClient.albumFavoriteCollectionIndex else null,
-            albumYear = albumYear,
+            albumDecade = albumDecade,
             params = params ?: mapOf(Pair("1", "1"))
         )
 
@@ -1661,7 +1686,7 @@ class PlexDatasourceServer @Inject constructor(
         sortBy: PlexSortType? = PlexSortType.ARTIST_TITLE_SORT,
         sortOrder: PlexSortOrder? = PlexSortOrder.ASCENDING,
         params: Map<String, String>? = null,
-        years: List<String>? = null,
+        albumDecade: String? = null,
         artistId: String? = null
     ): AllResponse<XyMusic> {
         if (dataType == MusicDataTypeEnum.ALBUM) {
@@ -1675,7 +1700,7 @@ class PlexDatasourceServer @Inject constructor(
                 sortOrder = sortOrder,
                 params = params,
                 artistId = artistId,
-                years = years
+                albumDecade = albumDecade
             )
         } else {
             //存储歌曲数据
@@ -1687,7 +1712,7 @@ class PlexDatasourceServer @Inject constructor(
                     sort = "$sortBy:$sortOrder",
                     trackCollection = if (ifFavorite == true) plexApiClient.musicFavoriteCollectionIndex else null,
                     params = params ?: mapOf(Pair("1", "1")),
-                    year = years,
+                    albumDecade = albumDecade,
                     artistId = artistId
                 )
 

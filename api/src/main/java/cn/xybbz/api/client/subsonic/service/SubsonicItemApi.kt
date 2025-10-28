@@ -7,6 +7,7 @@ import cn.xybbz.api.client.subsonic.data.SubsonicRandomResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicSearchResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicSongResponse
+import cn.xybbz.api.client.subsonic.data.SubsonicSongsByGenreResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicStarred2Response
 import cn.xybbz.api.enums.subsonic.AlbumType
 import retrofit2.http.GET
@@ -59,4 +60,12 @@ interface SubsonicItemApi : BaseApi {
     suspend fun getStarred2(
         @Query("musicFolderId") musicFolderId: String?
     ): SubsonicResponse<SubsonicStarred2Response>
+
+    @GET("rest/getSongsByGenre")
+    suspend fun getSongsByGenre(
+        @Query("genre") genre: String,
+        @Query("count") size: Int = 20,
+        @Query("offset") offset: Int = 0,
+        @Query("musicFolderId") musicFolderId: String? = null
+    ):SubsonicResponse<SubsonicSongsByGenreResponse>
 }

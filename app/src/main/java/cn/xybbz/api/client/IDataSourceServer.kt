@@ -274,11 +274,10 @@ interface IDataSourceServer {
 
     /**
      * 获得流派内音乐列表/或者专辑
-     * @param [genres] 流派id
+     * @param [genreIds] 流派id
      */
-    fun selectMusicListByGenreIds(
-        genres: List<String>,
-        pageNum: Int,
+    suspend fun selectMusicListByGenreIds(
+        genreIds: List<String>,
         pageSize: Int
     ): List<XyMusic>?
 
@@ -313,8 +312,7 @@ interface IDataSourceServer {
      */
     suspend fun getMusicListByArtistIds(
         artistIds: List<String>,
-        pageSize: Int,
-        pageNum: Int
+        pageSize: Int
     ): List<XyMusic>?
 
     /**

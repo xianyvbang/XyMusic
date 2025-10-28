@@ -148,19 +148,17 @@ class DailyRecommender(
 
         val byArtists = repo.getMusicListByArtistIds(
             topArtists.toList(),
-            pageNum = 0,
-            pageSize = 200
+            pageSize = Constants.ALBUM_MUSIC_LIST_PAGE / 2
         )?:emptyList() // each artist 取部分
         val byGenres = repo.selectMusicListByGenreIds(
             topGenres.toList(),
-            pageNum = 0,
-            pageSize = 300
+            pageSize = Constants.ALBUM_MUSIC_LIST_PAGE / 2
         )?:emptyList()
 
         // 补充：如果候选少，随机从全库取一部分（分页）
         val seed = byArtists.union(byGenres).toMutableList()
         if (seed.isEmpty() || seed.size < 300) {
-            val all = repo.getRandomMusicList(pageNum = 0, pageSize = 500)
+            val all = repo.getRandomMusicList(pageNum = 0, pageSize = Constants.ALBUM_MUSIC_LIST_PAGE / 2)
             all?.let {randomMusics ->
                 seed.addAll(randomMusics)
             }

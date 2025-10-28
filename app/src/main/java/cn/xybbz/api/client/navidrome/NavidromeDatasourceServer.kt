@@ -460,7 +460,11 @@ class NavidromeDatasourceServer @Inject constructor(
         pageSize: Int,
         startIndex: Int
     ): AllResponse<XyMusic> {
-        return getServerMusicList(startIndex = startIndex, pageSize = pageSize, artistId = artistId)
+        return getServerMusicList(
+            startIndex = startIndex,
+            pageSize = pageSize,
+            artistIds = listOf(artistId)
+        )
     }
 
     /**
@@ -655,8 +659,6 @@ class NavidromeDatasourceServer @Inject constructor(
      * 获得最近播放音乐或专辑
      */
     override suspend fun playRecordMusicOrAlbumList(pageSize: Int) {
-        //只有最近播放专辑
-        //插入最新播放专辑
         val musicList = getServerMusicList(
             startIndex = 0,
             pageSize = pageSize,
@@ -713,6 +715,21 @@ class NavidromeDatasourceServer @Inject constructor(
      */
     override suspend fun getGenreById(genreId: String): XyGenre? {
         return db.genreDao.selectById(genreId)
+    }
+
+    /**
+     * 获得流派内音乐列表/或者专辑
+     * @param [genreIds] 流派id
+     */
+    override suspend fun selectMusicListByGenreIds(
+        genreIds: List<String>,
+        pageSize: Int
+    ): List<XyMusic>? {
+        return getServerMusicList(
+            startIndex = 0,
+            pageSize = pageSize,
+            genreIds = genreIds
+        ).items
     }
 
     /**
@@ -775,11 +792,25 @@ class NavidromeDatasourceServer @Inject constructor(
             val homeMusicList = getServerMusicList(
                 startIndex = pageNum * pageSize,
                 pageSize = pageSize,
-                artistId = artistId
+                artistIds = listOf(artistId)
             )
             selectMusicList = homeMusicList.items
         }
         return selectMusicList
+    }
+
+    /**
+     * 根据艺术家列表获得歌曲列表
+     */
+    override suspend fun getMusicListByArtistIds(
+        artistIds: List<String>,
+        pageSize: Int
+    ): List<XyMusic>? {
+        return getServerMusicList(
+            startIndex = 0,
+            pageSize = pageSize,
+            artistIds = artistIds
+        ).items
     }
 
     /**
@@ -1037,8 +1068,8 @@ class NavidromeDatasourceServer @Inject constructor(
         startIndex: Int,
         pageSize: Int,
         albumId: String? = null,
-        artistId: String? = null,
-        genreId: String? = null,
+        artistIds: List<String>? = null,
+        genreIds: List<String>? = null,
         isFavorite: Boolean? = null,
         search: String? = null,
         year: Int? = null,
@@ -1054,9 +1085,9 @@ class NavidromeDatasourceServer @Inject constructor(
                     sort = sortBy,
                     title = search,
                     starred = isFavorite,
-                    genreId = genreId,
+                    genreIds = genreIds,
                     albumId = albumId,
-                    artistId = artistId,
+                    artistIds = artistIds,
                     year = year,
                 )
             }
