@@ -45,6 +45,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
+import java.time.ZoneId
 import javax.inject.Inject
 
 class NavidromeDatasourceServer @Inject constructor(
@@ -1341,7 +1342,8 @@ class NavidromeDatasourceServer @Inject constructor(
             codec = music.suffix,
             ifLyric = !music.lyrics.isNullOrBlank(),
             lyric = music.lyrics,
-            playlistItemId = music.id
+            playlistItemId = music.id,
+            lastPlayedDate = music.playDate?.atZone(ZoneId.systemDefault())?.toEpochSecond() ?: 0L
         )
     }
 

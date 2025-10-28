@@ -1389,7 +1389,8 @@ class EmbyDatasourceServer @Inject constructor(
             container = mediaSourceInfo?.container,
             codec = mediaStream?.codec,
             lyric = "",
-            playlistItemId = item.id
+            playlistItemId = item.id,
+            lastPlayedDate = item.userData?.lastPlayedDate?.atZone(ZoneId.systemDefault())?.toEpochSecond() ?: 0L,
         )
     }
 

@@ -22,6 +22,7 @@ import cn.xybbz.api.enums.jellyfin.CollectionType
 import cn.xybbz.api.enums.subsonic.AlbumType
 import cn.xybbz.api.enums.subsonic.Status
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.constants.Constants.LYRICS_AMPLIFICATION
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
@@ -307,7 +308,13 @@ class SubsonicDatasourceServer @Inject constructor(
      * @return 返回歌词列表
      */
     override suspend fun getMusicLyricList(music: XyMusic): List<LrcEntry>? {
-        return null
+        return if (music.ifLyric) {
+            val lyrics = subsonicApiClient.lyricsApi().getLyrics(music.itemId)
+            Log.i("=====","打印获取歌词信息: ${lyrics.toString()}")
+            null
+        } else {
+            null
+        }
     }
 
 
@@ -1084,9 +1091,10 @@ class SubsonicDatasourceServer @Inject constructor(
             runTimeTicks = music.duration,
             container = music.suffix,
             codec = music.suffix,
-            ifLyric = false,
+            ifLyric = true,
             lyric = "",
-            playlistItemId = music.id
+            playlistItemId = music.id,
+            lastPlayedDate = 0L
         )
     }
 

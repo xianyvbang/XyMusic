@@ -1887,7 +1887,8 @@ class PlexDatasourceServer @Inject constructor(
             container = part?.container,
             codec = media?.audioCodec,
             genreIds = "",
-            playlistItemId = item.playlistItemID
+            playlistItemId = item.playlistItemID,
+            lastPlayedDate = item.lastViewedAt ?: 0L
         )
     }
 

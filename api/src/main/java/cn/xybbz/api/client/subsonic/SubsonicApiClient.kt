@@ -1,14 +1,17 @@
 package cn.xybbz.api.client.subsonic
 
+import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.DefaultApiClient
 import cn.xybbz.api.client.subsonic.service.SubsonicArtistsApi
 import cn.xybbz.api.client.subsonic.service.SubsonicGenreApi
 import cn.xybbz.api.client.subsonic.service.SubsonicItemApi
+import cn.xybbz.api.client.subsonic.service.SubsonicLyricsApi
 import cn.xybbz.api.client.subsonic.service.SubsonicPlaylistsApi
 import cn.xybbz.api.client.subsonic.service.SubsonicUserApi
 import cn.xybbz.api.client.subsonic.service.SubsonicUserLibraryApi
 import cn.xybbz.api.client.subsonic.service.SubsonicUserViewsApi
 import cn.xybbz.api.enums.subsonic.ResponseFormatType
+import kotlin.jvm.java
 
 class SubsonicApiClient : DefaultApiClient() {
 
@@ -55,6 +58,8 @@ class SubsonicApiClient : DefaultApiClient() {
     private lateinit var subsonicUserViewsApi: SubsonicUserViewsApi
     private lateinit var subsonicGenreApi: SubsonicGenreApi
     private lateinit var subsonicUserLibraryApi: SubsonicUserLibraryApi
+
+    private lateinit var subsonicLyricsApi: SubsonicLyricsApi
 
 
     /**
@@ -152,6 +157,16 @@ class SubsonicApiClient : DefaultApiClient() {
             subsonicUserLibraryApi = instance().create(SubsonicUserLibraryApi::class.java)
         }
         return subsonicUserLibraryApi
+    }
+
+    /**
+     * 歌词接口
+     */
+    override fun lyricsApi(restart: Boolean): SubsonicLyricsApi {
+        if (!this::subsonicLyricsApi.isInitialized || restart) {
+            subsonicLyricsApi = instance().create(SubsonicLyricsApi::class.java)
+        }
+        return subsonicLyricsApi
     }
 
     /**
