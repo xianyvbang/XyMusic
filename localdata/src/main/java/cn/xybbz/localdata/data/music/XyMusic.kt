@@ -140,7 +140,7 @@ data class XyMusic(
     /**
      * 最近播放时间
      */
-    val lastPlayedDate: Long = 0,
+    val lastPlayedDate: Long,
     /**
      * 创建时间
      */
