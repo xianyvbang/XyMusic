@@ -43,6 +43,7 @@ import cn.xybbz.localdata.data.music.NewestMusic
 import cn.xybbz.localdata.data.music.PlayHistoryMusic
 import cn.xybbz.localdata.data.music.PlayQueueMusic
 import cn.xybbz.localdata.data.music.PlaylistMusic
+import cn.xybbz.localdata.data.music.RecommendedMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.player.XyPlayer
 import cn.xybbz.localdata.data.progress.EnableProgress
@@ -64,7 +65,7 @@ import cn.xybbz.localdata.data.setting.XySettings
         MaximumPlayMusic::class, NewestAlbum::class, NewestMusic::class, PlayHistoryMusic::class,
         PlaylistMusic::class, PlayQueueMusic::class, XyDataCount::class, PlayHistoryAlbum::class,
         MaximumPlayAlbum::class, FavoriteAlbum::class, FavoriteArtist::class, XyBackgroundConfig::class,
-        XyRecentHistory::class],
+        XyRecentHistory::class, RecommendedMusic::class],
     exportSchema = true
 )
 abstract class DatabaseClient : RoomDatabase() {

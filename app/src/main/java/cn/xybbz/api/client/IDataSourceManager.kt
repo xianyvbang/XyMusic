@@ -64,6 +64,8 @@ class IDataSourceManager(
     private val favoriteRepository: FavoriteRepository
 ) : IDataSourceServer {
 
+    val _connectionConfigServer = connectionConfigServer
+
     var dataSourceType by mutableStateOf<DataSourceType?>(null)
         private set
 

@@ -17,10 +17,10 @@ class RecommenderModule {
     @Singleton
     @Provides
     fun dailyRecommender(
-        dataSourceManager:IDataSourceManager,
+        dataSourceManager: IDataSourceManager,
         db: DatabaseClient
     ): DailyRecommender {
-        val dailyRecommender = DailyRecommender(dataSourceManager, RecentHistoryCache(db.recentHistoryDao))
+        val dailyRecommender = DailyRecommender(dataSourceManager, db, RecentHistoryCache(db))
         return dailyRecommender
     }
 }

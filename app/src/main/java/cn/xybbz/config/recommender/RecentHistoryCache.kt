@@ -1,36 +1,37 @@
 package cn.xybbz.config.recommender
 
-import cn.xybbz.localdata.dao.recommend.XyRecentHistoryDao
+import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.recommend.XyRecentHistory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class RecentHistoryCache(
-    private val dao: XyRecentHistoryDao,
+    private val db: DatabaseClient,
     private val maxSize: Int = 300,
     private val expireDays: Int = 7
 ) {
 
     private val DAY_MS = 24 * 60 * 60 * 1000L
 
-    suspend fun addAll(songIds: List<String>) = withContext(Dispatchers.IO) {
+    suspend fun addAll(songIds: List<String>, connectionId: Long) = withContext(Dispatchers.IO) {
         val now = System.currentTimeMillis()
-        val entities = songIds.map { XyRecentHistory(it, now) }
-        dao.insertAll(entities)
-        dao.trimToMaxSize(maxSize)
+        val entities = songIds.map { XyRecentHistory(it, connectionId, now) }
+        db.recentHistoryDao.insertAll(entities)
+        db.recentHistoryDao.trimToMaxSize(maxSize)
+
     }
 
     suspend fun contains(songId: String): Boolean = withContext(Dispatchers.IO) {
-        val all = dao.getAllIds()
+        val all = db.recentHistoryDao.getAllIds()
         songId in all
     }
 
     suspend fun getRecentIds(): List<String> = withContext(Dispatchers.IO) {
-        dao.getAllIds()
+        db.recentHistoryDao.getAllIds()
     }
 
     suspend fun cleanupExpired() = withContext(Dispatchers.IO) {
         val expireBefore = System.currentTimeMillis() - expireDays * DAY_MS
-        dao.deleteExpired(expireBefore)
+        db.recentHistoryDao.deleteExpired(expireBefore)
     }
 }

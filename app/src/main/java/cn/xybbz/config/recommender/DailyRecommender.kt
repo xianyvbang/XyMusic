@@ -1,11 +1,11 @@
 package cn.xybbz.config.recommender
 
+import android.util.Log
 import cn.xybbz.api.client.IDataSourceManager
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import java.util.concurrent.TimeUnit
 import kotlin.math.log10
 import kotlin.math.max
@@ -15,7 +15,7 @@ private val DAY_MS = TimeUnit.DAYS.toMillis(1)
 
 data class RecommenderConfig(
     val recentPlayExcludeDays: Long = 3,
-    val recommendCount: Int = 30,
+    val recommendCount: Int = 50,
     val explorationRate: Double = 0.15, // 探索比例（0..1）
     val maxCandidates: Int = 2000 // 为了性能，候选集上限
 )
@@ -26,12 +26,13 @@ data class RecommenderConfig(
  */
 class DailyRecommender(
     private val repo: IDataSourceManager,
+    private val db: DatabaseClient,
     private val recentHistory: RecentHistoryCache,
     private val config: RecommenderConfig = RecommenderConfig()
 ) {
-    private val ioScope = CoroutineScope(Dispatchers.IO)
 
-    suspend fun generate(): List<XyMusic> = withContext(ioScope.coroutineContext) {
+
+    suspend fun generate() {
         // 1) 拉取必要数据（最近播放用于画像）
         val recentPlays = repo.getPlayRecordMusicList(pageSize = Constants.ALBUM_MUSIC_LIST_PAGE)
 
@@ -43,8 +44,6 @@ class DailyRecommender(
 
         // 4) 从候选集评分并排序（混合得分）
         val scored = candidates.map { song ->
-
-
             val prefScore =
                 (song.artistIds?.map { artistId ->
                     val artistPref = artistPrefs[artistId.toString()]
@@ -65,7 +64,7 @@ class DailyRecommender(
         val now = System.currentTimeMillis()
         val filtered = sorted.filterNot { s ->
             val daysSince =
-                if (s.lastPlayedDate <= 0L) Long.MAX_VALUE else (now - s.lastPlayedDate) / DAY_MS
+                if (s.lastPlayedDate <= 0L) config.recentPlayExcludeDays else (now - s.lastPlayedDate) / DAY_MS
             daysSince < config.recentPlayExcludeDays
         }.filterNot { s ->
             // contains is suspend
@@ -87,13 +86,21 @@ class DailyRecommender(
             !recentHistory.contains(c.itemId) &&
                     recentPlays.none { it.itemId == c.itemId } // never in recent plays -> good exploration candidate
         }.shuffled().take(exploreCount)
-
-        val result = (exploit + explorationPool).distinct().take(n)
-
+        //大于5分钟的音乐都过滤
+        val result =
+            (exploit + explorationPool).distinct().filter { it.runTimeTicks / 60.0 > 6 }
+                .take(n)
+        Log.i("=====","推荐音乐获取大小:${result.size} ")
         // 更新 recentHistory（异步安全）
-        recentHistory.addAll(result.map { it.itemId })
-
-        return@withContext result
+        recentHistory.addAll(
+            result.map { it.itemId },
+            repo._connectionConfigServer.getConnectionId()
+        )
+        db.musicDao.saveBatch(
+            result,
+            MusicDataTypeEnum.RECOMMEND,
+            repo._connectionConfigServer.getConnectionId()
+        )
     }
 
     // 画像：计算 artist/genre 权重（简单加权：播放次数 & 最近播放 & liked）
@@ -149,17 +156,18 @@ class DailyRecommender(
         val byArtists = repo.getMusicListByArtistIds(
             topArtists.toList(),
             pageSize = Constants.ALBUM_MUSIC_LIST_PAGE / 2
-        )?:emptyList() // each artist 取部分
+        ) ?: emptyList() // each artist 取部分
         val byGenres = repo.selectMusicListByGenreIds(
             topGenres.toList(),
             pageSize = Constants.ALBUM_MUSIC_LIST_PAGE / 2
-        )?:emptyList()
+        ) ?: emptyList()
 
         // 补充：如果候选少，随机从全库取一部分（分页）
         val seed = byArtists.union(byGenres).toMutableList()
         if (seed.isEmpty() || seed.size < 300) {
-            val all = repo.getRandomMusicList(pageNum = 0, pageSize = Constants.ALBUM_MUSIC_LIST_PAGE / 2)
-            all?.let {randomMusics ->
+            val all =
+                repo.getRandomMusicList(pageNum = 0, pageSize = Constants.ALBUM_MUSIC_LIST_PAGE / 2)
+            all?.let { randomMusics ->
                 seed.addAll(randomMusics)
             }
         }

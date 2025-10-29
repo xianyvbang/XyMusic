@@ -132,6 +132,7 @@ interface AlbumDao {
             }
 
             MusicDataTypeEnum.PLAYLIST -> {}
+            MusicDataTypeEnum.RECOMMEND -> {}
         }
 
     }
@@ -269,6 +270,7 @@ interface AlbumDao {
 
             MusicDataTypeEnum.GENRE -> {}
             MusicDataTypeEnum.PLAYLIST -> {}
+            MusicDataTypeEnum.RECOMMEND -> {}
         }
         removeByNotQuote()
     }

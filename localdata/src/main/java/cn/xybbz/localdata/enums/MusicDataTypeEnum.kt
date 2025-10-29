@@ -53,5 +53,10 @@ enum class MusicDataTypeEnum(val message: String) {
     /**
      * 歌单音乐
      */
-    PLAYLIST("歌单")
+    PLAYLIST("歌单"),
+
+    /**
+     * 推荐音乐
+     */
+    RECOMMEND("推荐音乐")
 }

@@ -235,9 +235,8 @@ class SubsonicDatasourceServer @Inject constructor(
             album.subsonicResponse.album?.song?.let {
 
                 val albumMusicList = convertToMusicList(it)
-                db.musicDao.saveBatch(
-                    albumMusicList, dataType,
-                    connectionId = connectionConfigServer.getConnectionId(),
+                saveBatchMusic(
+                    albumMusicList, dataType
                 )
             }
             artistExtend = album.subsonicResponse.album?.let { convertToAlbum(it) }
@@ -247,9 +246,8 @@ class SubsonicDatasourceServer @Inject constructor(
             //存储歌曲数据
             playlist.subsonicResponse.playlist?.entry?.let {
                 val albumMusicList = convertToMusicList(it)
-                db.musicDao.saveBatch(
-                    albumMusicList, dataType,
-                    connectionId = connectionConfigServer.getConnectionId(),
+                saveBatchMusic(
+                    items =albumMusicList, dataType,
                     playlistId = albumId
                 )
             }
