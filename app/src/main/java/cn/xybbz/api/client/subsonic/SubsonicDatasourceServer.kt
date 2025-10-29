@@ -22,10 +22,10 @@ import cn.xybbz.api.enums.jellyfin.CollectionType
 import cn.xybbz.api.enums.subsonic.AlbumType
 import cn.xybbz.api.enums.subsonic.Status
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.common.constants.Constants.LYRICS_AMPLIFICATION
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
+import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.ConnectionConfigServer
@@ -309,9 +309,10 @@ class SubsonicDatasourceServer @Inject constructor(
      */
     override suspend fun getMusicLyricList(music: XyMusic): List<LrcEntry>? {
         return if (music.ifLyric) {
-            val lyrics = subsonicApiClient.lyricsApi().getLyrics(music.itemId)
-            Log.i("=====","打印获取歌词信息: ${lyrics.toString()}")
-            null
+            val lyrics = subsonicApiClient.lyricsApi().getLyrics(music.artists,music.name)
+            lyrics.subsonicResponse.lyrics?.value?.let {
+                LrcUtils.parseLrc(it)
+            }
         } else {
             null
         }
