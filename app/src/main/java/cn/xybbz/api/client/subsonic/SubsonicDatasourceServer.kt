@@ -84,6 +84,7 @@ class SubsonicDatasourceServer @Inject constructor(
     override suspend fun postPingSystem(): Boolean {
         return try {
             val pingData = subsonicApiClient.userApi().postPingSystem()
+            subsonicApiClient.updateVersion(pingData.subsonicResponse.version)
             Log.i("=====", "ping数据返回: $pingData")
             pingData.subsonicResponse.status == Status.Ok
         } catch (e: Exception) {

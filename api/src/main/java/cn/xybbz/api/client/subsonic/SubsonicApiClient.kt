@@ -1,6 +1,5 @@
 package cn.xybbz.api.client.subsonic
 
-import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.DefaultApiClient
 import cn.xybbz.api.client.subsonic.service.SubsonicArtistsApi
 import cn.xybbz.api.client.subsonic.service.SubsonicGenreApi
@@ -11,7 +10,6 @@ import cn.xybbz.api.client.subsonic.service.SubsonicUserApi
 import cn.xybbz.api.client.subsonic.service.SubsonicUserLibraryApi
 import cn.xybbz.api.client.subsonic.service.SubsonicUserViewsApi
 import cn.xybbz.api.enums.subsonic.ResponseFormatType
-import kotlin.jvm.java
 
 class SubsonicApiClient : DefaultApiClient() {
 
@@ -87,6 +85,10 @@ class SubsonicApiClient : DefaultApiClient() {
         this.clientName = clientName
         this.responseFormat = responseFormat
         return this
+    }
+
+    fun updateVersion(protocolVersion: String) {
+        this.protocolVersion = protocolVersion
     }
 
     /**

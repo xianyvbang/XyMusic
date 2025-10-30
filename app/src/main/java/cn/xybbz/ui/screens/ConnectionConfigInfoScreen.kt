@@ -107,7 +107,7 @@ fun ConnectionConfigInfoScreen(
                         )
                         .height(20.dp),
                     content = {
-                        XyItemText(text = "${connectionConfigInfoViewModel.connectionConfig?.type?.name} ${connectionConfigInfoViewModel.connectionConfig?.serverVersion}")
+                        XyItemText(text = "${connectionConfigInfoViewModel.connectionConfig?.name} ${connectionConfigInfoViewModel.connectionConfig?.serverVersion}")
                     }
                 )
             }
