@@ -28,6 +28,6 @@ interface XyBackgroundConfigDao {
     @Query("update xy_background_config set homeBrash = :homeBrash where id = :id")
     suspend fun updateHomeBrash(homeBrash: String, id: Long)
 
-    @Query("delete from xy_connection_config")
+    @Query("delete from xy_background_config")
     suspend fun remove()
 }
