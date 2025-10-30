@@ -3,7 +3,6 @@ package cn.xybbz.api.client.subsonic
 import android.content.Context
 import android.icu.text.Transliterator
 import android.util.Log
-import androidx.media3.common.util.UnstableApi
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.PagingData
 import androidx.paging.RemoteMediator
@@ -26,6 +25,7 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
+import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.ConnectionConfigServer
@@ -48,7 +48,6 @@ import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
 import javax.inject.Inject
 
-@androidx.annotation.OptIn(UnstableApi::class)
 class SubsonicDatasourceServer @Inject constructor(
     private val db: DatabaseClient,
     private val application: Context,
@@ -85,6 +84,7 @@ class SubsonicDatasourceServer @Inject constructor(
     override suspend fun postPingSystem(): Boolean {
         return try {
             val pingData = subsonicApiClient.userApi().postPingSystem()
+            subsonicApiClient.updateVersion(pingData.subsonicResponse.version)
             Log.i("=====", "ping数据返回: $pingData")
             pingData.subsonicResponse.status == Status.Ok
         } catch (e: Exception) {
@@ -236,9 +236,8 @@ class SubsonicDatasourceServer @Inject constructor(
             album.subsonicResponse.album?.song?.let {
 
                 val albumMusicList = convertToMusicList(it)
-                db.musicDao.saveBatch(
-                    albumMusicList, dataType,
-                    connectionId = connectionConfigServer.getConnectionId(),
+                saveBatchMusic(
+                    albumMusicList, dataType
                 )
             }
             artistExtend = album.subsonicResponse.album?.let { convertToAlbum(it) }
@@ -248,9 +247,8 @@ class SubsonicDatasourceServer @Inject constructor(
             //存储歌曲数据
             playlist.subsonicResponse.playlist?.entry?.let {
                 val albumMusicList = convertToMusicList(it)
-                db.musicDao.saveBatch(
-                    albumMusicList, dataType,
-                    connectionId = connectionConfigServer.getConnectionId(),
+                saveBatchMusic(
+                    items =albumMusicList, dataType,
                     playlistId = albumId
                 )
             }
@@ -309,7 +307,14 @@ class SubsonicDatasourceServer @Inject constructor(
      * @return 返回歌词列表
      */
     override suspend fun getMusicLyricList(music: XyMusic): List<LrcEntry>? {
-        return null
+        return if (music.ifLyric) {
+            val lyrics = subsonicApiClient.lyricsApi().getLyrics(music.artists,music.name)
+            lyrics.subsonicResponse.lyrics?.value?.let {
+                LrcUtils.parseLrc(it)
+            }
+        } else {
+            null
+        }
     }
 
 
@@ -383,7 +388,10 @@ class SubsonicDatasourceServer @Inject constructor(
     /**
      * 导入歌单
      */
-    override suspend fun importPlaylist(playlistData: PlaylistParser.Playlist, playlistId: String): Boolean {
+    override suspend fun importPlaylist(
+        playlistData: PlaylistParser.Playlist,
+        playlistId: String
+    ): Boolean {
 
         val musicList = playlistData.musicList.mapNotNull {
             try {
@@ -412,13 +420,18 @@ class SubsonicDatasourceServer @Inject constructor(
         )
 
         val serverMusicMap = serverMusicList.items?.groupBy { it.itemId }
-        if (musicList.isNotEmpty()){
+        if (musicList.isNotEmpty()) {
             //去重后的列表
             val removeDuplicatesMusicList = musicList.mapNotNull {
                 if (serverMusicMap?.containsKey(it.itemId) == true) null else it
             }
-            if (removeDuplicatesMusicList.isNotEmpty()){
-                saveBatchMusic(removeDuplicatesMusicList, MusicDataTypeEnum.PLAYLIST,null,playlistId)
+            if (removeDuplicatesMusicList.isNotEmpty()) {
+                saveBatchMusic(
+                    removeDuplicatesMusicList,
+                    MusicDataTypeEnum.PLAYLIST,
+                    null,
+                    playlistId
+                )
                 val pic = if (removeDuplicatesMusicList.isNotEmpty()) musicList[0].pic else null
                 saveMusicPlaylist(
                     playlistId = playlistId,
@@ -592,12 +605,12 @@ class SubsonicDatasourceServer @Inject constructor(
     /**
      * 获得最近播放音乐或专辑
      */
-    override suspend fun playRecordMusicOrAlbumList() {
+    override suspend fun playRecordMusicOrAlbumList(pageSize: Int) {
         //subsonic只有最近播放专辑
         //插入最新播放专辑
         val albumList = subsonicApiClient.itemApi().getAlbumList2(
             type = AlbumType.RECENT,
-            size = Constants.MIN_PAGE,
+            size = pageSize,
             offset = 0,
             musicFolderId = connectionConfigServer.libraryId
         ).subsonicResponse.albumList2?.album
@@ -709,6 +722,35 @@ class SubsonicDatasourceServer @Inject constructor(
      */
     override suspend fun getGenreById(genreId: String): XyGenre? {
         return db.genreDao.selectById(genreId)
+    }
+
+    /**
+     * 获得流派内音乐列表/或者专辑
+     * @param [genreIds] 流派id
+     */
+    override suspend fun selectMusicListByGenreIds(
+        genreIds: List<String>,
+        pageSize: Int
+    ): List<XyMusic>? {
+
+        val map = genreIds.mapNotNull {
+            try {
+                val randomSongs = subsonicApiClient.itemApi().getSongsByGenre(
+                    genre = it,
+                    size = pageSize,
+                    musicFolderId = connectionConfigServer.libraryId
+                )
+                randomSongs.subsonicResponse.songsByGenre?.song?.let {
+                    convertToMusicList(
+                        it
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e(Constants.LOG_ERROR_PREFIX, "获取流派内音乐失败", e)
+                null
+            }
+        }.flatten<XyMusic>()
+        return map
     }
 
     /**
@@ -1049,9 +1091,10 @@ class SubsonicDatasourceServer @Inject constructor(
             runTimeTicks = music.duration,
             container = music.suffix,
             codec = music.suffix,
-            ifLyric = false,
+            ifLyric = true,
             lyric = "",
-            playlistItemId = music.id
+            playlistItemId = music.id,
+            lastPlayedDate = 0L
         )
     }
 
@@ -1208,6 +1251,16 @@ class SubsonicDatasourceServer @Inject constructor(
             pageSize = pageSize,
             pageNum = pageNum
         )
+    }
+
+    /**
+     * 根据艺术家列表获得歌曲列表
+     */
+    override suspend fun getMusicListByArtistIds(
+        artistIds: List<String>,
+        pageSize: Int
+    ): List<XyMusic>? {
+        return null
     }
 
     /**

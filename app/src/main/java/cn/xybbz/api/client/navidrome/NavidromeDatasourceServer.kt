@@ -45,6 +45,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
+import java.time.ZoneId
 import javax.inject.Inject
 
 class NavidromeDatasourceServer @Inject constructor(
@@ -460,7 +461,11 @@ class NavidromeDatasourceServer @Inject constructor(
         pageSize: Int,
         startIndex: Int
     ): AllResponse<XyMusic> {
-        return getServerMusicList(startIndex = startIndex, pageSize = pageSize, artistId = artistId)
+        return getServerMusicList(
+            startIndex = startIndex,
+            pageSize = pageSize,
+            artistIds = listOf(artistId)
+        )
     }
 
     /**
@@ -492,7 +497,10 @@ class NavidromeDatasourceServer @Inject constructor(
     /**
      * 导入歌单
      */
-    override suspend fun importPlaylist(playlistData: PlaylistParser.Playlist, playlistId: String): Boolean {
+    override suspend fun importPlaylist(
+        playlistData: PlaylistParser.Playlist,
+        playlistId: String
+    ): Boolean {
 
         val musicList = playlistData.musicList.mapNotNull {
             try {
@@ -516,13 +524,18 @@ class NavidromeDatasourceServer @Inject constructor(
         )
 
         val serverMusicMap = serverMusicList.items?.groupBy { it.itemId }
-        if (musicList.isNotEmpty()){
+        if (musicList.isNotEmpty()) {
             //去重后的列表
             val removeDuplicatesMusicList = musicList.mapNotNull {
                 if (serverMusicMap?.containsKey(it.itemId) == true) null else it
             }
-            if (removeDuplicatesMusicList.isNotEmpty()){
-                saveBatchMusic(removeDuplicatesMusicList, MusicDataTypeEnum.PLAYLIST,null,playlistId)
+            if (removeDuplicatesMusicList.isNotEmpty()) {
+                saveBatchMusic(
+                    removeDuplicatesMusicList,
+                    MusicDataTypeEnum.PLAYLIST,
+                    null,
+                    playlistId
+                )
                 val pic = if (removeDuplicatesMusicList.isNotEmpty()) musicList[0].pic else null
                 saveMusicPlaylist(
                     playlistId = playlistId,
@@ -646,23 +659,19 @@ class NavidromeDatasourceServer @Inject constructor(
     /**
      * 获得最近播放音乐或专辑
      */
-    override suspend fun playRecordMusicOrAlbumList() {
-        //只有最近播放专辑
-        //插入最新播放专辑
-        val albumList = getServerAlbumList(
+    override suspend fun playRecordMusicOrAlbumList(pageSize: Int) {
+        val musicList = getServerMusicList(
             startIndex = 0,
-            pageSize = Constants.MIN_PAGE,
-            orderType = OrderType.DESC,
-            sortBy = SortType.PLAY_DATE,
-            recentlyPlayed = true
+            pageSize = pageSize,
+            sortOrder = OrderType.DESC,
+            sortBy = SortType.PLAY_DATE
         )
-        albumList.items?.let {
+        musicList.items?.let {
             db.withTransaction {
-                db.albumDao.removeByType(MusicDataTypeEnum.PLAY_HISTORY)
-                saveBatchAlbum(it, MusicDataTypeEnum.PLAY_HISTORY)
+                db.musicDao.removeByType(MusicDataTypeEnum.PLAY_HISTORY)
+                saveBatchMusic(it, MusicDataTypeEnum.PLAY_HISTORY)
             }
         }
-
     }
 
     /**
@@ -707,6 +716,21 @@ class NavidromeDatasourceServer @Inject constructor(
      */
     override suspend fun getGenreById(genreId: String): XyGenre? {
         return db.genreDao.selectById(genreId)
+    }
+
+    /**
+     * 获得流派内音乐列表/或者专辑
+     * @param [genreIds] 流派id
+     */
+    override suspend fun selectMusicListByGenreIds(
+        genreIds: List<String>,
+        pageSize: Int
+    ): List<XyMusic>? {
+        return getServerMusicList(
+            startIndex = 0,
+            pageSize = pageSize,
+            genreIds = genreIds
+        ).items
     }
 
     /**
@@ -769,11 +793,25 @@ class NavidromeDatasourceServer @Inject constructor(
             val homeMusicList = getServerMusicList(
                 startIndex = pageNum * pageSize,
                 pageSize = pageSize,
-                artistId = artistId
+                artistIds = listOf(artistId)
             )
             selectMusicList = homeMusicList.items
         }
         return selectMusicList
+    }
+
+    /**
+     * 根据艺术家列表获得歌曲列表
+     */
+    override suspend fun getMusicListByArtistIds(
+        artistIds: List<String>,
+        pageSize: Int
+    ): List<XyMusic>? {
+        return getServerMusicList(
+            startIndex = 0,
+            pageSize = pageSize,
+            artistIds = artistIds
+        ).items
     }
 
     /**
@@ -1031,8 +1069,8 @@ class NavidromeDatasourceServer @Inject constructor(
         startIndex: Int,
         pageSize: Int,
         albumId: String? = null,
-        artistId: String? = null,
-        genreId: String? = null,
+        artistIds: List<String>? = null,
+        genreIds: List<String>? = null,
         isFavorite: Boolean? = null,
         search: String? = null,
         year: Int? = null,
@@ -1048,9 +1086,9 @@ class NavidromeDatasourceServer @Inject constructor(
                     sort = sortBy,
                     title = search,
                     starred = isFavorite,
-                    genreId = genreId,
+                    genreIds = genreIds,
                     albumId = albumId,
-                    artistId = artistId,
+                    artistIds = artistIds,
                     year = year,
                 )
             }
@@ -1304,7 +1342,8 @@ class NavidromeDatasourceServer @Inject constructor(
             codec = music.suffix,
             ifLyric = !music.lyrics.isNullOrBlank(),
             lyric = music.lyrics,
-            playlistItemId = music.id
+            playlistItemId = music.id,
+            lastPlayedDate = music.playDate?.atZone(ZoneId.systemDefault())?.toEpochSecond() ?: 0L
         )
     }
 

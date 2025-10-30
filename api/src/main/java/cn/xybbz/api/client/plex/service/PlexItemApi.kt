@@ -26,12 +26,13 @@ interface PlexItemApi : BaseApi {
         @Query("X-Plex-Container-Size") pageSize: Int,
         @Query("artist.id") artistId: String? = null,
         @Query("album.id") albumId: String? = null,
-        @Query("genre") genreId: String? = null,
+        //使用逗号分割
+        @Query("genre") genreIds: String? = null,
         @Query("album.collection") albumCollection: Int? = null,
         @Query("track.collection") trackCollection: Int? = null,
         @Query("artist.collection") artistCollection: Int? = null,
-        @Query("year", encoded = false) year: List<String>? = null,
-        @Query("album.year", encoded = false) albumYear: List<String>? = null,
+        @Query("decade", encoded = false) decade: String? = null,
+        @Query("album.decade", encoded = false) albumDecade: String? = null,
         @Query("artist.title", encoded = false) artistTitle: String? = null,
         @QueryMap(encoded = false) params: Map<String, String>? = null
     ): PlexResponse<PlexLibraryItemResponse>

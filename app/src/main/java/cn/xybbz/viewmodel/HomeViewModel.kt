@@ -16,6 +16,7 @@ import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.DataSourceChangeUtils
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
+import cn.xybbz.config.recommender.DailyRecommender
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.DatabaseClient
@@ -41,7 +42,8 @@ class HomeViewModel @OptIn(UnstableApi::class)
     private val connectionConfigServer: ConnectionConfigServer,
     private val _musicPlayContext: MusicPlayContext,
     private val musicController: MusicController,
-    private val _backgroundConfig: BackgroundConfig
+    private val _backgroundConfig: BackgroundConfig,
+    private val dailyRecommender: DailyRecommender
 ) : ViewModel() {
 
     val musicPlayContext = _musicPlayContext
@@ -77,6 +79,13 @@ class HomeViewModel @OptIn(UnstableApi::class)
      */
     var mostPlayerAlbumList by mutableStateOf<List<XyAlbum>>(emptyList())
         private set
+
+    /**
+     * 推荐音乐
+     */
+    var recommendedMusicList by mutableStateOf<List<XyMusic>>(emptyList())
+        private set
+
 
     /**
      * 歌单列表
@@ -161,6 +170,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
         getNewAlbumList()
         getPlayRecordMusicList()
         getPlayRecordAlbumList()
+        getRecommendedMusicList()
         //获取数据数量
         getDataCount()
         getConnectionListData()
@@ -317,6 +327,24 @@ class HomeViewModel @OptIn(UnstableApi::class)
     }
 
     /**
+     * 获得推荐音乐列表
+     */
+
+    fun getRecommendedMusicList(){
+        viewModelScope.launch {
+            connectionConfigServer.loginStateFlow.collect { bool ->
+                if (bool) {
+                    db.musicDao.selectRecommendedMusicListFlow(50)
+                        .distinctUntilChanged()
+                        .collect {
+                            recommendedMusicList = it
+                        }
+                }
+            }
+        }
+    }
+
+    /**
      * 获得服务端歌单
      */
     suspend fun getServerPlaylists() {
@@ -362,6 +390,10 @@ class HomeViewModel @OptIn(UnstableApi::class)
                 }
                 val dataCountAsync = async {
                     getServerDataCount()
+                }
+
+                val recommendedMusicAsync = async {
+                    generateRecommendedMusicList()
                 }
 
                 awaitAll(
@@ -421,5 +453,9 @@ class HomeViewModel @OptIn(UnstableApi::class)
      */
     private suspend fun getServerDataCount() {
         dataSourceManager.getDataInfoCount(connectionConfigServer.getConnectionId())
+    }
+
+    private suspend fun generateRecommendedMusicList() {
+        dailyRecommender.generate()
     }
 }

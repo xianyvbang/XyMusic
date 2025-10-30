@@ -16,6 +16,7 @@ import cn.xybbz.localdata.data.music.NewestMusic
 import cn.xybbz.localdata.data.music.PlayHistoryMusic
 import cn.xybbz.localdata.data.music.PlayQueueMusic
 import cn.xybbz.localdata.data.music.PlaylistMusic
+import cn.xybbz.localdata.data.music.RecommendedMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.flow.Flow
@@ -160,9 +161,16 @@ interface XyMusicDao {
                 }
             }
 
+            MusicDataTypeEnum.RECOMMEND -> {
+                saveRecommendedMusic(data.mapIndexed { index, item ->
+                    RecommendedMusic(
+                        item.itemId,
+                        connectionId,
+                        index
+                    )
+                })
+            }
         }
-
-
     }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -191,6 +199,10 @@ interface XyMusicDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun savePlaylistMusic(data: List<PlaylistMusic>)
+
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveRecommendedMusic(data: List<RecommendedMusic>)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun save(data: XyMusic): Long
@@ -255,72 +267,82 @@ interface XyMusicDao {
                 }
             }
 
+            MusicDataTypeEnum.RECOMMEND -> {
+                removeRecommendedMusic()
+            }
         }
         removeByNotQuote()
     }
 
     @Query(
         """
-        delete from homemusic
+        delete from homemusic where connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removeHomeMusic()
 
     @Query(
         """
-        delete from favoritemusic
+        delete from favoritemusic where connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removeFavoriteMusic()
 
     @Query(
         """
-        delete from albumMusic where albumId = :albumId
+        delete from albumMusic where albumId = :albumId and connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removeAlbumMusic(albumId: String)
 
     @Query(
         """
-        delete from artistMusic where artistId = :artistId
+        delete from artistMusic where artistId = :artistId and connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removeArtistMusic(artistId: String)
 
     @Query(
         """
-        delete from playHistoryMusic
+        delete from playHistoryMusic where connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removePlayHistoryMusic()
 
     @Query(
         """
-        delete from playQueueMusic
+        delete from playQueueMusic where connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removePlayQueueMusic()
 
     @Query(
         """
-        delete from maximumPlayMusic
+        delete from maximumPlayMusic where connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removeMaximumPlayMusic()
 
     @Query(
         """
-        delete from newestMusic
+        delete from newestMusic where connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removeNewestMusic()
 
     @Query(
         """
-        delete from playlistMusic where playlistId = :playlistId
+        delete from playlistMusic where playlistId = :playlistId and connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removePlaylistMusic(playlistId: String)
+
+    @Query(
+        """
+        delete from RecommendedMusic where connectionId = (select connectionId from xy_settings)
+    """
+    )
+    suspend fun removeRecommendedMusic()
 
     /**
      *  删除没有被引用的数据
@@ -337,6 +359,7 @@ interface XyMusicDao {
           AND itemId NOT IN (SELECT musicId FROM newestmusic)
           AND itemId NOT IN (SELECT musicId FROM playhistorymusic)
           AND itemId NOT IN (SELECT musicId FROM playqueuemusic)
+          AND itemId NOT IN (SELECT musicId FROM recommendedmusic)
     """
     )
     suspend fun removeByNotQuote()
@@ -370,7 +393,11 @@ interface XyMusicDao {
         order by hm.`index`
     """
     )
-    fun selectHomeMusicListPageByYear(ifFavorite: Boolean?,startYear: Int?, endYear: Int?): PagingSource<Int, XyMusic>
+    fun selectHomeMusicListPageByYear(
+        ifFavorite: Boolean?,
+        startYear: Int?,
+        endYear: Int?
+    ): PagingSource<Int, XyMusic>
 
 
     /**
@@ -487,6 +514,10 @@ interface XyMusicDao {
             MusicDataTypeEnum.PLAYLIST -> {
                 flow {}
             }
+
+            MusicDataTypeEnum.RECOMMEND -> {
+                selectRecommendedMusicListFlow(limit)
+            }
         }
     }
 
@@ -520,6 +551,22 @@ interface XyMusicDao {
     fun selectPlayHistoryMusicListFlow(
         limit: Int
     ): Flow<List<XyMusic>>
+
+    /**
+     * 获得播放历史的limit条数据
+     */
+    @Query(
+        """
+        select mi.* from PlayHistoryMusic phm
+        inner join xy_music mi on phm.musicId = mi.itemId
+        inner join xy_settings xs on mi.connectionId = xs.connectionId and phm.connectionId = xs.connectionId
+        order by `index`
+        limit :limit
+    """
+    )
+    suspend fun selectPlayHistoryMusicList(
+        limit: Int
+    ): List<XyMusic>
 
     /**
      * 获得播放列表的数据
@@ -560,6 +607,20 @@ interface XyMusicDao {
     """
     )
     fun selectMaximumPlayMusicListFlow(
+        limit: Int
+    ): Flow<List<XyMusic>>
+
+
+    @Query(
+        """
+        select mi.* from RecommendedMusic mpm
+        inner join xy_music mi on mpm.musicId = mi.itemId
+        inner join xy_settings xs on mi.connectionId = xs.connectionId and mpm.connectionId = xs.connectionId
+        order by `index`
+        limit :limit
+    """
+    )
+    fun selectRecommendedMusicListFlow(
         limit: Int
     ): Flow<List<XyMusic>>
 

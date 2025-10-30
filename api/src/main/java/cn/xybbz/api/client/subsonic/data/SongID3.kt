@@ -72,7 +72,7 @@ data class SongID3(
     /**
      * 所属年代
      */
-    val year: Int,
+    val year: Int?,
     /**
      * 流派
      */

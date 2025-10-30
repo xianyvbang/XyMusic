@@ -33,7 +33,7 @@ data class ItemRequest(
     val mediaTypes: Collection<MediaType>? = emptyList(),
     val nameStartsWith: String? = null,
     val nameLessThan: String? = null,
-    val genreIds:List<String>? = null,
+    val genreIds: List<String>? = null,
     val albumIds:List<String>? = null,
     val userId:String? = null,
     val enableTotalRecordCount: Boolean = true,

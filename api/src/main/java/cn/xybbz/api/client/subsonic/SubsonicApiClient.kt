@@ -4,6 +4,7 @@ import cn.xybbz.api.client.DefaultApiClient
 import cn.xybbz.api.client.subsonic.service.SubsonicArtistsApi
 import cn.xybbz.api.client.subsonic.service.SubsonicGenreApi
 import cn.xybbz.api.client.subsonic.service.SubsonicItemApi
+import cn.xybbz.api.client.subsonic.service.SubsonicLyricsApi
 import cn.xybbz.api.client.subsonic.service.SubsonicPlaylistsApi
 import cn.xybbz.api.client.subsonic.service.SubsonicUserApi
 import cn.xybbz.api.client.subsonic.service.SubsonicUserLibraryApi
@@ -56,6 +57,8 @@ class SubsonicApiClient : DefaultApiClient() {
     private lateinit var subsonicGenreApi: SubsonicGenreApi
     private lateinit var subsonicUserLibraryApi: SubsonicUserLibraryApi
 
+    private lateinit var subsonicLyricsApi: SubsonicLyricsApi
+
 
     /**
      * 创建API客户端
@@ -82,6 +85,10 @@ class SubsonicApiClient : DefaultApiClient() {
         this.clientName = clientName
         this.responseFormat = responseFormat
         return this
+    }
+
+    fun updateVersion(protocolVersion: String) {
+        this.protocolVersion = protocolVersion
     }
 
     /**
@@ -152,6 +159,16 @@ class SubsonicApiClient : DefaultApiClient() {
             subsonicUserLibraryApi = instance().create(SubsonicUserLibraryApi::class.java)
         }
         return subsonicUserLibraryApi
+    }
+
+    /**
+     * 歌词接口
+     */
+    override fun lyricsApi(restart: Boolean): SubsonicLyricsApi {
+        if (!this::subsonicLyricsApi.isInitialized || restart) {
+            subsonicLyricsApi = instance().create(SubsonicLyricsApi::class.java)
+        }
+        return subsonicLyricsApi
     }
 
     /**

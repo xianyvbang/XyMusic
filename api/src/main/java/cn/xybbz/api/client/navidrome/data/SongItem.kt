@@ -58,7 +58,7 @@ data class SongItem(
     /**
      * 播放时间
      */
-    val playDate: String? = null,
+    val playDate: LocalDateTime? = null,
     /**
      * 是否收藏
      */

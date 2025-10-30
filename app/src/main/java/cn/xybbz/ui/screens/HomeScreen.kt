@@ -575,6 +575,83 @@ fun HomeScreen(
                     }
                 }
 
+
+                if (homeViewModel.recommendedMusicList.isNotEmpty()) {
+                    item {
+                        XyRow {
+                            XyItemMedium(
+                                modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
+                                text = stringResource(R.string.recommended_music),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+
+                            Row(
+                                horizontalArrangement = Arrangement.End,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                IconButton(onClick = composeClick {
+                                    if (homeViewModel.recommendedMusicList.isNotEmpty())
+                                        homeViewModel.playMusicList(
+                                            musicList = homeViewModel.recommendedMusicList,
+                                            onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
+                                            playerTypeEnum = PlayerTypeEnum.RANDOM_PLAY
+                                        )
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Shuffle,
+                                        contentDescription = stringResource(R.string.random_play) + stringResource(
+                                            R.string.recommended_music
+                                        )
+                                    )
+                                }
+                                IconButton(onClick = composeClick {
+                                    if (homeViewModel.mostPlayerMusicList.isNotEmpty())
+                                        homeViewModel.playMusicList(
+                                            musicList = homeViewModel.recommendedMusicList,
+                                            onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
+                                            playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
+                                        )
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Repeat,
+                                        contentDescription = stringResource(R.string.list_loop) + stringResource(
+                                            R.string.recommended_music
+                                        )
+                                    )
+                                }
+
+                            }
+                        }
+                    }
+                    item {
+                        LazyRow(
+                            modifier = Modifier.height(MusicCardImageSize + 50.dp),
+                            contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
+                            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
+                        ) {
+                            itemsIndexed(
+                                homeViewModel.recommendedMusicList.take(5),
+                                key = { index, item -> item.itemId + index }) { index, music ->
+                                MusicMusicCardComponent(
+                                    onItem = { music },
+                                    imageSize = MusicCardImageSize,
+                                    onRouter = {
+                                        //点击播放
+                                        homeViewModel.musicPlayContext.musicList(
+                                            onMusicPlayParameter = OnMusicPlayParameter(
+                                                musicId = music.itemId,
+                                                albumId = music
+                                                    .album
+                                            ),
+                                            homeViewModel.recommendedMusicList
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
                 if (homeViewModel.newAlbumList.isNotEmpty()) {
                     item {
                         XyRow {

@@ -424,7 +424,7 @@ class JellyfinDatasourceServer @Inject constructor(
             getServerMusicList(
                 pageSize = pageSize,
                 startIndex = startIndex,
-                artistId = artistId
+                artistIds = listOf(artistId)
             )
         return response
     }
@@ -492,11 +492,25 @@ class JellyfinDatasourceServer @Inject constructor(
             val homeMusicList = getServerMusicList(
                 pageSize,
                 pageNum * pageSize,
-                artistId = artistId
+                artistIds = listOf(artistId)
             )
             selectMusicList = homeMusicList.items
         }
         return selectMusicList
+    }
+
+    /**
+     * 根据艺术家列表获得歌曲列表
+     */
+    override suspend fun getMusicListByArtistIds(
+        artistIds: List<String>,
+        pageSize: Int
+    ): List<XyMusic>? {
+        return getServerMusicList(
+            startIndex = 0,
+            pageSize = pageSize,
+            artistIds = artistIds
+        ).items
     }
 
 
@@ -533,7 +547,6 @@ class JellyfinDatasourceServer @Inject constructor(
 
     /**
      * 获得媒体库列表
-     * //todo 这里需要只显示音乐媒体库
      */
     override suspend fun selectMediaLibrary() {
         val viewLibrary = jellyfinApiClient.userViewsApi().getUserViews(
@@ -563,10 +576,10 @@ class JellyfinDatasourceServer @Inject constructor(
     /**
      * 获得最近播放音乐
      */
-    override suspend fun playRecordMusicOrAlbumList() {
+    override suspend fun playRecordMusicOrAlbumList(pageSize: Int) {
         val musicList = getServerMusicList(
             startIndex = 0,
-            pageSize = Constants.MIN_PAGE,
+            pageSize = pageSize,
             filters = listOf(ItemFilter.IS_PLAYED),
             sortBy = listOf(ItemSortBy.DATE_PLAYED),
             sortOrder = listOf(SortOrder.DESCENDING)
@@ -891,6 +904,21 @@ class JellyfinDatasourceServer @Inject constructor(
     }
 
     /**
+     * 获得流派内音乐列表/或者专辑
+     * @param [genreIds] 流派id
+     */
+    override suspend fun selectMusicListByGenreIds(
+        genreIds: List<String>,
+        pageSize: Int
+    ): List<XyMusic>? {
+        return getServerMusicList(
+            startIndex = 0,
+            pageSize = pageSize,
+            genreIds = genreIds
+        ).items
+    }
+
+    /**
      * 释放
      */
     override suspend fun release() {
@@ -1096,19 +1124,20 @@ class JellyfinDatasourceServer @Inject constructor(
         pageSize: Int,
         startIndex: Int,
         albumId: String? = null,
-        artistId: String? = null,
+        artistIds: List<String>? = null,
         isFavorite: Boolean? = null,
         search: String? = null,
         sortBy: List<ItemSortBy>? = null,
         sortOrder: List<SortOrder>? = null,
         filters: List<ItemFilter>? = null,
         years: List<Int>? = null,
+        genreIds: List<String>? = null,
         parentId: String? = null,
         path: String? = null
     ): AllResponse<XyMusic> {
         val response = jellyfinApiClient.itemApi().getItems(
             itemRequest = ItemRequest(
-                artistIds = artistId?.let { listOf(it) },
+                artistIds = artistIds,
                 limit = pageSize,
                 startIndex = startIndex,
                 sortBy = sortBy ?: listOf(ItemSortBy.SORT_NAME),
@@ -1125,6 +1154,7 @@ class JellyfinDatasourceServer @Inject constructor(
                 ),
                 searchTerm = search,
                 imageTypeLimit = 1,
+                genreIds = genreIds,
                 years = years,
                 albumIds = albumId?.let { listOf(albumId) },
                 parentId = if (parentId.isNullOrBlank()) connectionConfigServer.libraryId else parentId,
@@ -1290,7 +1320,9 @@ class JellyfinDatasourceServer @Inject constructor(
             itemId = item.id,
             pic = itemImageUrl,
             name = item.name
-                ?: if (ifPlaylist) application.getString(Constants.UNKNOWN_PLAYLIST) else application.getString(Constants.UNKNOWN_ALBUM),
+                ?: if (ifPlaylist) application.getString(Constants.UNKNOWN_PLAYLIST) else application.getString(
+                    Constants.UNKNOWN_ALBUM
+                ),
             connectionId = connectionConfigServer.getConnectionId(),
             artistIds = item.albumArtists?.joinToString(Constants.ARTIST_DELIMITER) { it.id },
             artists = item.albumArtists?.joinToString(Constants.ARTIST_DELIMITER) { it.name.toString() }
@@ -1361,7 +1393,8 @@ class JellyfinDatasourceServer @Inject constructor(
             container = mediaSourceInfo?.container,
             codec = mediaStream?.codec,
             lyric = "",
-            playlistItemId = item.id
+            playlistItemId = item.id,
+            lastPlayedDate = item.userData?.lastPlayedDate?.atZone(ZoneId.systemDefault())?.toEpochSecond() ?: 0L
         )
     }
 

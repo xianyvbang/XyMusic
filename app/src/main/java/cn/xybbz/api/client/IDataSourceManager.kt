@@ -64,6 +64,8 @@ class IDataSourceManager(
     private val favoriteRepository: FavoriteRepository
 ) : IDataSourceServer {
 
+    val _connectionConfigServer = connectionConfigServer
+
     var dataSourceType by mutableStateOf<DataSourceType?>(null)
         private set
 
@@ -686,9 +688,9 @@ class IDataSourceManager(
     /**
      * 获得最近播放音乐
      */
-    override suspend fun playRecordMusicOrAlbumList() {
+    override suspend fun playRecordMusicOrAlbumList(pageSize: Int) {
         try {
-            dataSourceServer.playRecordMusicOrAlbumList()
+            dataSourceServer.playRecordMusicOrAlbumList(pageSize)
         } catch (e: SocketTimeoutException) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐更新超时", e)
         } catch (e: Exception) {
@@ -696,6 +698,13 @@ class IDataSourceManager(
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐未知错误失败", e)
         }
+    }
+
+    /**
+     * 获得最近播放音乐列表
+     */
+    override suspend fun getPlayRecordMusicList(pageSize: Int): List<XyMusic> {
+        return dataSourceServer.getPlayRecordMusicList(pageSize)
     }
 
     /**
@@ -776,6 +785,22 @@ class IDataSourceManager(
     }
 
     /**
+     * 获得流派内音乐列表/或者专辑
+     * @param [genreIds] 流派名称
+     */
+    override suspend fun selectMusicListByGenreIds(
+        genreIds: List<String>,
+        pageSize: Int
+    ): List<XyMusic>? {
+        return try {
+             dataSourceServer.getPlayRecordMusicList(pageSize)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得流派内音乐列表失败", e)
+            null
+        }
+    }
+
+    /**
      * 获得歌曲列表
      */
     override suspend fun getMusicList(
@@ -827,6 +852,21 @@ class IDataSourceManager(
             null
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据报错", e)
+            null
+        }
+    }
+
+    /**
+     * 根据艺术家列表获得歌曲列表
+     */
+    override suspend fun getMusicListByArtistIds(
+        artistIds: List<String>,
+        pageSize: Int
+    ): List<XyMusic>? {
+        return try {
+             dataSourceServer.getMusicListByArtistIds(artistIds, pageSize)
+        }catch (e: Exception){
+            Log.e(Constants.LOG_ERROR_PREFIX, "根据艺术家列表获得歌曲列表失败", e)
             null
         }
     }

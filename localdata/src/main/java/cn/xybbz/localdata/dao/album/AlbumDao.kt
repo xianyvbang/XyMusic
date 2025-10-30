@@ -132,6 +132,7 @@ interface AlbumDao {
             }
 
             MusicDataTypeEnum.PLAYLIST -> {}
+            MusicDataTypeEnum.RECOMMEND -> {}
         }
 
     }
@@ -267,29 +268,34 @@ interface AlbumDao {
                 removeNewestAlbum()
             }
 
-            MusicDataTypeEnum.GENRE -> {}
+            MusicDataTypeEnum.GENRE -> {
+                genreId?.let {
+                    removeGenreAlbum(genreId)
+                }
+            }
             MusicDataTypeEnum.PLAYLIST -> {}
+            MusicDataTypeEnum.RECOMMEND -> {}
         }
         removeByNotQuote()
     }
 
     @Query(
         """
-        delete from homealbum
+        delete from homealbum where connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removeHomeAlbum()
 
     @Query(
         """
-        delete from ArtistAlbum where artistId = :artistId
+        delete from ArtistAlbum where artistId = :artistId and connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removeArtistAlbum(artistId: String)
 
     @Query(
         """
-        delete from NewestAlbum
+        delete from NewestAlbum where connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removeNewestAlbum()
@@ -297,17 +303,24 @@ interface AlbumDao {
 
     @Query(
         """
-        delete from playhistoryalbum
+        delete from playhistoryalbum where connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removePlayHistoryAlbum()
 
     @Query(
         """
-        delete from maximumplayalbum
+        delete from maximumplayalbum where connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removeMaximumPlayAlbum()
+
+    @Query(
+        """
+        delete from genrealbum where genreId = :genreId and connectionId = (select connectionId from xy_settings)
+    """
+    )
+    suspend fun removeGenreAlbum(genreId: String)
 
     /**
      *  删除没有被引用的数据
