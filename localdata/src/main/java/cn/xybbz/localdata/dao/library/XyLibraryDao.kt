@@ -19,6 +19,9 @@ interface XyLibraryDao {
     @Query("select * from xy_library where connectionId = (select connectionId from xy_settings)")
     suspend fun selectListByDataSourceType(): List<XyLibrary>
 
+    @Query("select * from xy_library where connectionId = :connectionId")
+    suspend fun selectListByConnectionId(connectionId: Long): List<XyLibrary>
+
     @Query("select * from xy_library where connectionId = (select connectionId from xy_settings)")
     fun selectListByDataSourceTypeFlow(): Flow<List<XyLibrary>>
 

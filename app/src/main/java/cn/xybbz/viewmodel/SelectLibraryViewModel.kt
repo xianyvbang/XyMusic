@@ -6,8 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cn.xybbz.R
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.utils.DefaultObjectUtils
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.localdata.config.DatabaseClient
@@ -51,15 +51,10 @@ class SelectLibraryViewModel @AssistedInject constructor(
      */
     private fun getLibraryList() {
         viewModelScope.launch {
-            libraryId = thisLibraryId.toString()
+            libraryId = thisLibraryId ?: Constants.MINUS_ONE_INT.toString()
             val libraryData = db.libraryDao.selectListByDataSourceType()
             libraryList.add(
-                XyLibrary(
-                    id = "-1",
-                    name = R.string.all_media_libraries.toString(),
-                    connectionId = connectionId,
-                    collectionType = ""
-                )
+                DefaultObjectUtils.getDefaultXyLibrary(connectionId)
             )
             if (libraryData.isNotEmpty()) {
                 libraryList.addAll(libraryData)

@@ -13,6 +13,7 @@ import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.IDataSourceManager
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.DatabaseUtils
+import cn.xybbz.common.utils.DefaultObjectUtils
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.config.BackgroundConfig
@@ -20,7 +21,6 @@ import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.SettingsConfig
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
-import cn.xybbz.localdata.data.library.XyLibrary
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -71,14 +71,7 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
         private set
 
     //当前媒体库
-    var library by mutableStateOf(
-        XyLibrary(
-            id = "-1",
-            name = R.string.all_media_libraries.toString(),
-            connectionId = connectionId,
-            collectionType = ""
-        )
-    )
+    var library by mutableStateOf(DefaultObjectUtils.getDefaultXyLibrary(connectionId))
         private set
 
     init {
@@ -105,12 +98,17 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
 
     //查询媒体库数据
     private suspend fun getLibrary(libraryId: String?) {
-        val libraryList = db.libraryDao.selectListByDataSourceType()
-        if (libraryList.isNotEmpty() && !libraryId.isNullOrBlank()) {
-            val xyLibrary = libraryList.findLast { library -> library.id == libraryId }
-            if (xyLibrary != null)
-                library = xyLibrary
+        if (libraryId.isNullOrBlank()) {
+            library = DefaultObjectUtils.getDefaultXyLibrary(connectionId)
+        } else {
+            val libraryList = db.libraryDao.selectListByConnectionId(connectionId)
+            if (libraryList.isNotEmpty()) {
+                val xyLibrary = libraryList.findLast { library -> library.id == libraryId }
+                if (xyLibrary != null)
+                    library = xyLibrary
+            }
         }
+
     }
 
     fun updatePassword(data: String?) {

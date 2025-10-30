@@ -167,10 +167,10 @@ class ConnectionViewModel @Inject constructor(
                 tmpAddressList.add(url)
                 val ipAndPort = isEndPort(url)
                 if (!ipAndPort) {
-                    if (URLUtil.isHttpUrl(address)) {
-                        tmpAddressList.add("${address}:${dataSourceType?.httpPort}")
+                    if (URLUtil.isHttpUrl(url)) {
+                        tmpAddressList.add("${url}:${dataSourceType?.httpPort}")
                     } else {
-                        tmpAddressList.add("${address}:${dataSourceType?.httpsPort}")
+                        tmpAddressList.add("${url}:${dataSourceType?.httpsPort}")
                     }
                 }
             }
