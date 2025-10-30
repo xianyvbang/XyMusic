@@ -184,7 +184,7 @@ fun ConnectionConfigInfoScreen(
                             navHostController.navigate(
                                 RouterConstants.SelectLibrary(
                                     connectionId,
-                                    connectionConfigInfoViewModel.library.id
+                                    connectionConfigInfoViewModel.connectionConfig?.libraryId
                                 )
                             )
                         }
