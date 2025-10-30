@@ -276,70 +276,70 @@ interface XyMusicDao {
 
     @Query(
         """
-        delete from homemusic
+        delete from homemusic where connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removeHomeMusic()
 
     @Query(
         """
-        delete from favoritemusic
+        delete from favoritemusic where connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removeFavoriteMusic()
 
     @Query(
         """
-        delete from albumMusic where albumId = :albumId
+        delete from albumMusic where albumId = :albumId and connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removeAlbumMusic(albumId: String)
 
     @Query(
         """
-        delete from artistMusic where artistId = :artistId
+        delete from artistMusic where artistId = :artistId and connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removeArtistMusic(artistId: String)
 
     @Query(
         """
-        delete from playHistoryMusic
+        delete from playHistoryMusic where connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removePlayHistoryMusic()
 
     @Query(
         """
-        delete from playQueueMusic
+        delete from playQueueMusic where connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removePlayQueueMusic()
 
     @Query(
         """
-        delete from maximumPlayMusic
+        delete from maximumPlayMusic where connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removeMaximumPlayMusic()
 
     @Query(
         """
-        delete from newestMusic
+        delete from newestMusic where connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removeNewestMusic()
 
     @Query(
         """
-        delete from playlistMusic where playlistId = :playlistId
+        delete from playlistMusic where playlistId = :playlistId and connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removePlaylistMusic(playlistId: String)
 
     @Query(
         """
-        delete from RecommendedMusic
+        delete from RecommendedMusic where connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removeRecommendedMusic()
