@@ -93,14 +93,10 @@ class DailyRecommender(
         Log.i("=====","推荐音乐获取大小:${result.size} ")
         // 更新 recentHistory（异步安全）
         recentHistory.addAll(
-            result.map { it.itemId },
-            repo._connectionConfigServer.getConnectionId()
-        )
-        db.musicDao.saveBatch(
             result,
-            MusicDataTypeEnum.RECOMMEND,
             repo._connectionConfigServer.getConnectionId()
         )
+
     }
 
     // 画像：计算 artist/genre 权重（简单加权：播放次数 & 最近播放 & liked）
