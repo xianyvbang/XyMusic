@@ -42,17 +42,13 @@
 |        淡入淡出功能        |
 | 音乐跳转位置的时候缓存也跳转位置进行缓存 |
 |      清理代码,增加注释       | 进行中 |
-|         推荐功能         | 进行中 |
 
 ## UI展示
 
-### 实现多数据源连接
+### 主要功能页面
 
-<img src="./images/connection1.png" alt="" width="200"/>
-
-### 首页
-
-<img src="./images/home.png" alt="" width="200"/>
+| <img src="./images/connection1.png" alt="" width="200"/>  | <img src="./images/home.png" alt="" width="200"/>  |
+|:---------------------------------------------------------:|:--------------------------------------------------:|
 
 ### 播放页面
 
@@ -70,21 +66,15 @@
 
 <img src="./images/music.png" alt="" width="200"/>
 
-### 专辑列表页
+### 专辑页面
 
-<img src="./images/album.png" alt="" width="200"/>
+| <img src="./images/album.png" alt="" width="200"/> | <img src="./images/album_info.png" alt="" width="200"/> |
+|:--------------------------------------------------:|:-------------------------------------------------------:|
 
-### 专辑详情页
+### 艺术家页面
 
-<img src="./images/album_info.png" alt="" width="200"/>
-
-### 艺术家列表页
-
-<img src="./images/artist.png" alt="" width="200"/>
-
-### 艺术家详情页
-
-<img src="./images/artist_info.png" alt="" width="200"/>
+| <img src="./images/artist.png" alt="" width="200"/> | <img src="./images/artist_info.png" alt="" width="200"/> |
+|:---------------------------------------------------:|:--------------------------------------------------------:|
 
 ### 收藏页面
 
