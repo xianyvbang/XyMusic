@@ -2,10 +2,12 @@ package cn.xybbz.ui.screens
 
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -19,6 +21,7 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -42,15 +45,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -73,6 +82,7 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.viewmodel.ArtistInfoViewModel
+import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import kotlin.math.min
 
@@ -108,8 +118,7 @@ fun ArtistInfoScreen(
 
 
     val imageOffsetDp =
-        DefaultImageHeight - WindowInsets.statusBars.asPaddingValues()
-            .calculateTopPadding() - TopAppBarDefaults.TopAppBarExpandedHeight
+        DefaultImageHeight
     val density = LocalDensity.current
 
     val topBarAlpha by remember {
@@ -147,78 +156,167 @@ fun ArtistInfoScreen(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .brashColor(
-                topVerticalColor = artistInfoViewModel.backgroundConfig.artistInfoBrash[0],
-                bottomVerticalColor = artistInfoViewModel.backgroundConfig.artistInfoBrash[1]
-            )
     ) {
         val maxHeight =
-            this.maxHeight - XyTheme.dimens.itemHeight - WindowInsets.statusBars.asPaddingValues()
-                .calculateTopPadding() - TopAppBarDefaults.TopAppBarExpandedHeight
+            this.maxHeight - XyTheme.dimens.itemHeight - TopAppBarDefaults.TopAppBarExpandedHeight- WindowInsets.statusBars.asPaddingValues()
+                .calculateTopPadding()
 
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .brashColor(
+                    topVerticalColor = artistInfoViewModel.backgroundConfig.artistInfoBrash[0],
+                    bottomVerticalColor = artistInfoViewModel.backgroundConfig.artistInfoBrash[1]
+                )
+        )
 
+        Box(
+            modifier = Modifier
+                .height(
+                    DefaultImageHeight
+                )
+        ) {
+            XyImage(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.TopCenter)
+                    .height(DefaultImageHeight),
+                model = artistInfoViewModel.artistInfoData?.pic,
+                contentDescription = stringResource(R.string.artist_cover),
+                fallback = painterResource(R.drawable.artrist_info),
+                placeholder = painterResource(R.drawable.artrist_info),
+                error = painterResource(R.drawable.artrist_info),
+                alpha = (topBarAlpha - 1) * -1
+            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .padding(horizontal = XyTheme.dimens.outerHorizontalPadding)
+            ) {
+
+                BasicText(
+                    text = artistInfoViewModel.artistInfoData?.name ?: "",
+                    modifier = Modifier.basicMarquee(
+                        iterations = Int.MAX_VALUE
+                    ),
+                    color = {
+                        Color.White.copy(alpha = (topBarAlpha - 1) * -1)
+                    },
+                    style = LocalTextStyle.current.copy(fontSize = 30.sp)
+
+                )
+                Spacer(modifier = Modifier.height(XyTheme.dimens.corner))
+                BasicText(
+                    text = artistInfoViewModel.artistInfoData?.describe
+                        ?: stringResource(R.string.no_description),
+                    modifier = Modifier,
+                    color = {
+                        Color.White.copy(alpha = (topBarAlpha - 1) * -1)
+                    },
+                    style = MaterialTheme.typography.titleSmall
+
+                )
+                Spacer(modifier = Modifier.height(XyTheme.dimens.corner))
+            }
+        }
 
         XyColumnScreen {
+            TopAppBarComponent(
+//                modifier = Modifier.align(alignment = Alignment.TopCenter),
+                title = {
+                    Box(
+                        modifier = Modifier
+                            .padding(
+                                top = WindowInsets.statusBars.asPaddingValues()
+                                    .calculateTopPadding()
+                            )
+                            .height(TopAppBarDefaults.TopAppBarExpandedHeight),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        BasicText(
+                            text = artistInfoViewModel.artistInfoData?.name ?: "",
+                            modifier = Modifier.basicMarquee(
+                                iterations = Int.MAX_VALUE
+                            ),
+                            color = {
+                                Color.White.copy(alpha = topBarAlpha)
+                            },
+                            style = LocalTextStyle.current
 
+                        )
+                    }
+
+                },
+                actions = {
+                    Box(
+                        modifier = Modifier
+                            .padding(
+                                top = WindowInsets.statusBars.asPaddingValues()
+                                    .calculateTopPadding()
+                            )
+                            .height(TopAppBarDefaults.TopAppBarExpandedHeight),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (artistInfoViewModel.dataSourceManager.dataSourceType?.ifArtistFavorite == true)
+                            IconButton(onClick = {
+                                coroutineScope.launch {
+                                    val ifFavorite =
+                                        artistInfoViewModel.dataSourceManager.setFavoriteData(
+                                            type = MusicTypeEnum.ARTIST,
+                                            itemId = artistId(),
+                                            ifFavorite = artistInfoViewModel.ifFavorite
+                                        )
+                                    artistInfoViewModel.updateFavorite(ifFavorite)
+                                }
+                            }) {
+                                Icon(
+                                    imageVector = if (artistInfoViewModel.ifFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                                    contentDescription = if (artistInfoViewModel.ifFavorite) stringResource(
+                                        R.string.favorite_added
+                                    ) else stringResource(R.string.favorite_removed),
+                                    tint = Color.Red
+                                )
+                            }
+
+                    }
+
+                },
+                navigationIcon = {
+                    Box(
+                        modifier = Modifier
+                            .padding(
+                                top = WindowInsets.statusBars.asPaddingValues()
+                                    .calculateTopPadding()
+                            )
+                            .height(TopAppBarDefaults.TopAppBarExpandedHeight),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        IconButton(
+                            onClick = {
+                                navController.popBackStack()
+                            },
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.return_home)
+                            )
+                        }
+                    }
+
+
+                },
+//                scrollBehavior = scrollBehavior
+            )
             LazyColumn(
                 state = lazyListState1,
                 modifier = Modifier
                     .fillMaxSize()
-                    .nestedScroll(scrollConnection)
+                    .nestedScroll(scrollConnection),
+                contentPadding = PaddingValues(top = DefaultImageHeight- TopAppBarDefaults.TopAppBarExpandedHeight- WindowInsets.statusBars.asPaddingValues()
+                    .calculateTopPadding())
             ) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .height(
-                                DefaultImageHeight
-                            )
-                    ) {
-                        XyImage(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .align(Alignment.TopCenter)
-                                .height(DefaultImageHeight),
-                            model = artistInfoViewModel.artistInfoData?.pic,
-                            contentDescription = stringResource(R.string.artist_cover),
-                            fallback = painterResource(R.drawable.artrist_info),
-                            placeholder = painterResource(R.drawable.artrist_info),
-                            error = painterResource(R.drawable.artrist_info),
-                            alpha = (topBarAlpha - 1) * -1
-                        )
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .align(Alignment.BottomCenter)
-                                .padding(horizontal = XyTheme.dimens.outerHorizontalPadding)
-                        ) {
-
-                            BasicText(
-                                text = artistInfoViewModel.artistInfoData?.name ?: "",
-                                modifier = Modifier.basicMarquee(
-                                    iterations = Int.MAX_VALUE
-                                ),
-                                color = {
-                                    Color.White.copy(alpha = (topBarAlpha - 1) * -1)
-                                },
-                                style = LocalTextStyle.current.copy(fontSize = 30.sp)
-
-                            )
-                            Spacer(modifier = Modifier.height(XyTheme.dimens.corner))
-                            BasicText(
-                                text = artistInfoViewModel.artistInfoData?.describe
-                                    ?: stringResource(R.string.no_description),
-                                modifier = Modifier,
-                                color = {
-                                    Color.White.copy(alpha = (topBarAlpha - 1) * -1)
-                                },
-                                style = MaterialTheme.typography.titleSmall
-
-                            )
-                            Spacer(modifier = Modifier.height(XyTheme.dimens.corner))
-                        }
-                    }
-                }
                 stickyHeader {
                     PrimaryTabRow(
                         containerColor = Color.Transparent,
@@ -336,92 +434,7 @@ fun ArtistInfoScreen(
             }
         }
 
-        TopAppBarComponent(
-            modifier = Modifier.align(alignment = Alignment.TopCenter),
-            title = {
-                Box(
-                    modifier = Modifier
-                        .padding(
-                            top = WindowInsets.statusBars.asPaddingValues()
-                                .calculateTopPadding()
-                        )
-                        .height(TopAppBarDefaults.TopAppBarExpandedHeight),
-                    contentAlignment = Alignment.Center
-                ) {
-                    BasicText(
-                        text = artistInfoViewModel.artistInfoData?.name ?: "",
-                        modifier = Modifier.basicMarquee(
-                            iterations = Int.MAX_VALUE
-                        ),
-                        color = {
-                            Color.White.copy(alpha = topBarAlpha)
-                        },
-                        style = LocalTextStyle.current
 
-                    )
-                }
-
-            },
-            actions = {
-                Box(
-                    modifier = Modifier
-                        .padding(
-                            top = WindowInsets.statusBars.asPaddingValues()
-                                .calculateTopPadding()
-                        )
-                        .height(TopAppBarDefaults.TopAppBarExpandedHeight),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (artistInfoViewModel.dataSourceManager.dataSourceType?.ifArtistFavorite == true)
-                        IconButton(onClick = {
-                            coroutineScope.launch {
-                                val ifFavorite =
-                                    artistInfoViewModel.dataSourceManager.setFavoriteData(
-                                        type = MusicTypeEnum.ARTIST,
-                                        itemId = artistId(),
-                                        ifFavorite = artistInfoViewModel.ifFavorite
-                                    )
-                                artistInfoViewModel.updateFavorite(ifFavorite)
-                            }
-                        }) {
-                            Icon(
-                                imageVector = if (artistInfoViewModel.ifFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                                contentDescription = if (artistInfoViewModel.ifFavorite) stringResource(
-                                    R.string.favorite_added
-                                ) else stringResource(R.string.favorite_removed),
-                                tint = Color.Red
-                            )
-                        }
-
-                }
-
-            },
-            navigationIcon = {
-                Box(
-                    modifier = Modifier
-                        .padding(
-                            top = WindowInsets.statusBars.asPaddingValues()
-                                .calculateTopPadding()
-                        )
-                        .height(TopAppBarDefaults.TopAppBarExpandedHeight),
-                    contentAlignment = Alignment.Center
-                ) {
-                    IconButton(
-                        onClick = {
-                            navController.popBackStack()
-                        },
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.return_home)
-                        )
-                    }
-                }
-
-
-            },
-//                scrollBehavior = scrollBehavior
-        )
     }
 
 
