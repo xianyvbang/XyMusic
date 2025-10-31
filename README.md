@@ -47,24 +47,10 @@
 
 ### 主要功能页面
 
-| <img src="./images/connection1.png" alt="" width="200"/>  | <img src="./images/home.png" alt="" width="200"/>  |
-|:---------------------------------------------------------:|:--------------------------------------------------:|
+| <img src="./images/connection1.png" alt="" width="200"/> | <img src="./images/home.png" alt="" width="200"/>  | <img src="./images/player_screen.png" alt="" width="200"/> | <img src="./images/settings.png" alt="" width="200"/> |
+|:--------------------------------------------------------:|:--------------------------------------------------:|:----------------------------------------------------------:|:-----------------------------------------------------:|
+|   <img src="./images/search.png" alt="" width="200"/>    | <img src="./images/music.png" alt="" width="200"/> |  <img src="./images/favorite.png" alt="" width="200"/>     | <img src="./images/genres.png" alt="" width="200"/>   |
 
-### 播放页面
-
-<img src="./images/player_screen.png" alt="" width="200"/>
-
-### 设置页
-
-<img src="./images/settings.png" alt="" width="200"/>
-
-### 搜索页
-
-<img src="./images/search.png" alt="" width="200"/>
-
-### 音乐列表页
-
-<img src="./images/music.png" alt="" width="200"/>
 
 ### 专辑页面
 
@@ -76,14 +62,6 @@
 | <img src="./images/artist.png" alt="" width="200"/> | <img src="./images/artist_info.png" alt="" width="200"/> |
 |:---------------------------------------------------:|:--------------------------------------------------------:|
 
-### 收藏页面
-
-<img src="./images/favorite.png" alt="" width="200"/>
-
-### 流派页面
-
-<img src="./images/genres.png" alt="" width="200"/>
-
 ## 技术提示
 
 - UI框架使用[Jetpack Compose](https://developer.android.com/develop/ui/compose/documentation?hl=zh-cn)
@@ -94,28 +72,30 @@
 - 数据存储使用[Room](https://developer.android.com/training/data-storage/room)
 - 分页列表加载使用[Paging3](https://developer.android.com/topic/libraries/architecture/paging/v3-overview)
 - 跳转页面使用[Navigation](https://developer.android.com/guide/navigation)
+- 图片显示使用[Coil](https://github.com/coil-kt/coil)
   
 
 ## 感谢开源项目
 
-[SaltUI: 衍生自Salt Player的部分 UI 组件](https://github.com/Moriafly/SaltUI)
+[SaltUI:衍生自Salt Player的部分 UI 组件](https://github.com/Moriafly/SaltUI)
 
-[Media3](https://github.com/androidx/media)
+[Media3:Jetpack Media3 support libraries for media use cases](https://github.com/androidx/media)
 
-[Coil](https://github.com/coil-kt/coil)
+[Coil:Image loading for Android and Compose Multiplatform.](https://github.com/coil-kt/coil)
 
-[Moshi](https://github.com/square/moshi)
+[Moshi:A modern JSON library for Kotlin and Java](https://github.com/square/moshi)
 
-[DialogX](https://github.com/kongzue/DialogX)
+[DialogX:DialogX对话框组件库](https://github.com/kongzue/DialogX)
 
-[Retrofit](https://github.com/square/retrofit)
+[Retrofit:A type-safe HTTP client for Android and the JVM](https://github.com/square/retrofit)
 
-[OkHttp](https://github.com/square/okhttp)
+[OkHttp:Square’s meticulous HTTP client for the JVM, Android, and GraalVM.](https://github.com/square/okhttp)
 
-[Room](https://github.com/androidx/androidx/tree/androidx-main/room)
+[Room：The Room persistence library provides an abstraction layer over SQLite to allow fluent database access while harnessing the full power of SQLite](https://github.com/androidx/androidx/tree/androidx-main/room)
 
-[ColorPicker](https://github.com/skydoves/colorpicker-compose)
-[MultiLanguages](https://github.com/getActivity/MultiLanguages)
+[ColorPicker：Kotlin Multiplatform color picker library for getting colors from any images by tapping on the desired color.](https://github.com/skydoves/colorpicker-compose)
+
+[MultiLanguages：Android 多语种适配框架，兼容高版本，适配第三方库语种](https://github.com/getActivity/MultiLanguages)
 
 ## 使用的免费图片
 
@@ -124,7 +104,4 @@
 [播放详情默认图片 作者: OpenClipart-Vectors](https://pixabay.com/zh/vectors/disc-record-retro-vinyl-audio-158357/)
 
 [艺术家详情默认图片 作者: iloarca](https://pixabay.com/zh/photos/singer-concert-red-music-band-4577668/)
-
-
-[//]: # ( todo 还有个艺术家详情页默认封面)
 
