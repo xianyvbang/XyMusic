@@ -132,7 +132,7 @@ fun ArtistInfoScreen(
             ): Offset {
                 return if (available.y > 0) Offset.Zero else Offset(
                     x = 0f,
-                    y = if (horPagerState.currentPage == 1) -lazyGridState.dispatchRawDelta(-available.y) else -lazyListState1.dispatchRawDelta(
+                    y = -lazyListState1.dispatchRawDelta(
                         -available.y
                     )
                 )
