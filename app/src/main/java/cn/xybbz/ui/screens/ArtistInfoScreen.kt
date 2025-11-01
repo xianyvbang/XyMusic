@@ -2,7 +2,6 @@ package cn.xybbz.ui.screens
 
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -21,7 +20,6 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -45,7 +43,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
@@ -54,12 +51,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -82,7 +77,6 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.viewmodel.ArtistInfoViewModel
-import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import kotlin.math.min
 
@@ -158,17 +152,17 @@ fun ArtistInfoScreen(
             .fillMaxSize()
     ) {
         val maxHeight =
-            this.maxHeight - XyTheme.dimens.itemHeight - TopAppBarDefaults.TopAppBarExpandedHeight- WindowInsets.statusBars.asPaddingValues()
-                .calculateTopPadding()
+            this.maxHeight - XyTheme.dimens.itemHeight - TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
+                .calculateTopPadding() /*- (DefaultImageHeight.times(0.2f))*/
 
-        Box(
+        /*Box(
             modifier = Modifier
                 .fillMaxSize()
                 .brashColor(
                     topVerticalColor = artistInfoViewModel.backgroundConfig.artistInfoBrash[0],
                     bottomVerticalColor = artistInfoViewModel.backgroundConfig.artistInfoBrash[1]
                 )
-        )
+        )*/
 
         Box(
             modifier = Modifier
@@ -186,7 +180,7 @@ fun ArtistInfoScreen(
                 fallback = painterResource(R.drawable.artrist_info),
                 placeholder = painterResource(R.drawable.artrist_info),
                 error = painterResource(R.drawable.artrist_info),
-                alpha = (topBarAlpha - 1) * -1
+//                alpha = (topBarAlpha - 1) * -1
             )
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -219,6 +213,23 @@ fun ArtistInfoScreen(
 
                 )
                 Spacer(modifier = Modifier.height(XyTheme.dimens.corner))
+                Spacer(modifier = Modifier.height(DefaultImageHeight.times(0.2f))
+                    .drawWithCache {
+                        onDrawBehind {
+                            drawRect(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        artistInfoViewModel.backgroundConfig.artistInfoBrash[0]
+                                    ),
+                                    startY = 0f,
+                                    endY = size.height
+                                ),
+                                blendMode = BlendMode.SrcOver
+                            )
+                        }
+
+                    })
             }
         }
 
@@ -313,9 +324,16 @@ fun ArtistInfoScreen(
                 state = lazyListState1,
                 modifier = Modifier
                     .fillMaxSize()
-                    .nestedScroll(scrollConnection),
-                contentPadding = PaddingValues(top = DefaultImageHeight- TopAppBarDefaults.TopAppBarExpandedHeight- WindowInsets.statusBars.asPaddingValues()
-                    .calculateTopPadding())
+                    .nestedScroll(scrollConnection)
+
+                    .brashColor(
+                        topVerticalColor = artistInfoViewModel.backgroundConfig.artistInfoBrash[0],
+                        bottomVerticalColor = artistInfoViewModel.backgroundConfig.artistInfoBrash[1]
+                    ),
+                contentPadding = PaddingValues(
+                    top = (DefaultImageHeight.times(0.8f)) - TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
+                        .calculateTopPadding()
+                )
             ) {
                 stickyHeader {
                     PrimaryTabRow(
