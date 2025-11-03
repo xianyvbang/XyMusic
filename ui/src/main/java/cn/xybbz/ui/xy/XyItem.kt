@@ -813,7 +813,7 @@ fun XyItemSlider(
                 )
             }
         }
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(XyTheme.dimens.contentPadding))
         XySlider(
             value = value,
             onValueChange = onValueChange,
