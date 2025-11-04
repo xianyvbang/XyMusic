@@ -333,6 +333,7 @@ interface AlbumDao {
           AND itemId NOT IN (SELECT albumId FROM newestalbum)
           and itemId not in (select albumId from playhistoryalbum)
           and itemId not in (select albumId from maximumplayalbum)
+          and itemId not in (select albumId from artistalbum)
           and ifPlaylist = false
     """
     )

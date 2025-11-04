@@ -218,7 +218,8 @@ interface XyMusicDao {
         dataType: MusicDataTypeEnum,
         artistId: String? = null,
         playlistId: String? = null,
-        albumId: String? = null
+        albumId: String? = null,
+        itemIds: List<String>? = null
     ) {
         when (dataType) {
             MusicDataTypeEnum.HOME -> {
@@ -268,7 +269,11 @@ interface XyMusicDao {
             }
 
             MusicDataTypeEnum.RECOMMEND -> {
-                removeRecommendedMusic()
+                if (!itemIds.isNullOrEmpty()) {
+                    removeRecommendedMusicByItems(itemIds)
+                } else {
+                    removeRecommendedMusic()
+                }
             }
         }
         removeByNotQuote()
@@ -343,6 +348,14 @@ interface XyMusicDao {
     """
     )
     suspend fun removeRecommendedMusic()
+
+    @Query(
+    """
+        delete from RecommendedMusic where musicId in (:itemIds) and connectionId = (select connectionId from xy_settings)
+    """
+    )
+    suspend fun removeRecommendedMusicByItems(itemIds: List<String>)
+
 
     /**
      *  删除没有被引用的数据

@@ -19,19 +19,28 @@ class RecentHistoryCache(
         val now = System.currentTimeMillis()
         val entities = songs.map { XyRecentHistory(it.itemId, connectionId, now) }
         db.recentHistoryDao.insertAll(entities)
+        val songIds = db.recentHistoryDao.maxSizeSongIds(maxSize)
         db.recentHistoryDao.trimToMaxSize(maxSize)
-        db.musicDao.removeByType(MusicDataTypeEnum.RECOMMEND)
         db.musicDao.saveBatch(
             songs,
             MusicDataTypeEnum.RECOMMEND,
             connectionId
         )
+        db.musicDao.removeByType(MusicDataTypeEnum.RECOMMEND, itemIds = songIds)
     }
 
-    suspend fun contains(songId: String): Boolean = withContext(Dispatchers.IO) {
+    suspend fun contains(items: List<XyMusic>): List<XyMusic> = withContext(Dispatchers.IO) {
         val all = db.recentHistoryDao.getAllIds()
-        songId in all
+        items.filterNot { it.itemId in all }
     }
+
+    suspend fun contains(items: List<XyMusic>, predicate: (XyMusic) -> Boolean): List<XyMusic> =
+        withContext(Dispatchers.IO) {
+            val all = db.recentHistoryDao.getAllIds()
+            items.filter {
+                it.itemId !in all && predicate.invoke(it)
+            }
+        }
 
     suspend fun getRecentIds(): List<String> = withContext(Dispatchers.IO) {
         db.recentHistoryDao.getAllIds()
