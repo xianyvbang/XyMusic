@@ -1323,7 +1323,7 @@ class NavidromeDatasourceServer @Inject constructor(
             } ?: "" else navidromeApiClient.createAudioUrl(music.id),
             album = music.albumId,
             albumName = music.album,
-            genreIds = music.genre,
+            genreIds = music.genres?.joinToString(Constants.ARTIST_DELIMITER) { it.id },
             connectionId = connectionConfigServer.getConnectionId(),
             artists = music.artist,
             artistIds = music.artistId,

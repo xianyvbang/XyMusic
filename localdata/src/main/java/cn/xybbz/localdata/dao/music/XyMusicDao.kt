@@ -629,7 +629,7 @@ interface XyMusicDao {
         select mi.* from RecommendedMusic mpm
         inner join xy_music mi on mpm.musicId = mi.itemId
         inner join xy_settings xs on mi.connectionId = xs.connectionId and mpm.connectionId = xs.connectionId
-        order by `index`
+        order by mpm.cachedAt, `index` desc 
         limit :limit
     """
     )

@@ -1150,7 +1150,8 @@ class JellyfinDatasourceServer @Inject constructor(
                     ItemFields.PRIMARY_IMAGE_ASPECT_RATIO,
                     ItemFields.SORT_NAME,
                     ItemFields.MEDIA_SOURCES,
-                    ItemFields.DATE_CREATED
+                    ItemFields.DATE_CREATED,
+                    ItemFields.GENRES
                 ),
                 searchTerm = search,
                 imageTypeLimit = 1,
@@ -1394,7 +1395,8 @@ class JellyfinDatasourceServer @Inject constructor(
             codec = mediaStream?.codec,
             lyric = "",
             playlistItemId = item.id,
-            lastPlayedDate = item.userData?.lastPlayedDate?.atZone(ZoneId.systemDefault())?.toEpochSecond() ?: 0L
+            lastPlayedDate = item.userData?.lastPlayedDate?.atZone(ZoneId.systemDefault())
+                ?.toEpochSecond() ?: 0L
         )
     }
 

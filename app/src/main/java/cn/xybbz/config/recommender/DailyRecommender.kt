@@ -171,15 +171,16 @@ class DailyRecommender(
         val startTime = System.currentTimeMillis()
         val byArtists = repo.getMusicListByArtistIds(
             topArtists.toList(),
-            pageSize = (Constants.ALBUM_MUSIC_LIST_PAGE / 3).toInt()
+            pageSize = (Constants.ALBUM_MUSIC_LIST_PAGE / 2.5).toInt()
         ) ?: emptyList() // each artist 取部分
         val endTime = System.currentTimeMillis()
         Log.i("DailyRecommender", "Fetching music by artists took ${endTime - startTime} ms")
 
+        Log.i("DailyRecommender", "Top genres: $topGenres")
         val startTime1 = System.currentTimeMillis()
         val byGenres = repo.selectMusicListByGenreIds(
             topGenres.toList(),
-            pageSize = (Constants.ALBUM_MUSIC_LIST_PAGE / 3).toInt()
+            pageSize = (Constants.ALBUM_MUSIC_LIST_PAGE / 4).toInt()
         ) ?: emptyList()
         val endTime1 = System.currentTimeMillis()
         Log.i("DailyRecommender", "Fetching music by genres took ${endTime1 - startTime1} ms")
