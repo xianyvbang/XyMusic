@@ -207,7 +207,10 @@ fun LrcViewNewCompose(
                 }
                 if (LrcServer.lcrEntryList.isEmpty())
                     item {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Text(text = stringResource(R.string.no_lyrics))
                         }
                     }
@@ -275,6 +278,7 @@ fun KaraokeLyricLineNew(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) { onClick() },
+        backgroundColor = Color.Transparent
     ) {
         Text(
             text = line.text,
@@ -326,6 +330,7 @@ fun KaraokeLyricLineNew(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) { onClick() },
+        backgroundColor = Color.Transparent
     ) {
         Row(horizontalArrangement = Arrangement.Center) {
             line.text.forEachIndexed { index, char ->
