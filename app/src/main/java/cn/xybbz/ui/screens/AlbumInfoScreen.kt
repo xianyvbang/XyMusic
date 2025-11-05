@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -316,11 +317,13 @@ fun AlbumInfoScreen(
                                                 contentDescription = stringResource(R.string.export_playlist)
                                             )
                                         },
-                                        onClick = getExportPlaylistsAlertDialogObject(onPlayTrackList = {
-                                            albumInfoViewModel.exportPlaylist()
-                                        }, onClick = {
-                                            ifShowMenu = false
-                                        })
+                                        onClick = getExportPlaylistsAlertDialogObject(
+                                            onPlayTrackList = {
+                                                albumInfoViewModel.exportPlaylist()
+                                            },
+                                            onClick = {
+                                                ifShowMenu = false
+                                            })
                                     ),
                                     MenuItemDefaultData(
                                         title = stringResource(R.string.rename_playlist),
@@ -487,7 +490,9 @@ fun AlbumInfoScreen(
                                     ifSelectCheckBox = { albumInfoViewModel.selectControl.selectMusicDataList.any { it.itemId == music.itemId } },
                                     trailingOnClick = { select ->
                                         if (select) {
-                                            albumInfoViewModel.selectControl.removeSelectMusicId(music.itemId)
+                                            albumInfoViewModel.selectControl.removeSelectMusicId(
+                                                music.itemId
+                                            )
                                         } else {
                                             albumInfoViewModel.selectControl.setSelectMusicListData(
                                                 music
@@ -505,6 +510,150 @@ fun AlbumInfoScreen(
     }
 
 }
+/*
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AlbumPlaylistViewComponent(
+    modifier: Modifier = Modifier,
+    musicListPage: LazyPagingItems<XyMusic>?,
+    lazyListState: LazyListState = rememberLazyListState(),
+    xyAlbum: XyAlbum,
+    ifFavorite: Boolean,
+    updateIfFavorite:(Boolean)->Unit
+) {
+
+    val nestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                val delta = available.y
+                return if (delta > 0) Offset.Zero else {
+                    val y =
+                        -lazyListState.dispatchRawDelta(-delta)
+                    Offset(
+                        x = 0f,
+                        y = y
+                    )
+                }
+            }
+        }
+    }
+
+    val context = LocalContext.current
+    BoxWithConstraints {
+        val maxHeight = this.maxHeight
+
+            SwipeRefreshListComponent(
+                collectAsLazyPagingItems = musicListPage,
+                lazyState = lazyListState,
+                lazyColumBottom = null,
+                bottomItem = null,
+                modifier = Modifier
+                    .nestedScroll(nestedScrollConnection)
+            ) { list ->
+                item {
+                    MusicAlbumInfoComponent(
+                        onData = {
+                            xyAlbum
+                        },
+                        onIfFavorite = { ifFavorite },
+                        onSetIfFavorite = { updateIfFavorite(it) },
+                        onIfSavePlaybackHistory = { albumInfoViewModel.ifSavePlaybackHistory },
+                        onSetIfSavePlaybackHistory = {
+                            albumInfoViewModel.setIfSavePlaybackHistoryData(
+                                itemId,
+                                it
+                            )
+                        },
+                        dataSourceManager = albumInfoViewModel.dataSourceManager,
+                        musicController = albumInfoViewModel.musicController
+                    )
+                }
+                stickyHeader(key = 2) { headerIndex ->
+                    StickyHeaderOperationParent(
+                        ifEnabled = true,
+                        onIfOpenSelect = { ifOpenSelect },
+                        onSetIfOpenSelect = { ifOpenSelect = it },
+                        onIfAllSelect = { ifAllSelect },
+                        onSetIfAllSelect = { ifAllSelect = it },
+                        onMusicListPage = { musicListPage },
+                        albumInfoViewModel = albumInfoViewModel,
+                        musicListPage = musicListPage,
+                        sortBy = sortBy
+                    )
+                }
+
+
+                item {
+                    LazyListComponent(
+                        modifier = Modifier.height(
+                            maxHeight - DefaultAlbumInfoHeight - XyTheme.dimens.contentPadding - TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
+                                .calculateTopPadding() + XyTheme.dimens.snackBarPlayerHeight + WindowInsets.navigationBars.asPaddingValues()
+                                .calculateBottomPadding()
+                        ),
+                        collectAsLazyPagingItems = musicListPage
+                    ) {
+                        items(
+                            list.itemCount,
+                            key = list.itemKey { item -> item.itemId },
+                            contentType = list.itemContentType { MusicTypeEnum.MUSIC }
+                        ) { index ->
+
+                            list[index]?.let { music ->
+                                MusicItemIndexComponent(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    backgroundColor = Color.Transparent,
+                                    onMusicData = { music },
+                                    onIfFavorite = {
+                                        if (favoriteList.containsKey(music.itemId)) {
+                                            favoriteList.getOrDefault(music.itemId, false)
+                                        } else {
+                                            music.ifFavoriteStatus
+                                        }
+                                    },
+                                    index = index + 1,
+                                    textColor = if (albumInfoViewModel.musicController.musicInfo?.itemId == music.itemId)
+                                        MaterialTheme.colorScheme.primary
+                                    else
+                                        MaterialTheme.colorScheme.onSurface,
+                                    subordination =
+                                        if (albumInfoViewModel.albumPlayerHistoryProgressMap.containsKey(
+                                                music.itemId
+                                            )
+                                        ) "已播: ${albumInfoViewModel.albumPlayerHistoryProgressMap[music.itemId]}%" else music.artists
+                                            ?: "",
+                                    onMusicPlay = { parameter ->
+                                        coroutineScope.launch {
+                                            albumInfoViewModel.musicPlayContext.album(
+                                                parameter
+                                            )
+                                        }
+                                    },
+                                    ifSelect = ifOpenSelect,
+                                    ifSelectCheckBox = { albumInfoViewModel.selectControl.selectMusicDataList.any { it.itemId == music.itemId } },
+                                    trailingOnClick = { select ->
+                                        if (select) {
+                                            albumInfoViewModel.selectControl.removeSelectMusicId(
+                                                music.itemId
+                                            )
+                                        } else {
+                                            albumInfoViewModel.selectControl.setSelectMusicListData(
+                                                music
+                                            )
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+}*/
 
 /**
  * 音乐列表操作栏
@@ -582,6 +731,9 @@ private fun MusicListOperation(
                 }
             }
             .height(XyTheme.dimens.itemHeight),
+        paddingValues = PaddingValues(
+            horizontal = XyTheme.dimens.outerHorizontalPadding
+        ),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -716,7 +868,7 @@ private fun MusicAlbumInfoComponent(
 
         }
         //修改为切换开启播放历史
-        XyRow {
+        XyRow(paddingValues = PaddingValues(top = XyTheme.dimens.outerVerticalPadding)) {
             XyItemSwitcherNotPadding(
                 state = onIfSavePlaybackHistory(),
                 onChange = { onSetIfSavePlaybackHistory(it) },
