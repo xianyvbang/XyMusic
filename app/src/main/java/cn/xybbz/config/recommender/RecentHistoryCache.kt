@@ -26,7 +26,8 @@ class RecentHistoryCache(
             MusicDataTypeEnum.RECOMMEND,
             connectionId
         )
-        db.musicDao.removeByType(MusicDataTypeEnum.RECOMMEND, itemIds = songIds)
+        if (songIds.isNotEmpty())
+            db.musicDao.removeByType(MusicDataTypeEnum.RECOMMEND, itemIds = songIds)
     }
 
     suspend fun contains(items: List<XyMusic>): List<XyMusic> = withContext(Dispatchers.IO) {
