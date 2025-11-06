@@ -51,7 +51,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cn.xybbz.R
 import cn.xybbz.common.utils.LrcUtils.formatTime
 import cn.xybbz.config.lrc.LrcServer
-import cn.xybbz.ui.components.LrcEntry
+import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumn
@@ -255,7 +255,7 @@ fun LrcViewNewCompose(
 
 @Composable
 fun KaraokeLyricLineNew(
-    line: LrcEntry,
+    line: LrcEntryData,
     highlight: Boolean,
     onClick: () -> Unit
 ) {
@@ -302,7 +302,7 @@ fun KaraokeLyricLineNew(
 
 @Composable
 fun KaraokeLyricLineNew(
-    line: LrcEntry,
+    line: LrcEntryData,
     currentTimeMillis: Long,
     highlight: Boolean,
     onClick: () -> Unit

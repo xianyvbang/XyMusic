@@ -32,6 +32,7 @@ import cn.xybbz.common.utils.CharUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.entity.api.LoginSuccessData
+import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchAndOrder
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.toSearchAndOrder
@@ -44,7 +45,6 @@ import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import cn.xybbz.ui.components.LrcEntry
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import okhttp3.OkHttpClient
@@ -476,11 +476,11 @@ class EmbyDatasourceServer @Inject constructor(
      * @param [music] 音乐id
      * @return 返回歌词列表
      */
-    override suspend fun getMusicLyricList(music: XyMusic): List<LrcEntry>? {
+    override suspend fun getMusicLyricList(music: XyMusic): List<LrcEntryData>? {
         return if (music.ifLyric) {
             val lyrics = embyApiClient.lyricsApi().getLyrics(music.itemId)
             lyrics.lyrics.map {
-                LrcEntry(startTime = it.start!! / LYRICS_AMPLIFICATION, text = it.text)
+                LrcEntryData(startTime = it.start!! / LYRICS_AMPLIFICATION, text = it.text)
             }
         } else {
             null

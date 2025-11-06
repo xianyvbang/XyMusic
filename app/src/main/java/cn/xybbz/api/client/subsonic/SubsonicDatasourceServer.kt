@@ -30,6 +30,7 @@ import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.entity.api.LoginSuccessData
+import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.config.DatabaseClient
@@ -42,7 +43,6 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.page.defaultLocalPager
-import cn.xybbz.ui.components.LrcEntry
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
@@ -306,7 +306,7 @@ class SubsonicDatasourceServer @Inject constructor(
      * @param [music] 音乐id
      * @return 返回歌词列表
      */
-    override suspend fun getMusicLyricList(music: XyMusic): List<LrcEntry>? {
+    override suspend fun getMusicLyricList(music: XyMusic): List<LrcEntryData>? {
         return if (music.ifLyric) {
             val lyrics = subsonicApiClient.lyricsApi().getLyrics(music.artists,music.name)
             lyrics.subsonicResponse.lyrics?.value?.let {
