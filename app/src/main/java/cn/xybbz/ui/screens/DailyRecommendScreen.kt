@@ -26,6 +26,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.ui.components.LazyLoadingAndStatus
 import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.show
@@ -90,8 +91,8 @@ fun DailyRecommendScreen(
             LazyColumnNotComponent() {
                 itemsIndexed(
                     dailyRecommendViewModel.recommendedMusicList,
-                    key = { index, item -> item.itemId },
-                    contentType = { index, item -> MusicTypeEnum.MUSIC }
+                    key = { _, item -> item.itemId },
+                    contentType = { _, _ -> MusicTypeEnum.MUSIC }
                 ) { index, music ->
                     MusicItemComponent(
                         onMusicData = { music },
@@ -121,6 +122,12 @@ fun DailyRecommendScreen(
                                     ?.show()
                             }
                         }
+                    )
+                }
+                item {
+                    LazyLoadingAndStatus(
+                        text = stringResource(R.string.reached_bottom),
+                        ifLoading = false
                     )
                 }
             }

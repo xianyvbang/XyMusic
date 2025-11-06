@@ -2,8 +2,8 @@ package cn.xybbz.common.utils
 
 import android.text.TextUtils
 import android.text.format.DateUtils
+import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.dto.NetworkLrcDto
-import cn.xybbz.ui.components.LrcEntry
 import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -14,24 +14,25 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
 import java.util.regex.Pattern
+import kotlin.collections.isNotEmpty
+import kotlin.collections.isNullOrEmpty
+import kotlin.collections.sort
+import kotlin.collections.sortedBy
 
 
 object LrcUtils {
 
-    const val LRC_SUFFIX = "lrc"
-    const val TXT_SUFFIX = "txt"
-
     /**
      * 从文本解析歌词
      */
-    fun parseLrc(lrcText: String): List<LrcEntry> {
+    fun parseLrc(lrcText: String): List<LrcEntryData> {
         if (TextUtils.isEmpty(lrcText)) {
             return emptyList()
         }
-        val entryList: MutableList<LrcEntry> = mutableListOf()
+        val entryList: MutableList<LrcEntryData> = mutableListOf()
         val array = lrcText.lines()
         for (line in array) {
-            val list: List<LrcEntry> = parseLine(line)
+            val list: List<LrcEntryData> = parseLine(line)
             if (list.isNotEmpty()) {
                 entryList.addAll(list)
             }
@@ -52,7 +53,7 @@ object LrcUtils {
     /**
      * 解析一行歌词
      */
-    fun parseLine(lineText: String): List<LrcEntry> {
+    fun parseLine(lineText: String): List<LrcEntryData> {
         var line = lineText
         if (TextUtils.isEmpty(line)) {
             return listOf()
@@ -65,7 +66,7 @@ object LrcUtils {
         }
         val times = lineMatcher.group(1) ?: ""
         val text = lineMatcher.group(3)
-        val entryList: MutableList<LrcEntry> = ArrayList()
+        val entryList: MutableList<LrcEntryData> = ArrayList()
 
         // [00:17]
         val timeMatcher = PATTERN_TIME.matcher(times)
@@ -79,7 +80,7 @@ object LrcUtils {
                 mil *= 10
             }
             val time = min * DateUtils.MINUTE_IN_MILLIS + sec * DateUtils.SECOND_IN_MILLIS + mil
-            entryList.add(LrcEntry(time, text ?: ""))
+            entryList.add(LrcEntryData(time, text ?: ""))
         }
         return entryList
     }
@@ -96,13 +97,13 @@ object LrcUtils {
     }
 
 
-    private val PATTERN_LINE = Pattern.compile("((\\[\\d\\d:\\d\\d\\.\\d{2,3}\\])+)(.+)")
-    private val PATTERN_TIME = Pattern.compile("\\[(\\d\\d):(\\d\\d)\\.(\\d{2,3})\\]")
+    private val PATTERN_LINE = Pattern.compile("((\\[\\d\\d:\\d\\d\\.\\d{2,3}])+)(.+)")
+    private val PATTERN_TIME = Pattern.compile("\\[(\\d\\d):(\\d\\d)\\.(\\d{2,3})]")
 
     /**
      * 从文件解析双语歌词
      */
-    fun parseLrc(lrcFiles: Array<File?>?): List<LrcEntry>? {
+    fun parseLrc(lrcFiles: Array<File?>?): List<LrcEntryData>? {
         if (lrcFiles == null || lrcFiles.size != 2 || lrcFiles[0] == null) {
             return null
         }
@@ -125,16 +126,16 @@ object LrcUtils {
     /**
      * 从文件解析歌词
      */
-    private fun parseLrc(lrcFile: File?): List<LrcEntry>? {
+    private fun parseLrc(lrcFile: File?): List<LrcEntryData>? {
         if (lrcFile == null || !lrcFile.exists()) {
             return null
         }
-        val entryList: MutableList<LrcEntry> = ArrayList()
+        val entryList: MutableList<LrcEntryData> = ArrayList()
         try {
             val br = BufferedReader(InputStreamReader(FileInputStream(lrcFile), "utf-8"))
             var line: String
             while (br.readLine().also { line = it } != null) {
-                val list: List<LrcEntry>? = parseLine(line)
+                val list: List<LrcEntryData>? = parseLine(line)
                 if (!list.isNullOrEmpty()) {
                     entryList.addAll(list)
                 }
@@ -150,14 +151,14 @@ object LrcUtils {
     /**
      * 从文本解析双语歌词
      */
-    fun parseLrc(lrcTexts: Array<String>?): List<LrcEntry>? {
+    fun parseLrc(lrcTexts: Array<String>?): List<LrcEntryData>? {
         if (lrcTexts == null || lrcTexts.size != 2 || TextUtils.isEmpty(lrcTexts[0])) {
             return null
         }
         val mainLrcText = lrcTexts[0]
         val secondLrcText = lrcTexts[1]
-        val mainEntryList: List<LrcEntry>? = parseLrc(mainLrcText)
-        val secondEntryList: List<LrcEntry>? = parseLrc(secondLrcText)
+        val mainEntryList: List<LrcEntryData>? = parseLrc(mainLrcText)
+        val secondEntryList: List<LrcEntryData>? = parseLrc(secondLrcText)
         if (mainEntryList != null && secondEntryList != null) {
             for (mainEntry in mainEntryList) {
                 for (secondEntry in secondEntryList) {

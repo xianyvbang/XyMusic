@@ -7,16 +7,19 @@ import androidx.compose.runtime.setValue
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.ui.components.LrcEntry
 import kotlinx.coroutines.launch
+import kotlin.collections.indexOfFirst
+import kotlin.collections.isNotEmpty
+import kotlin.collections.sortedBy
 
 object LrcServer {
 
     /**
      * 歌词信息
      */
-    var lcrEntryList by mutableStateOf<List<LrcEntry>>(emptyList())
+    var lcrEntryList by mutableStateOf<List<LrcEntryData>>(emptyList())
         private set
 
 
@@ -52,7 +55,7 @@ object LrcServer {
     /**
      * 根据歌词列表创建歌词列表
      */
-    fun createLrcList(lrcList: List<LrcEntry>?) {
+    fun createLrcList(lrcList: List<LrcEntryData>?) {
         lcrEntryList = emptyList()
         lrcText = ""
         indexData = -1

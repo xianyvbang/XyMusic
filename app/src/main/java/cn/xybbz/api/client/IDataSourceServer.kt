@@ -8,6 +8,7 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.PlaylistParser
+import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.Sort
@@ -17,7 +18,6 @@ import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import cn.xybbz.ui.components.LrcEntry
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
@@ -144,7 +144,7 @@ interface IDataSourceServer {
      * @param [music] 音乐id
      * @return 返回歌词列表
      */
-    suspend fun getMusicLyricList(music: XyMusic): List<LrcEntry>?
+    suspend fun getMusicLyricList(music: XyMusic): List<LrcEntryData>?
 
     /**
      * 根据艺术家获得专辑列表

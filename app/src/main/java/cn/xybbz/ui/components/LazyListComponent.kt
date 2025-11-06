@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
@@ -309,29 +310,34 @@ fun LazyLoadingAndStatus(text: String, ifLoading: Boolean) {
         contentAlignment = Alignment.Center
     ) {
         val lineWidth = this.maxWidth / 4
+        LazyLoadingAndStatusInfo(text = text, lineWidth = lineWidth, ifLoading = ifLoading)
+    }
+}
+
+@Composable
+fun LazyLoadingAndStatusInfo(text: String, lineWidth: Dp, ifLoading: Boolean) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        HorizontalDivider(modifier = Modifier.width(lineWidth))
+        Spacer(modifier = Modifier.width(XyTheme.dimens.corner))
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            HorizontalDivider(modifier = Modifier.width(lineWidth))
-            Spacer(modifier = Modifier.width(XyTheme.dimens.corner))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                if (ifLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .size(24.dp),
-                        color = Color.Gray,
-                        strokeWidth = 2.dp
-                    )
-                    Spacer(modifier = Modifier.width(XyTheme.dimens.corner))
-                }
-                XyItemText(text = text)
+            if (ifLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(24.dp),
+                    color = Color.Gray,
+                    strokeWidth = 2.dp
+                )
+                Spacer(modifier = Modifier.width(XyTheme.dimens.corner))
             }
-            Spacer(modifier = Modifier.width(XyTheme.dimens.corner))
-            HorizontalDivider(modifier = Modifier.width(lineWidth))
+            XyItemText(text = text)
         }
+        Spacer(modifier = Modifier.width(XyTheme.dimens.corner))
+        HorizontalDivider(modifier = Modifier.width(lineWidth))
     }
 }

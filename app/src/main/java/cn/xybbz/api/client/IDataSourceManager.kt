@@ -26,6 +26,7 @@ import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.entity.data.LoginStateData
+import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.Sort
@@ -40,7 +41,6 @@ import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import cn.xybbz.ui.components.LrcEntry
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -473,7 +473,7 @@ class IDataSourceManager(
      * @param [music] 音乐id
      * @return 返回歌词列表
      */
-    override suspend fun getMusicLyricList(music: XyMusic): List<LrcEntry>? {
+    override suspend fun getMusicLyricList(music: XyMusic): List<LrcEntryData>? {
         return try {
             dataSourceServer.getMusicLyricList(music)
         } catch (e: SocketTimeoutException) {
