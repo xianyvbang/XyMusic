@@ -19,6 +19,7 @@ import cn.xybbz.ui.screens.CacheLimitScreen
 import cn.xybbz.ui.screens.ConnectionConfigInfoScreen
 import cn.xybbz.ui.screens.ConnectionManagement
 import cn.xybbz.ui.screens.ConnectionScreen
+import cn.xybbz.ui.screens.DailyRecommendScreen
 import cn.xybbz.ui.screens.FavoriteScreen
 import cn.xybbz.ui.screens.GenresInfoScreen
 import cn.xybbz.ui.screens.GenresScreen
@@ -156,6 +157,10 @@ fun RouterCompose(
                     connectionId = selectLibrary.connectionId,
                     thisLibraryId = selectLibrary.libraryId
                 )
+            }
+
+            extremityComposable<RouterConstants.DailyRecommend> {
+                DailyRecommendScreen()
             }
         }
     }

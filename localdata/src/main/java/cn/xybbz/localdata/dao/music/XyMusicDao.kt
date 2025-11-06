@@ -350,7 +350,7 @@ interface XyMusicDao {
     suspend fun removeRecommendedMusic()
 
     @Query(
-    """
+        """
         delete from RecommendedMusic where musicId in (:itemIds) and connectionId = (select connectionId from xy_settings)
     """
     )

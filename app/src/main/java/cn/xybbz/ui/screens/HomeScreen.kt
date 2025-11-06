@@ -43,6 +43,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
@@ -98,6 +99,7 @@ import cn.xybbz.ui.xy.XyItemMedium
 import cn.xybbz.ui.xy.XyItemTabBigButton
 import cn.xybbz.ui.xy.XyItemText
 import cn.xybbz.ui.xy.XyItemTextHorizontal
+import cn.xybbz.ui.xy.XyItemTextLarge
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.HomeViewModel
 import kotlinx.coroutines.launch
@@ -618,6 +620,12 @@ fun HomeScreen(
                                             R.string.recommended_music
                                         )
                                     )
+                                }
+
+                                TextButton(onClick = composeClick {
+                                    navHostController.navigate(RouterConstants.DailyRecommend)
+                                },contentPadding = PaddingValues()) {
+                                    XyItemTextLarge(text = "查看更多",color = Color(0xFFC6E5F5))
                                 }
 
                             }

@@ -37,6 +37,10 @@ fun XyRoundedSurface(
 fun RoundedSurfaceColumnPadding(
     modifier: Modifier = Modifier,
     color: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
+    contentPaddingValues: PaddingValues = PaddingValues(
+        horizontal = XyTheme.dimens.outerHorizontalPadding,
+        vertical = XyTheme.dimens.outerVerticalPadding
+    ),
     horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -45,8 +49,7 @@ fun RoundedSurfaceColumnPadding(
         modifier = modifier
             .fillMaxWidth()
             .padding(
-                horizontal = XyTheme.dimens.outerHorizontalPadding,
-                vertical = XyTheme.dimens.outerVerticalPadding
+                contentPaddingValues
             ),
         color = color,
         shape = RoundedCornerShape(XyTheme.dimens.corner),

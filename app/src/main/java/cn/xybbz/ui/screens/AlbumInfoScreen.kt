@@ -428,7 +428,6 @@ fun AlbumInfoScreen(
                 }
                 stickyHeader(key = 2) { headerIndex ->
                     StickyHeaderOperationParent(
-                        ifEnabled = true,
                         onIfOpenSelect = { ifOpenSelect },
                         onSetIfOpenSelect = { ifOpenSelect = it },
                         onIfAllSelect = { ifAllSelect },
@@ -440,11 +439,10 @@ fun AlbumInfoScreen(
                     )
                 }
 
-
                 item {
                     LazyListComponent(
                         modifier = Modifier.height(
-                            maxHeight - DefaultAlbumInfoHeight - XyTheme.dimens.contentPadding - TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
+                            maxHeight - DefaultAlbumInfoHeight - /*XyTheme.dimens.contentPadding -*/ TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
                                 .calculateTopPadding() + XyTheme.dimens.snackBarPlayerHeight + WindowInsets.navigationBars.asPaddingValues()
                                 .calculateBottomPadding()
                         ),
@@ -504,156 +502,10 @@ fun AlbumInfoScreen(
                         }
                     }
                 }
-
             }
         }
     }
-
 }
-/*
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AlbumPlaylistViewComponent(
-    modifier: Modifier = Modifier,
-    musicListPage: LazyPagingItems<XyMusic>?,
-    lazyListState: LazyListState = rememberLazyListState(),
-    xyAlbum: XyAlbum,
-    ifFavorite: Boolean,
-    updateIfFavorite:(Boolean)->Unit
-) {
-
-    val nestedScrollConnection = remember {
-        object : NestedScrollConnection {
-            override fun onPreScroll(
-                available: Offset,
-                source: NestedScrollSource
-            ): Offset {
-                val delta = available.y
-                return if (delta > 0) Offset.Zero else {
-                    val y =
-                        -lazyListState.dispatchRawDelta(-delta)
-                    Offset(
-                        x = 0f,
-                        y = y
-                    )
-                }
-            }
-        }
-    }
-
-    val context = LocalContext.current
-    BoxWithConstraints {
-        val maxHeight = this.maxHeight
-
-            SwipeRefreshListComponent(
-                collectAsLazyPagingItems = musicListPage,
-                lazyState = lazyListState,
-                lazyColumBottom = null,
-                bottomItem = null,
-                modifier = Modifier
-                    .nestedScroll(nestedScrollConnection)
-            ) { list ->
-                item {
-                    MusicAlbumInfoComponent(
-                        onData = {
-                            xyAlbum
-                        },
-                        onIfFavorite = { ifFavorite },
-                        onSetIfFavorite = { updateIfFavorite(it) },
-                        onIfSavePlaybackHistory = { albumInfoViewModel.ifSavePlaybackHistory },
-                        onSetIfSavePlaybackHistory = {
-                            albumInfoViewModel.setIfSavePlaybackHistoryData(
-                                itemId,
-                                it
-                            )
-                        },
-                        dataSourceManager = albumInfoViewModel.dataSourceManager,
-                        musicController = albumInfoViewModel.musicController
-                    )
-                }
-                stickyHeader(key = 2) { headerIndex ->
-                    StickyHeaderOperationParent(
-                        ifEnabled = true,
-                        onIfOpenSelect = { ifOpenSelect },
-                        onSetIfOpenSelect = { ifOpenSelect = it },
-                        onIfAllSelect = { ifAllSelect },
-                        onSetIfAllSelect = { ifAllSelect = it },
-                        onMusicListPage = { musicListPage },
-                        albumInfoViewModel = albumInfoViewModel,
-                        musicListPage = musicListPage,
-                        sortBy = sortBy
-                    )
-                }
-
-
-                item {
-                    LazyListComponent(
-                        modifier = Modifier.height(
-                            maxHeight - DefaultAlbumInfoHeight - XyTheme.dimens.contentPadding - TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
-                                .calculateTopPadding() + XyTheme.dimens.snackBarPlayerHeight + WindowInsets.navigationBars.asPaddingValues()
-                                .calculateBottomPadding()
-                        ),
-                        collectAsLazyPagingItems = musicListPage
-                    ) {
-                        items(
-                            list.itemCount,
-                            key = list.itemKey { item -> item.itemId },
-                            contentType = list.itemContentType { MusicTypeEnum.MUSIC }
-                        ) { index ->
-
-                            list[index]?.let { music ->
-                                MusicItemIndexComponent(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    backgroundColor = Color.Transparent,
-                                    onMusicData = { music },
-                                    onIfFavorite = {
-                                        if (favoriteList.containsKey(music.itemId)) {
-                                            favoriteList.getOrDefault(music.itemId, false)
-                                        } else {
-                                            music.ifFavoriteStatus
-                                        }
-                                    },
-                                    index = index + 1,
-                                    textColor = if (albumInfoViewModel.musicController.musicInfo?.itemId == music.itemId)
-                                        MaterialTheme.colorScheme.primary
-                                    else
-                                        MaterialTheme.colorScheme.onSurface,
-                                    subordination =
-                                        if (albumInfoViewModel.albumPlayerHistoryProgressMap.containsKey(
-                                                music.itemId
-                                            )
-                                        ) "已播: ${albumInfoViewModel.albumPlayerHistoryProgressMap[music.itemId]}%" else music.artists
-                                            ?: "",
-                                    onMusicPlay = { parameter ->
-                                        coroutineScope.launch {
-                                            albumInfoViewModel.musicPlayContext.album(
-                                                parameter
-                                            )
-                                        }
-                                    },
-                                    ifSelect = ifOpenSelect,
-                                    ifSelectCheckBox = { albumInfoViewModel.selectControl.selectMusicDataList.any { it.itemId == music.itemId } },
-                                    trailingOnClick = { select ->
-                                        if (select) {
-                                            albumInfoViewModel.selectControl.removeSelectMusicId(
-                                                music.itemId
-                                            )
-                                        } else {
-                                            albumInfoViewModel.selectControl.setSelectMusicListData(
-                                                music
-                                            )
-                                        }
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-
-            }
-        }
-    }
-}*/
 
 /**
  * 音乐列表操作栏
@@ -809,7 +661,8 @@ private fun MusicAlbumInfoComponent(
     onIfSavePlaybackHistory: () -> Boolean,
     onSetIfSavePlaybackHistory: (Boolean) -> Unit,
     dataSourceManager: IDataSourceManager,
-    musicController: MusicController
+    musicController: MusicController,
+    ifShowPlaybackHistory: Boolean = true
 ) {
     val coroutineScope = rememberCoroutineScope()
 
@@ -867,34 +720,35 @@ private fun MusicAlbumInfoComponent(
             }
 
         }
+        if (ifShowPlaybackHistory)
         //修改为切换开启播放历史
-        XyRow(paddingValues = PaddingValues(top = XyTheme.dimens.outerVerticalPadding)) {
-            XyItemSwitcherNotPadding(
-                state = onIfSavePlaybackHistory(),
-                onChange = { onSetIfSavePlaybackHistory(it) },
-                text = stringResource(R.string.enable_playback_history)
-            )
-
-            IconButton(onClick = composeClick {
-                coroutineScope.launch {
-                    val ifFavoriteData = dataSourceManager.setFavoriteData(
-                        type = MusicTypeEnum.ALBUM,
-                        itemId = onData()?.itemId ?: "",
-                        musicController = musicController,
-                        ifFavorite = onIfFavorite()
-                    )
-                    onSetIfFavorite(ifFavoriteData)
-                }
-            }) {
-                Icon(
-                    imageVector = if (onIfFavorite()) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                    contentDescription = if (onIfFavorite()) stringResource(R.string.favorite_added) else stringResource(
-                        R.string.favorite_removed
-                    ),
-                    tint = if (onIfFavorite()) Color.Red else LocalContentColor.current
+            XyRow(paddingValues = PaddingValues(top = XyTheme.dimens.outerVerticalPadding)) {
+                XyItemSwitcherNotPadding(
+                    state = onIfSavePlaybackHistory(),
+                    onChange = { onSetIfSavePlaybackHistory(it) },
+                    text = stringResource(R.string.enable_playback_history)
                 )
+
+                IconButton(onClick = composeClick {
+                    coroutineScope.launch {
+                        val ifFavoriteData = dataSourceManager.setFavoriteData(
+                            type = MusicTypeEnum.ALBUM,
+                            itemId = onData()?.itemId ?: "",
+                            musicController = musicController,
+                            ifFavorite = onIfFavorite()
+                        )
+                        onSetIfFavorite(ifFavoriteData)
+                    }
+                }) {
+                    Icon(
+                        imageVector = if (onIfFavorite()) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                        contentDescription = if (onIfFavorite()) stringResource(R.string.favorite_added) else stringResource(
+                            R.string.favorite_removed
+                        ),
+                        tint = if (onIfFavorite()) Color.Red else LocalContentColor.current
+                    )
+                }
             }
-        }
     }
 
 }
@@ -975,7 +829,6 @@ private fun StickyHeaderOperation(
 
 @Composable
 private fun StickyHeaderOperationParent(
-    ifEnabled: Boolean = true,
     onIfOpenSelect: () -> Boolean,
     onSetIfOpenSelect: (Boolean) -> Unit,
     onIfAllSelect: () -> Boolean,
@@ -987,60 +840,60 @@ private fun StickyHeaderOperationParent(
 ) {
 
     val mainViewModel = LocalMainViewModel.current
-    if (ifEnabled)
-        StickyHeaderOperation(
-            onIfOpenSelect = onIfOpenSelect,
-            onSetIfOpenSelect = onSetIfOpenSelect,
-            onIfAllSelect = onIfAllSelect,
-            onSetIfAllSelect = onSetIfAllSelect,
-            onMusicListPage = onMusicListPage,
-            albumInfoViewModel = albumInfoViewModel,
-            sortContent = {
-                SelectSortBottomSheetComponent(
-                    onIfYearFilter = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifYearFilter },
-                    onIfSelectOneYear = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifMusicSelectOneYear },
-                    onIfStartEndYear = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifStartEndYear },
-                    onIfSort = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifMusicSort },
-                    onIfFavoriteFilter = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifMusicFavoriteFilter },
-                    onSortTypeClick = {
-                        albumInfoViewModel.setSortedData(it, { musicListPage.refresh() })
-                    },
-                    onSortType = { sortBy.sortType },
-                    onFilterEraTypeList = { mainViewModel.eraItemList },
-                    onFilterEraTypeClick = {
-                        albumInfoViewModel.setFilterEraType(
-                            it,
-                            { musicListPage.refresh() })
-                    },
-                    onIfFavorite = { sortBy.isFavorite == true },
-                    setFavorite = {
-                        albumInfoViewModel.setFavorite(
-                            it,
-                            { musicListPage.refresh() })
-                    },
-                    sortTypeList = listOf(
-                        SortTypeEnum.CREATE_TIME_ASC,
-                        SortTypeEnum.CREATE_TIME_DESC,
-                        SortTypeEnum.MUSIC_NAME_ASC,
-                        SortTypeEnum.MUSIC_NAME_DESC
-                    ),
-                    onYearSet = { mainViewModel.yearSet },
-                    onSelectYear = { sortBy.yearList?.get(0) },
-                    onSetSelectYear = { year ->
-                        year?.let {
-                            albumInfoViewModel.setFilterYear(
-                                listOf(it), { musicListPage.refresh() }
-                            )
-                        }
-                    },
-                    onSelectRangeYear = { sortBy.yearList },
-                    onSetSelectRangeYear = { years ->
+    StickyHeaderOperation(
+        onIfOpenSelect = onIfOpenSelect,
+        onSetIfOpenSelect = onSetIfOpenSelect,
+        onIfAllSelect = onIfAllSelect,
+        onSetIfAllSelect = onSetIfAllSelect,
+        onMusicListPage = onMusicListPage,
+        albumInfoViewModel = albumInfoViewModel,
+        sortContent = {
+            SelectSortBottomSheetComponent(
+                onIfYearFilter = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifYearFilter },
+                onIfSelectOneYear = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifMusicSelectOneYear },
+                onIfStartEndYear = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifStartEndYear },
+                onIfSort = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifMusicSort },
+                onIfFavoriteFilter = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifMusicFavoriteFilter },
+                onSortTypeClick = {
+                    albumInfoViewModel.setSortedData(it, { musicListPage.refresh() })
+                },
+                onSortType = { sortBy.sortType },
+                onFilterEraTypeList = { mainViewModel.eraItemList },
+                onFilterEraTypeClick = {
+                    albumInfoViewModel.setFilterEraType(
+                        it,
+                        { musicListPage.refresh() })
+                },
+                onIfFavorite = { sortBy.isFavorite == true },
+                setFavorite = {
+                    albumInfoViewModel.setFavorite(
+                        it,
+                        { musicListPage.refresh() })
+                },
+                sortTypeList = listOf(
+                    SortTypeEnum.CREATE_TIME_ASC,
+                    SortTypeEnum.CREATE_TIME_DESC,
+                    SortTypeEnum.MUSIC_NAME_ASC,
+                    SortTypeEnum.MUSIC_NAME_DESC
+                ),
+                onYearSet = { mainViewModel.yearSet },
+                onSelectYear = { sortBy.yearList?.get(0) },
+                onSetSelectYear = { year ->
+                    year?.let {
                         albumInfoViewModel.setFilterYear(
-                            years.mapNotNull { it },
-                            { musicListPage.refresh() })
+                            listOf(it), { musicListPage.refresh() }
+                        )
                     }
-                )
-            }
-        )
+                },
+                onSelectRangeYear = { sortBy.yearList },
+                onSetSelectRangeYear = { years ->
+                    albumInfoViewModel.setFilterYear(
+                        years.mapNotNull { it },
+                        { musicListPage.refresh() })
+                }
+            )
+        }
+    )
+
 
 }
