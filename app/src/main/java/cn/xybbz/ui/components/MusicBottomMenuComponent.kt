@@ -1027,7 +1027,10 @@ fun MusicInfoBottomComponent(
 
         LazyColumnBottomSheetComponent {
             item {
-                RoundedSurfaceColumnPadding(color = Color.Transparent) {
+                RoundedSurfaceColumnPadding(
+                    color = Color.Transparent,
+                    contentPaddingValues = PaddingValues(vertical = XyTheme.dimens.outerVerticalPadding)
+                ) {
                     XyItemTextPadding(text = stringResource(R.string.title), sub = musicInfo.name)
                     XyItemTextPadding(
                         text = stringResource(R.string.artist),
