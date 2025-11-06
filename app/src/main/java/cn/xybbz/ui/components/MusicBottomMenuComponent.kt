@@ -1060,14 +1060,14 @@ fun MusicInfoBottomComponent(
                     )
                     XyItemTextPadding(
                         text = stringResource(R.string.bitrate),
-                        sub = "${musicInfo.bitRate ?: 0}kbps"
-                    )
-                    XyItemTextPadding(
-                        text = stringResource(R.string.kbps),
-                        sub = "${musicInfo.sampleRate ?: 0}Hz"
+                        sub = "${(musicInfo.bitRate ?: 0) / 1000}kbps"
                     )
                     XyItemTextPadding(
                         text = stringResource(R.string.sample_rate),
+                        sub = "${musicInfo.sampleRate ?: 0}Hz"
+                    )
+                    XyItemTextPadding(
+                        text = stringResource(R.string.bit_depth),
                         sub = "${musicInfo.bitDepth ?: 0}bit"
                     )
                     XyItemTextPadding(

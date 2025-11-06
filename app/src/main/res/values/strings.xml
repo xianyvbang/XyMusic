@@ -285,7 +285,6 @@
     <string name="media_source">媒体来源</string>
     <string name="duration">时长</string>
     <string name="bitrate">比特率</string>
-    <string name="kbps">kbps</string>
     <string name="sample_rate">采样率</string>
     <string name="bit_depth">位深</string>
     <string name="bit">bit</string>
