@@ -160,6 +160,11 @@ sealed class RouterConstants() {
         val libraryId: String?
     ) : RouterConstants()
 
+    /**
+     * 每日推荐页面
+     */
+    @Serializable
+    data object DailyRecommend : RouterConstants()
 
 }
 

@@ -617,7 +617,7 @@ fun XyItemSwitcherNotPadding(
     Row(
         modifier = Modifier
             .then(modifier)
-            .heightIn(min = 56.dp)
+            .heightIn(min = 28.dp)
             .alpha(if (enabled) 1f else 0.5f)
             .debounceClickable(enabled = enabled) {
                 onChange(!state)
@@ -813,7 +813,7 @@ fun XyItemSlider(
                 )
             }
         }
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(XyTheme.dimens.contentPadding))
         XySlider(
             value = value,
             onValueChange = onValueChange,

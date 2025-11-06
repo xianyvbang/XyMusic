@@ -15,7 +15,7 @@ val Typography = Typography(
     // Other default text styles to override
     titleSmall = TextStyle(
         fontSize = 12.sp,
-        lineHeight = 13.sp,
+        lineHeight = 14.sp,
     ),
 //    main
     labelSmall = TextStyle(

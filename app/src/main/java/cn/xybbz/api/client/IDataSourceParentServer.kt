@@ -594,8 +594,11 @@ abstract class IDataSourceParentServer(
      */
     override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
         var artistInfo: XyArtist? = db.artistDao.selectById(artistId)
-        if (artistInfo == null) {
+        if (artistInfo == null || artistInfo.describe.isNullOrBlank()) {
             artistInfo = selectArtistInfoByRemotely(artistId)
+            artistInfo?.let {
+                db.artistDao.update(artistInfo)
+            }
         } else {
             val ifFavorite = db.artistDao.selectFavoriteById(artistId) == true
             artistInfo = artistInfo.copy(ifFavorite = ifFavorite)

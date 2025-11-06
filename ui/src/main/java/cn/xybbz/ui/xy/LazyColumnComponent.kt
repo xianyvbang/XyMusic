@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.OutlinedTextFieldDefaults.contentPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,6 +54,16 @@ fun LazyColumnNotComponent(
     contentPadding: PaddingValues = PaddingValues(0.dp),
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
+    bottomItem: (LazyListScope.() -> Unit)? = {
+        item {
+            Spacer(
+                modifier = Modifier.height(
+                    XyTheme.dimens.snackBarPlayerHeight + WindowInsets.navigationBars.asPaddingValues()
+                        .calculateBottomPadding()
+                )
+            )
+        }
+    },
     items: LazyListScope.() -> Unit
 ) {
     LazyColumnParentComponent(
@@ -64,14 +75,7 @@ fun LazyColumnNotComponent(
         horizontalAlignment = horizontalAlignment,
         content = {
             items()
-            item {
-                Spacer(
-                    modifier = Modifier.height(
-                        XyTheme.dimens.snackBarPlayerHeight + WindowInsets.navigationBars.asPaddingValues()
-                            .calculateBottomPadding()
-                    )
-                )
-            }
+            bottomItem?.invoke(this)
         }
     )
 }

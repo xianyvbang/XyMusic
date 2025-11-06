@@ -6,7 +6,6 @@ import android.icu.math.BigDecimal
 import android.icu.text.SimpleDateFormat
 import android.os.Bundle
 import android.provider.Settings
-import android.text.format.DateFormat
 import android.util.Log
 import android.webkit.URLUtil
 import android.widget.Toast
@@ -69,6 +68,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
 import cn.xybbz.R
 import cn.xybbz.common.utils.DateUtil.millisecondsToTime
+import cn.xybbz.common.utils.DateUtil.toDateStr
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavController
@@ -1027,7 +1027,10 @@ fun MusicInfoBottomComponent(
 
         LazyColumnBottomSheetComponent {
             item {
-                RoundedSurfaceColumnPadding(color = Color.Transparent) {
+                RoundedSurfaceColumnPadding(
+                    color = Color.Transparent,
+                    contentPaddingValues = PaddingValues(vertical = XyTheme.dimens.outerVerticalPadding)
+                ) {
                     XyItemTextPadding(text = stringResource(R.string.title), sub = musicInfo.name)
                     XyItemTextPadding(
                         text = stringResource(R.string.artist),
@@ -1057,14 +1060,14 @@ fun MusicInfoBottomComponent(
                     )
                     XyItemTextPadding(
                         text = stringResource(R.string.bitrate),
-                        sub = "${musicInfo.bitRate ?: 0}kbps"
-                    )
-                    XyItemTextPadding(
-                        text = stringResource(R.string.kbps),
-                        sub = "${musicInfo.sampleRate ?: 0}Hz"
+                        sub = "${(musicInfo.bitRate ?: 0) / 1000}kbps"
                     )
                     XyItemTextPadding(
                         text = stringResource(R.string.sample_rate),
+                        sub = "${musicInfo.sampleRate ?: 0}Hz"
+                    )
+                    XyItemTextPadding(
+                        text = stringResource(R.string.bit_depth),
                         sub = "${musicInfo.bitDepth ?: 0}bit"
                     )
                     XyItemTextPadding(
@@ -1088,13 +1091,11 @@ fun MusicInfoBottomComponent(
                         text = stringResource(R.string.actual_path),
                         sub = musicInfo.path
                     )
-//                    MusicInfoItemComponent(title = "添加时间", info = DateUtils.formatDateTime(context,musicInfo.createTime,))
                     XyItemTextPadding(
                         text = stringResource(R.string.add_time),
-                        sub = DateFormat.format(
-                            "yyyy/MM/dd HH:mm",
-                            musicInfo.createTime
-                        ).toString()
+                        sub = musicInfo.createTime.toDateStr(
+                            "yyyy/MM/dd HH:mm"
+                        )
                     )
 
                 }

@@ -334,7 +334,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
         viewModelScope.launch {
             connectionConfigServer.loginStateFlow.collect { bool ->
                 if (bool) {
-                    db.musicDao.selectRecommendedMusicListFlow(50)
+                    db.musicDao.selectRecommendedMusicListFlow(20)
                         .distinctUntilChanged()
                         .collect {
                             recommendedMusicList = it
@@ -456,6 +456,10 @@ class HomeViewModel @OptIn(UnstableApi::class)
     }
 
     private suspend fun generateRecommendedMusicList() {
-        dailyRecommender.generate()
+        try {
+            dailyRecommender.generate()
+        }catch (e: Exception){
+            Log.e(Constants.LOG_ERROR_PREFIX,"生成每日推荐错误",e)
+        }
     }
 }

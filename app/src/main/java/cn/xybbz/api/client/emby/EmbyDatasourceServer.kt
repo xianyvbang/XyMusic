@@ -1109,7 +1109,8 @@ class EmbyDatasourceServer @Inject constructor(
                     ItemFields.PRIMARY_IMAGE_ASPECT_RATIO,
                     ItemFields.SORT_NAME,
                     ItemFields.MEDIA_SOURCES,
-                    ItemFields.DATE_CREATED
+                    ItemFields.DATE_CREATED,
+                    ItemFields.GENRES
                 ),
                 searchTerm = search,
                 imageTypeLimit = 1,

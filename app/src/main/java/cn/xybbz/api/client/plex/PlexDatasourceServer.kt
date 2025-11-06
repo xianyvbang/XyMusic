@@ -1867,6 +1867,7 @@ class PlexDatasourceServer @Inject constructor(
             musicUrl = audioUrl,
             album = item.parentRatingKey.toString(),
             albumName = item.parentTitle,
+            genreIds = item.genre?.joinToString(Constants.ARTIST_DELIMITER) { it.tag },
             connectionId = connectionConfigServer.getConnectionId(),
             artists = item.grandparentTitle,
             artistIds = item.grandparentRatingKey,
@@ -1886,7 +1887,6 @@ class PlexDatasourceServer @Inject constructor(
             runTimeTicks = part?.duration ?: 0,
             container = part?.container,
             codec = media?.audioCodec,
-            genreIds = "",
             playlistItemId = item.playlistItemID,
             lastPlayedDate = item.lastViewedAt ?: 0L
         )

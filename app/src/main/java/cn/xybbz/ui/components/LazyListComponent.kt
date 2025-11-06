@@ -9,9 +9,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -56,6 +59,21 @@ fun <T : Any> SwipeRefreshListComponent(
     modifier: Modifier = Modifier,
     lazyState: LazyListState = rememberLazyListState(),
     collectAsLazyPagingItems: LazyPagingItems<T>?,
+    lazyColumBottom: (LazyListScope.(isLoading: Boolean, ifNotData: Boolean) -> Unit)? = { isLoading, ifNotData ->
+        lazyColumBottomComponent(
+            onIsLoading = { isLoading },
+            onIfNotData = { ifNotData }) { collectAsLazyPagingItems }
+    },
+    bottomItem: (LazyListScope.() -> Unit)? = {
+        item {
+            Spacer(
+                modifier = Modifier.height(
+                    XyTheme.dimens.snackBarPlayerHeight + WindowInsets.navigationBars.asPaddingValues()
+                        .calculateBottomPadding()
+                )
+            )
+        }
+    },
     listContent: LazyListScope.(LazyPagingItems<T>) -> Unit,
 ) {
 
@@ -98,14 +116,17 @@ fun <T : Any> SwipeRefreshListComponent(
             collectAsLazyPagingItems?.refresh()
         }
     ) {
-        LazyColumnNotComponent(modifier = modifier, state = lazyState) {
+        LazyColumnNotComponent(modifier = modifier, state = lazyState, bottomItem = bottomItem) {
             collectAsLazyPagingItems?.let {
                 listContent(collectAsLazyPagingItems)
 
             }
-            lazyColumBottomComponent(
-                onIsLoading = { isLoading },
-                onIfNotData = { ifNotData }) { collectAsLazyPagingItems }
+
+            lazyColumBottom?.invoke(
+                this,
+                isLoading,
+                ifNotData
+            )
         }
     }
 }

@@ -1,12 +1,13 @@
 package cn.xybbz.common.utils
 
 import android.annotation.SuppressLint
-import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
+import android.text.format.DateFormat
 import java.time.Instant
+import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.Date
+import java.util.Locale
 
 object DateUtil {
 
@@ -17,9 +18,8 @@ object DateUtil {
      */
     @SuppressLint("SimpleDateFormat")
     fun Long.toDateStr(pattern: String = "yyyy-MM-dd HH:mm:ss"): String {
-        val date = Date(this)
-        val format = SimpleDateFormat(pattern)
-        return format.format(date)
+        val inTimeInMillis = if (this < 1_000_000_000_000L) this * 1000 else this
+        return DateFormat.format(pattern, inTimeInMillis).toString()
     }
 
     /**
@@ -28,15 +28,9 @@ object DateUtil {
      * @return [String] 时间字符串
      */
     fun String.toDateLong(pattern: String = "yyyy-MM-dd HH:mm:ss"): Long {
-        @SuppressLint("SimpleDateFormat")
-        val dateFormat = SimpleDateFormat(pattern)
-        var date: Date? = Date()
-        try {
-            date = dateFormat.parse(this)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return date?.time ?: 0
+        val formatter = DateTimeFormatter.ofPattern(pattern, Locale.getDefault())
+        val localDateTime = LocalDateTime.parse(this, formatter)
+        return localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
     /**
