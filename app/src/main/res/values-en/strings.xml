@@ -289,7 +289,6 @@ Automatic calculation rules for the upper limit of cache:
     <string name="media_source">Media sources</string>
     <string name="duration">Duration</string>
     <string name="bitrate">bit rate</string>
-    <string name="kbps">kbps</string>
     <string name="sample_rate">Sampling rate</string>
     <string name="bit_depth">Position deep</string>
     <string name="bit">bit</string>
