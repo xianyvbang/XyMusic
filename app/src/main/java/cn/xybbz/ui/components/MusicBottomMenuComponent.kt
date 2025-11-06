@@ -6,7 +6,6 @@ import android.icu.math.BigDecimal
 import android.icu.text.SimpleDateFormat
 import android.os.Bundle
 import android.provider.Settings
-import android.text.format.DateFormat
 import android.util.Log
 import android.webkit.URLUtil
 import android.widget.Toast
@@ -69,6 +68,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
 import cn.xybbz.R
 import cn.xybbz.common.utils.DateUtil.millisecondsToTime
+import cn.xybbz.common.utils.DateUtil.toDateStr
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavController
@@ -1091,13 +1091,11 @@ fun MusicInfoBottomComponent(
                         text = stringResource(R.string.actual_path),
                         sub = musicInfo.path
                     )
-//                    MusicInfoItemComponent(title = "添加时间", info = DateUtils.formatDateTime(context,musicInfo.createTime,))
                     XyItemTextPadding(
                         text = stringResource(R.string.add_time),
-                        sub = DateFormat.format(
-                            "yyyy/MM/dd HH:mm",
-                            musicInfo.createTime
-                        ).toString()
+                        sub = musicInfo.createTime.toDateStr(
+                            "yyyy/MM/dd HH:mm"
+                        )
                     )
 
                 }
