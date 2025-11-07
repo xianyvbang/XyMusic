@@ -110,9 +110,9 @@ fun DailyRecommendScreen(
                         backgroundColor = Color.Transparent,
                         onMusicPlay = {
                             coroutineScope.launch {
-                                dailyRecommendViewModel.musicPlayContext.favorite(
+                                dailyRecommendViewModel.musicPlayContext.musicList(
                                     it,
-                                    index = index
+                                    dailyRecommendViewModel.recommendedMusicList
                                 )
                             }
                         },
