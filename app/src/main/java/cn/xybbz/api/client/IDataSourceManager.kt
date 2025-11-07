@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.media3.common.util.UnstableApi
@@ -90,7 +91,7 @@ class IDataSourceManager(
         private set
 
     //报错信息
-    var errorHint by mutableStateOf(R.string.empty_info)
+    var errorHint by mutableIntStateOf(R.string.empty_info)
         private set
 
     var errorMessage by mutableStateOf("")

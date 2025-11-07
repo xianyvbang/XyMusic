@@ -42,7 +42,7 @@ object OperationTipUtils {
     suspend fun operationTipProgress(
         loadingMessage: Int = 0,
         operation: suspend (LoadingObject) -> Unit
-    ): Boolean {
+    ) {
         val loadingObject =
             LoadingObject(
                 id = UUID.randomUUID().toString(),
@@ -62,7 +62,6 @@ object OperationTipUtils {
         operation(loadingObject)
         delay(10)
         loadingObject.dismiss()
-        return true
     }
 
 
