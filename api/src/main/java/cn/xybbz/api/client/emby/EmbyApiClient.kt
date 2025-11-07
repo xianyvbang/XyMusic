@@ -106,7 +106,7 @@ class EmbyApiClient : DefaultApiClient() {
      * 获得用户接口服务
      */
     override fun userApi(restart: Boolean): EmbyUserApi {
-        if (!this::embyUserApi.isInitialized) {
+        if (!this::embyUserApi.isInitialized || restart) {
             embyUserApi = instance().create(EmbyUserApi::class.java)
         }
         return embyUserApi
@@ -116,7 +116,7 @@ class EmbyApiClient : DefaultApiClient() {
      * 播放列表接口
      */
     override fun playlistsApi(restart: Boolean): EmbyPlaylistsApi {
-        if (!this::embyPlaylistsApi.isInitialized) {
+        if (!this::embyPlaylistsApi.isInitialized || restart) {
             embyPlaylistsApi = instance().create(EmbyPlaylistsApi::class.java)
         }
         return embyPlaylistsApi

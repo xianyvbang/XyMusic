@@ -94,7 +94,7 @@ class JellyfinApiClient : DefaultApiClient() {
      * 获得用户接口服务
      */
     override fun userApi(restart: Boolean): UserApi {
-        if (!this::jellyfinUserApi.isInitialized) {
+        if (!this::jellyfinUserApi.isInitialized || restart) {
             jellyfinUserApi = instance().create(UserApi::class.java)
         }
         return jellyfinUserApi
@@ -104,7 +104,7 @@ class JellyfinApiClient : DefaultApiClient() {
      *用户资源接口服务
      */
     override fun userLibraryApi(restart: Boolean): UserLibraryApi {
-        if (!this::jellyfinUserLibraryApi.isInitialized) {
+        if (!this::jellyfinUserLibraryApi.isInitialized || restart) {
             jellyfinUserLibraryApi = instance().create(UserLibraryApi::class.java)
         }
         return jellyfinUserLibraryApi
@@ -282,7 +282,7 @@ class JellyfinApiClient : DefaultApiClient() {
         container: Collection<String>? = emptyList(),
         deviceId: String? = null,
         userId: String? = null,
-        playSessionId:String,
+        playSessionId: String,
         maxStreamingBitrate: Int? = null,
         transcodingContainer: String? = null,
         transcodingProtocol: MediaStreamProtocol? = null,
