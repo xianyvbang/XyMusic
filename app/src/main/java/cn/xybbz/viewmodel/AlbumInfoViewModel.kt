@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
 class AlbumInfoViewModel @AssistedInject constructor(
     @Assisted private val itemId: String,
     @Assisted private val dataType: MusicDataTypeEnum,
-    private val dataSourceManager: IDataSourceManager,
+    val dataSourceManager: IDataSourceManager,
     private val db: DatabaseClient,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicController,
