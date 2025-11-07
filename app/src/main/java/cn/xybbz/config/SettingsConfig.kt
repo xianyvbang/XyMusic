@@ -5,6 +5,7 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.util.Log
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cn.xybbz.common.enums.AllDataEnum
@@ -47,8 +48,9 @@ class SettingsConfig(
 
     /**
      * 音乐缓存上限
+     * todo 这里赋值应该改为使用方法设置
      */
-    var maxBytes by mutableStateOf(0L)
+    var maxBytes by mutableLongStateOf(0L)
 
     fun get(): XySettings {
         return settings ?: XySettings()

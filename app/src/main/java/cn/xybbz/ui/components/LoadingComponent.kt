@@ -1,7 +1,6 @@
 package cn.xybbz.ui.components
 
 import androidx.activity.compose.BackHandler
-import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +16,7 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,7 +50,7 @@ data class LoadingObject constructor(
         }
     }
 ) {
-    var message by mutableStateOf<Int>(R.string.loading)
+    var message by mutableIntStateOf(R.string.loading)
         private set
     var progress: Float? by mutableStateOf(null)
         private set
@@ -59,10 +59,6 @@ data class LoadingObject constructor(
     fun updateProgress(progress: Float, index: Int) {
         this.progress = progress
         this.message = index
-    }
-
-    fun updateMessage(@StringRes message: Int) {
-        this.message = message
     }
 
     fun updateMessageProgress(message: Int) {

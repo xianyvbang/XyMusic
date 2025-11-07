@@ -39,14 +39,14 @@ import kotlinx.coroutines.launch
 class AlbumInfoViewModel @AssistedInject constructor(
     @Assisted private val itemId: String,
     @Assisted private val dataType: MusicDataTypeEnum,
-    private val _dataSourceManager: IDataSourceManager,
+    private val dataSourceManager: IDataSourceManager,
     private val db: DatabaseClient,
-    private val _musicPlayContext: MusicPlayContext,
-    private val _musicController: MusicController,
+    val musicPlayContext: MusicPlayContext,
+    val musicController: MusicController,
     private val connectionConfigServer: ConnectionConfigServer,
-    private val _selectControl: SelectControl,
-    private val _favoriteRepository: FavoriteRepository,
-    private val _backgroundConfig: BackgroundConfig
+    val selectControl: SelectControl,
+    val favoriteRepository: FavoriteRepository,
+    val backgroundConfig: BackgroundConfig
 ) : PageListViewModel() {
 
     /**
@@ -58,12 +58,6 @@ class AlbumInfoViewModel @AssistedInject constructor(
         fun create(itemId: String, dataType: MusicDataTypeEnum): AlbumInfoViewModel
     }
 
-    val musicPlayContext = _musicPlayContext
-    val musicController = _musicController
-    val dataSourceManager = _dataSourceManager
-    val selectControl = _selectControl
-    val favoriteRepository = _favoriteRepository
-    val backgroundConfig = _backgroundConfig
 
     /**
      * 播放进度
@@ -98,7 +92,7 @@ class AlbumInfoViewModel @AssistedInject constructor(
     val xyMusicList: Flow<PagingData<XyMusic>> = connectionConfigServer.loginStateFlow
         .flatMapLatest { loggedIn ->
             if (loggedIn) {
-                _dataSourceManager.selectMusicListByParentId(
+                dataSourceManager.selectMusicListByParentId(
                     itemId = itemId,
                     dataType = dataType,
                     sort = sortBy
@@ -119,7 +113,7 @@ class AlbumInfoViewModel @AssistedInject constructor(
      */
     fun getAlbumInfoData() {
         viewModelScope.launch {
-            val albumInfo = _dataSourceManager.selectAlbumInfoById(itemId, dataType)
+            val albumInfo = dataSourceManager.selectAlbumInfoById(itemId, dataType)
             if (albumInfo != null) {
                 xyAlbumInfoData = albumInfo
                 ifFavorite = albumInfo.ifFavorite

@@ -79,7 +79,7 @@ class ConnectionViewModel @Inject constructor(
 
     //报错信息
 
-    var errorHint by mutableStateOf<Int>(R.string.empty_info)
+    var errorHint by mutableIntStateOf(R.string.empty_info)
         private set
 
     var errorMessage by mutableStateOf("")

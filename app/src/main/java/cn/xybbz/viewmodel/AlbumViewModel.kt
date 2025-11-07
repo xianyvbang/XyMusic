@@ -18,13 +18,11 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class AlbumViewModel @Inject constructor(
-    private val _dataSourceManager: IDataSourceManager,
-    private val connectionConfigServer: ConnectionConfigServer,
-    private val _backgroundConfig: BackgroundConfig
+     val dataSourceManager: IDataSourceManager,
+     val connectionConfigServer: ConnectionConfigServer,
+     val backgroundConfig: BackgroundConfig
 ) : PageListViewModel() {
 
-    val dataSourceManager = _dataSourceManager
-    val backgroundConfig = _backgroundConfig
 
     /**
      * 首页专辑信息

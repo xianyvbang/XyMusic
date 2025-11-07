@@ -15,10 +15,6 @@
     <!--    精准定时任务权限-->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
-<!--    安装apk的权限-->
-
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
-
     <application
         android:name=".XyApplication"
         android:allowBackup="true"

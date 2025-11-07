@@ -13,6 +13,7 @@ import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.RepeatOne
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -106,7 +107,7 @@ class MainViewModel @Inject constructor(
         private set
 
     //下载进度
-    var apkProgress by mutableStateOf<Float>(0.0f)
+    var apkProgress by mutableFloatStateOf(0.0f)
         private set
 
     //下载状态 true 下载中, false 未在下载中
