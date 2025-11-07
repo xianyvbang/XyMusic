@@ -56,5 +56,9 @@ enum class MusicPlayTypeEnum(val code: Int, val message: String) {
     /**
      * 歌单音乐
      */
-    PLAYLIST(11,"歌单")
+    PLAYLIST(11,"歌单"),
+    /**
+     * 每日推荐
+     */
+    RECOMMEND(12,"每日推荐"),
 }
