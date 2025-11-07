@@ -128,7 +128,7 @@ class NavidromeApiClient : DefaultApiClient() {
      * 获得用户接口服务
      */
     override fun userApi(restart: Boolean): NavidromeUserApi {
-        if (!this::navidromeUserApi.isInitialized) {
+        if (!this::navidromeUserApi.isInitialized || restart) {
             navidromeUserApi = instance().create(NavidromeUserApi::class.java)
         }
         return navidromeUserApi
