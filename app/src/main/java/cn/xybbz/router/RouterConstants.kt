@@ -1,6 +1,7 @@
 package cn.xybbz.router
 
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
@@ -11,43 +12,48 @@ import kotlinx.serialization.Serializable
  * @param [router] 路由地址
  * @param [type] 类型 0 NavigationBar打开展示 1普通页面
  */
-@Serializable
-sealed class RouterConstants() {
+ interface RouterConstants {
 
     /**
      * 首页
      */
     @Serializable
-    data object Home : RouterConstants()
+    @SerialName("Home")
+    data object Home : RouterConstants
 
     /**
      * 搜索页面
      */
     @Serializable
-    data object Search : RouterConstants()
+    @SerialName("Search")
+    data object Search : RouterConstants
 
     /**
      * 音乐列表页面
      */
     @Serializable
-    data object Music : RouterConstants()
+    @SerialName("Music")
+    data object Music : RouterConstants
 
     /**
      * 艺术家
      */
     @Serializable
-    data object Artist : RouterConstants()
+    @SerialName("Artist")
+    data object Artist : RouterConstants
 
     /**
      * 设置
      */
     @Serializable
-    data object Setting : RouterConstants()
+    @SerialName("Setting")
+    data object Setting : RouterConstants
 
     /**
      * 专辑详细
      */
     @Serializable
+    @SerialName("AlbumInfo")
     data class AlbumInfo(
         /**
          * 专辑id/歌单id
@@ -57,114 +63,130 @@ sealed class RouterConstants() {
          * 数据类型0专辑,1歌单
          */
         val dataType: MusicDataTypeEnum
-    ) : RouterConstants()
+    ) : RouterConstants
 
     /**
      * 收藏列表
      */
     @Serializable
-    data object FavoriteList : RouterConstants()
+    @SerialName("FavoriteList")
+    data object FavoriteList : RouterConstants
 
     /**
      * 专辑推荐页面
      */
     @Serializable
-    data object Album : RouterConstants()
+    @SerialName("Album")
+    data object Album : RouterConstants
 
     /**
      * 页面
      */
     @Serializable
-    data object Screen : RouterConstants()
+    @SerialName("Screen")
+    data object Screen : RouterConstants
 
     /**
      * 连接管理
      */
     @Serializable
-    data object ConnectionManagement : RouterConstants()
+    @SerialName("ConnectionManagement")
+    data object ConnectionManagement : RouterConstants
 
     /**
      * 艺术家详细
      */
     @Serializable
+    @SerialName("ArtistInfo")
     data class ArtistInfo(
         val artistId: String
-    ) : RouterConstants()
+    ) : RouterConstants
 
     /**
      * 连接服务页面
      */
     @Serializable
+    @SerialName("Connection")
     data class Connection(
         val connectionUiType: String? = null
-    ) : RouterConstants()
+    ) : RouterConstants
 
     /**
      * 连接详情
      */
     @Serializable
+    @SerialName("ConnectionInfo")
     data class ConnectionInfo(
         val connectionId: Long
-    ) : RouterConstants()
+    ) : RouterConstants
 
     /**
      * 存储管理
      */
     @Serializable
-    data object MemoryManagement : RouterConstants()
+    @SerialName("MemoryManagement")
+    data object MemoryManagement : RouterConstants
 
     /**
      * 界面设置
      */
     @Serializable
-    data object InterfaceSetting : RouterConstants()
+    @SerialName("InterfaceSetting")
+    data object InterfaceSetting : RouterConstants
 
     /**
      * 语言设置
      */
     @Serializable
-    data object LanguageConfig : RouterConstants()
+    @SerialName("LanguageConfig")
+    data object LanguageConfig : RouterConstants
 
     /**
      * 流派列表
      */
     @Serializable
-    data object Genres : RouterConstants()
+    @SerialName("Genres")
+    data object Genres : RouterConstants
 
     /**
      * 流派详情
      */
     @Serializable
+    @SerialName("GenreInfo")
     data class GenreInfo(
         val genreId: String
-    ) : RouterConstants()
+    ) : RouterConstants
 
     /**
      * 关于页面
      */
     @Serializable
-    data object About : RouterConstants()
+    @SerialName("About")
+    data object About : RouterConstants
 
     /**
      * 缓存大小设置页面
      */
     @Serializable
-    data object CacheLimit : RouterConstants()
+    @SerialName("CacheLimit")
+    data object CacheLimit : RouterConstants
 
     /**
      * 选择媒体库页面
      */
     @Serializable
+    @SerialName("SelectLibrary")
     data class SelectLibrary(
         val connectionId: Long,
         val libraryId: String?
-    ) : RouterConstants()
+    ) : RouterConstants
 
     /**
      * 每日推荐页面
      */
     @Serializable
-    data object DailyRecommend : RouterConstants()
+    @SerialName("DailyRecommend")
+    data object DailyRecommend : RouterConstants
 
 }
 
