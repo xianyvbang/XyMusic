@@ -761,13 +761,14 @@ abstract class IDataSourceParentServer(
         artist: Int?,
         playlist: Int?,
         genres: Int?,
-        favorite: Int?
+        favorite: Int?,
+        connectionId:Long
     ) {
-        val dataCount = db.dataCountDao.selectOne()
+        val dataCount = db.dataCountDao.selectOne(connectionId)
         if (dataCount != null) {
             db.dataCountDao.update(
                 XyDataCount(
-                    connectionId = connectionConfigServer.getConnectionId(),
+                    connectionId = connectionId,
                     musicCount = music ?: dataCount.musicCount,
                     albumCount = album ?: dataCount.albumCount,
                     artistCount = artist ?: dataCount.artistCount,
@@ -779,7 +780,7 @@ abstract class IDataSourceParentServer(
         } else {
             db.dataCountDao.save(
                 XyDataCount(
-                    connectionId = connectionConfigServer.getConnectionId(),
+                    connectionId = connectionId,
                     musicCount = music ?: 0,
                     albumCount = album ?: 0,
                     artistCount = artist ?: 0,
