@@ -100,14 +100,14 @@ class ConnectionViewModel @Inject constructor(
         }
         loading = true
         clearLoginStatus()
-        var ifEnable = true
+        var ifEnable = false
         if (_dataSourceManager.dataSourceType == null) {
             _dataSourceManager.switchDataSource(dataSourceType)
             tmpDataSourceParentServer = _dataSourceManager
+            ifEnable = true
         } else if (tmpDataSourceParentServer == null) {
             tmpDataSourceParentServer =
                 dataSourceType?.let { _dataSourceManager.getDataSourceServerByType(it, true) }
-            ifEnable = false
         }
 
         val clientLoginInfoReq =
