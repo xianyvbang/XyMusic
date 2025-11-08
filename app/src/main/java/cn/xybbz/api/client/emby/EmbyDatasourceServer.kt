@@ -421,7 +421,7 @@ class EmbyDatasourceServer @Inject constructor(
             favorite.await()
         }
 
-        updateOrSaveDataInfoCount(music, album, artist, playlist, genres, favorite)
+        updateOrSaveDataInfoCount(music, album, artist, playlist, genres, favorite, connectionId)
     }
 
     /**

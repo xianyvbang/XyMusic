@@ -392,7 +392,7 @@ class NavidromeDatasourceServer @Inject constructor(
             genres.await()
             favorite.await()
         }
-        updateOrSaveDataInfoCount(music, album, artist, playlist, genres, favorite)
+        updateOrSaveDataInfoCount(music, album, artist, playlist, genres, favorite, connectionId)
 
     }
 
