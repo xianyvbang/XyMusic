@@ -3,7 +3,6 @@ package cn.xybbz.viewmodel
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -49,6 +48,9 @@ class HomeViewModel @OptIn(UnstableApi::class)
     val musicPlayContext = _musicPlayContext
     val dataSourceManager = _dataSourceManager
     val backgroundConfig = _backgroundConfig
+
+    var isRefreshing by mutableStateOf(false)
+        private set
 
     /**
      * 最新专辑
@@ -96,37 +98,37 @@ class HomeViewModel @OptIn(UnstableApi::class)
     /**
      * 音乐数量
      */
-    var musicCount by mutableIntStateOf(0)
+    var musicCount by mutableStateOf<String?>(null)
         private set
 
     /**
      * 专辑数量
      */
-    var albumCount by mutableIntStateOf(0)
+    var albumCount by mutableStateOf<String?>(null)
         private set
 
     /**
      * 艺术家数量
      */
-    var artistCount by mutableIntStateOf(0)
+    var artistCount by mutableStateOf<String?>(null)
         private set
 
     /**
      * 歌单数量
      */
-    var playlistCount by mutableIntStateOf(0)
+    var playlistCount by mutableStateOf<String?>(null)
         private set
 
     /**
      * 流派数量
      */
-    var genreCount by mutableIntStateOf(0)
+    var genreCount by mutableStateOf<String?>(null)
         private set
 
     /**
      * 收藏数量
      */
-    var favoriteCount by mutableIntStateOf(0)
+    var favoriteCount by mutableStateOf<String?>(null)
         private set
 
     /**
@@ -161,7 +163,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
                             )
                         )
                     }
-                })
+                }, true)
             }
         }
         getPlaylists()
@@ -239,9 +241,9 @@ class HomeViewModel @OptIn(UnstableApi::class)
                 if (bool) {
 
                     db.albumDao.selectPlaylistFlow().collect {
-                            playlists = it
-                            isLoadingPlaylist = false
-                        }
+                        playlists = it
+                        isLoadingPlaylist = false
+                    }
                 }
             }
 
@@ -330,7 +332,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
      * 获得推荐音乐列表
      */
 
-    fun getRecommendedMusicList(){
+    fun getRecommendedMusicList() {
         viewModelScope.launch {
             connectionConfigServer.loginStateFlow.collect { bool ->
                 if (bool) {
@@ -348,7 +350,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
      * 获得服务端歌单
      */
     suspend fun getServerPlaylists() {
-        Log.i("=====","获得歌单数据")
+        Log.i("=====", "获得歌单数据")
         dataSourceManager.getPlaylists()
     }
 
@@ -356,7 +358,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
     /**
      * 初始化获得数据
      */
-    suspend fun initGetData(onEnd: (Boolean) -> Unit, isRefresh: Boolean = false) {
+    suspend fun initGetData(onEnd: ((Boolean) -> Unit)? = null, isRefresh: Boolean = false) {
         connectionConfigServer.loginStateFlow.collect { bool ->
             if (bool) {
                 refreshDataAll(onEnd, isRefresh)
@@ -367,7 +369,8 @@ class HomeViewModel @OptIn(UnstableApi::class)
     /**
      * 刷新数据
      */
-    fun refreshDataAll(onEnd: (Boolean) -> Unit, isRefresh: Boolean = false) {
+    fun refreshDataAll(onEnd: ((Boolean) -> Unit)? = null, isRefresh: Boolean = false) {
+        isRefreshing = true
         viewModelScope.launch {
             if (dataSourceManager.ifLoginError) {
                 if (isRefresh) {
@@ -392,9 +395,10 @@ class HomeViewModel @OptIn(UnstableApi::class)
                     getServerDataCount()
                 }
 
-                val recommendedMusicAsync = async {
-                    generateRecommendedMusicList()
-                }
+                if (isRefresh)
+                    async {
+                        generateRecommendedMusicList()
+                    }
 
                 awaitAll(
                     mostPlayerMusicAsync,
@@ -404,7 +408,8 @@ class HomeViewModel @OptIn(UnstableApi::class)
                     dataCountAsync
                 )
             }
-            onEnd(false)
+            isRefreshing = false
+            onEnd?.invoke(false)
         }
     }
 
@@ -417,12 +422,21 @@ class HomeViewModel @OptIn(UnstableApi::class)
                 connectionConfigServer.loginStateFlow.collect { bool ->
                     if (bool) {
                         db.dataCountDao.selectOneFlow().collect {
-                            musicCount = it?.musicCount ?: 0
-                            albumCount = it?.albumCount ?: 0
-                            artistCount = it?.artistCount ?: 0
-                            playlistCount = it?.playlistCount ?: 0
-                            genreCount = it?.genreCount ?: 0
-                            favoriteCount = it?.favoriteCount ?: 0
+                            if (it != null) {
+                                musicCount = it.musicCount.toString()
+                                albumCount = it.albumCount.toString()
+                                artistCount = it.artistCount.toString()
+                                playlistCount = it.playlistCount.toString()
+                                genreCount = it.genreCount.toString()
+                                favoriteCount = it.favoriteCount.toString()
+                            } else {
+                                musicCount = null
+                                albumCount = null
+                                artistCount = null
+                                playlistCount = null
+                                genreCount = null
+                                favoriteCount = null
+                            }
                         }
                     }
                 }
@@ -458,8 +472,8 @@ class HomeViewModel @OptIn(UnstableApi::class)
     private suspend fun generateRecommendedMusicList() {
         try {
             dailyRecommender.generate()
-        }catch (e: Exception){
-            Log.e(Constants.LOG_ERROR_PREFIX,"生成每日推荐错误",e)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "生成每日推荐错误", e)
         }
     }
 }
