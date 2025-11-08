@@ -391,4 +391,6 @@
     <string name="server_version_cannot_be_obtained">服务端版本无法获取</string>
     <string name="plex_resource_error">获得Plex资源地址失败</string>
 
+    <string name="unknown">未知</string>
+
 </resources>

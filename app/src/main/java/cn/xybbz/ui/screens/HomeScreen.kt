@@ -71,6 +71,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
+import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.UiConstants.MusicCardImageSize
 import cn.xybbz.common.enums.img
 import cn.xybbz.compositionLocal.LocalNavController
@@ -123,9 +124,6 @@ fun HomeScreen(
         mutableStateOf("")
     }
     val state = rememberPullToRefreshState()
-    var isRefreshing by remember {
-        mutableStateOf(false)
-    }
 
     var ifShowConnectionMenu by remember {
         mutableStateOf(false)
@@ -250,12 +248,9 @@ fun HomeScreen(
                                     },
                                     onClick = {
                                         coroutineScope.launch {
-                                            isRefreshing = true
                                             ifShowConnectionMenu = false
                                             homeViewModel.changeDataSource(connection)
-                                            homeViewModel.initGetData(onEnd = {
-                                                isRefreshing = false
-                                            })
+                                            homeViewModel.initGetData()
                                         }.invokeOnCompletion {
 
                                         }
@@ -350,13 +345,10 @@ fun HomeScreen(
             })
         PullToRefreshBox(
             state = state,
-            isRefreshing = isRefreshing,
+            isRefreshing = homeViewModel.isRefreshing,
             onRefresh = {
-                isRefreshing = true
                 coroutineScope.launch {
-                    homeViewModel.refreshDataAll(onEnd = {
-                        isRefreshing = false
-                    }, true)
+                    homeViewModel.refreshDataAll(isRefresh = true)
                 }.invokeOnCompletion {
                 }
             },
@@ -364,7 +356,7 @@ fun HomeScreen(
                 PullToRefreshDefaults.LoadingIndicator(
                     modifier = Modifier.align(Alignment.TopCenter),
                     state = state,
-                    isRefreshing = isRefreshing
+                    isRefreshing = homeViewModel.isRefreshing
                 )
             }
         ) {
@@ -373,7 +365,9 @@ fun HomeScreen(
                     XyRow {
                         XyItemTabBigButton(
                             text = stringResource(R.string.all_music),
-                            sub = if (ifShowCount) homeViewModel.musicCount.toString() else null,
+                            sub = if (ifShowCount) homeViewModel.musicCount ?: stringResource(
+                                Constants.UNKNOWN
+                            ) else null,
                             imageVector = Icons.Rounded.MusicNote,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
@@ -387,7 +381,9 @@ fun HomeScreen(
                         )
                         XyItemTabBigButton(
                             text = stringResource(R.string.album),
-                            sub = if (ifShowCount) homeViewModel.albumCount.toString() else null,
+                            sub = if (ifShowCount) homeViewModel.albumCount ?: stringResource(
+                                Constants.UNKNOWN
+                            )  else null,
                             imageVector = Icons.Rounded.Album,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
@@ -404,7 +400,9 @@ fun HomeScreen(
                         )
                         XyItemTabBigButton(
                             text = stringResource(R.string.artist),
-                            sub = if (ifShowCount) homeViewModel.artistCount.toString() else null,
+                            sub = if (ifShowCount) homeViewModel.artistCount ?: stringResource(
+                                Constants.UNKNOWN
+                            )  else null,
                             imageVector = Icons.Rounded.Person,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
@@ -418,7 +416,9 @@ fun HomeScreen(
                         )
                         XyItemTabBigButton(
                             text = stringResource(R.string.favorite),
-                            sub = if (ifShowCount) homeViewModel.favoriteCount.toString() else null,
+                            sub = if (ifShowCount) homeViewModel.favoriteCount ?: stringResource(
+                                Constants.UNKNOWN
+                            )  else null,
                             imageVector = Icons.Rounded.Favorite,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
@@ -433,7 +433,9 @@ fun HomeScreen(
 
                         XyItemTabBigButton(
                             text = stringResource(R.string.genres),
-                            sub = if (ifShowCount) homeViewModel.genreCount.toString() else null,
+                            sub = if (ifShowCount) homeViewModel.genreCount ?: stringResource(
+                                Constants.UNKNOWN
+                            )  else null,
                             imageVector = Icons.AutoMirrored.Rounded.Label,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
@@ -624,8 +626,8 @@ fun HomeScreen(
 
                                 TextButton(onClick = composeClick {
                                     navHostController.navigate(RouterConstants.DailyRecommend)
-                                },contentPadding = PaddingValues()) {
-                                    XyItemTextLarge(text = "查看更多",color = Color(0xFFC6E5F5))
+                                }, contentPadding = PaddingValues()) {
+                                    XyItemTextLarge(text = "查看更多", color = Color(0xFFC6E5F5))
                                 }
 
                             }

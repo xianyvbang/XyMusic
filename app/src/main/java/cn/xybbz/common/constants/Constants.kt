@@ -77,6 +77,9 @@ object Constants {
     @StringRes
     val UNKNOWN_PLAYLIST: Int = R.string.unknown_playlist
 
+    @StringRes
+    val UNKNOWN: Int = R.string.unknown
+
     /**
      * MusicPlayer自定义按钮主动调用类型
      */

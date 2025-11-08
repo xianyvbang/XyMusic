@@ -207,6 +207,11 @@ abstract class IDataSourceParentServer(
                     setServerOkHttpClient()
                     connectionConfigServer.updateLoginStates(true)
                     initFavoriteData()
+                    try {
+                        getDataInfoCount(connectionId)
+                    }catch (e: Exception){
+                        Log.i(Constants.LOG_ERROR_PREFIX,"获取音乐/专辑/艺术家/收藏/流派数量异常",e)
+                    }
                 }
             }
 

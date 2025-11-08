@@ -95,7 +95,7 @@ enum class DataSourceType(
         options = listOf("http://", "https://"),
         code = "2",
         version = "1.16.0",
-        ifShowCount = false,
+        ifShowCount = true,
         ifDelete = false,
         ifMusicSelectOneYear = false,
         ifMusicSort = false,
