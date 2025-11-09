@@ -127,6 +127,7 @@
     <string name="back_to_input_credentials">返回輸入</string>
     <!--收藏页面-->
     <string name="my_favorites">我的收藏</string>
+    <string name="daily_recommendations">每日推薦</string>
 
     <!--首页-->
 
@@ -141,6 +142,7 @@
     <string name="all_music">所有音樂</string>
     <string name="favorite">收藏</string>
     <string name="most_played">最多播放</string>
+    <string name="recommended_music">每日推薦</string>
     <string name="random_play">隨機播放</string>
     <string name="list_loop">清單迴圈</string>
     <string name="latest_albums">最新專輯</string>
@@ -207,7 +209,6 @@
     <string name="search_box_icon">搜索框圖示</string>
     <string name="search_history">搜索歷史</string>
     <string name="loading">載入中...</string>
-    <string name="no_more_data">已經到底了</string>
     <!--媒体库选择-->
     <string name="media_library_selection">媒體庫選擇</string>
     <string name="back_to_connection_info">返回連接資訊頁面</string>
@@ -345,7 +346,7 @@
     <string name="server_connection_error">服務端連接錯誤</string>
     <string name="server_connection_timeout">服務端連接超時</string>
     <string name="no_connection_selected">未選擇連接</string>
-    <string name="login_failed_no_token">登陸失敗，無法獲取令牌</string>
+    <string name="login_failed_no_token">登陸失敗，帳號或密碼錯誤</string>
     <string name="login_success">登陸成功</string>
     <string name="get_server_resources_failed">獲得伺服器資源失敗</string>
     <string name="creating_playlist">建立中...</string>
@@ -394,5 +395,7 @@
     <string name="server_version_too_low">服務端版本過低（%s），支援的最低版本： %s</string>
     <string name="server_version_cannot_be_obtained">服務端版本無法獲取</string>
     <string name="plex_resource_error">獲得Plex資源地址失敗</string>
+
+    <string name="unknown">未知</string>
 
 </resources>

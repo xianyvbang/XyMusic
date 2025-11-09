@@ -1,73 +1,73 @@
 <resources>
-    <string name="app_name">Salted Fish Listening to Songs</string>
+    <string name="app_name">The salted fish listen to the song</string>
     <string name="add_or_switch_data_sources">Add or switch data sources</string>
     <string name="notification_content_title">Unable to resume playback</string>
     <string name="notification_content_text">If the play button is still present on the media notification, press it, otherwise open the app to start playback and reconnect the session to the controller</string>
     <string name="notification_channel_name">Unable to resume playback</string>
-    <string name="exo_download_notification_channel_name">download</string>
-    <string name="home">front page</string>
-    <string name="music">music</string>
-    <string name="genres">school</string>
-    <string name="search">search</string>
-    <string name="httpInput">Server input box icon</string>
-    <string name="server">Server address</string>
+    <string name="exo_download_notification_channel_name">Download</string>
+    <string name="home">Home</string>
+    <string name="music">Music</string>
+    <string name="genres">genre</string>
+    <string name="search">Search</string>
+    <string name="httpInput">Server-side input box icon</string>
+    <string name="server">The server address</string>
 
     <!--关于页面-->
-    <string name="about">about</string>
+    <string name="about">concerning</string>
     <string name="app_icon_info">APP icon</string>
-    <string name="current_version">Current version</string>
+    <string name="current_version">current version</string>
     <string name="check_updates">Check for updates</string>
-    <string name="latest_version">latest version</string>
-    <string name="new_version_detected">New version detected</string>
-    <string name="get_latest_version">Retrieving the latest version, please wait.</string>
+    <string name="latest_version">The latest version</string>
+    <string name="new_version_detected">A new version is detected</string>
+    <string name="get_latest_version">Getting the latest version, please wait</string>
     <string name="get_latest_version_success">Get the latest version successfully</string>
-    <string name="get_latest_version_fail">Failed to get latest version</string>
-    <string name="new_version_download">There is a new version available for download and update</string>
-    <string name="version_number">version number</string>
+    <string name="get_latest_version_fail">Getting the latest version failed</string>
+    <string name="new_version_download">There is a new version to download and update</string>
+    <string name="version_number">Version number</string>
     <string name="current_download_progress">Current download progress</string>
     <string name="download_failed">Download failed</string>
-    <string name="cancel_download">Cancel download</string>
+    <string name="cancel_download">Cancel the download</string>
     <string name="download_install">Download and install</string>
-    <string name="close">closure</string>
-    <string name="problem_feedback">Problem feedback</string>
-    <string name="function_not_implemented">Function not implemented</string>
+    <string name="close">Shut down</string>
+    <string name="problem_feedback">Feedback on questions</string>
+    <string name="function_not_implemented">Functionality is not implemented</string>
     <string name="official_website">Official website</string>
-    <string name="no_official_website_yet">No official website yet</string>
+    <string name="no_official_website_yet">There is no official website for the time being</string>
 
 
     <!-- 通用-->
-    <string name="return_setting_screen">Return to settings</string>
-    <string name="return_home">Return to home page</string>
-    <string name="return_album_page">Return to album list</string>
-    <string name="back_to_genres_list">Return to genre list</string>
+    <string name="return_setting_screen">Go back to Settings</string>
+    <string name="return_home">Back to home</string>
+    <string name="return_album_page">Return to the album list</string>
+    <string name="back_to_genres_list">Returns to the list of genres</string>
     <string name="back">return</string>
-    <string name="username">username</string>
+    <string name="username">Username</string>
     <string name="password">password</string>
     <string name="all_media_libraries">All media libraries</string>
 
     <!--    专辑详情-->
     <string name="album">album</string>
     <string name="playlist">Playlist</string>
-    <string name="open_operation_menu">Open action menu</string>
-    <string name="import_playlist">Import playlist</string>
-    <string name="import_playlist_hint">The imported playlist will be matched with the song name and artist in the service, which may cause inaccurate data. Please check carefully after importing. The imported playlist will also be synchronized to create a playlist on the server.</string>
-    <string name="import_info">import</string>
+    <string name="open_operation_menu">Open the Actions menu</string>
+    <string name="import_playlist">Import the playlist</string>
+    <string name="import_playlist_hint">The imported playlist will match the song name and the singer to the service, which may cause inaccurate data</string>
+    <string name="import_info">Import</string>
     <string name="select_all">Select all</string>
-    <string name="deselect_all">Deselect all</string>
+    <string name="deselect_all">Cancel all</string>
     <string name="pause_playback">Pause playback</string>
-    <string name="resume_playback">continue playing</string>
+    <string name="resume_playback">Keep playing</string>
     <string name="start_playback">Start playing</string>
-    <string name="close_selection">Close selection</string>
-    <string name="delete_playback_history">Delete play history</string>
+    <string name="close_selection">Close the selection</string>
+    <string name="delete_playback_history">Delete playback history</string>
     <string name="select">choose</string>
-    <string name="album_cover">album cover</string>
-    <string name="favorite_added">Collected</string>
-    <string name="favorite_removed">Not favorited</string>
-    <string name="enable_playback_history">Enable storage of playback history</string>
-    <string name="export_playlist">Export playlist</string>
-    <string name="rename_playlist">Rename playlist</string>
-    <string name="delete_playlist">Delete playlist</string>
-    <string name="modify_playlist_name">Modify playlist name</string>
+    <string name="album_cover">Album cover</string>
+    <string name="favorite_added">Bookmarked</string>
+    <string name="favorite_removed">Not collected</string>
+    <string name="enable_playback_history">Turn on Save playback history</string>
+    <string name="export_playlist">Export the playlist</string>
+    <string name="rename_playlist">Rename the playlist</string>
+    <string name="delete_playlist">Delete the playlist</string>
+    <string name="modify_playlist_name">Modify the playlist name</string>
     <string name="confirm_delete_playlist">Are you sure you want to remove $s\?</string>
 
     <!--    艺术家详情-->
@@ -127,6 +127,7 @@ Automatic calculation rules for the upper limit of cache:
     <string name="back_to_input_credentials">Return to input</string>
     <!--收藏页面-->
     <string name="my_favorites">My collection</string>
+    <string name="daily_recommendations">Daily recommendations</string>
 
     <!--首页-->
 
@@ -141,6 +142,7 @@ Automatic calculation rules for the upper limit of cache:
     <string name="all_music">All music</string>
     <string name="favorite">collection</string>
     <string name="most_played">Most played</string>
+    <string name="recommended_music">Daily recommendations</string>
     <string name="random_play">Shuffle</string>
     <string name="list_loop">List loop</string>
     <string name="latest_albums">latest album</string>
@@ -207,7 +209,6 @@ Automatic calculation rules for the upper limit of cache:
     <string name="search_box_icon">Search box icon</string>
     <string name="search_history">Search history</string>
     <string name="loading">Loading...</string>
-    <string name="no_more_data">It\'s already the end</string>
     <!--媒体库选择-->
     <string name="media_library_selection">Media library selection</string>
     <string name="back_to_connection_info">Return to the connection information page</string>
@@ -275,7 +276,7 @@ Automatic calculation rules for the upper limit of cache:
     <string name="custom_timer_close">Customize timed close events</string>
     <string name="max_24_hours">Maximum setting 24 hours</string>
     <string name="countdown_prefix">Countdown: </string>
-    <string name="timer_close_disabled">closure</string>
+    <string name="timer_close_disabled">Shut down</string>
     <string name="custom_timer_suffix">minutes later</string>
     <string name="timer_close_custom">Customization</string>
     <string name="close_after_playback">Close after playback</string>
@@ -345,7 +346,7 @@ Automatic calculation rules for the upper limit of cache:
     <string name="server_connection_error">Server-side connection error</string>
     <string name="server_connection_timeout">The server-side connection timed out</string>
     <string name="no_connection_selected">Connection is not selected</string>
-    <string name="login_failed_no_token">Login failed, unable to obtain tokens</string>
+    <string name="login_failed_no_token">Login failed, wrong account or password</string>
     <string name="login_success">The landing was successful</string>
     <string name="get_server_resources_failed">Failed to obtain server resources</string>
     <string name="creating_playlist">Creating...</string>
@@ -394,5 +395,7 @@ Automatic calculation rules for the upper limit of cache:
     <string name="server_version_too_low">The server-side version is too low (%s), and the minimum supported version is %s</string>
     <string name="server_version_cannot_be_obtained">The server-side version is not available</string>
     <string name="plex_resource_error">Failed to obtain the Plex resource address</string>
+
+    <string name="unknown">Unknown</string>
 
 </resources>
