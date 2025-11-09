@@ -254,13 +254,6 @@ class IDataSourceManager(
      * 切换连接服务
      */
     suspend fun changeDataSource(connectionConfig: ConnectionConfig) {
-        //更新原本的数据源,关闭ifEnable
-
-        val config = db.connectionConfigDao.selectConnectionConfig()
-        if (config != null) {
-            db.connectionConfigDao.update(config.copy(ifEnable = false))
-        }
-        db.connectionConfigDao.update(connectionConfig.copy(ifEnable = true))
         release()
         connectionConfigServer.setConnectionConfigData(connectionConfig)
         changeDataSource()

@@ -68,11 +68,6 @@ data class ConnectionConfig(
     val key: String = "",
 
     /**
-     * 是否启用
-     */
-    val ifEnable: Boolean,
-
-    /**
      * 媒体库Id
      */
     val libraryId: String? = null,

@@ -169,7 +169,6 @@ abstract class IDataSourceParentServer(
                     currentPassword = encryptAES.aesData,
                     iv = encryptAES.aesIv,
                     key = encryptAES.aesKey,
-                    ifEnable = clientLoginInfoReq.ifEnable,
                     serverVersion = responseData.version,
                     updateTime = System.currentTimeMillis(),
                     lastLoginTime = System.currentTimeMillis(),
@@ -187,7 +186,6 @@ abstract class IDataSourceParentServer(
                 currentPassword = encryptAES.aesData,
                 iv = encryptAES.aesIv,
                 key = encryptAES.aesKey,
-                ifEnable = clientLoginInfoReq.ifEnable,
                 serverVersion = responseData.version,
                 deviceId = deviceId
             )
@@ -312,7 +310,6 @@ abstract class IDataSourceParentServer(
                         serverVersion = connectionConfig.serverVersion,
                         serverName = connectionConfig.serverName,
                         serverId = connectionConfig.serverId,
-                        ifEnable = connectionConfig.ifEnable
                     )
                 )
             )

@@ -56,9 +56,6 @@ interface ConnectionConfigDao {
     @Query("delete from xy_connection_config where id = :connectionId")
     suspend fun removeById(connectionId: Long)
 
-    @Query("select * from xy_connection_config where ifEnable = true ")
-    suspend fun selectEnableConnectionConfig(): ConnectionConfig?
-
     @Query("update xy_connection_config set name = :name where id = :connectionId")
     suspend fun updateName(name: String, connectionId: Long)
 }
