@@ -35,11 +35,14 @@ import cn.xybbz.R
 import cn.xybbz.common.enums.img
 import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.router.RouterConstants
+import cn.xybbz.ui.components.LazyListComponent
+import cn.xybbz.ui.components.LazyLoadingAndStatus
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.ItemTrailingArrowRight
+import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.ConnectionManagementViewModel
 
@@ -87,7 +90,7 @@ fun ConnectionManagement(
                     )
                 }
             })
-        LazyColumn(
+        LazyColumnNotComponent(
             modifier = Modifier.fillMaxSize(),
             state = lazyListState,
             contentPadding = PaddingValues(8.dp),
@@ -152,6 +155,13 @@ fun ConnectionManagement(
                             }
                         }
                     }
+                )
+            }
+
+            item {
+                LazyLoadingAndStatus(
+                    text = stringResource(R.string.reached_bottom),
+                    ifLoading = false
                 )
             }
         }

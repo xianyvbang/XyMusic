@@ -351,7 +351,7 @@ fun SearchResultScreen(
 
             item {
                 LazyLoadingAndStatus(
-                    text = stringResource(R.string.no_more_data),
+                    text = stringResource(R.string.reached_bottom),
                     ifLoading = false
                 )
             }

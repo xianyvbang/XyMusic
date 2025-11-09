@@ -154,7 +154,7 @@ fun MusicList(
         }
         item {
             LazyLoadingAndStatus(
-                stringResource(R.string.no_more_data),
+                stringResource(R.string.reached_bottom),
                 ifLoading = ifNextPageNumList
             )
         }
