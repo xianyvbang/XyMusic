@@ -203,7 +203,6 @@
     <string name="search_box_icon">搜索框图标</string>
     <string name="search_history">搜索历史</string>
     <string name="loading">加载中...</string>
-    <string name="no_more_data">已经到底了</string>
     <!--媒体库选择-->
     <string name="media_library_selection">媒体库选择</string>
     <string name="back_to_connection_info">返回连接信息页面</string>
