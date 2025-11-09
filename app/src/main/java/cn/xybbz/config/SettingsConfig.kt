@@ -60,10 +60,13 @@ class SettingsConfig(
         coroutineScope.launch {
             Log.i("=====", "开始存储设置")
             this@SettingsConfig.settings = db.settingsDao.selectOneData() ?: XySettings()
-            this@SettingsConfig.languageType = this@SettingsConfig.get().languageType
+            if (this@SettingsConfig.get().languageType != null){
+                this@SettingsConfig.languageType = this@SettingsConfig.get().languageType
+            }else {
+                setDefaultLanguage(applicationContext)
+            }
             this@SettingsConfig.cacheUpperLimit = this@SettingsConfig.get().cacheUpperLimit
             Log.i("api", "动态设置数据--读取配置")
-//            setDefaultLanguage(this@SettingsConfig.languageType, applicationContext)
         }
         val packageManager = applicationContext.packageManager
         val packageName = applicationContext.packageName
@@ -211,17 +214,9 @@ class SettingsConfig(
     /**
      * 设置当前默认语言
      */
-    fun setDefaultLanguage(languageType: LanguageType?, context: Context) {
-        if (languageType == null) {
-            val systemLanguage = MultiLanguages.getSystemLanguage(context)
-            Log.i("======", "当前语言 ${systemLanguage.displayLanguage}  ${systemLanguage.toLanguageTag()}")
-            MultiLanguages.clearAppLanguage(context)
-            this.languageType = LanguageType.getThis(systemLanguage.toLanguageTag())
-        } else {
-            val locale = Locale.forLanguageTag(languageType.languageCode)
-            MultiLanguages.setAppLanguage(context, locale);
-            this.languageType = languageType
-        }
+    fun setDefaultLanguage(context: Context) {
+        val systemLanguage = MultiLanguages.getSystemLanguage(context)
+        this.languageType = LanguageType.getThis(systemLanguage.toLanguageTag())
     }
 
     /**
