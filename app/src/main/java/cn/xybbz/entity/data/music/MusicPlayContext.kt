@@ -363,7 +363,7 @@ class MusicPlayContext @Inject constructor(
         coroutineScope.launch {
             //2024年4月17日 10:54:36 albumId 可能为null/空 下面方法未判断
             val tmpMusicList = mutableListOf<XyMusic>()
-            var tmpIndex = 0
+            var tmpIndex:Int? = null
             val xyMusicList = musicPlayData.xyMusicList?.invoke()
             if (xyMusicList?.isNotEmpty() == true) {
                 if (musicPlayData.onMusicPlayParameter.musicId.isNotBlank())

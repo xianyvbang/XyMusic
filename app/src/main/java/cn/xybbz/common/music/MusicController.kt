@@ -538,7 +538,7 @@ class MusicController(
     fun initMusicList(
         musicDataList: List<XyMusic>,
         musicCurrentPositionMapData: Map<String, Long>?,
-        originIndex: Int,
+        originIndex: Int?,
         pageNum: Int,
         pageSize: Int,
         artistId: String?,
@@ -555,7 +555,7 @@ class MusicController(
             musicCurrentPositionMap.clear()
             musicCurrentPositionMap.putAll(musicCurrentPositionMapData)
         }
-        curOriginIndex = originIndex
+        originIndex?.let { curOriginIndex = originIndex }
 
         cacheController.cancelAllCache()
         val tmpList = mutableListOf<XyMusic>()
@@ -575,7 +575,10 @@ class MusicController(
             stop()
             clearMediaItems()
             val mediaItemList = musicDataList.map { item -> musicSetMediaItem(item) }
-            setMediaItems(mediaItemList, originIndex, C.TIME_UNSET)
+            if (originIndex != null)
+                setMediaItems(mediaItemList, originIndex, C.TIME_UNSET)
+            else
+                setMediaItems(mediaItemList)
             Log.i("=====", "当前播放状态${state}")
             if (!ifInitPlayerList) {
                 Log.i("=====", "重新播放")
