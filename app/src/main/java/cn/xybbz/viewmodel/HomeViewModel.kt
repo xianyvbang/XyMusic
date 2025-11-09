@@ -37,17 +37,15 @@ import javax.inject.Inject
 class HomeViewModel @OptIn(UnstableApi::class)
 @Inject constructor(
     private val db: DatabaseClient,
-    private val _dataSourceManager: IDataSourceManager,
-    private val connectionConfigServer: ConnectionConfigServer,
+    val dataSourceManager: IDataSourceManager,
+    val connectionConfigServer: ConnectionConfigServer,
     private val _musicPlayContext: MusicPlayContext,
     private val musicController: MusicController,
-    private val _backgroundConfig: BackgroundConfig,
+    val backgroundConfig: BackgroundConfig,
     private val dailyRecommender: DailyRecommender
 ) : ViewModel() {
 
     val musicPlayContext = _musicPlayContext
-    val dataSourceManager = _dataSourceManager
-    val backgroundConfig = _backgroundConfig
 
     var isRefreshing by mutableStateOf(false)
         private set

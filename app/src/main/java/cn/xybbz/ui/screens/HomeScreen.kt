@@ -221,7 +221,7 @@ fun HomeScreen(
                             *homeViewModel.connectionList.map { connection ->
                                 MenuItemDefaultData(
                                     title = connection.name, leadingIcon = {
-                                        if (connection.ifEnable)
+                                        if (homeViewModel.connectionConfigServer.getConnectionId() == connection.id)
                                             Icon(
                                                 Icons.Rounded.Check,
                                                 contentDescription = connection.name + stringResource(
@@ -383,7 +383,7 @@ fun HomeScreen(
                             text = stringResource(R.string.album),
                             sub = if (ifShowCount) homeViewModel.albumCount ?: stringResource(
                                 Constants.UNKNOWN
-                            )  else null,
+                            ) else null,
                             imageVector = Icons.Rounded.Album,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
@@ -402,7 +402,7 @@ fun HomeScreen(
                             text = stringResource(R.string.artist),
                             sub = if (ifShowCount) homeViewModel.artistCount ?: stringResource(
                                 Constants.UNKNOWN
-                            )  else null,
+                            ) else null,
                             imageVector = Icons.Rounded.Person,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
@@ -418,7 +418,7 @@ fun HomeScreen(
                             text = stringResource(R.string.favorite),
                             sub = if (ifShowCount) homeViewModel.favoriteCount ?: stringResource(
                                 Constants.UNKNOWN
-                            )  else null,
+                            ) else null,
                             imageVector = Icons.Rounded.Favorite,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
@@ -435,7 +435,7 @@ fun HomeScreen(
                             text = stringResource(R.string.genres),
                             sub = if (ifShowCount) homeViewModel.genreCount ?: stringResource(
                                 Constants.UNKNOWN
-                            )  else null,
+                            ) else null,
                             imageVector = Icons.AutoMirrored.Rounded.Label,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {

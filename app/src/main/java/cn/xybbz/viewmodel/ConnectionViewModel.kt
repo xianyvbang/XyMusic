@@ -117,8 +117,7 @@ class ConnectionViewModel @Inject constructor(
                 password = password,
                 serverId = plexInfo?.serverId,
                 serverVersion = plexInfo?.serverVersion,
-                serverName = plexInfo?.serverName,
-                ifEnable = ifEnable
+                serverName = plexInfo?.serverName
             )
         tmpDataSourceParentServer?.addClientAndLogin(clientLoginInfoReq)?.onEach {
             Log.i("=====", "数据获取${it}")
@@ -263,8 +262,7 @@ class ConnectionViewModel @Inject constructor(
             ClientLoginInfoReq(
                 address = tmpAddress,
                 username = username,
-                password = password,
-                ifEnable = true
+                password = password
             )
         try {
             val resources = tmpDataSourceParentServer?.getResources(clientLoginInfoReq)

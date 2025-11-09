@@ -24,8 +24,7 @@ data class ClientLoginInfoReq(
     val connectionId: Long? = null,
     val serverVersion: String? = null,
     val serverName: String? = null,
-    val serverId: String? = null,
-    val ifEnable: Boolean
+    val serverId: String? = null
 ) : AuthenticateRequest
 
 @JsonClass(generateAdapter = true)
