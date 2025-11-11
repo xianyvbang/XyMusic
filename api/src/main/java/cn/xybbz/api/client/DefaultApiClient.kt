@@ -100,6 +100,7 @@ abstract class DefaultApiClient : ApiConfig {
             .addNetworkInterceptor(SubsonicNetworkStatusInterceptor(ifSubsonic = { if (ifTmp) ifSubsonic else TokenServer.ifSubsonic }))
             .followRedirects(true)
             .followSslRedirects(true)
+            .retryOnConnectionFailure(true)
             // 可以添加其他配置，比如连接超时、读写超时等
             .build()
         return apiOkHttpClient

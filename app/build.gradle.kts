@@ -180,6 +180,7 @@ dependencies {
 
     //本地缓存的module
     implementation(project(":localdata"))
+    implementation(project(":download"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
