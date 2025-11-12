@@ -28,7 +28,6 @@ import cn.xybbz.api.client.IDataSourceManager
 import cn.xybbz.api.client.version.VersionApiClient
 import cn.xybbz.api.client.version.data.ReleasesData
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.common.enums.DownloadState
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.CacheController
 import cn.xybbz.common.music.MusicController
@@ -37,6 +36,7 @@ import cn.xybbz.common.utils.GitHubVersionVersionUtils
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.SettingsConfig
 import cn.xybbz.config.alarm.AlarmConfig
+import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.entity.data.PlayerTypeData
 import cn.xybbz.entity.data.music.MusicPlayContext
@@ -46,6 +46,7 @@ import cn.xybbz.localdata.data.music.PlayHistoryMusic
 import cn.xybbz.localdata.data.music.PlayQueueMusic
 import cn.xybbz.localdata.data.player.XyPlayer
 import cn.xybbz.localdata.data.progress.Progress
+import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -71,7 +72,8 @@ class MainViewModel @Inject constructor(
     private val musicPlayContext: MusicPlayContext,
     private val cacheController: CacheController,
     private val alarmConfig: AlarmConfig,
-    private val versionApiClient: VersionApiClient
+    private val versionApiClient: VersionApiClient,
+    private val downloadManager: DownLoadManager
 ) : ViewModel() {
 
     val dataSourceManager = _dataSourceManager
@@ -111,7 +113,7 @@ class MainViewModel @Inject constructor(
         private set
 
     //下载状态 true 下载中, false 未在下载中
-    var apkDownloadState by mutableStateOf(DownloadState.NOT_STARTED)
+    var apkDownloadStatus by mutableStateOf(DownloadStatus.QUEUED)
         private set
 
     //下载的异步携程
@@ -612,7 +614,7 @@ class MainViewModel @Inject constructor(
      * @return true 获取最新版本号成功,false 获取最新版本号失败
      */
     suspend fun initLatestVersion(ifClick: Boolean = true): Boolean {
-        if (apkDownloadState == DownloadState.DOWNLOADING) return true
+        if (apkDownloadStatus == DownloadStatus.DOWNLOADING) return true
         val versionName = settingsConfig.packageInfo.versionName
         var ifGetVersionSuccess: Boolean
         val currentTimeMillis = System.currentTimeMillis()
@@ -673,12 +675,13 @@ class MainViewModel @Inject constructor(
         apkSize: Long
     ) {
 
-        apkDownloadState = DownloadState.DOWNLOADING
+        //判断下载是否进行中如果进行中则不重复下载
+        apkDownloadStatus = DownloadStatus.DOWNLOADING
         val apkFile = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), apkName)
         apkProgress = 1.0f * apkFile.length() / apkSize
 
         if (apkFile.exists() && apkFile.length() == apkSize) {
-            apkDownloadState = DownloadState.COMPLETED
+            apkDownloadStatus = DownloadStatus.COMPLETED
             installApk(context, apkFile)
         } else {
             withContext(Dispatchers.IO) {
@@ -707,11 +710,11 @@ class MainViewModel @Inject constructor(
                             }
                         }
                         // 下载完成 → 安装
-                        apkDownloadState = DownloadState.COMPLETED
+                        apkDownloadStatus = DownloadStatus.COMPLETED
                         installApk(context, apkFile)
                     }
                 } else {
-                    apkDownloadState = DownloadState.FAILED
+                    apkDownloadStatus = DownloadStatus.FAILED
                     Log.i("=====", "文件下载失败: ${response.code()}: ${response.message()}")
                 }
             }
@@ -728,7 +731,7 @@ class MainViewModel @Inject constructor(
         apkName: String,
         apkSize: Long
     ) {
-        if (apkDownloadState == DownloadState.DOWNLOADING) return
+        if (apkDownloadStatus == DownloadStatus.DOWNLOADING) return
         downloadJob = viewModelScope.launch(Dispatchers.IO) {
             downloadAndInstall(context, apkUrl, apkName, apkSize)
         }
@@ -736,7 +739,7 @@ class MainViewModel @Inject constructor(
 
     //取消下载
     fun cancelDownload() {
-        apkDownloadState = DownloadState.PAUSED
+        apkDownloadStatus = DownloadStatus.PAUSED
         downloadJob?.cancel()
     }
 

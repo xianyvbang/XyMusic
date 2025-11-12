@@ -166,6 +166,7 @@ dependencies {
     implementation(libs.google.hilt)
     ksp(libs.google.hilt.compiler)
     implementation(libs.google.hilt.navigation)
+    implementation(libs.google.hilt.work)
 
     //多语种适配框架
     implementation(libs.multi.languages)
@@ -180,7 +181,6 @@ dependencies {
 
     //本地缓存的module
     implementation(project(":localdata"))
-    implementation(project(":download"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

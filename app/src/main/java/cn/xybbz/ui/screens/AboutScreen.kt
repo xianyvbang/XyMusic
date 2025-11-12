@@ -39,7 +39,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
-import cn.xybbz.common.enums.DownloadState
+import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.compositionLocal.LocalMainViewModel
@@ -168,7 +168,7 @@ fun AboutScreen(
                                         LinearProgressIndicator(progress = { mainViewModel.apkProgress })
                                         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
                                         BasicText(text = "${stringResource(R.string.current_download_progress)}: ${(mainViewModel.apkProgress * 100.0).toInt()}%")
-                                        if (mainViewModel.apkDownloadState == DownloadState.FAILED)
+                                        if (mainViewModel.apkDownloadStatus == DownloadStatus.FAILED)
                                             XyItemTextLarge(
                                                 text = stringResource(R.string.download_failed),
                                                 color = MaterialTheme.colorScheme.onErrorContainer
@@ -180,7 +180,7 @@ fun AboutScreen(
                                                     mainViewModel.cancelDownload()
                                                 },
                                                 text = stringResource(R.string.cancel_download),
-                                                enabled = mainViewModel.apkDownloadState == DownloadState.DOWNLOADING
+                                                enabled = mainViewModel.apkDownloadStatus == DownloadStatus.DOWNLOADING
                                             )
                                             Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
                                             Button(
@@ -202,12 +202,12 @@ fun AboutScreen(
 
                                                     }
                                                 },
-                                                enabled = mainViewModel.apkDownloadState != DownloadState.DOWNLOADING,
+                                                enabled = mainViewModel.apkDownloadStatus != DownloadStatus.DOWNLOADING,
                                                 shape = RoundedCornerShape(XyTheme.dimens.corner),
                                                 modifier = Modifier.weight(1f),
                                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                                             ) {
-                                                if (mainViewModel.apkDownloadState == DownloadState.DOWNLOADING)
+                                                if (mainViewModel.apkDownloadStatus == DownloadStatus.DOWNLOADING)
                                                     ContainedLoadingIndicator(
                                                         modifier = Modifier.size(
                                                             30.dp
