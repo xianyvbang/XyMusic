@@ -1,6 +1,7 @@
 package cn.xybbz.common.utils
 
 import android.webkit.MimeTypeMap
+import cn.xybbz.config.download.core.DownloadRequest
 import cn.xybbz.config.download.core.ResolvedPath
 import cn.xybbz.localdata.data.download.XyDownload
 import kotlinx.coroutines.Dispatchers
@@ -39,17 +40,16 @@ internal object FileNameResolver {
      * @return A [ResolvedPath] object containing the guaranteed unique final path and file name.
      */
     suspend fun resolve(
-        request: XyDownload,
+        request: DownloadRequest,
         globalFinalDir: String
     ): ResolvedPath = mutex.withLock { // Use a mutex to ensure atomicity and prevent race conditions
 
         val parentDir: String
         val rawName: String
 
-        val userFile = File(request.filePath)
         // Use the parent directory from the provided path, or fallback to the global directory.
-        parentDir = userFile.parent ?: globalFinalDir
-        rawName = userFile.name
+        parentDir = globalFinalDir
+        rawName = request.fileName
 
         // Clean up the raw name (remove illegal chars, etc.).
         val sanitizedName = sanitize(rawName)

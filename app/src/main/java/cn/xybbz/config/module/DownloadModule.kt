@@ -2,9 +2,13 @@ package cn.xybbz.config.module
 
 import android.content.Context
 import androidx.work.WorkManager
+import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.download.core.DownloadDispatcherImpl
 import cn.xybbz.config.download.core.DownloaderConfig
+import cn.xybbz.config.download.core.OkhttpDownloadCore
+import cn.xybbz.config.module.ConnectionConfigModule_ConnectionConfigServerFactory.connectionConfigServer
+import cn.xybbz.config.module.DatabaseModule_DbFactory.db
 import cn.xybbz.localdata.config.DatabaseClient
 import dagger.Module
 import dagger.Provides
@@ -18,16 +22,19 @@ import javax.inject.Singleton
 class DownloadModule {
 
 
+
     @Singleton
     @Provides
     fun downloadDispatcher(
         db: DatabaseClient,
-        @ApplicationContext applicationContext: Context
+        @ApplicationContext applicationContext: Context,
+        connectionConfigServer: ConnectionConfigServer
     ): DownloadDispatcherImpl {
         val downloadDispatcherImpl = DownloadDispatcherImpl(
             db,
             WorkManager.getInstance(applicationContext),
-            DownloaderConfig.Builder(applicationContext).build()
+            DownloaderConfig.Builder(applicationContext).build(),
+            connectionConfigServer
         )
         return downloadDispatcherImpl;
     }

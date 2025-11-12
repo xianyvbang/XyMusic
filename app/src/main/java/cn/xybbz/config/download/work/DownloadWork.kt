@@ -17,21 +17,23 @@ import dagger.assisted.AssistedInject
 import java.io.File
 import kotlin.coroutines.cancellation.CancellationException
 
-@HiltWorker
 class DownloadWork @AssistedInject constructor(
     @Assisted appContext: Context,
-    @Assisted params: WorkerParameters,
-    private val okhttpDownloadCore: OkhttpDownloadCore,
+    @Assisted workerParams: WorkerParameters,
     private val db: DatabaseClient,
     private val callback: DownloadDispatcherImpl,
     private val client: VersionApiClient,
 ) :
-    CoroutineWorker(appContext, params) {
+    CoroutineWorker(appContext, workerParams) {
     override suspend fun doWork(): Result {
         val downloadId = inputData.getLong(Constants.DOWNLOAD_ID, -1L)
         if (downloadId == -1L) return Result.failure()
         val downloadTask = db.downloadDao.selectById(downloadId) ?: return Result.failure()
         val statusChange = suspend { db.downloadDao.getStatusById(downloadId) }
+
+        val okhttpDownloadCore = OkhttpDownloadCore(
+            applicationContext
+        )
         try {
             okhttpDownloadCore.download(client, statusChange, downloadTask).collect { state ->
                 when (state) {

@@ -53,28 +53,11 @@ class DatasourceConfig {
     private object Migration2 : Migration(2, 3) {
         override fun migrate(db: SupportSQLiteDatabase) {
             // 数据库的升级语句
-            db.execSQL("""
-                CREATE TABLE "xy_download" (
-  "id" INTEGER NOT NULL,
-  "url" TEXT,
-  "fileName" TEXT,
-  "filePath" TEXT,
-  "fileSize" integer,
-  "tempFilePath" TEXT,
-  "progress" integer,
-  "totalBytes" integer,
-  "downloadedBytes" integer,
-  "error" TEXT,
-  "uid" text,
-  "title" TEXT,
-  "cover" TEXT,
-  "duration" integer,
-  "connectionId" INTEGER,
-  "updateTime" integer,
-  "createTime" integer,
-  PRIMARY KEY ("id")
-);
-            """.trimIndent())
+            db.execSQL(
+                """
+                CREATE TABLE `xy_download` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `url` TEXT NOT NULL, `fileName` TEXT NOT NULL, `filePath` TEXT NOT NULL, `fileSize` INTEGER NOT NULL, `tempFilePath` TEXT NOT NULL, `typeData` TEXT NOT NULL, `progress` INTEGER NOT NULL, `totalBytes` INTEGER NOT NULL, `downloadedBytes` INTEGER NOT NULL, `status` TEXT NOT NULL, `error` TEXT, `uid` TEXT, `title` TEXT, `cover` TEXT, `duration` INTEGER, `connectionId` INTEGER, `updateTime` INTEGER NOT NULL, `createTime` INTEGER NOT NULL);
+            """.trimIndent()
+            )
         }
     }
 }

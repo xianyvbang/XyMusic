@@ -37,10 +37,12 @@ import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.SettingsConfig
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.download.DownLoadManager
+import cn.xybbz.config.download.core.DownloadRequest
 import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.entity.data.PlayerTypeData
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.data.era.XyEraItem
 import cn.xybbz.localdata.data.music.PlayHistoryMusic
 import cn.xybbz.localdata.data.music.PlayQueueMusic
@@ -648,6 +650,7 @@ class MainViewModel @Inject constructor(
             ifUpdateVersion =
                 GitHubVersionVersionUtils.isLatestVersion(versionName, latestVersion)
         }
+        ifGetVersionSuccess = true
         return ifGetVersionSuccess
     }
 
@@ -674,9 +677,16 @@ class MainViewModel @Inject constructor(
         apkName: String,
         apkSize: Long
     ) {
+        downloadManager.enqueue(
+            DownloadRequest(
+                url = apkUrl,
+                fileName = apkName,
+                fileSize = apkSize
+            )
+        )
 
         //判断下载是否进行中如果进行中则不重复下载
-        apkDownloadStatus = DownloadStatus.DOWNLOADING
+        /*apkDownloadStatus = DownloadStatus.DOWNLOADING
         val apkFile = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), apkName)
         apkProgress = 1.0f * apkFile.length() / apkSize
 
@@ -719,7 +729,7 @@ class MainViewModel @Inject constructor(
                 }
             }
 
-        }
+        }*/
     }
 
     /**

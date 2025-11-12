@@ -3,6 +3,7 @@ package cn.xybbz.localdata.data.download
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import cn.xybbz.localdata.enums.DownloadStatus
+import cn.xybbz.localdata.enums.DownloadTypes
 
 @Entity(tableName = "xy_download")
 data class XyDownload(
@@ -14,7 +15,7 @@ data class XyDownload(
     val fileSize: Long,
     val tempFilePath: String,
 
-
+    val typeData: DownloadTypes = DownloadTypes.APK,
     var progress: Int = 0,
     var totalBytes: Long = 0L,
     var downloadedBytes: Long = 0L,

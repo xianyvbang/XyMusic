@@ -5,7 +5,7 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.hjq.language.MultiLanguages
 import dagger.hilt.android.HiltAndroidApp
-import jakarta.inject.Inject
+import javax.inject.Inject
 
 @HiltAndroidApp
 class XyApplication : Application(),Configuration.Provider {

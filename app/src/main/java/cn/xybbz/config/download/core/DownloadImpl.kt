@@ -26,7 +26,7 @@ class DownloadImpl(
         }
     }
 
-    override suspend fun enqueue(vararg requests: XyDownload) {
+    override suspend fun enqueue(vararg requests: DownloadRequest) {
         if (requests.isEmpty()) {
             return
         }
