@@ -13,7 +13,7 @@ sealed class DownloadState {
      * @param [speedBps] 速度 BPS
      */
     data class InProgress(
-        val progress: Int,
+        val progress: Float,
         val downloadedBytes: Long,
         val totalBytes: Long,
         val speedBps: Long

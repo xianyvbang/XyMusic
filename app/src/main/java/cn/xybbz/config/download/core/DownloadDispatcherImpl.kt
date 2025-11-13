@@ -13,6 +13,8 @@ import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.enums.DownloadStatus
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -36,6 +38,9 @@ class DownloadDispatcherImpl(
     private val runningTasks = ConcurrentHashMap<Long, XyDownload>()
     private val pausedTasks = ConcurrentHashMap<Long, XyDownload>()
 
+    // 创建一个用于广播任务更新事件的 SharedFlow
+    private val _taskUpdateEventFlow = MutableSharedFlow<XyDownload>()
+    val taskUpdateEventFlow = _taskUpdateEventFlow.asSharedFlow()
     private var lastDbUpdateTime = 0L
     private val dbUpdateInterval = 1000L
 
@@ -200,7 +205,7 @@ class DownloadDispatcherImpl(
 
     override fun onProgress(
         downloadId: Long,
-        progress: Int,
+        progress: Float,
         downloadedBytes: Long,
         totalBytes: Long,
         speedBps: Long
@@ -214,6 +219,12 @@ class DownloadDispatcherImpl(
             it.totalBytes = totalBytes
         }
         val currentTime = System.currentTimeMillis()
+
+        if (download != null) {
+            scope.launch {
+                scope.launch { _taskUpdateEventFlow.emit(download.copy(updateTime = currentTime)) }
+            }
+        }
         //更新数据库数据
         scope.launch {
             if (currentTime - lastDbUpdateTime >= dbUpdateInterval) {
@@ -251,6 +262,7 @@ class DownloadDispatcherImpl(
                 if (task != null) {
                     updateTask = task
                     task.status = status
+                    _taskUpdateEventFlow.emit(task.copy(updateTime = time))
                     // 使用更全面的数据库更新方法
                     when (status) {
                         DownloadStatus.COMPLETED -> {

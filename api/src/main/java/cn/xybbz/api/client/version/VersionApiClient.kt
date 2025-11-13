@@ -19,6 +19,10 @@ class VersionApiClient : ApiConfig {
 
     private lateinit var gitHubVersionApi: GitHubVersionApi
 
+    init {
+        setRetrofitData("",false)
+    }
+
     /**
      * 通过Retrofit创建Api接口
      */

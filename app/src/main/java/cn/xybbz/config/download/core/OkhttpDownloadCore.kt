@@ -1,6 +1,7 @@
 package cn.xybbz.config.download.core
 
 import android.content.Context
+import android.icu.math.BigDecimal
 import android.util.Log
 import cn.xybbz.api.client.version.VersionApiClient
 import cn.xybbz.common.constants.Constants
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import java.io.File
 import java.io.RandomAccessFile
+import java.math.RoundingMode
 import kotlin.coroutines.cancellation.CancellationException
 
 class OkhttpDownloadCore(
@@ -136,7 +138,13 @@ class OkhttpDownloadCore(
 
     }.flowOn(Dispatchers.IO)
 
-    private fun calculateProgress(downloaded: Long, total: Long): Int {
-        return if (total > 0) ((downloaded * 100) / total).toInt() else 0
+    private fun calculateProgress(downloaded: Long, total: Long): Float {
+        return if (total > 0) ((downloaded * 100.0) / total).roundToFloat() else 0f
+    }
+
+    fun Double.roundToFloat(scale: Int = 1): Float {
+        return BigDecimal(this)
+            .setScale(scale, RoundingMode.DOWN.ordinal)
+            .toFloat()
     }
 }

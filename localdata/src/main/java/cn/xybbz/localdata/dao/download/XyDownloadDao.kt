@@ -6,6 +6,8 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.enums.DownloadStatus
+import cn.xybbz.localdata.enums.DownloadTypes
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface XyDownloadDao {
@@ -22,7 +24,7 @@ interface XyDownloadDao {
     @Query("update xy_download set progress = :progress, downloadedBytes = :downloadedBytes, totalBytes = :totalBytes, updateTime = :updateTime where id = :id")
     suspend fun updateProgress(
         id: Long,
-        progress: Int,
+        progress: Float,
         downloadedBytes: Long,
         totalBytes: Long,
         updateTime: Long
@@ -58,8 +60,26 @@ interface XyDownloadDao {
     @Query("SELECT * FROM xy_download WHERE id IN (:ids)")
     suspend fun getByIds(ids: List<Long>): List<XyDownload>
 
-    @Query("SELECT * FROM xy_download where connectionId = :connectionId")
-    suspend fun getAllTasksSuspend(connectionId: Long): List<XyDownload>
+    @Query("SELECT * FROM xy_download where (connectionId = :connectionId or typeData = :typeData)")
+    suspend fun getAllTasksSuspend(
+        connectionId: Long,
+        typeData: DownloadTypes = DownloadTypes.APK
+    ): List<XyDownload>
+
+    @Query("SELECT * FROM xy_download where typeData =:typeData and connectionId = (select connectionId from xy_settings) ORDER BY createTime DESC")
+    fun getAllTasksFlow(typeData: DownloadTypes): Flow<List<XyDownload>>
 
 
+    @Query("select * from xy_download where typeData = :typeData and url = :url limit 1")
+    suspend fun getByTypeAndUrl(typeData: DownloadTypes, url: String): XyDownload?
+
+
+    @Query("SELECT * FROM xy_download where typeData = :typeData and connectionId = (select connectionId from xy_settings) ORDER BY createTime DESC limit 1")
+    fun getOneFlow(typeData: DownloadTypes): Flow<XyDownload?>
+
+    @Query("SELECT * FROM xy_download where typeData = :typeData ORDER BY createTime DESC limit 1")
+    fun getOneApkFlow(typeData: DownloadTypes = DownloadTypes.APK): Flow<XyDownload?>
+
+    @Query("SELECT * FROM xy_download where typeData = :typeData and connectionId = (select connectionId from xy_settings) ORDER BY createTime DESC limit 1")
+    suspend fun getOne(typeData: DownloadTypes): XyDownload?
 }

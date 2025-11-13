@@ -16,7 +16,7 @@ data class XyDownload(
     val tempFilePath: String,
 
     val typeData: DownloadTypes = DownloadTypes.APK,
-    var progress: Int = 0,
+    var progress: Float = 0f,
     var totalBytes: Long = 0L,
     var downloadedBytes: Long = 0L,
 

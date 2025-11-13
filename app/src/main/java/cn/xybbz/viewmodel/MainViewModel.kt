@@ -1,11 +1,7 @@
 package cn.xybbz.viewmodel
 
-import android.content.Context
-import android.content.Intent
 import android.icu.math.BigDecimal
 import android.icu.math.MathContext
-import android.net.Uri
-import android.os.Environment
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.material.icons.Icons
@@ -13,52 +9,39 @@ import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.RepeatOne
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.client.IDataSourceManager
-import cn.xybbz.api.client.version.VersionApiClient
-import cn.xybbz.api.client.version.data.ReleasesData
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.CacheController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.DateUtil
-import cn.xybbz.common.utils.GitHubVersionVersionUtils
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.SettingsConfig
 import cn.xybbz.config.alarm.AlarmConfig
-import cn.xybbz.config.download.DownLoadManager
-import cn.xybbz.config.download.core.DownloadRequest
 import cn.xybbz.config.lrc.LrcServer
+import cn.xybbz.config.update.ApkUpdateManager
 import cn.xybbz.entity.data.PlayerTypeData
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.localdata.config.DatabaseClient
-import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.data.era.XyEraItem
 import cn.xybbz.localdata.data.music.PlayHistoryMusic
 import cn.xybbz.localdata.data.music.PlayQueueMusic
 import cn.xybbz.localdata.data.player.XyPlayer
 import cn.xybbz.localdata.data.progress.Progress
-import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.File
-import java.io.FileOutputStream
 import java.time.Year
 import javax.inject.Inject
 
@@ -74,8 +57,7 @@ class MainViewModel @Inject constructor(
     private val musicPlayContext: MusicPlayContext,
     private val cacheController: CacheController,
     private val alarmConfig: AlarmConfig,
-    private val versionApiClient: VersionApiClient,
-    private val downloadManager: DownLoadManager
+    private val apkUpdateManager: ApkUpdateManager,
 ) : ViewModel() {
 
     val dataSourceManager = _dataSourceManager
@@ -94,29 +76,7 @@ class MainViewModel @Inject constructor(
     //从1900年到当前年份的set列表
     val yearSet by mutableStateOf(DateUtil.getYearSet())
 
-    //最新版本的版本号
-    var latestVersion by mutableStateOf("")
-        private set
 
-    //当前版本
-    var currentVersion by mutableStateOf("")
-        private set
-
-    //是否可以更新版本
-    var ifUpdateVersion by mutableStateOf(false)
-        private set
-
-    //最新版本信息
-    var releasesInfo by mutableStateOf<ReleasesData?>(null)
-        private set
-
-    //下载进度
-    var apkProgress by mutableFloatStateOf(0.0f)
-        private set
-
-    //下载状态 true 下载中, false 未在下载中
-    var apkDownloadStatus by mutableStateOf(DownloadStatus.QUEUED)
-        private set
 
     //下载的异步携程
     var downloadJob: Job? = null
@@ -129,11 +89,8 @@ class MainViewModel @Inject constructor(
         initEraData()
         //音乐服务初始化
         musicControllerInit()
-        //获取最新版本号初始化
-        versionApiClient.setRetrofitData("", false)
-        viewModelScope.launch {
-            initLatestVersion()
-        }
+        //初始化版本信息获取
+        initGetVersionInfo()
     }
 
     /**
@@ -288,7 +245,6 @@ class MainViewModel @Inject constructor(
         /**
          * 设置音乐列表变化时调用的方法
          */
-        //todo 插入音乐,加载下一页的时候没有触发存储
         musicController.setOnAddMusicListFun { artist ->
             viewModelScope.launch {
                 var index = db.musicDao.selectPlayQueueIndex() ?: -1
@@ -301,7 +257,7 @@ class MainViewModel @Inject constructor(
                     )
                 }
                 if (xyMusicList.isNotEmpty()) {
-                    //todo 修改数据存储为XyPlayerMusicItem
+
                     //先删除数据
                     db.musicDao.removePlayQueueMusic()
                     //存储音乐数据
@@ -602,6 +558,15 @@ class MainViewModel @Inject constructor(
     }
 
     /**
+     * 初始化版本信息获取
+     */
+    fun initGetVersionInfo(){
+        viewModelScope.launch {
+            apkUpdateManager.initLatestVersion()
+        }
+    }
+
+    /**
      * 清空分页信息
      */
 
@@ -610,168 +575,4 @@ class MainViewModel @Inject constructor(
             db.remoteCurrentDao.removeAll()
         }
     }
-
-    /**
-     * 获得应用的最新版本号
-     * @return true 获取最新版本号成功,false 获取最新版本号失败
-     */
-    suspend fun initLatestVersion(ifClick: Boolean = true): Boolean {
-        if (apkDownloadStatus == DownloadStatus.DOWNLOADING) return true
-        val versionName = settingsConfig.packageInfo.versionName
-        var ifGetVersionSuccess: Boolean
-        val currentTimeMillis = System.currentTimeMillis()
-
-        val ifDownloadApk = ifDownloadApk(ifClick)
-        if (ifDownloadApk)
-            settingsConfig.setLatestVersionTime(currentTimeMillis)
-        try {
-            val releasesInfo = versionApiClient.versionApi().getLatestReleasesInfo()
-            Log.i("======", "返回github信息: ${releasesInfo}")
-            this.releasesInfo = releasesInfo
-            if (releasesInfo != null) {
-                latestVersion = releasesInfo.tagName
-                settingsConfig.setLatestVersion(releasesInfo.tagName)
-
-                val assetItem = releasesInfo.assets.findLast { it.name.contains("apk") }
-                if (assetItem != null) {
-                    settingsConfig.setLastApkUrl(assetItem.browserDownloadUrl)
-                }
-
-                ifGetVersionSuccess = true
-            } else {
-                ifGetVersionSuccess = false
-            }
-        } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获取github版本号失败", e)
-            ifGetVersionSuccess = false
-        }
-
-        if (!versionName.isNullOrBlank()) {
-            ifUpdateVersion =
-                GitHubVersionVersionUtils.isLatestVersion(versionName, latestVersion)
-        }
-        ifGetVersionSuccess = true
-        return ifGetVersionSuccess
-    }
-
-    /**
-     * 是否已经完成下载,或者下载时间不超过1小时
-     */
-    fun ifDownloadApk(ifClick: Boolean = true): Boolean {
-        latestVersion = settingsConfig.get().latestVersion
-        val versionName = settingsConfig.packageInfo.versionName
-        currentVersion = if (versionName.isNullOrBlank()) "" else versionName
-        val latestVersionTime = settingsConfig.get().latestVersionTime
-        val currentTimeMillis = System.currentTimeMillis()
-        val ifGetVersion = (currentTimeMillis - latestVersionTime) >= (1 * 60 * 60 * 1000)
-        return ifClick && !ifGetVersion
-    }
-
-
-    /**
-     * 下载 APK 并安装
-     */
-    suspend fun downloadAndInstall(
-        context: Context,
-        apkUrl: String,
-        apkName: String,
-        apkSize: Long
-    ) {
-        downloadManager.enqueue(
-            DownloadRequest(
-                url = apkUrl,
-                fileName = apkName,
-                fileSize = apkSize
-            )
-        )
-
-        //判断下载是否进行中如果进行中则不重复下载
-        /*apkDownloadStatus = DownloadStatus.DOWNLOADING
-        val apkFile = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), apkName)
-        apkProgress = 1.0f * apkFile.length() / apkSize
-
-        if (apkFile.exists() && apkFile.length() == apkSize) {
-            apkDownloadStatus = DownloadStatus.COMPLETED
-            installApk(context, apkFile)
-        } else {
-            withContext(Dispatchers.IO) {
-                val response =
-                    versionApiClient.versionApi()
-                        .downloadFile(
-                            fileUrl = apkUrl,
-                            range = "bytes=${apkFile.length()}-",
-                            alreadyDownloaded = apkFile.length(),
-                            totalBytes = apkSize
-                        )
-                if (response.isSuccessful) {
-                    response.body()?.let { body ->
-                        val buffer = ByteArray(8 * 1024)
-                        var bytes: Int
-                        FileOutputStream(apkFile, true).use { output ->
-                            body.byteStream().use { input ->
-
-                                while (input.read(buffer).also { bytes = it } != -1) {
-                                    ensureActive() // ⬅️ 协程被取消时抛异常，中断下载
-                                    output.write(buffer, 0, bytes)
-                                    apkProgress =
-                                        (apkFile.length().toDouble() / apkSize).toFloat()
-                                }
-//                                input.copyTo(output)
-                            }
-                        }
-                        // 下载完成 → 安装
-                        apkDownloadStatus = DownloadStatus.COMPLETED
-                        installApk(context, apkFile)
-                    }
-                } else {
-                    apkDownloadStatus = DownloadStatus.FAILED
-                    Log.i("=====", "文件下载失败: ${response.code()}: ${response.message()}")
-                }
-            }
-
-        }*/
-    }
-
-    /**
-     * 下载apk并写入job
-     */
-    fun downloadAndInstallJob(
-        context: Context,
-        apkUrl: String,
-        apkName: String,
-        apkSize: Long
-    ) {
-        if (apkDownloadStatus == DownloadStatus.DOWNLOADING) return
-        downloadJob = viewModelScope.launch(Dispatchers.IO) {
-            downloadAndInstall(context, apkUrl, apkName, apkSize)
-        }
-    }
-
-    //取消下载
-    fun cancelDownload() {
-        apkDownloadStatus = DownloadStatus.PAUSED
-        downloadJob?.cancel()
-    }
-
-    /**
-     * 安装 APK
-     */
-    private fun installApk(
-        context: Context,
-        apkFile: File,
-    ) {
-        val apkUri: Uri = FileProvider.getUriForFile(
-            context,
-            "${context.packageName}.provider",
-            apkFile
-        )
-
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(apkUri, "application/vnd.android.package-archive")
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
-        }
-
-        context.startActivity(intent)
-    }
-
 }

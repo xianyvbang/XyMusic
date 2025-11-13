@@ -7,7 +7,7 @@ import cn.xybbz.config.download.core.IDownloader
 import cn.xybbz.localdata.config.DatabaseClient
 
 class DownLoadManager(
-    private val applicationContext: Context,
+    val applicationContext: Context,
     private val db: DatabaseClient,
     private val downloadDispatcher: DownloadDispatcherImpl
 ) : IDownloader by DownloadImpl(downloadDispatcher, applicationContext, db) {

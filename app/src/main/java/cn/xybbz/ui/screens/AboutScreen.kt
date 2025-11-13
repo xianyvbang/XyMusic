@@ -1,5 +1,6 @@
 package cn.xybbz.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,7 +27,12 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,12 +44,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.R
-import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
-import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.SettingItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
@@ -73,7 +79,15 @@ fun AboutScreen(
 
     val context = LocalContext.current
 
-    val mainViewModel = LocalMainViewModel.current
+    val apkDownloadInfo by aboutViewModel.apkDownloadInfo.collectAsStateWithLifecycle()
+    var enabledGetVersion by remember {
+        mutableStateOf(true)
+    }
+
+
+    LaunchedEffect(apkDownloadInfo) {
+        Log.i("=====","数据变化 ${apkDownloadInfo}")
+    }
 
     XyColumnScreen(
         modifier = Modifier.brashColor(
@@ -128,7 +142,7 @@ fun AboutScreen(
             item {
                 SettingItemComponent(
                     title = R.string.current_version,
-                    info = "v${mainViewModel.currentVersion}"
+                    info = "v${aboutViewModel.apkUpdateManager.currentVersion}"
                 ) {
 
                 }
@@ -137,12 +151,13 @@ fun AboutScreen(
             item {
                 SettingItemComponent(
                     title = R.string.check_updates,
-                    info = if (mainViewModel.ifUpdateVersion) stringResource(R.string.latest_version) else "${
+                    enabled = enabledGetVersion,
+                    info = if (aboutViewModel.apkUpdateManager.ifMaxVersion) stringResource(R.string.latest_version) else "${
                         stringResource(
                             R.string.new_version_detected
                         )
-                    }:${mainViewModel.latestVersion}",
-                    ifOpenBadge = !mainViewModel.ifUpdateVersion
+                    }:${aboutViewModel.apkUpdateManager.latestVersion}",
+                    ifOpenBadge = !aboutViewModel.apkUpdateManager.ifMaxVersion
                 ) {
                     coroutineScope.launch {
                         val initLatestVersion = OperationTipUtils.operationTipNotToBlock(
@@ -150,7 +165,10 @@ fun AboutScreen(
                             successMessage = R.string.get_latest_version_success,
                             errorMessage = R.string.get_latest_version_fail
                         ) {
-                            val initLatestVersion = mainViewModel.initLatestVersion(false)
+                            enabledGetVersion = false
+                            val initLatestVersion =
+                                aboutViewModel.apkUpdateManager.initLatestVersion(true)
+                            enabledGetVersion = true
                             initLatestVersion
                         }
                         if (initLatestVersion) {
@@ -158,17 +176,25 @@ fun AboutScreen(
                                 title = R.string.new_version_download,
                                 content = {
                                     XyColumn(backgroundColor = Color.Transparent) {
-                                        LazyColumnBottomSheetComponent {
+                                        LazyColumnBottomSheetComponent(
+                                            modifier = Modifier.height(
+                                                300.dp
+                                            )
+                                        ) {
                                             item {
-                                                XyItemTextLarge(text = "${mainViewModel.releasesInfo?.body}")
+                                                XyItemTextLarge(text = "${aboutViewModel.apkUpdateManager.releasesInfo?.body}")
                                             }
                                         }
-                                        XyItemTextLarge(text = "${stringResource(R.string.version_number)}: ${mainViewModel.latestVersion}")
+                                        XyItemTextLarge(text = "${stringResource(R.string.version_number)}: ${aboutViewModel.apkUpdateManager.latestVersion}")
                                         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                                        LinearProgressIndicator(progress = { mainViewModel.apkProgress })
+                                        LinearProgressIndicator(progress = {
+                                            if ((apkDownloadInfo?.totalBytes
+                                                    ?: 0) > 0
+                                            ) ((apkDownloadInfo?.progress ?: 0f) / 100f) else 0f
+                                        })
                                         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                                        BasicText(text = "${stringResource(R.string.current_download_progress)}: ${(mainViewModel.apkProgress * 100.0).toInt()}%")
-                                        if (mainViewModel.apkDownloadStatus == DownloadStatus.FAILED)
+                                        BasicText(text = "${stringResource(R.string.current_download_progress)}: ${apkDownloadInfo?.progress ?: 0f}%")
+                                        if (apkDownloadInfo?.status == DownloadStatus.FAILED)
                                             XyItemTextLarge(
                                                 text = stringResource(R.string.download_failed),
                                                 color = MaterialTheme.colorScheme.onErrorContainer
@@ -177,22 +203,21 @@ fun AboutScreen(
                                             XyButton(
                                                 modifier = Modifier.weight(1f),
                                                 onClick = {
-                                                    mainViewModel.cancelDownload()
+                                                    aboutViewModel.cancelDownload()
                                                 },
                                                 text = stringResource(R.string.cancel_download),
-                                                enabled = mainViewModel.apkDownloadStatus == DownloadStatus.DOWNLOADING
+                                                enabled = apkDownloadInfo?.status == DownloadStatus.DOWNLOADING
                                             )
                                             Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
                                             Button(
                                                 onClick = composeClick {
                                                     coroutineScope.launch {
-                                                        mainViewModel.releasesInfo?.assets?.findLast {
+                                                        aboutViewModel.apkUpdateManager.releasesInfo?.assets?.findLast {
                                                             it.name.contains(
                                                                 "apk"
                                                             )
                                                         }?.let { asset ->
-                                                            mainViewModel.downloadAndInstallJob(
-                                                                context,
+                                                            aboutViewModel.downloadAndInstall(
                                                                 asset.url,
                                                                 asset.name,
                                                                 asset.size
@@ -202,12 +227,12 @@ fun AboutScreen(
 
                                                     }
                                                 },
-                                                enabled = mainViewModel.apkDownloadStatus != DownloadStatus.DOWNLOADING,
+                                                enabled = apkDownloadInfo?.status != DownloadStatus.DOWNLOADING,
                                                 shape = RoundedCornerShape(XyTheme.dimens.corner),
                                                 modifier = Modifier.weight(1f),
                                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                                             ) {
-                                                if (mainViewModel.apkDownloadStatus == DownloadStatus.DOWNLOADING)
+                                                if (apkDownloadInfo?.status == DownloadStatus.DOWNLOADING)
                                                     ContainedLoadingIndicator(
                                                         modifier = Modifier.size(
                                                             30.dp

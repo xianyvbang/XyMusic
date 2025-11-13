@@ -1,6 +1,5 @@
 package cn.xybbz.config.download.core
 
-import cn.xybbz.localdata.data.download.XyDownload
 
 interface IDownloader {
     suspend fun enqueue(vararg requests: DownloadRequest)
@@ -9,4 +8,6 @@ interface IDownloader {
     fun cancel(vararg ids: Long)
     fun delete(vararg ids: Long, deleteFile: Boolean = true)
     fun updateConfig(config: DownloaderConfig)
+    fun addListener(listener: DownloadListener)
+    fun removerListener(listener: DownloadListener)
 }

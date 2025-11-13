@@ -10,6 +10,7 @@ import cn.xybbz.localdata.enums.DownloadStatus
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
+import java.util.concurrent.CopyOnWriteArrayList
 
 class DownloadImpl(
     private val downloadDispatcher: DownloadDispatcherImpl,
@@ -18,11 +19,43 @@ class DownloadImpl(
 ) : IDownloader {
 
     val scope = CoroutineScopeUtils.getIo("downloadImpl")
+    private val listeners = CopyOnWriteArrayList<DownloadListener>()
 
     init {
         scope.launch{
             downloadDispatcher.rehydrate()
+            downloadDispatcher.taskUpdateEventFlow.collect { updatedTask ->
+                // 当收到来自 Dispatcher 的更新事件时，通知所有外部监听器
+                notifyListeners(updatedTask)
+            }
+        }
+    }
 
+    /**
+     * Adds a listener to receive download task updates.
+     * @param listener The listener to add.
+     */
+    override fun addListener(listener: DownloadListener) {
+        if (!listeners.contains(listener)) {
+            listeners.add(listener)
+        }
+    }
+
+    /**
+     * Removes a previously added listener.
+     * @param listener The listener to remove.
+     */
+    override fun removerListener(listener: DownloadListener) {
+        listeners.remove(listener)
+    }
+
+    /**
+     * Internal method to notify all registered listeners about a task update.
+     */
+    internal fun notifyListeners(task: XyDownload) {
+        // CopyOnWriteArrayList 使得遍历操作是线程安全的
+        listeners.forEach {
+            it.onTaskUpdated(task)
         }
     }
 

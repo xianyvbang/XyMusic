@@ -6,7 +6,7 @@ interface IDownloadDispatcher {
 
     fun onProgress(
         downloadId: Long,
-        progress: Int,
+        progress: Float,
         downloadedBytes: Long,
         totalBytes: Long,
         speedBps: Long

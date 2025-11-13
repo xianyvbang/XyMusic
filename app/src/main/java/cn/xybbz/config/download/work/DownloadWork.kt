@@ -1,7 +1,6 @@
 package cn.xybbz.config.download.work
 
 import android.content.Context
-import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import cn.xybbz.api.client.version.VersionApiClient
