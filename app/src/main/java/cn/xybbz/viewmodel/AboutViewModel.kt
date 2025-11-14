@@ -58,10 +58,6 @@ class AboutViewModel @Inject constructor(
             initialValue = null
         )
 
-
-
-
-
     suspend fun downloadAndInstall(
         apkUrl: String,
         apkName: String,

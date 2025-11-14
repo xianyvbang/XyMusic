@@ -79,7 +79,7 @@ class VersionApiClient : ApiConfig {
     /**
      * 获取版本号信息的Api
      */
-    fun versionApi(restart: Boolean = false): GitHubVersionApi {
+   override fun downloadApi(restart: Boolean): GitHubVersionApi {
         if (!this::gitHubVersionApi.isInitialized || restart) {
             gitHubVersionApi = instance().create(GitHubVersionApi::class.java)
         }

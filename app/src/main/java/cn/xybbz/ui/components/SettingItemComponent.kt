@@ -133,7 +133,7 @@ fun SettingParentItemComponent(
     XyRowButton(
         modifier = modifier.height(XyTheme.dimens.itemHeight),
         enabled = enabled,
-        onClick = composeClick {
+        onClick =  {
             onClick?.invoke()
         }) {
         XyItemText(

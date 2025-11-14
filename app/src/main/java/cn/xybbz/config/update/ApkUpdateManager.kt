@@ -58,7 +58,7 @@ class ApkUpdateManager(
             settingsConfig.setLatestVersionTime(currentTimeMillis)
         }else {
             try {
-                val releasesInfo = versionApiClient.versionApi().getLatestReleasesInfo()
+                val releasesInfo = versionApiClient.downloadApi().getLatestReleasesInfo()
                 Log.i("======", "返回github信息: ${releasesInfo}")
                 this.releasesInfo = releasesInfo
                 if (releasesInfo != null) {

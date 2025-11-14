@@ -1,9 +1,9 @@
 package cn.xybbz.download.core
 
-import cn.xybbz.api.client.version.VersionApiClient
-import cn.xybbz.localdata.enums.DownloadStatus
+import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.download.state.DownloadState
 import cn.xybbz.localdata.data.download.XyDownload
+import cn.xybbz.localdata.enums.DownloadStatus
 import kotlinx.coroutines.flow.Flow
 
 interface IDownloadCore {
@@ -17,7 +17,7 @@ interface IDownloadCore {
      * @param [statusChange] 状态变更信息
      */
     suspend fun download(
-        client: VersionApiClient,
+        client: ApiConfig,
         statusChange: suspend () -> DownloadStatus?,
         xyDownload: XyDownload
     ):Flow<DownloadState>

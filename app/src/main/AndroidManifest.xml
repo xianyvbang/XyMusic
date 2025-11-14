@@ -6,15 +6,16 @@
 
     <!--targetSdk34开始需要添加此权限-->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
-
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-
     <!--    悬浮窗-->
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+<!--    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />-->
 
     <!--    精准定时任务权限-->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+<!--    前台通知使用-->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
 
     <application
         android:name=".XyApplication"
@@ -79,6 +80,14 @@
             android:name=".config.service.ReportReceiver"
             android:exported="false" />
         <!--        <service android:name=".ui.components.FloatingWindowComponent"/>-->
+
+        <receiver
+            android:name=".config.download.notification.DownloadNotificationReceiver"
+            android:exported="false" />
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
     </application>
 
 </manifest>

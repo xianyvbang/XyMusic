@@ -8,6 +8,7 @@ import androidx.work.workDataOf
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.ConnectionConfigServer
+import cn.xybbz.config.download.notification.NotificationController
 import cn.xybbz.config.download.work.DownloadWork
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.download.XyDownload
@@ -28,7 +29,8 @@ class DownloadDispatcherImpl(
     private val db: DatabaseClient,
     private val workManager: WorkManager,
     var config: DownloaderConfig,
-    private val connectionConfigServer: ConnectionConfigServer
+    private val connectionConfigServer: ConnectionConfigServer,
+    private val notificationController: NotificationController
 ) : IDownloadDispatcher {
 
     val scope = CoroutineScopeUtils.getIo("download")
@@ -37,6 +39,7 @@ class DownloadDispatcherImpl(
     private val readyTasks = ConcurrentLinkedQueue<XyDownload>()
     private val runningTasks = ConcurrentHashMap<Long, XyDownload>()
     private val pausedTasks = ConcurrentHashMap<Long, XyDownload>()
+    private val failedTasks = ConcurrentHashMap<Long, XyDownload>()
 
     // 创建一个用于广播任务更新事件的 SharedFlow
     private val _taskUpdateEventFlow = MutableSharedFlow<XyDownload>()
@@ -64,6 +67,7 @@ class DownloadDispatcherImpl(
                 }
 
                 DownloadStatus.PAUSED -> pausedTasks[task.id] = task
+                DownloadStatus.FAILED -> failedTasks[task.id] = task
                 else -> {
                 }
             }
@@ -114,6 +118,12 @@ class DownloadDispatcherImpl(
                     // Key Node: Persist state change
                     db.downloadDao.updateStatus(it.id, DownloadStatus.QUEUED)
                 }
+                failedTasks.remove(id)?.let {
+                    it.status = DownloadStatus.QUEUED
+                    readyTasks.add(it)
+                    // Key Node: Persist state change
+                    db.downloadDao.updateStatus(it.id, DownloadStatus.QUEUED)
+                }
             }
             promoteAndExecute()
         }
@@ -128,6 +138,7 @@ class DownloadDispatcherImpl(
                     ?.also { readyTasks.remove(it); tasksToCancel.add(it) }
                 runningTasks.remove(id)?.also { tasksToCancel.add(it) }
                 pausedTasks.remove(id)?.also { tasksToCancel.add(it) }
+                failedTasks.remove(id)?.also { tasksToCancel.add(it) }
             }
 
             if (tasksToCancel.isNotEmpty()) {
@@ -157,6 +168,7 @@ class DownloadDispatcherImpl(
                     ?.also { readyTasks.remove(it); tasksToCancel.add(it) }
                 runningTasks.remove(id)?.also { tasksToCancel.add(it) }
                 pausedTasks.remove(id)?.also { tasksToCancel.add(it) }
+                failedTasks.remove(id)?.also { tasksToCancel.add(it) }
             }
 
             if (tasksToCancel.isNotEmpty()) {
@@ -208,7 +220,8 @@ class DownloadDispatcherImpl(
         progress: Float,
         downloadedBytes: Long,
         totalBytes: Long,
-        speedBps: Long
+        speedBps: Long,
+        isSendNotice: Boolean
     ) {
 
         //更新map的数据
@@ -222,6 +235,19 @@ class DownloadDispatcherImpl(
 
         if (download != null) {
             scope.launch {
+                if (isSendNotice){
+                    notificationController.cancel(download.id.toInt() + 100000)
+                    val notificationBuilder =
+                        notificationController.buildNotification(
+                            download,
+                            speedBps
+                        )
+                    notificationController.show(
+                        downloadId.toInt(),
+                        notificationBuilder
+                    )
+                }
+
                 scope.launch { _taskUpdateEventFlow.emit(download.copy(updateTime = currentTime)) }
             }
         }
@@ -250,7 +276,8 @@ class DownloadDispatcherImpl(
         downloadId: Long,
         status: DownloadStatus,
         finalPath: String?,
-        error: String?
+        error: String?,
+        isSendNotice: Boolean
     ) {
         scope.launch {
             var updateTask: XyDownload? = null
@@ -277,12 +304,15 @@ class DownloadDispatcherImpl(
                         }
 
                         DownloadStatus.PAUSED -> db.downloadDao.updateStatus(downloadId, status)
-                        DownloadStatus.FAILED -> db.downloadDao.updateOnError(
-                            downloadId,
-                            status,
-                            error,
-                            time
-                        )
+                        DownloadStatus.FAILED -> {
+                            pausedTasks[task.id] = task
+                            db.downloadDao.updateOnError(
+                                downloadId,
+                                status,
+                                error,
+                                time
+                            )
+                        }
 
                         DownloadStatus.CANCEL -> db.downloadDao.updateStatus(downloadId, status)
                         else -> {}
@@ -291,6 +321,28 @@ class DownloadDispatcherImpl(
             }
 
             updateTask?.let {
+                if (isSendNotice){
+                    val staticNotificationId = it.id.toInt() + 100000
+                    when (it.status) {
+                        DownloadStatus.PAUSED -> {
+                            // 显示一个“已暂停”的通知
+                            val builder = notificationController.buildNotification(it, 0L)
+                            notificationController.show(staticNotificationId, builder)
+                        }
+
+                        DownloadStatus.COMPLETED, DownloadStatus.FAILED, DownloadStatus.CANCEL -> {
+                            // 任务结束后，移除通知
+                            notificationController.cancel(it.id.toInt())
+                            notificationController.cancel(staticNotificationId)
+                            cleanupTaskFiles(it)
+                        }
+
+                        else -> {
+                            notificationController.cancel(staticNotificationId)
+                        }
+                    }
+                }
+
                 promoteAndExecute()
             }
         }

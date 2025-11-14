@@ -1,6 +1,7 @@
 package cn.xybbz.localdata.data.download
 
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.localdata.enums.DownloadTypes
@@ -23,6 +24,9 @@ data class XyDownload(
     var status: DownloadStatus = DownloadStatus.QUEUED,
 
     var error:String? = null,
+
+    @Ignore
+    val headers: Map<String, String> = emptyMap(),
 
     val uid: String? = null,
     val title: String? = null,

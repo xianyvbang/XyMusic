@@ -1,7 +1,11 @@
 package cn.xybbz.localdata.enums
 
-enum class DownloadTypes {
+enum class DownloadTypes() {
 
     APK,
-    Media
+    JELLYFIN,
+    SUBSONIC,
+    NAVIDROME,
+    EMBY,
+    PLEX
 }

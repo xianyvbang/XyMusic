@@ -3,7 +3,7 @@ package cn.xybbz.config.download.core
 import android.content.Context
 import android.icu.math.BigDecimal
 import android.util.Log
-import cn.xybbz.api.client.version.VersionApiClient
+import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.FileUtil
 import cn.xybbz.download.core.IDownloadCore
@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import retrofit2.awaitResponse
 import java.io.File
 import java.io.RandomAccessFile
 import java.math.RoundingMode
@@ -29,28 +30,26 @@ class OkhttpDownloadCore(
     /**
      * 下载
      * @param [url] 网址
-     * @param [fileName] 文件名
-     * @param [filePath] 文件路径
      * @param [client] okhttp客户端
      * @param [statusChange] 状态变更信息
      */
     override suspend fun download(
-        client: VersionApiClient,
+        client: ApiConfig,
         statusChange: suspend () -> DownloadStatus?,
         xyDownload: XyDownload
     ): Flow<DownloadState> = flow {
         val tempFile = File(xyDownload.tempFilePath)
         val downloadedBytes = if (tempFile.exists()) tempFile.length() else 0L
-
+        val call = client.downloadApi()
+            .downloadFile(
+                fileUrl = xyDownload.url,
+                range = "bytes=${downloadedBytes}-",
+                headers = xyDownload.headers
+            )
 
         val response = try {
-            client.versionApi()
-                .downloadFile(
-                    fileUrl = xyDownload.url,
-                    range = "bytes=${downloadedBytes}-",
-                    alreadyDownloaded = tempFile.length(),
-                    totalBytes = xyDownload.fileSize
-                )
+
+            call.awaitResponse()
         } catch (e: Exception) {
             emit(DownloadState.Error("下载失败: ${e.message}", e))
             return@flow
@@ -111,6 +110,7 @@ class OkhttpDownloadCore(
                     }
                     if (currentStatus == DownloadStatus.CANCEL) {
                         // 感知到取消指令，抛出异常以终止流程
+                        call.cancel()
                         throw CancellationException("取消下载")
                     }
                 }

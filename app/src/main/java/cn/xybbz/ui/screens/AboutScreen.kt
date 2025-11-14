@@ -25,6 +25,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProgressIndicatorDefaults
+import androidx.compose.material3.ProgressIndicatorDefaults.drawStopIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -83,10 +85,11 @@ fun AboutScreen(
     var enabledGetVersion by remember {
         mutableStateOf(true)
     }
+    val primary = MaterialTheme.colorScheme.primary
 
 
     LaunchedEffect(apkDownloadInfo) {
-        Log.i("=====","数据变化 ${apkDownloadInfo}")
+        Log.i("=====", "数据变化 ${apkDownloadInfo}")
     }
 
     XyColumnScreen(
@@ -185,20 +188,35 @@ fun AboutScreen(
                                                 XyItemTextLarge(text = "${aboutViewModel.apkUpdateManager.releasesInfo?.body}")
                                             }
                                         }
+                                        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
                                         XyItemTextLarge(text = "${stringResource(R.string.version_number)}: ${aboutViewModel.apkUpdateManager.latestVersion}")
                                         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                                        LinearProgressIndicator(progress = {
-                                            if ((apkDownloadInfo?.totalBytes
-                                                    ?: 0) > 0
-                                            ) ((apkDownloadInfo?.progress ?: 0f) / 100f) else 0f
-                                        })
+                                        LinearProgressIndicator(
+                                            progress = {
+                                                if ((apkDownloadInfo?.totalBytes
+                                                        ?: 0) > 0
+                                                ) ((apkDownloadInfo?.progress ?: 0f) / 100f) else 0f
+                                            },
+                                            drawStopIndicator = {
+                                                drawStopIndicator(
+                                                    drawScope = this,
+                                                    stopSize = 0.dp,
+                                                    color = primary,
+                                                    strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+                                                )
+                                            },
+                                        )
                                         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
                                         BasicText(text = "${stringResource(R.string.current_download_progress)}: ${apkDownloadInfo?.progress ?: 0f}%")
-                                        if (apkDownloadInfo?.status == DownloadStatus.FAILED)
+                                        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
+                                        if (apkDownloadInfo?.status == DownloadStatus.FAILED){
                                             XyItemTextLarge(
                                                 text = stringResource(R.string.download_failed),
                                                 color = MaterialTheme.colorScheme.onErrorContainer
                                             )
+                                            Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
+                                        }
+
                                         Row {
                                             XyButton(
                                                 modifier = Modifier.weight(1f),

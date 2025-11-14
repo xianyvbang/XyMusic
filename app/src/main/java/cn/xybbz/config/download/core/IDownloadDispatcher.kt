@@ -9,14 +9,16 @@ interface IDownloadDispatcher {
         progress: Float,
         downloadedBytes: Long,
         totalBytes: Long,
-        speedBps: Long
+        speedBps: Long,
+        isSendNotice: Boolean = true
     )
 
     fun onStateChanged(
         downloadId: Long,
         status: DownloadStatus,
         finalPath: String? = null,
-        error: String? = null
+        error: String? = null,
+        isSendNotice: Boolean = true
     )
 
 }

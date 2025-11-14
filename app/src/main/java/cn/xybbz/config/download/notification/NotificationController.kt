@@ -9,8 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
@@ -19,11 +17,6 @@ import androidx.work.ForegroundInfo
 import cn.xybbz.R
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.enums.DownloadStatus
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import java.io.IOException
 
 /**
  * FileName: AppDatabase
@@ -32,8 +25,7 @@ import java.io.IOException
  * Description:
  **/
 class NotificationController(
-    private val context: Context,
-    private val client: OkHttpClient
+    private val context: Context
 ) {
     companion object {
         private const val CHANNEL_ID = "downloader_channel"
@@ -71,14 +63,10 @@ class NotificationController(
             if (download.status == DownloadStatus.DOWNLOADING) " - ${formatSpeed(speedBps)}" else ""
         val contentText = "$statusText$speedText"
 
-        // 异步获取封面
-        val largeIcon = fetchCover(download.cover)
-
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(contentText)
             .setSmallIcon(R.drawable.svg_notification_download) // 你需要准备一个下载图标
-            .setLargeIcon(largeIcon)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setOngoing(true) // 让通知不可被用户轻易划掉
             .setProgress(100, progress.toInt(), false)
@@ -88,22 +76,34 @@ class NotificationController(
             DownloadStatus.DOWNLOADING -> {
                 builder.addAction(
                     R.drawable.svg_notification_pause, "Pause",
-                    createActionIntent(download.id, DownloadNotificationReceiver.Companion.ACTION_PAUSE)
+                    createActionIntent(
+                        download.id,
+                        DownloadNotificationReceiver.Companion.ACTION_PAUSE
+                    )
                 )
                 builder.addAction(
                     R.drawable.svg_notification_cancel, "Cancel",
-                    createActionIntent(download.id, DownloadNotificationReceiver.Companion.ACTION_CANCEL)
+                    createActionIntent(
+                        download.id,
+                        DownloadNotificationReceiver.Companion.ACTION_CANCEL
+                    )
                 )
             }
 
             DownloadStatus.PAUSED -> {
                 builder.addAction(
                     R.drawable.svg_notification_play, "Resume",
-                    createActionIntent(download.id, DownloadNotificationReceiver.Companion.ACTION_RESUME)
+                    createActionIntent(
+                        download.id,
+                        DownloadNotificationReceiver.Companion.ACTION_RESUME
+                    )
                 )
                 builder.addAction(
                     R.drawable.svg_notification_cancel, "Cancel",
-                    createActionIntent(download.id, DownloadNotificationReceiver.Companion.ACTION_CANCEL)
+                    createActionIntent(
+                        download.id,
+                        DownloadNotificationReceiver.Companion.ACTION_CANCEL
+                    )
                 )
             }
 
@@ -149,24 +149,6 @@ class NotificationController(
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-    }
-
-    private suspend fun fetchCover(url: String?): Bitmap? = withContext(Dispatchers.IO) {
-        if (url.isNullOrBlank()) return@withContext null
-        try {
-            val request = Request.Builder().url(url).build()
-            val response = client.newCall(request).execute()
-            if (response.isSuccessful) {
-                response.body?.byteStream()?.use {
-                    BitmapFactory.decodeStream(it)
-                }
-            } else {
-                null
-            }
-        } catch (e: IOException) {
-            DownloaderManager.config.logger.d(TAG, "$e")
-            null
-        }
     }
 
     private fun getStatusText(status: DownloadStatus): String = when (status) {

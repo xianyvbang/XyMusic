@@ -6,6 +6,7 @@ import cn.xybbz.api.client.jellyfin.JellyfinDatasourceServer
 import cn.xybbz.api.client.navidrome.NavidromeDatasourceServer
 import cn.xybbz.api.client.plex.PlexDatasourceServer
 import cn.xybbz.api.client.subsonic.SubsonicDatasourceServer
+import cn.xybbz.config.module.annotations.DataSourceKey
 import cn.xybbz.localdata.enums.DataSourceType
 import dagger.Module
 import dagger.Provides
