@@ -23,13 +23,7 @@ interface GitHubVersionApi : IDownLoadApi {
     @Streaming
     override fun downloadFile(
         @Url fileUrl: String,
-        @HeaderMap headers: Map<String, String> ,/* mapOf(
-            HEADER_DOWNLOAD to "true",
-            ApiConstants.ACCEPT to "application/octet-stream",
-            "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-            "X-Already-Downloaded" to "0",
-            "X-Total-Bytes" to "0"
-        ),*/
+        @HeaderMap headers: Map<String, String> ,
         @Header("Range") range: String /*= "bytes=0-"*/,
     ): Call<ResponseBody>
 }

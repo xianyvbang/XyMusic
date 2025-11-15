@@ -24,7 +24,7 @@ class DownloadWork @AssistedInject constructor(
     @Assisted workerParams: WorkerParameters,
     private val db: DatabaseClient,
     private val callback: DownloadDispatcherImpl,
-    private val apiConfigList: Map<DownloadTypes,Provider<ApiConfig>>,
+    private val apiConfigList: Map<DownloadTypes,@JvmSuppressWildcards Provider<ApiConfig>>,
     private val notificationController: NotificationController
 ) :
     CoroutineWorker(appContext, workerParams) {
@@ -44,7 +44,7 @@ class DownloadWork @AssistedInject constructor(
             notificationController.createForegroundInfo(notificationId, initialNotification)
         setForeground(foregroundInfo)
 
-        val client = apiConfigList.get(downloadTask.typeData)?.get() ?: return Result.failure()
+        val client = apiConfigList[downloadTask.typeData]?.get() ?: return Result.failure()
         try {
             okhttpDownloadCore.download(client, statusChange, downloadTask).collect { state ->
                 when (state) {

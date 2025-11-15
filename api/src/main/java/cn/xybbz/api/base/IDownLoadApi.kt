@@ -1,5 +1,6 @@
 package cn.xybbz.api.base
 
+import cn.xybbz.api.constants.ApiConstants
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.http.GET
@@ -14,7 +15,9 @@ interface IDownLoadApi {
     @Streaming
     fun downloadFile(
         @Url fileUrl: String,
-        @HeaderMap headers: Map<String, String>,
-        @Header("Range") range: String /*= "bytes=0-"*/,
+        @HeaderMap headers: Map<String, String> = mapOf(
+            ApiConstants.ACCEPT to ApiConstants.DOWNLOAD_ACCEPT
+        ),
+        @Header("Range") range: String, /*= "bytes=0-"*/
     ): Call<ResponseBody>
 }

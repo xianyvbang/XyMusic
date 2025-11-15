@@ -43,8 +43,7 @@ class OkhttpDownloadCore(
         val call = client.downloadApi()
             .downloadFile(
                 fileUrl = xyDownload.url,
-                range = "bytes=${downloadedBytes}-",
-                headers = xyDownload.headers
+                range = "bytes=${downloadedBytes}-"
             )
 
         val response = try {

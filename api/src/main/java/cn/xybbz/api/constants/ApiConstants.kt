@@ -8,6 +8,7 @@ object ApiConstants {
      * application/octet-stream;
      */
     const val HEADER_ACCEPT: String = "application/json,q=0.9, */*;q=0.8"
+    const val DOWNLOAD_ACCEPT: String = "application/octet-stream"
 
     const val ACCEPT: String = "Accept"
 
