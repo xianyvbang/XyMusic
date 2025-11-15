@@ -535,6 +535,13 @@ class JellyfinDatasourceServer @Inject constructor(
     }
 
     /**
+     * 创建下载链接
+     */
+    override fun createDownloadUrl(musicId: String): String {
+        return jellyfinApiClient.createDownloadUrl(musicId)
+    }
+
+    /**
      * 获得随机音乐
      */
     override suspend fun getRandomMusicList(pageSize: Int, pageNum: Int): List<XyMusic>? {
@@ -1370,6 +1377,7 @@ class JellyfinDatasourceServer @Inject constructor(
             pic = itemImageUrl,
             name = item.name ?: application.getString(Constants.UNKNOWN_MUSIC),
             musicUrl = audioUrl,
+            downloadUrl = createDownloadUrl(item.id),
             album = item.albumId.toString(),
             albumName = item.album,
             connectionId = connectionConfigServer.getConnectionId(),

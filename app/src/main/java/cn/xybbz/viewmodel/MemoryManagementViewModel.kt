@@ -65,6 +65,7 @@ class MemoryManagementViewModel @Inject constructor(
      * @return
      * @throws Exception
      */
+    //todo 获取和清除缓存可以通过settingConfig.cacheFilePath进行操作
     @Throws(java.lang.Exception::class)
     fun getTotalCacheSize(context: Context): String {
         var cacheSize = getFolderSize(context.cacheDir)

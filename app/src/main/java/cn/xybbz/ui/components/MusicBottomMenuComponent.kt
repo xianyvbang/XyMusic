@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Album
 import androidx.compose.material.icons.outlined.AvTimer
 import androidx.compose.material.icons.outlined.DeleteForever
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.KeyboardDoubleArrowRight
 import androidx.compose.material.icons.outlined.Person
@@ -346,6 +347,21 @@ fun MusicBottomMenuComponent(
                                 ifDoubleSpeed = true
                             }.invokeOnCompletion {
                                 ifShowBottom = false
+                            }
+                        }
+                    )
+
+                    IconButtonComponent(
+                        MusicItemMenuData(
+                            imageVector = Icons.Outlined.Download,
+                            name = "下载"
+                        ),
+                        onClick = {
+                            coroutineScope.launch {
+                                musicBottomMenuViewModel.downloadController.downLoadMusic(music)
+                            }.invokeOnCompletion {
+
+
                             }
                         }
                     )

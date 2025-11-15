@@ -1366,6 +1366,7 @@ class EmbyDatasourceServer @Inject constructor(
             pic = itemImageUrl,
             name = item.name ?: application.getString(Constants.UNKNOWN_MUSIC),
             musicUrl = audioUrl,
+            downloadUrl = createDownloadUrl(item.id) ,
             album = item.albumId.toString(),
             albumName = item.album,
             connectionId = connectionConfigServer.getConnectionId(),

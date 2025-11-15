@@ -176,6 +176,13 @@ class NavidromeApiClient : DefaultApiClient() {
     }
 
     /**
+     * 创建下载链接
+     */
+    override fun createDownloadUrl(itemId: String): String {
+        return baseUrl + "/rest/download?id=${itemId}"
+    }
+
+    /**
      *用户资源接口服务
      */
     override fun userLibraryApi(restart: Boolean): NavidromeUserLibraryApi {

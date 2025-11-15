@@ -1865,6 +1865,7 @@ class PlexDatasourceServer @Inject constructor(
             pic = itemImageUrl,
             name = item.title,
             musicUrl = audioUrl,
+            downloadUrl = createDownloadUrl(part?.key ?: ""),
             album = item.parentRatingKey.toString(),
             albumName = item.parentTitle,
             genreIds = item.genre?.joinToString(Constants.ARTIST_DELIMITER) { it.tag },

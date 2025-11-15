@@ -629,6 +629,7 @@ class MusicController(
 
         return mediaItemBuilder.setMediaId(musicExtend.itemId)
             .setMediaMetadata(mediaMetadata)
+            //todo 这里的判断临时先用这个判断,后面改成
             .setMimeType(
                 if (FileTypes.inferFileTypeFromMimeType(normalizeMimeType) != -1) normalizeMimeType else MimeTypes.APPLICATION_M3U8
             )

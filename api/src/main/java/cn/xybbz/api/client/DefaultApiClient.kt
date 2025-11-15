@@ -242,4 +242,9 @@ abstract class DefaultApiClient : ApiConfig {
     open fun updateIfSubsonic() {
         TokenServer.updateIfSubsonic(ifSubsonic)
     }
+
+    /**
+     * 创建下载链接
+     */
+    abstract fun createDownloadUrl(itemId: String): String
 }

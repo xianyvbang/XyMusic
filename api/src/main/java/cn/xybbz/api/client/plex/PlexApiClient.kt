@@ -284,6 +284,13 @@ class PlexApiClient : DefaultApiClient() {
     }
 
     /**
+     * 创建下载链接
+     */
+    override fun createDownloadUrl(itemId: String): String {
+        return "$baseUrl$itemId?download=1"
+    }
+
+    /**
      * 歌词接口
      */
     override fun lyricsApi(restart: Boolean): PlexLyricsApi {

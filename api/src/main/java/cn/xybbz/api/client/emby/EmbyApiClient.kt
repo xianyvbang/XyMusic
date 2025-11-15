@@ -154,6 +154,13 @@ class EmbyApiClient : DefaultApiClient() {
     }
 
     /**
+     * 创建下载链接
+     */
+    override fun createDownloadUrl(itemId: String): String {
+        return baseUrl + "/Items/${itemId}/Download"
+    }
+
+    /**
      * 资源接口
      */
     override fun libraryApi(restart: Boolean): EmbyLibraryApi {

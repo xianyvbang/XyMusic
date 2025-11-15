@@ -1,6 +1,5 @@
 package cn.xybbz.common.music
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Environment
 import android.util.Log
@@ -8,6 +7,7 @@ import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSource
+import androidx.media3.datasource.cache.CacheSpan
 import androidx.media3.datasource.cache.CacheWriter
 import androidx.media3.datasource.cache.SimpleCache
 import androidx.media3.datasource.okhttp.OkHttpDataSource
@@ -24,10 +24,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.util.NavigableSet
 import java.util.concurrent.ConcurrentHashMap
 
 
-@SuppressLint("UnsafeOptInUsageError")
 class CacheController(
     private val context: Context,
     private val settingsConfig: SettingsConfig,
@@ -41,6 +43,8 @@ class CacheController(
     private val cacheTask: ConcurrentHashMap<String, CacheTask> = ConcurrentHashMap()
     private val cacheCoroutineScope = CoroutineScopeUtils.getIo(this.javaClass.name)
 
+    private val childPath = "cache"
+
     private val cacheSchedule = MutableStateFlow(0f)
     val _cacheSchedule = cacheSchedule.asStateFlow()
 
@@ -51,10 +55,10 @@ class CacheController(
                 File(
 //                    context.externalCacheDir,
                     context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
-                    context.packageName
+                    childPath
                 )
             } else {
-                File(context.filesDir, context.packageName)
+                File(context.filesDir, childPath)
             }
         Log.i("catch", "缓存初始化 $cacheParentDirectory")
         // 设置缓存目录和缓存机制，如果不需要清除缓存可以使用NoOpCacheEvictor
@@ -71,6 +75,7 @@ class CacheController(
         cacheDataSourceFactory = CacheDataSource.Factory()
             .setCache(cache)
             .setUpstreamDataSourceFactory(
+                //todo 这里可以改为单独的okhttp请求,不再考虑本地播放的问题
                 DefaultDataSource.Factory(
                     context,
                     OkHttpDataSource.Factory(cacheApiClient.okhttpClientFunction())
@@ -187,5 +192,42 @@ class CacheController(
         }
         cacheTask.clear()
         cache.release()
+    }
+
+
+    fun transformCacheToVideo(context: Context, key: String = ""): File? {
+        var transformFile: File? = null
+        cache.run {
+            key.ifEmpty {
+                keys.firstOrNull()
+            }?.let {
+                transformFile = transformCacheSpanToMp4(context, getCachedSpans(it))
+            }
+        }
+        return transformFile
+    }
+
+    private fun transformCacheSpanToMp4(context: Context, cacheSpans: NavigableSet<CacheSpan>): File {
+        val targetMp4File = File(if (Environment.MEDIA_MOUNTED == Environment.getExternalStorageState()) {
+            context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+        } else {
+            context.filesDir
+        }, "testVideo.mp4")
+        if (!targetMp4File.exists()) {
+            targetMp4File.createNewFile()
+            FileOutputStream(targetMp4File, true).use { output ->
+                cacheSpans.forEach { cacheSpan ->
+                    FileInputStream(cacheSpan.file).let { input ->
+                        val buffer = ByteArray(1024)
+                        var length: Int
+                        while (input.read(buffer).also { length = it } > 0) {
+                            output.write(buffer, 0, length)
+                        }
+                        input.close()
+                    }
+                }
+            }
+        }
+        return targetMp4File
     }
 }

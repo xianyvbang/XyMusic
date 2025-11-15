@@ -13,6 +13,7 @@ import cn.xybbz.R
 import cn.xybbz.api.client.IDataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
+import cn.xybbz.common.music.DownloadController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.ConnectionConfigServer
@@ -38,7 +39,8 @@ class MusicBottomMenuViewModel @Inject constructor(
     private val _dataSourceManager: IDataSourceManager,
     private val _alarmConfig: AlarmConfig,
     private val _connectionConfigServer: ConnectionConfigServer,
-    private val _favoriteRepository: FavoriteRepository
+    private val _favoriteRepository: FavoriteRepository,
+    val downloadController: DownloadController
 ) : ViewModel() {
 
 

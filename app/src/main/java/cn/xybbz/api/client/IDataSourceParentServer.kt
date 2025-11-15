@@ -996,6 +996,11 @@ abstract class IDataSourceParentServer(
     }
 
     /**
+     * 创建下载链接
+     */
+    abstract fun createDownloadUrl(musicId: String): String
+
+    /**
      * 是否从本地获取数据 true表示从本地获取,false表示不从本地获取
      */
     fun ifLocalGetData(): Boolean {

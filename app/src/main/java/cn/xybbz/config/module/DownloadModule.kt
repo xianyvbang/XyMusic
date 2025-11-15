@@ -2,6 +2,8 @@ package cn.xybbz.config.module
 
 import android.content.Context
 import androidx.work.WorkManager
+import cn.xybbz.api.client.CacheApiClient
+import cn.xybbz.common.music.DownloadController
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.download.core.DownloadDispatcherImpl
@@ -65,5 +67,17 @@ class DownloadModule {
                 applicationContext,
             )
         return notificationController;
+    }
+
+    @Singleton
+    @Provides
+    fun downloadController(
+        @ApplicationContext applicationContext: Context,
+        cacheApiClient: CacheApiClient
+    ): DownloadController{
+        return DownloadController(
+            applicationContext,
+            cacheApiClient
+        )
     }
 }

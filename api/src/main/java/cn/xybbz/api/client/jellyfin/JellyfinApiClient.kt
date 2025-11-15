@@ -202,6 +202,13 @@ class JellyfinApiClient : DefaultApiClient() {
     }
 
     /**
+     * 创建下载链接
+     */
+    override fun createDownloadUrl(itemId: String): String {
+        return baseUrl + "/Items/${itemId}/Download"
+    }
+
+    /**
      * 创建图像URL
      * @param [itemId] 项目ID
      * @param [imageType] 图像类型

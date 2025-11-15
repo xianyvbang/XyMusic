@@ -10,7 +10,7 @@ import java.util.concurrent.Executors
 class DatasourceConfig {
 
     private val dbName = "appData.db"
-    private val migrations = arrayOf(Migration1,Migration2)
+    private val migrations = arrayOf(Migration1,Migration2,Migration3)
 
     fun createDatabaseClient(context: Context): DatabaseClient {
         return Room.databaseBuilder(context.applicationContext, DatabaseClient::class.java, dbName)
@@ -59,6 +59,13 @@ class DatasourceConfig {
                 CREATE TABLE `xy_download` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `url` TEXT NOT NULL, `fileName` TEXT NOT NULL, `filePath` TEXT NOT NULL, `fileSize` INTEGER NOT NULL, `tempFilePath` TEXT NOT NULL, `typeData` TEXT NOT NULL, `progress` REAL NOT NULL, `totalBytes` INTEGER NOT NULL, `downloadedBytes` INTEGER NOT NULL, `status` TEXT NOT NULL, `error` TEXT, `uid` TEXT, `title` TEXT, `cover` TEXT, `duration` INTEGER, `connectionId` INTEGER, `updateTime` INTEGER NOT NULL, `createTime` INTEGER NOT NULL);
             """.trimIndent()
             )
+        }
+    }
+
+    private object Migration3 : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // 数据库的升级语句
+            db.execSQL("ALTER TABLE xy_music ADD COLUMN downloadUrl TEXT NOT NULL")
         }
     }
 }

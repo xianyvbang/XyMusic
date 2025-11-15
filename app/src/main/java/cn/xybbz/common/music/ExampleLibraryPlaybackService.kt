@@ -93,18 +93,6 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
         //todo 这里的可以获得元数据
         exoPlayer?.addAnalyticsListener(XyLogger(db = db))
 
-        /*object : EventLogger() {
-            override fun onMetadata(eventTime: EventTime, metadata: Metadata) {
-
-                Log.i("music","去读元数据")
-                logd("metadata [" )
-                for (i in 0..<metadata.length()) {
-                    logd("  " + metadata.get(i))
-                }
-                logd("]")
-            }
-        }*/
-
         val sessionCommand = SessionCommand(SAVE_TO_FAVORITES, Bundle.EMPTY)
         val removeFavorites = SessionCommand(REMOVE_FROM_FAVORITES, Bundle.EMPTY)
         val favoriteButton =

@@ -39,6 +39,11 @@ data class XyMusic(
     val musicUrl: String = "",
 
     /**
+     * 下载地址
+     */
+    val downloadUrl: String,
+
+    /**
      * 专辑id
      */
     val album: String = "",
