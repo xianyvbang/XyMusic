@@ -79,25 +79,11 @@ class LoggingInterceptor : Interceptor {
         }
         val originalResponse = chain.proceed(request)
         if (!originalResponse.isSuccessful && originalResponse.code !in 301..304) {
-
-            // 非成功状态检查
-            val errorBody = originalResponse.peekBody(Long.MAX_VALUE).string()
-            Log.e(
-                "api",
-                "请求接口---> ${request.url.encodedPath} 请求头Token -> ${
-                    request.header(
-                        ApiConstants.AUTHORIZATION
-                    ) ?: request.header(
-                        ApiConstants.NAVIDROME_AUTHORIZATION
-                    )
-                } " +
-                        "响应编码=====> ${originalResponse.code}, 响应内容 -> ${originalResponse.message}, 错误体 -> $errorBody"
-            )
             if (originalResponse.code == ApiConstants.UNAUTHORIZED) {
                 throw UnauthorizedException(
                     msg = "请求接口---> ${request.url.encodedPath} ${originalResponse.message}",
                     statusCode = originalResponse.code,
-                    responsePhrase = errorBody
+                    responsePhrase = "登陆失败"
                 )
             } else {
                 throw ServiceException(
