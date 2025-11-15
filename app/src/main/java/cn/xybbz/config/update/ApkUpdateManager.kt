@@ -4,10 +4,12 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import cn.xybbz.R
 import cn.xybbz.api.client.version.VersionApiClient
 import cn.xybbz.api.client.version.data.ReleasesData
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.GitHubVersionVersionUtils
+import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.SettingsConfig
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.enums.DownloadStatus
@@ -18,7 +20,7 @@ class ApkUpdateManager(
     private val settingsConfig: SettingsConfig,
     private val versionApiClient: VersionApiClient,
 
-) {
+    ) {
 
     //最新版本的版本号
     var latestVersion by mutableStateOf("")
@@ -46,17 +48,20 @@ class ApkUpdateManager(
      * @return true 获取最新版本号成功,false 获取最新版本号失败
      */
     suspend fun initLatestVersion(ifCheck: Boolean = false): Boolean {
+
+        if (ifCheck)
+            MessageUtils.sendPopTipSuccess(R.string.get_latest_version)
         val apkDownload = db.downloadDao.getOne(DownloadTypes.APK)
         if (apkDownload?.status == DownloadStatus.DOWNLOADING) return true
         val versionName = settingsConfig.packageInfo.versionName
-        var ifGetVersionSuccess: Boolean = true
+        var ifGetVersionSuccess = true
         val currentTimeMillis = System.currentTimeMillis()
 
         val ifDownloadApk = ifDownloadApk(ifCheck)
-        if (ifDownloadApk){
+        if (ifDownloadApk) {
             latestVersion = settingsConfig.get().latestVersion
-            settingsConfig.setLatestVersionTime(currentTimeMillis)
-        }else {
+
+        } else {
             try {
                 val releasesInfo = versionApiClient.downloadApi().getLatestReleasesInfo()
                 Log.i("======", "返回github信息: ${releasesInfo}")
@@ -69,8 +74,7 @@ class ApkUpdateManager(
                     if (assetItem != null) {
                         settingsConfig.setLastApkUrl(assetItem.browserDownloadUrl)
                     }
-
-                    ifGetVersionSuccess = true
+                    settingsConfig.setLatestVersionTime(currentTimeMillis)
                 } else {
                     ifGetVersionSuccess = false
                 }
@@ -78,13 +82,19 @@ class ApkUpdateManager(
                 Log.e(Constants.LOG_ERROR_PREFIX, "获取github版本号失败", e)
                 ifGetVersionSuccess = false
             }
+
         }
-
-
-
         if (!versionName.isNullOrBlank()) {
             ifMaxVersion =
                 GitHubVersionVersionUtils.isLatestVersion(versionName, latestVersion)
+            if (ifCheck)
+                if (!ifMaxVersion && ifGetVersionSuccess) {
+                    MessageUtils.sendPopTipSuccess(R.string.get_latest_version_success)
+                } else if (!ifMaxVersion && !ifGetVersionSuccess) {
+                    MessageUtils.sendPopTipError(R.string.get_latest_version_fail)
+                } else {
+                    MessageUtils.sendPopTipSuccess(R.string.now_new_version)
+                }
         }
         return ifGetVersionSuccess
     }
@@ -98,7 +108,7 @@ class ApkUpdateManager(
         val latestVersionTime = settingsConfig.get().latestVersionTime
         val currentTimeMillis = System.currentTimeMillis()
         val ifGetVersion = (currentTimeMillis - latestVersionTime) >= (1 * 60 * 60 * 1000)
-        return !ifCheck && !ifGetVersion
+        return ifCheck && !ifGetVersion
     }
 
 }

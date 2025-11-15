@@ -22,6 +22,7 @@
     <string name="get_latest_version">正在获取最新版本,请稍等</string>
     <string name="get_latest_version_success">获取最新版本成功</string>
     <string name="get_latest_version_fail">获取最新版本失败</string>
+    <string name="now_new_version">软件已是最新版本</string>
     <string name="new_version_download">有新版本下载可更新</string>
     <string name="version_number">版本号</string>
     <string name="current_download_progress">当前下载进度</string>

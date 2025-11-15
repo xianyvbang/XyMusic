@@ -49,7 +49,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.R
 import cn.xybbz.common.utils.MessageUtils
-import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.ui.components.AlertDialogObject
@@ -154,7 +153,6 @@ fun AboutScreen(
             item {
                 SettingItemComponent(
                     title = R.string.check_updates,
-                    enabled = enabledGetVersion,
                     info = if (aboutViewModel.apkUpdateManager.ifMaxVersion) stringResource(R.string.latest_version) else "${
                         stringResource(
                             R.string.new_version_detected
@@ -163,18 +161,9 @@ fun AboutScreen(
                     ifOpenBadge = !aboutViewModel.apkUpdateManager.ifMaxVersion
                 ) {
                     coroutineScope.launch {
-                        val initLatestVersion = OperationTipUtils.operationTipNotToBlock(
-                            loadingMessage = R.string.get_latest_version,
-                            successMessage = R.string.get_latest_version_success,
-                            errorMessage = R.string.get_latest_version_fail
-                        ) {
-                            enabledGetVersion = false
-                            val initLatestVersion =
-                                aboutViewModel.apkUpdateManager.initLatestVersion(true)
-                            enabledGetVersion = true
-                            initLatestVersion
-                        }
-                        if (initLatestVersion) {
+                        val initLatestVersion =
+                            aboutViewModel.apkUpdateManager.initLatestVersion(true)
+                        if (initLatestVersion && !aboutViewModel.apkUpdateManager.ifMaxVersion) {
                             AlertDialogObject(
                                 title = R.string.new_version_download,
                                 content = {
