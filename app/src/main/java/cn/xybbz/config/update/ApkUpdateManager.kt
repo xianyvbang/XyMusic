@@ -51,7 +51,7 @@ class ApkUpdateManager(
 
         if (ifCheck)
             MessageUtils.sendPopTipSuccess(R.string.get_latest_version)
-        val apkDownload = db.downloadDao.getOne(DownloadTypes.APK)
+        val apkDownload = db.apkDownloadDao.getOne(DownloadTypes.APK)
         if (apkDownload?.status == DownloadStatus.DOWNLOADING) return true
         val versionName = settingsConfig.packageInfo.versionName
         var ifGetVersionSuccess = true

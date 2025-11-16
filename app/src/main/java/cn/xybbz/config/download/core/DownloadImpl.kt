@@ -73,8 +73,6 @@ class DownloadImpl(
                     request = request,
                     globalFinalDir = downloadDispatcher.config.finalDirectory,
                 )
-                val time = System.currentTimeMillis()
-
                 val tempDir = File(applicationContext.cacheDir, "downloads")
 
                 // 2. 确保这个稳定目录存在
@@ -87,16 +85,15 @@ class DownloadImpl(
 
                 val task = XyDownload(
                     url = request.url,
-                    filePath = resolved.finalPath,
-                    tempFilePath = tempFile.absolutePath,
                     fileName = resolved.fileName,
-                    createTime = time,
-                    updateTime = time,
+                    filePath = resolved.finalPath,
+                    fileSize = request.fileSize,
+                    tempFilePath = tempFile.absolutePath,
+                    typeData = request.type,
                     uid = request.uid,
+                    title = request.title,
                     cover = request.cover,
                     duration = request.duration,
-                    fileSize = request.fileSize,
-                    title = request.title,
                     connectionId = request.connectionId
                 )
                 successTasksToInsert.add(task)
@@ -132,15 +129,15 @@ class DownloadImpl(
         }
         // 2. 将预处理失败的任务直接插入数据库
         if (failTasks.isNotEmpty()) {
-            db.downloadDao.insert(*failTasks.toTypedArray())
+            db.apkDownloadDao.insert(*failTasks.toTypedArray())
         }
         // 3. 持久化：将新任务批量写入数据库
         if (successTasksToInsert.isNotEmpty()) {
             //todo 这里需要判断是否为重复下载,如果是重复下载则只是更新数据
-            val successIds = db.downloadDao.insert(*successTasksToInsert.toTypedArray())
+            val successIds = db.apkDownloadDao.insert(*successTasksToInsert.toTypedArray())
 
             // 4. 根据新 ID 从数据库重新获取完整的、带有正确 ID 的任务对象
-            val newTasksWithCorrectIds = db.downloadDao.getByIds(successIds)
+            val newTasksWithCorrectIds = db.apkDownloadDao.getByIds(successIds)
 
             // 5. 委托：将带有正确 ID 的任务交给 Dispatcher 处理
             if (newTasksWithCorrectIds.isNotEmpty()) {

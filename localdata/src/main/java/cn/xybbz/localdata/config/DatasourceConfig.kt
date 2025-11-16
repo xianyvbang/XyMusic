@@ -53,10 +53,9 @@ class DatasourceConfig {
     private object Migration2 : Migration(2, 3) {
         override fun migrate(db: SupportSQLiteDatabase) {
             // 数据库的升级语句
-            //todo 需要新的语句
             db.execSQL(
                 """
-                CREATE TABLE `xy_download` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `url` TEXT NOT NULL, `fileName` TEXT NOT NULL, `filePath` TEXT NOT NULL, `fileSize` INTEGER NOT NULL, `tempFilePath` TEXT NOT NULL, `typeData` TEXT NOT NULL, `progress` REAL NOT NULL, `totalBytes` INTEGER NOT NULL, `downloadedBytes` INTEGER NOT NULL, `status` TEXT NOT NULL, `error` TEXT, `uid` TEXT, `title` TEXT, `cover` TEXT, `duration` INTEGER, `connectionId` INTEGER, `updateTime` INTEGER NOT NULL, `createTime` INTEGER NOT NULL);
+                    CREATE TABLE `xy_download` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `url` TEXT NOT NULL, `fileName` TEXT NOT NULL, `filePath` TEXT NOT NULL, `fileSize` INTEGER NOT NULL, `tempFilePath` TEXT NOT NULL, `typeData` TEXT NOT NULL, `progress` REAL NOT NULL, `totalBytes` INTEGER NOT NULL, `downloadedBytes` INTEGER NOT NULL, `status` TEXT NOT NULL, `error` TEXT, `uid` TEXT, `title` TEXT, `cover` TEXT, `duration` INTEGER, `connectionId` INTEGER, `updateTime` INTEGER NOT NULL, `createTime` INTEGER NOT NULL);
             """.trimIndent()
             )
         }
@@ -65,7 +64,7 @@ class DatasourceConfig {
     private object Migration3 : Migration(3, 4) {
         override fun migrate(db: SupportSQLiteDatabase) {
             // 数据库的升级语句
-            db.execSQL("ALTER TABLE xy_music ADD COLUMN downloadUrl TEXT NOT NULL")
+            db.execSQL("ALTER TABLE xy_music ADD COLUMN downloadUrl TEXT NOT NULL DEFAULT ''")
         }
     }
 }

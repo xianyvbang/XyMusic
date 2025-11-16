@@ -33,6 +33,7 @@ import cn.xybbz.localdata.data.count.XyDataCount
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
+import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.page.bigPager
 import cn.xybbz.page.defaultPager
@@ -79,7 +80,6 @@ abstract class IDataSourceParentServer(
      * 获得当前数据源类型
      */
     abstract fun getDataSourceType(): DataSourceType
-
 
     /**
      * 根据输入地址获取服务器信息

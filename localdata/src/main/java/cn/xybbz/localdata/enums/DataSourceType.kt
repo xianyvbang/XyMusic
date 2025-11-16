@@ -183,5 +183,17 @@ enum class DataSourceType(
         ifAlbumInfoFavoriteFilter = true,
         ifStartEndYear = true,
         ifArtistFavorite = true,
-    )
+    );
+
+
+
+    fun getDownloadType(): DownloadTypes{
+        return when(this){
+            JELLYFIN -> DownloadTypes.JELLYFIN
+            SUBSONIC -> DownloadTypes.SUBSONIC
+            NAVIDROME -> DownloadTypes.NAVIDROME
+            EMBY -> DownloadTypes.EMBY
+            PLEX -> DownloadTypes.PLEX
+        }
+    }
 }

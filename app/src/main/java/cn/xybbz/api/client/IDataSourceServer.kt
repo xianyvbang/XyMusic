@@ -17,6 +17,7 @@ import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,6 +36,10 @@ interface IDataSourceServer {
 
     fun updateIfTmpObject(ifTmp: Boolean)
 
+    /**
+     * 根据下载类型获得数据源
+     */
+    fun getApiClient(downloadTypes: DownloadTypes): ApiConfig
     /**
      * 用户登录逻辑
      */

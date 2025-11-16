@@ -1,6 +1,7 @@
 package cn.xybbz.api.client.navidrome
 
 import cn.xybbz.api.client.DefaultApiClient
+import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.navidrome.service.NavidromeArtistsApi
 import cn.xybbz.api.client.navidrome.service.NavidromeGenreApi
 import cn.xybbz.api.client.navidrome.service.NavidromeItemApi
@@ -11,7 +12,7 @@ import cn.xybbz.api.client.subsonic.SubsonicApiClient
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.enums.subsonic.ResponseFormatType
 
-class NavidromeApiClient : DefaultApiClient() {
+class NavidromeApiClient : DefaultParentApiClient() {
 
     /**
      * subsonic的加密盐

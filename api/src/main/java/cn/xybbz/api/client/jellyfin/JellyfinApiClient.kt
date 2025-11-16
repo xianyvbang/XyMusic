@@ -1,6 +1,7 @@
 package cn.xybbz.api.client.jellyfin
 
 import cn.xybbz.api.client.DefaultApiClient
+import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.jellyfin.service.ArtistsApi
 import cn.xybbz.api.client.jellyfin.service.GenreApi
 import cn.xybbz.api.client.jellyfin.service.ImageApi
@@ -19,7 +20,7 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 
-class JellyfinApiClient : DefaultApiClient() {
+class JellyfinApiClient : DefaultParentApiClient() {
 
     private var clientName: String = ""
     private var clientVersion: String = ""

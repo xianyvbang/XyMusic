@@ -106,7 +106,7 @@ abstract class DatabaseClient : RoomDatabase() {
 
     val recentHistoryDao: XyRecentHistoryDao by lazy { createXyRecentHistoryDao() }
 
-    val downloadDao: XyDownloadDao by lazy { createXyDownloadDao() }
+    val apkDownloadDao: XyDownloadDao by lazy { createXyDownloadDao() }
 
 
     abstract fun createMusicDao(): XyMusicDao

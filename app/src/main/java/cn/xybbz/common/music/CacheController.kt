@@ -1,5 +1,6 @@
 package cn.xybbz.common.music
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Environment
 import android.util.Log
@@ -30,6 +31,7 @@ import java.util.NavigableSet
 import java.util.concurrent.ConcurrentHashMap
 
 
+@SuppressLint("UnsafeOptInUsageError")
 class CacheController(
     private val context: Context,
     private val settingsConfig: SettingsConfig,
@@ -75,7 +77,6 @@ class CacheController(
         cacheDataSourceFactory = CacheDataSource.Factory()
             .setCache(cache)
             .setUpstreamDataSourceFactory(
-                //todo 这里可以改为单独的okhttp请求,不再考虑本地播放的问题
                 DefaultDataSource.Factory(
                     context,
                     OkHttpDataSource.Factory(cacheApiClient.okhttpClientFunction())

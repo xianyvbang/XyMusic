@@ -1299,6 +1299,13 @@ class PlexDatasourceServer @Inject constructor(
     }
 
     /**
+     * 创建下载链接
+     */
+    override fun createDownloadUrl(musicId: String): String {
+        return plexApiClient.createDownloadUrl(musicId)
+    }
+
+    /**
      * 获得OkHttpClient
      */
     override fun getOkhttpClient(): OkHttpClient {

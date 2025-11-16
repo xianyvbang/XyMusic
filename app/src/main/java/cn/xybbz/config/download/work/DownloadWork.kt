@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import cn.xybbz.api.client.ApiConfig
+import cn.xybbz.api.client.IDataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.config.download.core.DownloadDispatcherImpl
 import cn.xybbz.config.download.core.OkhttpDownloadCore
@@ -24,7 +25,7 @@ class DownloadWork @AssistedInject constructor(
     @Assisted workerParams: WorkerParameters,
     private val db: DatabaseClient,
     private val callback: DownloadDispatcherImpl,
-    private val apiConfigList: Map<DownloadTypes,@JvmSuppressWildcards Provider<ApiConfig>>,
+    private val dataSourceManager: IDataSourceManager,
     private val notificationController: NotificationController
 ) :
     CoroutineWorker(appContext, workerParams) {
@@ -32,8 +33,8 @@ class DownloadWork @AssistedInject constructor(
     override suspend fun doWork(): Result {
         val downloadId = inputData.getLong(Constants.DOWNLOAD_ID, -1L)
         if (downloadId == -1L) return Result.failure()
-        val downloadTask = db.downloadDao.selectById(downloadId) ?: return Result.failure()
-        val statusChange = suspend { db.downloadDao.getStatusById(downloadId) }
+        val downloadTask = db.apkDownloadDao.selectById(downloadId) ?: return Result.failure()
+        val statusChange = suspend { db.apkDownloadDao.getStatusById(downloadId) }
         val notificationId = downloadId.toInt() // 使用 taskId 作为通知 ID
         val okhttpDownloadCore = OkhttpDownloadCore(
             applicationContext
@@ -43,8 +44,7 @@ class DownloadWork @AssistedInject constructor(
         val foregroundInfo =
             notificationController.createForegroundInfo(notificationId, initialNotification)
         setForeground(foregroundInfo)
-
-        val client = apiConfigList[downloadTask.typeData]?.get() ?: return Result.failure()
+        val client = dataSourceManager.getApiClient(downloadTask.typeData)
         try {
             okhttpDownloadCore.download(client, statusChange, downloadTask).collect { state ->
                 when (state) {
@@ -105,7 +105,7 @@ class DownloadWork @AssistedInject constructor(
 
     private suspend fun handleCancellation(task: XyDownload) {
         // 删除临时文件
-        db.downloadDao.updateStatus(task.id, DownloadStatus.CANCEL)
+        db.apkDownloadDao.updateStatus(task.id, DownloadStatus.CANCEL)
         try {
             File(task.tempFilePath).delete()
         } catch (e: Exception) {

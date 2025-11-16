@@ -835,6 +835,13 @@ class NavidromeDatasourceServer @Inject constructor(
     }
 
     /**
+     * 创建下载链接
+     */
+    override fun createDownloadUrl(musicId: String): String {
+        return navidromeApiClient.createDownloadUrl(musicId)
+    }
+
+    /**
      * 获得OkHttpClient
      */
     override fun getOkhttpClient(): OkHttpClient {
@@ -1321,6 +1328,11 @@ class NavidromeDatasourceServer @Inject constructor(
                     it
                 )
             } ?: "" else navidromeApiClient.createAudioUrl(music.id),
+            downloadUrl = if (isPlaylistMusic) music.mediaFileId?.let {
+                navidromeApiClient.createDownloadUrl(
+                    it
+                )
+            } ?: "" else navidromeApiClient.createDownloadUrl(music.id),
             album = music.albumId,
             albumName = music.album,
             genreIds = music.genres?.joinToString(Constants.ARTIST_DELIMITER) { it.id },

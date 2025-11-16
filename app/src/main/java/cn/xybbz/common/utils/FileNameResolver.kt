@@ -3,7 +3,6 @@ package cn.xybbz.common.utils
 import android.webkit.MimeTypeMap
 import cn.xybbz.config.download.core.DownloadRequest
 import cn.xybbz.config.download.core.ResolvedPath
-import cn.xybbz.localdata.data.download.XyDownload
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock

@@ -1,6 +1,8 @@
 package cn.xybbz.api.client.emby
 
+import cn.xybbz.api.TokenServer.baseUrl
 import cn.xybbz.api.client.DefaultApiClient
+import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.emby.service.EmbyArtistsApi
 import cn.xybbz.api.client.emby.service.EmbyGenreApi
 import cn.xybbz.api.client.emby.service.EmbyItemApi
@@ -16,7 +18,7 @@ import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.enums.jellyfin.ImageType
 import cn.xybbz.api.enums.jellyfin.MediaStreamProtocol
 
-class EmbyApiClient : DefaultApiClient() {
+class EmbyApiClient : DefaultParentApiClient() {
 
     private var clientName: String = ""
     private var clientVersion: String = ""

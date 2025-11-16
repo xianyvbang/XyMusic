@@ -608,7 +608,7 @@ class MusicController(
         var musicUrl = musicExtend.musicUrl
         if (URLUtil.isNetworkUrl(musicUrl)
         ) {
-            musicUrl = musicUrl + "&playSessionId=${musicExtend.playSessionId}"
+            musicUrl += "&playSessionId=${musicExtend.playSessionId}"
             mediaItemBuilder.setUri(musicUrl)
         } else {
             mediaItemBuilder.setUri(Uri.fromFile(File(musicUrl)))

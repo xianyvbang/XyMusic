@@ -23,9 +23,6 @@ data class XyDownload(
     var status: DownloadStatus = DownloadStatus.QUEUED,
 
     var error:String? = null,
-
-
-
     val uid: String? = null,
     val title: String? = null,
     val cover: String? = null,
@@ -34,7 +31,4 @@ data class XyDownload(
 
     val updateTime: Long = System.currentTimeMillis(),
     val createTime: Long = System.currentTimeMillis(),
-){
-    /*@Ignore
-    var headers: Map<String, String> = emptyMap()*/
-}
+)

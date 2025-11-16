@@ -890,6 +890,13 @@ class EmbyDatasourceServer @Inject constructor(
     }
 
     /**
+     * 创建下载链接
+     */
+    override fun createDownloadUrl(musicId: String): String {
+        return embyApiClient.createDownloadUrl(musicId)
+    }
+
+    /**
      * 获得OkHttpClient
      */
     override fun getOkhttpClient(): OkHttpClient {
@@ -1385,7 +1392,7 @@ class EmbyDatasourceServer @Inject constructor(
             bitRate = mediaSourceInfo?.bitrate,
             sampleRate = mediaStream?.sampleRate,
             bitDepth = mediaStream?.bitDepth,
-            size = mediaSourceInfo?.size,
+            size = mediaSourceInfo?.size?:0,
             runTimeTicks = BigDecimal.valueOf(mediaSourceInfo?.runTimeTicks ?: 0)
                 .divide(BigDecimal(10000), BigDecimal.ROUND_UP).toLong(),
             container = mediaSourceInfo?.container,

@@ -358,7 +358,7 @@ fun MusicBottomMenuComponent(
                         ),
                         onClick = {
                             coroutineScope.launch {
-                                musicBottomMenuViewModel.downloadController.downLoadMusic(music)
+                                musicBottomMenuViewModel.downloadMusic(music)
                             }.invokeOnCompletion {
 
 

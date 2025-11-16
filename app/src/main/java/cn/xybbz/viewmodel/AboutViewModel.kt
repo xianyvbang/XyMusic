@@ -51,7 +51,7 @@ class AboutViewModel @Inject constructor(
         downloadManager.addListener(downloadListener)
     }
 
-    val apkDownloadInfo: StateFlow<XyDownload?> = db.downloadDao.getOneApkFlow()
+    val apkDownloadInfo: StateFlow<XyDownload?> = db.apkDownloadDao.getOneApkFlow()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -64,7 +64,7 @@ class AboutViewModel @Inject constructor(
         apkSize: Long
     ) {
         //判断是否下载中,如果有下载中则不能继续下载
-        val apkDownload = db.downloadDao.getByTypeAndUrl(DownloadTypes.APK, apkUrl)
+        val apkDownload = db.apkDownloadDao.getByTypeAndUrl(DownloadTypes.APK, apkUrl)
         if (apkDownload != null && apkDownload.status != DownloadStatus.COMPLETED) {
             downloadManager.resume(apkDownload.id)
         } else if (apkDownload != null && apkDownload.status == DownloadStatus.COMPLETED) {

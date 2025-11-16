@@ -112,7 +112,7 @@ class DailyRecommender(
         // 更新 recentHistory（异步安全）
         recentHistory.addAll(
             result,
-            repo._connectionConfigServer.getConnectionId()
+            repo.connectionConfigServer.getConnectionId()
         )
     }
 

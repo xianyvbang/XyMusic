@@ -1072,6 +1072,7 @@ class SubsonicDatasourceServer @Inject constructor(
             },
             name = music.title,
             musicUrl = subsonicApiClient.createAudioUrl(music.id),
+            downloadUrl = createDownloadUrl(music.id),
             album = music.albumId,
             albumName = music.album,
             genreIds = music.genre,
@@ -1271,5 +1272,12 @@ class SubsonicDatasourceServer @Inject constructor(
         pageNum: Int
     ): List<XyMusic>? {
         return super.getMusicListByFavorite(pageSize = pageSize, pageNum = pageNum)
+    }
+
+    /**
+     * 创建下载链接
+     */
+    override fun createDownloadUrl(musicId: String): String {
+        return subsonicApiClient.createDownloadUrl(musicId)
     }
 }

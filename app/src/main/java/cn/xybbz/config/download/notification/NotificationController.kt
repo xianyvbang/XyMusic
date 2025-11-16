@@ -29,7 +29,7 @@ class NotificationController(
 ) {
     companion object {
         private const val CHANNEL_ID = "downloader_channel"
-        private const val CHANNEL_NAME = "Downloads"
+        private const val CHANNEL_NAME = "ApkDownloads"
     }
 
     init {
