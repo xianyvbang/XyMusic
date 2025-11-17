@@ -29,7 +29,7 @@ class DownloadDispatcherImpl(
     private val db: DatabaseClient,
     private val workManager: WorkManager,
     var config: DownloaderConfig,
-    private val connectionConfigServer: ConnectionConfigServer,
+    val connectionConfigServer: ConnectionConfigServer,
     private val notificationController: NotificationController
 ) : IDownloadDispatcher {
 

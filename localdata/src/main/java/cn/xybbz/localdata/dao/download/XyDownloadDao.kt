@@ -69,16 +69,26 @@ interface XyDownloadDao {
     @Query("SELECT * FROM xy_download where typeData =:typeData and connectionId = (select connectionId from xy_settings) ORDER BY createTime DESC")
     fun getAllTasksFlow(typeData: DownloadTypes): Flow<List<XyDownload>>
 
+    @Query("SELECT * FROM xy_download where typeData != :notTypeData and connectionId = (select connectionId from xy_settings) ORDER BY createTime DESC")
+    fun getAllMusicTasksFlow(notTypeData: DownloadTypes = DownloadTypes.APK): Flow<List<XyDownload>>
+
 
     @Query("select * from xy_download where typeData = :typeData and url = :url and status != :notStatus limit 1")
-    suspend fun getByTypeAndUrl(typeData: DownloadTypes, url: String,notStatus: DownloadStatus = DownloadStatus.CANCEL): XyDownload?
+    suspend fun getByTypeAndUrl(
+        typeData: DownloadTypes,
+        url: String,
+        notStatus: DownloadStatus = DownloadStatus.CANCEL
+    ): XyDownload?
 
 
     @Query("SELECT * FROM xy_download where typeData = :typeData and connectionId = (select connectionId from xy_settings) ORDER BY createTime DESC limit 1")
     fun getOneFlow(typeData: DownloadTypes): Flow<XyDownload?>
 
     @Query("SELECT * FROM xy_download where typeData = :typeData and status != :notStatus ORDER BY createTime DESC limit 1")
-    fun getOneApkFlow(typeData: DownloadTypes = DownloadTypes.APK,notStatus: DownloadStatus = DownloadStatus.CANCEL): Flow<XyDownload?>
+    fun getOneApkFlow(
+        typeData: DownloadTypes = DownloadTypes.APK,
+        notStatus: DownloadStatus = DownloadStatus.CANCEL
+    ): Flow<XyDownload?>
 
     @Query("SELECT * FROM xy_download where typeData = :typeData and connectionId = (select connectionId from xy_settings) ORDER BY createTime DESC limit 1")
     suspend fun getOne(typeData: DownloadTypes): XyDownload?

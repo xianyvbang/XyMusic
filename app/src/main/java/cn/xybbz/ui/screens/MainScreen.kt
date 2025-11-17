@@ -2,6 +2,7 @@
 
 package cn.xybbz.ui.screens
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.annotation.OptIn
@@ -39,6 +40,9 @@ import cn.xybbz.ui.components.MusicBottomMenuComponent
 import cn.xybbz.ui.components.SnackBarPlayerComponent
 import cn.xybbz.viewmodel.MainViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionStatus
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 
 
 @ExperimentalPermissionsApi
@@ -59,9 +63,27 @@ fun MainScreen() {
 
         //todo putDataSourceState 这个属性应该放在全局的object类里,不是放在mainViewModel里
 
+        val permissionState =
+            rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
+
+
         LifecycleEffect(
             onCreate = {
 //                mainViewModel.clearRemoteCurrent()
+                //todo 通知权限调用应该修改到下载的时候
+                when(permissionState.status){
+                    is PermissionStatus.Granted -> {
+                        Log.i("permission","通知权限启用")
+                    }
+                    is PermissionStatus.Denied -> {
+                        if (permissionState.status.shouldShowRationale){
+                            permissionState.launchPermissionRequest()
+                        }else {
+                            Log.w("permission","通知权限被禁止")
+                        }
+                    }
+                }
+                permissionState.launchPermissionRequest()
                 Log.i("=====", "初始化")
             },
             onStart = {
@@ -93,22 +115,9 @@ fun MainScreen() {
         AddPlaylistBottomComponent()
 
         Scaffold(
-            /*topBar = {
-                TopAppBar(title = {
-                    //todo 这里可以写入链接的部分信息
-                    Text(
-                        text = "欢迎回来",
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.W900
-                    )
-                })
-            },*/
             snackbarHost = {
                 SnackBarHostUi()
             },
-            /*bottomBar = {
-                NavigationBarAnim()
-            }*/
         ) { it ->
             Box() {
                 RouterCompose(paddingValues = it)

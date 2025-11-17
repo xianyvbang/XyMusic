@@ -7,6 +7,7 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.PagingData
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
+import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.AllResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
@@ -41,6 +42,7 @@ import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
+import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.page.defaultLocalPager
 import kotlinx.coroutines.flow.Flow
@@ -138,6 +140,13 @@ class SubsonicDatasourceServer @Inject constructor(
             totalRecordCount = artists.size,
             startIndex = 0
         )
+    }
+
+    /**
+     * 根据下载类型获得数据源
+     */
+    override fun getApiClient(downloadTypes: DownloadTypes): ApiConfig {
+        return subsonicApiClient
     }
 
     /**

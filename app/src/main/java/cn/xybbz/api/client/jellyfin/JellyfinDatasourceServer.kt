@@ -6,6 +6,7 @@ import android.os.Build
 import android.util.Log
 import androidx.room.withTransaction
 import cn.xybbz.R
+import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.AllResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
@@ -47,6 +48,7 @@ import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
+import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
@@ -137,6 +139,13 @@ class JellyfinDatasourceServer @Inject constructor(
         //提前写入没有sessionToken的Authenticate请求头,不然登录请求都会报错
         setToken()
         jellyfinApiClient.setRetrofitData(address, ifTmpObject())
+    }
+
+    /**
+     * 根据下载类型获得数据源
+     */
+    override fun getApiClient(downloadTypes: DownloadTypes): ApiConfig {
+        return jellyfinApiClient
     }
 
     /**

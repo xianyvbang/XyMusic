@@ -15,7 +15,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 class DownloadImpl(
     private val downloadDispatcher: DownloadDispatcherImpl,
     private val applicationContext: Context,
-    private val db: DatabaseClient
+    private val db: DatabaseClient,
 ) : IDownloader {
 
     val scope = CoroutineScopeUtils.getIo("downloadImpl")
@@ -23,11 +23,16 @@ class DownloadImpl(
 
     init {
         scope.launch{
-            downloadDispatcher.rehydrate()
-            downloadDispatcher.taskUpdateEventFlow.collect { updatedTask ->
-                // 当收到来自 Dispatcher 的更新事件时，通知所有外部监听器
-                notifyListeners(updatedTask)
+            downloadDispatcher.connectionConfigServer.loginStateFlow.collect {
+                if (it){
+                    downloadDispatcher.rehydrate()
+                    downloadDispatcher.taskUpdateEventFlow.collect { updatedTask ->
+                        // 当收到来自 Dispatcher 的更新事件时，通知所有外部监听器
+                        notifyListeners(updatedTask)
+                    }
+                }
             }
+
         }
     }
 

@@ -20,6 +20,7 @@ import cn.xybbz.ui.screens.ConnectionConfigInfoScreen
 import cn.xybbz.ui.screens.ConnectionManagement
 import cn.xybbz.ui.screens.ConnectionScreen
 import cn.xybbz.ui.screens.DailyRecommendScreen
+import cn.xybbz.ui.screens.DownloadScreen
 import cn.xybbz.ui.screens.FavoriteScreen
 import cn.xybbz.ui.screens.GenresInfoScreen
 import cn.xybbz.ui.screens.GenresScreen
@@ -161,6 +162,10 @@ fun RouterCompose(
 
             extremityComposable<RouterConstants.DailyRecommend> {
                 DailyRecommendScreen()
+            }
+
+            nodeComposable<RouterConstants.Download> {
+                DownloadScreen()
             }
         }
     }

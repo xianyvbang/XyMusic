@@ -1,15 +1,21 @@
 package cn.xybbz.config.download
 
 import android.content.Context
+import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.download.core.DownloadDispatcherImpl
 import cn.xybbz.config.download.core.DownloadImpl
 import cn.xybbz.config.download.core.IDownloader
+import cn.xybbz.config.module.ConnectionConfigModule_ConnectionConfigServerFactory.connectionConfigServer
 import cn.xybbz.localdata.config.DatabaseClient
 
 class DownLoadManager(
     val applicationContext: Context,
     private val db: DatabaseClient,
-    private val downloadDispatcher: DownloadDispatcherImpl
-) : IDownloader by DownloadImpl(downloadDispatcher, applicationContext, db) {
+    private val downloadDispatcher: DownloadDispatcherImpl,
+) : IDownloader by DownloadImpl(
+    downloadDispatcher,
+    applicationContext,
+    db
+) {
 
 }

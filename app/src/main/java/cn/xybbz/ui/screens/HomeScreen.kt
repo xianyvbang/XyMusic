@@ -25,6 +25,7 @@ import androidx.compose.material.icons.rounded.AddCircle
 import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.MusicNote
@@ -339,6 +340,15 @@ fun HomeScreen(
                         Icon(
                             imageVector = Icons.Rounded.Search,
                             contentDescription = stringResource(R.string.search_page_switch_button)
+                        )
+                    }
+
+                    IconButton(onClick = {
+                        navHostController.navigate(RouterConstants.Download)
+                    }) {
+                        Icon(
+                            imageVector = Icons.Rounded.Download,
+                            contentDescription = stringResource(R.string.download_failed)
                         )
                     }
                 }

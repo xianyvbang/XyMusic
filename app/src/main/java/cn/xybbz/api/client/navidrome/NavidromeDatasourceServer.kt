@@ -4,6 +4,7 @@ import android.content.Context
 import android.icu.text.Transliterator
 import android.util.Log
 import androidx.room.withTransaction
+import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.AllResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
@@ -40,6 +41,7 @@ import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
+import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
@@ -163,6 +165,13 @@ class NavidromeDatasourceServer @Inject constructor(
             val artist = navidromeApiClient.artistsApi().getArtist(artistId)
             artist?.let { artist -> convertToArtist(artist, 0) }
         }
+    }
+
+    /**
+     * 根据下载类型获得数据源
+     */
+    override fun getApiClient(downloadTypes: DownloadTypes): ApiConfig {
+        return navidromeApiClient
     }
 
     /**

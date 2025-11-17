@@ -188,5 +188,12 @@ import kotlinx.serialization.Serializable
     @SerialName("DailyRecommend")
     data object DailyRecommend : RouterConstants
 
+    /**
+     * 下载页面
+     */
+    @Serializable
+    @SerialName("Download")
+    data object Download : RouterConstants
+
 }
 
