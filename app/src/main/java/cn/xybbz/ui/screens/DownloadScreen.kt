@@ -3,16 +3,16 @@ package cn.xybbz.ui.screens
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,7 +29,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -40,13 +42,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.R
 import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.localdata.data.download.XyDownload
+import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.DownloadViewModel
+import kotlinx.coroutines.launch
 import kotlin.math.log10
 import kotlin.math.pow
 
@@ -82,10 +87,14 @@ fun DownloadScreen(
                 }
             })
 
-        LazyColumnNotComponent() {
+        LazyColumnNotComponent(
+            contentPadding = PaddingValues(
+                XyTheme.dimens.outerHorizontalPadding
+            ),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.innerVerticalPadding),
+        ) {
             items(tasks, key = { it.id }) { task ->
-
-                DownloadItem(
+                DownloadItemTrailingContent(
                     task = task,
                     isMultiSelectMode = downloadViewModel.isMultiSelectMode,
                     isSelected = downloadViewModel.selectedTaskIds.contains(task.id),
@@ -101,15 +110,22 @@ fun DownloadScreen(
                     onPause = { downloadViewModel.pauseDownload(task.id) },
                     onResume = { downloadViewModel.resumeDownload(task.id) },
                     onCancel = { downloadViewModel.cancelDownload(task.id) },
-                    onDelete = { downloadViewModel.deleteDownload(task.id) })
+                    onDelete = { downloadViewModel.deleteDownload(task.id) },
+                    onGetMusicInfo = { downloadViewModel.getMusicInfoById(it) }
+                )
             }
         }
     }
 }
 
 @Composable
-fun DownloadItem(
+fun DownloadItemTrailingContent(
+    modifier: Modifier = Modifier,
     task: XyDownload,
+    enabled: Boolean = true,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
+    brush: Brush? = null,
+    textColor: Color = MaterialTheme.colorScheme.onSurface,
     isMultiSelectMode: Boolean,
     isSelected: Boolean,
     onItemClick: () -> Unit,
@@ -117,94 +133,140 @@ fun DownloadItem(
     onPause: () -> Unit,
     onResume: () -> Unit,
     onCancel: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onGetMusicInfo: suspend (String) -> XyMusic?
 ) {
+
     val primary = MaterialTheme.colorScheme.primary
+    val coroutineScope = rememberCoroutineScope()
 
     ListItem(
-        modifier = Modifier.combinedClickable(
-            onClick = onItemClick,
-            onLongClick = onItemLongClick
-        ),
-        colors = ListItemDefaults.colors(
-            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
-        ),
+        colors = ListItemDefaults.colors(containerColor = if (brush != null) Color.Transparent else backgroundColor),
+        modifier = modifier
+            .height(XyTheme.dimens.itemHeight)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(XyTheme.dimens.corner))
+            .combinedClickable(
+                enabled = enabled,
+                onClick = {
+                    if (task.status == DownloadStatus.DOWNLOADING || task.status == DownloadStatus.QUEUED) {
+                        onPause()
+                    } else if (task.status == DownloadStatus.PAUSED) {
+                        onResume()
+                    }
+                },
+                onLongClick = onItemLongClick
+            ),
         headlineContent = {
             Text(
-                text = task.title ?: task.fileName,
+                text = (task.title ?: task.fileName) + "Status: ${task.status.name}",
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 style = MaterialTheme.typography.bodySmall,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                color = textColor
             )
-        }, supportingContent = {
-            Column() {
-                Text("Status: ${task.status.name}", fontSize = 12.sp)
-                Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                LinearProgressIndicator(
-                    modifier = Modifier.fillMaxWidth(),
-                    progress = { if (task.totalBytes > 0) task.progress / 100f else 0f },
-                    drawStopIndicator = {
-                        drawStopIndicator(
-                            drawScope = this,
-                            stopSize = 0.dp,
-                            color = primary,
-                            strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+        },
+        supportingContent = {
+            when (task.status) {
+                DownloadStatus.QUEUED -> {
+                    Text(
+                        text = "排队中",
+                        fontStyle = MaterialTheme.typography.titleSmall.fontStyle
+                    )
+                }
+
+                DownloadStatus.DOWNLOADING -> {
+                    Column {
+                        LinearProgressIndicator(
+                            modifier = Modifier.fillMaxWidth(),
+                            progress = { if (task.totalBytes > 0) task.progress / 100f else 0f },
+                            drawStopIndicator = {
+                                drawStopIndicator(
+                                    drawScope = this,
+                                    stopSize = 0.dp,
+                                    color = primary,
+                                    strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+                                )
+                            })
+                        Text(
+                            "${formatBytes(task.downloadedBytes)} / ${formatBytes(task.totalBytes)}",
+                            fontSize = 12.sp,
+                            modifier = Modifier.align(Alignment.End)
                         )
-                    })
-                Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                Text(
-                    "${formatBytes(task.downloadedBytes)} / ${formatBytes(task.totalBytes)}",
-                    fontSize = 12.sp,
-                    modifier = Modifier.align(Alignment.End)
-                )
-                Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    if (!isMultiSelectMode) {
-                        if (task.status == DownloadStatus.DOWNLOADING || task.status == DownloadStatus.QUEUED) {
-                            IconButton(onClick = composeClick { onPause() }) {
-                                Icon(
-                                    painterResource(R.drawable.svg_notification_pause),
-                                    contentDescription = "Pause"
-                                )
-                            }
-                        }
-                        if (task.status == DownloadStatus.PAUSED) {
-                            IconButton(onClick = onResume) {
-                                Icon(
-                                    painterResource(R.drawable.svg_notification_play),
-                                    contentDescription = "Resume"
-                                )
-                            }
-                        }
-                        if (task.status in listOf(
-                                DownloadStatus.QUEUED,
-                                DownloadStatus.DOWNLOADING,
-                                DownloadStatus.PAUSED,
-                                DownloadStatus.FAILED
-                            )
+                        /*Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
                         ) {
-                            IconButton(onClick = onCancel) {
-                                Icon(Icons.Default.Close, contentDescription = "Cancel")
+                            if (task.status in listOf(
+                                    DownloadStatus.QUEUED,
+                                    DownloadStatus.DOWNLOADING,
+                                    DownloadStatus.PAUSED,
+                                    DownloadStatus.FAILED
+                                )
+                            ) {
+                                IconButton(onClick = onCancel) {
+                                    Icon(Icons.Default.Close, contentDescription = "Cancel")
+                                }
+                                IconButton(onClick = onDelete) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Delete")
+                                }
                             }
-                            IconButton(onClick = onDelete) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete")
+                            if (task.status == DownloadStatus.CANCEL || task.status == DownloadStatus.COMPLETED) {
+                                IconButton(onClick = onDelete) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Delete")
+                                }
                             }
-                        }
-                        if (task.status == DownloadStatus.CANCEL || task.status == DownloadStatus.COMPLETED) {
-                            IconButton(onClick = onDelete) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete")
-                            }
-                        }
+                        }*/
+
                     }
                 }
 
+                DownloadStatus.PAUSED -> {
+                    Text(
+                        text = "点击继续下载",
+                        fontStyle = MaterialTheme.typography.titleSmall.fontStyle
+                    )
+                }
+                DownloadStatus.COMPLETED -> {
+                    Text(
+                        text = "下载完成",
+                        fontStyle = MaterialTheme.typography.titleSmall.fontStyle
+                    )
+                }
+                DownloadStatus.FAILED -> {
+                    Text(
+                        text = "下载失败: ${task.error}",
+                        fontStyle = MaterialTheme.typography.titleSmall.fontStyle
+                    )
+                }
+                DownloadStatus.CANCEL -> {
+                    Text(
+                        text = "取消下载: ${task.error}",
+                        fontStyle = MaterialTheme.typography.titleSmall.fontStyle
+                    )
+                }
             }
 
-        })
+        },
+        trailingContent = {
+            IconButton(
+                modifier = Modifier.offset(x = (10).dp),
+                onClick = {
+                    coroutineScope.launch {
+                        task.uid?.let {
+                            onGetMusicInfo(it)?.show()
+                        }
+                    }
+                },
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "${task.title ?: task.fileName}${stringResource(R.string.other_operations_button_suffix)}"
+                )
+            }
+        }
+    )
 }
 
 //todo 这个考虑使用其他方式

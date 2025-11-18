@@ -7,10 +7,12 @@ import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cn.xybbz.api.client.IDataSourceManager
 import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.download.XyDownload
+import cn.xybbz.localdata.data.music.XyMusic
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,7 +24,8 @@ import javax.inject.Inject
 class DownloadViewModel @Inject constructor(
     val favoriteRepository: FavoriteRepository,
     private val db: DatabaseClient,
-    private val downLoadManager: DownLoadManager
+    private val downLoadManager: DownLoadManager,
+    private val datasourceServer: IDataSourceManager
 ) : ViewModel() {
 
 
@@ -66,6 +69,10 @@ class DownloadViewModel @Inject constructor(
         }
     }
 
+
+    suspend fun getMusicInfoById(itemId: String): XyMusic? {
+        return datasourceServer.selectMusicInfoById(itemId)
+    }
 
 
 }
