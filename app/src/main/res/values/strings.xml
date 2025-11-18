@@ -136,6 +136,7 @@
     <string name="open_settings_page_button">打开设置页面按钮</string>
     <string name="search_page_switch_button">搜索页面切换按钮</string>
     <string name="all_music">所有音乐</string>
+    <string name="local">本地</string>
     <string name="favorite">收藏</string>
     <string name="most_played">最多播放</string>
     <string name="recommended_music">每日推荐</string>

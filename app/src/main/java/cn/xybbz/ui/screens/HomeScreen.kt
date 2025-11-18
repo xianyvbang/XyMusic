@@ -389,6 +389,24 @@ fun HomeScreen(
                                 end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
                             )
                         )
+
+                        XyItemTabBigButton(
+                            text = stringResource(R.string.local),
+                            sub = if (ifShowCount) homeViewModel.musicCount ?: stringResource(
+                                Constants.UNKNOWN
+                            ) else null,
+                            imageVector = Icons.Rounded.MusicNote,
+                            iconColor = MaterialTheme.colorScheme.onSurface,
+                            onClick = {
+                                navHostController.navigate(RouterConstants.Music)
+                            },
+                            brush = Brush.linearGradient(
+                                colors = listOf(Color(0xFF6BFFF4), Color(0xFFFFBA6C)),
+                                start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
+                                end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
+                            )
+                        )
+
                         XyItemTabBigButton(
                             text = stringResource(R.string.album),
                             sub = if (ifShowCount) homeViewModel.albumCount ?: stringResource(

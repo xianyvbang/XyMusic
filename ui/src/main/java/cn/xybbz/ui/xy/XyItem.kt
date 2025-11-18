@@ -692,7 +692,7 @@ fun XyItemTabBigButton(
     text: String,
     sub: String? = null,
     imageVector: ImageVector,
-    iconSize: Dp = XyTheme.dimens.itemHeight,
+    iconSize: Dp = 58.dp,
     enabled: Boolean = true,
     iconColor: Color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(
         alpha = 0.3f
