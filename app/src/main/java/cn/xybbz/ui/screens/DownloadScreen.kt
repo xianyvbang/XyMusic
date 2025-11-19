@@ -1,5 +1,6 @@
 package cn.xybbz.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -34,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -42,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cn.xybbz.R
 import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.localdata.data.download.XyDownload
@@ -87,6 +91,13 @@ fun DownloadScreen(
                         contentDescription = stringResource(R.string.return_home)
                     )
                 }
+            }, actions = {
+                MultiSelectTopAppEnd(
+                    isMultiSelectMode = downloadViewModel.isMultiSelectMode,
+                    onPause = { downloadViewModel.performBatchPause() },
+                    onResume = { downloadViewModel.performBatchResume() },
+                    onCancel = { downloadViewModel.performBatchCancel() }
+                )
             })
 
         LazyColumnNotComponent(
@@ -152,11 +163,16 @@ fun DownloadItemTrailingContent(
             .fillMaxWidth()
             .combinedClickable(
                 onClick = {
-                    if (task.status == DownloadStatus.DOWNLOADING || task.status == DownloadStatus.QUEUED) {
-                        onPause()
-                    } else if (task.status == DownloadStatus.PAUSED) {
-                        onResume()
+                    if (isMultiSelectMode) {
+                        onItemClick()
+                    } else {
+                        if (task.status == DownloadStatus.DOWNLOADING || task.status == DownloadStatus.QUEUED) {
+                            onPause()
+                        } else if (task.status == DownloadStatus.PAUSED) {
+                            onResume()
+                        }
                     }
+
                 },
                 onLongClick = onItemLongClick
             )
@@ -273,7 +289,7 @@ fun DownloadItemTrailingContent(
 
             }
 
-            if (isMultiSelectMode){
+            if (isMultiSelectMode) {
                 IconButton(
                     modifier = Modifier.offset(x = (10).dp),
                     onClick = {
@@ -284,7 +300,7 @@ fun DownloadItemTrailingContent(
                         onItemClick()
                     })
                 }
-            }else {
+            } else {
                 IconButton(
                     modifier = Modifier.offset(x = (10).dp),
                     onClick = {
@@ -317,6 +333,34 @@ fun DownloadPrompt(
         fontSize = fontSize,
         color = color
     )
+}
+
+@Composable
+fun MultiSelectTopAppEnd(
+    isMultiSelectMode: Boolean,
+    onPause: () -> Unit,
+    onResume: () -> Unit,
+    onCancel: () -> Unit
+) {
+    AnimatedVisibility(isMultiSelectMode) {
+        Row() {
+            IconButton(onClick = onPause) {
+                Icon(
+                    painterResource(R.drawable.svg_notification_pause),
+                    contentDescription = "Pause selected"
+                )
+            }
+            IconButton(onClick = onResume) {
+                Icon(
+                    painterResource(R.drawable.svg_notification_play),
+                    contentDescription = "Resume selected"
+                )
+            }
+            IconButton(onClick = onCancel) {
+                Icon(Icons.Default.Delete, contentDescription = "Cancel selected")
+            }
+        }
+    }
 }
 
 //todo 这个考虑使用其他方式

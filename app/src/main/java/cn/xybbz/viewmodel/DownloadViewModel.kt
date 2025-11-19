@@ -59,9 +59,9 @@ class DownloadViewModel @Inject constructor(
 
     fun toggleSelection(taskId: Long) {
         if (selectedTaskIds.contains(taskId)) {
-            selectedTaskIds - taskId
+            selectedTaskIds.remove(taskId)
         } else {
-            selectedTaskIds + taskId
+            selectedTaskIds.add(taskId)
         }
         // 如果取消了所有选择，则自动退出多选模式
         if (selectedTaskIds.isEmpty()) {
