@@ -701,7 +701,7 @@ fun XyItemTabBigButton(
 ) {
     Column(
         modifier = modifier
-            .width(iconSize)
+//            .width(iconSize)
             .background(brush, RoundedCornerShape(XyTheme.dimens.corner))
             .debounceClickable(enabled = enabled) {
                 onClick.invoke()

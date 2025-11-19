@@ -420,7 +420,7 @@ fun MusicBottomMenuComponent(
 
                     IconBottomMenuHor(
                         imageVector = Icons.Outlined.Album,
-                        text = "${stringResource(R.string.album)}: ${music.albumName}",
+                        text = "${stringResource(R.string.album)}: ${music.albumName ?: ""}",
                         onClick = {
                             coroutineScope.launch {
                                 sheetState.hide()

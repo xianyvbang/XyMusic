@@ -195,5 +195,11 @@ import kotlinx.serialization.Serializable
     @SerialName("Download")
     data object Download : RouterConstants
 
+    /**
+     * 本地页面
+     */
+    @Serializable
+    @SerialName("Local")
+    data object Local : RouterConstants
 }
 

@@ -1383,7 +1383,7 @@ class EmbyDatasourceServer @Inject constructor(
             name = item.name ?: application.getString(Constants.UNKNOWN_MUSIC),
             musicUrl = audioUrl,
             downloadUrl = createDownloadUrl(item.id) ,
-            album = item.albumId.toString(),
+            album = item.albumId ?: "",
             albumName = item.album,
             connectionId = connectionConfigServer.getConnectionId(),
             artists = item.artistItems?.joinToString(Constants.ARTIST_DELIMITER) { artist -> artist.name.toString() },

@@ -121,6 +121,7 @@ fun HomeScreen(
         skipPartiallyExpanded = false
     )
 
+
     var playlistName by remember {
         mutableStateOf("")
     }
@@ -164,6 +165,11 @@ fun HomeScreen(
 
     val coroutineScope = rememberCoroutineScope()
 
+   /* BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val width = this.maxWidth
+
+    }
+*/
     XyColumnScreen(
         modifier = modifier
             .brashColor(
@@ -372,8 +378,11 @@ fun HomeScreen(
         ) {
             LazyColumnNotComponent {
                 item {
-                    XyRow {
+                    XyRow (
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ){
                         XyItemTabBigButton(
+                            modifier = Modifier.weight(1f),
                             text = stringResource(R.string.all_music),
                             sub = if (ifShowCount) homeViewModel.musicCount ?: stringResource(
                                 Constants.UNKNOWN
@@ -391,6 +400,7 @@ fun HomeScreen(
                         )
 
                         XyItemTabBigButton(
+                            modifier = Modifier.weight(1f),
                             text = stringResource(R.string.local),
                             sub = if (ifShowCount) homeViewModel.musicCount ?: stringResource(
                                 Constants.UNKNOWN
@@ -398,16 +408,17 @@ fun HomeScreen(
                             imageVector = Icons.Rounded.MusicNote,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
-                                navHostController.navigate(RouterConstants.Music)
+                                navHostController.navigate(RouterConstants.Local)
                             },
                             brush = Brush.linearGradient(
-                                colors = listOf(Color(0xFF6BFFF4), Color(0xFFFFBA6C)),
+                                colors = listOf(Color(0xFF0A7B88), Color(0xFFFFBA6C)),
                                 start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
                                 end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
                             )
                         )
 
                         XyItemTabBigButton(
+                            modifier = Modifier.weight(1f),
                             text = stringResource(R.string.album),
                             sub = if (ifShowCount) homeViewModel.albumCount ?: stringResource(
                                 Constants.UNKNOWN
@@ -427,6 +438,7 @@ fun HomeScreen(
                             )
                         )
                         XyItemTabBigButton(
+                            modifier = Modifier.weight(1f),
                             text = stringResource(R.string.artist),
                             sub = if (ifShowCount) homeViewModel.artistCount ?: stringResource(
                                 Constants.UNKNOWN
@@ -443,6 +455,7 @@ fun HomeScreen(
                             )
                         )
                         XyItemTabBigButton(
+                            modifier = Modifier.weight(1f),
                             text = stringResource(R.string.favorite),
                             sub = if (ifShowCount) homeViewModel.favoriteCount ?: stringResource(
                                 Constants.UNKNOWN
@@ -460,6 +473,7 @@ fun HomeScreen(
                         )
 
                         XyItemTabBigButton(
+                            modifier = Modifier.weight(1f),
                             text = stringResource(R.string.genres),
                             sub = if (ifShowCount) homeViewModel.genreCount ?: stringResource(
                                 Constants.UNKNOWN
