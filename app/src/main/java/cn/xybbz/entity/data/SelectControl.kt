@@ -2,14 +2,15 @@ package cn.xybbz.entity.data
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import cn.xybbz.R
 import cn.xybbz.api.client.IDataSourceManager
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.MusicController
+import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.components.AddPlaylistBottomData
@@ -31,7 +32,10 @@ class SelectControl {
 
 
     //选中音乐列表
-    val selectMusicDataList = mutableStateListOf<XyMusic>()
+    val selectMusicDataList = mutableStateSetOf<XyMusic>()
+
+    var isSelectAll by mutableStateOf(false)
+        private set
 
     var musicList by mutableStateOf<List<XyMusic>?>(null)
         private set
@@ -50,6 +54,8 @@ class SelectControl {
     //是否在歌单中操作
     var ifPlaylist by mutableStateOf(false)
         private set
+
+    val scope = CoroutineScopeUtils.getIo("SelectControl")
 
     //永久删除所选音乐资源-从硬盘上删除
     val onRemoveSelectListResource: ((IDataSourceManager, CoroutineScope) -> Unit) =
@@ -126,7 +132,7 @@ class SelectControl {
 
     constructor()
 
-    fun show(ifOpenSelect: Boolean, ifPlaylist: Boolean = false, onOpenChange: (Boolean) -> Unit) {
+    fun show(ifOpenSelect: Boolean, ifPlaylist: Boolean = false, onOpenChange: ((Boolean) -> Unit)? = null) {
         setData(ifOpenSelect, false, ifPlaylist)
         this.onOpenChange = onOpenChange
     }
@@ -136,14 +142,16 @@ class SelectControl {
     }
 
     fun setData(ifOpenSelect: Boolean, ifEnableButton: Boolean, ifPlaylist: Boolean) {
-        clearSelectMusicList()
         this.ifOpenSelect = ifOpenSelect
         this.ifEnableButton = ifEnableButton
         this.ifPlaylist = ifPlaylist
     }
 
     fun clearData() {
-        clearSelectMusicList()
+        scope.launch {
+            selectMusicDataList.clear()
+        }
+        isSelectAll = false
         ifOpenSelect = false
         ifEnableButton = false
         this.ifPlaylist = false
@@ -160,17 +168,6 @@ class SelectControl {
             ifEnableButton = true
         }
     }
-
-    /**
-     * 设置选择音乐列出所有数据
-     * @param [musics] 音乐信息
-     */
-    fun setSelectMusicListAllData(musics: List<XyMusic>) {
-        selectMusicDataList.clear()
-        selectMusicDataList.addAll(musics)
-        ifEnableButton = true
-    }
-
     /**
      * 删除选中数据
      */
@@ -206,15 +203,24 @@ class SelectControl {
      */
     fun addPlayerList(musicController: MusicController) {
         musicController.addMusicList(
-            musicList = selectMusicDataList,
+            musicList = selectMusicDataList.toList(),
             isPlayer = true,
         )
         clearData()
     }
 
-    fun clearSelectMusicList() {
-        ifEnableButton = false
-        selectMusicDataList.clear()
+    fun toggleSelectionAll(musicList: List<XyMusic>? = null) {
+        if (isSelectAll) {
+            selectMusicDataList.clear()
+            isSelectAll = false
+            ifEnableButton = false
+        } else {
+            if (!musicList.isNullOrEmpty()){
+                ifEnableButton = true
+                isSelectAll = true
+                selectMusicDataList.addAll(musicList)
+            }
+        }
     }
 
 

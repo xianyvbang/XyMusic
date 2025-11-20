@@ -55,7 +55,7 @@
     <string name="import_playlist_hint">导入歌单会根据歌曲名称和歌手到服务中进行匹配,可能造成数据不准确,请导入后仔细查验,导入歌单也会同步在服务端创建歌单</string>
     <string name="import_info">导入</string>
     <string name="select_all">全选</string>
-    <string name="deselect_all">取消全选</string>
+    <string name="deselect_all">全不选</string>
     <string name="pause_playback">暂停播放</string>
     <string name="resume_playback">继续播放</string>
     <string name="start_playback">开始播放</string>

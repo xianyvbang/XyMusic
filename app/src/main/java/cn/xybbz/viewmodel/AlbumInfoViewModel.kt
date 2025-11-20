@@ -234,7 +234,7 @@ class AlbumInfoViewModel @AssistedInject constructor(
     /**
      * 更新选择功能是否是在歌单中
      */
-    fun show(onOpenChange: (Boolean) -> Unit) {
+    fun show(onOpenChange: ((Boolean) -> Unit)? = null) {
         selectControl.show(
             true,
             dataType == MusicDataTypeEnum.PLAYLIST,
