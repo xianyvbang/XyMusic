@@ -75,4 +75,36 @@ class DownloadViewModel @Inject constructor(
     }
 
 
+    fun performBatchPause() {
+        val idsToPause = selectedTaskIds
+        if (idsToPause.isNotEmpty()) {
+            downLoadManager.pause(*idsToPause.toLongArray())
+        }
+        exitMultiSelectMode()
+    }
+
+    fun performBatchResume() {
+        val idsToResume = selectedTaskIds
+        if (idsToResume.isNotEmpty()) {
+            downLoadManager.resume(*idsToResume.toLongArray())
+        }
+        exitMultiSelectMode()
+    }
+
+    fun performBatchCancel() {
+        val idsToCancel = selectedTaskIds
+        if (idsToCancel.isNotEmpty()) {
+            downLoadManager.cancel(*idsToCancel.toLongArray())
+        }
+        exitMultiSelectMode()
+    }
+
+    fun performBatchDelete() {
+        val idsToCancel = selectedTaskIds
+        if (idsToCancel.isNotEmpty()) {
+            downLoadManager.delete(*idsToCancel.toLongArray())
+        }
+        exitMultiSelectMode()
+    }
+
 }

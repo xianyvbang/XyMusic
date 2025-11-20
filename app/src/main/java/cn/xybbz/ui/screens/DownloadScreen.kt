@@ -16,8 +16,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.rounded.Cancel
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.PlayCircle
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,7 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -45,18 +48,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cn.xybbz.R
 import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DownloadStatus
+import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
+import cn.xybbz.ui.xy.XyItemTextHorizontal
 import cn.xybbz.viewmodel.DownloadViewModel
 import kotlinx.coroutines.launch
 import kotlin.math.log10
@@ -71,6 +75,7 @@ fun DownloadScreen(
 
     val coroutineScope = rememberCoroutineScope()
     val navController = LocalNavController.current
+    val context = LocalContext.current
     val tasks by downloadViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
 
 
@@ -80,10 +85,13 @@ fun DownloadScreen(
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
             title = {
-                Text(
-                    text = "下载列表",
-                    fontWeight = FontWeight.W900
-                )
+                if (!downloadViewModel.isMultiSelectMode)
+                    Text(
+                        text = "下载列表",
+                        fontWeight = FontWeight.W900
+                    )
+                else
+                    Text(text = "批量操作", fontWeight = FontWeight.W900)
             }, navigationIcon = {
                 IconButton(onClick = composeClick { navController.popBackStack() }) {
                     Icon(
@@ -96,7 +104,22 @@ fun DownloadScreen(
                     isMultiSelectMode = downloadViewModel.isMultiSelectMode,
                     onPause = { downloadViewModel.performBatchPause() },
                     onResume = { downloadViewModel.performBatchResume() },
-                    onCancel = { downloadViewModel.performBatchCancel() }
+                    onCancel = { downloadViewModel.performBatchCancel() },
+                    onDelete = {
+                        if (downloadViewModel.selectedTaskIds.isNotEmpty())
+                            AlertDialogObject(title = R.string.remove_download_title, content = {
+                                XyItemTextHorizontal(
+                                    text = stringResource(
+                                        R.string.confirm_delete_download,
+                                        downloadViewModel.selectedTaskIds.size
+                                    )
+                                )
+                            }, onConfirmation = {
+                                downloadViewModel.performBatchDelete()
+                            }, onDismissRequest = {
+                                downloadViewModel.enterMultiSelectMode()
+                            }, ifWarning = true).show()
+                    }
                 )
             })
 
@@ -340,24 +363,29 @@ fun MultiSelectTopAppEnd(
     isMultiSelectMode: Boolean,
     onPause: () -> Unit,
     onResume: () -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     AnimatedVisibility(isMultiSelectMode) {
         Row() {
             IconButton(onClick = onPause) {
                 Icon(
-                    painterResource(R.drawable.svg_notification_pause),
+                    imageVector = Icons.Rounded.Pause,
                     contentDescription = "Pause selected"
                 )
             }
             IconButton(onClick = onResume) {
                 Icon(
-                    painterResource(R.drawable.svg_notification_play),
+                    imageVector = Icons.Rounded.PlayCircle,
                     contentDescription = "Resume selected"
                 )
             }
             IconButton(onClick = onCancel) {
-                Icon(Icons.Default.Delete, contentDescription = "Cancel selected")
+                Icon(imageVector = Icons.Rounded.Cancel, contentDescription = "Cancel selected")
+            }
+
+            IconButton(onClick = onDelete) {
+                Icon(imageVector = Icons.Rounded.Delete, contentDescription = "Cancel selected")
             }
         }
     }
