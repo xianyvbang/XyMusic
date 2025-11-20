@@ -17,6 +17,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @SuppressLint("UnsafeOptInUsageError")
@@ -40,6 +41,10 @@ class DownloadViewModel @Inject constructor(
     var isMultiSelectMode by mutableStateOf(false)
         private set
 
+    var isSelectAll by mutableStateOf(false)
+        private set
+
+
     val selectedTaskIds = mutableStateSetOf<Long>()
 
     fun pauseDownload(id: Long) = downLoadManager.pause(id)
@@ -54,18 +59,38 @@ class DownloadViewModel @Inject constructor(
 
     fun exitMultiSelectMode() {
         isMultiSelectMode = false
+        isSelectAll = false
         selectedTaskIds.clear()
     }
 
     fun toggleSelection(taskId: Long) {
         if (selectedTaskIds.contains(taskId)) {
+            isSelectAll = false
             selectedTaskIds.remove(taskId)
         } else {
+            //判断是否已经全选
+            val downloadIds = musicDownloadInfo.value.map { it.id }
             selectedTaskIds.add(taskId)
+            if (selectedTaskIds.containsAll(downloadIds)){
+                isSelectAll = true
+            }
         }
         // 如果取消了所有选择，则自动退出多选模式
         if (selectedTaskIds.isEmpty()) {
             exitMultiSelectMode()
+        }
+    }
+
+    fun toggleSelectionAll() {
+        viewModelScope.launch {
+            val downloadIds = musicDownloadInfo.value.map { it.id }
+            if (isSelectAll){
+                selectedTaskIds.clear()
+                isSelectAll = false
+            }else {
+                isSelectAll = true
+                selectedTaskIds.addAll(downloadIds)
+            }
         }
     }
 

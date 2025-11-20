@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.Cancel
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayCircle
@@ -90,18 +91,29 @@ fun DownloadScreen(
                         text = "下载列表",
                         fontWeight = FontWeight.W900
                     )
-                else
-                    Text(text = "批量操作", fontWeight = FontWeight.W900)
             }, navigationIcon = {
+
+                if (!downloadViewModel.isMultiSelectMode)
                 IconButton(onClick = composeClick { navController.popBackStack() }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.return_home)
                     )
                 }
+                else
+                    IconButton(onClick = composeClick {
+                        downloadViewModel.exitMultiSelectMode()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Rounded.Close,
+                            contentDescription = stringResource(R.string.close)
+                        )
+                    }
+
             }, actions = {
                 MultiSelectTopAppEnd(
                     isMultiSelectMode = downloadViewModel.isMultiSelectMode,
+                    isSelectAll = downloadViewModel.isSelectAll,
                     onPause = { downloadViewModel.performBatchPause() },
                     onResume = { downloadViewModel.performBatchResume() },
                     onCancel = { downloadViewModel.performBatchCancel() },
@@ -119,6 +131,9 @@ fun DownloadScreen(
                             }, onDismissRequest = {
                                 downloadViewModel.enterMultiSelectMode()
                             }, ifWarning = true).show()
+                    },
+                    onSelectAll = {
+                        downloadViewModel.toggleSelectionAll()
                     }
                 )
             })
@@ -361,10 +376,12 @@ fun DownloadPrompt(
 @Composable
 fun MultiSelectTopAppEnd(
     isMultiSelectMode: Boolean,
+    isSelectAll: Boolean,
     onPause: () -> Unit,
     onResume: () -> Unit,
     onCancel: () -> Unit,
     onDelete: () -> Unit,
+    onSelectAll: () -> Unit
 ) {
     AnimatedVisibility(isMultiSelectMode) {
         Row() {
@@ -386,6 +403,20 @@ fun MultiSelectTopAppEnd(
 
             IconButton(onClick = onDelete) {
                 Icon(imageVector = Icons.Rounded.Delete, contentDescription = "Cancel selected")
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = if (isSelectAll) "全不选" else "全选", fontWeight = FontWeight.W900)
+                IconButton(
+                    modifier = Modifier.offset(x = (10).dp),
+                    onClick = {
+                        onSelectAll()
+                    },
+                ) {
+                    RadioButton(selected = isSelectAll, onClick = {
+                        onSelectAll()
+                    })
+                }
             }
         }
     }
