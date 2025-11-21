@@ -1,7 +1,10 @@
 package cn.xybbz.ui.screens
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,12 +38,12 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -57,6 +60,7 @@ import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.show
+import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
@@ -70,73 +74,43 @@ import kotlin.math.pow
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DownloadScreen(
-    modifier: Modifier = Modifier,
     downloadViewModel: DownloadViewModel = hiltViewModel<DownloadViewModel>()
 ) {
 
-    val coroutineScope = rememberCoroutineScope()
-    val navController = LocalNavController.current
-    val context = LocalContext.current
     val tasks by downloadViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
-
-
     XyColumnScreen(
         modifier = Modifier
+            .brashColor(
+                Color(0xFF0D9488),
+                Color(0xFF0EA5E9)
+            )
     ) {
-        TopAppBarComponent(
-            modifier = Modifier.statusBarsPadding(),
-            title = {
-                if (!downloadViewModel.isMultiSelectMode)
-                    Text(
-                        text = "下载列表",
-                        fontWeight = FontWeight.W900
-                    )
-            }, navigationIcon = {
-
-                if (!downloadViewModel.isMultiSelectMode)
-                IconButton(onClick = composeClick { navController.popBackStack() }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.return_home)
-                    )
-                }
-                else
-                    IconButton(onClick = composeClick {
-                        downloadViewModel.exitMultiSelectMode()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Rounded.Close,
-                            contentDescription = stringResource(R.string.close)
+        MultiSelectTopAppEnd(
+            isMultiSelectMode = downloadViewModel.isMultiSelectMode,
+            isSelectAll = downloadViewModel.isSelectAll,
+            onExitMultiSelectMode = { downloadViewModel.exitMultiSelectMode() },
+            onPause = { downloadViewModel.performBatchPause() },
+            onResume = { downloadViewModel.performBatchResume() },
+            onCancel = { downloadViewModel.performBatchCancel() },
+            onDelete = {
+                if (downloadViewModel.selectedTaskIds.isNotEmpty())
+                    AlertDialogObject(title = R.string.remove_download_title, content = {
+                        XyItemTextHorizontal(
+                            text = stringResource(
+                                R.string.confirm_delete_download,
+                                downloadViewModel.selectedTaskIds.size
+                            )
                         )
-                    }
-
-            }, actions = {
-                MultiSelectTopAppEnd(
-                    isMultiSelectMode = downloadViewModel.isMultiSelectMode,
-                    isSelectAll = downloadViewModel.isSelectAll,
-                    onPause = { downloadViewModel.performBatchPause() },
-                    onResume = { downloadViewModel.performBatchResume() },
-                    onCancel = { downloadViewModel.performBatchCancel() },
-                    onDelete = {
-                        if (downloadViewModel.selectedTaskIds.isNotEmpty())
-                            AlertDialogObject(title = R.string.remove_download_title, content = {
-                                XyItemTextHorizontal(
-                                    text = stringResource(
-                                        R.string.confirm_delete_download,
-                                        downloadViewModel.selectedTaskIds.size
-                                    )
-                                )
-                            }, onConfirmation = {
-                                downloadViewModel.performBatchDelete()
-                            }, onDismissRequest = {
-                                downloadViewModel.enterMultiSelectMode()
-                            }, ifWarning = true).show()
-                    },
-                    onSelectAll = {
-                        downloadViewModel.toggleSelectionAll()
-                    }
-                )
-            })
+                    }, onConfirmation = {
+                        downloadViewModel.performBatchDelete()
+                    }, onDismissRequest = {
+                        downloadViewModel.enterMultiSelectMode()
+                    }, ifWarning = true).show()
+            },
+            onSelectAll = {
+                downloadViewModel.toggleSelectionAll()
+            }
+        )
 
         LazyColumnNotComponent(
             contentPadding = PaddingValues(
@@ -373,51 +347,108 @@ fun DownloadPrompt(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MultiSelectTopAppEnd(
     isMultiSelectMode: Boolean,
     isSelectAll: Boolean,
+    onExitMultiSelectMode: () -> Unit,
     onPause: () -> Unit,
     onResume: () -> Unit,
     onCancel: () -> Unit,
     onDelete: () -> Unit,
     onSelectAll: () -> Unit
 ) {
-    AnimatedVisibility(isMultiSelectMode) {
-        Row() {
-            IconButton(onClick = onPause) {
-                Icon(
-                    imageVector = Icons.Rounded.Pause,
-                    contentDescription = "Pause selected"
-                )
-            }
-            IconButton(onClick = onResume) {
-                Icon(
-                    imageVector = Icons.Rounded.PlayCircle,
-                    contentDescription = "Resume selected"
-                )
-            }
-            IconButton(onClick = onCancel) {
-                Icon(imageVector = Icons.Rounded.Cancel, contentDescription = "Cancel selected")
-            }
+    val navController = LocalNavController.current
 
-            IconButton(onClick = onDelete) {
-                Icon(imageVector = Icons.Rounded.Delete, contentDescription = "Cancel selected")
-            }
+    AnimatedContent(isMultiSelectMode, label = "animated content") {
+        if (it) {
+            TopAppBarComponent(
+                modifier = Modifier.statusBarsPadding(),
+                title = {},
+                navigationIcon = {
+                    IconButton(onClick = composeClick {
+                        onExitMultiSelectMode()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Rounded.Close,
+                            contentDescription = stringResource(R.string.close)
+                        )
+                    }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = if (isSelectAll) "全不选" else "全选", fontWeight = FontWeight.W900)
-                IconButton(
-                    modifier = Modifier.offset(x = (10).dp),
-                    onClick = {
-                        onSelectAll()
-                    },
-                ) {
-                    RadioButton(selected = isSelectAll, onClick = {
-                        onSelectAll()
-                    })
-                }
-            }
+                }, actions = {
+                    AnimatedVisibility(isMultiSelectMode) {
+                        Row() {
+                            IconButton(onClick = composeClick(onClick = onPause)) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Pause,
+                                    contentDescription = "Pause selected"
+                                )
+                            }
+                            IconButton(onClick = composeClick(onClick = onResume)) {
+                                Icon(
+                                    imageVector = Icons.Rounded.PlayCircle,
+                                    contentDescription = "Resume selected"
+                                )
+                            }
+                            IconButton(onClick = composeClick(onClick = onCancel)) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Cancel,
+                                    contentDescription = "Cancel selected"
+                                )
+                            }
+
+                            IconButton(onClick = composeClick(onClick = onDelete)) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Delete,
+                                    contentDescription = "Cancel selected"
+                                )
+                            }
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) {
+                                    onSelectAll()
+                                }) {
+                                Text(
+                                    text = if (isSelectAll) "全不选" else "全选",
+                                    fontWeight = FontWeight.W900
+                                )
+                                IconButton(
+                                    modifier = Modifier.offset(x = (10).dp),
+                                    onClick = {
+                                        onSelectAll()
+                                    },
+                                ) {
+                                    RadioButton(selected = isSelectAll, onClick = {
+                                        onSelectAll()
+                                    })
+                                }
+                            }
+                        }
+                    }
+                })
+
+        } else {
+            TopAppBarComponent(
+                modifier = Modifier.statusBarsPadding(),
+                title = {
+                    Text(
+                        text = "下载列表",
+                        fontWeight = FontWeight.W900
+                    )
+                }, navigationIcon = {
+
+                    IconButton(onClick = composeClick { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.return_home)
+                        )
+                    }
+                })
         }
     }
 }
