@@ -99,7 +99,8 @@ class DownloadImpl(
                     title = request.title,
                     cover = request.cover,
                     duration = request.duration,
-                    connectionId = request.connectionId
+                    connectionId = request.connectionId,
+                    music = request.music
                 )
                 successTasksToInsert.add(task)
             } catch (e: IOException) {

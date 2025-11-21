@@ -2,6 +2,7 @@ package cn.xybbz.localdata.data.download
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.localdata.enums.DownloadTypes
 
@@ -28,6 +29,8 @@ data class XyDownload(
     val cover: String? = null,
     val duration: Long? = null,
     val connectionId: Long? = null,
+    val extend:String? = null,
+    val music: XyMusic? = null,
 
     val updateTime: Long = System.currentTimeMillis(),
     val createTime: Long = System.currentTimeMillis(),

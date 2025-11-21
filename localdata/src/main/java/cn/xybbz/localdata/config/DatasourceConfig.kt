@@ -55,7 +55,7 @@ class DatasourceConfig {
             // 数据库的升级语句
             db.execSQL(
                 """
-                    CREATE TABLE `xy_download` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `url` TEXT NOT NULL, `fileName` TEXT NOT NULL, `filePath` TEXT NOT NULL, `fileSize` INTEGER NOT NULL, `tempFilePath` TEXT NOT NULL, `typeData` TEXT NOT NULL, `progress` REAL NOT NULL, `totalBytes` INTEGER NOT NULL, `downloadedBytes` INTEGER NOT NULL, `status` TEXT NOT NULL, `error` TEXT, `uid` TEXT, `title` TEXT, `cover` TEXT, `duration` INTEGER, `connectionId` INTEGER, `updateTime` INTEGER NOT NULL, `createTime` INTEGER NOT NULL);
+                    CREATE TABLE `xy_download` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `url` TEXT NOT NULL, `fileName` TEXT NOT NULL, `filePath` TEXT NOT NULL, `fileSize` INTEGER NOT NULL, `tempFilePath` TEXT NOT NULL, `typeData` TEXT NOT NULL, `progress` REAL NOT NULL, `totalBytes` INTEGER NOT NULL, `downloadedBytes` INTEGER NOT NULL, `status` TEXT NOT NULL, `error` TEXT, `uid` TEXT, `title` TEXT, `cover` TEXT, `duration` INTEGER, `connectionId` INTEGER, `extend` TEXT, `music` TEXT, `updateTime` INTEGER NOT NULL, `createTime` INTEGER NOT NULL);
             """.trimIndent()
             )
         }

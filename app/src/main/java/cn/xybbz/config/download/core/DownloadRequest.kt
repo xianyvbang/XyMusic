@@ -1,5 +1,6 @@
 package cn.xybbz.config.download.core
 
+import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DownloadTypes
 
 data class DownloadRequest (
@@ -14,4 +15,6 @@ data class DownloadRequest (
     val cover: String? = null,
     val duration: Long = 0L,
     val connectionId: Long? = null,
+    val extend:String? = null,
+    val music: XyMusic? = null,
     )

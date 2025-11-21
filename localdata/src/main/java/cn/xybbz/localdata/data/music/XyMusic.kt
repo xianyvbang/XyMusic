@@ -7,6 +7,7 @@ import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import cn.xybbz.localdata.data.connection.ConnectionConfig
+import com.squareup.moshi.JsonClass
 import java.util.UUID
 
 @Entity(
@@ -19,6 +20,7 @@ import java.util.UUID
     )],
     indices = [Index("connectionId")]
 )
+@JsonClass(generateAdapter = true)
 data class XyMusic(
     /**
      * 数据音乐

@@ -146,8 +146,8 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer.hls)
 
     //moshi 数据解析 类似json
-    implementation(libs.squareup.converter.moshi)
-    implementation(libs.moshi.kotlin)
+//    implementation(libs.squareup.converter.moshi)
+//    implementation(libs.moshi.kotlin)
 
     //启动页面
     implementation(libs.androidx.core.splashscreen)

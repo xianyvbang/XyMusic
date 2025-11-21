@@ -173,15 +173,6 @@ fun MusicBottomMenuComponent(
             }
         }
 
-        LaunchedEffect(Unit) {
-            if (!favoriteMusicMap.containsKey(music.itemId)) {
-                musicBottomMenuViewModel.favoriteRepository.toggleBoolean(
-                    music.itemId,
-                    music.ifFavoriteStatus
-                )
-            }
-        }
-
         //是否显示头尾跳过时间
         var ifShowHeadAndTail by remember {
             mutableStateOf(false)
