@@ -396,6 +396,8 @@
     <string name="unknown">未知</string>
 
     <string name="remove_download_title">批量删除下载</string>
-    <string name="confirm_delete_download">确定要删除这%d歌曲吗?</string>
+    <string name="confirm_delete_download">确定要删除这%d一个下载吗吗?</string>
+    <string name="download_list">下载列表</string>
+    <string name="local_music">本地音乐</string>
 
 </resources>

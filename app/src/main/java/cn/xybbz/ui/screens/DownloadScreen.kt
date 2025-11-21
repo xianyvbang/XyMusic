@@ -437,7 +437,7 @@ fun MultiSelectTopAppEnd(
                 modifier = Modifier.statusBarsPadding(),
                 title = {
                     Text(
-                        text = "下载列表",
+                        text = stringResource(R.string.download_list),
                         fontWeight = FontWeight.W900
                     )
                 }, navigationIcon = {
