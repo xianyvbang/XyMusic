@@ -34,21 +34,25 @@ class SelectControl {
     //选中音乐列表
     val selectMusicDataList = mutableStateSetOf<XyMusic>()
 
+    /**
+     * 是否已经全选
+     */
     var isSelectAll by mutableStateOf(false)
-        private set
-
-    var musicList by mutableStateOf<List<XyMusic>?>(null)
         private set
 
     //是否显示按钮
     var ifOpenSelect by mutableStateOf(false)
         private set
 
+    //是否为本地页面操作
+    var ifLocal by mutableStateOf(false)
+        private set
+
     //是否启用按钮
     var ifEnableButton by mutableStateOf(false)
         private set
 
-    var itemId: String? by mutableStateOf(null)
+    var playlistId: String? by mutableStateOf(null)
         private set
 
     //是否在歌单中操作
@@ -127,13 +131,19 @@ class SelectControl {
 
     constructor(ifOpenSelect: Boolean, itemId: String) : this() {
         this.ifOpenSelect = ifOpenSelect
-        this.itemId = itemId
+        this.playlistId = itemId
     }
 
     constructor()
 
-    fun show(ifOpenSelect: Boolean, ifPlaylist: Boolean = false, onOpenChange: ((Boolean) -> Unit)? = null) {
-        setData(ifOpenSelect, false, ifPlaylist)
+    fun show(
+        ifOpenSelect: Boolean,
+        playlistId: String? = null,
+        ifPlaylist: Boolean = false,
+        ifLocal: Boolean = false,
+        onOpenChange: ((Boolean) -> Unit)? = null
+    ) {
+        setData(ifOpenSelect, playlistId, false, ifPlaylist, ifLocal)
         this.onOpenChange = onOpenChange
     }
 
@@ -141,10 +151,22 @@ class SelectControl {
         clearData()
     }
 
-    fun setData(ifOpenSelect: Boolean, ifEnableButton: Boolean, ifPlaylist: Boolean) {
+    private fun setData(
+        ifOpenSelect: Boolean,
+        playlistId: String? = null,
+        ifEnableButton: Boolean,
+        ifPlaylist: Boolean,
+        ifLocal: Boolean = false
+    ) {
         this.ifOpenSelect = ifOpenSelect
+        if (ifPlaylist)
+            this.playlistId = playlistId
+        else
+            this.playlistId = null
+
         this.ifEnableButton = ifEnableButton
         this.ifPlaylist = ifPlaylist
+        this.ifLocal = ifLocal
     }
 
     fun clearData() {
@@ -162,12 +184,21 @@ class SelectControl {
      * 设置选择音乐列表数据
      * @param [music] 音乐
      */
-    fun setSelectMusicListData(music: XyMusic) {
-        if (!selectMusicDataList.any { it.itemId == music.itemId }) {
+    fun toggleSelection(music: XyMusic, onIsSelectAll: () -> Boolean) {
+
+        if (selectMusicDataList.contains(music)) {
+            selectMusicDataList.remove(music)
+            if (selectMusicDataList.isEmpty()) {
+                ifEnableButton = false
+            }
+            isSelectAll = false
+        } else {
             selectMusicDataList.add(music)
             ifEnableButton = true
+            isSelectAll = onIsSelectAll()
         }
     }
+
     /**
      * 删除选中数据
      */
@@ -184,19 +215,6 @@ class SelectControl {
         }
 
     }
-
-
-    /**
-     * 删除选择音乐 ID
-     * @param [itemId] 商品编号
-     */
-    fun removeSelectMusicId(itemId: String) {
-        selectMusicDataList.removeIf { it.itemId == itemId }
-        if (selectMusicDataList.isEmpty()) {
-            ifEnableButton = false
-        }
-    }
-
 
     /**
      * 播放选中列表
@@ -215,7 +233,7 @@ class SelectControl {
             isSelectAll = false
             ifEnableButton = false
         } else {
-            if (!musicList.isNullOrEmpty()){
+            if (!musicList.isNullOrEmpty()) {
                 ifEnableButton = true
                 isSelectAll = true
                 selectMusicDataList.addAll(musicList)
@@ -233,10 +251,10 @@ class SelectControl {
     ) {
         viewModelScope.launch {
             if (selectMusicDataList.isNotEmpty()) {
-                itemId?.let {
+                playlistId?.let {
                     dataSourceManager.removeMusicPlaylist(
                         it,
-                        selectMusicDataList.map { it.itemId }
+                        selectMusicDataList.map { music -> music.itemId }
                     )
                 }
             }

@@ -1,8 +1,6 @@
 package cn.xybbz.ui.screens
 
 import android.util.Log
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -13,19 +11,16 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
@@ -58,11 +53,6 @@ fun MusicScreen(
     val homeMusicPager = musicViewModel.homeMusicPager.collectAsLazyPagingItems()
     val favoriteList by musicViewModel.favoriteRepository.favoriteMap.collectAsState()
     val sortBy by musicViewModel.sortBy.collectAsState()
-
-    //是否打开选择
-    /* var ifOpenSelect by remember {
-         mutableStateOf(false)
-     }*/
 
     XyColumnScreen(
         modifier = Modifier
@@ -163,11 +153,11 @@ fun MusicScreen(
                         },
                         trailingOnClick = { select ->
                             Log.i("======", "数据是否一起变化${select}")
-                            if (select) {
-                                musicViewModel.selectControl.removeSelectMusicId(music.itemId)
-                            } else {
-                                musicViewModel.selectControl.setSelectMusicListData(music)
-                            }
+                            musicViewModel.selectControl.toggleSelection(music, onIsSelectAll = {
+                                musicViewModel.selectControl.selectMusicDataList.containsAll(
+                                    homeMusicPager.itemSnapshotList.items
+                                )
+                            })
                         }
                     )
                 }
@@ -210,7 +200,10 @@ fun MusicSelectTopBarComponent(
         title = {
             if (selectControl.ifOpenSelect) {
 
-                XySelectAllComponent(isSelectAll = selectControl.isSelectAll, onSelectAll = onSelectAll)
+                XySelectAllComponent(
+                    isSelectAll = selectControl.isSelectAll,
+                    onSelectAll = onSelectAll
+                )
 
                 /*if (onIfAllSelect()) {
                     TextButton(onClick = {

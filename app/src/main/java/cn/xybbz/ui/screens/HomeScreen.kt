@@ -36,6 +36,8 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
@@ -165,11 +167,11 @@ fun HomeScreen(
 
     val coroutineScope = rememberCoroutineScope()
 
-   /* BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val width = this.maxWidth
+    /* BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+         val width = this.maxWidth
 
-    }
-*/
+     }
+ */
     XyColumnScreen(
         modifier = modifier
             .brashColor(
@@ -352,10 +354,16 @@ fun HomeScreen(
                     IconButton(onClick = {
                         navHostController.navigate(RouterConstants.Download)
                     }) {
-                        Icon(
-                            imageVector = Icons.Rounded.Download,
-                            contentDescription = stringResource(R.string.download_failed)
-                        )
+                        BadgedBox(badge = {
+                            if (homeViewModel.downloadCount > 0) {
+                                Badge(containerColor = Color.Red)
+                            }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Rounded.Download,
+                                contentDescription = stringResource(R.string.download_list)
+                            )
+                        }
                     }
                 }
             })
@@ -378,9 +386,9 @@ fun HomeScreen(
         ) {
             LazyColumnNotComponent {
                 item {
-                    XyRow (
+                    XyRow(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ){
+                    ) {
                         XyItemTabBigButton(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.all_music),
@@ -402,7 +410,7 @@ fun HomeScreen(
                         XyItemTabBigButton(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.local),
-                            sub = if (ifShowCount) homeViewModel.musicCount ?: stringResource(
+                            sub = if (ifShowCount) homeViewModel.localCount ?: stringResource(
                                 Constants.UNKNOWN
                             ) else null,
                             imageVector = Icons.Rounded.MusicNote,

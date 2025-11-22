@@ -24,9 +24,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.localdata.enums.PlayerTypeEnum
 import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.show
+import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
@@ -44,7 +46,7 @@ fun LocalScreen(localViewModel: LocalViewModel = hiltViewModel<LocalViewModel>()
     val favoriteList by localViewModel.favoriteRepository.favoriteMap.collectAsState()
 
     XyColumnScreen(
-        modifier = Modifier
+        modifier = Modifier.brashColor(Color(0xFF0A7B88), Color(0xFFFFBA6C))
     ) {
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
@@ -72,10 +74,11 @@ fun LocalScreen(localViewModel: LocalViewModel = hiltViewModel<LocalViewModel>()
                 downloadMusicList,
                 key = { _, item -> item.id },
                 contentType = { _, _ -> MusicTypeEnum.MUSIC }
-            ) { index, download ->
+            ) { _, download ->
                 download.music?.let { music ->
                     MusicItemComponent(
                         onMusicData = { music },
+                        enabledPic = false,
                         onIfFavorite = {
                             if (favoriteList.containsKey(music.itemId)) {
                                 favoriteList.getOrDefault(music.itemId, false)
@@ -89,9 +92,10 @@ fun LocalScreen(localViewModel: LocalViewModel = hiltViewModel<LocalViewModel>()
                             MaterialTheme.colorScheme.onSurface,
                         backgroundColor = Color.Transparent,
                         onMusicPlay = {
-                            localViewModel.musicPlayContext.favorite(
+                            localViewModel.musicPlayContext.musicList(
                                 it,
-                                index = index
+                                musicList = downloadMusicList.mapNotNull { musicDownload -> musicDownload.music },
+                                playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
                             )
                         },
                         trailingOnClick = {

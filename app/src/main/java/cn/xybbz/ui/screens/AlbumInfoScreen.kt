@@ -90,7 +90,6 @@ import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavController
-import cn.xybbz.entity.data.SelectControl
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
@@ -474,15 +473,14 @@ fun AlbumInfoScreen(
                                     ifSelect = albumInfoViewModel.selectControl.ifOpenSelect,
                                     ifSelectCheckBox = { albumInfoViewModel.selectControl.selectMusicDataList.any { it.itemId == music.itemId } },
                                     trailingOnClick = { select ->
-                                        if (select) {
-                                            albumInfoViewModel.selectControl.removeSelectMusicId(
-                                                music.itemId
-                                            )
-                                        } else {
-                                            albumInfoViewModel.selectControl.setSelectMusicListData(
-                                                music
-                                            )
-                                        }
+                                        albumInfoViewModel.selectControl.toggleSelection(
+                                            music,
+                                            onIsSelectAll = {
+                                                albumInfoViewModel.selectControl.selectMusicDataList.containsAll(
+                                                    musicListPage.itemSnapshotList.items
+                                                )
+                                            }
+                                        )
                                     }
                                 )
                             }
@@ -571,7 +569,10 @@ private fun MusicListOperation(
 
 
         if (albumInfoViewModel.selectControl.ifOpenSelect) {
-            XySelectAllComponent(isSelectAll = albumInfoViewModel.selectControl.isSelectAll, onSelectAll = onSelectAll)
+            XySelectAllComponent(
+                isSelectAll = albumInfoViewModel.selectControl.isSelectAll,
+                onSelectAll = onSelectAll
+            )
             IconButton(onClick = {
                 albumInfoViewModel.selectControl.dismiss()
             }) {

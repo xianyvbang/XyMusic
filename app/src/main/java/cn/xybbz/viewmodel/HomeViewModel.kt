@@ -23,6 +23,7 @@ import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.remote.RemoteCurrent
+import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -130,6 +131,19 @@ class HomeViewModel @OptIn(UnstableApi::class)
         private set
 
     /**
+     * 本地音乐数量
+     */
+    var localCount by mutableStateOf<String?>(null)
+        private set
+
+    /**
+     * 下载中的任务的数量
+     */
+    var downloadCount by mutableStateOf<Int>(5)
+        private set
+
+
+    /**
      * 所有链接信息
      */
     var connectionList by mutableStateOf<List<ConnectionConfig>>(emptyList())
@@ -173,6 +187,10 @@ class HomeViewModel @OptIn(UnstableApi::class)
         getRecommendedMusicList()
         //获取数据数量
         getDataCount()
+        //获得本地音乐数量
+        getLocalMusicCount()
+        //下载中的任务数量
+        getDownloadCount()
         getConnectionListData()
     }
 
@@ -439,6 +457,47 @@ class HomeViewModel @OptIn(UnstableApi::class)
                     }
                 }
             }
+    }
+
+    /**
+     * 获得本地音乐数量
+     */
+    private fun getLocalMusicCount() {
+        viewModelScope.launch {
+            connectionConfigServer.loginStateFlow.collect { bool ->
+                if (bool) {
+                    db.apkDownloadDao.getAllMusicTasksCountFlow(status = DownloadStatus.COMPLETED)
+                        .collect {
+                            if (it == 0) {
+                                localCount = null
+                            } else {
+                                localCount = it.toString()
+                            }
+                        }
+                }
+            }
+        }
+    }
+
+    /**
+     * 获得下载列表数量
+     */
+    private fun getDownloadCount() {
+        viewModelScope.launch {
+            connectionConfigServer.loginStateFlow.collect { bool ->
+                if (bool) {
+                    db.apkDownloadDao.getAllMusicTasksDownloadCountFlow(
+                        status = listOf(
+                            DownloadStatus.QUEUED,
+                            DownloadStatus.DOWNLOADING
+                        )
+                    )
+                        .collect {
+                            downloadCount = it
+                        }
+                }
+            }
+        }
     }
 
     /**

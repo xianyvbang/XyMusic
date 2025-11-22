@@ -264,6 +264,7 @@
     <string name="share_song">分享歌曲</string>
     <string name="song_info">歌曲信息</string>
     <string name="delete_permanently">永久删除</string>
+    <string name="delete_local_permanently">删除本地文件</string>
     <string name="delete_warning">注意!!会同步删除服务端中文件</string>
     <string name="exact_alarm_permission_granted">已开启精确闹钟权限</string>
     <string name="exact_alarm_permission_not_granted">未开启精确闹钟权限</string>
@@ -396,8 +397,9 @@
     <string name="unknown">未知</string>
 
     <string name="remove_download_title">批量删除下载</string>
-    <string name="confirm_delete_download">确定要删除这%d一个下载吗吗?</string>
+    <string name="confirm_delete_download">注意! 已完成下载的任务,此处只会删除下载任务,不会删除音乐文件,\n 确定要删除这%d个下载吗?</string>
     <string name="download_list">下载列表</string>
     <string name="local_music">本地音乐</string>
+    <string name="add_download_list">已添加到下载列表</string>
 
 </resources>

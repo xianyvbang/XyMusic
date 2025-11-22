@@ -237,6 +237,7 @@ class AlbumInfoViewModel @AssistedInject constructor(
     fun show(onOpenChange: ((Boolean) -> Unit)? = null) {
         selectControl.show(
             true,
+            itemId,
             dataType == MusicDataTypeEnum.PLAYLIST,
             onOpenChange = onOpenChange
         )
