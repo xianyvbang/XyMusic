@@ -75,9 +75,17 @@ interface XyDownloadDao {
     @Query("SELECT * FROM xy_download where status = :status and typeData != :notTypeData and connectionId = (select connectionId from xy_settings) ORDER BY createTime DESC")
     fun getAllMusicTasksFlow(notTypeData: DownloadTypes = DownloadTypes.APK,status: DownloadStatus): Flow<List<XyDownload>>
 
+    @Query("SELECT count(id) FROM xy_download where status = :status and typeData != :notTypeData and connectionId = (select connectionId from xy_settings) ORDER BY createTime DESC")
+    fun getAllMusicTasksCountFlow(notTypeData: DownloadTypes = DownloadTypes.APK,status: DownloadStatus): Flow<Int>
+
+    @Query("SELECT count(id) FROM xy_download where status in (:status) and typeData != :notTypeData and connectionId = (select connectionId from xy_settings) ORDER BY createTime DESC")
+    fun getAllMusicTasksDownloadCountFlow(notTypeData: DownloadTypes = DownloadTypes.APK,status: List<DownloadStatus>): Flow<Int>
+
     @Query("SELECT * FROM xy_download where typeData != :notTypeData and connectionId = (select connectionId from xy_settings) ORDER BY createTime DESC")
     suspend fun getAllMusicTasks(notTypeData: DownloadTypes = DownloadTypes.APK): List<XyDownload>
 
+    @Query("SELECT * FROM xy_download where uid = :uid and typeData != :notTypeData and connectionId = (select connectionId from xy_settings) ORDER BY createTime DESC limit 1")
+    suspend fun getMusicTaskByUid(notTypeData: DownloadTypes = DownloadTypes.APK,uid: String): XyDownload?
 
     @Query("select * from xy_download where typeData = :typeData and url = :url and status != :notStatus limit 1")
     suspend fun getByTypeAndUrl(

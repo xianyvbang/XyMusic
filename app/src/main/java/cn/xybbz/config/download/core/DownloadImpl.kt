@@ -1,5 +1,6 @@
 package cn.xybbz.config.download.core
 
+import android.R.attr.duration
 import android.content.Context
 import android.util.Log
 import cn.xybbz.common.utils.CoroutineScopeUtils
@@ -22,9 +23,9 @@ class DownloadImpl(
     private val listeners = CopyOnWriteArrayList<DownloadListener>()
 
     init {
-        scope.launch{
+        scope.launch {
             downloadDispatcher.connectionConfigServer.loginStateFlow.collect {
-                if (it){
+                if (it) {
                     downloadDispatcher.rehydrate()
                     downloadDispatcher.taskUpdateEventFlow.collect { updatedTask ->
                         // 当收到来自 Dispatcher 的更新事件时，通知所有外部监听器
@@ -88,6 +89,18 @@ class DownloadImpl(
                 // 3. 在这个稳定目录中创建临时文件
                 tempFile = File.createTempFile("download_", ".tmp", tempDir)
 
+                if (!request.uid.isNullOrBlank()) {
+                    val downloadTask = db.apkDownloadDao.getMusicTaskByUid(uid = request.uid)
+                    if (downloadTask != null) {
+                        if (downloadTask.status != DownloadStatus.CANCEL && downloadTask.status != DownloadStatus.FAILED && downloadTask.status != DownloadStatus.PAUSED) {
+                            continue
+                        } else if (downloadTask.status == DownloadStatus.PAUSED) {
+                            resume(downloadTask.id)
+                            continue
+                        }
+                    }
+                }
+
                 val task = XyDownload(
                     url = request.url,
                     fileName = resolved.fileName,
@@ -102,6 +115,7 @@ class DownloadImpl(
                     connectionId = request.connectionId,
                     music = request.music
                 )
+
                 successTasksToInsert.add(task)
             } catch (e: IOException) {
                 // --- 捕获异常，创建“失败”任务 ---
