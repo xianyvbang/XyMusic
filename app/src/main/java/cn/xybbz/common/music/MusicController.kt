@@ -217,8 +217,7 @@ class MusicController(
             super.onPlayerError(error)
             // 获取播放错误信息
             Log.e("=====", "播放报错$error", error)
-            //todo 别忘记解开
-//            seekToNext()
+            seekToNext()
         }
 
         //检测播放何时转换为其他媒体项

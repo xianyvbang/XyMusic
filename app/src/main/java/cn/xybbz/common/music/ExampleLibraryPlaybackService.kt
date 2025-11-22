@@ -90,7 +90,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                 settingsConfig.get().ifHandleAudioFocus
             )
             .build()
-        //todo 这里的可以获得元数据
+        //这里的可以获得元数据
         exoPlayer?.addAnalyticsListener(XyLogger(db = db))
 
         val sessionCommand = SessionCommand(SAVE_TO_FAVORITES, Bundle.EMPTY)

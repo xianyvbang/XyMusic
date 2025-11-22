@@ -613,30 +613,6 @@ abstract class IDataSourceParentServer(
         return db.musicDao.selectPlayHistoryMusicList(pageSize)
     }
 
-    /**
-     * 获得流派内音乐列表/或者专辑
-     * @param [genres] 流派名称
-     * todo 需要修改部分接口的音乐功能,实现流派可以传入名称 jellyfin的流派名称使用 "|" 分割,这个方法每个数据源都单独实现
-     */
-   /* override fun selectMusicListByGenreIds(
-        genres: List<String>,
-        pageNum: Int,
-        pageSize: Int
-    ): List<XyMusic>? {
-        TODO("Not yet implemented")
-    }*/
-
-    /**
-     * 根据艺术家列表获得歌曲列表
-     */
-   /* override suspend fun getMusicListByArtistIds(
-        artistIds: List<String>,
-        pageSize: Int,
-        pageNum: Int
-    ): List<XyMusic>? {
-        TODO("Not yet implemented")
-    }*/
-
 
     /**
      * 批量写入艺术家
