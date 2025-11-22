@@ -199,7 +199,7 @@ fun DownloadItemTrailingContent(
             Column(modifier = Modifier.weight(1f)) {
                 Box(modifier = Modifier.height(30.dp)) {
                     Text(
-                        text = (task.title ?: task.fileName) + "Status: ${task.status.name}",
+                        text = (task.title ?: task.fileName),
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         style = MaterialTheme.typography.bodySmall,
@@ -241,31 +241,6 @@ fun DownloadItemTrailingContent(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.align(Alignment.End)
                                 )
-                                /*Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.End
-                                ) {
-                                    if (task.status in listOf(
-                                            DownloadStatus.QUEUED,
-                                            DownloadStatus.DOWNLOADING,
-                                            DownloadStatus.PAUSED,
-                                            DownloadStatus.FAILED
-                                        )
-                                    ) {
-                                        IconButton(onClick = onCancel) {
-                                            Icon(Icons.Default.Close, contentDescription = "Cancel")
-                                        }
-                                        IconButton(onClick = onDelete) {
-                                            Icon(Icons.Default.Delete, contentDescription = "Delete")
-                                        }
-                                    }
-                                    if (task.status == DownloadStatus.CANCEL || task.status == DownloadStatus.COMPLETED) {
-                                        IconButton(onClick = onDelete) {
-                                            Icon(Icons.Default.Delete, contentDescription = "Delete")
-                                        }
-                                    }
-                                }*/
-
                             }
                         }
 
