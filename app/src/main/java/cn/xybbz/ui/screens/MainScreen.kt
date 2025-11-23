@@ -184,7 +184,7 @@ private fun NavController.currentSelectChange(selectControl: SelectControl) {
     }
 
     if (needDismiss) {
-        LaunchedEffect(needDismiss) {
+        LaunchedEffect(true) {
             selectControl.dismiss()
             needDismiss = false
         }
