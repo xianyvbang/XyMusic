@@ -28,6 +28,7 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.rememberNavController
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.entity.data.SelectControl
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.RouterCompose
 import cn.xybbz.router.RouterConstants
@@ -71,15 +72,16 @@ fun MainScreen() {
             onCreate = {
 //                mainViewModel.clearRemoteCurrent()
                 //todo 通知权限调用应该修改到下载的时候
-                when(permissionState.status){
+                when (permissionState.status) {
                     is PermissionStatus.Granted -> {
-                        Log.i("permission","通知权限启用")
+                        Log.i("permission", "通知权限启用")
                     }
+
                     is PermissionStatus.Denied -> {
-                        if (permissionState.status.shouldShowRationale){
+                        if (permissionState.status.shouldShowRationale) {
                             permissionState.launchPermissionRequest()
-                        }else {
-                            Log.w("permission","通知权限被禁止")
+                        } else {
+                            Log.w("permission", "通知权限被禁止")
                         }
                     }
                 }
@@ -113,13 +115,13 @@ fun MainScreen() {
             navController.navigate(RouterConstants.AlbumInfo(albumId, MusicDataTypeEnum.ALBUM))
         })
         AddPlaylistBottomComponent()
-
+        navController.currentSelectChange(mainViewModel.selectControl)
         Scaffold(
             snackbarHost = {
                 SnackBarHostUi()
             },
-        ) { it ->
-            Box() {
+        ) {
+            Box {
                 RouterCompose(paddingValues = it)
                 LoadingCompose(modifier = Modifier.align(alignment = Alignment.Center))
             }
@@ -157,4 +159,15 @@ private fun NavController.currentSnackBarHostScreen(): MutableState<Boolean> {
         addOnDestinationChangedListener(listener)
     }
     return currentScreen
+}
+
+@Composable
+private fun NavController.currentSelectChange(selectControl: SelectControl) {
+    LaunchedEffect(key1 = this) {
+        val listener = NavController.OnDestinationChangedListener { _, _, _ ->
+            if (selectControl.ifOpenSelect)
+                selectControl.dismiss()
+        }
+        addOnDestinationChangedListener(listener)
+    }
 }

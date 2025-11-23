@@ -214,26 +214,6 @@ fun MusicSelectTopBarComponent(
                     isSelectAll = selectControl.isSelectAll,
                     onSelectAll = onSelectAll
                 )
-
-                /*if (onIfAllSelect()) {
-                    TextButton(onClick = {
-                        onSetIfAllSelect(false)
-                        selectControl.clearSelectMusicList()
-                    }) {
-                        Text(text = stringResource(R.string.deselect_all))
-                    }
-                } else {
-                    TextButton(onClick = {
-                        onSetIfAllSelect(true)
-                        coroutineScope.launch {
-                            val musicList = musicViewModel.getMusicMusic(musicListCount())
-                            if (!musicList.isNullOrEmpty())
-                                selectControl.setSelectMusicListAllData(musicList)
-                        }
-                    }) {
-                        Text(text = stringResource(R.string.select_all))
-                    }
-                }*/
             } else {
                 Text(
                     text = title,
@@ -243,9 +223,6 @@ fun MusicSelectTopBarComponent(
         }, navigationIcon = {
             IconButton(
                 onClick = {
-                    if (selectControl.ifOpenSelect) {
-                        selectControl.dismiss()
-                    }
                     navController.popBackStack()
                 },
             ) {

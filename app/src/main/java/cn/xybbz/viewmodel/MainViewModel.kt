@@ -31,6 +31,7 @@ import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.update.ApkUpdateManager
 import cn.xybbz.entity.data.PlayerTypeData
+import cn.xybbz.entity.data.SelectControl
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.era.XyEraItem
@@ -60,6 +61,7 @@ class MainViewModel @Inject constructor(
     private val alarmConfig: AlarmConfig,
     private val apkUpdateManager: ApkUpdateManager,
     private val favoriteRepository: FavoriteRepository,
+    val selectControl: SelectControl
 ) : ViewModel() {
 
     val dataSourceManager = _dataSourceManager

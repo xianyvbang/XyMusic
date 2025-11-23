@@ -241,7 +241,6 @@ fun AlbumInfoScreen(
                 navigationIcon = {
                     IconButton(
                         onClick = {
-                            albumInfoViewModel.selectControl.dismiss()
                             navHostController.popBackStack()
                         },
                     ) {
