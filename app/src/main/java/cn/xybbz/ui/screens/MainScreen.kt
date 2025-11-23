@@ -18,6 +18,8 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -44,6 +46,9 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 @ExperimentalPermissionsApi
@@ -163,11 +168,25 @@ private fun NavController.currentSnackBarHostScreen(): MutableState<Boolean> {
 
 @Composable
 private fun NavController.currentSelectChange(selectControl: SelectControl) {
+    val coroutineScope = rememberCoroutineScope()
+
+    var needDismiss by remember { mutableStateOf(false) }
     LaunchedEffect(key1 = this) {
         val listener = NavController.OnDestinationChangedListener { _, _, _ ->
-            if (selectControl.ifOpenSelect)
-                selectControl.dismiss()
+            coroutineScope.launch {
+                withContext(Dispatchers.IO){
+                    if (selectControl.ifOpenSelect)
+                        needDismiss = true
+                }
+            }
         }
         addOnDestinationChangedListener(listener)
+    }
+
+    if (needDismiss) {
+        LaunchedEffect(needDismiss) {
+            selectControl.dismiss()
+            needDismiss = false
+        }
     }
 }
