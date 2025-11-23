@@ -65,6 +65,7 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
+import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.enums.TabListEnum
 import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -435,6 +436,35 @@ fun ArtistInfoScreen(
                                                 .height(maxHeight),
                                             collectAsLazyPagingItems = musicPage
                                         ) { list ->
+                                            item {
+                                                MusicListOperation(
+                                                    onAlbumPlayerHistoryProgress = { albumInfoViewModel.albumPlayerHistoryProgress },
+                                                    onPlayAlbumId = {
+                                                        albumInfoViewModel.musicController.musicInfo?.album
+                                                            ?: ""
+                                                    },
+                                                    onMusicAlbum = { albumInfoViewModel.xyAlbumInfoData },
+                                                    musicPlayContext = albumInfoViewModel.musicPlayContext,
+                                                    onPlayState = { albumInfoViewModel.musicController.state },
+                                                    onRemovePlayerHistory = {
+                                                        albumInfoViewModel.removeAlbumPlayerHistoryProgress(
+                                                            it
+                                                        )
+                                                    },
+                                                    onMusicPlanOrPause = {
+                                                        if (albumInfoViewModel.musicController.state != PlayStateEnum.Pause) {
+                                                            albumInfoViewModel.musicController.pause()
+                                                        } else {
+                                                            albumInfoViewModel.musicController.resume()
+                                                        }
+                                                    },
+                                                    albumInfoViewModel = albumInfoViewModel,
+                                                    onSelectAll = {
+                                                        albumInfoViewModel.selectControl.toggleSelectionAll(onMusicListPage().itemSnapshotList.items.map { it.itemId })
+                                                    },
+                                                    sortContent = sortContent
+                                                )
+                                            }
                                             items(
                                                 list.itemCount,
                                                 key = list.itemKey { item -> item.itemId },
