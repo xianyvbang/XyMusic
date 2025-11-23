@@ -562,8 +562,7 @@ class EmbyDatasourceServer @Inject constructor(
                 val pic = if (removeDuplicatesMusicList.isNotEmpty()) musicList[0].pic else null
                 saveMusicPlaylist(
                     playlistId = playlistId,
-                    musicIds = removeDuplicatesMusicList.map { music -> music.itemId },
-                    pic = pic
+                    musicIds = removeDuplicatesMusicList.map { music -> music.itemId }
                 )
             }
         }
@@ -610,26 +609,12 @@ class EmbyDatasourceServer @Inject constructor(
      */
     override suspend fun saveMusicPlaylist(
         playlistId: String,
-        musicIds: List<String>,
-        pic: String?
+        musicIds: List<String>
     ): Boolean {
         embyApiClient.playlistsApi().addItemToPlaylist(
             playlistId = playlistId,
             ids = musicIds.joinToString(Constants.ARTIST_DELIMITER) { it })
-        var playlistIndex = db.musicDao.selectPlaylistIndex() ?: -1
-        val playlists = musicIds.map { musicId ->
-            playlistIndex += 1
-            PlaylistMusic(
-                playlistId = playlistId,
-                musicId = musicId,
-                index = playlistIndex,
-                connectionId = connectionConfigServer.getConnectionId()
-            )
-        }
-        db.musicDao.savePlaylistMusic(playlists)
-        //更新歌单的封面信息
-        db.albumDao.updatePic(playlistId, pic.toString())
-        return true
+        return super.saveMusicPlaylist(playlistId,musicIds)
     }
 
     /**

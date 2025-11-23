@@ -95,7 +95,7 @@ data class XyMusic(
     /**
      * 是否已经收藏
      */
-    val ifFavoriteStatus: Boolean,
+   val ifFavoriteStatus: Boolean,
 
     /**
      * 是否有歌词

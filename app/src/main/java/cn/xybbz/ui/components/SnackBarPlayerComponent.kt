@@ -204,11 +204,13 @@ fun SnackBarPlayerComponent(
                     IconButton(onClick = {
                         if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
                             MessageUtils.sendPopTip(R.string.please_select)
-
                         } else {
-                            snackBarPlayerViewModel.selectControl.onAddPlaySelect(
-                                snackBarPlayerViewModel.musicController
-                            )
+                            coroutineScope.launch {
+                                snackBarPlayerViewModel.selectControl.onAddPlaySelect(
+                                    snackBarPlayerViewModel.musicController,
+                                    snackBarPlayerViewModel.db
+                                )
+                            }
                         }
                     }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
                         Icon(

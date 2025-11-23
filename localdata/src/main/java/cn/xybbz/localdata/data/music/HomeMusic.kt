@@ -27,6 +27,30 @@ import cn.xybbz.localdata.data.connection.ConnectionConfig
 
 data class HomeMusic(
     val musicId: String,
+    /**
+     * 音乐图片
+     */
+    val pic: String? = "",
+    /**
+     * 音乐名称
+     */
+    val name: String = "",
+    /**
+     * 音乐艺术家名称
+     */
+    val artists: String? = "",
+    /**
+     * 专辑id
+     */
+    val album: String = "",
+    /**
+     * 编码
+     */
+    val codec: String? = "",
+    /**
+     * 比特率
+     */
+    val bitRate: Int? = 0,
     val connectionId: Long,
     val index:Int,
     val cachedAt: Long = System.currentTimeMillis()// 缓存时间戳（System.currentTimeMillis()）

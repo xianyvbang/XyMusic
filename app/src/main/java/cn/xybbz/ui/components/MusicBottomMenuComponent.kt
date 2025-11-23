@@ -161,15 +161,11 @@ fun MusicBottomMenuComponent(
 
     bottomMenuMusicInfo.forEach { music ->
 
-        val favoriteMusicMap by musicBottomMenuViewModel.favoriteRepository.favoriteMap.collectAsState()
+        val favoriteMusicMap by musicBottomMenuViewModel.favoriteRepository.favoriteSet.collectAsState()
         //收藏信息
         val favoriteState by remember {
             derivedStateOf {
-                if (favoriteMusicMap.containsKey(music.itemId)) {
-                    favoriteMusicMap.getOrDefault(music.itemId, false)
-                } else {
-                    music.ifFavoriteStatus
-                }
+                favoriteMusicMap.contains(music.itemId)
             }
         }
 
@@ -244,9 +240,7 @@ fun MusicBottomMenuComponent(
                     modifier = Modifier.padding(
                         horizontal = XyTheme.dimens.outerHorizontalPadding
                     ),
-                    onMusicData = {
-                        music
-                    },
+                    music = music,
                     backgroundColor = Color.Transparent,
                     brush = Brush.horizontalGradient(
                         colors = listOf(Color(0xFF5A524C), Color(0xFF726B66)),
@@ -289,7 +283,7 @@ fun MusicBottomMenuComponent(
                                 sheetState.hide()
                                 AddPlaylistBottomData(
                                     ifShow = true,
-                                    musicInfoList = listOf(music)
+                                    musicInfoList = listOf(music.itemId)
                                 ).show()
                             }.invokeOnCompletion {
                                 ifShowBottom = false

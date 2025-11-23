@@ -27,6 +27,7 @@ import cn.xybbz.localdata.data.connection.ConnectionConfig
 data class FavoriteMusic(
     val musicId: String,
     val connectionId: Long,
+    val ifFavorite: Boolean = true,
     val index:Int,
     val cachedAt: Long = System.currentTimeMillis()
 )

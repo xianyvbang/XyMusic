@@ -277,11 +277,6 @@ class NavidromeDatasourceServer @Inject constructor(
                 albumId = if (dataType == MusicTypeEnum.ALBUM) listOf(itemId) else null,
                 artistId = if (dataType == MusicTypeEnum.ARTIST) listOf(itemId) else null
             ).isFavorite
-        db.musicDao.updateFavoriteByItemId(
-            favorite,
-            itemId,
-            connectionConfigServer.getConnectionId()
-        )
         return favorite
     }
 
@@ -295,11 +290,6 @@ class NavidromeDatasourceServer @Inject constructor(
             albumId = if (dataType == MusicTypeEnum.ALBUM) listOf(itemId) else null,
             artistId = if (dataType == MusicTypeEnum.ARTIST) listOf(itemId) else null
         ).isFavorite
-        db.musicDao.updateFavoriteByItemId(
-            favorite,
-            itemId,
-            connectionConfigServer.getConnectionId()
-        )
         return favorite
     }
 
@@ -548,8 +538,7 @@ class NavidromeDatasourceServer @Inject constructor(
                 val pic = if (removeDuplicatesMusicList.isNotEmpty()) musicList[0].pic else null
                 saveMusicPlaylist(
                     playlistId = playlistId,
-                    musicIds = removeDuplicatesMusicList.map { music -> music.itemId },
-                    pic = pic
+                    musicIds = removeDuplicatesMusicList.map { music -> music.itemId }
                 )
             }
         }
@@ -596,26 +585,12 @@ class NavidromeDatasourceServer @Inject constructor(
      */
     override suspend fun saveMusicPlaylist(
         playlistId: String,
-        musicIds: List<String>,
-        pic: String?
+        musicIds: List<String>
     ): Boolean {
         navidromeApiClient.playlistsApi().addPlaylistMusics(
             playlistId = playlistId, PlaylistAddMusicsUpdateRequest(musicIds)
         )
-        var playlistIndex = db.musicDao.selectPlaylistIndex() ?: -1
-        val playlists = musicIds.map { musicId ->
-            playlistIndex += 1
-            PlaylistMusic(
-                playlistId = playlistId,
-                musicId = musicId,
-                index = playlistIndex,
-                connectionId = connectionConfigServer.getConnectionId()
-            )
-        }
-        db.musicDao.savePlaylistMusic(playlists)
-        //更新歌单的封面信息
-        db.albumDao.updatePic(playlistId, pic.toString())
-        return true
+        return super.saveMusicPlaylist(playlistId,musicIds)
     }
 
     /**

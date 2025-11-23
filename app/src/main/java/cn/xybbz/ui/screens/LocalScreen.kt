@@ -43,7 +43,7 @@ fun LocalScreen(localViewModel: LocalViewModel = hiltViewModel<LocalViewModel>()
     val navController = LocalNavController.current
     val coroutineScope = rememberCoroutineScope()
     val downloadMusicList by localViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
-    val favoriteList by localViewModel.favoriteRepository.favoriteMap.collectAsState()
+    val favoriteSet by localViewModel.favoriteRepository.favoriteSet.collectAsState()
 
     XyColumnScreen(
         modifier = Modifier.brashColor(Color(0xFF0A7B88), Color(0xFFFFBA6C))
@@ -77,14 +77,16 @@ fun LocalScreen(localViewModel: LocalViewModel = hiltViewModel<LocalViewModel>()
             ) { _, download ->
                 download.music?.let { music ->
                     MusicItemComponent(
-                        onMusicData = { music },
+                        itemId = music.itemId,
+                        name = music.name,
+                        album = music.album,
+                        artists = music.artists,
+                        pic = music.pic,
+                        codec = music.codec,
+                        bitRate = music.bitRate,
                         enabledPic = false,
                         onIfFavorite = {
-                            if (favoriteList.containsKey(music.itemId)) {
-                                favoriteList.getOrDefault(music.itemId, false)
-                            } else {
-                                music.ifFavoriteStatus
-                            }
+                            music.itemId in favoriteSet
                         },
                         textColor = if (localViewModel.musicController.musicInfo?.itemId == music.itemId)
                             MaterialTheme.colorScheme.primary
@@ -99,6 +101,9 @@ fun LocalScreen(localViewModel: LocalViewModel = hiltViewModel<LocalViewModel>()
                             )
                         },
                         trailingOnClick = {
+                            music.show()
+                        },
+                        trailingOnSelectClick = {
                             coroutineScope.launch {
                                 music.show()
                             }

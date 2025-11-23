@@ -123,6 +123,7 @@ import cn.xybbz.ui.xy.XyItemTextHorizontal
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.AlbumInfoViewModel
 import kotlinx.coroutines.launch
+import kotlin.collections.map
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 
@@ -156,7 +157,7 @@ fun AlbumInfoScreen(
     val navHostController = LocalNavController.current
     val isSticking by remember(lazyListState) { lazyListState.isSticking(1) }
 
-    val favoriteList by albumInfoViewModel.favoriteRepository.favoriteMap.collectAsState()
+    val favoriteSet by albumInfoViewModel.favoriteRepository.favoriteSet.collectAsState()
 
     val musicListPage =
         albumInfoViewModel.xyMusicList.collectAsLazyPagingItems()
@@ -418,7 +419,6 @@ fun AlbumInfoScreen(
                 }
                 stickyHeader(key = 2) { headerIndex ->
                     StickyHeaderOperationParent(
-                        onMusicListPage = { musicListPage },
                         albumInfoViewModel = albumInfoViewModel,
                         musicListPage = musicListPage,
                         sortBy = sortBy
@@ -444,13 +444,9 @@ fun AlbumInfoScreen(
                                 MusicItemIndexComponent(
                                     modifier = Modifier.fillMaxWidth(),
                                     backgroundColor = Color.Transparent,
-                                    onMusicData = { music },
+                                    music = music,
                                     onIfFavorite = {
-                                        if (favoriteList.containsKey(music.itemId)) {
-                                            favoriteList.getOrDefault(music.itemId, false)
-                                        } else {
-                                            music.ifFavoriteStatus
-                                        }
+                                        music.itemId in favoriteSet
                                     },
                                     index = index + 1,
                                     textColor = if (albumInfoViewModel.musicController.musicInfo?.itemId == music.itemId)
@@ -471,16 +467,21 @@ fun AlbumInfoScreen(
                                         }
                                     },
                                     ifSelect = albumInfoViewModel.selectControl.ifOpenSelect,
-                                    ifSelectCheckBox = { albumInfoViewModel.selectControl.selectMusicDataList.any { it.itemId == music.itemId } },
-                                    trailingOnClick = { select ->
+                                    ifSelectCheckBox = { albumInfoViewModel.selectControl.selectMusicIdList.any { it == music.itemId } },
+                                    trailingOnSelectClick = { select ->
                                         albumInfoViewModel.selectControl.toggleSelection(
-                                            music,
+                                            music.itemId,
                                             onIsSelectAll = {
-                                                albumInfoViewModel.selectControl.selectMusicDataList.containsAll(
-                                                    musicListPage.itemSnapshotList.items
+                                                albumInfoViewModel.selectControl.selectMusicIdList.containsAll(
+                                                    musicListPage.itemSnapshotList.items.map { it.itemId }
                                                 )
                                             }
                                         )
+                                    },
+                                    trailingOnClick = {
+                                        coroutineScope.launch {
+                                            music.show()
+                                        }
                                     }
                                 )
                             }
@@ -764,7 +765,7 @@ private fun StickyHeaderOperation(
         },
         albumInfoViewModel = albumInfoViewModel,
         onSelectAll = {
-            albumInfoViewModel.selectControl.toggleSelectionAll(onMusicListPage().itemSnapshotList.items)
+            albumInfoViewModel.selectControl.toggleSelectionAll(onMusicListPage().itemSnapshotList.items.map { it.itemId })
         },
         sortContent = sortContent
     )
@@ -772,7 +773,6 @@ private fun StickyHeaderOperation(
 
 @Composable
 private fun StickyHeaderOperationParent(
-    onMusicListPage: () -> LazyPagingItems<XyMusic>,
     albumInfoViewModel: AlbumInfoViewModel,
     musicListPage: LazyPagingItems<XyMusic>,
     sortBy: Sort,
@@ -780,7 +780,7 @@ private fun StickyHeaderOperationParent(
 
     val mainViewModel = LocalMainViewModel.current
     StickyHeaderOperation(
-        onMusicListPage = onMusicListPage,
+        onMusicListPage = {musicListPage},
         albumInfoViewModel = albumInfoViewModel,
         sortContent = {
             SelectSortBottomSheetComponent(

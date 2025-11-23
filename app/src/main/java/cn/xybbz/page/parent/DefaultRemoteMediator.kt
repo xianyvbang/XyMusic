@@ -10,13 +10,14 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.remote.RemoteCurrent
 import java.util.concurrent.TimeUnit
+import kotlin.collections.isNullOrEmpty
 
 @OptIn(ExperimentalPagingApi::class)
-abstract class DefaultRemoteMediator<T : Any>(
+abstract class DefaultRemoteMediator<T:Any,K : Any>(
     private val db: DatabaseClient,
-    protected val remoteId:String,
+    protected val remoteId: String,
     private val connectionId: Long
-): RemoteMediator<Int, T>() {
+) : RemoteMediator<Int, T>() {
 
     protected val remoteKeyDao = db.remoteCurrentDao
 
@@ -46,7 +47,7 @@ abstract class DefaultRemoteMediator<T : Any>(
                 }
             }
 
-            val response = getRemoteServerObjectList(loadKey,state.config.pageSize)
+            val response = getRemoteServerObjectList(loadKey, state.config.pageSize)
 
             db.withTransaction {
                 if (loadType == LoadType.REFRESH) {
@@ -82,7 +83,7 @@ abstract class DefaultRemoteMediator<T : Any>(
         return getInitializeAction()
     }
 
-    open suspend fun getInitializeAction():InitializeAction{
+    open suspend fun getInitializeAction(): InitializeAction {
         val cacheTimeout =
             TimeUnit.MILLISECONDS.convert(Constants.PAGE_TIME_FAILURE, TimeUnit.MINUTES)
         return if (System.currentTimeMillis() - (remoteKeyDao.remoteKeyById(remoteId)?.createTime
@@ -99,7 +100,7 @@ abstract class DefaultRemoteMediator<T : Any>(
      * @param [loadKey] 页码 从0开始
      * @param [pageSize] 页面大小
      */
-    abstract suspend fun getRemoteServerObjectList(loadKey:Int,pageSize:Int): AllResponse<T>
+    abstract suspend fun getRemoteServerObjectList(loadKey: Int, pageSize: Int): AllResponse<K>
 
     /**
      * 删除本地数据库对象列表
@@ -109,5 +110,5 @@ abstract class DefaultRemoteMediator<T : Any>(
     /**
      * 存储对象列表到本地数据库
      */
-    abstract suspend fun saveBatchLocalObjectList(items:List<T>)
+    abstract suspend fun saveBatchLocalObjectList(items: List<K>)
 }

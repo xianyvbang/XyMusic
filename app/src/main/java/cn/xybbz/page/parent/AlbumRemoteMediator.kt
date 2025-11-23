@@ -27,7 +27,7 @@ class AlbumRemoteMediator(
     private val datasourceServer: IDataSourceParentServer,
     private val connectionId: Long,
     private val sort: StateFlow<Sort>
-) : DefaultRemoteMediator<XyAlbum>(
+) : DefaultRemoteMediator<XyAlbum,XyAlbum>(
     db,
     RemoteIdConstants.ALBUM + dataSource + connectionId,
     connectionId

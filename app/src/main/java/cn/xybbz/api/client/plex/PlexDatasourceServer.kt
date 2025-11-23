@@ -588,11 +588,6 @@ class PlexDatasourceServer @Inject constructor(
                 collectionId = collectionId,
                 uri = plexApiClient.createMusicUri(itemId)
             )
-        db.musicDao.updateFavoriteByItemId(
-            true,
-            itemId,
-            connectionConfigServer.getConnectionId()
-        )
         return true
     }
 
@@ -686,11 +681,6 @@ class PlexDatasourceServer @Inject constructor(
         plexApiClient.userLibraryApi().unmarkFavoriteItem(
             musicId = itemId,
             collectionId = collectionId
-        )
-        db.musicDao.updateFavoriteByItemId(
-            false,
-            itemId,
-            connectionConfigServer.getConnectionId()
         )
         return false
     }
@@ -950,8 +940,7 @@ class PlexDatasourceServer @Inject constructor(
                 val pic = if (removeDuplicatesMusicList.isNotEmpty()) musicList[0].pic else null
                 saveMusicPlaylist(
                     playlistId = playlistId,
-                    musicIds = removeDuplicatesMusicList.map { music -> music.itemId },
-                    pic = pic
+                    musicIds = removeDuplicatesMusicList.map { music -> music.itemId }
                 )
             }
         }
@@ -996,8 +985,7 @@ class PlexDatasourceServer @Inject constructor(
      */
     override suspend fun saveMusicPlaylist(
         playlistId: String,
-        musicIds: List<String>,
-        pic: String?
+        musicIds: List<String>
     ): Boolean {
         plexApiClient.playlistsApi().addPlaylistMusics(
             playlistId = playlistId,
@@ -1015,7 +1003,7 @@ class PlexDatasourceServer @Inject constructor(
         }
         db.musicDao.savePlaylistMusic(playlists)
         //更新歌单的封面信息
-        db.albumDao.updatePic(playlistId, pic.toString())
+        db.albumDao.updatePic(playlistId)
         return true
     }
 

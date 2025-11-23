@@ -23,11 +23,6 @@ import cn.xybbz.localdata.data.connection.ConnectionConfig
         parentColumns = ["id"],
         childColumns = ["connectionId"],
         onDelete = CASCADE
-    ), ForeignKey(
-        entity = XyAlbum::class,
-        parentColumns = ["itemId"],
-        childColumns = ["playlistId"],
-        onDelete = CASCADE
     )],
     indices = [Index("musicId"), Index("connectionId"), Index("playlistId")]
 )

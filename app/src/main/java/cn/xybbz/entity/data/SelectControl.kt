@@ -12,7 +12,7 @@ import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.common.utils.OperationTipUtils
-import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.ui.components.AddPlaylistBottomData
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.show
@@ -31,8 +31,8 @@ import kotlinx.coroutines.launch
 class SelectControl {
 
 
-    //选中音乐列表
-    val selectMusicDataList = mutableStateSetOf<XyMusic>()
+    //选中音乐列表id
+    val selectMusicIdList = mutableStateSetOf<String>()
 
     /**
      * 是否已经全选
@@ -78,15 +78,16 @@ class SelectControl {
         }
 
     //增加选中音乐到播放列表
-    val onAddPlaySelect: (MusicController) -> Unit = {
-        addPlayerList(it)
-    }
+    val onAddPlaySelect: suspend (MusicController, DatabaseClient) -> Unit =
+        { musicController, db ->
+            addPlayerList(musicController, db)
+        }
 
     //增加选中音乐到歌单
     val onAddPlaylistSelect: () -> Unit = {
         AddPlaylistBottomData(
             ifShow = true,
-            musicInfoList = selectMusicDataList.map { it },
+            musicInfoList = selectMusicIdList.map { it },
             onItemClick = {
                 dismiss()
             }).show()
@@ -104,16 +105,16 @@ class SelectControl {
             viewModelScope.launch {
                 OperationTipUtils.operationTipProgress() { loadingObject ->
                     loadingObject.updateProgress(0.0f, 0)
-                    selectMusicDataList.filter { item -> item.ifFavoriteStatus }
-                        .forEachIndexed { index, music ->
+                    selectMusicIdList
+                        .forEachIndexed { index, musicId ->
                             dataSourceManager.setFavoriteData(
                                 MusicTypeEnum.MUSIC,
-                                music.itemId,
+                                musicId,
                                 musicController,
                                 true
                             )
                             loadingObject.updateProgress(
-                                (index * 1.0f + 1.0f) / selectMusicDataList.size,
+                                (index * 1.0f + 1.0f) / selectMusicIdList.size,
                                 index + 1
                             )
                         }
@@ -171,7 +172,7 @@ class SelectControl {
 
     fun clearData() {
         scope.launch {
-            selectMusicDataList.clear()
+            selectMusicIdList.clear()
         }
         isSelectAll = false
         ifOpenSelect = false
@@ -184,16 +185,16 @@ class SelectControl {
      * 设置选择音乐列表数据
      * @param [music] 音乐
      */
-    fun toggleSelection(music: XyMusic, onIsSelectAll: () -> Boolean) {
+    fun toggleSelection(musicId: String, onIsSelectAll: () -> Boolean) {
 
-        if (selectMusicDataList.contains(music)) {
-            selectMusicDataList.remove(music)
-            if (selectMusicDataList.isEmpty()) {
+        if (selectMusicIdList.contains(musicId)) {
+            selectMusicIdList.remove(musicId)
+            if (selectMusicIdList.isEmpty()) {
                 ifEnableButton = false
             }
             isSelectAll = false
         } else {
-            selectMusicDataList.add(music)
+            selectMusicIdList.add(musicId)
             ifEnableButton = true
             isSelectAll = onIsSelectAll()
         }
@@ -206,9 +207,9 @@ class SelectControl {
         dataSourceManager: IDataSourceManager,
         viewModelScope: CoroutineScope
     ) {
-        if (selectMusicDataList.isNotEmpty()) {
+        if (selectMusicIdList.isNotEmpty()) {
             viewModelScope.launch {
-                dataSourceManager.removeMusicByIds(selectMusicDataList.map { it.itemId })
+                dataSourceManager.removeMusicByIds(selectMusicIdList.toList())
             }.invokeOnCompletion {
                 dismiss()
             }
@@ -219,24 +220,25 @@ class SelectControl {
     /**
      * 播放选中列表
      */
-    fun addPlayerList(musicController: MusicController) {
+    suspend fun addPlayerList(musicController: MusicController, db: DatabaseClient) {
+        val xyMusics = db.musicDao.selectByIds(selectMusicIdList.toList())
         musicController.addMusicList(
-            musicList = selectMusicDataList.toList(),
+            musicList = xyMusics,
             isPlayer = true,
         )
         clearData()
     }
 
-    fun toggleSelectionAll(musicList: List<XyMusic>? = null) {
+    fun toggleSelectionAll(musicIdList: List<String>? = null) {
         if (isSelectAll) {
-            selectMusicDataList.clear()
+            selectMusicIdList.clear()
             isSelectAll = false
             ifEnableButton = false
         } else {
-            if (!musicList.isNullOrEmpty()) {
+            if (!musicIdList.isNullOrEmpty()) {
                 ifEnableButton = true
                 isSelectAll = true
-                selectMusicDataList.addAll(musicList)
+                selectMusicIdList.addAll(musicIdList)
             }
         }
     }
@@ -250,11 +252,11 @@ class SelectControl {
         viewModelScope: CoroutineScope
     ) {
         viewModelScope.launch {
-            if (selectMusicDataList.isNotEmpty()) {
+            if (selectMusicIdList.isNotEmpty()) {
                 playlistId?.let {
                     dataSourceManager.removeMusicPlaylist(
                         it,
-                        selectMusicDataList.map { music -> music.itemId }
+                        selectMusicIdList.toList()
                     )
                 }
             }
@@ -265,6 +267,6 @@ class SelectControl {
 
     //判断是否选择列表是否为空
     fun ifSelectEmpty(): Boolean {
-        return selectMusicDataList.isEmpty()
+        return selectMusicIdList.isEmpty()
     }
 }

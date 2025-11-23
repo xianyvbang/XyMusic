@@ -46,7 +46,7 @@ fun MusicPageListComponent(
 
     val coroutineScope = rememberCoroutineScope()
     val navController = LocalNavController.current
-    val favoriteList by favoriteRepository.favoriteMap.collectAsState()
+    val favoriteList by favoriteRepository.favoriteSet.collectAsState(emptyList())
 
 
     XyColumnScreen(
@@ -81,13 +81,15 @@ fun MusicPageListComponent(
                 ) { index ->
                     collectAsLazyPagingItems[index]?.let { music ->
                         MusicItemComponent(
-                            onMusicData = { music },
+                            itemId = music.itemId,
+                            name = music.name,
+                            album = music.album,
+                            artists = music.artists,
+                            pic = music.pic,
+                            codec = music.codec,
+                            bitRate = music.bitRate,
                             onIfFavorite = {
-                                if (favoriteList.containsKey(music.itemId)) {
-                                    favoriteList.getOrDefault(music.itemId, false)
-                                } else {
-                                    music.ifFavoriteStatus
-                                }
+                                favoriteList.contains(music.itemId)
                             },
                             textColor = if (musicController.musicInfo?.itemId == music.itemId)
                                 MaterialTheme.colorScheme.primary
@@ -98,10 +100,7 @@ fun MusicPageListComponent(
                                 onMusicPlay(it,index)
                             },
                             trailingOnClick = {
-                                coroutineScope.launch {
-                                    getMusicInfo(music.itemId)
-                                        ?.show()
-                                }
+                                music.show()
                             }
                         )
                     }

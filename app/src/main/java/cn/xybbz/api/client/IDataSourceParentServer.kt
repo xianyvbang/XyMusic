@@ -31,9 +31,10 @@ import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.count.XyDataCount
 import cn.xybbz.localdata.data.genre.XyGenre
+import cn.xybbz.localdata.data.music.HomeMusic
+import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
-import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.page.bigPager
 import cn.xybbz.page.defaultPager
@@ -207,8 +208,12 @@ abstract class IDataSourceParentServer(
                     initFavoriteData()
                     try {
                         getDataInfoCount(connectionId)
-                    }catch (e: Exception){
-                        Log.i(Constants.LOG_ERROR_PREFIX,"获取音乐/专辑/艺术家/收藏/流派数量异常",e)
+                    } catch (e: Exception) {
+                        Log.i(
+                            Constants.LOG_ERROR_PREFIX,
+                            "获取音乐/专辑/艺术家/收藏/流派数量异常",
+                            e
+                        )
                     }
                 }
             }
@@ -524,7 +529,7 @@ abstract class IDataSourceParentServer(
     @OptIn(ExperimentalPagingApi::class)
     override fun selectMusicFlowList(
         sortByFlow: StateFlow<Sort>
-    ): Flow<PagingData<XyMusic>> {
+    ): Flow<PagingData<HomeMusic>> {
         return defaultPager(
             remoteMediator = MusicRemoteMediator(
                 db = db,
@@ -567,6 +572,32 @@ abstract class IDataSourceParentServer(
             false
         }
 
+    }
+
+    /**
+     * 保存自建歌单中的音乐
+     * @param [playlistId] 歌单id
+     * @param [musicIds] 音乐id集合
+     * @param [pic] 自建歌单图片
+     */
+    override suspend fun saveMusicPlaylist(
+        playlistId: String,
+        musicIds: List<String>
+    ): Boolean {
+        var playlistIndex = db.musicDao.selectPlaylistIndex() ?: -1
+        val playlists = musicIds.map { musicId ->
+            playlistIndex += 1
+            PlaylistMusic(
+                playlistId = playlistId,
+                musicId = musicId,
+                index = playlistIndex,
+                connectionId = connectionConfigServer.getConnectionId()
+            )
+        }
+        db.musicDao.savePlaylistMusic(playlists)
+        //更新歌单的封面信息
+        db.albumDao.updatePic(playlistId)
+        return true
     }
 
     /**
@@ -737,7 +768,7 @@ abstract class IDataSourceParentServer(
         playlist: Int?,
         genres: Int?,
         favorite: Int?,
-        connectionId:Long
+        connectionId: Long
     ) {
         val dataCount = db.dataCountDao.selectOne(connectionId)
         if (dataCount != null) {

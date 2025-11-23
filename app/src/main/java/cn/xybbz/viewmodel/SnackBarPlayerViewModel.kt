@@ -24,7 +24,7 @@ import javax.inject.Inject
 @OptIn(UnstableApi::class)
 class SnackBarPlayerViewModel @Inject constructor(
     val musicController: MusicController,
-    private val db: DatabaseClient,
+    val db: DatabaseClient,
     private val cacheController: CacheController,
     val dataSourceManager: IDataSourceManager,
     val selectControl: SelectControl,
@@ -49,7 +49,8 @@ class SnackBarPlayerViewModel @Inject constructor(
         viewModelScope.launch {
             val downloadTypes =
                 dataSourceManager.dataSourceType?.getDownloadType() ?: DownloadTypes.APK
-            val requests = selectControl.selectMusicDataList.map { musicData ->
+            val musicList = db.musicDao.selectByIds(selectControl.selectMusicIdList.toList())
+            val requests = musicList.map { musicData ->
                 DownloadRequest(
                     url = musicData.downloadUrl,
                     fileName = musicData.name + "." + musicData.container,

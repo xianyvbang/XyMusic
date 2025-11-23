@@ -11,8 +11,11 @@ import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.favorite.FavoriteRepository
+import cn.xybbz.config.module.DatabaseModule_DbFactory.db
 import cn.xybbz.entity.data.music.MusicPlayContext
+import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtist
+import cn.xybbz.localdata.data.music.XyMusic
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -26,26 +29,19 @@ import kotlinx.coroutines.launch
 @HiltViewModel(assistedFactory = ArtistInfoViewModel.Factory::class)
 class ArtistInfoViewModel @AssistedInject constructor(
     @Assisted private val artistId: String,
-    private val _dataSourceManager: IDataSourceManager,
-    private val _musicPlayContext: MusicPlayContext,
-    private val _connectionConfigServer: ConnectionConfigServer,
-    private val _musicController: MusicController,
-    private val _favoriteRepository: FavoriteRepository,
-    private val _backgroundConfig: BackgroundConfig
+    val dataSourceManager: IDataSourceManager,
+    val musicPlayContext: MusicPlayContext,
+    val connectionConfigServer: ConnectionConfigServer,
+    val musicController: MusicController,
+    val favoriteRepository: FavoriteRepository,
+    val backgroundConfig: BackgroundConfig,
+    val db: DatabaseClient,
 ) : ViewModel() {
 
     @AssistedFactory
     interface Factory {
         fun create(artistId: String): ArtistInfoViewModel
     }
-
-    val musicPlayContext = _musicPlayContext
-    val dataSourceManager = _dataSourceManager
-    val musicController = _musicController
-    val connectionConfigServer = _connectionConfigServer
-    val favoriteRepository = _favoriteRepository
-    val backgroundConfig = _backgroundConfig
-
 
     /**
      * 艺术家信息
@@ -60,11 +56,11 @@ class ArtistInfoViewModel @AssistedInject constructor(
         private set
 
     //艺术家的音乐列表
-    val musicList = _dataSourceManager.selectMusicListByArtistId(artistId).distinctUntilChanged()
+    val musicList = dataSourceManager.selectMusicListByArtistId(artistId).distinctUntilChanged()
         .cachedIn(viewModelScope)
 
     //艺术家的专辑列表
-    val albumList = _dataSourceManager.selectAlbumListByArtistId(artistId).distinctUntilChanged()
+    val albumList = dataSourceManager.selectAlbumListByArtistId(artistId).distinctUntilChanged()
         .cachedIn(viewModelScope)
 
     init {

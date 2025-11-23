@@ -27,7 +27,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
-import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
@@ -47,17 +46,17 @@ class AddPlaylistBottomData() {
     var ifShow: Boolean by mutableStateOf(false)
     var onClose: (suspend (Boolean) -> Unit)? = null
     var onItemClick: (suspend (Boolean) -> Unit)? = null
-    var musicInfoList: List<XyMusic> by mutableStateOf(emptyList())
+    var musicIdList: List<String> by mutableStateOf(emptyList())
 
     constructor(
         ifShow: Boolean = false,
         onClose: (suspend (Boolean) -> Unit)? = null,
         onItemClick: (suspend (Boolean) -> Unit)? = null,
-        musicInfoList: List<XyMusic>
+        musicInfoList: List<String>
     ) : this() {
         this.ifShow = ifShow
         this.onClose = onClose
-        this.musicInfoList = musicInfoList
+        this.musicIdList = musicInfoList
         this.onItemClick = onItemClick
     }
 
@@ -67,7 +66,7 @@ class AddPlaylistBottomData() {
     fun thisCopyData(data: AddPlaylistBottomData) {
         this.ifShow = data.ifShow
         this.onClose = data.onClose
-        this.musicInfoList = data.musicInfoList
+        this.musicIdList = data.musicIdList
         this.onItemClick = data.onItemClick
     }
 
@@ -76,7 +75,7 @@ class AddPlaylistBottomData() {
      */
     fun dismiss() {
         this.ifShow = false
-        this.musicInfoList = emptyList()
+        this.musicIdList = emptyList()
         onClose = null
         onItemClick = null
     }
@@ -169,13 +168,12 @@ fun AddPlaylistBottomComponent(
 //                    brush = null,
                     backgroundColor = Color.Transparent,
                     onClick = {
-                        if (playlistObject.musicInfoList.isNotEmpty())
+                        if (playlistObject.musicIdList.isNotEmpty())
                             coroutineScope.launch {
                                 sheetState.hide()
                                 playlistBottomViewModel.dataSourceManager.saveMusicPlaylist(
                                     playlistId = item.itemId,
-                                    musicIds = playlistObject.musicInfoList.map { it.itemId },
-                                    pic = playlistObject.musicInfoList[0].pic,
+                                    musicIds = playlistObject.musicIdList,
                                 )
                                 playlistObject.onClose?.invoke(false)
                                 playlistObject.onItemClick?.invoke(false)

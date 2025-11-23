@@ -27,6 +27,7 @@ import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.SettingsConfig
 import cn.xybbz.config.alarm.AlarmConfig
+import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.update.ApkUpdateManager
 import cn.xybbz.entity.data.PlayerTypeData
@@ -58,6 +59,7 @@ class MainViewModel @Inject constructor(
     private val cacheController: CacheController,
     private val alarmConfig: AlarmConfig,
     private val apkUpdateManager: ApkUpdateManager,
+    private val favoriteRepository: FavoriteRepository,
 ) : ViewModel() {
 
     val dataSourceManager = _dataSourceManager
@@ -172,7 +174,7 @@ class MainViewModel @Inject constructor(
                     type = MusicTypeEnum.MUSIC,
                     itemId = it,
                     musicController = musicController,
-                    ifFavorite = musicController.musicInfo?.ifFavoriteStatus == true
+                    ifFavorite = it in favoriteRepository.favoriteSet.value
                 )
             }
         }

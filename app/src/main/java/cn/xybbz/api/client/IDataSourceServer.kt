@@ -16,6 +16,7 @@ import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.genre.XyGenre
+import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -71,7 +72,7 @@ interface IDataSourceServer {
      */
     fun selectMusicFlowList(
         sortByFlow: StateFlow<Sort>
-    ): Flow<PagingData<XyMusic>>
+    ): Flow<PagingData<HomeMusic>>
 
     /**
      * 获得艺术家
@@ -205,8 +206,7 @@ interface IDataSourceServer {
      */
     suspend fun saveMusicPlaylist(
         playlistId: String,
-        musicIds: List<String>,
-        pic: String? = ""
+        musicIds: List<String>
     ): Boolean
 
     /**

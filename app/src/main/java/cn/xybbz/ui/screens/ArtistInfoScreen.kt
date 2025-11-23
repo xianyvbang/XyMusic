@@ -74,6 +74,7 @@ import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.VerticalGridListComponent
+import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
@@ -105,13 +106,14 @@ fun ArtistInfoScreen(
         artistInfoViewModel.musicList.collectAsLazyPagingItems()
     val albumPageList =
         artistInfoViewModel.albumList.collectAsLazyPagingItems()
+    val favoriteSet by artistInfoViewModel.favoriteRepository.favoriteSet.collectAsState()
+
     val coroutineScope = rememberCoroutineScope()
     val navController = LocalNavController.current
     val lazyListState1 = rememberLazyListState()
     val lazyListState = rememberLazyListState()
     val lazyGridState = rememberLazyGridState()
     val parentState = rememberLazyListState()
-    val favoriteList by artistInfoViewModel.favoriteRepository.favoriteMap.collectAsState()
 
     //渐变高度占图片高度的比例
     val gradientHeight = 0.4f
@@ -440,22 +442,24 @@ fun ArtistInfoScreen(
                                             ) { index ->
                                                 list[index]?.let { music ->
                                                     MusicItemComponent(
-                                                        onMusicData = { music },
+                                                        itemId = music.itemId,
+                                                        name = music.name,
+                                                        album = music.album,
+                                                        artists = music.artists,
+                                                        pic = music.pic,
+                                                        codec = music.codec,
+                                                        bitRate = music.bitRate,
                                                         onIfFavorite = {
-                                                            if (favoriteList.containsKey(music.itemId)) {
-                                                                favoriteList.getOrDefault(
-                                                                    music.itemId,
-                                                                    false
-                                                                )
-                                                            } else {
-                                                                music.ifFavoriteStatus
-                                                            }
+                                                            music.itemId in favoriteSet
                                                         },
                                                         textColor = if (artistInfoViewModel.musicController.musicInfo?.itemId == music.itemId)
                                                             MaterialTheme.colorScheme.primary
                                                         else
                                                             MaterialTheme.colorScheme.onSurface,
                                                         backgroundColor = Color.Transparent,
+                                                        trailingOnClick = {
+                                                            music.show()
+                                                        },
                                                         onMusicPlay = {
                                                             coroutineScope.launch {
                                                                 artistInfoViewModel.musicPlayContext.artist(

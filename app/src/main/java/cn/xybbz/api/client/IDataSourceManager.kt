@@ -40,6 +40,7 @@ import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.genre.XyGenre
+import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
@@ -329,7 +330,7 @@ class IDataSourceManager(
      */
     override fun selectMusicFlowList(
         sortByFlow: StateFlow<Sort>
-    ): Flow<PagingData<XyMusic>> {
+    ): Flow<PagingData<HomeMusic>> {
         return dataSourceServer.selectMusicFlowList(sortByFlow)
     }
 
@@ -642,8 +643,7 @@ class IDataSourceManager(
      */
     override suspend fun saveMusicPlaylist(
         playlistId: String,
-        musicIds: List<String>,
-        pic: String?
+        musicIds: List<String>
     ): Boolean {
         return OperationTipUtils.operationTipNotToBlock(
             loadingMessage = R.string.adding_music_to_playlist,
@@ -651,7 +651,7 @@ class IDataSourceManager(
             errorMessage = R.string.add_music_to_playlist_failed
         ) {
             try {
-                dataSourceServer.saveMusicPlaylist(playlistId, musicIds, pic)
+                dataSourceServer.saveMusicPlaylist(playlistId, musicIds)
             } catch (e: Exception) {
                 Log.e(Constants.LOG_ERROR_PREFIX, "保存自建歌单中的音乐失败", e)
                 false
@@ -1004,7 +1004,6 @@ class IDataSourceManager(
         if (favorite != ifFavorite)
             when (type) {
                 MusicTypeEnum.MUSIC -> {
-                    favoriteRepository.toggleBoolean(itemId, favorite)
                     if (musicController?.musicInfo?.itemId == itemId) {
                         musicController.updateCurrentFavorite(favorite)
                     }

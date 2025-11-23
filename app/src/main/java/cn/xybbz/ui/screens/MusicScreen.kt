@@ -37,6 +37,7 @@ import cn.xybbz.ui.components.SelectSortBottomSheetComponent
 import cn.xybbz.ui.components.SwipeRefreshListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.XySelectAllComponent
+import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.xy.XyColumnScreen
@@ -51,7 +52,7 @@ fun MusicScreen(
     val coroutineScope = rememberCoroutineScope()
     val mainViewModel = LocalMainViewModel.current
     val homeMusicPager = musicViewModel.homeMusicPager.collectAsLazyPagingItems()
-    val favoriteList by musicViewModel.favoriteRepository.favoriteMap.collectAsState()
+    val favoriteSet by musicViewModel.favoriteRepository.favoriteSet.collectAsState()
     val sortBy by musicViewModel.sortBy.collectAsState()
 
     XyColumnScreen(
@@ -74,7 +75,9 @@ fun MusicScreen(
                 }
             },
             onSelectAll = {
-                musicViewModel.selectControl.toggleSelectionAll(homeMusicPager.itemSnapshotList.items)
+                coroutineScope.launch {
+                    musicViewModel.getMusicInfoByIds(homeMusicPager.itemSnapshotList.items.map { it.musicId })
+                }
             },
             selectControl = musicViewModel.selectControl,
             sortOrFilterContent = {
@@ -120,20 +123,20 @@ fun MusicScreen(
         ) { page ->
             items(
                 page.itemCount,
-                page.itemKey { it.itemId },
+                page.itemKey { it.musicId },
                 page.itemContentType { MusicTypeEnum.MUSIC.code }) { index ->
                 // 加上remember就可以防止重组
-                page[index]?.let { music ->
+                page[index]?.let { musicParent ->
                     MusicItemComponent(
-                        onMusicData = {
-                            music
-                        },
+                        itemId = musicParent.musicId,
+                        name = musicParent.name,
+                        album = musicParent.album,
+                        artists = musicParent.artists,
+                        pic = musicParent.pic,
+                        codec = musicParent.codec,
+                        bitRate = musicParent.bitRate,
                         onIfFavorite = {
-                            if (favoriteList.containsKey(music.itemId)) {
-                                favoriteList.getOrDefault(music.itemId, false)
-                            } else {
-                                music.ifFavoriteStatus
-                            }
+                            musicParent.musicId in favoriteSet
                         },
                         onMusicPlay = {
                             musicViewModel.musicPlayContext.music(
@@ -143,21 +146,26 @@ fun MusicScreen(
                             )
                         },
                         backgroundColor = Color.Transparent,
-                        textColor = if (musicViewModel.musicController.musicInfo?.itemId == music.itemId)
+                        textColor = if (musicViewModel.musicController.musicInfo?.itemId == musicParent.musicId)
                             MaterialTheme.colorScheme.primary
                         else
                             MaterialTheme.colorScheme.onSurface,
                         ifSelect = musicViewModel.selectControl.ifOpenSelect,
                         ifSelectCheckBox = {
-                            musicViewModel.selectControl.selectMusicDataList.any { it.itemId == music.itemId }
+                            musicViewModel.selectControl.selectMusicIdList.any { it == musicParent.musicId }
                         },
-                        trailingOnClick = { select ->
+                        trailingOnSelectClick = { select ->
                             Log.i("======", "数据是否一起变化${select}")
-                            musicViewModel.selectControl.toggleSelection(music, onIsSelectAll = {
-                                musicViewModel.selectControl.selectMusicDataList.containsAll(
-                                    homeMusicPager.itemSnapshotList.items
+                            musicViewModel.selectControl.toggleSelection(musicParent.musicId, onIsSelectAll = {
+                                musicViewModel.selectControl.selectMusicIdList.containsAll(
+                                    homeMusicPager.itemSnapshotList.items.map { it.musicId }
                                 )
                             })
+                        },
+                        trailingOnClick = {
+                            coroutineScope.launch {
+                                musicViewModel.getMusicInfoById(musicParent.musicId)?.show()
+                            }
                         }
                     )
                 }

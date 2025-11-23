@@ -9,9 +9,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -30,12 +27,13 @@ import com.google.common.collect.Multimaps.index
  * @param [index] 索引
  * @param [onMusicPlay] 播放方法
  */
+
 @Composable
 fun MusicItemComponent(
     modifier: Modifier = Modifier,
-    onMusicData: () -> XyMusic,
+    music: XyMusic,
     index: Int? = null,
-    enabledPic:Boolean = true,
+    enabledPic: Boolean = true,
     onIfFavorite: () -> Boolean,
     subordination: String? = null,
     backgroundColor: Color = Color.Transparent,
@@ -44,22 +42,68 @@ fun MusicItemComponent(
     onMusicPlay: (OnMusicPlayParameter) -> Unit,
     ifShowTrailingContent: Boolean = true,
     ifSelect: Boolean = false,
-    trailingOnClick: ((Boolean) -> Unit)? = null,
+    trailingOnSelectClick: ((Boolean) -> Unit)? = null,
+    trailingOnClick: () -> Unit,
+    ifSelectCheckBox: (() -> Boolean)? = null
+) {
+    MusicItemComponent(
+        modifier = modifier,
+        index = index,
+        enabledPic = enabledPic,
+        itemId = music.itemId,
+        name = music.name,
+        album = music.album,
+        artists = music.artists,
+        pic = music.pic,
+        codec = music.codec,
+        bitRate = music.bitRate,
+        subordination = subordination,
+        onIfFavorite = onIfFavorite,
+        textColor = textColor,
+        backgroundColor = backgroundColor,
+        brush = brush,
+        ifSelect = ifSelect,
+        trailingOnSelectClick = trailingOnSelectClick,
+        trailingOnClick = trailingOnClick,
+        ifSelectCheckBox = ifSelectCheckBox,
+        onMusicPlay = onMusicPlay,
+        ifShowTrailingContent = ifShowTrailingContent
+    )
+}
+
+@Composable
+fun MusicItemComponent(
+    modifier: Modifier = Modifier,
+    itemId: String,
+    name: String,
+    album: String = "",
+    artists: String? = "",
+    pic: String? = "",
+    codec: String? = "",
+    bitRate: Int? = 0,
+    index: Int? = null,
+    enabledPic: Boolean = true,
+    onIfFavorite: () -> Boolean,
+    subordination: String? = null,
+    backgroundColor: Color = Color.Transparent,
+    brush: Brush? = null,
+    textColor: Color = MaterialTheme.colorScheme.onSurface,
+    onMusicPlay: (OnMusicPlayParameter) -> Unit,
+    ifShowTrailingContent: Boolean = true,
+    ifSelect: Boolean = false,
+    trailingOnSelectClick: ((Boolean) -> Unit)? = null,
+    trailingOnClick: () -> Unit,
     ifSelectCheckBox: (() -> Boolean)? = null
 ) {
 
-    val xyMusicData by remember {
-        mutableStateOf(onMusicData())
-    }
-
     ItemTrailingContent(
-        name = xyMusicData.name,
-        subordination = subordination ?: (xyMusicData.artists ?: ""),
+        name = name,
+        subordination = subordination ?: (artists ?: ""),
         favoriteState = onIfFavorite(),
-        imgUrl = xyMusicData.pic,
+        imgUrl = pic,
         index = index,
-        media = getMusicMedia(xyMusicData),
-        enabledPic= enabledPic,
+        media = getMusicMedia(codec, bitRate),
+        enabledPic = enabledPic,
         backgroundColor = backgroundColor,
         brush = brush,
         textColor = textColor,
@@ -68,12 +112,12 @@ fun MusicItemComponent(
             if (!ifSelect)
                 onMusicPlay.invoke(
                     OnMusicPlayParameter(
-                        musicId = xyMusicData.itemId,
-                        albumId = xyMusicData.album
+                        musicId = itemId,
+                        albumId = album
                     )
                 )
             else {
-                trailingOnClick?.invoke(ifSelectCheckBox?.invoke() == true)
+                trailingOnSelectClick?.invoke(ifSelectCheckBox?.invoke() == true)
             }
         },
         trailingContent = {
@@ -82,23 +126,23 @@ fun MusicItemComponent(
                     IconButton(
                         modifier = Modifier.offset(x = (10).dp),
                         onClick = {
-                            xyMusicData.show()
+                            trailingOnClick?.invoke()
                         },
                     ) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
-                            contentDescription = "${xyMusicData.name}${stringResource(R.string.other_operations_button_suffix)}"
+                            contentDescription = "${name}${stringResource(R.string.other_operations_button_suffix)}"
                         )
                     }
                 else {
                     IconButton(
                         modifier = Modifier.offset(x = (10).dp),
                         onClick = {
-                            trailingOnClick?.invoke(ifSelectCheckBox?.invoke() == true)
+                            trailingOnSelectClick?.invoke(ifSelectCheckBox?.invoke() == true)
                         },
                     ) {
                         RadioButton(selected = ifSelectCheckBox?.invoke() == true, onClick = {
-                            trailingOnClick?.invoke(ifSelectCheckBox?.invoke() == true)
+                            trailingOnSelectClick?.invoke(ifSelectCheckBox?.invoke() == true)
                         })
                     }
 
@@ -119,20 +163,27 @@ fun MusicItemComponent(
 @Composable
 fun MusicItemNotClickComponent(
     modifier: Modifier = Modifier,
-    onMusicData: () -> XyMusic,
+    music: XyMusic,
     subordination: String? = null,
     backgroundColor: Color = MaterialTheme.colorScheme.background,
     brush: Brush? = null
 ) {
 
     MusicItemComponent(
-        onMusicData = onMusicData,
+        itemId = music.itemId,
+        name = music.name,
+        album = music.album,
+        artists = music.artists,
+        pic = music.pic,
+        codec = music.codec,
+        bitRate = music.bitRate,
         subordination = subordination,
         backgroundColor = backgroundColor,
         brush = brush,
         modifier = modifier,
         onIfFavorite = { false },
         ifShowTrailingContent = false,
+        trailingOnClick = {},
         onMusicPlay = {},
     )
 
@@ -149,7 +200,7 @@ fun MusicItemNotClickComponent(
 @Composable
 fun MusicItemIndexComponent(
     modifier: Modifier = Modifier,
-    onMusicData: () -> XyMusic,
+    music: XyMusic,
     onIfFavorite: () -> Boolean,
     subordination: String? = null,
     index: Int,
@@ -157,12 +208,19 @@ fun MusicItemIndexComponent(
     backgroundColor: Color = MaterialTheme.colorScheme.background,
     onMusicPlay: (OnMusicPlayParameter) -> Unit,
     ifSelect: Boolean = false,
-    trailingOnClick: ((Boolean) -> Unit)? = null,
+    trailingOnSelectClick: (Boolean) -> Unit,
+    trailingOnClick: () -> Unit,
     ifSelectCheckBox: (() -> Boolean)? = null
 ) {
 
     MusicItemComponent(
-        onMusicData = onMusicData,
+        itemId = music.itemId,
+        name = music.name,
+        album = music.album,
+        artists = music.artists,
+        pic = music.pic,
+        codec = music.codec,
+        bitRate = music.bitRate,
         index = index,
         subordination = subordination,
         onIfFavorite = onIfFavorite,
@@ -170,6 +228,7 @@ fun MusicItemIndexComponent(
         modifier = modifier,
         backgroundColor = backgroundColor,
         ifSelect = ifSelect,
+        trailingOnSelectClick = trailingOnSelectClick,
         trailingOnClick = trailingOnClick,
         ifSelectCheckBox = ifSelectCheckBox,
         onMusicPlay = onMusicPlay,
@@ -179,6 +238,6 @@ fun MusicItemIndexComponent(
 /**
  * 获得音乐的media信息字符串
  */
-fun getMusicMedia(music: XyMusic): String {
-    return "${music.codec} ${music.bitRate?.div(1000)}k"
+fun getMusicMedia(codec: String? = "", bitRate: Int? = 0): String {
+    return "$codec ${bitRate?.div(1000)}k"
 }

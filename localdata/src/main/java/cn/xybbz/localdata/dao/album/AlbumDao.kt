@@ -179,13 +179,13 @@ interface AlbumDao {
     @Update
     suspend fun update(data: XyAlbum)
 
-    @Query("update xy_album set name = :name where itemId = :itemId")
+    @Query("update xy_album set name = :name where itemId = :itemId and connectionId = (select connectionId from xy_settings)")
     suspend fun updateName(itemId: String, name: String)
 
-    @Query("update xy_album set pic = :pic where itemId = :itemId")
-    suspend fun updatePic(itemId: String, pic: String)
+    @Query("update xy_album set pic = (select pic from xy_music where itemId = :itemId and connectionId = (select connectionId from xy_settings)) where itemId = :itemId and connectionId = (select connectionId from xy_settings)")
+    suspend fun updatePic(itemId: String)
 
-    @Query("update xy_album set pic = :pic,musicCount = (select count(musicId) from playlistmusic where playlistId = :itemId) where itemId = :itemId")
+    @Query("update xy_album set pic = :pic,musicCount = (select count(musicId) from playlistmusic where playlistId = :itemId) where itemId = :itemId and connectionId = (select connectionId from xy_settings)")
     suspend fun updatePicAndCount(itemId: String, pic: String)
 
     /**
