@@ -12,6 +12,7 @@ import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.module.DatabaseModule_DbFactory.db
+import cn.xybbz.entity.data.SelectControl
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -36,6 +37,7 @@ class ArtistInfoViewModel @AssistedInject constructor(
     val favoriteRepository: FavoriteRepository,
     val backgroundConfig: BackgroundConfig,
     val db: DatabaseClient,
+    val selectControl: SelectControl
 ) : ViewModel() {
 
     @AssistedFactory

@@ -6,9 +6,13 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -25,8 +29,12 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.PlaylistAddCheck
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
+import androidx.compose.material.icons.rounded.PauseCircle
+import androidx.compose.material.icons.rounded.PlayCircle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -65,9 +73,11 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
-import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.enums.TabListEnum
 import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.entity.data.SelectControl
+import cn.xybbz.entity.data.music.MusicPlayContext
+import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.RouterConstants
 import cn.xybbz.ui.components.LazyListComponent
@@ -75,11 +85,14 @@ import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.VerticalGridListComponent
+import cn.xybbz.ui.components.XySelectAllComponent
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
+import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyImage
+import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.ArtistInfoViewModel
 import kotlinx.coroutines.launch
 import kotlin.math.min
@@ -437,32 +450,14 @@ fun ArtistInfoScreen(
                                             collectAsLazyPagingItems = musicPage
                                         ) { list ->
                                             item {
-                                                MusicListOperation(
-                                                    onAlbumPlayerHistoryProgress = { albumInfoViewModel.albumPlayerHistoryProgress },
-                                                    onPlayAlbumId = {
-                                                        albumInfoViewModel.musicController.musicInfo?.album
-                                                            ?: ""
-                                                    },
-                                                    onMusicAlbum = { albumInfoViewModel.xyAlbumInfoData },
-                                                    musicPlayContext = albumInfoViewModel.musicPlayContext,
-                                                    onPlayState = { albumInfoViewModel.musicController.state },
-                                                    onRemovePlayerHistory = {
-                                                        albumInfoViewModel.removeAlbumPlayerHistoryProgress(
-                                                            it
-                                                        )
-                                                    },
-                                                    onMusicPlanOrPause = {
-                                                        if (albumInfoViewModel.musicController.state != PlayStateEnum.Pause) {
-                                                            albumInfoViewModel.musicController.pause()
-                                                        } else {
-                                                            albumInfoViewModel.musicController.resume()
-                                                        }
-                                                    },
-                                                    albumInfoViewModel = albumInfoViewModel,
+                                                ArtistMusicListOperation(
+                                                    artistId = artistId(),
+                                                    musicPlayContext = artistInfoViewModel.musicPlayContext,
+                                                    selectControl = artistInfoViewModel.selectControl,
                                                     onSelectAll = {
-                                                        albumInfoViewModel.selectControl.toggleSelectionAll(onMusicListPage().itemSnapshotList.items.map { it.itemId })
+                                                        artistInfoViewModel.selectControl.toggleSelectionAll(musicPage.itemSnapshotList.items.map { it.itemId })
                                                     },
-                                                    sortContent = sortContent
+                                                    sortContent = {}
                                                 )
                                             }
                                             items(
@@ -500,6 +495,18 @@ fun ArtistInfoScreen(
                                                                     artistId = artistId()
                                                                 )
                                                             }
+                                                        },
+                                                        ifSelect = artistInfoViewModel.selectControl.ifOpenSelect,
+                                                        ifSelectCheckBox = { artistInfoViewModel.selectControl.selectMusicIdList.any { it == music.itemId } },
+                                                        trailingOnSelectClick = { select ->
+                                                            artistInfoViewModel.selectControl.toggleSelection(
+                                                                music.itemId,
+                                                                onIsSelectAll = {
+                                                                    artistInfoViewModel.selectControl.selectMusicIdList.containsAll(
+                                                                        list.itemSnapshotList.items.map { it.itemId }
+                                                                    )
+                                                                }
+                                                            )
                                                         }
                                                     )
                                                 }
@@ -542,13 +549,90 @@ fun ArtistInfoScreen(
                     }
                 }
             }
-
-
         }
-
-
     }
-
-
 }
 
+
+/**
+ * 音乐列表操作栏
+ */
+@Composable
+private fun ArtistMusicListOperation(
+    artistId: String,
+    musicPlayContext: MusicPlayContext,
+    selectControl: SelectControl,
+    onSelectAll: () -> Unit,
+    sortContent: @Composable () -> Unit
+) {
+    XyRow(
+        modifier = Modifier
+            .debounceClickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
+                if (selectControl.ifOpenSelect) {
+                    onSelectAll()
+                } else {
+                    musicPlayContext.artist(
+                        OnMusicPlayParameter(
+                            musicId = "",
+                            artistId = artistId
+                        ),
+                        index = 0,
+                        artistId = artistId
+                    )
+                }
+            }
+            .height(XyTheme.dimens.itemHeight),
+        paddingValues = PaddingValues(
+            horizontal = XyTheme.dimens.outerHorizontalPadding
+        )
+    ) {
+
+
+        if (selectControl.ifOpenSelect) {
+            XySelectAllComponent(
+                isSelectAll = selectControl.isSelectAll,
+                onSelectAll = onSelectAll
+            )
+            IconButton(onClick = {
+                selectControl.dismiss()
+            }) {
+                Icon(
+                    imageVector = Icons.Rounded.Close,
+                    contentDescription = stringResource(R.string.close_selection)
+                )
+            }
+        } else {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.PlayCircle,
+                    contentDescription = stringResource(R.string.start_playback)
+                )
+                Text(text = stringResource(R.string.start_playback))
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ) {
+                sortContent()
+
+                IconButton(onClick = {
+                    selectControl.show(
+                        true
+                    )
+                }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.PlaylistAddCheck,
+                        contentDescription = stringResource(R.string.select)
+                    )
+                }
+            }
+        }
+
+    }
+}
