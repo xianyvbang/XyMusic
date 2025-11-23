@@ -670,7 +670,7 @@ interface XyMusicDao {
         itemId: String
     ): XyMusic?
 
-    @Query("select * from xy_music where itemId in (:itemIds) and connectionId = (select connectionId from xy_settings)limit 1")
+    @Query("select * from xy_music where itemId in (:itemIds) and connectionId = (select connectionId from xy_settings)")
     suspend fun selectByIds(
         itemIds: List<String>
     ): List<XyMusic>

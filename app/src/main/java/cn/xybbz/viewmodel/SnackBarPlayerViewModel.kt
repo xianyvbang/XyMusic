@@ -49,7 +49,8 @@ class SnackBarPlayerViewModel @Inject constructor(
         viewModelScope.launch {
             val downloadTypes =
                 dataSourceManager.dataSourceType?.getDownloadType() ?: DownloadTypes.APK
-            val musicList = db.musicDao.selectByIds(selectControl.selectMusicIdList.toList())
+            val itemIds = selectControl.selectMusicIdList.toList()
+            val musicList = db.musicDao.selectByIds(itemIds)
             val requests = musicList.map { musicData ->
                 DownloadRequest(
                     url = musicData.downloadUrl,

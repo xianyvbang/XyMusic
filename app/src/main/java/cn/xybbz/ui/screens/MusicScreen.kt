@@ -76,7 +76,7 @@ fun MusicScreen(
             },
             onSelectAll = {
                 coroutineScope.launch {
-                    musicViewModel.getMusicInfoByIds(homeMusicPager.itemSnapshotList.items.map { it.musicId })
+                    musicViewModel.selectControl.toggleSelectionAll(homeMusicPager.itemSnapshotList.items.map { it.musicId })
                 }
             },
             selectControl = musicViewModel.selectControl,
@@ -152,15 +152,17 @@ fun MusicScreen(
                             MaterialTheme.colorScheme.onSurface,
                         ifSelect = musicViewModel.selectControl.ifOpenSelect,
                         ifSelectCheckBox = {
-                            musicViewModel.selectControl.selectMusicIdList.any { it == musicParent.musicId }
+                            musicParent.musicId in musicViewModel.selectControl.selectMusicIdList
                         },
                         trailingOnSelectClick = { select ->
                             Log.i("======", "数据是否一起变化${select}")
-                            musicViewModel.selectControl.toggleSelection(musicParent.musicId, onIsSelectAll = {
-                                musicViewModel.selectControl.selectMusicIdList.containsAll(
-                                    homeMusicPager.itemSnapshotList.items.map { it.musicId }
-                                )
-                            })
+                            musicViewModel.selectControl.toggleSelection(
+                                musicParent.musicId,
+                                onIsSelectAll = {
+                                    musicViewModel.selectControl.selectMusicIdList.containsAll(
+                                        homeMusicPager.itemSnapshotList.items.map { it.musicId }
+                                    )
+                                })
                         },
                         trailingOnClick = {
                             coroutineScope.launch {
