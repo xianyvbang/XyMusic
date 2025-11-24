@@ -40,7 +40,7 @@ fun SettingItemComponent(
     modifier: Modifier = Modifier,
     info: String? = null,
     bottomInfo: String? = null,
-    imageVector: ImageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+    imageVector: ImageVector? = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
     maxLines: Int = 1,
     ifOpenBadge: Boolean = false,
     enabled: Boolean = true,
@@ -93,42 +93,44 @@ fun SettingItemComponent(
                         maxLines = maxLines
                     )
                 }
-                Spacer(modifier = Modifier.width(5.dp))
-                IconButton(onClick = composeClick {
-                    if (onRouter != null)
-                        onRouter()
-                    else
-                        AlertDialogObject(
-                            title = title,
-                            content = if (content != null) {
-                                { content.invoke() }
-                            } else null,
-                            onConfirmation = {
-                                coroutineScope.launch {
-                                    onConfirmation?.invoke()
-                                }.invokeOnCompletion {
+                imageVector?.let {
+                    Spacer(modifier = Modifier.width(5.dp))
+                    IconButton(onClick = composeClick {
+                        if (onRouter != null)
+                            onRouter()
+                        else
+                            AlertDialogObject(
+                                title = title,
+                                content = if (content != null) {
+                                    { content.invoke() }
+                                } else null,
+                                onConfirmation = {
+                                    coroutineScope.launch {
+                                        onConfirmation?.invoke()
+                                    }.invokeOnCompletion {
 
-                                }
+                                    }
 
-                            }, onDismissRequest = {
-                                onDismissRequest?.invoke()
-                            }).show()
-                }) {
-                    BadgedBox(
-                        badge = {
-                            if (ifOpenBadge)
-                                Badge()
-                        }
-                    ) {
-                        Icon(
-                            imageVector = imageVector,
-                            contentDescription = stringResource(
-                                R.string.enter_settings,
-                                stringResource(title)
+                                }, onDismissRequest = {
+                                    onDismissRequest?.invoke()
+                                }).show()
+                    }) {
+                        BadgedBox(
+                            badge = {
+                                if (ifOpenBadge)
+                                    Badge()
+                            }
+                        ) {
+                            Icon(
+                                imageVector = imageVector,
+                                contentDescription = stringResource(
+                                    R.string.enter_settings,
+                                    stringResource(title)
+                                )
                             )
-                        )
-                    }
+                        }
 
+                    }
                 }
             }
         })

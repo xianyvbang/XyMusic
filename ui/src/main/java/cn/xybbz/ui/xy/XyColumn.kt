@@ -68,6 +68,7 @@ fun XyColumnButton(
             horizontal = XyTheme.dimens.outerHorizontalPadding,
             vertical = XyTheme.dimens.outerVerticalPadding
         ),
+        horizontalAlignment= Alignment.Start,
         content = content
     )
 }

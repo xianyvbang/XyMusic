@@ -2,6 +2,8 @@ package cn.xybbz.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -39,6 +41,8 @@ fun XySelectAllComponent(
                 R.string.select_all
             ), fontWeight = FontWeight.W600
         )
+
+        Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
 
     }
 }
