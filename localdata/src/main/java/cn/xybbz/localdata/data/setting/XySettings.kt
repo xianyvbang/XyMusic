@@ -60,5 +60,14 @@ data class XySettings(
     /**
      * 最新版本下载地址
      */
-    val lasestApkUrl:String = ""
+    val lasestApkUrl:String = "",
+
+    /**
+     * 最大同时下载数量
+     */
+    val maxConcurrentDownloads:Int = 3,
+    /**
+     * 是否仅连接Wifi下载
+     */
+    val ifOnlyWifiDownload: Boolean = false
 )

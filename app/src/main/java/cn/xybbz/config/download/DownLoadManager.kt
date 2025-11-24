@@ -3,6 +3,7 @@ package cn.xybbz.config.download
 import android.content.Context
 import cn.xybbz.config.download.core.DownloadDispatcherImpl
 import cn.xybbz.config.download.core.DownloadImpl
+import cn.xybbz.config.download.core.DownloaderConfig
 import cn.xybbz.config.download.core.IDownloader
 import cn.xybbz.localdata.config.DatabaseClient
 
@@ -15,5 +16,9 @@ class DownLoadManager(
     applicationContext,
     db
 ) {
+
+    fun getConfig(): DownloaderConfig{
+        return downloadDispatcher.config
+    }
 
 }

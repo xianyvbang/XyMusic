@@ -155,7 +155,7 @@ fun SettingScreen(
 
                     SettingItemComponent(
                         title = R.string.cache_location,
-                        info = settingsViewModel.settingsConfig.cacheFilePath,
+                        bottomInfo = settingsViewModel.settingsConfig.cacheFilePath,
                         maxLines = Int.MAX_VALUE
                     ) {
                         if (settingsViewModel.settingsConfig.cacheFilePath.isNotBlank()) {
@@ -216,7 +216,8 @@ fun SettingScreen(
             item {
                 SettingRoundedSurfaceColumn {
                     SettingItemComponent(
-                        title = R.string.download_management,
+                        title = R.string.download_max_list,
+                        info = settingsViewModel.settingDataNow.maxConcurrentDownloads.toString(),
                         imageVector = Icons.Rounded.KeyboardArrowDown
                     ) {
                         //进行最大下载数量设置
@@ -224,7 +225,7 @@ fun SettingScreen(
 
                     MusicSettingSwitchItemComponent(
                         title = stringResource(R.string.only_wifi),
-                        ifChecked = settingsViewModel.settingDataNow.isLocal
+                        ifChecked = settingsViewModel.settingDataNow.ifOnlyWifiDownload
                     ) { bol ->
                         coroutineScope.launch {
 
@@ -233,7 +234,7 @@ fun SettingScreen(
 
                     SettingItemComponent(
                         title = R.string.song_cache_location,
-                        info = settingsViewModel.settingsConfig.cacheFilePath,
+                        bottomInfo = settingsViewModel.downLoadManager.getConfig().finalDirectory,
                         maxLines = Int.MAX_VALUE
                     ) {
                         if (settingsViewModel.settingsConfig.cacheFilePath.isNotBlank()) {

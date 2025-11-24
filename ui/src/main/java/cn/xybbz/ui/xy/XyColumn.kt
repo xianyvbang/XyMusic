@@ -51,6 +51,7 @@ fun XyColumn(
 @Composable
 fun XyColumnButton(
     modifier: Modifier = Modifier,
+    backgroundColor: Color = Color.Transparent,
     enabled: Boolean = true,
     onClick: () -> Unit,
     content: @Composable ColumnScope.() -> Unit
@@ -62,6 +63,7 @@ fun XyColumnButton(
             .debounceClickable (enabled = enabled){
                 onClick()
             },
+        backgroundColor = backgroundColor,
         paddingValues = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding,
             vertical = XyTheme.dimens.outerVerticalPadding

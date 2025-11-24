@@ -120,7 +120,7 @@ fun MainScreen() {
             navController.navigate(RouterConstants.AlbumInfo(albumId, MusicDataTypeEnum.ALBUM))
         })
         AddPlaylistBottomComponent()
-        navController.currentSelectChange(mainViewModel.selectControl)
+        navController.CurrentSelectChange(mainViewModel.selectControl)
         Scaffold(
             snackbarHost = {
                 SnackBarHostUi()
@@ -167,7 +167,7 @@ private fun NavController.currentSnackBarHostScreen(): MutableState<Boolean> {
 }
 
 @Composable
-private fun NavController.currentSelectChange(selectControl: SelectControl) {
+private fun NavController.CurrentSelectChange(selectControl: SelectControl) {
     val coroutineScope = rememberCoroutineScope()
 
     var needDismiss by remember { mutableStateOf(false) }

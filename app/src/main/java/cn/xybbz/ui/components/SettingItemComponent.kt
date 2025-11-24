@@ -3,6 +3,7 @@ package cn.xybbz.ui.components
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -14,6 +15,7 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -22,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cn.xybbz.R
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
@@ -148,9 +151,7 @@ fun SettingParentItemComponent(
             onClick?.invoke()
         }
     ) {
-        XyRow(
-            modifier = modifier.height(XyTheme.dimens.itemHeight)
-        ) {
+        XyRow(paddingValues = PaddingValues(),modifier = Modifier.weight(1f),) {
             XyItemText(
                 text = title,
                 color = if (enabled) textColor else MaterialTheme.colorScheme.onSurfaceVariant
@@ -159,9 +160,11 @@ fun SettingParentItemComponent(
 
         }
         bottomInfo?.let {
-            XyItemText(
+            Text(
+                modifier = Modifier.weight(1f),
                 text = bottomInfo,
                 style = MaterialTheme.typography.bodySmall,
+                fontSize = 10.sp,
                 color = if (enabled) textColor else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

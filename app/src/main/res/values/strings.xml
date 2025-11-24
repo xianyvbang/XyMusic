@@ -220,7 +220,8 @@
     <string name="cache_location">缓存位置</string>
     <string name="song_cache_location">歌曲存储位置</string>
     <string name="connection_management">连接管理</string>
-    <string name="download_management">连接管理</string>
+    <string name="download_management">下载管理</string>
+    <string name="download_max_list">最大同时下载数量</string>
     <string name="more">更多</string>
 
     <string name="connection_address_cannot_be_empty">链接地址不能为空</string>
