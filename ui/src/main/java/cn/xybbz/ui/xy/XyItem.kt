@@ -351,6 +351,7 @@ fun XyItemTitlePadding(
 fun XyItemText(
     text: String,
     modifier: Modifier = Modifier,
+    style: TextStyle = MaterialTheme.typography.titleSmall,
     maxLines: Int = Int.MAX_VALUE,
     color: Color = MaterialTheme.colorScheme.onSurface
 ) {
@@ -358,7 +359,7 @@ fun XyItemText(
         modifier = Modifier
             .then(modifier),
         text = text,
-        style = MaterialTheme.typography.titleSmall,
+        style = style,
         color = color,
         maxLines = maxLines
     )

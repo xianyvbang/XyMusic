@@ -4,11 +4,13 @@ package cn.xybbz.ui.screens
 import android.content.ClipData
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -112,17 +114,7 @@ fun SettingScreen(
 
             }
             item {
-                RoundedSurfaceColumnPadding(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(0x4D503803),
-                            Color.Gray.copy(alpha = 0.1f)
-                        ), tileMode = TileMode.Repeated
-                    ),
-                    paddingValues = PaddingValues(
-                        horizontal = XyTheme.dimens.outerHorizontalPadding
-                    )
-                ) {
+                SettingRoundedSurfaceColumn {
 
                     MusicSettingSwitchItemComponent(
                         title = stringResource(R.string.prioritize_local_data),
@@ -162,7 +154,7 @@ fun SettingScreen(
                     }
 
                     SettingItemComponent(
-                        title = R.string.song_cache_location,
+                        title = R.string.cache_location,
                         info = settingsViewModel.settingsConfig.cacheFilePath,
                         maxLines = Int.MAX_VALUE
                     ) {
@@ -199,20 +191,66 @@ fun SettingScreen(
 
             }
             item {
-                RoundedSurfaceColumnPadding(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(0x4D503803),
-                            Color.Gray.copy(alpha = 0.1f)
-                        ), tileMode = TileMode.Repeated
-                    ),
-                    paddingValues = PaddingValues(
-                        horizontal = XyTheme.dimens.outerHorizontalPadding
-                    )
-                ) {
+                SettingRoundedSurfaceColumn {
                     SettingItemComponent(title = R.string.connection_management) {
                         navController.navigate(RouterConstants.ConnectionManagement)
                     }
+                }
+            }
+
+            item {
+                XyRow(
+                    paddingValues = PaddingValues(
+                        start = XyTheme.dimens.outerHorizontalPadding,
+                        end = XyTheme.dimens.outerHorizontalPadding,
+                        top = XyTheme.dimens.outerVerticalPadding
+                    ),
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    XyItemTitle(
+                        text = stringResource(R.string.download_management)
+                    )
+                }
+
+            }
+            item {
+                SettingRoundedSurfaceColumn {
+                    SettingItemComponent(
+                        title = R.string.download_management,
+                        imageVector = Icons.Rounded.KeyboardArrowDown
+                    ) {
+                        //进行最大下载数量设置
+                    }
+
+                    MusicSettingSwitchItemComponent(
+                        title = stringResource(R.string.only_wifi),
+                        ifChecked = settingsViewModel.settingDataNow.isLocal
+                    ) { bol ->
+                        coroutineScope.launch {
+
+                        }
+                    }
+
+                    SettingItemComponent(
+                        title = R.string.song_cache_location,
+                        info = settingsViewModel.settingsConfig.cacheFilePath,
+                        maxLines = Int.MAX_VALUE
+                    ) {
+                        if (settingsViewModel.settingsConfig.cacheFilePath.isNotBlank()) {
+                            val clipData =
+                                ClipData.newPlainText(
+                                    "label",
+                                    settingsViewModel.settingsConfig.cacheFilePath
+                                )
+                            coroutineScope.launch {
+                                clipboardManager.setClipEntry(ClipEntry(clipData))
+                            }.invokeOnCompletion {
+                                MessageUtils.sendPopTip(context.getString(R.string.copy_success))
+                            }
+                        }
+
+                    }
+
                 }
             }
 
@@ -232,17 +270,7 @@ fun SettingScreen(
 
             }
             item {
-                RoundedSurfaceColumnPadding(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(0x4D503803),
-                            Color.Gray.copy(alpha = 0.1f)
-                        ), tileMode = TileMode.Repeated
-                    ),
-                    paddingValues = PaddingValues(
-                        horizontal = XyTheme.dimens.outerHorizontalPadding
-                    )
-                ) {
+                SettingRoundedSurfaceColumn {
 
                     SettingItemComponent(title = R.string.storage_management) {
                         navController.navigate(RouterConstants.MemoryManagement)
@@ -266,4 +294,20 @@ fun SettingScreen(
         }
     }
 
+}
+
+@Composable
+fun SettingRoundedSurfaceColumn(content: @Composable ColumnScope.() -> Unit) {
+    RoundedSurfaceColumnPadding(
+        brush = Brush.horizontalGradient(
+            colors = listOf(
+                Color(0x4D503803),
+                Color.Gray.copy(alpha = 0.1f)
+            ), tileMode = TileMode.Repeated
+        ),
+        paddingValues = PaddingValues(
+            horizontal = XyTheme.dimens.outerHorizontalPadding
+        ),
+        content = content
+    )
 }

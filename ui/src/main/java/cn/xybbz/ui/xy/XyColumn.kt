@@ -49,6 +49,28 @@ fun XyColumn(
 }
 
 @Composable
+fun XyColumnButton(
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    XyColumn (
+        modifier = Modifier
+            .then(modifier)
+            .fillMaxWidth()
+            .debounceClickable (enabled = enabled){
+                onClick()
+            },
+        paddingValues = PaddingValues(
+            horizontal = XyTheme.dimens.outerHorizontalPadding,
+            vertical = XyTheme.dimens.outerVerticalPadding
+        ),
+        content = content
+    )
+}
+
+@Composable
 fun XyColumnNotHorizontalPadding(
     modifier: Modifier = Modifier,
     backgroundColor: Color = MaterialTheme.colorScheme.background,

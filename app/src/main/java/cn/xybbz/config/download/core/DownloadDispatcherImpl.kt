@@ -54,7 +54,12 @@ class DownloadDispatcherImpl(
      */
     suspend fun rehydrate() = withContext(Dispatchers.IO) {
         // Only rehydrate once
-        if (readyTasks.isNotEmpty() || runningTasks.isNotEmpty() || pausedTasks.isNotEmpty()) return@withContext
+        if (readyTasks.isNotEmpty() || runningTasks.isNotEmpty() || pausedTasks.isNotEmpty() || failedTasks.isNotEmpty()) {
+            readyTasks.clear()
+            runningTasks.clear()
+            pausedTasks.clear()
+            failedTasks.clear()
+        }
 
         val allTasks = db.apkDownloadDao.getAllTasksSuspend(connectionConfigServer.getConnectionId())
         allTasks.forEach { task ->

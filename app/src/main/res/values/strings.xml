@@ -213,11 +213,14 @@
     <string name="settings">设置</string>
     <string name="playback">播放</string>
     <string name="prioritize_local_data">优先获取本地数据播放</string>
+    <string name="only_wifi">仅Wi-Fi下载</string>
     <string name="cache_limit">缓存上限</string>
     <string name="album_playback_history">专辑播放历史</string>
     <string name="allow_simultaneous_playback">允许与其他应用同时播放</string>
-    <string name="song_cache_location">歌曲缓存位置</string>
+    <string name="cache_location">缓存位置</string>
+    <string name="song_cache_location">歌曲存储位置</string>
     <string name="connection_management">连接管理</string>
+    <string name="download_management">连接管理</string>
     <string name="more">更多</string>
 
     <string name="connection_address_cannot_be_empty">链接地址不能为空</string>

@@ -139,7 +139,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
     /**
      * 下载中的任务的数量
      */
-    var downloadCount by mutableStateOf<Int>(5)
+    var downloadCount by mutableStateOf<Int>(0)
         private set
 
 

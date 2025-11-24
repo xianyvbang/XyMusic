@@ -2,9 +2,7 @@ package cn.xybbz.ui.screens
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,12 +17,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.PlaylistAddCheck
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.Cancel
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayCircle
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,7 +38,6 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,8 +56,10 @@ import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DownloadStatus
+import cn.xybbz.router.RouterConstants
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.XySelectAllComponent
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
@@ -89,6 +90,7 @@ fun DownloadScreen(
             isMultiSelectMode = downloadViewModel.isMultiSelectMode,
             isSelectAll = downloadViewModel.isSelectAll,
             onExitMultiSelectMode = { downloadViewModel.exitMultiSelectMode() },
+            onEnterMultiSelectMode = { downloadViewModel.enterMultiSelectMode() },
             onPause = { downloadViewModel.performBatchPause() },
             onResume = { downloadViewModel.performBatchResume() },
             onCancel = { downloadViewModel.performBatchCancel() },
@@ -328,6 +330,7 @@ fun MultiSelectTopAppEnd(
     isMultiSelectMode: Boolean,
     isSelectAll: Boolean,
     onExitMultiSelectMode: () -> Unit,
+    onEnterMultiSelectMode: () -> Unit,
     onPause: () -> Unit,
     onResume: () -> Unit,
     onCancel: () -> Unit,
@@ -342,14 +345,25 @@ fun MultiSelectTopAppEnd(
                 modifier = Modifier.statusBarsPadding(),
                 title = {},
                 navigationIcon = {
-                    IconButton(onClick = composeClick {
-                        onExitMultiSelectMode()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Rounded.Close,
-                            contentDescription = stringResource(R.string.close)
+                    Row(
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = composeClick {
+                            onExitMultiSelectMode()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Rounded.Close,
+                                contentDescription = stringResource(R.string.close)
+                            )
+                        }
+                        XySelectAllComponent(
+                            isSelectAll = isSelectAll,
+                            horizontalArrangement = Arrangement.End,
+                            onSelectAll = onSelectAll
                         )
                     }
+
 
                 }, actions = {
                     AnimatedVisibility(isMultiSelectMode) {
@@ -380,8 +394,10 @@ fun MultiSelectTopAppEnd(
                                 )
                             }
 
-                            Row(
+
+                            /*Row(
                                 verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.End,
                                 modifier = Modifier.clickable(
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = null
@@ -389,11 +405,13 @@ fun MultiSelectTopAppEnd(
                                     onSelectAll()
                                 }) {
                                 Text(
-                                    text = if (isSelectAll) "全不选" else "全选",
+                                    text = if (isSelectAll) stringResource(R.string.deselect_all) else stringResource(
+                                        R.string.select_all
+                                    ),
                                     fontWeight = FontWeight.W900
                                 )
                                 IconButton(
-                                    modifier = Modifier.offset(x = (10).dp),
+                                    modifier = Modifier.background(Color.Red)*//*offset(x = (10).dp)*//*,
                                     onClick = {
                                         onSelectAll()
                                     },
@@ -402,7 +420,7 @@ fun MultiSelectTopAppEnd(
                                         onSelectAll()
                                     })
                                 }
-                            }
+                            }*/
                         }
                     }
                 })
@@ -423,6 +441,31 @@ fun MultiSelectTopAppEnd(
                             contentDescription = stringResource(R.string.return_home)
                         )
                     }
+                }, actions = {
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        IconButton(onClick = {
+                            onEnterMultiSelectMode()
+                        }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.PlaylistAddCheck,
+                                contentDescription = stringResource(R.string.open_selection_function)
+                            )
+                        }
+
+                        IconButton(onClick = {
+                            navController.navigate(RouterConstants.Setting)
+                        }) {
+                            Icon(
+                                imageVector = Icons.Rounded.Settings,
+                                contentDescription = stringResource(R.string.open_settings_page_button)
+                            )
+                        }
+                    }
+
                 })
         }
     }
