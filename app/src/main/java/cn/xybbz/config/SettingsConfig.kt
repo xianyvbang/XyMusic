@@ -299,6 +299,41 @@ class SettingsConfig(
     }
 
     /**
+     * 更新是否仅连接Wifi下载
+     */
+    suspend fun setIfOnlyWifiDownload(ifOnlyWifiDownload: Boolean){
+        settings = get().copy(ifOnlyWifiDownload = ifOnlyWifiDownload)
+        if (get().id != AllDataEnum.All.code) {
+            db.settingsDao.updateIfOnlyWifiDownload(
+                ifOnlyWifiDownload = ifOnlyWifiDownload,
+                get().id
+            )
+        } else {
+            val settingId =
+                db.settingsDao.save(XySettings(ifOnlyWifiDownload = ifOnlyWifiDownload))
+            settings = get().copy(id = settingId)
+        }
+    }
+
+    /**
+     * 更新最大同时下载数量
+     */
+    suspend fun setMaxConcurrentDownloads(maxConcurrentDownloads: Int){
+        settings = get().copy(maxConcurrentDownloads = maxConcurrentDownloads)
+        if (get().id != AllDataEnum.All.code) {
+            db.settingsDao.updateMaxConcurrentDownloads(
+                maxConcurrentDownloads = maxConcurrentDownloads,
+                get().id
+            )
+
+        } else {
+            val settingId =
+                db.settingsDao.save(XySettings(maxConcurrentDownloads = maxConcurrentDownloads))
+            settings = get().copy(id = settingId)
+        }
+    }
+
+    /**
      * 更新缓存数据目录地址
      */
     fun updateCacheFilePath(path: String) {

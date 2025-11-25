@@ -66,4 +66,10 @@ interface SettingsDao {
 
     @Query("update xy_settings set latestVersionTime = :latestVersionTime where id = :id")
     suspend fun updateLatestVersionTime(latestVersionTime: Long, id: Long)
+
+    @Query("update xy_settings set ifOnlyWifiDownload = :ifOnlyWifiDownload where id = :id")
+    suspend fun updateIfOnlyWifiDownload(ifOnlyWifiDownload: Boolean, id: Long)
+
+    @Query("update xy_settings set maxConcurrentDownloads = :maxConcurrentDownloads where id = :id")
+    suspend fun updateMaxConcurrentDownloads(maxConcurrentDownloads: Int, id: Long)
 }

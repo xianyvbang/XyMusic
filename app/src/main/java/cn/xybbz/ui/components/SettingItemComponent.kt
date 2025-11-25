@@ -46,6 +46,7 @@ fun SettingItemComponent(
     enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
     content: @Composable (() -> Unit)? = null,
+    trailingContent: @Composable (() -> Unit)? = null,
     onCloseRequest: (() -> Unit)? = null,
     onDismissRequest: (() -> Unit)? = null,
     onConfirmation: (() -> Unit)? = null,
@@ -83,6 +84,7 @@ fun SettingItemComponent(
                     onCloseRequest = onCloseRequest
                 ).show()
         }, trailingContent = {
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.End
@@ -93,6 +95,7 @@ fun SettingItemComponent(
                         maxLines = maxLines
                     )
                 }
+                trailingContent?.invoke()
                 imageVector?.let {
                     Spacer(modifier = Modifier.width(5.dp))
                     IconButton(onClick = composeClick {

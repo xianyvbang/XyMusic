@@ -33,4 +33,22 @@ class SettingsViewModel @Inject constructor(
     var settingDataNow by mutableStateOf(
         settingsConfig.get()
     )
+
+    init {
+        getSetting()
+    }
+
+    /**
+     * 获得系统设置
+     */
+    private fun getSetting() {
+        viewModelScope.launch {
+            db.settingsDao.selectOne().distinctUntilChanged().collect {
+                if (it != null) {
+                    settingDataNow = it
+                }
+            }
+        }
+    }
+
 }

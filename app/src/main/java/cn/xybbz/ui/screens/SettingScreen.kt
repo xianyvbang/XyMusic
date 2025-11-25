@@ -3,32 +3,49 @@ package cn.xybbz.ui.screens
 
 import android.content.ClipData
 import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
+import cn.xybbz.common.enums.img
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.router.RouterConstants
@@ -36,6 +53,9 @@ import cn.xybbz.ui.components.MusicSettingSwitchItemComponent
 import cn.xybbz.ui.components.SettingItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.ext.brashColor
+import cn.xybbz.ui.ext.composeClick
+import cn.xybbz.ui.popup.MenuItemDefaultData
+import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
@@ -60,6 +80,10 @@ fun SettingScreen(
 
     val navController = LocalNavController.current
     val coroutineScope = rememberCoroutineScope()
+
+    var ifShowMaxConcurrentDownloads by remember {
+        mutableStateOf(false)
+    }
 
     val context = LocalContext.current
     LaunchedEffect(Unit) {
@@ -156,7 +180,8 @@ fun SettingScreen(
                     SettingItemComponent(
                         title = R.string.cache_location,
                         bottomInfo = settingsViewModel.settingsConfig.cacheFilePath,
-                        maxLines = Int.MAX_VALUE
+                        maxLines = Int.MAX_VALUE,
+                        imageVector = null
                     ) {
                         if (settingsViewModel.settingsConfig.cacheFilePath.isNotBlank()) {
                             val clipData =
@@ -218,9 +243,75 @@ fun SettingScreen(
                     SettingItemComponent(
                         title = R.string.download_max_list,
                         info = settingsViewModel.settingDataNow.maxConcurrentDownloads.toString(),
-                        imageVector = Icons.Rounded.KeyboardArrowDown
-                    ) {
-                        //进行最大下载数量设置
+                        imageVector = Icons.Rounded.KeyboardArrowDown,
+                        trailingContent = {
+                            XyDropdownMenu(
+                                onIfShowMenu = {ifShowMaxConcurrentDownloads},
+                                onSetIfShowMenu = { ifShowMaxConcurrentDownloads = it },
+                                modifier = Modifier
+                                    .width(200.dp),
+                                itemDataList = listOf(
+                                    MenuItemDefaultData(
+                                        title = "1", leadingIcon = {
+                                            if (settingsViewModel.settingDataNow.maxConcurrentDownloads == 1)
+                                                Icon(
+                                                    Icons.Rounded.Check,
+                                                    contentDescription = stringResource(
+                                                        R.string.download_max_list
+                                                    ) + "1"
+                                                )
+                                        },
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                ifShowMaxConcurrentDownloads = false
+                                                settingsViewModel.settingsConfig.setMaxConcurrentDownloads(1)
+                                            }.invokeOnCompletion {
+
+                                            }
+
+                                        }),
+                                    MenuItemDefaultData(
+                                        title = "3", leadingIcon = {
+                                            if (settingsViewModel.settingDataNow.maxConcurrentDownloads == 3)
+                                                Icon(
+                                                    Icons.Rounded.Check,
+                                                    contentDescription = stringResource(
+                                                        R.string.download_max_list
+                                                    ) + "3"
+                                                )
+                                        },
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                ifShowMaxConcurrentDownloads = false
+                                                settingsViewModel.settingsConfig.setMaxConcurrentDownloads(3)
+                                            }.invokeOnCompletion {
+
+                                            }
+
+                                        }),
+                                    MenuItemDefaultData(
+                                        title = "5", leadingIcon = {
+                                            if (settingsViewModel.settingDataNow.maxConcurrentDownloads == 5)
+                                                Icon(
+                                                    Icons.Rounded.Check,
+                                                    contentDescription = stringResource(
+                                                        R.string.download_max_list
+                                                    ) + "5"
+                                                )
+                                        },
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                ifShowMaxConcurrentDownloads = false
+                                                settingsViewModel.settingsConfig.setMaxConcurrentDownloads(5)
+                                            }.invokeOnCompletion {
+
+                                            }
+
+                                        })
+                                ))
+                        }
+                    ){
+                        ifShowMaxConcurrentDownloads = true
                     }
 
                     MusicSettingSwitchItemComponent(
@@ -228,20 +319,21 @@ fun SettingScreen(
                         ifChecked = settingsViewModel.settingDataNow.ifOnlyWifiDownload
                     ) { bol ->
                         coroutineScope.launch {
-
+                            settingsViewModel.settingsConfig.setIfOnlyWifiDownload(bol)
                         }
                     }
 
                     SettingItemComponent(
                         title = R.string.song_cache_location,
                         bottomInfo = settingsViewModel.downLoadManager.getConfig().finalDirectory,
-                        maxLines = Int.MAX_VALUE
+                        maxLines = Int.MAX_VALUE,
+                        imageVector = null
                     ) {
                         if (settingsViewModel.settingsConfig.cacheFilePath.isNotBlank()) {
                             val clipData =
                                 ClipData.newPlainText(
                                     "label",
-                                    settingsViewModel.settingsConfig.cacheFilePath
+                                    settingsViewModel.downLoadManager.getConfig().finalDirectory
                                 )
                             coroutineScope.launch {
                                 clipboardManager.setClipEntry(ClipEntry(clipData))
