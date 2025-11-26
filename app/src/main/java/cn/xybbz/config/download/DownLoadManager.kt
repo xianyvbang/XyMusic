@@ -16,7 +16,6 @@ class DownLoadManager(
     applicationContext,
     db
 ) {
-
     fun getConfig(): DownloaderConfig{
         return downloadDispatcher.config
     }

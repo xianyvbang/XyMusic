@@ -2,12 +2,13 @@ package cn.xybbz.config.module
 
 import android.content.Context
 import androidx.work.WorkManager
-import cn.xybbz.api.client.CacheApiClient
 import cn.xybbz.config.ConnectionConfigServer
+import cn.xybbz.config.SettingsConfig
 import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.download.core.DownloadDispatcherImpl
 import cn.xybbz.config.download.core.DownloaderConfig
 import cn.xybbz.config.download.notification.NotificationController
+import cn.xybbz.config.network.NetWorkMonitor
 import cn.xybbz.localdata.config.DatabaseClient
 import dagger.Module
 import dagger.Provides
@@ -27,16 +28,22 @@ class DownloadModule {
         db: DatabaseClient,
         @ApplicationContext applicationContext: Context,
         connectionConfigServer: ConnectionConfigServer,
-        notificationController:NotificationController
+        notificationController: NotificationController,
+        netWorkMonitor: NetWorkMonitor,
+        settingsConfig: SettingsConfig
     ): DownloadDispatcherImpl {
+        val settings = settingsConfig.get()
         val downloadDispatcherImpl = DownloadDispatcherImpl(
             db,
             WorkManager.getInstance(applicationContext),
-            DownloaderConfig.Builder(applicationContext).build(),
+            DownloaderConfig.Builder(applicationContext)
+                .setMaxConcurrentDownloads(settings.maxConcurrentDownloads)
+                .setIfOnlyWifiDownload(settings.ifOnlyWifiDownload).build(),
             connectionConfigServer,
-            notificationController
+            notificationController,
+            netWorkMonitor
         )
-        return downloadDispatcherImpl;
+        return downloadDispatcherImpl
     }
 
 
@@ -66,5 +73,11 @@ class DownloadModule {
                 applicationContext,
             )
         return notificationController;
+    }
+
+    @Singleton
+    @Provides
+    fun netWorkMonitor(@ApplicationContext applicationContext: Context): NetWorkMonitor {
+        return NetWorkMonitor(applicationContext)
     }
 }

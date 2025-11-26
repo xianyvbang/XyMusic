@@ -1,7 +1,9 @@
 package cn.xybbz.config.download.core
 
 import android.util.Log
+import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
@@ -10,6 +12,7 @@ import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.download.notification.NotificationController
 import cn.xybbz.config.download.work.DownloadWork
+import cn.xybbz.config.network.NetWorkMonitor
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.enums.DownloadStatus
@@ -30,7 +33,8 @@ class DownloadDispatcherImpl(
     private val workManager: WorkManager,
     var config: DownloaderConfig,
     val connectionConfigServer: ConnectionConfigServer,
-    private val notificationController: NotificationController
+    private val notificationController: NotificationController,
+    private val netWorkMonitor: NetWorkMonitor
 ) : IDownloadDispatcher {
 
     val scope = CoroutineScopeUtils.getIo("download")
@@ -61,7 +65,8 @@ class DownloadDispatcherImpl(
             failedTasks.clear()
         }
 
-        val allTasks = db.apkDownloadDao.getAllTasksSuspend(connectionConfigServer.getConnectionId())
+        val allTasks =
+            db.apkDownloadDao.getAllTasksSuspend(connectionConfigServer.getConnectionId())
         allTasks.forEach { task ->
             when (task.status) {
                 DownloadStatus.QUEUED -> readyTasks.add(task)
@@ -77,7 +82,17 @@ class DownloadDispatcherImpl(
                 }
             }
         }
-        promoteAndExecute()
+        if (config.ifOnlyWifiDownload) {
+            netWorkMonitor.start { bool ->
+                if (bool) {
+                    resume(pausedTasks.entries.map { (key, _) -> key })
+                } else {
+                    pause(pausedTasks.entries.map { (key, _) -> key })
+                }
+            }
+        } else {
+            promoteAndExecute()
+        }
     }
 
     fun enqueue(newTasks: List<XyDownload>) {
@@ -88,9 +103,23 @@ class DownloadDispatcherImpl(
     }
 
     fun updateConfig(newConfig: DownloaderConfig) {
+        val ifOnlyWifiDownloadChange = newConfig.ifOnlyWifiDownload != config.ifOnlyWifiDownload
         this.config = newConfig
-        // Trigger a promotion check in case the concurrency limit was increased
-        promoteAndExecute()
+        if (newConfig.ifOnlyWifiDownload) {
+            if (ifOnlyWifiDownloadChange)
+                netWorkMonitor.start { bool ->
+                    if (bool) {
+                        resume(pausedTasks.entries.map { (key, _) -> key })
+                    } else {
+                        pause(pausedTasks.entries.map { (key, _) -> key })
+                    }
+                }
+        } else {
+            if (ifOnlyWifiDownloadChange) {
+                netWorkMonitor.stop()
+            }
+            promoteAndExecute()
+        }
     }
 
     fun pause(ids: List<Long>) {
@@ -207,10 +236,19 @@ class DownloadDispatcherImpl(
     private suspend fun startDownloadWorker(task: XyDownload) {
         // Key Node: Persist state change just before starting
         db.apkDownloadDao.updateStatus(task.id, DownloadStatus.DOWNLOADING)
-        val workRequest = OneTimeWorkRequestBuilder<DownloadWork>()
+        val workRequestBuild = OneTimeWorkRequestBuilder<DownloadWork>()
             .setInputData(workDataOf(Constants.DOWNLOAD_ID to task.id))
             .addTag(task.id.toString())
-            .build()
+        if (config.ifOnlyWifiDownload) {
+            workRequestBuild
+                .setConstraints(
+                    Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.UNMETERED)
+                        .build()
+                )
+        }
+        val workRequest =
+            workRequestBuild.build()
 
         workManager.enqueueUniqueWork(
             task.id.toString(),
@@ -240,7 +278,7 @@ class DownloadDispatcherImpl(
 
         if (download != null) {
             scope.launch {
-                if (isSendNotice){
+                if (isSendNotice) {
                     notificationController.cancel(download.id.toInt() + 100000)
                     val notificationBuilder =
                         notificationController.buildNotification(
@@ -326,7 +364,7 @@ class DownloadDispatcherImpl(
             }
 
             updateTask?.let {
-                if (isSendNotice){
+                if (isSendNotice) {
                     val staticNotificationId = it.id.toInt() + 100000
                     when (it.status) {
                         DownloadStatus.PAUSED -> {
@@ -352,6 +390,13 @@ class DownloadDispatcherImpl(
             }
         }
 
+    }
+
+    /**
+     * 监听网络变化,判断是否开启仅wifi下载并且是否处在wifi环境
+     */
+    override fun onEnabledOnlyWifiAndWifiDownload(): Boolean {
+        return config.ifOnlyWifiDownload && netWorkMonitor.isUnmeteredWifi.value
     }
 
     private fun cleanupTaskFiles(task: XyDownload) {

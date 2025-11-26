@@ -9,6 +9,7 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.config.download.core.DownloadDispatcherImpl
 import cn.xybbz.config.download.core.OkhttpDownloadCore
 import cn.xybbz.config.download.notification.NotificationController
+import cn.xybbz.config.network.NetWorkMonitor
 import cn.xybbz.download.state.DownloadState
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.download.XyDownload
@@ -34,7 +35,13 @@ class DownloadWork @AssistedInject constructor(
         val downloadId = inputData.getLong(Constants.DOWNLOAD_ID, -1L)
         if (downloadId == -1L) return Result.failure()
         val downloadTask = db.apkDownloadDao.selectById(downloadId) ?: return Result.failure()
-        val statusChange = suspend { db.apkDownloadDao.getStatusById(downloadId) }
+        val statusChange = suspend {
+            if (callback.onEnabledOnlyWifiAndWifiDownload()){
+                DownloadStatus.PAUSED
+            }else {
+                db.apkDownloadDao.getStatusById(downloadId)
+            }
+        }
         val notificationId = downloadId.toInt() // 使用 taskId 作为通知 ID
         val okhttpDownloadCore = OkhttpDownloadCore(
             applicationContext
