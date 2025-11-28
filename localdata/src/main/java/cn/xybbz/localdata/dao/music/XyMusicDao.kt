@@ -18,9 +18,11 @@ import cn.xybbz.localdata.data.music.PlayQueueMusic
 import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.RecommendedMusic
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import java.util.UUID
 
 @Dao
 interface XyMusicDao {
@@ -674,6 +676,21 @@ interface XyMusicDao {
     suspend fun selectByIds(
         itemIds: List<String>
     ): List<XyMusic>
+
+    @Query("""
+        select itemId,pic,name,album,musicUrl,container,artists,fm.ifFavorite as ifFavoriteStatus,size,xd.filePath,:playSessionId as playSessionId
+        from xy_music xm 
+        left join favoritemusic fm on xm.itemId = fm.musicId
+        left join xy_download xd on xd.uid = xm.itemId
+        where xm.itemId in (:itemIds) 
+        and xm.connectionId = (select connectionId from xy_settings)
+        and fm.connectionId = (select connectionId from xy_settings)
+        and xd.status = 'COMPLETED'
+    """)
+    suspend fun selectExtendByIds(
+        itemIds: List<String>,
+        playSessionId: String = UUID.randomUUID().toString()
+    ): List<XyMusicExtend>
 
     /**
      * 根据id查询XyItem详情

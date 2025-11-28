@@ -221,7 +221,7 @@ class SelectControl {
      * 播放选中列表
      */
     suspend fun addPlayerList(musicController: MusicController, db: DatabaseClient) {
-        val xyMusics = db.musicDao.selectByIds(selectMusicIdList.toList())
+        val xyMusics = db.musicDao.selectExtendByIds(selectMusicIdList.toList())
         musicController.addMusicList(
             musicList = xyMusics,
             isPlayer = true,

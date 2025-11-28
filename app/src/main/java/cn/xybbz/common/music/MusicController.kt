@@ -40,7 +40,7 @@ import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
 import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.config.favorite.FavoriteRepository
-import cn.xybbz.entity.data.music.XyMusicExtend
+import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import com.google.common.util.concurrent.ListenableFuture

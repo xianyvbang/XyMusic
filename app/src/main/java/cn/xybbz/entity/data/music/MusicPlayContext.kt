@@ -16,6 +16,7 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.MusicListIndexUtils
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.player.XyPlayer
 import cn.xybbz.localdata.data.progress.Progress
 import cn.xybbz.localdata.data.setting.SkipTime
@@ -28,12 +29,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.collections.isNotEmpty
+import kotlin.collections.isNullOrEmpty
 
 @Immutable
 data class MusicPlayData(
     var onMusicPlayParameter: OnMusicPlayParameter,
-    var xyMusicList: (suspend () -> List<XyMusic>)? = { emptyList() },
-    var onNextMusicList: (suspend (Int) -> List<XyMusic>?)? = null,
+    var xyMusicList: (suspend () -> List<XyMusicExtend>)? = { emptyList() },
+    var onNextMusicList: (suspend (Int) -> List<XyMusicExtend>?)? = null,
     var pageSize: Int = Constants.MIN_PAGE
 )
 
@@ -59,7 +62,7 @@ class MusicPlayContext @Inject constructor(
      */
     fun musicList(
         onMusicPlayParameter: OnMusicPlayParameter,
-        musicList: List<XyMusic>,
+        musicList: List<XyMusicExtend>,
         playerTypeEnum: PlayerTypeEnum? = null
     ) {
 

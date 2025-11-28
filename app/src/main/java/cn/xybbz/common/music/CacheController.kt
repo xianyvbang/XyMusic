@@ -19,7 +19,7 @@ import cn.xybbz.api.client.CacheApiClient
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.SettingsConfig
 import cn.xybbz.entity.data.music.CacheTask
-import cn.xybbz.entity.data.music.XyMusicExtend
+import cn.xybbz.localdata.data.music.XyMusicExtend
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

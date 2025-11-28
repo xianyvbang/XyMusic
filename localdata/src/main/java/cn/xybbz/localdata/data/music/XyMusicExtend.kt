@@ -1,4 +1,4 @@
-package cn.xybbz.entity.data.music
+package cn.xybbz.localdata.data.music
 
 import java.util.UUID
 

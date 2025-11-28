@@ -3,12 +3,10 @@ package cn.xybbz.localdata.data.music
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.ForeignKey.Companion.CASCADE
-import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import com.squareup.moshi.JsonClass
-import java.util.UUID
 
 @Entity(
     tableName = "xy_music",
@@ -150,10 +148,4 @@ data class XyMusic(
      * 创建时间
      */
     val createTime: Long = System.currentTimeMillis()
-) {
-    /**
-     * 播放会话id,
-     */
-    @Ignore
-    val playSessionId: String = UUID.randomUUID().toString()
-}
+)

@@ -257,7 +257,7 @@ class SubsonicDatasourceServer @Inject constructor(
             playlist.subsonicResponse.playlist?.entry?.let {
                 val albumMusicList = convertToMusicList(it)
                 saveBatchMusic(
-                    items =albumMusicList, dataType,
+                    items = albumMusicList, dataType,
                     playlistId = albumId
                 )
             }
@@ -316,8 +316,9 @@ class SubsonicDatasourceServer @Inject constructor(
      * @return 返回歌词列表
      */
     override suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>? {
-        return if (itemId.ifLyric) {
-            val lyrics = subsonicApiClient.lyricsApi().getLyrics(itemId.artists, itemId.name)
+        val music = db.musicDao.selectById(itemId)
+        return if (music?.ifLyric == true) {
+            val lyrics = subsonicApiClient.lyricsApi().getLyrics(music.artists, music.name)
             lyrics.subsonicResponse.lyrics?.value?.let {
                 LrcUtils.parseLrc(it)
             }
@@ -495,7 +496,7 @@ class SubsonicDatasourceServer @Inject constructor(
             playlistId = playlistId.replace(Constants.SUBSONIC_PLAYLIST_SUFFIX, ""),
             songIdToAdd = musicIds
         )
-        return super.saveMusicPlaylist(playlistId,musicIds)
+        return super.saveMusicPlaylist(playlistId, musicIds)
     }
 
     /**

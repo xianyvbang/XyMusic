@@ -856,8 +856,9 @@ class PlexDatasourceServer @Inject constructor(
      * @return 返回歌词列表
      */
     override suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>? {
-        return if (itemId.ifLyric && !itemId.lyric.isNullOrBlank()) {
-            val lyrics = itemId.lyric?.let { plexApiClient.lyricsApi().getLyrics(it) }
+        val music = db.musicDao.selectById(itemId)
+        return if (music?.ifLyric == true) {
+            val lyrics = music.lyric?.let { plexApiClient.lyricsApi().getLyrics(it) }
             val lrcEntries = lyrics?.let {
                 LrcUtils.parseLrc(lyrics)
             }

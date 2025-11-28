@@ -83,8 +83,4 @@ class ConnectionConfigServer(
         this.libraryId = libraryId
     }
 
-    fun getIsLocal(): Boolean {
-        return settingsConfig.get().isLocal
-    }
-
 }

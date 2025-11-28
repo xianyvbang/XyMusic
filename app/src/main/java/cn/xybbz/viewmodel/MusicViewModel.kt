@@ -62,7 +62,5 @@ class MusicViewModel @Inject constructor(
             .cachedIn(viewModelScope)
 
     suspend fun getMusicInfoById(musicId: String): XyMusic? = db.musicDao.selectById(musicId)
-    suspend fun getMusicInfoByIds(musicIds: List<String>): List<XyMusic> =
-        db.musicDao.selectByIds(musicIds)
 
 }

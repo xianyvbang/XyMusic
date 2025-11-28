@@ -441,8 +441,9 @@ class NavidromeDatasourceServer @Inject constructor(
      * @return 返回歌词列表
      */
     override suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>? {
-        return if (itemId.ifLyric) {
-            itemId.lyric?.let {
+        val music = db.musicDao.selectById(itemId = itemId)
+        return if (music?.ifLyric == true) {
+            music.lyric?.let {
                 LrcUtils.parseLrc(it)
 
             }
