@@ -23,7 +23,7 @@ class LocalViewModel @Inject constructor(
 ) : ViewModel() {
 
     val musicDownloadInfo: StateFlow<List<XyDownload>> =
-        db.apkDownloadDao.getAllMusicTasksFlow(status = DownloadStatus.COMPLETED)
+        db.downloadDao.getAllMusicTasksFlow(status = DownloadStatus.COMPLETED)
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5000),

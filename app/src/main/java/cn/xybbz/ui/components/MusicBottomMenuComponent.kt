@@ -76,6 +76,7 @@ import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.entity.data.MusicItemMenuData
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.setting.SkipTime
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.router.RouterConstants.ArtistInfo
@@ -101,7 +102,7 @@ import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
 
-var bottomMenuMusicInfo = mutableStateListOf<XyMusic>()
+var bottomMenuMusicInfo = mutableStateListOf<XyMusicExtend>()
 
 /**
  * 底部弹出菜单

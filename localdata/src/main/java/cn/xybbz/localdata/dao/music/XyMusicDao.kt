@@ -18,7 +18,7 @@ import cn.xybbz.localdata.data.music.PlayQueueMusic
 import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.RecommendedMusic
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.localdata.data.music.XyMusicExtend
+import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -573,6 +573,26 @@ interface XyMusicDao {
     )
     suspend fun selectHomeMusicList(limit: Int, startIndex: Int): List<XyMusic>
 
+    @Query(
+        """
+         select itemId,mi.pic,mi.name,mi.album,mi.musicUrl,mi.container,mi.artists,fm.ifFavorite as ifFavoriteStatus,mi.size,xd.filePath,:playSessionId as playSessionId 
+        from HomeMusic hm
+        inner join xy_music mi on hm.musicId = mi.itemId
+        left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED'
+        left join favoritemusic fm on hm.musicId = fm.musicId
+        where hm.connectionId = (select connectionId from xy_settings)
+        and xd.connectionId = (select connectionId from xy_settings)
+        and fm.connectionId = (select connectionId from xy_settings)
+        order by hm.`index`
+        limit :limit offset :startIndex 
+    """
+    )
+    suspend fun selectMusicExtendList(
+        limit: Int,
+        startIndex: Int,
+        playSessionId: String = UUID.randomUUID().toString()
+    ): List<XyPlayMusic>
+
     /**
      * 获得播放历史的limit条数据
      */
@@ -677,20 +697,22 @@ interface XyMusicDao {
         itemIds: List<String>
     ): List<XyMusic>
 
-    @Query("""
-        select itemId,pic,name,album,musicUrl,container,artists,fm.ifFavorite as ifFavoriteStatus,size,xd.filePath,:playSessionId as playSessionId
+    @Query(
+        """
+        select itemId,xm.pic,xm.name,xm.album,xm.musicUrl,xm.container,xm.artists,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,:playSessionId as playSessionId 
         from xy_music xm 
         left join favoritemusic fm on xm.itemId = fm.musicId
-        left join xy_download xd on xd.uid = xm.itemId
+        left join xy_download xd on xd.uid = xm.itemId and xd.status = 'COMPLETED'
         where xm.itemId in (:itemIds) 
         and xm.connectionId = (select connectionId from xy_settings)
         and fm.connectionId = (select connectionId from xy_settings)
-        and xd.status = 'COMPLETED'
-    """)
+        and fm.connectionId = (select connectionId from xy_settings)
+    """
+    )
     suspend fun selectExtendByIds(
         itemIds: List<String>,
         playSessionId: String = UUID.randomUUID().toString()
-    ): List<XyMusicExtend>
+    ): List<XyPlayMusic>
 
     /**
      * 根据id查询XyItem详情
@@ -918,6 +940,28 @@ interface XyMusicDao {
         startIndex: Int
     ): List<XyMusic>
 
+    @Query(
+        """
+        select itemId,xm.pic,xm.name,xm.album,xm.musicUrl,xm.container,xm.artists,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,:playSessionId as playSessionId 
+        from albummusic am
+        inner join xy_music xm on am.musicId = xm.itemId
+        left join xy_download xd on xd.uid = xm.itemId and xd.status = 'COMPLETED'
+        left join favoritemusic fm on xm.itemId = fm.musicId
+        where am.connectionId = (select connectionId from xy_settings)
+        and xd.connectionId = (select connectionId from xy_settings)
+        and fm.connectionId = (select connectionId from xy_settings)
+        and  am.albumId = :albumId
+        order by am.`index`
+        limit :limit offset :startIndex
+    """
+    )
+    suspend fun selectMusicExtendListByAlbumId(
+        albumId: String,
+        limit: Int,
+        startIndex: Int,
+        playSessionId: String = UUID.randomUUID().toString()
+    ): List<XyPlayMusic>
+
     /**
      * 根据专辑id获得音乐列表
      */
@@ -937,10 +981,33 @@ interface XyMusicDao {
         startIndex: Int
     ): List<XyMusic>
 
+
+
+    @Query(
+        """
+         select itemId,xm.pic,xm.name,xm.album,xm.musicUrl,xm.container,xm.artists,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,:playSessionId as playSessionId 
+        from artistmusic am
+        inner join xy_music xm on am.musicId = xm.itemId
+        left join xy_download xd on xd.uid = xm.itemId and xd.status = 'COMPLETED'
+        left join favoritemusic fm on xm.itemId = fm.musicId
+        where am.connectionId = (select connectionId from xy_settings)
+        and xd.connectionId = (select connectionId from xy_settings)
+        and fm.connectionId = (select connectionId from xy_settings)
+        and  am.artistId = :artistId
+        order by am.`index`
+        limit :limit offset :startIndex
+    """
+    )
+    suspend fun selectMusicExtendListByArtistId(
+        artistId: String,
+        limit: Int,
+        startIndex: Int,
+        playSessionId: String = UUID.randomUUID().toString()
+    ): List<XyPlayMusic>
+
     /**
      * 获得收藏分页信息
      */
-    @Transaction
     @Query(
         """
         select mi.* from favoritemusic fm
@@ -954,6 +1021,25 @@ interface XyMusicDao {
         limit: Int,
         startIndex: Int
     ): List<XyMusic>
+
+    @Query(
+        """
+        select itemId,xm.pic,xm.name,xm.album,xm.musicUrl,xm.container,xm.artists,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,:playSessionId as playSessionId 
+        from favoritemusic fm
+        inner join xy_music xm on fm.musicId = xm.itemId
+        left join xy_download xd on xd.uid = xm.itemId and xd.status = 'COMPLETED'
+        where fm.connectionId = (select connectionId from xy_settings)
+        and xd.connectionId = (select connectionId from xy_settings)
+        and fm.connectionId = (select connectionId from xy_settings)
+        order by fm.`index`
+        limit :limit offset :startIndex
+    """
+    )
+    suspend fun selectMusicExtendListByFavorite(
+        limit: Int,
+        startIndex: Int,
+        playSessionId: String = UUID.randomUUID().toString()
+    ): List<XyPlayMusic>
 
     @Query(
         """

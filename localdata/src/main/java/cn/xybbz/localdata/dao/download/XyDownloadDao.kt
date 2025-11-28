@@ -60,6 +60,9 @@ interface XyDownloadDao {
     @Query("SELECT * FROM xy_download WHERE id IN (:ids)")
     suspend fun getByIds(ids: List<Long>): List<XyDownload>
 
+    @Query("SELECT * FROM xy_download WHERE uid IN (:musicIds) and status = :status and connectionId = (select connectionId from xy_settings)")
+    suspend fun getMusicByMusicIds(musicIds: List<String>, status: DownloadStatus = DownloadStatus.COMPLETED): List<XyDownload>
+
     @Query("SELECT * FROM xy_download where (connectionId = :connectionId or typeData = :typeData)")
     suspend fun getAllTasksSuspend(
         connectionId: Long,

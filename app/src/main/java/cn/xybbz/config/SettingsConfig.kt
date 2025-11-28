@@ -227,24 +227,6 @@ class SettingsConfig(
     }
 
     /**
-     * 更新设置是否关闭本地数据优先获取播放
-     */
-    suspend fun setIsLocalData(isLocal: Boolean) {
-        settings = get().copy(isLocal = isLocal)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateIsLocal(
-                isLocal = isLocal,
-                get().id
-            )
-
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(isLocal = isLocal))
-            settings = get().copy(id = settingId)
-        }
-    }
-
-    /**
      * 设置最新版本号
      */
     suspend fun setLatestVersion(version: String) {

@@ -55,9 +55,6 @@ interface SettingsDao {
     @Query("update xy_settings set languageType = :languageType where id = :id")
     suspend fun updateLanguageType(languageType: LanguageType, id: Long)
 
-    @Query("update xy_settings set isLocal = :isLocal where id = :id")
-    suspend fun updateIsLocal(isLocal: Boolean, id: Long)
-
     @Query("update xy_settings set latestVersion = :latestVersion where id = :id")
     suspend fun updateLatestVersion(latestVersion: String, id: Long)
 

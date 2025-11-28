@@ -41,6 +41,7 @@ import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -49,6 +50,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
 import javax.inject.Inject
+import kotlin.collections.flatten
 
 class SubsonicDatasourceServer @Inject constructor(
     private val db: DatabaseClient,
@@ -1205,7 +1207,7 @@ class SubsonicDatasourceServer @Inject constructor(
     override suspend fun getMusicList(
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
+    ): List<XyPlayMusic>? {
         return null
     }
 
@@ -1216,7 +1218,7 @@ class SubsonicDatasourceServer @Inject constructor(
         albumId: String,
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
+    ): List<XyPlayMusic>? {
         return super.getMusicListByAlbumId(
             albumId = albumId,
             pageSize = pageSize,
@@ -1231,7 +1233,7 @@ class SubsonicDatasourceServer @Inject constructor(
         artistId: String,
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
+    ): List<XyPlayMusic>? {
         return super.getMusicListByArtistId(
             artistId = artistId,
             pageSize = pageSize,
@@ -1255,7 +1257,7 @@ class SubsonicDatasourceServer @Inject constructor(
     override suspend fun getMusicListByFavorite(
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
+    ): List<XyPlayMusic>? {
         return super.getMusicListByFavorite(pageSize = pageSize, pageNum = pageNum)
     }
 

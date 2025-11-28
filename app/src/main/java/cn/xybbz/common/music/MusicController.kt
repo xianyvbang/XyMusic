@@ -40,7 +40,7 @@ import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
 import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.config.favorite.FavoriteRepository
-import cn.xybbz.localdata.data.music.XyMusicExtend
+import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import com.google.common.util.concurrent.ListenableFuture
@@ -60,7 +60,7 @@ class MusicController(
 ) {
 
     // 原始歌曲列表
-    var originMusicList by mutableStateOf(emptyList<XyMusicExtend>())
+    var originMusicList by mutableStateOf(emptyList<XyPlayMusic>())
         private set
 
     //当前播放歌曲的进度
@@ -79,7 +79,7 @@ class MusicController(
         private set
 
     //当前播放音乐信息
-    var musicInfo by mutableStateOf<XyMusicExtend?>(null)
+    var musicInfo by mutableStateOf<XyPlayMusic?>(null)
         private set
 
     //音频总时长
@@ -340,7 +340,7 @@ class MusicController(
     /**
      * 开始缓存
      */
-    fun startCache(music: XyMusicExtend) {
+    fun startCache(music: XyPlayMusic) {
         cacheController.cacheMedia(music)
     }
 
@@ -385,7 +385,7 @@ class MusicController(
 
     fun removeItem(index: Int) {
         //判断要删除的索引和当前索引是否一致
-        val tmpList = mutableListOf<XyMusicExtend>()
+        val tmpList = mutableListOf<XyPlayMusic>()
         tmpList.addAll(originMusicList)
         tmpList.removeAt(index)
         originMusicList = tmpList
@@ -411,19 +411,19 @@ class MusicController(
      * 列表中添加数据
      */
     fun addMusicList(
-        musicList: List<XyMusicExtend>,
+        musicList: List<XyPlayMusic>,
         artistId: String? = null,
         isPlayer: Boolean? = null
     ) {
         var nowIndex = 0
         if (originMusicList.isNotEmpty()) {
             nowIndex = curOriginIndex + 1
-            val tmpList = mutableListOf<XyMusicExtend>()
+            val tmpList = mutableListOf<XyPlayMusic>()
             tmpList.addAll(originMusicList)
             tmpList.addAll(nowIndex, musicList)
             originMusicList = tmpList
         } else {
-            val tmpList = mutableListOf<XyMusicExtend>()
+            val tmpList = mutableListOf<XyPlayMusic>()
             tmpList.addAll(originMusicList)
             tmpList.addAll(musicList)
             originMusicList = tmpList
@@ -447,7 +447,7 @@ class MusicController(
      * 添加音乐到列表
      */
     fun addMusic(
-        music: XyMusicExtend,
+        music: XyPlayMusic,
         artistId: String = "",
         isPlayer: Boolean? = null
     ) {
@@ -458,7 +458,7 @@ class MusicController(
             }
         } else {
             val nowIndex = curOriginIndex + 1
-            val tmpList = mutableListOf<XyMusicExtend>()
+            val tmpList = mutableListOf<XyPlayMusic>()
             tmpList.addAll(originMusicList)
             val isListEmpty = tmpList.isEmpty()
             tmpList.add(nowIndex, music)
@@ -484,12 +484,12 @@ class MusicController(
     /**
      * 添加下一首播放功能
      */
-    fun addNextPlayer(music: XyMusicExtend) {
+    fun addNextPlayer(music: XyPlayMusic) {
         val mediaItem = musicSetMediaItem(music)
 
         if (originMusicList.isEmpty()) {
 
-            val tmpList = mutableListOf<XyMusicExtend>()
+            val tmpList = mutableListOf<XyPlayMusic>()
             tmpList.addAll(originMusicList)
             tmpList.add(music)
             originMusicList = tmpList
@@ -503,13 +503,13 @@ class MusicController(
             val indexOfFirst =
                 originMusicList.indexOfFirst { it.itemId == music.itemId }
             if (indexOfFirst != -1) {
-                val tmpList = mutableListOf<XyMusicExtend>()
+                val tmpList = mutableListOf<XyPlayMusic>()
                 tmpList.addAll(originMusicList)
                 tmpList.removeAt(indexOfFirst)
                 originMusicList = tmpList
             }
             if (indexOfFirst != curOriginIndex + 1) {
-                val tmpList = mutableListOf<XyMusicExtend>()
+                val tmpList = mutableListOf<XyPlayMusic>()
                 tmpList.addAll(originMusicList)
                 tmpList.add(curOriginIndex + 1, music)
                 originMusicList = tmpList
@@ -527,7 +527,7 @@ class MusicController(
      * 设置当前音乐列表
      */
     fun initMusicList(
-        musicDataList: List<XyMusicExtend>,
+        musicDataList: List<XyPlayMusic>,
         musicCurrentPositionMapData: Map<String, Long>?,
         originIndex: Int?,
         pageNum: Int,
@@ -549,7 +549,7 @@ class MusicController(
         originIndex?.let { curOriginIndex = originIndex }
 
         cacheController.cancelAllCache()
-        val tmpList = mutableListOf<XyMusicExtend>()
+        val tmpList = mutableListOf<XyPlayMusic>()
         tmpList.addAll(musicDataList)
         originMusicList = tmpList
         this.pageNum = pageNum
@@ -589,7 +589,7 @@ class MusicController(
     /**
      * 将MusicArtistExtend转换成MediaItem
      */
-    private fun musicSetMediaItem(musicExtend: XyMusicExtend): MediaItem {
+    private fun musicSetMediaItem(musicExtend: XyPlayMusic): MediaItem {
 
         //设置单个资源
         val bundle = Bundle()

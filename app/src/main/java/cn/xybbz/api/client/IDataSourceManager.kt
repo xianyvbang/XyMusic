@@ -42,6 +42,7 @@ import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -533,6 +534,24 @@ class IDataSourceManager(
     }
 
     /**
+     * 获得随机音乐
+     */
+    override suspend fun getRandomMusicExtendList(
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyPlayMusic>? {
+        return try {
+            dataSourceServer.getRandomMusicExtendList(pageSize, pageNum)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据超时", e)
+            return null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据报错", e)
+            return null
+        }
+    }
+
+    /**
      * 释放
      */
     override suspend fun release() {
@@ -816,7 +835,7 @@ class IDataSourceManager(
     override suspend fun getMusicList(
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
+    ): List<XyPlayMusic>? {
         return try {
             dataSourceServer.getMusicList(pageSize, pageNum)
         } catch (e: SocketTimeoutException) {
@@ -835,7 +854,7 @@ class IDataSourceManager(
         albumId: String,
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
+    ): List<XyPlayMusic>? {
         return try {
             dataSourceServer.getMusicListByAlbumId(albumId, pageSize, pageNum)
         } catch (e: SocketTimeoutException) {
@@ -854,7 +873,7 @@ class IDataSourceManager(
         artistId: String,
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
+    ): List<XyPlayMusic>? {
         return try {
             dataSourceServer.getMusicListByArtistId(artistId, pageSize, pageNum)
         } catch (e: SocketTimeoutException) {
@@ -887,7 +906,7 @@ class IDataSourceManager(
     override suspend fun getMusicListByFavorite(
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
+    ): List<XyPlayMusic>? {
         return try {
             dataSourceServer.getMusicListByFavorite(pageSize, pageNum)
         } catch (e: SocketTimeoutException) {

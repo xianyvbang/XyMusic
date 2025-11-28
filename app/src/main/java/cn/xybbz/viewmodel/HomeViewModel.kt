@@ -466,7 +466,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
         viewModelScope.launch {
             connectionConfigServer.loginStateFlow.collect { bool ->
                 if (bool) {
-                    db.apkDownloadDao.getAllMusicTasksCountFlow(status = DownloadStatus.COMPLETED)
+                    db.downloadDao.getAllMusicTasksCountFlow(status = DownloadStatus.COMPLETED)
                         .collect {
                             if (it == 0) {
                                 localCount = null
@@ -486,7 +486,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
         viewModelScope.launch {
             connectionConfigServer.loginStateFlow.collect { bool ->
                 if (bool) {
-                    db.apkDownloadDao.getAllMusicTasksDownloadCountFlow(
+                    db.downloadDao.getAllMusicTasksDownloadCountFlow(
                         status = listOf(
                             DownloadStatus.QUEUED,
                             DownloadStatus.DOWNLOADING

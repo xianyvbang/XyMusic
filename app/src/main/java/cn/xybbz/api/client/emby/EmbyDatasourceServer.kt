@@ -43,6 +43,7 @@ import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -614,7 +615,7 @@ class EmbyDatasourceServer @Inject constructor(
         embyApiClient.playlistsApi().addItemToPlaylist(
             playlistId = playlistId,
             ids = musicIds.joinToString(Constants.ARTIST_DELIMITER) { it })
-        return super.saveMusicPlaylist(playlistId,musicIds)
+        return super.saveMusicPlaylist(playlistId, musicIds)
     }
 
     /**
@@ -787,8 +788,8 @@ class EmbyDatasourceServer @Inject constructor(
     override suspend fun getMusicList(
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
-        var selectMusicList: List<XyMusic>? =
+    ): List<XyPlayMusic>? {
+        var selectMusicList =
             super.getMusicList(pageSize = pageSize, pageNum = pageNum)
 
         if (selectMusicList.isNullOrEmpty()) {
@@ -796,7 +797,7 @@ class EmbyDatasourceServer @Inject constructor(
                 pageSize,
                 pageNum * pageSize
             )
-            selectMusicList = homeMusicList.items
+            selectMusicList = transitionMusicExtend(homeMusicList.items)
 
         }
         return selectMusicList
@@ -809,8 +810,8 @@ class EmbyDatasourceServer @Inject constructor(
         albumId: String,
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
-        var selectMusicList: List<XyMusic>? =
+    ): List<XyPlayMusic>? {
+        var selectMusicList =
             super.getMusicListByAlbumId(albumId = albumId, pageSize = pageSize, pageNum = pageNum)
 
         if (selectMusicList.isNullOrEmpty()) {
@@ -819,7 +820,7 @@ class EmbyDatasourceServer @Inject constructor(
                 pageNum * pageSize,
                 parentId = albumId
             )
-            selectMusicList = homeMusicList.items
+            selectMusicList = transitionMusicExtend(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -831,8 +832,8 @@ class EmbyDatasourceServer @Inject constructor(
         artistId: String,
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
-        var selectMusicList: List<XyMusic>? =
+    ): List<XyPlayMusic>? {
+        var selectMusicList =
             super.getMusicListByArtistId(
                 artistId = artistId,
                 pageSize = pageSize,
@@ -844,7 +845,7 @@ class EmbyDatasourceServer @Inject constructor(
                 pageNum * pageSize,
                 artistIds = listOf(artistId)
             )
-            selectMusicList = homeMusicList.items
+            selectMusicList = transitionMusicExtend(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -869,8 +870,8 @@ class EmbyDatasourceServer @Inject constructor(
     override suspend fun getMusicListByFavorite(
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
-        var selectMusicList: List<XyMusic>? =
+    ): List<XyPlayMusic>? {
+        var selectMusicList =
             super.getMusicListByFavorite(pageSize = pageSize, pageNum = pageNum)
         if (selectMusicList.isNullOrEmpty()) {
             val homeMusicList = getServerMusicList(
@@ -878,7 +879,7 @@ class EmbyDatasourceServer @Inject constructor(
                 pageNum * pageSize,
                 isFavorite = true
             )
-            selectMusicList = homeMusicList.items
+            selectMusicList = transitionMusicExtend(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -1367,7 +1368,7 @@ class EmbyDatasourceServer @Inject constructor(
             pic = itemImageUrl,
             name = item.name ?: application.getString(Constants.UNKNOWN_MUSIC),
             musicUrl = audioUrl,
-            downloadUrl = createDownloadUrl(item.id) ,
+            downloadUrl = createDownloadUrl(item.id),
             album = item.albumId ?: "",
             albumName = item.album,
             connectionId = connectionConfigServer.getConnectionId(),
@@ -1386,14 +1387,15 @@ class EmbyDatasourceServer @Inject constructor(
             bitRate = mediaSourceInfo?.bitrate,
             sampleRate = mediaStream?.sampleRate,
             bitDepth = mediaStream?.bitDepth,
-            size = mediaSourceInfo?.size?:0,
+            size = mediaSourceInfo?.size ?: 0,
             runTimeTicks = BigDecimal.valueOf(mediaSourceInfo?.runTimeTicks ?: 0)
                 .divide(BigDecimal(10000), BigDecimal.ROUND_UP).toLong(),
             container = mediaSourceInfo?.container,
             codec = mediaStream?.codec,
             lyric = "",
             playlistItemId = item.id,
-            lastPlayedDate = item.userData?.lastPlayedDate?.atZone(ZoneId.systemDefault())?.toEpochSecond() ?: 0L,
+            lastPlayedDate = item.userData?.lastPlayedDate?.atZone(ZoneId.systemDefault())
+                ?.toEpochSecond() ?: 0L,
         )
     }
 
@@ -1425,7 +1427,9 @@ class EmbyDatasourceServer @Inject constructor(
             itemId = album.id,
             pic = itemImageUrl,
             name = album.name
-                ?: if (ifPlaylist) application.getString(Constants.UNKNOWN_PLAYLIST) else application.getString(Constants.UNKNOWN_ALBUM),
+                ?: if (ifPlaylist) application.getString(Constants.UNKNOWN_PLAYLIST) else application.getString(
+                    Constants.UNKNOWN_ALBUM
+                ),
             connectionId = connectionConfigServer.getConnectionId(),
             artistIds = album.albumArtists?.joinToString(Constants.ARTIST_DELIMITER) { it.id },
             artists = album.albumArtists?.joinToString(Constants.ARTIST_DELIMITER) { it.name.toString() }

@@ -46,6 +46,7 @@ import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -437,8 +438,8 @@ class JellyfinDatasourceServer @Inject constructor(
     override suspend fun getMusicList(
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
-        var selectMusicList: List<XyMusic>? =
+    ): List<XyPlayMusic>? {
+        var selectMusicList=
             super.getMusicList(pageSize = pageSize, pageNum = pageNum)
 
         if (selectMusicList.isNullOrEmpty()) {
@@ -446,7 +447,7 @@ class JellyfinDatasourceServer @Inject constructor(
                 pageSize,
                 pageNum * pageSize
             )
-            selectMusicList = homeMusicList.items
+            selectMusicList = transitionMusicExtend(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -457,8 +458,8 @@ class JellyfinDatasourceServer @Inject constructor(
     override suspend fun getMusicListByAlbumId(
         albumId: String, pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
-        var selectMusicList: List<XyMusic>? =
+    ): List<XyPlayMusic>? {
+        var selectMusicList =
             super.getMusicListByAlbumId(albumId = albumId, pageSize = pageSize, pageNum = pageNum)
 
         if (selectMusicList.isNullOrEmpty()) {
@@ -467,7 +468,7 @@ class JellyfinDatasourceServer @Inject constructor(
                 pageNum * pageSize,
                 parentId = albumId
             )
-            selectMusicList = homeMusicList.items
+            selectMusicList = transitionMusicExtend(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -480,8 +481,8 @@ class JellyfinDatasourceServer @Inject constructor(
         artistId: String,
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
-        var selectMusicList: List<XyMusic>? =
+    ): List<XyPlayMusic>? {
+        var selectMusicList =
             super.getMusicListByArtistId(
                 artistId = artistId,
                 pageSize = pageSize,
@@ -493,7 +494,7 @@ class JellyfinDatasourceServer @Inject constructor(
                 pageNum * pageSize,
                 artistIds = listOf(artistId)
             )
-            selectMusicList = homeMusicList.items
+            selectMusicList = transitionMusicExtend(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -519,8 +520,8 @@ class JellyfinDatasourceServer @Inject constructor(
     override suspend fun getMusicListByFavorite(
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
-        var selectMusicList: List<XyMusic>? =
+    ): List<XyPlayMusic>? {
+        var selectMusicList =
             super.getMusicListByFavorite(pageSize = pageSize, pageNum = pageNum)
         if (selectMusicList.isNullOrEmpty()) {
             val homeMusicList = getServerMusicList(
@@ -528,7 +529,7 @@ class JellyfinDatasourceServer @Inject constructor(
                 pageNum * pageSize,
                 isFavorite = true
             )
-            selectMusicList = homeMusicList.items
+            selectMusicList = transitionMusicExtend(homeMusicList.items)
         }
         return selectMusicList
     }

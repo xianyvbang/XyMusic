@@ -34,6 +34,7 @@ import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.page.bigPager
@@ -433,6 +434,18 @@ abstract class IDataSourceParentServer(
                 artistId = artistId
             )
         }.flow
+    }
+
+    /**
+     * 获得随机音乐
+     */
+    override suspend fun getRandomMusicExtendList(
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyPlayMusic>? {
+        return transitionMusicExtend(
+            getRandomMusicList(pageSize,pageNum)
+        )
     }
 
     /**
@@ -952,8 +965,8 @@ abstract class IDataSourceParentServer(
         albumId: String,
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
-        return db.musicDao.selectMusicListByAlbumId(albumId, pageSize, pageNum * pageSize)
+    ): List<XyPlayMusic>? {
+        return db.musicDao.selectMusicExtendListByAlbumId(albumId, pageSize, pageNum * pageSize)
     }
 
     /**
@@ -962,8 +975,32 @@ abstract class IDataSourceParentServer(
     override suspend fun getMusicList(
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
-        return db.musicDao.selectHomeMusicList(pageSize, pageNum * pageSize)
+    ): List<XyPlayMusic>? {
+        return db.musicDao.selectMusicExtendList(pageSize, pageNum * pageSize)
+    }
+
+    suspend fun transitionMusicExtend(musicList: List<XyMusic>?): List<XyPlayMusic>?{
+        val downloads = musicList?.map { it.itemId }?.let {
+            db.downloadDao.getMusicByMusicIds(it)
+        }
+        val downloadMap = downloads?.associateBy { it.uid }
+
+        return musicList?.map { music ->
+            downloadMap?.containsKey(music.itemId)
+            XyPlayMusic(
+                itemId = music.itemId,
+                pic = music.pic,
+                name = music.name,
+                album = music.album,
+                musicUrl = music.musicUrl,
+                playSessionId = UUID.randomUUID().toString(),
+                container = music.container,
+                artists = music.artists,
+                ifFavoriteStatus = music.ifFavoriteStatus,
+                size = music.size,
+                filePath = if (downloadMap?.containsKey(music.itemId) == true) downloadMap[music.itemId]?.filePath else null
+            )
+        }
     }
 
     /**
@@ -973,8 +1010,8 @@ abstract class IDataSourceParentServer(
         artistId: String,
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
-        return db.musicDao.selectMusicListByArtistId(artistId, pageSize, pageNum * pageSize)
+    ): List<XyPlayMusic>? {
+        return db.musicDao.selectMusicExtendListByArtistId(artistId, pageSize, pageNum * pageSize)
     }
 
     /**
@@ -983,8 +1020,8 @@ abstract class IDataSourceParentServer(
     override suspend fun getMusicListByFavorite(
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
-        return db.musicDao.selectMusicListByFavorite(pageSize, pageNum * pageSize)
+    ): List<XyPlayMusic>? {
+        return db.musicDao.selectMusicExtendListByFavorite(pageSize, pageNum * pageSize)
     }
 
     /**
