@@ -163,4 +163,9 @@ object Constants {
      */
     @StringRes
     val PLEX_ARTIST_COLLECTION_TITLE: Int = R.string.plex_artist_collection_title
+
+    /**
+     * 下载唯一id
+     */
+    const val DOWNLOAD_ID = "download_id"
 }

@@ -12,7 +12,7 @@ class GenresRemoteMediator(
     private val datasourceServer: IDataSourceParentServer,
     private val db: DatabaseClient,
     private val connectionId: Long
-) : DefaultRemoteMediator<XyGenre>(
+) : DefaultRemoteMediator<XyGenre,XyGenre>(
     db,
     RemoteIdConstants.GENRE + connectionId,
     connectionId

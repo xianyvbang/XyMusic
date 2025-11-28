@@ -31,6 +31,8 @@ import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.count.XyDataCount
 import cn.xybbz.localdata.data.genre.XyGenre
+import cn.xybbz.localdata.data.music.HomeMusic
+import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -79,7 +81,6 @@ abstract class IDataSourceParentServer(
      * 获得当前数据源类型
      */
     abstract fun getDataSourceType(): DataSourceType
-
 
     /**
      * 根据输入地址获取服务器信息
@@ -207,8 +208,12 @@ abstract class IDataSourceParentServer(
                     initFavoriteData()
                     try {
                         getDataInfoCount(connectionId)
-                    }catch (e: Exception){
-                        Log.i(Constants.LOG_ERROR_PREFIX,"获取音乐/专辑/艺术家/收藏/流派数量异常",e)
+                    } catch (e: Exception) {
+                        Log.i(
+                            Constants.LOG_ERROR_PREFIX,
+                            "获取音乐/专辑/艺术家/收藏/流派数量异常",
+                            e
+                        )
                     }
                 }
             }
@@ -524,7 +529,7 @@ abstract class IDataSourceParentServer(
     @OptIn(ExperimentalPagingApi::class)
     override fun selectMusicFlowList(
         sortByFlow: StateFlow<Sort>
-    ): Flow<PagingData<XyMusic>> {
+    ): Flow<PagingData<HomeMusic>> {
         return defaultPager(
             remoteMediator = MusicRemoteMediator(
                 db = db,
@@ -570,6 +575,32 @@ abstract class IDataSourceParentServer(
     }
 
     /**
+     * 保存自建歌单中的音乐
+     * @param [playlistId] 歌单id
+     * @param [musicIds] 音乐id集合
+     * @param [pic] 自建歌单图片
+     */
+    override suspend fun saveMusicPlaylist(
+        playlistId: String,
+        musicIds: List<String>
+    ): Boolean {
+        var playlistIndex = db.musicDao.selectPlaylistIndex() ?: -1
+        val playlists = musicIds.map { musicId ->
+            playlistIndex += 1
+            PlaylistMusic(
+                playlistId = playlistId,
+                musicId = musicId,
+                index = playlistIndex,
+                connectionId = connectionConfigServer.getConnectionId()
+            )
+        }
+        db.musicDao.savePlaylistMusic(playlists)
+        //更新歌单的封面信息
+        db.albumDao.updatePic(playlistId)
+        return true
+    }
+
+    /**
      * 获得专辑信息
      * @param [albumId] 专辑id
      * @return 专辑+艺术家信息
@@ -598,9 +629,6 @@ abstract class IDataSourceParentServer(
         var artistInfo: XyArtist? = db.artistDao.selectById(artistId)
         if (artistInfo == null || artistInfo.describe.isNullOrBlank()) {
             artistInfo = selectArtistInfoByRemotely(artistId)
-            artistInfo?.let {
-                db.artistDao.update(artistInfo)
-            }
         } else {
             val ifFavorite = db.artistDao.selectFavoriteById(artistId) == true
             artistInfo = artistInfo.copy(ifFavorite = ifFavorite)
@@ -615,30 +643,6 @@ abstract class IDataSourceParentServer(
     override suspend fun getPlayRecordMusicList(pageSize: Int): List<XyMusic> {
         return db.musicDao.selectPlayHistoryMusicList(pageSize)
     }
-
-    /**
-     * 获得流派内音乐列表/或者专辑
-     * @param [genres] 流派名称
-     * todo 需要修改部分接口的音乐功能,实现流派可以传入名称 jellyfin的流派名称使用 "|" 分割,这个方法每个数据源都单独实现
-     */
-   /* override fun selectMusicListByGenreIds(
-        genres: List<String>,
-        pageNum: Int,
-        pageSize: Int
-    ): List<XyMusic>? {
-        TODO("Not yet implemented")
-    }*/
-
-    /**
-     * 根据艺术家列表获得歌曲列表
-     */
-   /* override suspend fun getMusicListByArtistIds(
-        artistIds: List<String>,
-        pageSize: Int,
-        pageNum: Int
-    ): List<XyMusic>? {
-        TODO("Not yet implemented")
-    }*/
 
 
     /**
@@ -764,7 +768,7 @@ abstract class IDataSourceParentServer(
         playlist: Int?,
         genres: Int?,
         favorite: Int?,
-        connectionId:Long
+        connectionId: Long
     ) {
         val dataCount = db.dataCountDao.selectOne(connectionId)
         if (dataCount != null) {
@@ -994,6 +998,11 @@ abstract class IDataSourceParentServer(
         }
         return db.musicDao.selectMusicListByFavorite(pageSize, pageNum * pageSize)
     }
+
+    /**
+     * 创建下载链接
+     */
+    abstract fun createDownloadUrl(musicId: String): String
 
     /**
      * 是否从本地获取数据 true表示从本地获取,false表示不从本地获取

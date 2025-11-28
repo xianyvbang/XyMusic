@@ -19,6 +19,10 @@ class VersionApiClient : ApiConfig {
 
     private lateinit var gitHubVersionApi: GitHubVersionApi
 
+    init {
+        setRetrofitData("",false)
+    }
+
     /**
      * 通过Retrofit创建Api接口
      */
@@ -75,7 +79,7 @@ class VersionApiClient : ApiConfig {
     /**
      * 获取版本号信息的Api
      */
-    fun versionApi(restart: Boolean = false): GitHubVersionApi {
+   override fun downloadApi(restart: Boolean): GitHubVersionApi {
         if (!this::gitHubVersionApi.isInitialized || restart) {
             gitHubVersionApi = instance().create(GitHubVersionApi::class.java)
         }

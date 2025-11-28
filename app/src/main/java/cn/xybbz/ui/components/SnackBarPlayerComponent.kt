@@ -30,9 +30,11 @@ import androidx.compose.material.icons.automirrored.outlined.QueueMusic
 import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material.icons.automirrored.rounded.PlaylistPlay
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.HeartBroken
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.PlaylistRemove
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -179,32 +181,36 @@ fun SnackBarPlayerComponent(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (snackBarPlayerViewModel.datasourceManager.dataSourceType?.ifDelete == true)
+                    if (snackBarPlayerViewModel.dataSourceManager.dataSourceType?.ifDelete == true)
                         IconButton(onClick = {
 
                             if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
                                 MessageUtils.sendPopTip(R.string.please_select)
                             } else {
                                 snackBarPlayerViewModel.selectControl.onRemoveSelectListResource.invoke(
-                                    snackBarPlayerViewModel.datasourceManager,
+                                    snackBarPlayerViewModel.dataSourceManager,
                                     coroutineScope
                                 )
                             }
                         }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
                             Icon(
                                 imageVector = Icons.Rounded.Delete,
-                                contentDescription = stringResource(R.string.delete_permanently)
+                                contentDescription = if (snackBarPlayerViewModel.selectControl.ifLocal) stringResource(
+                                    R.string.delete_local_permanently
+                                ) else stringResource(R.string.delete_permanently)
                             )
                         }
 
                     IconButton(onClick = {
                         if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
                             MessageUtils.sendPopTip(R.string.please_select)
-
                         } else {
-                            snackBarPlayerViewModel.selectControl.onAddPlaySelect(
-                                snackBarPlayerViewModel.musicController
-                            )
+                            coroutineScope.launch {
+                                snackBarPlayerViewModel.selectControl.onAddPlaySelect(
+                                    snackBarPlayerViewModel.musicController,
+                                    snackBarPlayerViewModel.db
+                                )
+                            }
                         }
                     }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
                         Icon(
@@ -232,12 +238,12 @@ fun SnackBarPlayerComponent(
                                 MessageUtils.sendPopTip(R.string.please_select)
                             } else
                                 snackBarPlayerViewModel.selectControl.onRemovePlaylistMusic(
-                                    snackBarPlayerViewModel.datasourceManager,
+                                    snackBarPlayerViewModel.dataSourceManager,
                                     coroutineScope
                                 )
                         }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.PlaylistAdd,
+                                imageVector = Icons.Rounded.PlaylistRemove,
                                 contentDescription = stringResource(R.string.music_remove_from_playlist)
                             )
                         }
@@ -247,7 +253,7 @@ fun SnackBarPlayerComponent(
                             MessageUtils.sendPopTip(R.string.please_select)
                         } else
                             snackBarPlayerViewModel.selectControl.onRemoveFavorite(
-                                snackBarPlayerViewModel.datasourceManager,
+                                snackBarPlayerViewModel.dataSourceManager,
                                 coroutineScope,
                                 snackBarPlayerViewModel.musicController
                             )
@@ -257,6 +263,21 @@ fun SnackBarPlayerComponent(
                             contentDescription = stringResource(R.string.unfavorite)
                         )
                     }
+
+                    if (!snackBarPlayerViewModel.selectControl.ifLocal)
+                        IconButton(onClick = {
+                            if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
+                                MessageUtils.sendPopTip(R.string.please_select)
+                            } else {
+                                snackBarPlayerViewModel.downloadMusics()
+                            }
+
+                        }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
+                            Icon(
+                                imageVector = Icons.Rounded.Download,
+                                contentDescription = stringResource(R.string.download_list)
+                            )
+                        }
                 }
             } else {
                 Row(

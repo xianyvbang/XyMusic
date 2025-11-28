@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -67,6 +68,7 @@ import cn.xybbz.common.enums.img
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.localdata.enums.DataSourceType
+import cn.xybbz.router.RouterConstants
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
@@ -160,6 +162,20 @@ fun ConnectionScreen(
                     )
                 }
 
+        }, actions = {
+            IconButton(onClick = {
+                navHostController.navigate(RouterConstants.Setting) {
+                    popUpTo(RouterConstants.Home) {
+                        saveState = true
+                    }
+                    restoreState = true
+                }
+            }) {
+                Icon(
+                    imageVector = Icons.Rounded.Settings,
+                    contentDescription = stringResource(R.string.open_settings_page_button)
+                )
+            }
         })
 
         AnimatedVisibility(visible = ifSelectDataSource != ScreenType.SELECT_DATA_SOURCE) {

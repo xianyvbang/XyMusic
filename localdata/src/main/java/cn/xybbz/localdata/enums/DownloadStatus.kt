@@ -1,11 +1,11 @@
-package cn.xybbz.common.enums
+package cn.xybbz.localdata.enums
 
 /**
  * 下载状态枚举
  */
-enum class DownloadState {
+enum class DownloadStatus {
     //未开始
-    NOT_STARTED,
+    QUEUED,
 
     //进行中
     DOWNLOADING,
@@ -17,5 +17,8 @@ enum class DownloadState {
     COMPLETED,
 
     //失败
-    FAILED
+    FAILED,
+
+    //取消
+    CANCEL,
 }

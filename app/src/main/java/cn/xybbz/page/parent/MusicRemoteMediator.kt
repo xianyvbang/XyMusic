@@ -6,6 +6,7 @@ import cn.xybbz.api.client.data.AllResponse
 import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +18,7 @@ class MusicRemoteMediator(
     private val datasourceServer: IDataSourceParentServer,
     private val connectionId: Long,
     private val sortByFlow: StateFlow<Sort>
-) : DefaultRemoteMediator<XyMusic>(
+) : DefaultRemoteMediator<HomeMusic,XyMusic>(
     db,
     RemoteIdConstants.MUSIC + connectionId,
     connectionId

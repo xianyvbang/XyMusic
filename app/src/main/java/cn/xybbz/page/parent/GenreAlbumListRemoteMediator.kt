@@ -14,7 +14,7 @@ class GenreAlbumListRemoteMediator(
     private val datasourceServer: IDataSourceParentServer,
     private val db: DatabaseClient,
     private val connectionId: Long
-) : DefaultRemoteMediator<XyAlbum>(
+) : DefaultRemoteMediator<XyAlbum,XyAlbum>(
     db,
     RemoteIdConstants.GENRE + RemoteIdConstants.ALBUM + genreId + connectionId,
     connectionId

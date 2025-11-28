@@ -20,12 +20,14 @@ import cn.xybbz.ui.screens.ConnectionConfigInfoScreen
 import cn.xybbz.ui.screens.ConnectionManagement
 import cn.xybbz.ui.screens.ConnectionScreen
 import cn.xybbz.ui.screens.DailyRecommendScreen
+import cn.xybbz.ui.screens.DownloadScreen
 import cn.xybbz.ui.screens.FavoriteScreen
 import cn.xybbz.ui.screens.GenresInfoScreen
 import cn.xybbz.ui.screens.GenresScreen
 import cn.xybbz.ui.screens.HomeScreen
 import cn.xybbz.ui.screens.InterfaceSettingScreen
 import cn.xybbz.ui.screens.LanguageConfigScreen
+import cn.xybbz.ui.screens.LocalScreen
 import cn.xybbz.ui.screens.MemoryManagementScreen
 import cn.xybbz.ui.screens.MusicScreen
 import cn.xybbz.ui.screens.SearchScreen
@@ -161,6 +163,14 @@ fun RouterCompose(
 
             extremityComposable<RouterConstants.DailyRecommend> {
                 DailyRecommendScreen()
+            }
+
+            nodeComposable<RouterConstants.Download> {
+                DownloadScreen()
+            }
+
+            nodeComposable<RouterConstants.Local> {
+                LocalScreen()
             }
         }
     }

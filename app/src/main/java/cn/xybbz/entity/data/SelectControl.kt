@@ -2,16 +2,17 @@ package cn.xybbz.entity.data
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import cn.xybbz.R
 import cn.xybbz.api.client.IDataSourceManager
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.MusicController
+import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.common.utils.OperationTipUtils
-import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.ui.components.AddPlaylistBottomData
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.show
@@ -30,26 +31,35 @@ import kotlinx.coroutines.launch
 class SelectControl {
 
 
-    //选中音乐列表
-    val selectMusicDataList = mutableStateListOf<XyMusic>()
+    //选中音乐列表id
+    val selectMusicIdList = mutableStateSetOf<String>()
 
-    var musicList by mutableStateOf<List<XyMusic>?>(null)
+    /**
+     * 是否已经全选
+     */
+    var isSelectAll by mutableStateOf(false)
         private set
 
     //是否显示按钮
     var ifOpenSelect by mutableStateOf(false)
         private set
 
+    //是否为本地页面操作
+    var ifLocal by mutableStateOf(false)
+        private set
+
     //是否启用按钮
     var ifEnableButton by mutableStateOf(false)
         private set
 
-    var itemId: String? by mutableStateOf(null)
+    var playlistId: String? by mutableStateOf(null)
         private set
 
     //是否在歌单中操作
     var ifPlaylist by mutableStateOf(false)
         private set
+
+    val scope = CoroutineScopeUtils.getIo("SelectControl")
 
     //永久删除所选音乐资源-从硬盘上删除
     val onRemoveSelectListResource: ((IDataSourceManager, CoroutineScope) -> Unit) =
@@ -68,15 +78,16 @@ class SelectControl {
         }
 
     //增加选中音乐到播放列表
-    val onAddPlaySelect: (MusicController) -> Unit = {
-        addPlayerList(it)
-    }
+    val onAddPlaySelect: suspend (MusicController, DatabaseClient) -> Unit =
+        { musicController, db ->
+            addPlayerList(musicController, db)
+        }
 
     //增加选中音乐到歌单
     val onAddPlaylistSelect: () -> Unit = {
         AddPlaylistBottomData(
             ifShow = true,
-            musicInfoList = selectMusicDataList.map { it },
+            musicInfoList = selectMusicIdList.map { it },
             onItemClick = {
                 dismiss()
             }).show()
@@ -94,16 +105,16 @@ class SelectControl {
             viewModelScope.launch {
                 OperationTipUtils.operationTipProgress() { loadingObject ->
                     loadingObject.updateProgress(0.0f, 0)
-                    selectMusicDataList.filter { item -> item.ifFavoriteStatus }
-                        .forEachIndexed { index, music ->
+                    selectMusicIdList
+                        .forEachIndexed { index, musicId ->
                             dataSourceManager.setFavoriteData(
                                 MusicTypeEnum.MUSIC,
-                                music.itemId,
+                                musicId,
                                 musicController,
                                 true
                             )
                             loadingObject.updateProgress(
-                                (index * 1.0f + 1.0f) / selectMusicDataList.size,
+                                (index * 1.0f + 1.0f) / selectMusicIdList.size,
                                 index + 1
                             )
                         }
@@ -121,13 +132,19 @@ class SelectControl {
 
     constructor(ifOpenSelect: Boolean, itemId: String) : this() {
         this.ifOpenSelect = ifOpenSelect
-        this.itemId = itemId
+        this.playlistId = itemId
     }
 
     constructor()
 
-    fun show(ifOpenSelect: Boolean, ifPlaylist: Boolean = false, onOpenChange: (Boolean) -> Unit) {
-        setData(ifOpenSelect, false, ifPlaylist)
+    fun show(
+        ifOpenSelect: Boolean,
+        playlistId: String? = null,
+        ifPlaylist: Boolean = false,
+        ifLocal: Boolean = false,
+        onOpenChange: ((Boolean) -> Unit)? = null
+    ) {
+        setData(ifOpenSelect, playlistId, false, ifPlaylist, ifLocal)
         this.onOpenChange = onOpenChange
     }
 
@@ -135,15 +152,29 @@ class SelectControl {
         clearData()
     }
 
-    fun setData(ifOpenSelect: Boolean, ifEnableButton: Boolean, ifPlaylist: Boolean) {
-        clearSelectMusicList()
+    private fun setData(
+        ifOpenSelect: Boolean,
+        playlistId: String? = null,
+        ifEnableButton: Boolean,
+        ifPlaylist: Boolean,
+        ifLocal: Boolean = false
+    ) {
         this.ifOpenSelect = ifOpenSelect
+        if (ifPlaylist)
+            this.playlistId = playlistId
+        else
+            this.playlistId = null
+
         this.ifEnableButton = ifEnableButton
         this.ifPlaylist = ifPlaylist
+        this.ifLocal = ifLocal
     }
 
     fun clearData() {
-        clearSelectMusicList()
+        scope.launch {
+            selectMusicIdList.clear()
+        }
+        isSelectAll = false
         ifOpenSelect = false
         ifEnableButton = false
         this.ifPlaylist = false
@@ -154,21 +185,19 @@ class SelectControl {
      * 设置选择音乐列表数据
      * @param [music] 音乐
      */
-    fun setSelectMusicListData(music: XyMusic) {
-        if (!selectMusicDataList.any { it.itemId == music.itemId }) {
-            selectMusicDataList.add(music)
-            ifEnableButton = true
-        }
-    }
+    fun toggleSelection(musicId: String, onIsSelectAll: () -> Boolean) {
 
-    /**
-     * 设置选择音乐列出所有数据
-     * @param [musics] 音乐信息
-     */
-    fun setSelectMusicListAllData(musics: List<XyMusic>) {
-        selectMusicDataList.clear()
-        selectMusicDataList.addAll(musics)
-        ifEnableButton = true
+        if (selectMusicIdList.contains(musicId)) {
+            selectMusicIdList.remove(musicId)
+            if (selectMusicIdList.isEmpty()) {
+                ifEnableButton = false
+            }
+            isSelectAll = false
+        } else {
+            selectMusicIdList.add(musicId)
+            ifEnableButton = true
+            isSelectAll = onIsSelectAll()
+        }
     }
 
     /**
@@ -178,9 +207,9 @@ class SelectControl {
         dataSourceManager: IDataSourceManager,
         viewModelScope: CoroutineScope
     ) {
-        if (selectMusicDataList.isNotEmpty()) {
+        if (selectMusicIdList.isNotEmpty()) {
             viewModelScope.launch {
-                dataSourceManager.removeMusicByIds(selectMusicDataList.map { it.itemId })
+                dataSourceManager.removeMusicByIds(selectMusicIdList.toList())
             }.invokeOnCompletion {
                 dismiss()
             }
@@ -188,33 +217,30 @@ class SelectControl {
 
     }
 
-
-    /**
-     * 删除选择音乐 ID
-     * @param [itemId] 商品编号
-     */
-    fun removeSelectMusicId(itemId: String) {
-        selectMusicDataList.removeIf { it.itemId == itemId }
-        if (selectMusicDataList.isEmpty()) {
-            ifEnableButton = false
-        }
-    }
-
-
     /**
      * 播放选中列表
      */
-    fun addPlayerList(musicController: MusicController) {
+    suspend fun addPlayerList(musicController: MusicController, db: DatabaseClient) {
+        val xyMusics = db.musicDao.selectByIds(selectMusicIdList.toList())
         musicController.addMusicList(
-            musicList = selectMusicDataList,
+            musicList = xyMusics,
             isPlayer = true,
         )
         clearData()
     }
 
-    fun clearSelectMusicList() {
-        ifEnableButton = false
-        selectMusicDataList.clear()
+    fun toggleSelectionAll(musicIdList: List<String>? = null) {
+        if (isSelectAll) {
+            selectMusicIdList.clear()
+            isSelectAll = false
+            ifEnableButton = false
+        } else {
+            if (!musicIdList.isNullOrEmpty()) {
+                ifEnableButton = true
+                isSelectAll = true
+                selectMusicIdList.addAll(musicIdList)
+            }
+        }
     }
 
 
@@ -226,11 +252,11 @@ class SelectControl {
         viewModelScope: CoroutineScope
     ) {
         viewModelScope.launch {
-            if (selectMusicDataList.isNotEmpty()) {
-                itemId?.let {
+            if (selectMusicIdList.isNotEmpty()) {
+                playlistId?.let {
                     dataSourceManager.removeMusicPlaylist(
                         it,
-                        selectMusicDataList.map { it.itemId }
+                        selectMusicIdList.toList()
                     )
                 }
             }
@@ -241,6 +267,6 @@ class SelectControl {
 
     //判断是否选择列表是否为空
     fun ifSelectEmpty(): Boolean {
-        return selectMusicDataList.isEmpty()
+        return selectMusicIdList.isEmpty()
     }
 }

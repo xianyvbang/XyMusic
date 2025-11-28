@@ -4,6 +4,7 @@ import android.content.Context
 import android.icu.text.Transliterator
 import android.util.Log
 import androidx.room.withTransaction
+import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.AllResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
@@ -40,6 +41,7 @@ import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
+import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
@@ -166,6 +168,13 @@ class NavidromeDatasourceServer @Inject constructor(
     }
 
     /**
+     * 根据下载类型获得数据源
+     */
+    override fun getApiClient(downloadTypes: DownloadTypes): ApiConfig {
+        return navidromeApiClient
+    }
+
+    /**
      * 搜索音乐,艺术家,专辑
      */
     override suspend fun searchAll(search: String): SearchData {
@@ -268,11 +277,6 @@ class NavidromeDatasourceServer @Inject constructor(
                 albumId = if (dataType == MusicTypeEnum.ALBUM) listOf(itemId) else null,
                 artistId = if (dataType == MusicTypeEnum.ARTIST) listOf(itemId) else null
             ).isFavorite
-        db.musicDao.updateFavoriteByItemId(
-            favorite,
-            itemId,
-            connectionConfigServer.getConnectionId()
-        )
         return favorite
     }
 
@@ -286,11 +290,6 @@ class NavidromeDatasourceServer @Inject constructor(
             albumId = if (dataType == MusicTypeEnum.ALBUM) listOf(itemId) else null,
             artistId = if (dataType == MusicTypeEnum.ARTIST) listOf(itemId) else null
         ).isFavorite
-        db.musicDao.updateFavoriteByItemId(
-            favorite,
-            itemId,
-            connectionConfigServer.getConnectionId()
-        )
         return favorite
     }
 
@@ -539,8 +538,7 @@ class NavidromeDatasourceServer @Inject constructor(
                 val pic = if (removeDuplicatesMusicList.isNotEmpty()) musicList[0].pic else null
                 saveMusicPlaylist(
                     playlistId = playlistId,
-                    musicIds = removeDuplicatesMusicList.map { music -> music.itemId },
-                    pic = pic
+                    musicIds = removeDuplicatesMusicList.map { music -> music.itemId }
                 )
             }
         }
@@ -587,26 +585,12 @@ class NavidromeDatasourceServer @Inject constructor(
      */
     override suspend fun saveMusicPlaylist(
         playlistId: String,
-        musicIds: List<String>,
-        pic: String?
+        musicIds: List<String>
     ): Boolean {
         navidromeApiClient.playlistsApi().addPlaylistMusics(
             playlistId = playlistId, PlaylistAddMusicsUpdateRequest(musicIds)
         )
-        var playlistIndex = db.musicDao.selectPlaylistIndex() ?: -1
-        val playlists = musicIds.map { musicId ->
-            playlistIndex += 1
-            PlaylistMusic(
-                playlistId = playlistId,
-                musicId = musicId,
-                index = playlistIndex,
-                connectionId = connectionConfigServer.getConnectionId()
-            )
-        }
-        db.musicDao.savePlaylistMusic(playlists)
-        //更新歌单的封面信息
-        db.albumDao.updatePic(playlistId, pic.toString())
-        return true
+        return super.saveMusicPlaylist(playlistId,musicIds)
     }
 
     /**
@@ -832,6 +816,13 @@ class NavidromeDatasourceServer @Inject constructor(
             selectMusicList = homeMusicList.items
         }
         return selectMusicList
+    }
+
+    /**
+     * 创建下载链接
+     */
+    override fun createDownloadUrl(musicId: String): String {
+        return navidromeApiClient.createDownloadUrl(musicId)
     }
 
     /**
@@ -1321,6 +1312,11 @@ class NavidromeDatasourceServer @Inject constructor(
                     it
                 )
             } ?: "" else navidromeApiClient.createAudioUrl(music.id),
+            downloadUrl = if (isPlaylistMusic) music.mediaFileId?.let {
+                navidromeApiClient.createDownloadUrl(
+                    it
+                )
+            } ?: "" else navidromeApiClient.createDownloadUrl(music.id),
             album = music.albumId,
             albumName = music.album,
             genreIds = music.genres?.joinToString(Constants.ARTIST_DELIMITER) { it.id },

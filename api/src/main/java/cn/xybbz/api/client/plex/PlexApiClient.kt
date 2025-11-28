@@ -1,6 +1,7 @@
 package cn.xybbz.api.client.plex
 
 import cn.xybbz.api.client.DefaultApiClient
+import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.jellyfin.encodeUrlParameter
 import cn.xybbz.api.client.plex.service.PlexItemApi
 import cn.xybbz.api.client.plex.service.PlexLibraryApi
@@ -11,7 +12,7 @@ import cn.xybbz.api.client.plex.service.PlexUserLibraryApi
 import cn.xybbz.api.client.plex.service.PlexUserViewsApi
 import cn.xybbz.api.constants.ApiConstants
 
-class PlexApiClient : DefaultApiClient() {
+class PlexApiClient : DefaultParentApiClient() {
 
     /**
      * 客户端编码
@@ -281,6 +282,13 @@ class PlexApiClient : DefaultApiClient() {
             plexLibraryApi = instance().create(PlexLibraryApi::class.java)
         }
         return plexLibraryApi
+    }
+
+    /**
+     * 创建下载链接
+     */
+    override fun createDownloadUrl(itemId: String): String {
+        return "$baseUrl$itemId?download=1"
     }
 
     /**

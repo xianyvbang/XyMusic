@@ -146,8 +146,8 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer.hls)
 
     //moshi 数据解析 类似json
-    implementation(libs.squareup.converter.moshi)
-    implementation(libs.moshi.kotlin)
+//    implementation(libs.squareup.converter.moshi)
+//    implementation(libs.moshi.kotlin)
 
     //启动页面
     implementation(libs.androidx.core.splashscreen)
@@ -166,6 +166,7 @@ dependencies {
     implementation(libs.google.hilt)
     ksp(libs.google.hilt.compiler)
     implementation(libs.google.hilt.navigation)
+    implementation(libs.google.hilt.work)
 
     //多语种适配框架
     implementation(libs.multi.languages)

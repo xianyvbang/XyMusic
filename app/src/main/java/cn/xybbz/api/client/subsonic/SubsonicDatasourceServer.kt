@@ -7,6 +7,7 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.PagingData
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
+import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.AllResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
@@ -38,9 +39,11 @@ import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
+import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
+import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.page.defaultLocalPager
 import kotlinx.coroutines.flow.Flow
@@ -141,11 +144,18 @@ class SubsonicDatasourceServer @Inject constructor(
     }
 
     /**
+     * 根据下载类型获得数据源
+     */
+    override fun getApiClient(downloadTypes: DownloadTypes): ApiConfig {
+        return subsonicApiClient
+    }
+
+    /**
      * 获得音乐列表数据 Subsonic没办法一次性获得所有音乐
      */
     override fun selectMusicFlowList(
         sortByFlow: StateFlow<Sort>
-    ): Flow<PagingData<XyMusic>> {
+    ): Flow<PagingData<HomeMusic>> {
         return defaultLocalPager {
             val sortBy = sortByFlow.value
             val yearList = sortBy.yearList
@@ -435,8 +445,7 @@ class SubsonicDatasourceServer @Inject constructor(
                 val pic = if (removeDuplicatesMusicList.isNotEmpty()) musicList[0].pic else null
                 saveMusicPlaylist(
                     playlistId = playlistId,
-                    musicIds = removeDuplicatesMusicList.map { music -> music.itemId },
-                    pic = pic
+                    musicIds = removeDuplicatesMusicList.map { music -> music.itemId }
                 )
             }
         }
@@ -481,27 +490,13 @@ class SubsonicDatasourceServer @Inject constructor(
      */
     override suspend fun saveMusicPlaylist(
         playlistId: String,
-        musicIds: List<String>,
-        pic: String?
+        musicIds: List<String>
     ): Boolean {
         subsonicApiClient.playlistsApi().updatePlaylist(
             playlistId = playlistId.replace(Constants.SUBSONIC_PLAYLIST_SUFFIX, ""),
             songIdToAdd = musicIds
         )
-        var playlistIndex = db.musicDao.selectPlaylistIndex() ?: -1
-        val playlists = musicIds.map { musicId ->
-            playlistIndex += 1
-            PlaylistMusic(
-                playlistId = playlistId,
-                musicId = musicId,
-                index = playlistIndex,
-                connectionId = connectionConfigServer.getConnectionId()
-            )
-        }
-        db.musicDao.savePlaylistMusic(playlists)
-        //更新歌单的封面信息
-        db.albumDao.updatePic(playlistId, pic.toString())
-        return true
+        return super.saveMusicPlaylist(playlistId,musicIds)
     }
 
     /**
@@ -1072,6 +1067,7 @@ class SubsonicDatasourceServer @Inject constructor(
             },
             name = music.title,
             musicUrl = subsonicApiClient.createAudioUrl(music.id),
+            downloadUrl = createDownloadUrl(music.id),
             album = music.albumId,
             albumName = music.album,
             genreIds = music.genre,
@@ -1187,11 +1183,6 @@ class SubsonicDatasourceServer @Inject constructor(
                 albumId = if (dataType == MusicTypeEnum.ALBUM) listOf(itemId) else null,
                 artistId = if (dataType == MusicTypeEnum.ARTIST) listOf(itemId) else null
             ).isFavorite
-        db.musicDao.updateFavoriteByItemId(
-            favorite,
-            itemId,
-            connectionConfigServer.getConnectionId()
-        )
         return favorite
     }
 
@@ -1205,11 +1196,6 @@ class SubsonicDatasourceServer @Inject constructor(
             albumId = if (dataType == MusicTypeEnum.ALBUM) listOf(itemId) else null,
             artistId = if (dataType == MusicTypeEnum.ARTIST) listOf(itemId) else null
         ).isFavorite
-        db.musicDao.updateFavoriteByItemId(
-            favorite,
-            itemId,
-            connectionConfigServer.getConnectionId()
-        )
         return favorite
     }
 
@@ -1271,5 +1257,12 @@ class SubsonicDatasourceServer @Inject constructor(
         pageNum: Int
     ): List<XyMusic>? {
         return super.getMusicListByFavorite(pageSize = pageSize, pageNum = pageNum)
+    }
+
+    /**
+     * 创建下载链接
+     */
+    override fun createDownloadUrl(musicId: String): String {
+        return subsonicApiClient.createDownloadUrl(musicId)
     }
 }

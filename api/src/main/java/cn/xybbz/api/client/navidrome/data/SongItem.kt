@@ -151,9 +151,6 @@ data class SongItem(
      * 排序专辑艺术家名称
      */
     val orderAlbumArtistName: String,
-    /**
-     * todo 不知道是用来做什么的,是否编辑?
-     */
     val compilation: Boolean,
     /**
      * 描述

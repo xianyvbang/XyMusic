@@ -12,6 +12,7 @@ import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.entity.data.SelectControl
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -46,7 +47,7 @@ class MusicViewModel @Inject constructor(
 
     // 单例Pager Flow
     // 暴露一个 Flow<PagingData<XyMusic>>
-    val homeMusicPager: Flow<PagingData<XyMusic>> =
+    val homeMusicPager: Flow<PagingData<HomeMusic>> =
         connectionConfigServer.loginStateFlow
             .flatMapLatest { loggedIn ->
                 if (loggedIn) {
@@ -60,11 +61,8 @@ class MusicViewModel @Inject constructor(
             }
             .cachedIn(viewModelScope)
 
-    /**
-     * 获得当前加载的列表
-     */
-    suspend fun getMusicMusic(limit: Int): List<XyMusic>? {
-        return db.musicDao.selectHomeMusicList(limit, 0)
-    }
+    suspend fun getMusicInfoById(musicId: String): XyMusic? = db.musicDao.selectById(musicId)
+    suspend fun getMusicInfoByIds(musicIds: List<String>): List<XyMusic> =
+        db.musicDao.selectByIds(musicIds)
 
 }

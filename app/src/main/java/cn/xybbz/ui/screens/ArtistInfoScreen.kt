@@ -6,9 +6,13 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -25,8 +29,12 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.PlaylistAddCheck
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
+import androidx.compose.material.icons.rounded.PauseCircle
+import androidx.compose.material.icons.rounded.PlayCircle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -67,6 +75,9 @@ import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.TabListEnum
 import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.entity.data.SelectControl
+import cn.xybbz.entity.data.music.MusicPlayContext
+import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.RouterConstants
 import cn.xybbz.ui.components.LazyListComponent
@@ -74,10 +85,14 @@ import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.VerticalGridListComponent
+import cn.xybbz.ui.components.XySelectAllComponent
+import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
+import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyImage
+import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.ArtistInfoViewModel
 import kotlinx.coroutines.launch
 import kotlin.math.min
@@ -105,13 +120,14 @@ fun ArtistInfoScreen(
         artistInfoViewModel.musicList.collectAsLazyPagingItems()
     val albumPageList =
         artistInfoViewModel.albumList.collectAsLazyPagingItems()
+    val favoriteSet by artistInfoViewModel.favoriteRepository.favoriteSet.collectAsState()
+
     val coroutineScope = rememberCoroutineScope()
     val navController = LocalNavController.current
     val lazyListState1 = rememberLazyListState()
     val lazyListState = rememberLazyListState()
     val lazyGridState = rememberLazyGridState()
     val parentState = rememberLazyListState()
-    val favoriteList by artistInfoViewModel.favoriteRepository.favoriteMap.collectAsState()
 
     //渐变高度占图片高度的比例
     val gradientHeight = 0.4f
@@ -433,6 +449,17 @@ fun ArtistInfoScreen(
                                                 .height(maxHeight),
                                             collectAsLazyPagingItems = musicPage
                                         ) { list ->
+                                            item {
+                                                ArtistMusicListOperation(
+                                                    artistId = artistId(),
+                                                    musicPlayContext = artistInfoViewModel.musicPlayContext,
+                                                    selectControl = artistInfoViewModel.selectControl,
+                                                    onSelectAll = {
+                                                        artistInfoViewModel.selectControl.toggleSelectionAll(musicPage.itemSnapshotList.items.map { it.itemId })
+                                                    },
+                                                    sortContent = {}
+                                                )
+                                            }
                                             items(
                                                 list.itemCount,
                                                 key = list.itemKey { item -> item.itemId },
@@ -440,22 +467,24 @@ fun ArtistInfoScreen(
                                             ) { index ->
                                                 list[index]?.let { music ->
                                                     MusicItemComponent(
-                                                        onMusicData = { music },
+                                                        itemId = music.itemId,
+                                                        name = music.name,
+                                                        album = music.album,
+                                                        artists = music.artists,
+                                                        pic = music.pic,
+                                                        codec = music.codec,
+                                                        bitRate = music.bitRate,
                                                         onIfFavorite = {
-                                                            if (favoriteList.containsKey(music.itemId)) {
-                                                                favoriteList.getOrDefault(
-                                                                    music.itemId,
-                                                                    false
-                                                                )
-                                                            } else {
-                                                                music.ifFavoriteStatus
-                                                            }
+                                                            music.itemId in favoriteSet
                                                         },
                                                         textColor = if (artistInfoViewModel.musicController.musicInfo?.itemId == music.itemId)
                                                             MaterialTheme.colorScheme.primary
                                                         else
                                                             MaterialTheme.colorScheme.onSurface,
                                                         backgroundColor = Color.Transparent,
+                                                        trailingOnClick = {
+                                                            music.show()
+                                                        },
                                                         onMusicPlay = {
                                                             coroutineScope.launch {
                                                                 artistInfoViewModel.musicPlayContext.artist(
@@ -466,6 +495,18 @@ fun ArtistInfoScreen(
                                                                     artistId = artistId()
                                                                 )
                                                             }
+                                                        },
+                                                        ifSelect = artistInfoViewModel.selectControl.ifOpenSelect,
+                                                        ifSelectCheckBox = { artistInfoViewModel.selectControl.selectMusicIdList.any { it == music.itemId } },
+                                                        trailingOnSelectClick = { select ->
+                                                            artistInfoViewModel.selectControl.toggleSelection(
+                                                                music.itemId,
+                                                                onIsSelectAll = {
+                                                                    artistInfoViewModel.selectControl.selectMusicIdList.containsAll(
+                                                                        list.itemSnapshotList.items.map { it.itemId }
+                                                                    )
+                                                                }
+                                                            )
                                                         }
                                                     )
                                                 }
@@ -508,13 +549,90 @@ fun ArtistInfoScreen(
                     }
                 }
             }
-
-
         }
-
-
     }
-
-
 }
 
+
+/**
+ * 音乐列表操作栏
+ */
+@Composable
+private fun ArtistMusicListOperation(
+    artistId: String,
+    musicPlayContext: MusicPlayContext,
+    selectControl: SelectControl,
+    onSelectAll: () -> Unit,
+    sortContent: @Composable () -> Unit
+) {
+    XyRow(
+        modifier = Modifier
+            .debounceClickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
+                if (selectControl.ifOpenSelect) {
+                    onSelectAll()
+                } else {
+                    musicPlayContext.artist(
+                        OnMusicPlayParameter(
+                            musicId = "",
+                            artistId = artistId
+                        ),
+                        index = 0,
+                        artistId = artistId
+                    )
+                }
+            }
+            .height(XyTheme.dimens.itemHeight),
+        paddingValues = PaddingValues(
+            horizontal = XyTheme.dimens.outerHorizontalPadding
+        )
+    ) {
+
+
+        if (selectControl.ifOpenSelect) {
+            XySelectAllComponent(
+                isSelectAll = selectControl.isSelectAll,
+                onSelectAll = onSelectAll
+            )
+            IconButton(onClick = {
+                selectControl.dismiss()
+            }) {
+                Icon(
+                    imageVector = Icons.Rounded.Close,
+                    contentDescription = stringResource(R.string.close_selection)
+                )
+            }
+        } else {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.PlayCircle,
+                    contentDescription = stringResource(R.string.start_playback)
+                )
+                Text(text = stringResource(R.string.start_playback))
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ) {
+                sortContent()
+
+                IconButton(onClick = {
+                    selectControl.show(
+                        true
+                    )
+                }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.PlaylistAddCheck,
+                        contentDescription = stringResource(R.string.select)
+                    )
+                }
+            }
+        }
+
+    }
+}

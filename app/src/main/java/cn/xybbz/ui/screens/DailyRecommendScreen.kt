@@ -45,7 +45,7 @@ fun DailyRecommendScreen(
 
     val coroutineScope = rememberCoroutineScope()
     val navController = LocalNavController.current
-    val favoriteList by dailyRecommendViewModel.favoriteRepository.favoriteMap.collectAsState()
+    val favoriteList by dailyRecommendViewModel.favoriteRepository.favoriteSet.collectAsState()
     val state = rememberPullToRefreshState()
 
     var isRefreshing by remember {
@@ -93,15 +93,17 @@ fun DailyRecommendScreen(
                     dailyRecommendViewModel.recommendedMusicList,
                     key = { _, item -> item.itemId },
                     contentType = { _, _ -> MusicTypeEnum.MUSIC }
-                ) { index, music ->
+                ) { _, music ->
                     MusicItemComponent(
-                        onMusicData = { music },
+                        itemId = music.itemId,
+                        name = music.name,
+                        album = music.album,
+                        artists = music.artists,
+                        pic = music.pic,
+                        codec = music.codec,
+                        bitRate = music.bitRate,
                         onIfFavorite = {
-                            if (favoriteList.containsKey(music.itemId)) {
-                                favoriteList.getOrDefault(music.itemId, false)
-                            } else {
-                                music.ifFavoriteStatus
-                            }
+                            music.itemId in favoriteList
                         },
                         textColor = if (dailyRecommendViewModel.musicController.musicInfo?.itemId == music.itemId)
                             MaterialTheme.colorScheme.primary
@@ -117,6 +119,9 @@ fun DailyRecommendScreen(
                             }
                         },
                         trailingOnClick = {
+                            music.show()
+                        },
+                        trailingOnSelectClick = {
                             coroutineScope.launch {
                                 dailyRecommendViewModel.getMusicInfo(music.itemId)
                                     ?.show()

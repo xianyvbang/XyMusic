@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.R
 import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.jellyfin.data.User
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.MusicController
@@ -18,11 +19,15 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.SettingsConfig
 import cn.xybbz.config.alarm.AlarmConfig
+import cn.xybbz.config.download.DownLoadManager
+import cn.xybbz.config.download.core.DownloadRequest
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.setting.SkipTime
+import cn.xybbz.localdata.enums.DownloadTypes
+import com.squareup.moshi.Moshi
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -34,19 +39,15 @@ import javax.inject.Inject
 class MusicBottomMenuViewModel @Inject constructor(
     private val settingsConfig: SettingsConfig,
     private val db: DatabaseClient,
-    private val _musicController: MusicController,
-    private val _dataSourceManager: IDataSourceManager,
-    private val _alarmConfig: AlarmConfig,
-    private val _connectionConfigServer: ConnectionConfigServer,
-    private val _favoriteRepository: FavoriteRepository
+    val musicController: MusicController,
+    val dataSourceManager: IDataSourceManager,
+    val alarmConfig: AlarmConfig,
+    val connectionConfigServer: ConnectionConfigServer,
+    val favoriteRepository: FavoriteRepository,
+    val downloadManager: DownLoadManager
 ) : ViewModel() {
 
 
-    val musicController: MusicController = _musicController
-    val dataSourceManager = _dataSourceManager
-    val connectionConfigServer = _connectionConfigServer
-    val favoriteRepository = _favoriteRepository
-    val alarmConfig = _alarmConfig
 
     /**
      * 播放速度
@@ -131,7 +132,7 @@ class MusicBottomMenuViewModel @Inject constructor(
         itemId: String,
         ifFavorite: Boolean
     ): Boolean {
-        val favoriteMusic = _dataSourceManager.setFavoriteData(
+        val favoriteMusic = dataSourceManager.setFavoriteData(
             type = MusicTypeEnum.MUSIC,
             itemId = itemId,
             musicController = musicController,
@@ -161,11 +162,11 @@ class MusicBottomMenuViewModel @Inject constructor(
      * 音乐app定时关闭
      */
     fun createMusicStop() {
-        _alarmConfig.cancelAllAlarm()
+        alarmConfig.cancelAllAlarm()
         val calendar = android.icu.util.Calendar.getInstance()
             .apply { time = Date() } // 创建Calendar对象并设置为当前时间
         calendar.add(Calendar.MINUTE, timerInfo.toInt())
-        _alarmConfig.getUpAlarmManagerStartWork(calendar, ifPlayEndClose)
+        alarmConfig.getUpAlarmManagerStartWork(calendar, ifPlayEndClose)
         Log.i("=====", "触发时间${SimpleDateFormat.getTimeInstance().format(calendar.time)}")
         MessageUtils.sendPopTip(
             SimpleDateFormat.getTimeInstance().format(calendar.time), R.string.timer_close_message
@@ -178,7 +179,7 @@ class MusicBottomMenuViewModel @Inject constructor(
      */
     fun cancelAlarm() {
         viewModelScope.launch {
-            _alarmConfig.cancelAllAlarm()
+            alarmConfig.cancelAllAlarm()
             MessageUtils.sendPopTip(
                 R.string.cancel_timer_close_message
             )
@@ -206,6 +207,24 @@ class MusicBottomMenuViewModel @Inject constructor(
             }
 
         }
+    }
+
+    suspend fun downloadMusic(musicData: XyMusic) {
+        val downloadTypes = dataSourceManager.dataSourceType?.getDownloadType() ?: DownloadTypes.APK
+        downloadManager.enqueue(
+            DownloadRequest(
+                url = musicData.downloadUrl,
+                fileName = musicData.name + "." + musicData.container,
+                fileSize = musicData.size ?: 0,
+                uid = musicData.itemId,
+                title = musicData.name,
+                type = downloadTypes,
+                cover = musicData.pic,
+                duration = musicData.runTimeTicks,
+                connectionId = connectionConfigServer.getConnectionId(),
+                music = musicData
+            )
+        )
     }
 
 }

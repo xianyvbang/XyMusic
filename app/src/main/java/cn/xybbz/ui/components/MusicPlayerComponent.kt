@@ -529,11 +529,7 @@ private fun FavoriteMusicIconComponent(
     favoriteRepository: FavoriteRepository
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val favorite by favoriteRepository.favoriteMap.collectAsState()
-    //收藏信息
-    var ifFavorite by remember {
-        mutableStateOf(favorite[musicDetail.itemId] ?: false)
-    }
+    val favoriteSet by favoriteRepository.favoriteSet.collectAsState()
 
     IconButton(
         onClick = {
@@ -542,9 +538,9 @@ private fun FavoriteMusicIconComponent(
                     MusicTypeEnum.MUSIC,
                     itemId = musicDetail.itemId,
                     musicController = musicController,
-                    ifFavorite = ifFavorite
+                    ifFavorite = musicDetail.itemId in favoriteSet
                 )
-                ifFavorite = ifFavoriteData
+//                ifFavorite = ifFavoriteData
             }
         },
     ) {
@@ -552,12 +548,12 @@ private fun FavoriteMusicIconComponent(
             modifier = Modifier
                 .size(60.dp),
             imageVector =
-                if (ifFavorite)
+                if (musicDetail.itemId in favoriteSet)
                     Icons.Rounded.Favorite
                 else
                     Icons.Rounded.FavoriteBorder,
             contentDescription = stringResource(R.string.favorite_button),
-            tint = if (ifFavorite) Color.Red else LocalContentColor.current
+            tint = if (musicDetail.itemId in favoriteSet) Color.Red else LocalContentColor.current
         )
     }
 

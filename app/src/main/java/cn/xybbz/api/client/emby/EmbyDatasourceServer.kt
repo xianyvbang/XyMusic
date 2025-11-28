@@ -5,6 +5,7 @@ import android.icu.math.BigDecimal
 import android.os.Build
 import android.util.Log
 import androidx.room.withTransaction
+import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.AllResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
@@ -44,6 +45,7 @@ import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
+import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
@@ -209,6 +211,13 @@ class EmbyDatasourceServer @Inject constructor(
                 artistIds = listOf(artistId)
             )
         return response
+    }
+
+    /**
+     * 根据下载类型获得数据源
+     */
+    override fun getApiClient(downloadTypes: DownloadTypes): ApiConfig {
+        return embyApiClient
     }
 
     /**
@@ -553,8 +562,7 @@ class EmbyDatasourceServer @Inject constructor(
                 val pic = if (removeDuplicatesMusicList.isNotEmpty()) musicList[0].pic else null
                 saveMusicPlaylist(
                     playlistId = playlistId,
-                    musicIds = removeDuplicatesMusicList.map { music -> music.itemId },
-                    pic = pic
+                    musicIds = removeDuplicatesMusicList.map { music -> music.itemId }
                 )
             }
         }
@@ -601,26 +609,12 @@ class EmbyDatasourceServer @Inject constructor(
      */
     override suspend fun saveMusicPlaylist(
         playlistId: String,
-        musicIds: List<String>,
-        pic: String?
+        musicIds: List<String>
     ): Boolean {
         embyApiClient.playlistsApi().addItemToPlaylist(
             playlistId = playlistId,
             ids = musicIds.joinToString(Constants.ARTIST_DELIMITER) { it })
-        var playlistIndex = db.musicDao.selectPlaylistIndex() ?: -1
-        val playlists = musicIds.map { musicId ->
-            playlistIndex += 1
-            PlaylistMusic(
-                playlistId = playlistId,
-                musicId = musicId,
-                index = playlistIndex,
-                connectionId = connectionConfigServer.getConnectionId()
-            )
-        }
-        db.musicDao.savePlaylistMusic(playlists)
-        //更新歌单的封面信息
-        db.albumDao.updatePic(playlistId, pic.toString())
-        return true
+        return super.saveMusicPlaylist(playlistId,musicIds)
     }
 
     /**
@@ -887,6 +881,13 @@ class EmbyDatasourceServer @Inject constructor(
             selectMusicList = homeMusicList.items
         }
         return selectMusicList
+    }
+
+    /**
+     * 创建下载链接
+     */
+    override fun createDownloadUrl(musicId: String): String {
+        return embyApiClient.createDownloadUrl(musicId)
     }
 
     /**
@@ -1366,7 +1367,8 @@ class EmbyDatasourceServer @Inject constructor(
             pic = itemImageUrl,
             name = item.name ?: application.getString(Constants.UNKNOWN_MUSIC),
             musicUrl = audioUrl,
-            album = item.albumId.toString(),
+            downloadUrl = createDownloadUrl(item.id) ,
+            album = item.albumId ?: "",
             albumName = item.album,
             connectionId = connectionConfigServer.getConnectionId(),
             artists = item.artistItems?.joinToString(Constants.ARTIST_DELIMITER) { artist -> artist.name.toString() },
@@ -1384,7 +1386,7 @@ class EmbyDatasourceServer @Inject constructor(
             bitRate = mediaSourceInfo?.bitrate,
             sampleRate = mediaStream?.sampleRate,
             bitDepth = mediaStream?.bitDepth,
-            size = mediaSourceInfo?.size,
+            size = mediaSourceInfo?.size?:0,
             runTimeTicks = BigDecimal.valueOf(mediaSourceInfo?.runTimeTicks ?: 0)
                 .divide(BigDecimal(10000), BigDecimal.ROUND_UP).toLong(),
             container = mediaSourceInfo?.container,

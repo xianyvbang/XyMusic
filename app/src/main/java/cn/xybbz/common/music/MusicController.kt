@@ -40,13 +40,17 @@ import cn.xybbz.common.constants.Constants.MUSIC_POSITION_UPDATE_INTERVAL
 import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
 import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
 import cn.xybbz.common.enums.PlayStateEnum
+import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import java.io.File
 
 
@@ -59,7 +63,6 @@ class MusicController(
     private val cacheController: CacheController,
     private val favoriteRepository: FavoriteRepository
 ) {
-
 
     // 原始歌曲列表
     var originMusicList by mutableStateOf(emptyList<XyMusic>())
@@ -217,8 +220,7 @@ class MusicController(
             super.onPlayerError(error)
             // 获取播放错误信息
             Log.e("=====", "播放报错$error", error)
-            //todo 别忘记解开
-//            seekToNext()
+            seekToNext()
         }
 
         //检测播放何时转换为其他媒体项
@@ -247,10 +249,7 @@ class MusicController(
                         startCache(originMusicList[curOriginIndex])
                     musicInfo?.let {
                         updateButtonCommend(
-                            favoriteRepository.favoriteMap.value.getOrDefault(
-                                it.itemId,
-                                false
-                            )
+                            it.itemId in favoriteRepository.favoriteSet.value
                         )
                         onChangeMusic?.invoke(it)
                         //判断音乐播放进度是否为0,如果为0则不处理,不为0则需要跳转到相应的进度
@@ -608,7 +607,7 @@ class MusicController(
         var musicUrl = musicExtend.musicUrl
         if (URLUtil.isNetworkUrl(musicUrl)
         ) {
-            musicUrl = musicUrl + "&playSessionId=${musicExtend.playSessionId}"
+            musicUrl += "&playSessionId=${musicExtend.playSessionId}"
             mediaItemBuilder.setUri(musicUrl)
         } else {
             mediaItemBuilder.setUri(Uri.fromFile(File(musicUrl)))
@@ -623,12 +622,12 @@ class MusicController(
             .setArtist(musicExtend.artists) // 可以设置其他元数据信息，例如专辑、时长等
             .setExtras(bundle)
             .build()
-        favoriteRepository.toggleBoolean(musicExtend.itemId, musicExtend.ifFavoriteStatus)
         val normalizeMimeType =
             MimeTypes.normalizeMimeType(MimeTypes.BASE_TYPE_AUDIO + "/${musicExtend.container}")
 
         return mediaItemBuilder.setMediaId(musicExtend.itemId)
             .setMediaMetadata(mediaMetadata)
+            //todo 这里的判断临时先用这个判断,后面改成
             .setMimeType(
                 if (FileTypes.inferFileTypeFromMimeType(normalizeMimeType) != -1) normalizeMimeType else MimeTypes.APPLICATION_M3U8
             )
@@ -797,7 +796,6 @@ class MusicController(
         Log.i("=====", "收藏响应${isFavorite}")
         musicInfo = musicInfo?.copy(ifFavoriteStatus = isFavorite)
         musicInfo?.let {
-            favoriteRepository.toggleBoolean(it.itemId, isFavorite)
             updateButtonCommend(isFavorite)
         }
     }
@@ -860,6 +858,6 @@ class MusicController(
      */
     fun invokingOnFavorite(itemId: String) {
         this.onFavorite?.invoke(itemId)
-        favoriteRepository.toggle(id = itemId)
+//        favoriteRepository.toggle(id = itemId)
     }
 }

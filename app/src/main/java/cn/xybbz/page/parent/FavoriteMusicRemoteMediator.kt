@@ -13,7 +13,7 @@ class FavoriteMusicRemoteMediator(
     private val datasourceServer: IDataSourceParentServer,
     private val db: DatabaseClient,
     private val connectionId: Long
-) : DefaultRemoteMediator<XyMusic>(
+) : DefaultRemoteMediator<XyMusic,XyMusic>(
     db,
     RemoteIdConstants.FAVORITE + connectionId,
     connectionId

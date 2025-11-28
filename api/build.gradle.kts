@@ -44,7 +44,7 @@ dependencies {
         exclude (group = "com.squareup.okhttp3",module = "okhttp")
     }
     //moshi 数据解析 类似json
-    implementation(libs.squareup.converter.moshi)
+    api(libs.squareup.converter.moshi)
     implementation(libs.squareup.okhttp)
     implementation(libs.moshi.kotlin)
     ksp(libs.moshi.kotlin.codegen)

@@ -6,6 +6,7 @@ import android.os.Build
 import android.util.Log
 import androidx.room.withTransaction
 import cn.xybbz.R
+import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.AllResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
@@ -47,6 +48,7 @@ import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
+import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
@@ -137,6 +139,13 @@ class JellyfinDatasourceServer @Inject constructor(
         //提前写入没有sessionToken的Authenticate请求头,不然登录请求都会报错
         setToken()
         jellyfinApiClient.setRetrofitData(address, ifTmpObject())
+    }
+
+    /**
+     * 根据下载类型获得数据源
+     */
+    override fun getApiClient(downloadTypes: DownloadTypes): ApiConfig {
+        return jellyfinApiClient
     }
 
     /**
@@ -237,11 +246,6 @@ class JellyfinDatasourceServer @Inject constructor(
      */
     override suspend fun markFavoriteItem(itemId: String, dataType: MusicTypeEnum): Boolean {
         val favorite = jellyfinApiClient.userLibraryApi().markFavoriteItem(itemId).isFavorite
-        db.musicDao.updateFavoriteByItemId(
-            favorite,
-            itemId,
-            connectionConfigServer.getConnectionId()
-        )
         return favorite
     }
 
@@ -251,11 +255,6 @@ class JellyfinDatasourceServer @Inject constructor(
      */
     override suspend fun unmarkFavoriteItem(itemId: String, dataType: MusicTypeEnum): Boolean {
         val favorite = jellyfinApiClient.userLibraryApi().unmarkFavoriteItem(itemId).isFavorite
-        db.musicDao.updateFavoriteByItemId(
-            favorite,
-            itemId,
-            connectionConfigServer.getConnectionId()
-        )
         return favorite
     }
 
@@ -535,6 +534,13 @@ class JellyfinDatasourceServer @Inject constructor(
     }
 
     /**
+     * 创建下载链接
+     */
+    override fun createDownloadUrl(musicId: String): String {
+        return jellyfinApiClient.createDownloadUrl(musicId)
+    }
+
+    /**
      * 获得随机音乐
      */
     override suspend fun getRandomMusicList(pageSize: Int, pageNum: Int): List<XyMusic>? {
@@ -662,8 +668,7 @@ class JellyfinDatasourceServer @Inject constructor(
                 val pic = if (removeDuplicatesMusicList.isNotEmpty()) musicList[0].pic else null
                 saveMusicPlaylist(
                     playlistId = playlistId,
-                    musicIds = removeDuplicatesMusicList.map { music -> music.itemId },
-                    pic = pic
+                    musicIds = removeDuplicatesMusicList.map { music -> music.itemId }
                 )
             }
         }
@@ -708,25 +713,12 @@ class JellyfinDatasourceServer @Inject constructor(
      * @param [pic] 照片
      */
     override suspend fun saveMusicPlaylist(
-        playlistId: String, musicIds: List<String>, pic: String?
+        playlistId: String, musicIds: List<String>
     ): Boolean {
         jellyfinApiClient.playlistsApi().addItemToPlaylist(
             playlistId = playlistId,
             ids = musicIds.joinToString(Constants.ARTIST_DELIMITER) { it })
-        var playlistIndex = db.musicDao.selectPlaylistIndex() ?: -1
-        val playlists = musicIds.map { musicId ->
-            playlistIndex += 1
-            PlaylistMusic(
-                playlistId = playlistId,
-                musicId = musicId,
-                index = playlistIndex,
-                connectionId = connectionConfigServer.getConnectionId()
-            )
-        }
-        db.musicDao.savePlaylistMusic(playlists)
-        //更新歌单的封面信息
-        db.albumDao.updatePic(playlistId, pic.toString())
-        return true
+        return super.saveMusicPlaylist(playlistId,musicIds)
     }
 
     /**
@@ -1370,6 +1362,7 @@ class JellyfinDatasourceServer @Inject constructor(
             pic = itemImageUrl,
             name = item.name ?: application.getString(Constants.UNKNOWN_MUSIC),
             musicUrl = audioUrl,
+            downloadUrl = createDownloadUrl(item.id),
             album = item.albumId.toString(),
             albumName = item.album,
             connectionId = connectionConfigServer.getConnectionId(),

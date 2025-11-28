@@ -2,8 +2,8 @@ package cn.xybbz.common.utils
 
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
-import cn.xybbz.common.music.MusicController
 import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.common.music.MusicController
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 
 /**
@@ -17,6 +17,7 @@ object DataSourceChangeUtils {
         dataSourceManager: IDataSourceManager,
         musicController: MusicController
     ) {
+        //清空所有下载
         musicController.clearPlayerList()
         dataSourceManager.changeDataSource(connectionConfig)
     }

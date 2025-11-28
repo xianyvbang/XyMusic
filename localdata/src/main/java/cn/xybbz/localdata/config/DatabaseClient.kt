@@ -2,9 +2,12 @@ package cn.xybbz.localdata.config
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
+import cn.xybbz.localdata.converter.XyMusicTypeConverter
 import cn.xybbz.localdata.dao.album.AlbumDao
 import cn.xybbz.localdata.dao.connection.ConnectionConfigDao
 import cn.xybbz.localdata.dao.count.XyDataCountDao
+import cn.xybbz.localdata.dao.download.XyDownloadDao
 import cn.xybbz.localdata.dao.era.XyEraItemDao
 import cn.xybbz.localdata.dao.genre.XyGenreDao
 import cn.xybbz.localdata.dao.library.XyLibraryDao
@@ -31,6 +34,7 @@ import cn.xybbz.localdata.data.artist.FavoriteArtist
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.count.XyDataCount
+import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.data.era.XyEraItem
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
@@ -56,7 +60,7 @@ import cn.xybbz.localdata.data.setting.XyBackgroundConfig
 import cn.xybbz.localdata.data.setting.XySettings
 
 @Database(
-    version = 2,
+    version = 4,
     entities = [XyMusic::class, XyAlbum::class, XySettings::class, SkipTime::class,
         RemoteCurrent::class, SearchHistory::class, Progress::class, XyArtist::class,
         EnableProgress::class, XyLibrary::class, XyPlayer::class, ConnectionConfig::class,
@@ -65,9 +69,10 @@ import cn.xybbz.localdata.data.setting.XySettings
         MaximumPlayMusic::class, NewestAlbum::class, NewestMusic::class, PlayHistoryMusic::class,
         PlaylistMusic::class, PlayQueueMusic::class, XyDataCount::class, PlayHistoryAlbum::class,
         MaximumPlayAlbum::class, FavoriteAlbum::class, FavoriteArtist::class, XyBackgroundConfig::class,
-        XyRecentHistory::class, RecommendedMusic::class],
+        XyRecentHistory::class, RecommendedMusic::class, XyDownload::class],
     exportSchema = true
 )
+@TypeConverters(XyMusicTypeConverter::class)
 abstract class DatabaseClient : RoomDatabase() {
 
     val musicDao: XyMusicDao by lazy { createMusicDao() }
@@ -104,6 +109,8 @@ abstract class DatabaseClient : RoomDatabase() {
 
     val recentHistoryDao: XyRecentHistoryDao by lazy { createXyRecentHistoryDao() }
 
+    val apkDownloadDao: XyDownloadDao by lazy { createXyDownloadDao() }
+
 
     abstract fun createMusicDao(): XyMusicDao
 
@@ -138,5 +145,7 @@ abstract class DatabaseClient : RoomDatabase() {
     abstract fun createXyBackgroundConfigDao(): XyBackgroundConfigDao
 
     abstract fun createXyRecentHistoryDao(): XyRecentHistoryDao
+
+    abstract fun createXyDownloadDao(): XyDownloadDao
 
 }

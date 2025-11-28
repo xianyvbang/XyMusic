@@ -3,6 +3,7 @@ package cn.xybbz.ui.xy
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -60,6 +61,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.ui.R
+import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 
@@ -83,11 +85,13 @@ fun ItemTrailingContent(
     imgUrl: String? = null,
     index: Int? = null,
     media: String? = null,
+    enabledPic: Boolean = true,
     enabled: Boolean = true,
     backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
     brush: Brush? = null,
     textColor: Color = MaterialTheme.colorScheme.onSurface,
     onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null
 ) {
 
@@ -127,9 +131,9 @@ fun ItemTrailingContent(
             .background(
                 brush
             )
-            .debounceClickable(enabled = enabled) {
+            .combinedClickable(enabled = enabled, onClick = composeClick {
                 onClick?.invoke()
-            },
+            }, onLongClick = { onLongClick?.invoke() }),
         headlineContent = {
             Text(
                 text = name,
@@ -173,15 +177,17 @@ fun ItemTrailingContent(
                 )
             }
         } else null,
-        leadingContent = {
-            if (index == null)
-                XySmallImage(
-                    model = imgUrl,
-                    contentDescription = "${name}${stringResource(R.string.image_suffix)}"
-                )
-            else
-                Text(text = index.toString(), style = MaterialTheme.typography.bodySmall)
-        }, trailingContent = {
+        leadingContent = if (enabledPic) {
+            {
+                if (index == null)
+                    XySmallImage(
+                        model = imgUrl,
+                        contentDescription = "${name}${stringResource(R.string.image_suffix)}"
+                    )
+                else
+                    Text(text = index.toString(), style = MaterialTheme.typography.bodySmall)
+            }
+        } else null, trailingContent = {
             trailingContent?.invoke()
         }
     )
@@ -345,6 +351,7 @@ fun XyItemTitlePadding(
 fun XyItemText(
     text: String,
     modifier: Modifier = Modifier,
+    style: TextStyle = MaterialTheme.typography.titleSmall,
     maxLines: Int = Int.MAX_VALUE,
     color: Color = MaterialTheme.colorScheme.onSurface
 ) {
@@ -352,7 +359,7 @@ fun XyItemText(
         modifier = Modifier
             .then(modifier),
         text = text,
-        style = MaterialTheme.typography.titleSmall,
+        style = style,
         color = color,
         maxLines = maxLines
     )
@@ -692,7 +699,6 @@ fun XyItemTabBigButton(
     text: String,
     sub: String? = null,
     imageVector: ImageVector,
-    iconSize: Dp = XyTheme.dimens.itemHeight,
     enabled: Boolean = true,
     iconColor: Color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(
         alpha = 0.3f
@@ -701,7 +707,6 @@ fun XyItemTabBigButton(
 ) {
     Column(
         modifier = modifier
-            .width(iconSize)
             .background(brush, RoundedCornerShape(XyTheme.dimens.corner))
             .debounceClickable(enabled = enabled) {
                 onClick.invoke()

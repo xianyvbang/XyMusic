@@ -20,7 +20,7 @@ class AlbumOrPlaylistMusicListRemoteMediator(
     private val dataType: MusicDataTypeEnum,
     private val connectionId: Long,
     private val sort: StateFlow<Sort>
-) : DefaultRemoteMediator<XyMusic>(
+) : DefaultRemoteMediator<XyMusic, XyMusic>(
     db,
     RemoteIdConstants.ALBUM_MUSIC + itemId + connectionId,
     connectionId

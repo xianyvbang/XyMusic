@@ -38,6 +38,16 @@ interface XyMusicDao {
         playlistId: String? = null
     ) {
         saveDataBatch(data)
+
+        var favoriteIndex = selectFavoriteIndex() ?: -1
+        saveFavoriteMusic(data.filter { it.ifFavoriteStatus }.map {
+            favoriteIndex += 1
+            FavoriteMusic(
+                musicId = it.itemId,
+                index = favoriteIndex,
+                connectionId = connectionId
+            )
+        })
         when (dataType) {
             MusicDataTypeEnum.HOME -> {
 
@@ -46,6 +56,12 @@ interface XyMusicDao {
                     index += 1
                     HomeMusic(
                         musicId = it.itemId,
+                        pic = it.pic,
+                        name = it.name,
+                        artists = it.artists,
+                        album = it.album,
+                        codec = it.codec,
+                        bitRate = it.bitRate,
                         index = index,
                         connectionId = connectionId
                     )
@@ -94,7 +110,7 @@ interface XyMusicDao {
             }
 
             MusicDataTypeEnum.PLAY_HISTORY -> {
-                var index = selectPlayHistoryIndex() ?: -1
+                /*var index = selectPlayHistoryIndex() ?: -1
                 savePlayHistoryMusic(data.map {
                     index += 1
                     PlayHistoryMusic(
@@ -102,7 +118,7 @@ interface XyMusicDao {
                         index = index,
                         connectionId = connectionId
                     )
-                })
+                })*/
             }
 
             MusicDataTypeEnum.PLAY_QUEUE -> {
@@ -384,13 +400,12 @@ interface XyMusicDao {
      */
     @Query(
         """
-        select mi.* from HomeMusic hm
-        inner join xy_music mi on hm.musicId = mi.itemId
-        inner join xy_settings xs on mi.connectionId = xs.connectionId and hm.connectionId = xs.connectionId
+        select hm.* from HomeMusic hm
+        inner join xy_settings xs on hm.connectionId = xs.connectionId and hm.connectionId = xs.connectionId
         order by hm.`index`
     """
     )
-    fun selectHomeMusicListPage(): PagingSource<Int, XyMusic>
+    fun selectHomeMusicListPage(): PagingSource<Int, HomeMusic>
 
     /**
      * 获得音乐分页信息
@@ -398,7 +413,7 @@ interface XyMusicDao {
      */
     @Query(
         """
-        select mi.* from HomeMusic hm
+        select hm.* from HomeMusic hm
         inner join xy_music mi on hm.musicId = mi.itemId
         inner join xy_settings xs on mi.connectionId = xs.connectionId and hm.connectionId = xs.connectionId
         WHERE (:ifFavorite IS NULL OR mi.itemId in(select musicId from favoritemusic))
@@ -410,7 +425,7 @@ interface XyMusicDao {
         ifFavorite: Boolean?,
         startYear: Int?,
         endYear: Int?
-    ): PagingSource<Int, XyMusic>
+    ): PagingSource<Int, HomeMusic>
 
 
     /**
@@ -426,6 +441,13 @@ interface XyMusicDao {
     """
     )
     fun selectFavoriteMusicListPage(): PagingSource<Int, XyMusic>
+
+    @Query(
+        """
+        select musicId from favoritemusic fm where ifFavorite = true and connectionId = (select connectionId from xy_settings) 
+    """
+    )
+    fun selectFavoriteList(): Flow<List<String>>
 
     /**
      * 按艺术家id获得音乐分页列表
@@ -648,6 +670,21 @@ interface XyMusicDao {
         itemId: String
     ): XyMusic?
 
+    @Query("select * from xy_music where itemId in (:itemIds) and connectionId = (select connectionId from xy_settings)")
+    suspend fun selectByIds(
+        itemIds: List<String>
+    ): List<XyMusic>
+
+    /**
+     * 根据id查询XyItem详情
+     * @param [itemId] 音乐 ID
+     * @return [XyItem?]
+     */
+    @Query("select * from xy_music where itemId = :itemId and connectionId = (select connectionId from xy_settings)limit 1")
+    fun selectByIdFlow(
+        itemId: String
+    ): Flow<XyMusic?>
+
     /**
      * 根据itemId,数据源数据类型删除数据
      * @param [itemId] 项目id
@@ -705,10 +742,11 @@ interface XyMusicDao {
             FavoriteMusic(
                 musicId = itemId,
                 connectionId = connectionId,
+                ifFavorite = ifFavorite,
                 index = favoriteIndex + 1
             )
         )
-        updateMusicFavorite(ifFavorite, itemId)
+//        updateMusicFavorite(ifFavorite, itemId)
     }
 
     /**

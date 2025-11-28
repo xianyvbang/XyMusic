@@ -52,7 +52,6 @@ import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -61,7 +60,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -106,6 +104,7 @@ import cn.xybbz.ui.components.MusicItemIndexComponent
 import cn.xybbz.ui.components.SelectSortBottomSheetComponent
 import cn.xybbz.ui.components.SwipeRefreshListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.XySelectAllComponent
 import cn.xybbz.ui.components.getExportPlaylistsAlertDialogObject
 import cn.xybbz.ui.components.importPlaylistsCompose
 import cn.xybbz.ui.components.show
@@ -124,6 +123,7 @@ import cn.xybbz.ui.xy.XyItemTextHorizontal
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.AlbumInfoViewModel
 import kotlinx.coroutines.launch
+import kotlin.collections.map
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 
@@ -157,16 +157,7 @@ fun AlbumInfoScreen(
     val navHostController = LocalNavController.current
     val isSticking by remember(lazyListState) { lazyListState.isSticking(1) }
 
-    val favoriteList by albumInfoViewModel.favoriteRepository.favoriteMap.collectAsState()
-
-    //是否打开选择
-    var ifOpenSelect by remember {
-        mutableStateOf(false)
-    }
-    //是否全选
-    var ifAllSelect by remember {
-        mutableStateOf(false)
-    }
+    val favoriteSet by albumInfoViewModel.favoriteRepository.favoriteSet.collectAsState()
 
     val musicListPage =
         albumInfoViewModel.xyMusicList.collectAsLazyPagingItems()
@@ -250,7 +241,6 @@ fun AlbumInfoScreen(
                 navigationIcon = {
                     IconButton(
                         onClick = {
-                            albumInfoViewModel.selectControl.dismiss()
                             navHostController.popBackStack()
                         },
                     ) {
@@ -428,11 +418,6 @@ fun AlbumInfoScreen(
                 }
                 stickyHeader(key = 2) { headerIndex ->
                     StickyHeaderOperationParent(
-                        onIfOpenSelect = { ifOpenSelect },
-                        onSetIfOpenSelect = { ifOpenSelect = it },
-                        onIfAllSelect = { ifAllSelect },
-                        onSetIfAllSelect = { ifAllSelect = it },
-                        onMusicListPage = { musicListPage },
                         albumInfoViewModel = albumInfoViewModel,
                         musicListPage = musicListPage,
                         sortBy = sortBy
@@ -458,13 +443,9 @@ fun AlbumInfoScreen(
                                 MusicItemIndexComponent(
                                     modifier = Modifier.fillMaxWidth(),
                                     backgroundColor = Color.Transparent,
-                                    onMusicData = { music },
+                                    music = music,
                                     onIfFavorite = {
-                                        if (favoriteList.containsKey(music.itemId)) {
-                                            favoriteList.getOrDefault(music.itemId, false)
-                                        } else {
-                                            music.ifFavoriteStatus
-                                        }
+                                        music.itemId in favoriteSet
                                     },
                                     index = index + 1,
                                     textColor = if (albumInfoViewModel.musicController.musicInfo?.itemId == music.itemId)
@@ -484,17 +465,21 @@ fun AlbumInfoScreen(
                                             )
                                         }
                                     },
-                                    ifSelect = ifOpenSelect,
-                                    ifSelectCheckBox = { albumInfoViewModel.selectControl.selectMusicDataList.any { it.itemId == music.itemId } },
-                                    trailingOnClick = { select ->
-                                        if (select) {
-                                            albumInfoViewModel.selectControl.removeSelectMusicId(
-                                                music.itemId
-                                            )
-                                        } else {
-                                            albumInfoViewModel.selectControl.setSelectMusicListData(
-                                                music
-                                            )
+                                    ifSelect = albumInfoViewModel.selectControl.ifOpenSelect,
+                                    ifSelectCheckBox = { albumInfoViewModel.selectControl.selectMusicIdList.any { it == music.itemId } },
+                                    trailingOnSelectClick = { select ->
+                                        albumInfoViewModel.selectControl.toggleSelection(
+                                            music.itemId,
+                                            onIsSelectAll = {
+                                                albumInfoViewModel.selectControl.selectMusicIdList.containsAll(
+                                                    musicListPage.itemSnapshotList.items.map { it.itemId }
+                                                )
+                                            }
+                                        )
+                                    },
+                                    trailingOnClick = {
+                                        coroutineScope.launch {
+                                            music.show()
                                         }
                                     }
                                 )
@@ -519,12 +504,8 @@ private fun MusicListOperation(
     onPlayState: () -> PlayStateEnum,
     onRemovePlayerHistory: (String) -> Unit,
     onMusicPlanOrPause: () -> Unit,
-    onIfOpenSelect: () -> Boolean,
-    onSelectClick: () -> Unit,
-    onIfAllSelect: () -> Boolean,
-    onSetIfAllSelect: (Boolean) -> Unit,
-    onSetIfOpenSelect: (Boolean) -> Unit,
     albumInfoViewModel: AlbumInfoViewModel,
+    onSelectAll: () -> Unit,
     sortContent: @Composable () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -532,7 +513,7 @@ private fun MusicListOperation(
 
     val iconImageVector by remember {
         derivedStateOf {
-            if (onIfOpenSelect()) null else if (onMusicAlbum()?.itemId == onPlayAlbumId())
+            if (albumInfoViewModel.selectControl.ifOpenSelect) null else if (onMusicAlbum()?.itemId == onPlayAlbumId())
                 if (onPlayState() == PlayStateEnum.Playing)
                     Icons.Rounded.PauseCircle
                 else
@@ -544,9 +525,7 @@ private fun MusicListOperation(
 
     val textInfo by remember {
         derivedStateOf {
-            if (onIfOpenSelect()) if (!onIfAllSelect()) context.getString(R.string.select_all) else context.getString(
-                R.string.deselect_all
-            ) else if (onMusicAlbum()?.itemId == onPlayAlbumId()) {
+            if (onMusicAlbum()?.itemId == onPlayAlbumId()) {
                 if (onPlayState() == PlayStateEnum.Playing)
                     context.getString(R.string.pause_playback)
                 else
@@ -564,8 +543,8 @@ private fun MusicListOperation(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) {
-                if (onIfOpenSelect()) {
-                    onSetIfAllSelect(!onIfAllSelect())
+                if (albumInfoViewModel.selectControl.ifOpenSelect) {
+                    onSelectAll()
                 } else {
                     coroutineScope.launch {
                         if (onMusicAlbum()?.itemId == onPlayAlbumId()) {
@@ -587,31 +566,34 @@ private fun MusicListOperation(
             horizontal = XyTheme.dimens.outerHorizontalPadding
         ),
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            iconImageVector?.let { imageVector ->
-                Icon(
-                    imageVector = imageVector,
-                    contentDescription = textInfo
-                )
-            }
-            Text(text = textInfo)
-        }
 
-        if (onIfOpenSelect())
+
+        if (albumInfoViewModel.selectControl.ifOpenSelect) {
+            XySelectAllComponent(
+                isSelectAll = albumInfoViewModel.selectControl.isSelectAll,
+                onSelectAll = onSelectAll
+            )
             IconButton(onClick = {
-                onSetIfAllSelect(false)
                 albumInfoViewModel.selectControl.dismiss()
-                onSetIfOpenSelect(false)
             }) {
                 Icon(
                     imageVector = Icons.Rounded.Close,
                     contentDescription = stringResource(R.string.close_selection)
                 )
             }
-        else
+        } else {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                iconImageVector?.let { imageVector ->
+                    Icon(
+                        imageVector = imageVector,
+                        contentDescription = textInfo
+                    )
+                }
+                Text(text = textInfo)
+            }
             if (onMusicAlbum()?.itemId != onPlayAlbumId() && onAlbumPlayerHistoryProgress() != null) {
                 IconButton(onClick = {
                     onAlbumPlayerHistoryProgress()?.let {
@@ -631,10 +613,7 @@ private fun MusicListOperation(
                     sortContent()
 
                     IconButton(onClick = {
-                        onSelectClick()
-                        albumInfoViewModel.show(onOpenChange = {
-                            onSetIfOpenSelect(it)
-                        })
+                        albumInfoViewModel.show()
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.PlaylistAddCheck,
@@ -643,6 +622,8 @@ private fun MusicListOperation(
                     }
                 }
             }
+        }
+
     }
 }
 
@@ -756,27 +737,10 @@ private fun MusicAlbumInfoComponent(
 
 @Composable
 private fun StickyHeaderOperation(
-    onIfOpenSelect: () -> Boolean,
-    onSetIfOpenSelect: (Boolean) -> Unit,
-    onIfAllSelect: () -> Boolean,
-    onSetIfAllSelect: (Boolean) -> Unit,
     onMusicListPage: () -> LazyPagingItems<XyMusic>,
     albumInfoViewModel: AlbumInfoViewModel,
     sortContent: @Composable () -> Unit
 ) {
-
-    val selectListSize by remember {
-        derivedStateOf {
-            albumInfoViewModel.selectControl.selectMusicDataList.size
-        }
-    }
-
-    LaunchedEffect(selectListSize) {
-        snapshotFlow { selectListSize }.collect {
-            onSetIfAllSelect(onMusicListPage().itemCount == selectListSize && onMusicListPage().itemCount > 0)
-        }
-    }
-
     MusicListOperation(
         onAlbumPlayerHistoryProgress = { albumInfoViewModel.albumPlayerHistoryProgress },
         onPlayAlbumId = {
@@ -798,42 +762,16 @@ private fun StickyHeaderOperation(
                 albumInfoViewModel.musicController.resume()
             }
         },
-        onIfOpenSelect = { onIfOpenSelect() },
-        onSelectClick = {
-            onSetIfAllSelect(false)
-            onSetIfOpenSelect(!onIfOpenSelect())
-        },
-        onIfAllSelect = { onIfAllSelect() },
-        onSetIfAllSelect = {
-            onSetIfAllSelect(it)
-            if (onIfAllSelect()) {
-                val tmpList = mutableListOf<XyMusic>()
-                for (index in 0 until onMusicListPage().itemCount) {
-                    onMusicListPage()[index]?.let { music ->
-                        tmpList.add(
-                            music
-                        )
-                    }
-                }
-                albumInfoViewModel.selectControl.setSelectMusicListAllData(
-                    tmpList
-                )
-            } else
-                albumInfoViewModel.selectControl.clearSelectMusicList()
-        },
-        onSetIfOpenSelect = { onSetIfOpenSelect(it) },
         albumInfoViewModel = albumInfoViewModel,
+        onSelectAll = {
+            albumInfoViewModel.selectControl.toggleSelectionAll(onMusicListPage().itemSnapshotList.items.map { it.itemId })
+        },
         sortContent = sortContent
     )
 }
 
 @Composable
 private fun StickyHeaderOperationParent(
-    onIfOpenSelect: () -> Boolean,
-    onSetIfOpenSelect: (Boolean) -> Unit,
-    onIfAllSelect: () -> Boolean,
-    onSetIfAllSelect: (Boolean) -> Unit,
-    onMusicListPage: () -> LazyPagingItems<XyMusic>,
     albumInfoViewModel: AlbumInfoViewModel,
     musicListPage: LazyPagingItems<XyMusic>,
     sortBy: Sort,
@@ -841,11 +779,7 @@ private fun StickyHeaderOperationParent(
 
     val mainViewModel = LocalMainViewModel.current
     StickyHeaderOperation(
-        onIfOpenSelect = onIfOpenSelect,
-        onSetIfOpenSelect = onSetIfOpenSelect,
-        onIfAllSelect = onIfAllSelect,
-        onSetIfAllSelect = onSetIfAllSelect,
-        onMusicListPage = onMusicListPage,
+        onMusicListPage = {musicListPage},
         albumInfoViewModel = albumInfoViewModel,
         sortContent = {
             SelectSortBottomSheetComponent(

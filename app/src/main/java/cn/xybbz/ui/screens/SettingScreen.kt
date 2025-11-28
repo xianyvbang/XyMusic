@@ -4,18 +4,26 @@ package cn.xybbz.ui.screens
 import android.content.ClipData
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -25,6 +33,7 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.common.utils.MessageUtils
@@ -34,6 +43,8 @@ import cn.xybbz.ui.components.MusicSettingSwitchItemComponent
 import cn.xybbz.ui.components.SettingItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.ext.brashColor
+import cn.xybbz.ui.popup.MenuItemDefaultData
+import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
@@ -58,6 +69,10 @@ fun SettingScreen(
 
     val navController = LocalNavController.current
     val coroutineScope = rememberCoroutineScope()
+
+    var ifShowMaxConcurrentDownloads by remember {
+        mutableStateOf(false)
+    }
 
     val context = LocalContext.current
     LaunchedEffect(Unit) {
@@ -112,17 +127,7 @@ fun SettingScreen(
 
             }
             item {
-                RoundedSurfaceColumnPadding(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(0x4D503803),
-                            Color.Gray.copy(alpha = 0.1f)
-                        ), tileMode = TileMode.Repeated
-                    ),
-                    paddingValues = PaddingValues(
-                        horizontal = XyTheme.dimens.outerHorizontalPadding
-                    )
-                ) {
+                SettingRoundedSurfaceColumn {
 
                     MusicSettingSwitchItemComponent(
                         title = stringResource(R.string.prioritize_local_data),
@@ -162,9 +167,10 @@ fun SettingScreen(
                     }
 
                     SettingItemComponent(
-                        title = R.string.song_cache_location,
-                        info = settingsViewModel.settingsConfig.cacheFilePath,
-                        maxLines = Int.MAX_VALUE
+                        title = R.string.cache_location,
+                        bottomInfo = settingsViewModel.settingsConfig.cacheFilePath,
+                        maxLines = Int.MAX_VALUE,
+                        imageVector = null
                     ) {
                         if (settingsViewModel.settingsConfig.cacheFilePath.isNotBlank()) {
                             val clipData =
@@ -199,20 +205,135 @@ fun SettingScreen(
 
             }
             item {
-                RoundedSurfaceColumnPadding(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(0x4D503803),
-                            Color.Gray.copy(alpha = 0.1f)
-                        ), tileMode = TileMode.Repeated
-                    ),
-                    paddingValues = PaddingValues(
-                        horizontal = XyTheme.dimens.outerHorizontalPadding
-                    )
-                ) {
+                SettingRoundedSurfaceColumn {
                     SettingItemComponent(title = R.string.connection_management) {
                         navController.navigate(RouterConstants.ConnectionManagement)
                     }
+                }
+            }
+
+            item {
+                XyRow(
+                    paddingValues = PaddingValues(
+                        start = XyTheme.dimens.outerHorizontalPadding,
+                        end = XyTheme.dimens.outerHorizontalPadding,
+                        top = XyTheme.dimens.outerVerticalPadding
+                    ),
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    XyItemTitle(
+                        text = stringResource(R.string.download_management)
+                    )
+                }
+
+            }
+            item {
+                SettingRoundedSurfaceColumn {
+                    SettingItemComponent(
+                        title = R.string.download_max_list,
+                        info = settingsViewModel.settingDataNow.maxConcurrentDownloads.toString(),
+                        imageVector = Icons.Rounded.KeyboardArrowDown,
+                        trailingContent = {
+                            XyDropdownMenu(
+                                onIfShowMenu = { ifShowMaxConcurrentDownloads },
+                                onSetIfShowMenu = { ifShowMaxConcurrentDownloads = it },
+                                modifier = Modifier
+                                    .width(200.dp),
+                                itemDataList = listOf(
+                                    MenuItemDefaultData(
+                                        title = "1", leadingIcon = {
+                                            if (settingsViewModel.settingDataNow.maxConcurrentDownloads == 1)
+                                                Icon(
+                                                    Icons.Rounded.Check,
+                                                    contentDescription = stringResource(
+                                                        R.string.download_max_list
+                                                    ) + "1"
+                                                )
+                                        },
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                ifShowMaxConcurrentDownloads = false
+                                                settingsViewModel.setMaxConcurrentDownloads(
+                                                    1,
+                                                    context
+                                                )
+                                            }.invokeOnCompletion {
+
+                                            }
+
+                                        }),
+                                    MenuItemDefaultData(
+                                        title = "3", leadingIcon = {
+                                            if (settingsViewModel.settingDataNow.maxConcurrentDownloads == 3)
+                                                Icon(
+                                                    Icons.Rounded.Check,
+                                                    contentDescription = stringResource(
+                                                        R.string.download_max_list
+                                                    ) + "3"
+                                                )
+                                        },
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                ifShowMaxConcurrentDownloads = false
+                                                settingsViewModel.setMaxConcurrentDownloads(
+                                                    3,
+                                                    context
+                                                )
+                                            }.invokeOnCompletion {
+
+                                            }
+
+                                        }),
+                                    MenuItemDefaultData(
+                                        title = "5", leadingIcon = {
+                                            if (settingsViewModel.settingDataNow.maxConcurrentDownloads == 5)
+                                                Icon(
+                                                    Icons.Rounded.Check,
+                                                    contentDescription = stringResource(
+                                                        R.string.download_max_list
+                                                    ) + "5"
+                                                )
+                                        },
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                ifShowMaxConcurrentDownloads = false
+                                                settingsViewModel.setMaxConcurrentDownloads(
+                                                    5,
+                                                    context
+                                                )
+                                            }.invokeOnCompletion {
+
+                                            }
+
+                                        })
+                                )
+                            )
+                        }
+                    ) {
+                        ifShowMaxConcurrentDownloads = true
+                    }
+
+                    SettingItemComponent(
+                        title = R.string.song_cache_location,
+                        bottomInfo = settingsViewModel.downLoadManager.getConfig().finalDirectory,
+                        maxLines = Int.MAX_VALUE,
+                        imageVector = null
+                    ) {
+                        if (settingsViewModel.settingsConfig.cacheFilePath.isNotBlank()) {
+                            val clipData =
+                                ClipData.newPlainText(
+                                    "label",
+                                    settingsViewModel.downLoadManager.getConfig().finalDirectory
+                                )
+                            coroutineScope.launch {
+                                clipboardManager.setClipEntry(ClipEntry(clipData))
+                            }.invokeOnCompletion {
+                                MessageUtils.sendPopTip(context.getString(R.string.copy_success))
+                            }
+                        }
+
+                    }
+
                 }
             }
 
@@ -232,17 +353,7 @@ fun SettingScreen(
 
             }
             item {
-                RoundedSurfaceColumnPadding(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(0x4D503803),
-                            Color.Gray.copy(alpha = 0.1f)
-                        ), tileMode = TileMode.Repeated
-                    ),
-                    paddingValues = PaddingValues(
-                        horizontal = XyTheme.dimens.outerHorizontalPadding
-                    )
-                ) {
+                SettingRoundedSurfaceColumn {
 
                     SettingItemComponent(title = R.string.storage_management) {
                         navController.navigate(RouterConstants.MemoryManagement)
@@ -266,4 +377,20 @@ fun SettingScreen(
         }
     }
 
+}
+
+@Composable
+fun SettingRoundedSurfaceColumn(content: @Composable ColumnScope.() -> Unit) {
+    RoundedSurfaceColumnPadding(
+        brush = Brush.horizontalGradient(
+            colors = listOf(
+                Color(0x4D503803),
+                Color.Gray.copy(alpha = 0.1f)
+            ), tileMode = TileMode.Repeated
+        ),
+        paddingValues = PaddingValues(
+            horizontal = XyTheme.dimens.outerHorizontalPadding
+        ),
+        content = content
+    )
 }

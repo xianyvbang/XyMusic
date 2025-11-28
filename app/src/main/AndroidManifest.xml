@@ -1,19 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
     <!--targetSdk34开始需要添加此权限-->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
-
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-
     <!--    悬浮窗-->
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+<!--    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />-->
 
     <!--    精准定时任务权限-->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+<!--    前台通知使用-->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
+
 
     <application
         android:name=".XyApplication"
@@ -63,6 +67,12 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            tools:node="remove">
+        </provider>
+
         <receiver
             android:name=".config.service.alert.AlertService"
             android:exported="false" />
@@ -72,6 +82,15 @@
             android:name=".config.service.ReportReceiver"
             android:exported="false" />
         <!--        <service android:name=".ui.components.FloatingWindowComponent"/>-->
+
+        <receiver
+            android:name=".config.download.notification.DownloadNotificationReceiver"
+            android:exported="false" />
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
+
     </application>
 
 </manifest>

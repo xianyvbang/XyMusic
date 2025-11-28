@@ -1,6 +1,6 @@
 package cn.xybbz.api.client.subsonic
 
-import cn.xybbz.api.client.DefaultApiClient
+import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.subsonic.service.SubsonicArtistsApi
 import cn.xybbz.api.client.subsonic.service.SubsonicGenreApi
 import cn.xybbz.api.client.subsonic.service.SubsonicItemApi
@@ -11,7 +11,7 @@ import cn.xybbz.api.client.subsonic.service.SubsonicUserLibraryApi
 import cn.xybbz.api.client.subsonic.service.SubsonicUserViewsApi
 import cn.xybbz.api.enums.subsonic.ResponseFormatType
 
-class SubsonicApiClient : DefaultApiClient() {
+class SubsonicApiClient : DefaultParentApiClient() {
 
     /**
      * 用户名
@@ -210,6 +210,13 @@ class SubsonicApiClient : DefaultApiClient() {
      */
     override fun release() {
 
+    }
+
+    /**
+     * 创建下载链接
+     */
+    override fun createDownloadUrl(itemId: String): String {
+        return baseUrl + "/rest/download?id=${itemId}"
     }
 
 }

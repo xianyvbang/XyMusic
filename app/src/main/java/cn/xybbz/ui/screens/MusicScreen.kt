@@ -12,18 +12,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -43,6 +36,8 @@ import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.SelectSortBottomSheetComponent
 import cn.xybbz.ui.components.SwipeRefreshListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.XySelectAllComponent
+import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.xy.XyColumnScreen
@@ -57,17 +52,8 @@ fun MusicScreen(
     val coroutineScope = rememberCoroutineScope()
     val mainViewModel = LocalMainViewModel.current
     val homeMusicPager = musicViewModel.homeMusicPager.collectAsLazyPagingItems()
-    val favoriteList by musicViewModel.favoriteRepository.favoriteMap.collectAsState()
+    val favoriteSet by musicViewModel.favoriteRepository.favoriteSet.collectAsState()
     val sortBy by musicViewModel.sortBy.collectAsState()
-
-    //是否打开选择
-    var ifOpenSelect by remember {
-        mutableStateOf(false)
-    }
-    //是否全选
-    var ifAllSelect by remember {
-        mutableStateOf(false)
-    }
 
     XyColumnScreen(
         modifier = Modifier
@@ -80,14 +66,7 @@ fun MusicScreen(
             modifier = Modifier.statusBarsPadding(),
             title = stringResource(R.string.music),
             musicViewModel = musicViewModel,
-            onIfOpenSelect = { ifOpenSelect },
-            onSetIfOpenSelect = {
-                ifOpenSelect = it
-            },
-            onIfAllSelect = {
-                ifAllSelect
-            },
-            onSetIfAllSelect = { ifAllSelect = it },
+
             onRandomPlayerClick = {
                 coroutineScope.launch {
                     musicViewModel.musicPlayContext.randomMusic(
@@ -95,11 +74,11 @@ fun MusicScreen(
                     )
                 }
             },
-            onSelectClick = {
-                ifOpenSelect = true
-
+            onSelectAll = {
+                coroutineScope.launch {
+                    musicViewModel.selectControl.toggleSelectionAll(homeMusicPager.itemSnapshotList.items.map { it.musicId })
+                }
             },
-            musicListCount = { homeMusicPager.itemCount },
             selectControl = musicViewModel.selectControl,
             sortOrFilterContent = {
                 SelectSortBottomSheetComponent(
@@ -144,20 +123,20 @@ fun MusicScreen(
         ) { page ->
             items(
                 page.itemCount,
-                page.itemKey { it.itemId },
+                page.itemKey { it.musicId },
                 page.itemContentType { MusicTypeEnum.MUSIC.code }) { index ->
                 // 加上remember就可以防止重组
-                page[index]?.let { music ->
+                page[index]?.let { musicParent ->
                     MusicItemComponent(
-                        onMusicData = {
-                            music
-                        },
+                        itemId = musicParent.musicId,
+                        name = musicParent.name,
+                        album = musicParent.album,
+                        artists = musicParent.artists,
+                        pic = musicParent.pic,
+                        codec = musicParent.codec,
+                        bitRate = musicParent.bitRate,
                         onIfFavorite = {
-                            if (favoriteList.containsKey(music.itemId)) {
-                                favoriteList.getOrDefault(music.itemId, false)
-                            } else {
-                                music.ifFavoriteStatus
-                            }
+                            musicParent.musicId in favoriteSet
                         },
                         onMusicPlay = {
                             musicViewModel.musicPlayContext.music(
@@ -167,20 +146,27 @@ fun MusicScreen(
                             )
                         },
                         backgroundColor = Color.Transparent,
-                        textColor = if (musicViewModel.musicController.musicInfo?.itemId == music.itemId)
+                        textColor = if (musicViewModel.musicController.musicInfo?.itemId == musicParent.musicId)
                             MaterialTheme.colorScheme.primary
                         else
                             MaterialTheme.colorScheme.onSurface,
-                        ifSelect = ifOpenSelect,
+                        ifSelect = musicViewModel.selectControl.ifOpenSelect,
                         ifSelectCheckBox = {
-                            musicViewModel.selectControl.selectMusicDataList.any { it.itemId == music.itemId }
+                            musicParent.musicId in musicViewModel.selectControl.selectMusicIdList
                         },
-                        trailingOnClick = { select ->
+                        trailingOnSelectClick = { select ->
                             Log.i("======", "数据是否一起变化${select}")
-                            if (select) {
-                                musicViewModel.selectControl.removeSelectMusicId(music.itemId)
-                            } else {
-                                musicViewModel.selectControl.setSelectMusicListData(music)
+                            musicViewModel.selectControl.toggleSelection(
+                                musicParent.musicId,
+                                onIsSelectAll = {
+                                    musicViewModel.selectControl.selectMusicIdList.containsAll(
+                                        homeMusicPager.itemSnapshotList.items.map { it.musicId }
+                                    )
+                                })
+                        },
+                        trailingOnClick = {
+                            coroutineScope.launch {
+                                musicViewModel.getMusicInfoById(musicParent.musicId)?.show()
                             }
                         }
                     )
@@ -196,53 +182,38 @@ fun MusicSelectTopBarComponent(
     modifier: Modifier,
     title: String,
     musicViewModel: MusicViewModel,
-    onIfOpenSelect: () -> Boolean,
-    onSetIfOpenSelect: (Boolean) -> Unit,
-    onIfAllSelect: () -> Boolean,
-    onSetIfAllSelect: (Boolean) -> Unit,
+//    onIfOpenSelect: () -> Boolean,
+//    onSetIfOpenSelect: (Boolean) -> Unit,
+//    onIfAllSelect: () -> Boolean,
     onRandomPlayerClick: () -> Unit,
-    onSelectClick: () -> Unit,
-    musicListCount: () -> Int,
+//    musicListCount: () -> Int,
+    onSelectAll: () -> Unit,
     selectControl: SelectControl,
     sortOrFilterContent: @Composable () -> Unit
 ) {
     val navController = LocalNavController.current
     val coroutineScope = rememberCoroutineScope()
 
-    val selectListSize by remember {
+    /*val selectListSize by remember {
         derivedStateOf {
             selectControl.selectMusicDataList.size
         }
-    }
+    }*/
 
-    LaunchedEffect(selectListSize) {
+    /*LaunchedEffect(selectListSize) {
         snapshotFlow { selectListSize }.collect {
             onSetIfAllSelect(musicListCount() == selectListSize && musicListCount() > 0)
         }
-    }
+    }*/
     TopAppBarComponent(
         modifier = modifier,
         title = {
-            if (onIfOpenSelect()) {
-                if (onIfAllSelect()) {
-                    TextButton(onClick = {
-                        onSetIfAllSelect(false)
-                        selectControl.clearSelectMusicList()
-                    }) {
-                        Text(text = stringResource(R.string.deselect_all))
-                    }
-                } else {
-                    TextButton(onClick = {
-                        onSetIfAllSelect(true)
-                        coroutineScope.launch {
-                            val musicList = musicViewModel.getMusicMusic(musicListCount())
-                            if (!musicList.isNullOrEmpty())
-                                selectControl.setSelectMusicListAllData(musicList)
-                        }
-                    }) {
-                        Text(text = stringResource(R.string.select_all))
-                    }
-                }
+            if (selectControl.ifOpenSelect) {
+
+                XySelectAllComponent(
+                    isSelectAll = selectControl.isSelectAll,
+                    onSelectAll = onSelectAll
+                )
             } else {
                 Text(
                     text = title,
@@ -250,37 +221,22 @@ fun MusicSelectTopBarComponent(
                 )
             }
         }, navigationIcon = {
-            if (onIfOpenSelect()) {
-                IconButton(
-                    onClick = {
-                        selectControl.dismiss()
-                        navController.popBackStack()
-                    },
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.return_home)
-                    )
-                }
-            } else {
-                IconButton(
-                    onClick = {
-                        navController.popBackStack()
-                    },
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.return_home)
-                    )
-                }
+            IconButton(
+                onClick = {
+                    navController.popBackStack()
+                },
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.return_home)
+                )
             }
 
+
         }, actions = {
-            if (onIfOpenSelect()) {
+            if (selectControl.ifOpenSelect) {
                 IconButton(onClick = {
-                    onSetIfAllSelect(false)
-                    musicViewModel.selectControl.dismiss()
-                    onSetIfOpenSelect(false)
+                    selectControl.dismiss()
                 }) {
                     Icon(
                         imageVector = Icons.Rounded.Close,
@@ -298,10 +254,7 @@ fun MusicSelectTopBarComponent(
                 }
 
                 IconButton(onClick = {
-                    onSelectClick()
-                    musicViewModel.selectControl.show(ifOpenSelect = true, onOpenChange = {
-                        onSetIfOpenSelect(it)
-                    })
+                    musicViewModel.selectControl.show(ifOpenSelect = true)
                 }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Rounded.PlaylistAddCheck,

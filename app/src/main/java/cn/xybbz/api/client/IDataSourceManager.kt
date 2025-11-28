@@ -13,6 +13,7 @@ import androidx.room.Transaction
 import cn.xybbz.R
 import cn.xybbz.api.client.data.AllResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
+import cn.xybbz.api.client.version.VersionApiClient
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.constants.Constants
@@ -39,8 +40,10 @@ import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.genre.XyGenre
+import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
+import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -60,12 +63,12 @@ class IDataSourceManager(
     private val application: Context,
     private val db: DatabaseClient,
     private val dataSources: Map<DataSourceType, @JvmSuppressWildcards Provider<IDataSourceParentServer>>,
-    private val connectionConfigServer: ConnectionConfigServer,
+    val connectionConfigServer: ConnectionConfigServer,
     private val alarmConfig: AlarmConfig,
-    private val favoriteRepository: FavoriteRepository
+    private val favoriteRepository: FavoriteRepository,
+    private val versionApiClient: VersionApiClient
 ) : IDataSourceServer {
 
-    val _connectionConfigServer = connectionConfigServer
 
     var dataSourceType by mutableStateOf<DataSourceType?>(null)
         private set
@@ -107,6 +110,20 @@ class IDataSourceManager(
                 serverLogin()
             }
 
+        }
+    }
+
+    /**
+     * 根据下载类型获得数据源
+     */
+    override fun getApiClient(downloadTypes: DownloadTypes): ApiConfig {
+        return when (downloadTypes) {
+            DownloadTypes.APK -> {
+                versionApiClient
+            }
+            else -> {
+                dataSourceServer.getApiClient(downloadTypes)
+            }
         }
     }
 
@@ -313,7 +330,7 @@ class IDataSourceManager(
      */
     override fun selectMusicFlowList(
         sortByFlow: StateFlow<Sort>
-    ): Flow<PagingData<XyMusic>> {
+    ): Flow<PagingData<HomeMusic>> {
         return dataSourceServer.selectMusicFlowList(sortByFlow)
     }
 
@@ -626,8 +643,7 @@ class IDataSourceManager(
      */
     override suspend fun saveMusicPlaylist(
         playlistId: String,
-        musicIds: List<String>,
-        pic: String?
+        musicIds: List<String>
     ): Boolean {
         return OperationTipUtils.operationTipNotToBlock(
             loadingMessage = R.string.adding_music_to_playlist,
@@ -635,7 +651,7 @@ class IDataSourceManager(
             errorMessage = R.string.add_music_to_playlist_failed
         ) {
             try {
-                dataSourceServer.saveMusicPlaylist(playlistId, musicIds, pic)
+                dataSourceServer.saveMusicPlaylist(playlistId, musicIds)
             } catch (e: Exception) {
                 Log.e(Constants.LOG_ERROR_PREFIX, "保存自建歌单中的音乐失败", e)
                 false
@@ -787,7 +803,7 @@ class IDataSourceManager(
         pageSize: Int
     ): List<XyMusic>? {
         return try {
-             dataSourceServer.getPlayRecordMusicList(pageSize)
+            dataSourceServer.getPlayRecordMusicList(pageSize)
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得流派内音乐列表失败", e)
             null
@@ -858,8 +874,8 @@ class IDataSourceManager(
         pageSize: Int
     ): List<XyMusic>? {
         return try {
-             dataSourceServer.getMusicListByArtistIds(artistIds, pageSize)
-        }catch (e: Exception){
+            dataSourceServer.getMusicListByArtistIds(artistIds, pageSize)
+        } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "根据艺术家列表获得歌曲列表失败", e)
             null
         }
@@ -988,7 +1004,6 @@ class IDataSourceManager(
         if (favorite != ifFavorite)
             when (type) {
                 MusicTypeEnum.MUSIC -> {
-                    favoriteRepository.toggleBoolean(itemId, favorite)
                     if (musicController?.musicInfo?.itemId == itemId) {
                         musicController.updateCurrentFavorite(favorite)
                     }

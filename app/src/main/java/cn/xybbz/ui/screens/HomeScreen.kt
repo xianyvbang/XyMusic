@@ -25,6 +25,7 @@ import androidx.compose.material.icons.rounded.AddCircle
 import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.MusicNote
@@ -35,6 +36,8 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
@@ -120,6 +123,7 @@ fun HomeScreen(
         skipPartiallyExpanded = false
     )
 
+
     var playlistName by remember {
         mutableStateOf("")
     }
@@ -163,6 +167,11 @@ fun HomeScreen(
 
     val coroutineScope = rememberCoroutineScope()
 
+    /* BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+         val width = this.maxWidth
+
+     }
+ */
     XyColumnScreen(
         modifier = modifier
             .brashColor(
@@ -341,6 +350,21 @@ fun HomeScreen(
                             contentDescription = stringResource(R.string.search_page_switch_button)
                         )
                     }
+
+                    IconButton(onClick = {
+                        navHostController.navigate(RouterConstants.Download)
+                    }) {
+                        BadgedBox(badge = {
+                            if (homeViewModel.downloadCount > 0) {
+                                Badge(containerColor = Color.Red)
+                            }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Rounded.Download,
+                                contentDescription = stringResource(R.string.download_list)
+                            )
+                        }
+                    }
                 }
             })
         PullToRefreshBox(
@@ -362,8 +386,11 @@ fun HomeScreen(
         ) {
             LazyColumnNotComponent {
                 item {
-                    XyRow {
+                    XyRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
                         XyItemTabBigButton(
+                            modifier = Modifier.weight(1f),
                             text = stringResource(R.string.all_music),
                             sub = if (ifShowCount) homeViewModel.musicCount ?: stringResource(
                                 Constants.UNKNOWN
@@ -379,7 +406,27 @@ fun HomeScreen(
                                 end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
                             )
                         )
+
                         XyItemTabBigButton(
+                            modifier = Modifier.weight(1f),
+                            text = stringResource(R.string.local),
+                            sub = if (ifShowCount) homeViewModel.localCount ?: stringResource(
+                                Constants.UNKNOWN
+                            ) else null,
+                            imageVector = Icons.Rounded.MusicNote,
+                            iconColor = MaterialTheme.colorScheme.onSurface,
+                            onClick = {
+                                navHostController.navigate(RouterConstants.Local)
+                            },
+                            brush = Brush.linearGradient(
+                                colors = listOf(Color(0xFF0A7B88), Color(0xFFFFBA6C)),
+                                start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
+                                end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
+                            )
+                        )
+
+                        XyItemTabBigButton(
+                            modifier = Modifier.weight(1f),
                             text = stringResource(R.string.album),
                             sub = if (ifShowCount) homeViewModel.albumCount ?: stringResource(
                                 Constants.UNKNOWN
@@ -399,6 +446,7 @@ fun HomeScreen(
                             )
                         )
                         XyItemTabBigButton(
+                            modifier = Modifier.weight(1f),
                             text = stringResource(R.string.artist),
                             sub = if (ifShowCount) homeViewModel.artistCount ?: stringResource(
                                 Constants.UNKNOWN
@@ -415,6 +463,7 @@ fun HomeScreen(
                             )
                         )
                         XyItemTabBigButton(
+                            modifier = Modifier.weight(1f),
                             text = stringResource(R.string.favorite),
                             sub = if (ifShowCount) homeViewModel.favoriteCount ?: stringResource(
                                 Constants.UNKNOWN
@@ -432,6 +481,7 @@ fun HomeScreen(
                         )
 
                         XyItemTabBigButton(
+                            modifier = Modifier.weight(1f),
                             text = stringResource(R.string.genres),
                             sub = if (ifShowCount) homeViewModel.genreCount ?: stringResource(
                                 Constants.UNKNOWN

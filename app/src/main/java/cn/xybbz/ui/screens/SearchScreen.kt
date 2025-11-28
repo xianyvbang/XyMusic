@@ -255,7 +255,7 @@ fun SearchResultScreen(
 ) {
     val navController = LocalNavController.current
 
-    val favoriteList by favoriteRepository.favoriteMap.collectAsState()
+    val favoriteSet by favoriteRepository.favoriteSet.collectAsState()
 
 
     LazyColumnNotComponent(
@@ -329,13 +329,15 @@ fun SearchResultScreen(
                 }
                 itemsIndexed(musicList, key = { _, music -> music.itemId }) { index, music ->
                     MusicItemComponent(
-                        onMusicData = { music },
+                        itemId = music.itemId,
+                        name = music.name,
+                        album = music.album,
+                        artists = music.artists,
+                        pic = music.pic,
+                        codec = music.codec,
+                        bitRate = music.bitRate,
                         onIfFavorite = {
-                            if (favoriteList.containsKey(music.itemId)) {
-                                favoriteList.getOrDefault(music.itemId, false)
-                            } else {
-                                music.ifFavoriteStatus
-                            }
+                            music.itemId in favoriteSet
                         },
                         onMusicPlay = {
                             onAddMusic(
@@ -343,6 +345,9 @@ fun SearchResultScreen(
                             )
                         },
                         trailingOnClick = {
+                            music.show()
+                        },
+                        trailingOnSelectClick = {
                             music.show()
                         }
                     )

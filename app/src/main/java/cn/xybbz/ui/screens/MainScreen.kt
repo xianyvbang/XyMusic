@@ -2,6 +2,7 @@
 
 package cn.xybbz.ui.screens
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.annotation.OptIn
@@ -17,6 +18,8 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -27,6 +30,7 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.rememberNavController
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.entity.data.SelectControl
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.RouterCompose
 import cn.xybbz.router.RouterConstants
@@ -39,6 +43,12 @@ import cn.xybbz.ui.components.MusicBottomMenuComponent
 import cn.xybbz.ui.components.SnackBarPlayerComponent
 import cn.xybbz.viewmodel.MainViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionStatus
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 @ExperimentalPermissionsApi
@@ -59,9 +69,28 @@ fun MainScreen() {
 
         //todo putDataSourceState 这个属性应该放在全局的object类里,不是放在mainViewModel里
 
+        val permissionState =
+            rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
+
+
         LifecycleEffect(
             onCreate = {
 //                mainViewModel.clearRemoteCurrent()
+                //todo 通知权限调用应该修改到下载的时候
+                when (permissionState.status) {
+                    is PermissionStatus.Granted -> {
+                        Log.i("permission", "通知权限启用")
+                    }
+
+                    is PermissionStatus.Denied -> {
+                        if (permissionState.status.shouldShowRationale) {
+                            permissionState.launchPermissionRequest()
+                        } else {
+                            Log.w("permission", "通知权限被禁止")
+                        }
+                    }
+                }
+                permissionState.launchPermissionRequest()
                 Log.i("=====", "初始化")
             },
             onStart = {
@@ -91,26 +120,13 @@ fun MainScreen() {
             navController.navigate(RouterConstants.AlbumInfo(albumId, MusicDataTypeEnum.ALBUM))
         })
         AddPlaylistBottomComponent()
-
+        navController.CurrentSelectChange(mainViewModel.selectControl)
         Scaffold(
-            /*topBar = {
-                TopAppBar(title = {
-                    //todo 这里可以写入链接的部分信息
-                    Text(
-                        text = "欢迎回来",
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.W900
-                    )
-                })
-            },*/
             snackbarHost = {
                 SnackBarHostUi()
             },
-            /*bottomBar = {
-                NavigationBarAnim()
-            }*/
-        ) { it ->
-            Box() {
+        ) {
+            Box {
                 RouterCompose(paddingValues = it)
                 LoadingCompose(modifier = Modifier.align(alignment = Alignment.Center))
             }
@@ -148,4 +164,29 @@ private fun NavController.currentSnackBarHostScreen(): MutableState<Boolean> {
         addOnDestinationChangedListener(listener)
     }
     return currentScreen
+}
+
+@Composable
+private fun NavController.CurrentSelectChange(selectControl: SelectControl) {
+    val coroutineScope = rememberCoroutineScope()
+
+    var needDismiss by remember { mutableStateOf(false) }
+    LaunchedEffect(key1 = this) {
+        val listener = NavController.OnDestinationChangedListener { _, _, _ ->
+            coroutineScope.launch {
+                withContext(Dispatchers.IO){
+                    if (selectControl.ifOpenSelect)
+                        needDismiss = true
+                }
+            }
+        }
+        addOnDestinationChangedListener(listener)
+    }
+
+    if (needDismiss) {
+        LaunchedEffect(true) {
+            selectControl.dismiss()
+            needDismiss = false
+        }
+    }
 }

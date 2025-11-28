@@ -1,11 +1,13 @@
 package cn.xybbz.common.utils
 
+import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import cn.xybbz.R
+import cn.xybbz.common.constants.Constants
 import cn.xybbz.ui.components.LoadingObject
 import cn.xybbz.ui.components.dismiss
 import cn.xybbz.ui.components.show
@@ -36,6 +38,35 @@ object OperationTipUtils {
         } else {
             MessageUtils.sendPopTipIconError(errorMessage)
         }
+        return operationStatus
+    }
+
+    suspend fun operationTipNotToBlockAndThrow(
+        @StringRes loadingMessage: Int = R.string.deleting,
+        @StringRes successMessage: Int = R.string.delete_success,
+        @StringRes failMessage: Int = R.string.delete_success,
+        @StringRes errorMessage: Int = R.string.delete_failed,
+        operation: suspend () -> Boolean
+    ): Boolean {
+        MessageUtils.sendPopTip(loadingMessage)
+        var isError = false
+        val operationStatus = try {
+            operation()
+        }catch (e: Exception){
+            Log.e(Constants.LOG_ERROR_PREFIX,"操作异常",e)
+            isError = true
+            false
+        }
+        if (isError){
+            MessageUtils.sendPopTipIconError(errorMessage)
+        }else {
+            if (operationStatus) {
+                MessageUtils.sendPopTipSuccess(successMessage)
+            } else {
+                MessageUtils.sendPopTipSuccess(failMessage)
+            }
+        }
+
         return operationStatus
     }
 

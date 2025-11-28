@@ -13,6 +13,7 @@ import cn.xybbz.api.client.plex.PlexApiClient
 import cn.xybbz.api.client.plex.PlexDatasourceServer
 import cn.xybbz.api.client.subsonic.SubsonicApiClient
 import cn.xybbz.api.client.subsonic.SubsonicDatasourceServer
+import cn.xybbz.api.client.version.VersionApiClient
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.favorite.FavoriteRepository
@@ -116,7 +117,8 @@ class DataSourceModule {
         dataSources: Map<DataSourceType, @JvmSuppressWildcards Provider<IDataSourceParentServer>>,
         connectionConfigServer: ConnectionConfigServer,
         alarmConfig: AlarmConfig,
-        favoriteRepository: FavoriteRepository
+        favoriteRepository: FavoriteRepository,
+        versionApiClient: VersionApiClient
     ): IDataSourceManager {
         val dataSourceManager = IDataSourceManager(
             application = application,
@@ -124,7 +126,8 @@ class DataSourceModule {
             dataSources,
             connectionConfigServer,
             alarmConfig,
-            favoriteRepository
+            favoriteRepository,
+            versionApiClient
         )
         dataSourceManager.initDataSource()
         return dataSourceManager

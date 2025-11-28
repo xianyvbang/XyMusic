@@ -4,6 +4,7 @@ import cn.xybbz.api.TokenServer
 import cn.xybbz.api.adapter.LocalDateAdapter
 import cn.xybbz.api.adapter.LocalDateTimeAdapter
 import cn.xybbz.api.base.BaseApi
+import cn.xybbz.api.base.IDownLoadApi
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.constants.ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
 import cn.xybbz.api.okhttp.LoggingInterceptor
@@ -46,6 +47,8 @@ abstract class DefaultApiClient : ApiConfig {
 
     lateinit var apiOkHttpClient: OkHttpClient
 
+    private lateinit var defaultDownloadApi: IDownLoadApi
+
     override fun setRetrofitData(baseUrl: String, ifTmp: Boolean) {
         this.baseUrl = baseUrl
         retrofit = Retrofit.Builder()
@@ -69,6 +72,7 @@ abstract class DefaultApiClient : ApiConfig {
         artistsApi(true)
         libraryApi(true)
         genreApi(true)
+        downloadApi(true)
     }
 
     override fun instance(): Retrofit {
@@ -100,6 +104,7 @@ abstract class DefaultApiClient : ApiConfig {
             .addNetworkInterceptor(SubsonicNetworkStatusInterceptor(ifSubsonic = { if (ifTmp) ifSubsonic else TokenServer.ifSubsonic }))
             .followRedirects(true)
             .followSslRedirects(true)
+            .retryOnConnectionFailure(true)
             // 可以添加其他配置，比如连接超时、读写超时等
             .build()
         return apiOkHttpClient
@@ -213,6 +218,16 @@ abstract class DefaultApiClient : ApiConfig {
      */
     open fun genreApi(restart: Boolean = false): BaseApi = object : BaseApi {
 
+    }
+
+    /**
+     * 下载相关接口
+     */
+    override fun downloadApi(restart: Boolean): IDownLoadApi {
+        if (!this::defaultDownloadApi.isInitialized || restart) {
+            defaultDownloadApi = instance().create(IDownLoadApi::class.java)
+        }
+        return defaultDownloadApi
     }
 
     override fun <T> createApiObj(clazz: Class<T>): T {
