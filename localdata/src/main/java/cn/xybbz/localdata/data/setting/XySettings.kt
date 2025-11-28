@@ -65,9 +65,5 @@ data class XySettings(
     /**
      * 最大同时下载数量
      */
-    val maxConcurrentDownloads:Int = 3,
-    /**
-     * 是否仅连接Wifi下载
-     */
-    val ifOnlyWifiDownload: Boolean = false
+    val maxConcurrentDownloads:Int = 3
 )

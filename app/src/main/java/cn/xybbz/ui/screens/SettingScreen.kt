@@ -313,15 +313,6 @@ fun SettingScreen(
                         ifShowMaxConcurrentDownloads = true
                     }
 
-                    MusicSettingSwitchItemComponent(
-                        title = stringResource(R.string.only_wifi),
-                        ifChecked = settingsViewModel.settingDataNow.ifOnlyWifiDownload
-                    ) { bol ->
-                        coroutineScope.launch {
-                            settingsViewModel.setIfOnlyWifiDownload(bol, context = context)
-                        }
-                    }
-
                     SettingItemComponent(
                         title = R.string.song_cache_location,
                         bottomInfo = settingsViewModel.downLoadManager.getConfig().finalDirectory,

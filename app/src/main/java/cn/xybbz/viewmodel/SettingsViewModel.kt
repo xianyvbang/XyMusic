@@ -52,21 +52,8 @@ class SettingsViewModel @Inject constructor(
 
     suspend fun setMaxConcurrentDownloads(maxConcurrentDownloads: Int, context: Context) {
         settingsConfig.setMaxConcurrentDownloads(maxConcurrentDownloads)
-        val downloaderConfig = downLoadManager.getConfig()
         downLoadManager.updateConfig(
             DownloaderConfig.Builder(context).setMaxConcurrentDownloads(maxConcurrentDownloads)
-                .setIfOnlyWifiDownload(downloaderConfig.ifOnlyWifiDownload)
-                .build()
-        )
-    }
-
-    suspend fun setIfOnlyWifiDownload(ifOnlyWifiDownload: Boolean, context: Context) {
-        settingsConfig.setIfOnlyWifiDownload(ifOnlyWifiDownload)
-        val downloaderConfig = downLoadManager.getConfig()
-        downLoadManager.updateConfig(
-            DownloaderConfig.Builder(context)
-                .setMaxConcurrentDownloads(downloaderConfig.maxConcurrentDownloads)
-                .setIfOnlyWifiDownload(ifOnlyWifiDownload)
                 .build()
         )
     }

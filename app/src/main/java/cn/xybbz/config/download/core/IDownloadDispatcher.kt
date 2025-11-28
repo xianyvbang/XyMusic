@@ -21,9 +21,4 @@ interface IDownloadDispatcher {
         isSendNotice: Boolean = true
     )
 
-    /**
-     * 监听网络变化,判断是否开启仅wifi下载并且是否处在wifi环境
-     */
-    fun onEnabledOnlyWifiAndWifiDownload(): Boolean
-
 }

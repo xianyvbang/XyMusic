@@ -47,7 +47,6 @@ class OkhttpDownloadCore(
             )
 
         val response = try {
-
             call.awaitResponse()
         } catch (e: Exception) {
             emit(DownloadState.Error("下载失败: ${e.message}", e))

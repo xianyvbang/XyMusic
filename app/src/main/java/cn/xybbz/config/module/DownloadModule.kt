@@ -29,7 +29,6 @@ class DownloadModule {
         @ApplicationContext applicationContext: Context,
         connectionConfigServer: ConnectionConfigServer,
         notificationController: NotificationController,
-        netWorkMonitor: NetWorkMonitor,
         settingsConfig: SettingsConfig
     ): DownloadDispatcherImpl {
         val settings = settingsConfig.get()
@@ -37,11 +36,9 @@ class DownloadModule {
             db,
             WorkManager.getInstance(applicationContext),
             DownloaderConfig.Builder(applicationContext)
-                .setMaxConcurrentDownloads(settings.maxConcurrentDownloads)
-                .setIfOnlyWifiDownload(settings.ifOnlyWifiDownload).build(),
+                .setMaxConcurrentDownloads(settings.maxConcurrentDownloads).build(),
             connectionConfigServer,
-            notificationController,
-            netWorkMonitor
+            notificationController
         )
         return downloadDispatcherImpl
     }
