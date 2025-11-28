@@ -41,7 +41,6 @@ import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.entity.data.music.XyMusicExtend
-import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import com.google.common.util.concurrent.ListenableFuture
@@ -131,7 +130,7 @@ class MusicController(
     private var onManualChangeMusic: (() -> Unit)? = null
 
     //音频切换
-    private var onChangeMusic: ((XyMusicExtend) -> Unit)? = null
+    private var onChangeMusic: ((String) -> Unit)? = null
 
     //收藏/取消收藏
     var onFavorite: ((String) -> Unit)? = null
@@ -247,7 +246,7 @@ class MusicController(
                         updateButtonCommend(
                             it.itemId in favoriteRepository.favoriteSet.value
                         )
-                        onChangeMusic?.invoke(it)
+                        onChangeMusic?.invoke(it.itemId)
                         //判断音乐播放进度是否为0,如果为0则不处理,不为0则需要跳转到相应的进度
                         if (musicCurrentPositionMap.containsKey(it.itemId)) {
                             musicCurrentPositionMap[it.itemId]?.let { position ->
@@ -734,7 +733,7 @@ class MusicController(
     /**
      * 设置播放方法
      */
-    fun setOnPlay(onPlayFun: (XyMusic) -> Unit) {
+    fun setOnPlay(onPlayFun: (String, String) -> Unit) {
         onPlay = onPlayFun
     }
 
@@ -762,7 +761,7 @@ class MusicController(
     /**
      * 音频切换调用方法
      */
-    fun setOnChangeMusic(onChangeMusic: (XyMusicExtend) -> Unit) {
+    fun setOnChangeMusic(onChangeMusic: (String) -> Unit) {
         this.onChangeMusic = onChangeMusic
     }
 

@@ -485,8 +485,9 @@ class EmbyDatasourceServer @Inject constructor(
      * @return 返回歌词列表
      */
     override suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>? {
-        return if (itemId.ifLyric) {
-            val lyrics = embyApiClient.lyricsApi().getLyrics(itemId.itemId)
+        val music = db.musicDao.selectById(itemId)
+        return if (music?.ifLyric == true) {
+            val lyrics = embyApiClient.lyricsApi().getLyrics(itemId)
             lyrics.lyrics.map {
                 LrcEntryData(startTime = it.start!! / LYRICS_AMPLIFICATION, text = it.text)
             }

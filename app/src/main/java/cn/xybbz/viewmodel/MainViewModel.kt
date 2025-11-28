@@ -106,19 +106,19 @@ class MainViewModel @Inject constructor(
             }
         }
 
-        musicController.setOnPlay {
+        musicController.setOnPlay { itemId, playSessionId ->
             //调用上报接口
             viewModelScope.launch {
                 dataSourceManager.reportPlaying(
-                    it.itemId,
-                    playSessionId = it.playSessionId,
+                    itemId,
+                    playSessionId = playSessionId,
                     positionTicks = musicController.currentPosition
                 )
             }
             viewModelScope.launch {
                 dataSourceManager.reportProgress(
-                    it.itemId,
-                    playSessionId = it.playSessionId,
+                    itemId,
+                    playSessionId = playSessionId,
                     positionTicks = musicController.currentPosition
                 )
                 alarmConfig.scheduleNextReport()
@@ -128,7 +128,7 @@ class MainViewModel @Inject constructor(
             }*/
         }
 
-        musicController.setOnPauseFun {itemId,playSessionId,musicUrl->
+        musicController.setOnPauseFun { itemId, playSessionId, musicUrl ->
             viewModelScope.launch {
                 dataSourceManager.reportPlaying(
                     itemId,
@@ -149,7 +149,7 @@ class MainViewModel @Inject constructor(
             setPlayerProgress(musicController.currentPosition)
         }
 
-        musicController.setOnSeekTo { millSeconds, itemId,playSessionId ->
+        musicController.setOnSeekTo { millSeconds, itemId, playSessionId ->
             setPlayerProgress(millSeconds)
 
             viewModelScope.launch {
@@ -182,24 +182,24 @@ class MainViewModel @Inject constructor(
         /**
          * 音频切换调用方法
          */
-        musicController.setOnChangeMusic {
+        musicController.setOnChangeMusic {itemId ->
 
             viewModelScope.launch {
                 //数据变化的时候进行数据变化
                 putIterations(0)
                 db.withTransaction {
                     db.musicDao.updateByPlayedCount(
-                        it.itemId
+                        itemId
                     )
                     val recordMusic =
-                        db.musicDao.selectById(it.itemId)
+                        db.musicDao.selectById(itemId)
 
                     if (recordMusic != null) {
                         val index = db.musicDao.selectPlayHistoryIndexAsc() ?: -1
                         db.musicDao.savePlayHistoryMusic(
                             listOf(
                                 PlayHistoryMusic(
-                                    musicId = it.itemId,
+                                    musicId = itemId,
                                     index = index - 1,
                                     connectionId = connectionConfigServer.getConnectionId()
                                 )
@@ -214,7 +214,7 @@ class MainViewModel @Inject constructor(
                 }
                 //歌词切换
                 LrcServer.getMusicLyricList(
-                    it.itemId,
+                    itemId,
                     connectionConfigServer = connectionConfigServer,
                     dataSourceManager
                 )
