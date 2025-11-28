@@ -40,7 +40,6 @@ import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.HomeMusic
-import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
@@ -313,12 +312,12 @@ class SubsonicDatasourceServer @Inject constructor(
 
     /**
      * 根据音乐获得歌词信息
-     * @param [music] 音乐id
+     * @param [itemId] 音乐id
      * @return 返回歌词列表
      */
-    override suspend fun getMusicLyricList(music: XyMusic): List<LrcEntryData>? {
-        return if (music.ifLyric) {
-            val lyrics = subsonicApiClient.lyricsApi().getLyrics(music.artists,music.name)
+    override suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>? {
+        return if (itemId.ifLyric) {
+            val lyrics = subsonicApiClient.lyricsApi().getLyrics(itemId.artists, itemId.name)
             lyrics.subsonicResponse.lyrics?.value?.let {
                 LrcUtils.parseLrc(it)
             }

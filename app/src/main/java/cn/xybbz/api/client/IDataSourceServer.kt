@@ -147,10 +147,10 @@ interface IDataSourceServer {
 
     /**
      * 根据音乐获得歌词信息
-     * @param [music] 音乐id
+     * @param [itemId] 音乐id
      * @return 返回歌词列表
      */
-    suspend fun getMusicLyricList(music: XyMusic): List<LrcEntryData>?
+    suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>?
 
     /**
      * 根据艺术家获得专辑列表

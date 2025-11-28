@@ -81,7 +81,6 @@ class MainViewModel @Inject constructor(
     val yearSet by mutableStateOf(DateUtil.getYearSet())
 
 
-
     //下载的异步携程
     var downloadJob: Job? = null
 
@@ -129,34 +128,34 @@ class MainViewModel @Inject constructor(
             }*/
         }
 
-        musicController.setOnPauseFun {
+        musicController.setOnPauseFun {itemId,playSessionId,musicUrl->
             viewModelScope.launch {
                 dataSourceManager.reportPlaying(
-                    it.itemId,
-                    playSessionId = it.playSessionId,
+                    itemId,
+                    playSessionId = playSessionId,
                     true,
                     musicController.currentPosition
                 )
             }
             viewModelScope.launch {
                 dataSourceManager.reportProgress(
-                    it.itemId,
-                    playSessionId = it.playSessionId,
+                    itemId,
+                    playSessionId = playSessionId,
                     positionTicks = musicController.currentPosition
                 )
             }
-            cacheController.pauseCache(it.musicUrl)
+            cacheController.pauseCache(musicUrl)
             Log.i("=====", "调用暂停方法")
             setPlayerProgress(musicController.currentPosition)
         }
 
-        musicController.setOnSeekTo { millSeconds, music ->
+        musicController.setOnSeekTo { millSeconds, itemId,playSessionId ->
             setPlayerProgress(millSeconds)
 
             viewModelScope.launch {
                 dataSourceManager.reportProgress(
-                    music.itemId,
-                    playSessionId = music.playSessionId,
+                    itemId,
+                    playSessionId = playSessionId,
                     positionTicks = millSeconds
                 )
             }
@@ -189,36 +188,33 @@ class MainViewModel @Inject constructor(
                 //数据变化的时候进行数据变化
                 putIterations(0)
                 db.withTransaction {
-                    musicController.musicInfo?.let { it1 ->
-                        db.musicDao.updateByPlayedCount(
-                            it1.playedCount, it.itemId
-                        )
-                        val recordMusic =
-                            db.musicDao.selectById(it1.itemId)
+                    db.musicDao.updateByPlayedCount(
+                        it.itemId
+                    )
+                    val recordMusic =
+                        db.musicDao.selectById(it.itemId)
 
-                        if (recordMusic != null) {
-                            val index = db.musicDao.selectPlayHistoryIndexAsc() ?: -1
-                            db.musicDao.savePlayHistoryMusic(
-                                listOf(
-                                    PlayHistoryMusic(
-                                        musicId = it1.itemId,
-                                        index = index - 1,
-                                        connectionId = connectionConfigServer.getConnectionId()
-                                    )
+                    if (recordMusic != null) {
+                        val index = db.musicDao.selectPlayHistoryIndexAsc() ?: -1
+                        db.musicDao.savePlayHistoryMusic(
+                            listOf(
+                                PlayHistoryMusic(
+                                    musicId = it.itemId,
+                                    index = index - 1,
+                                    connectionId = connectionConfigServer.getConnectionId()
                                 )
                             )
-                        }
-                        val recordCount = db.musicDao.selectPlayHistoryCount()
-                        if (recordCount > 20) {
-                            db.musicDao.deletePlayHistory()
-                        }
-
+                        )
+                    }
+                    val recordCount = db.musicDao.selectPlayHistoryCount()
+                    if (recordCount > 20) {
+                        db.musicDao.deletePlayHistory()
                     }
                     db.playerDao.updateIndex(musicController.musicInfo?.itemId ?: "")
                 }
                 //歌词切换
                 LrcServer.getMusicLyricList(
-                    it,
+                    it.itemId,
                     connectionConfigServer = connectionConfigServer,
                     dataSourceManager
                 )
@@ -564,7 +560,7 @@ class MainViewModel @Inject constructor(
     /**
      * 初始化版本信息获取
      */
-    fun initGetVersionInfo(){
+    fun initGetVersionInfo() {
         viewModelScope.launch {
             apkUpdateManager.initLatestVersion()
         }

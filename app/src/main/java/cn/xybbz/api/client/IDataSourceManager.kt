@@ -481,12 +481,12 @@ class IDataSourceManager(
 
     /**
      * 根据音乐获得歌词信息
-     * @param [music] 音乐id
+     * @param [itemId] 音乐id
      * @return 返回歌词列表
      */
-    override suspend fun getMusicLyricList(music: XyMusic): List<LrcEntryData>? {
+    override suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>? {
         return try {
-            dataSourceServer.getMusicLyricList(music)
+            dataSourceServer.getMusicLyricList(itemId)
         } catch (e: SocketTimeoutException) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得歌词超时", e)
             return null

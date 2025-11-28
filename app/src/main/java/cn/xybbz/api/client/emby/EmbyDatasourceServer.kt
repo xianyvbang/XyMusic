@@ -42,7 +42,6 @@ import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
-import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
@@ -482,12 +481,12 @@ class EmbyDatasourceServer @Inject constructor(
 
     /**
      * 根据音乐获得歌词信息
-     * @param [music] 音乐id
+     * @param [itemId] 音乐id
      * @return 返回歌词列表
      */
-    override suspend fun getMusicLyricList(music: XyMusic): List<LrcEntryData>? {
-        return if (music.ifLyric) {
-            val lyrics = embyApiClient.lyricsApi().getLyrics(music.itemId)
+    override suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>? {
+        return if (itemId.ifLyric) {
+            val lyrics = embyApiClient.lyricsApi().getLyrics(itemId.itemId)
             lyrics.lyrics.map {
                 LrcEntryData(startTime = it.start!! / LYRICS_AMPLIFICATION, text = it.text)
             }

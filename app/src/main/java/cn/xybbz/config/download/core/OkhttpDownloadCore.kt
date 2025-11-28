@@ -5,6 +5,7 @@ import android.icu.math.BigDecimal
 import android.util.Log
 import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.exception.CancelDownloadException
 import cn.xybbz.common.utils.FileUtil
 import cn.xybbz.download.core.IDownloadCore
 import cn.xybbz.download.state.DownloadState
@@ -109,7 +110,7 @@ class OkhttpDownloadCore(
                     if (currentStatus == DownloadStatus.CANCEL) {
                         // 感知到取消指令，抛出异常以终止流程
                         call.cancel()
-                        throw CancellationException("取消下载")
+                        throw CancelDownloadException("取消下载")
                     }
                 }
             }

@@ -38,7 +38,6 @@ import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
-import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
@@ -438,12 +437,12 @@ class NavidromeDatasourceServer @Inject constructor(
 
     /**
      * 根据音乐获得歌词信息
-     * @param [music] 音乐id
+     * @param [itemId] 音乐id
      * @return 返回歌词列表
      */
-    override suspend fun getMusicLyricList(music: XyMusic): List<LrcEntryData>? {
-        return if (music.ifLyric) {
-            music.lyric?.let {
+    override suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>? {
+        return if (itemId.ifLyric) {
+            itemId.lyric?.let {
                 LrcUtils.parseLrc(it)
 
             }

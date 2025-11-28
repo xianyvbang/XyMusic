@@ -852,12 +852,12 @@ class PlexDatasourceServer @Inject constructor(
 
     /**
      * 根据音乐获得歌词信息
-     * @param [music] 音乐id
+     * @param [itemId] 音乐id
      * @return 返回歌词列表
      */
-    override suspend fun getMusicLyricList(music: XyMusic): List<LrcEntryData>? {
-        return if (music.ifLyric && !music.lyric.isNullOrBlank()) {
-            val lyrics = music.lyric?.let { plexApiClient.lyricsApi().getLyrics(it) }
+    override suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>? {
+        return if (itemId.ifLyric && !itemId.lyric.isNullOrBlank()) {
+            val lyrics = itemId.lyric?.let { plexApiClient.lyricsApi().getLyrics(it) }
             val lrcEntries = lyrics?.let {
                 LrcUtils.parseLrc(lyrics)
             }

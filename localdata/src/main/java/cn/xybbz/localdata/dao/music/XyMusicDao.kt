@@ -787,8 +787,8 @@ interface XyMusicDao {
     /**
      * 更新播放次数
      */
-    @Query("update xy_music set playedCount = :playedCount where itemId = :itemId and connectionId = (select connectionId from xy_settings)")
-    suspend fun updateByPlayedCount(playedCount: Int, itemId: String)
+    @Query("update xy_music set playedCount = playedCount + 1 where itemId = :itemId and connectionId = (select connectionId from xy_settings)")
+    suspend fun updateByPlayedCount(itemId: String)
 
     /**
      * 获得播放历史数量
