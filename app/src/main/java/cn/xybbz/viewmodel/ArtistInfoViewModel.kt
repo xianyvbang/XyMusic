@@ -10,13 +10,12 @@ import cn.xybbz.api.client.IDataSourceManager
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
+import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.favorite.FavoriteRepository
-import cn.xybbz.config.module.DatabaseModule_DbFactory.db
 import cn.xybbz.entity.data.SelectControl
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtist
-import cn.xybbz.localdata.data.music.XyMusic
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -35,6 +34,7 @@ class ArtistInfoViewModel @AssistedInject constructor(
     val connectionConfigServer: ConnectionConfigServer,
     val musicController: MusicController,
     val favoriteRepository: FavoriteRepository,
+    val downloadRepository: DownloadRepository,
     val backgroundConfig: BackgroundConfig,
     val db: DatabaseClient,
     val selectControl: SelectControl

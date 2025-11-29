@@ -172,6 +172,7 @@ fun MusicBottomMenuComponent(
             })
 
         val favoriteMusicMap by musicBottomMenuViewModel.favoriteRepository.favoriteSet.collectAsState()
+        val downloadMusicIds by musicBottomMenuViewModel.downloadRepository.musicIdsFlow.collectAsState()
         //收藏信息
         val favoriteState by remember {
             derivedStateOf {
@@ -251,6 +252,7 @@ fun MusicBottomMenuComponent(
                         horizontal = XyTheme.dimens.outerHorizontalPadding
                     ),
                     music = music,
+                    ifDownload = music.itemId in downloadMusicIds,
                     backgroundColor = Color.Transparent,
                     brush = Brush.horizontalGradient(
                         colors = listOf(Color(0xFF5A524C), Color(0xFF726B66)),

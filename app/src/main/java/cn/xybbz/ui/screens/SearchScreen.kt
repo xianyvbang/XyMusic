@@ -48,6 +48,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
 import cn.xybbz.R
 import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -185,7 +186,8 @@ fun SearchScreen(
                     onLoadingState = {
                         searchViewModel.isSearchLoad
                     },
-                    favoriteRepository = searchViewModel.favoriteRepository
+                    favoriteRepository = searchViewModel.favoriteRepository,
+                    downloadRepository = searchViewModel.downloadRepository
                 )
             } else {
                 HistoryAndHintList(
@@ -251,11 +253,13 @@ fun SearchResultScreen(
     artistList: List<XyArtist>,
     onAddMusic: (XyMusic) -> Unit,
     onLoadingState: () -> Boolean,
-    favoriteRepository: FavoriteRepository
+    favoriteRepository: FavoriteRepository,
+    downloadRepository: DownloadRepository
 ) {
     val navController = LocalNavController.current
 
     val favoriteSet by favoriteRepository.favoriteSet.collectAsState()
+    val downloadMusicIds by downloadRepository.musicIdsFlow.collectAsState()
 
 
     LazyColumnNotComponent(
@@ -274,7 +278,7 @@ fun SearchResultScreen(
         } else {
             if (artistList.isNotEmpty()) {
                 item {
-                    XyRow{
+                    XyRow {
                         XyItemTitle(
                             text = stringResource(R.string.artist),
                             fontSize = 18.sp,
@@ -298,7 +302,7 @@ fun SearchResultScreen(
 
             if (albumList.isNotEmpty()) {
                 item {
-                    XyRow{
+                    XyRow {
                         XyItemTitle(text = stringResource(R.string.album), fontSize = 18.sp)
                     }
                 }
@@ -323,7 +327,7 @@ fun SearchResultScreen(
 
             if (musicList.isNotEmpty()) {
                 item {
-                    XyRow{
+                    XyRow {
                         XyItemTitle(text = stringResource(R.string.music), fontSize = 18.sp)
                     }
                 }
@@ -339,6 +343,7 @@ fun SearchResultScreen(
                         onIfFavorite = {
                             music.itemId in favoriteSet
                         },
+                        ifDownload = music.itemId in downloadMusicIds,
                         onMusicPlay = {
                             onAddMusic(
                                 music

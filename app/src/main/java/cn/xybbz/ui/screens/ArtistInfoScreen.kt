@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -33,7 +32,6 @@ import androidx.compose.material.icons.automirrored.rounded.PlaylistAddCheck
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
-import androidx.compose.material.icons.rounded.PauseCircle
 import androidx.compose.material.icons.rounded.PlayCircle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -121,12 +119,12 @@ fun ArtistInfoScreen(
     val albumPageList =
         artistInfoViewModel.albumList.collectAsLazyPagingItems()
     val favoriteSet by artistInfoViewModel.favoriteRepository.favoriteSet.collectAsState()
+    val downloadMusicIds by artistInfoViewModel.downloadRepository.musicIdsFlow.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
     val navController = LocalNavController.current
     val lazyListState1 = rememberLazyListState()
     val lazyListState = rememberLazyListState()
-    val lazyGridState = rememberLazyGridState()
     val parentState = rememberLazyListState()
 
     //渐变高度占图片高度的比例
@@ -477,6 +475,7 @@ fun ArtistInfoScreen(
                                                         onIfFavorite = {
                                                             music.itemId in favoriteSet
                                                         },
+                                                        ifDownload = music.itemId in downloadMusicIds,
                                                         textColor = if (artistInfoViewModel.musicController.musicInfo?.itemId == music.itemId)
                                                             MaterialTheme.colorScheme.primary
                                                         else

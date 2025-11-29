@@ -23,6 +23,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.DownloadDone
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -86,6 +87,7 @@ fun ItemTrailingContent(
     index: Int? = null,
     media: String? = null,
     enabledPic: Boolean = true,
+    ifDownload:Boolean,
     enabled: Boolean = true,
     backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
     brush: Brush? = null,
@@ -98,7 +100,8 @@ fun ItemTrailingContent(
     val density = LocalDensity.current
     val iconSizeDp = with(density) { 16.sp.toDp() }
 
-    val inlineContentId = "inlineContentId"
+    val inlineContentId = "inlineContentFavoriteId"
+    val inlineIfDownloadId = "inlineContentDownloadId"
 
     val inlineContent = mapOf(
         Pair(
@@ -119,7 +122,27 @@ fun ItemTrailingContent(
                         .padding(end = 2.dp),
                     tint = Color.Red
                 )
-            })
+            }),
+        Pair(
+            inlineIfDownloadId,
+            InlineTextContent(
+                //设置宽高
+                Placeholder(
+                    width = 16.sp,
+                    height = 16.sp,
+                    placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter,
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.DownloadDone,
+                    contentDescription = "已下载",
+                    modifier = Modifier
+                        .size(iconSizeDp)
+                        .padding(end = 2.dp),
+                    tint = Color.Green
+                )
+            }
+        )
     )
 
     ListItem(
@@ -150,6 +173,8 @@ fun ItemTrailingContent(
                     text = buildAnnotatedString {
                         if (favoriteState)
                             appendInlineContent(inlineContentId, "[icon]")
+                        if (ifDownload)
+                            appendInlineContent(inlineIfDownloadId, "[icon]")
                         media?.let {
                             withStyle(
                                 style = SpanStyle(

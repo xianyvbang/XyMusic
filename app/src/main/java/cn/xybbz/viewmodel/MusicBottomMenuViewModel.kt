@@ -19,6 +19,7 @@ import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.SettingsConfig
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.download.DownLoadManager
+import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.download.core.DownloadRequest
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.localdata.config.DatabaseClient
@@ -42,6 +43,7 @@ class MusicBottomMenuViewModel @Inject constructor(
     val alarmConfig: AlarmConfig,
     val connectionConfigServer: ConnectionConfigServer,
     val favoriteRepository: FavoriteRepository,
+    val downloadRepository: DownloadRepository,
     val downloadManager: DownLoadManager
 ) : ViewModel() {
 

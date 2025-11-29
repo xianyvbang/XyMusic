@@ -123,7 +123,6 @@ import cn.xybbz.ui.xy.XyItemTextHorizontal
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.AlbumInfoViewModel
 import kotlinx.coroutines.launch
-import kotlin.collections.map
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 
@@ -158,6 +157,7 @@ fun AlbumInfoScreen(
     val isSticking by remember(lazyListState) { lazyListState.isSticking(1) }
 
     val favoriteSet by albumInfoViewModel.favoriteRepository.favoriteSet.collectAsState()
+    val downloadMusicIds by albumInfoViewModel.downloadRepository.musicIdsFlow.collectAsState()
 
     val musicListPage =
         albumInfoViewModel.xyMusicList.collectAsLazyPagingItems()
@@ -447,6 +447,7 @@ fun AlbumInfoScreen(
                                     onIfFavorite = {
                                         music.itemId in favoriteSet
                                     },
+                                    ifDownload = music.itemId in downloadMusicIds,
                                     index = index + 1,
                                     textColor = if (albumInfoViewModel.musicController.musicInfo?.itemId == music.itemId)
                                         MaterialTheme.colorScheme.primary

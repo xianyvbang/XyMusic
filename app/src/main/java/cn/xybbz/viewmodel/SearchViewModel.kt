@@ -15,6 +15,7 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
+import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -33,12 +34,11 @@ class SearchViewModel @OptIn(UnstableApi::class)
     private val dataSourceManager: IDataSourceManager,
     private val connectionConfigServer: ConnectionConfigServer,
     private val musicController: MusicController,
-    private val _favoriteRepository: FavoriteRepository,
-    private val _backgroundConfig: BackgroundConfig
+    val favoriteRepository: FavoriteRepository,
+    val downloadRepository: DownloadRepository,
+    val backgroundConfig: BackgroundConfig
 ) : ViewModel() {
 
-    val favoriteRepository = _favoriteRepository
-    val backgroundConfig = _backgroundConfig
 
     /**
      * 搜索历史

@@ -23,6 +23,7 @@ import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.data.music.XyMusic
@@ -39,6 +40,7 @@ fun MusicPageListComponent(
     title: String,
     musicListPage: LazyPagingItems<XyMusic>,
     favoriteRepository: FavoriteRepository,
+    downloadRepository: DownloadRepository,
     musicController: MusicController,
     getMusicInfo: suspend (String) -> XyMusic?,
     onMusicPlay: (OnMusicPlayParameter,Int) -> Unit,
@@ -46,7 +48,8 @@ fun MusicPageListComponent(
 
     val coroutineScope = rememberCoroutineScope()
     val navController = LocalNavController.current
-    val favoriteList by favoriteRepository.favoriteSet.collectAsState(emptyList())
+    val favoriteList by favoriteRepository.favoriteSet.collectAsState()
+    val downloadMusicIdList by downloadRepository.musicIdsFlow.collectAsState()
 
 
     XyColumnScreen(
@@ -91,6 +94,7 @@ fun MusicPageListComponent(
                             onIfFavorite = {
                                 favoriteList.contains(music.itemId)
                             },
+                            ifDownload = music.itemId in downloadMusicIdList,
                             textColor = if (musicController.musicInfo?.itemId == music.itemId)
                                 MaterialTheme.colorScheme.primary
                             else
@@ -100,7 +104,9 @@ fun MusicPageListComponent(
                                 onMusicPlay(it,index)
                             },
                             trailingOnClick = {
-                                music.show()
+                                coroutineScope.launch {
+                                    getMusicInfo(music.itemId)?.show()
+                                }
                             }
                         )
                     }

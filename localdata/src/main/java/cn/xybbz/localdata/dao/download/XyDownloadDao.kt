@@ -84,6 +84,12 @@ interface XyDownloadDao {
         status: DownloadStatus
     ): Flow<List<XyDownload>>
 
+    @Query("SELECT uid FROM xy_download where status = :status and typeData != :notTypeData and connectionId = (select connectionId from xy_settings) ORDER BY createTime DESC")
+    fun getAllMusicTaskUidsFlow(
+        notTypeData: DownloadTypes = DownloadTypes.APK,
+        status: DownloadStatus
+    ): Flow<List<String>>
+
     @Query("SELECT count(id) FROM xy_download where status = :status and typeData != :notTypeData and connectionId = (select connectionId from xy_settings) ORDER BY createTime DESC")
     fun getAllMusicTasksCountFlow(
         notTypeData: DownloadTypes = DownloadTypes.APK,

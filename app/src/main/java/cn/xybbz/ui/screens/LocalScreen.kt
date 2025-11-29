@@ -88,6 +88,7 @@ fun LocalScreen(localViewModel: LocalViewModel = hiltViewModel<LocalViewModel>()
                         onIfFavorite = {
                             music.itemId in favoriteSet
                         },
+                        ifDownload = true,
                         textColor = if (localViewModel.musicController.musicInfo?.itemId == music.itemId)
                             MaterialTheme.colorScheme.primary
                         else

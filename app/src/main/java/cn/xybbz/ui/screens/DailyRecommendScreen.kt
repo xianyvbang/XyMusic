@@ -46,6 +46,7 @@ fun DailyRecommendScreen(
     val coroutineScope = rememberCoroutineScope()
     val navController = LocalNavController.current
     val favoriteList by dailyRecommendViewModel.favoriteRepository.favoriteSet.collectAsState()
+    val downloadMusicIds by dailyRecommendViewModel.downloadRepository.musicIdsFlow.collectAsState()
     val state = rememberPullToRefreshState()
 
     var isRefreshing by remember {
@@ -92,7 +93,7 @@ fun DailyRecommendScreen(
                 items(
                     dailyRecommendViewModel.recommendedMusicList,
                     key = { extend -> extend.music.itemId },
-                    contentType = { item-> MusicTypeEnum.MUSIC }
+                    contentType = { _-> MusicTypeEnum.MUSIC }
                 ) { musicExtend ->
                     MusicItemComponent(
                         itemId = musicExtend.music.itemId,
@@ -105,6 +106,7 @@ fun DailyRecommendScreen(
                         onIfFavorite = {
                             musicExtend.music.itemId in favoriteList
                         },
+                        ifDownload = musicExtend.music.itemId in downloadMusicIds,
                         textColor = if (dailyRecommendViewModel.musicController.musicInfo?.itemId == musicExtend.music.itemId)
                             MaterialTheme.colorScheme.primary
                         else

@@ -2,7 +2,6 @@ package cn.xybbz.common.music
 
 import android.content.ComponentName
 import android.content.Context
-import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
@@ -46,7 +45,6 @@ import cn.xybbz.localdata.enums.PlayerTypeEnum
 import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.io.File
 
 
 /**
@@ -341,7 +339,8 @@ class MusicController(
      * 开始缓存
      */
     fun startCache(music: XyPlayMusic) {
-        cacheController.cacheMedia(music)
+        if (!music.filePath.isNullOrBlank())
+            cacheController.cacheMedia(music)
     }
 
     fun pause() {
@@ -601,7 +600,7 @@ class MusicController(
             musicUrl += "&playSessionId=${musicExtend.playSessionId}"
             mediaItemBuilder.setUri(musicUrl)
         } else {
-            mediaItemBuilder.setUri(Uri.fromFile(File(musicUrl)))
+            mediaItemBuilder.setUri(musicExtend.filePath?.toUri())
         }
 
         val pic = musicExtend.pic ?: ""

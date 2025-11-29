@@ -1,6 +1,5 @@
 package cn.xybbz.common.utils
 
-import android.R.attr.mimeType
 import android.content.ContentValues
 import android.content.Context
 import android.os.Build
@@ -51,7 +50,7 @@ object FileUtil {
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
             // 你可以根据文件类型设置 MIME_TYPE
-            put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
+//            put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
             put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
         }
 
