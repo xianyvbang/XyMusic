@@ -14,8 +14,10 @@ import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.recommender.DailyRecommender
 import cn.xybbz.entity.data.music.MusicPlayContext
+import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyMusicExtend
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -41,7 +43,7 @@ class DailyRecommendViewModel @Inject constructor(
     /**
      * 推荐音乐
      */
-    var recommendedMusicList by mutableStateOf<List<XyMusic>>(emptyList())
+    var recommendedMusicList by mutableStateOf<List<XyMusicExtend>>(emptyList())
         private set
 
     init {
@@ -56,7 +58,7 @@ class DailyRecommendViewModel @Inject constructor(
         viewModelScope.launch {
             connectionConfigServer.loginStateFlow.collect { bool ->
                 if (bool) {
-                    db.musicDao.selectRecommendedMusicListFlow(50)
+                    db.musicDao.selectRecommendedMusicExtendListFlow(50)
                         .distinctUntilChanged()
                         .collect {
                             recommendedMusicList = it
@@ -81,6 +83,20 @@ class DailyRecommendViewModel @Inject constructor(
             dailyRecommender.generate()
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "生成每日推荐错误", e)
+        }
+    }
+
+    fun musicList(
+        onMusicPlayParameter: OnMusicPlayParameter
+    ) {
+        viewModelScope.launch {
+            musicPlayContext.musicList(
+                onMusicPlayParameter,
+                recommendedMusicList.map {
+                    it.toPlayMusic()
+                        .copy(ifFavoriteStatus = it.music.itemId in favoriteRepository.favoriteSet.value)
+                }
+            )
         }
     }
 }

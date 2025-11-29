@@ -1,6 +1,7 @@
 package cn.xybbz.ui.components
 
 
+import android.Manifest
 import android.content.Intent
 import android.icu.math.BigDecimal
 import android.icu.text.SimpleDateFormat
@@ -66,7 +67,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.media3.common.util.UnstableApi
 import cn.xybbz.R
 import cn.xybbz.common.utils.DateUtil.millisecondsToTime
 import cn.xybbz.common.utils.DateUtil.toDateStr
@@ -76,7 +76,6 @@ import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.entity.data.MusicItemMenuData
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.setting.SkipTime
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.router.RouterConstants.ArtistInfo
@@ -98,18 +97,18 @@ import cn.xybbz.ui.xy.XyItemTextPadding
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
 
-var bottomMenuMusicInfo = mutableStateListOf<XyMusicExtend>()
+var bottomMenuMusicInfo = mutableStateListOf<XyMusic>()
 
 /**
  * 底部弹出菜单
  * todo 这里要限制一下弹出的高度为最大高度的百分之55
  */
-@androidx.annotation.OptIn(UnstableApi::class)
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class,ExperimentalPermissionsApi::class)
 @Composable
 fun MusicBottomMenuComponent(
     musicBottomMenuViewModel: MusicBottomMenuViewModel = hiltViewModel<MusicBottomMenuViewModel>(),
@@ -160,7 +159,17 @@ fun MusicBottomMenuComponent(
         onSetShowArtistList = { ifShowArtistList = it },
     )
 
+
+
     bottomMenuMusicInfo.forEach { music ->
+
+        val permissionState =
+            rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS, onPermissionResult = {
+                coroutineScope.launch {
+                    musicBottomMenuViewModel.downloadMusic(music)
+                }.invokeOnCompletion {
+                }
+            })
 
         val favoriteMusicMap by musicBottomMenuViewModel.favoriteRepository.favoriteSet.collectAsState()
         //收藏信息
@@ -343,12 +352,8 @@ fun MusicBottomMenuComponent(
                             name = "下载"
                         ),
                         onClick = {
-                            coroutineScope.launch {
-                                musicBottomMenuViewModel.downloadMusic(music)
-                            }.invokeOnCompletion {
+                            permissionState.launchPermissionRequest()
 
-
-                            }
                         }
                     )
                 }
@@ -367,8 +372,8 @@ fun MusicBottomMenuComponent(
                         onClick = {
                             coroutineScope.launch {
                                 sheetState.hide()
-                                musicBottomMenuViewModel.musicController.addNextPlayer(
-                                    music
+                                musicBottomMenuViewModel.addNextPlayer(
+                                    music.itemId
                                 )
                                 MessageUtils.sendPopTip(context.getString(R.string.add_to_next_play_success))
                             }.invokeOnCompletion {

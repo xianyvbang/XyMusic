@@ -91,7 +91,7 @@ data class XyMusic(
     /**
      * 是否已经收藏
      */
-   val ifFavoriteStatus: Boolean,
+    val ifFavoriteStatus: Boolean,
 
     /**
      * 是否有歌词
@@ -148,4 +148,18 @@ data class XyMusic(
      * 创建时间
      */
     val createTime: Long = System.currentTimeMillis()
-)
+) {
+    fun toPlayMusic(): XyPlayMusic {
+        return XyPlayMusic(
+            itemId = itemId,
+            pic = pic,
+            name = name,
+            album = album,
+            musicUrl = musicUrl,
+            container = container,
+            artists = artists,
+            size = size,
+            filePath = null
+        )
+    }
+}

@@ -129,17 +129,6 @@ fun SettingScreen(
             item {
                 SettingRoundedSurfaceColumn {
 
-                    MusicSettingSwitchItemComponent(
-                        title = stringResource(R.string.prioritize_local_data),
-                        ifChecked = settingsViewModel.settingDataNow.isLocal
-                    ) { bol ->
-                        coroutineScope.launch {
-                            settingsViewModel.settingsConfig.setIsLocalData(
-                                bol
-                            )
-                        }
-                    }
-
                     SettingItemComponent(title = R.string.cache_limit) {
                         navController.navigate(RouterConstants.CacheLimit)
                     }

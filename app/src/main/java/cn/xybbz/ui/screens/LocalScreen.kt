@@ -94,9 +94,9 @@ fun LocalScreen(localViewModel: LocalViewModel = hiltViewModel<LocalViewModel>()
                             MaterialTheme.colorScheme.onSurface,
                         backgroundColor = Color.Transparent,
                         onMusicPlay = {
-                            localViewModel.musicPlayContext.musicList(
+                            localViewModel.musicList(
                                 it,
-                                musicList = downloadMusicList.mapNotNull { musicDownload -> musicDownload.music },
+                                downloadList = downloadMusicList,
                                 playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
                             )
                         },

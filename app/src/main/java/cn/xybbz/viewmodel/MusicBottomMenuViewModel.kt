@@ -11,7 +11,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.R
 import cn.xybbz.api.client.IDataSourceManager
-import cn.xybbz.api.client.jellyfin.data.User
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.MusicController
@@ -27,7 +26,6 @@ import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.setting.SkipTime
 import cn.xybbz.localdata.enums.DownloadTypes
-import com.squareup.moshi.Moshi
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -225,6 +223,16 @@ class MusicBottomMenuViewModel @Inject constructor(
                 music = musicData
             )
         )
+    }
+
+    fun addNextPlayer(itemId: String){
+        viewModelScope.launch {
+            val playMusic = db.musicDao.selectExtendById(itemId)
+            playMusic?.let {
+                musicController.addNextPlayer(it)
+            }
+        }
+
     }
 
 }

@@ -1,8 +1,10 @@
 package cn.xybbz.localdata.data.download
 
+import android.R.attr.name
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.localdata.enums.DownloadTypes
 
@@ -34,4 +36,21 @@ data class XyDownload(
 
     val updateTime: Long = System.currentTimeMillis(),
     val createTime: Long = System.currentTimeMillis(),
-)
+){
+
+    fun toPlayMusic(): XyPlayMusic?{
+        return music?.let {
+            XyPlayMusic(
+                itemId = music.itemId,
+                pic = music.pic,
+                name = music.name,
+                album = music.album,
+                musicUrl = music.musicUrl,
+                container = music.container,
+                artists = music.artists,
+                size = music.size,
+                filePath = filePath
+            )
+        }
+    }
+}

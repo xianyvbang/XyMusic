@@ -568,7 +568,7 @@ fun HomeScreen(
                             ) {
                                 IconButton(onClick = composeClick {
                                     if (homeViewModel.mostPlayerMusicList.isNotEmpty())
-                                        homeViewModel.playMusicList(
+                                        homeViewModel.musicList(
                                             musicList = homeViewModel.mostPlayerMusicList,
                                             onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
                                             playerTypeEnum = PlayerTypeEnum.RANDOM_PLAY
@@ -583,7 +583,7 @@ fun HomeScreen(
                                 }
                                 IconButton(onClick = composeClick {
                                     if (homeViewModel.mostPlayerMusicList.isNotEmpty())
-                                        homeViewModel.playMusicList(
+                                        homeViewModel.musicList(
                                             musicList = homeViewModel.mostPlayerMusicList,
                                             onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
                                             playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
@@ -606,18 +606,18 @@ fun HomeScreen(
                             contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
                             horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
                         ) {
-                            itemsIndexed(
+                            items(
                                 homeViewModel.mostPlayerMusicList,
-                                key = { index, item -> item.itemId + index }) { index, music ->
+                                key = { item -> item.music.itemId }) {musicExtend ->
                                 MusicMusicCardComponent(
-                                    onItem = { music },
+                                    onItem = { musicExtend.music },
                                     imageSize = MusicCardImageSize,
                                     onRouter = {
                                         //点击播放
-                                        homeViewModel.musicPlayContext.musicList(
+                                        homeViewModel.musicList(
                                             onMusicPlayParameter = OnMusicPlayParameter(
-                                                musicId = music.itemId,
-                                                albumId = music
+                                                musicId = musicExtend.music.itemId,
+                                                albumId = musicExtend.music
                                                     .album
                                             ),
                                             homeViewModel.mostPlayerMusicList
@@ -645,7 +645,7 @@ fun HomeScreen(
                             ) {
                                 IconButton(onClick = composeClick {
                                     if (homeViewModel.recommendedMusicList.isNotEmpty())
-                                        homeViewModel.playMusicList(
+                                        homeViewModel.musicList(
                                             musicList = homeViewModel.recommendedMusicList,
                                             onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
                                             playerTypeEnum = PlayerTypeEnum.RANDOM_PLAY
@@ -660,7 +660,7 @@ fun HomeScreen(
                                 }
                                 IconButton(onClick = composeClick {
                                     if (homeViewModel.mostPlayerMusicList.isNotEmpty())
-                                        homeViewModel.playMusicList(
+                                        homeViewModel.musicList(
                                             musicList = homeViewModel.recommendedMusicList,
                                             onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
                                             playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
@@ -689,18 +689,18 @@ fun HomeScreen(
                             contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
                             horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
                         ) {
-                            itemsIndexed(
+                            items(
                                 homeViewModel.recommendedMusicList.take(5),
-                                key = { index, item -> item.itemId + index }) { index, music ->
+                                key = { item -> item.music.itemId }) { musicExtend ->
                                 MusicMusicCardComponent(
-                                    onItem = { music },
+                                    onItem = { musicExtend.music },
                                     imageSize = MusicCardImageSize,
                                     onRouter = {
                                         //点击播放
-                                        homeViewModel.musicPlayContext.musicList(
+                                        homeViewModel.musicList(
                                             onMusicPlayParameter = OnMusicPlayParameter(
-                                                musicId = music.itemId,
-                                                albumId = music
+                                                musicId = musicExtend.music.itemId,
+                                                albumId = musicExtend.music
                                                     .album
                                             ),
                                             homeViewModel.recommendedMusicList
@@ -800,7 +800,7 @@ fun HomeScreen(
                             ) {
                                 IconButton(onClick = composeClick {
                                     if (homeViewModel.musicRecentlyList.isNotEmpty())
-                                        homeViewModel.playMusicList(
+                                        homeViewModel.musicList(
                                             musicList = homeViewModel.musicRecentlyList,
                                             onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
                                             playerTypeEnum = PlayerTypeEnum.RANDOM_PLAY
@@ -815,7 +815,7 @@ fun HomeScreen(
                                 }
                                 IconButton(onClick = composeClick {
                                     if (homeViewModel.musicRecentlyList.isNotEmpty())
-                                        homeViewModel.playMusicList(
+                                        homeViewModel.musicList(
                                             musicList = homeViewModel.musicRecentlyList,
                                             onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
                                             playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
@@ -840,18 +840,18 @@ fun HomeScreen(
                             contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
                             horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
                         ) {
-                            itemsIndexed(
+                            items(
                                 homeViewModel.musicRecentlyList,
-                                key = { index, item -> item.itemId + index }) { index, music ->
+                                key = { item -> item.music.itemId }) { musicExtend ->
                                 MusicMusicCardComponent(
-                                    onItem = { music },
+                                    onItem = { musicExtend.music },
                                     imageSize = MusicCardImageSize,
                                     onRouter = {
                                         //点击播放
-                                        homeViewModel.musicPlayContext.musicList(
+                                        homeViewModel.musicList(
                                             onMusicPlayParameter = OnMusicPlayParameter(
-                                                musicId = music.itemId,
-                                                albumId = music
+                                                musicId = musicExtend.music.itemId,
+                                                albumId = musicExtend.music
                                                     .album
                                             ),
                                             homeViewModel.musicRecentlyList

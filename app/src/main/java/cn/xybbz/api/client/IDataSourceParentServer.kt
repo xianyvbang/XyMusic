@@ -444,7 +444,7 @@ abstract class IDataSourceParentServer(
         pageNum: Int
     ): List<XyPlayMusic>? {
         return transitionMusicExtend(
-            getRandomMusicList(pageSize,pageNum)
+            getRandomMusicList(pageSize, pageNum)
         )
     }
 
@@ -979,27 +979,15 @@ abstract class IDataSourceParentServer(
         return db.musicDao.selectMusicExtendList(pageSize, pageNum * pageSize)
     }
 
-    suspend fun transitionMusicExtend(musicList: List<XyMusic>?): List<XyPlayMusic>?{
+    suspend fun transitionMusicExtend(musicList: List<XyMusic>?): List<XyPlayMusic>? {
         val downloads = musicList?.map { it.itemId }?.let {
             db.downloadDao.getMusicByMusicIds(it)
         }
         val downloadMap = downloads?.associateBy { it.uid }
 
         return musicList?.map { music ->
-            downloadMap?.containsKey(music.itemId)
-            XyPlayMusic(
-                itemId = music.itemId,
-                pic = music.pic,
-                name = music.name,
-                album = music.album,
-                musicUrl = music.musicUrl,
-                playSessionId = UUID.randomUUID().toString(),
-                container = music.container,
-                artists = music.artists,
-                ifFavoriteStatus = music.ifFavoriteStatus,
-                size = music.size,
-                filePath = if (downloadMap?.containsKey(music.itemId) == true) downloadMap[music.itemId]?.filePath else null
-            )
+            music.toPlayMusic()
+                .copy(filePath = if (downloadMap?.containsKey(music.itemId) == true) downloadMap[music.itemId]?.filePath else null)
         }
     }
 

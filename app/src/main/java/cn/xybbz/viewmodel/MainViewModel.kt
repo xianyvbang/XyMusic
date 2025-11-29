@@ -336,7 +336,7 @@ class MainViewModel @Inject constructor(
 
             connectionConfigServer.loginStateFlow.collect {
                 if (it) {
-                    val musicList = db.musicDao.selectPlayQueueMusicList()
+                    val musicList = db.musicDao.selectPlayQueuePlayMusicList()
                     if (dataSourceManager.dataSourceType != null) {
                         val player =
                             db.playerDao.selectPlayerByDataSource()
