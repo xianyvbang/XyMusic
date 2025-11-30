@@ -74,13 +74,15 @@ internal object FileNameResolver {
             throw IOException("Failed to create target directory: ${targetDir.absolutePath}")
         }
 
-        val originalFile = File(targetDir, fileName)
+        val tmpFileName = fileName.removePrefix(".")
+
+        val originalFile = File(targetDir, tmpFileName)
 
         // 1. 检查原始文件名是否可用
         if (!originalFile.exists()) {
             try {
                 originalFile.createNewFile()
-                return@withContext fileName // Success, return the original name
+                return@withContext tmpFileName // Success, return the original name
             } catch (e: IOException) {
                 // If creation fails (e.g., permission issue), we'll fall through to generate a new name.
                 throw e
@@ -88,8 +90,8 @@ internal object FileNameResolver {
         }
 
         // 2. 如果原始文件名已被占用或创建失败，开始生成新名称
-        val nameWithoutExtension = fileName.substringBeforeLast('.')
-        val extension = fileName.substringAfterLast('.', "")
+        val nameWithoutExtension = tmpFileName.substringBeforeLast('.')
+        val extension = tmpFileName.substringAfterLast('.', "")
 
         //  Use a finite loop instead of while(true)
         for (counter in 1..999) {

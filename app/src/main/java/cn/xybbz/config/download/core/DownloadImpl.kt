@@ -1,6 +1,5 @@
 package cn.xybbz.config.download.core
 
-import android.R.attr.duration
 import android.content.Context
 import android.util.Log
 import cn.xybbz.common.utils.CoroutineScopeUtils
@@ -90,7 +89,7 @@ class DownloadImpl(
                 tempFile = File.createTempFile("download_", ".tmp", tempDir)
 
                 if (!request.uid.isNullOrBlank()) {
-                    val downloadTask = db.apkDownloadDao.getMusicTaskByUid(uid = request.uid)
+                    val downloadTask = db.downloadDao.getMusicTaskByUid(uid = request.uid)
                     if (downloadTask != null) {
                         if (downloadTask.status != DownloadStatus.CANCEL && downloadTask.status != DownloadStatus.FAILED && downloadTask.status != DownloadStatus.PAUSED) {
                             continue
@@ -149,15 +148,15 @@ class DownloadImpl(
         }
         // 2. 将预处理失败的任务直接插入数据库
         if (failTasks.isNotEmpty()) {
-            db.apkDownloadDao.insert(*failTasks.toTypedArray())
+            db.downloadDao.insert(*failTasks.toTypedArray())
         }
         // 3. 持久化：将新任务批量写入数据库
         if (successTasksToInsert.isNotEmpty()) {
             //todo 这里需要判断是否为重复下载,如果是重复下载则只是更新数据
-            val successIds = db.apkDownloadDao.insert(*successTasksToInsert.toTypedArray())
+            val successIds = db.downloadDao.insert(*successTasksToInsert.toTypedArray())
 
             // 4. 根据新 ID 从数据库重新获取完整的、带有正确 ID 的任务对象
-            val newTasksWithCorrectIds = db.apkDownloadDao.getByIds(successIds)
+            val newTasksWithCorrectIds = db.downloadDao.getByIds(successIds)
 
             // 5. 委托：将带有正确 ID 的任务交给 Dispatcher 处理
             if (newTasksWithCorrectIds.isNotEmpty()) {

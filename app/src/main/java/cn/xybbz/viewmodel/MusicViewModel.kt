@@ -8,8 +8,9 @@ import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.SettingsConfig
+import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.favorite.FavoriteRepository
-import cn.xybbz.entity.data.SelectControl
+import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.music.HomeMusic
@@ -25,24 +26,17 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class MusicViewModel @Inject constructor(
-    private val _dataSourceManager: IDataSourceManager,
+     val dataSourceManager: IDataSourceManager,
     private val db: DatabaseClient,
-    private val _settingsConfig: SettingsConfig,
-    private val _musicPlayContext: MusicPlayContext,
-    private val _musicController: MusicController,
-    private val connectionConfigServer: ConnectionConfigServer,
-    private val _selectControl: SelectControl,
-    private val _favoriteRepository: FavoriteRepository,
-    private val _backgroundConfig: BackgroundConfig
+     val settingsConfig: SettingsConfig,
+     val musicPlayContext: MusicPlayContext,
+     val musicController: MusicController,
+     val connectionConfigServer: ConnectionConfigServer,
+     val selectControl: SelectControl,
+     val favoriteRepository: FavoriteRepository,
+     val downloadRepository: DownloadRepository,
+     val backgroundConfig: BackgroundConfig
 ) : PageListViewModel() {
-
-    val settingsConfig = _settingsConfig
-    val dataSourceManager = _dataSourceManager
-    val musicPlayContext = _musicPlayContext
-    val musicController = _musicController
-    val selectControl = _selectControl
-    val favoriteRepository = _favoriteRepository
-    val backgroundConfig = _backgroundConfig
 
 
     // 单例Pager Flow
@@ -62,7 +56,5 @@ class MusicViewModel @Inject constructor(
             .cachedIn(viewModelScope)
 
     suspend fun getMusicInfoById(musicId: String): XyMusic? = db.musicDao.selectById(musicId)
-    suspend fun getMusicInfoByIds(musicIds: List<String>): List<XyMusic> =
-        db.musicDao.selectByIds(musicIds)
 
 }

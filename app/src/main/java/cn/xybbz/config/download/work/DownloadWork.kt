@@ -5,6 +5,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import cn.xybbz.api.client.IDataSourceManager
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.exception.CancelDownloadException
 import cn.xybbz.config.download.core.DownloadDispatcherImpl
 import cn.xybbz.config.download.core.OkhttpDownloadCore
 import cn.xybbz.config.download.notification.NotificationController
@@ -15,7 +16,6 @@ import cn.xybbz.localdata.enums.DownloadStatus
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.io.File
-import kotlin.coroutines.cancellation.CancellationException
 
 class DownloadWork @AssistedInject constructor(
     @Assisted appContext: Context,
@@ -30,9 +30,9 @@ class DownloadWork @AssistedInject constructor(
     override suspend fun doWork(): Result {
         val downloadId = inputData.getLong(Constants.DOWNLOAD_ID, -1L)
         if (downloadId == -1L) return Result.failure()
-        val downloadTask = db.apkDownloadDao.selectById(downloadId) ?: return Result.failure()
+        val downloadTask = db.downloadDao.selectById(downloadId) ?: return Result.failure()
         val statusChange = suspend {
-            db.apkDownloadDao.getStatusById(downloadId)
+            db.downloadDao.getStatusById(downloadId)
         }
         val notificationId = downloadId.toInt() // 使用 taskId 作为通知 ID
         val okhttpDownloadCore = OkhttpDownloadCore(
@@ -86,7 +86,7 @@ class DownloadWork @AssistedInject constructor(
                 }
 
             }
-        } catch (e: CancellationException) {
+        } catch (e: CancelDownloadException) {
             handleCancellation(downloadTask)
             return Result.success()
         } catch (e: Exception) {
@@ -104,7 +104,7 @@ class DownloadWork @AssistedInject constructor(
 
     private suspend fun handleCancellation(task: XyDownload) {
         // 删除临时文件
-        db.apkDownloadDao.updateStatus(task.id, DownloadStatus.CANCEL)
+        db.downloadDao.updateStatus(task.id, DownloadStatus.CANCEL)
         try {
             File(task.tempFilePath).delete()
         } catch (e: Exception) {

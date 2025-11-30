@@ -38,8 +38,8 @@ import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
-import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -438,11 +438,12 @@ class NavidromeDatasourceServer @Inject constructor(
 
     /**
      * 根据音乐获得歌词信息
-     * @param [music] 音乐id
+     * @param [itemId] 音乐id
      * @return 返回歌词列表
      */
-    override suspend fun getMusicLyricList(music: XyMusic): List<LrcEntryData>? {
-        return if (music.ifLyric) {
+    override suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>? {
+        val music = db.musicDao.selectById(itemId = itemId)
+        return if (music?.ifLyric == true) {
             music.lyric?.let {
                 LrcUtils.parseLrc(it)
 
@@ -471,12 +472,11 @@ class NavidromeDatasourceServer @Inject constructor(
      * 获得随机音乐
      */
     override suspend fun getRandomMusicList(pageSize: Int, pageNum: Int): List<XyMusic>? {
-        val randomSongs = getServerMusicList(
+        return getServerMusicList(
             startIndex = pageSize * pageNum,
             pageSize = pageSize,
             sortBy = SortType.RANDOM,
-        )
-        return randomSongs.items
+        ).items
     }
 
     /**
@@ -723,8 +723,8 @@ class NavidromeDatasourceServer @Inject constructor(
     override suspend fun getMusicList(
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
-        var selectMusicList: List<XyMusic>? =
+    ): List<XyPlayMusic>? {
+        var selectMusicList =
             super.getMusicList(pageSize = pageSize, pageNum = pageNum)
 
         if (selectMusicList.isNullOrEmpty()) {
@@ -732,7 +732,7 @@ class NavidromeDatasourceServer @Inject constructor(
                 pageSize,
                 pageNum * pageSize
             )
-            selectMusicList = homeMusicList.items
+            selectMusicList = transitionMusicExtend(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -744,8 +744,8 @@ class NavidromeDatasourceServer @Inject constructor(
         albumId: String,
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
-        var selectMusicList: List<XyMusic>? =
+    ): List<XyPlayMusic>? {
+        var selectMusicList =
             super.getMusicListByAlbumId(albumId = albumId, pageSize = pageSize, pageNum = pageNum)
 
         if (selectMusicList.isNullOrEmpty()) {
@@ -754,7 +754,7 @@ class NavidromeDatasourceServer @Inject constructor(
                 pageSize = pageSize,
                 albumId = albumId
             )
-            selectMusicList = homeMusicList.items
+            selectMusicList = transitionMusicExtend(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -766,8 +766,8 @@ class NavidromeDatasourceServer @Inject constructor(
         artistId: String,
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
-        var selectMusicList: List<XyMusic>? =
+    ): List<XyPlayMusic>? {
+        var selectMusicList =
             super.getMusicListByArtistId(
                 artistId = artistId,
                 pageSize = pageSize,
@@ -779,7 +779,7 @@ class NavidromeDatasourceServer @Inject constructor(
                 pageSize = pageSize,
                 artistIds = listOf(artistId)
             )
-            selectMusicList = homeMusicList.items
+            selectMusicList = transitionMusicExtend(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -804,8 +804,8 @@ class NavidromeDatasourceServer @Inject constructor(
     override suspend fun getMusicListByFavorite(
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
-        var selectMusicList: List<XyMusic>? =
+    ): List<XyPlayMusic>? {
+        var selectMusicList =
             super.getMusicListByFavorite(pageSize = pageSize, pageNum = pageNum)
         if (selectMusicList.isNullOrEmpty()) {
             val homeMusicList = getServerMusicList(
@@ -813,7 +813,7 @@ class NavidromeDatasourceServer @Inject constructor(
                 pageSize = pageSize,
                 isFavorite = true
             )
-            selectMusicList = homeMusicList.items
+            selectMusicList = transitionMusicExtend(homeMusicList.items)
         }
         return selectMusicList
     }

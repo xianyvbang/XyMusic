@@ -49,10 +49,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -77,7 +75,7 @@ import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.config.favorite.FavoriteRepository
-import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import cn.xybbz.ui.components.lrc.LrcViewNewCompose
 import cn.xybbz.ui.ext.debounceClickable
@@ -96,7 +94,7 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MusicPlayerComponent(
-    music: XyMusic,
+    music: XyPlayMusic,
     toNext: () -> Unit,
     backNext: () -> Unit,
     onSetState: (Boolean) -> Unit
@@ -154,7 +152,7 @@ fun MusicPlayerComponent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MusicPlayerScreen(
-    musicDetail: XyMusic,
+    musicDetail: XyPlayMusic,
     musicPlayerViewModel: MusicPlayerViewModel = hiltViewModel<MusicPlayerViewModel>(),
     onCloseSheet: () -> Unit,
     onSeekToNext: () -> Unit,
@@ -523,7 +521,7 @@ fun PlayerStateComponent(
  */
 @Composable
 private fun FavoriteMusicIconComponent(
-    musicDetail: XyMusic,
+    musicDetail: XyPlayMusic,
     dataSourceManager: IDataSourceManager,
     musicController: MusicController,
     favoriteRepository: FavoriteRepository

@@ -4,15 +4,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import cn.xybbz.api.client.IDataSourceManager
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.ConnectionConfigServer
-import cn.xybbz.api.client.IDataSourceManager
 import cn.xybbz.entity.data.LrcEntryData
-import cn.xybbz.localdata.data.music.XyMusic
 import kotlinx.coroutines.launch
-import kotlin.collections.indexOfFirst
-import kotlin.collections.isNotEmpty
-import kotlin.collections.sortedBy
 
 object LrcServer {
 
@@ -33,7 +29,7 @@ object LrcServer {
      * 获得音乐歌词信息
      */
     fun getMusicLyricList(
-        music: XyMusic,
+        itemId: String,
         connectionConfigServer: ConnectionConfigServer,
         dataSourceManager: IDataSourceManager
     ) {
@@ -41,7 +37,7 @@ object LrcServer {
             try {
                 connectionConfigServer.loginStateFlow.collect { bool ->
                     if (bool) {
-                        val musicLyricList = dataSourceManager.getMusicLyricList(music)
+                        val musicLyricList = dataSourceManager.getMusicLyricList(itemId)
                         createLrcList(musicLyricList)
                     }
                 }

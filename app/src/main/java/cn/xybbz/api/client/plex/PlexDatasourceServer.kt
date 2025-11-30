@@ -42,6 +42,7 @@ import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -852,11 +853,12 @@ class PlexDatasourceServer @Inject constructor(
 
     /**
      * 根据音乐获得歌词信息
-     * @param [music] 音乐id
+     * @param [itemId] 音乐id
      * @return 返回歌词列表
      */
-    override suspend fun getMusicLyricList(music: XyMusic): List<LrcEntryData>? {
-        return if (music.ifLyric && !music.lyric.isNullOrBlank()) {
+    override suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>? {
+        val music = db.musicDao.selectById(itemId)
+        return if (music?.ifLyric == true) {
             val lyrics = music.lyric?.let { plexApiClient.lyricsApi().getLyrics(it) }
             val lrcEntries = lyrics?.let {
                 LrcUtils.parseLrc(lyrics)
@@ -1199,8 +1201,8 @@ class PlexDatasourceServer @Inject constructor(
     override suspend fun getMusicList(
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
-        var selectMusicList: List<XyMusic>? =
+    ): List<XyPlayMusic>? {
+        var selectMusicList =
             super.getMusicList(pageSize = pageSize, pageNum = pageNum)
 
         if (selectMusicList.isNullOrEmpty()) {
@@ -1208,7 +1210,7 @@ class PlexDatasourceServer @Inject constructor(
                 pageSize = pageSize,
                 startIndex = pageNum * pageSize
             )
-            selectMusicList = homeMusicList.items
+            selectMusicList = transitionMusicExtend(homeMusicList.items)
 
         }
         return selectMusicList
@@ -1221,8 +1223,8 @@ class PlexDatasourceServer @Inject constructor(
         albumId: String,
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
-        var selectMusicList: List<XyMusic>? =
+    ): List<XyPlayMusic>? {
+        var selectMusicList =
             super.getMusicListByAlbumId(albumId = albumId, pageSize = pageSize, pageNum = pageNum)
 
         if (selectMusicList.isNullOrEmpty()) {
@@ -1231,7 +1233,7 @@ class PlexDatasourceServer @Inject constructor(
                 startIndex = pageNum * pageSize,
                 albumId = albumId
             )
-            selectMusicList = homeMusicList.items
+            selectMusicList = transitionMusicExtend(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -1243,8 +1245,8 @@ class PlexDatasourceServer @Inject constructor(
         artistId: String,
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
-        var selectMusicList: List<XyMusic>? =
+    ): List<XyPlayMusic>? {
+        var selectMusicList =
             super.getMusicListByArtistId(
                 artistId = artistId,
                 pageSize = pageSize,
@@ -1256,7 +1258,7 @@ class PlexDatasourceServer @Inject constructor(
                 startIndex = pageNum * pageSize,
                 artistId = artistId
             )
-            selectMusicList = homeMusicList.items
+            selectMusicList = transitionMusicExtend(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -1281,8 +1283,8 @@ class PlexDatasourceServer @Inject constructor(
     override suspend fun getMusicListByFavorite(
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
-        var selectMusicList: List<XyMusic>? =
+    ): List<XyPlayMusic>? {
+        var selectMusicList =
             super.getMusicListByFavorite(pageSize = pageSize, pageNum = pageNum)
         if (selectMusicList.isNullOrEmpty()) {
             val homeMusicList = getServerMusicList(
@@ -1290,7 +1292,7 @@ class PlexDatasourceServer @Inject constructor(
                 startIndex = pageNum * pageSize,
                 ifFavorite = true
             )
-            selectMusicList = homeMusicList.items
+            selectMusicList = transitionMusicExtend(homeMusicList.items)
         }
         return selectMusicList
     }

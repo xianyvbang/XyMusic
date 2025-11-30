@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.sp
 import cn.xybbz.R
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.entity.data.music.ifNextPageNumList
-import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnParentComponent
@@ -55,7 +55,7 @@ import cn.xybbz.ui.xy.XyRow
 fun MusicListComponent(
     musicListState: Boolean,
     curOriginIndex: Int,
-    originMusicList: List<XyMusic>,
+    originMusicList: List<XyPlayMusic>,
     onSetState: (Boolean) -> Unit,
     onClearPlayerList: () -> Unit,
     onSeekToIndex: (Int) -> Unit,
@@ -129,7 +129,7 @@ fun MusicListComponent(
 @Composable
 fun MusicList(
     curOriginIndex: Int,
-    originMusicList: List<XyMusic>,
+    originMusicList: List<XyPlayMusic>,
     onSeekToIndex: (Int) -> Unit,
     onRemovePlayerMusicItem: (Int) -> Unit
 ) {
@@ -165,7 +165,7 @@ fun MusicList(
 fun MusicListItem(
     curOriginIndex: Int,
     onIndex: () -> Int,
-    xyMusic: XyMusic,
+    xyMusic: XyPlayMusic,
     onSeekToIndex: (Int) -> Unit,
     onRemovePlayerMusicItem: (Int) -> Unit
 ) {

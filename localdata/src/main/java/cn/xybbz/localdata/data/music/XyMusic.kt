@@ -3,12 +3,10 @@ package cn.xybbz.localdata.data.music
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.ForeignKey.Companion.CASCADE
-import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import com.squareup.moshi.JsonClass
-import java.util.UUID
 
 @Entity(
     tableName = "xy_music",
@@ -39,12 +37,10 @@ data class XyMusic(
      * 音乐地址
      */
     val musicUrl: String = "",
-
     /**
      * 下载地址
      */
     val downloadUrl: String,
-
     /**
      * 专辑id
      */
@@ -95,7 +91,7 @@ data class XyMusic(
     /**
      * 是否已经收藏
      */
-   val ifFavoriteStatus: Boolean,
+    val ifFavoriteStatus: Boolean,
 
     /**
      * 是否有歌词
@@ -153,9 +149,17 @@ data class XyMusic(
      */
     val createTime: Long = System.currentTimeMillis()
 ) {
-    /**
-     * 播放会话id,
-     */
-    @Ignore
-    val playSessionId: String = UUID.randomUUID().toString()
+    fun toPlayMusic(): XyPlayMusic {
+        return XyPlayMusic(
+            itemId = itemId,
+            pic = pic,
+            name = name,
+            album = album,
+            musicUrl = musicUrl,
+            container = container,
+            artists = artists,
+            size = size,
+            filePath = null
+        )
+    }
 }

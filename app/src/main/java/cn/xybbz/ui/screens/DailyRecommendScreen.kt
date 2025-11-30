@@ -1,7 +1,7 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,6 +28,7 @@ import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.ui.components.LazyLoadingAndStatus
 import cn.xybbz.ui.components.MusicItemComponent
+import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
@@ -46,6 +47,7 @@ fun DailyRecommendScreen(
     val coroutineScope = rememberCoroutineScope()
     val navController = LocalNavController.current
     val favoriteList by dailyRecommendViewModel.favoriteRepository.favoriteSet.collectAsState()
+    val downloadMusicIds by dailyRecommendViewModel.downloadRepository.musicIdsFlow.collectAsState()
     val state = rememberPullToRefreshState()
 
     var isRefreshing by remember {
@@ -88,51 +90,42 @@ fun DailyRecommendScreen(
                 }
             }
         ) {
-            LazyColumnNotComponent() {
-                itemsIndexed(
+            ScreenLazyColumn {
+                items(
                     dailyRecommendViewModel.recommendedMusicList,
-                    key = { _, item -> item.itemId },
-                    contentType = { _, _ -> MusicTypeEnum.MUSIC }
-                ) { _, music ->
+                    key = { extend -> extend.music.itemId },
+                    contentType = { _-> MusicTypeEnum.MUSIC }
+                ) { musicExtend ->
                     MusicItemComponent(
-                        itemId = music.itemId,
-                        name = music.name,
-                        album = music.album,
-                        artists = music.artists,
-                        pic = music.pic,
-                        codec = music.codec,
-                        bitRate = music.bitRate,
+                        itemId = musicExtend.music.itemId,
+                        name = musicExtend.music.name,
+                        album = musicExtend.music.album,
+                        artists = musicExtend.music.artists,
+                        pic = musicExtend.music.pic,
+                        codec = musicExtend.music.codec,
+                        bitRate = musicExtend.music.bitRate,
                         onIfFavorite = {
-                            music.itemId in favoriteList
+                            musicExtend.music.itemId in favoriteList
                         },
-                        textColor = if (dailyRecommendViewModel.musicController.musicInfo?.itemId == music.itemId)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onSurface,
+                        ifDownload = musicExtend.music.itemId in downloadMusicIds,
+                        ifPlay = dailyRecommendViewModel.musicController.musicInfo?.itemId == musicExtend.music.itemId,
                         backgroundColor = Color.Transparent,
                         onMusicPlay = {
                             coroutineScope.launch {
-                                dailyRecommendViewModel.musicPlayContext.musicList(
-                                    it,
-                                    dailyRecommendViewModel.recommendedMusicList
+                                dailyRecommendViewModel.musicList(
+                                    it
                                 )
                             }
                         },
                         trailingOnClick = {
-                            music.show()
+                            musicExtend.music.show()
                         },
                         trailingOnSelectClick = {
                             coroutineScope.launch {
-                                dailyRecommendViewModel.getMusicInfo(music.itemId)
+                                dailyRecommendViewModel.getMusicInfo(musicExtend.music.itemId)
                                     ?.show()
                             }
                         }
-                    )
-                }
-                item {
-                    LazyLoadingAndStatus(
-                        text = stringResource(R.string.reached_bottom),
-                        ifLoading = false
                     )
                 }
             }

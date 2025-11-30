@@ -44,6 +44,8 @@ fun MusicPlaylistItemComponent(
         name = name,
         subordination = subordination,
         favoriteState = false,
+        ifDownload = false,
+        ifPlay = false,
         imgUrl = imgUrl,
         enabled = enabled,
         backgroundColor = backgroundColor,

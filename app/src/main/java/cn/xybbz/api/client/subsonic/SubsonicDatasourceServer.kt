@@ -40,8 +40,8 @@ import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.HomeMusic
-import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -50,6 +50,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
 import javax.inject.Inject
+import kotlin.collections.flatten
 
 class SubsonicDatasourceServer @Inject constructor(
     private val db: DatabaseClient,
@@ -258,7 +259,7 @@ class SubsonicDatasourceServer @Inject constructor(
             playlist.subsonicResponse.playlist?.entry?.let {
                 val albumMusicList = convertToMusicList(it)
                 saveBatchMusic(
-                    items =albumMusicList, dataType,
+                    items = albumMusicList, dataType,
                     playlistId = albumId
                 )
             }
@@ -313,12 +314,13 @@ class SubsonicDatasourceServer @Inject constructor(
 
     /**
      * 根据音乐获得歌词信息
-     * @param [music] 音乐id
+     * @param [itemId] 音乐id
      * @return 返回歌词列表
      */
-    override suspend fun getMusicLyricList(music: XyMusic): List<LrcEntryData>? {
-        return if (music.ifLyric) {
-            val lyrics = subsonicApiClient.lyricsApi().getLyrics(music.artists,music.name)
+    override suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>? {
+        val music = db.musicDao.selectById(itemId)
+        return if (music?.ifLyric == true) {
+            val lyrics = subsonicApiClient.lyricsApi().getLyrics(music.artists, music.name)
             lyrics.subsonicResponse.lyrics?.value?.let {
                 LrcUtils.parseLrc(it)
             }
@@ -496,7 +498,7 @@ class SubsonicDatasourceServer @Inject constructor(
             playlistId = playlistId.replace(Constants.SUBSONIC_PLAYLIST_SUFFIX, ""),
             songIdToAdd = musicIds
         )
-        return super.saveMusicPlaylist(playlistId,musicIds)
+        return super.saveMusicPlaylist(playlistId, musicIds)
     }
 
     /**
@@ -1205,7 +1207,7 @@ class SubsonicDatasourceServer @Inject constructor(
     override suspend fun getMusicList(
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
+    ): List<XyPlayMusic>? {
         return null
     }
 
@@ -1216,7 +1218,7 @@ class SubsonicDatasourceServer @Inject constructor(
         albumId: String,
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
+    ): List<XyPlayMusic>? {
         return super.getMusicListByAlbumId(
             albumId = albumId,
             pageSize = pageSize,
@@ -1231,7 +1233,7 @@ class SubsonicDatasourceServer @Inject constructor(
         artistId: String,
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
+    ): List<XyPlayMusic>? {
         return super.getMusicListByArtistId(
             artistId = artistId,
             pageSize = pageSize,
@@ -1255,7 +1257,7 @@ class SubsonicDatasourceServer @Inject constructor(
     override suspend fun getMusicListByFavorite(
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>? {
+    ): List<XyPlayMusic>? {
         return super.getMusicListByFavorite(pageSize = pageSize, pageNum = pageNum)
     }
 

@@ -1,6 +1,7 @@
 package cn.xybbz.ui.components
 
 
+import android.Manifest
 import android.content.Intent
 import android.icu.math.BigDecimal
 import android.icu.text.SimpleDateFormat
@@ -66,7 +67,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.media3.common.util.UnstableApi
 import cn.xybbz.R
 import cn.xybbz.common.utils.DateUtil.millisecondsToTime
 import cn.xybbz.common.utils.DateUtil.toDateStr
@@ -97,6 +97,7 @@ import cn.xybbz.ui.xy.XyItemTextPadding
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
@@ -107,8 +108,7 @@ var bottomMenuMusicInfo = mutableStateListOf<XyMusic>()
  * 底部弹出菜单
  * todo 这里要限制一下弹出的高度为最大高度的百分之55
  */
-@androidx.annotation.OptIn(UnstableApi::class)
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class,ExperimentalPermissionsApi::class)
 @Composable
 fun MusicBottomMenuComponent(
     musicBottomMenuViewModel: MusicBottomMenuViewModel = hiltViewModel<MusicBottomMenuViewModel>(),
@@ -159,9 +159,20 @@ fun MusicBottomMenuComponent(
         onSetShowArtistList = { ifShowArtistList = it },
     )
 
+
+
     bottomMenuMusicInfo.forEach { music ->
 
+        val permissionState =
+            rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS, onPermissionResult = {
+                coroutineScope.launch {
+                    musicBottomMenuViewModel.downloadMusic(music)
+                }.invokeOnCompletion {
+                }
+            })
+
         val favoriteMusicMap by musicBottomMenuViewModel.favoriteRepository.favoriteSet.collectAsState()
+        val downloadMusicIds by musicBottomMenuViewModel.downloadRepository.musicIdsFlow.collectAsState()
         //收藏信息
         val favoriteState by remember {
             derivedStateOf {
@@ -241,6 +252,7 @@ fun MusicBottomMenuComponent(
                         horizontal = XyTheme.dimens.outerHorizontalPadding
                     ),
                     music = music,
+                    ifDownload = music.itemId in downloadMusicIds,
                     backgroundColor = Color.Transparent,
                     brush = Brush.horizontalGradient(
                         colors = listOf(Color(0xFF5A524C), Color(0xFF726B66)),
@@ -342,12 +354,8 @@ fun MusicBottomMenuComponent(
                             name = "下载"
                         ),
                         onClick = {
-                            coroutineScope.launch {
-                                musicBottomMenuViewModel.downloadMusic(music)
-                            }.invokeOnCompletion {
+                            permissionState.launchPermissionRequest()
 
-
-                            }
                         }
                     )
                 }
@@ -366,8 +374,8 @@ fun MusicBottomMenuComponent(
                         onClick = {
                             coroutineScope.launch {
                                 sheetState.hide()
-                                musicBottomMenuViewModel.musicController.addNextPlayer(
-                                    music
+                                musicBottomMenuViewModel.addNextPlayer(
+                                    music.itemId
                                 )
                                 MessageUtils.sendPopTip(context.getString(R.string.add_to_next_play_success))
                             }.invokeOnCompletion {

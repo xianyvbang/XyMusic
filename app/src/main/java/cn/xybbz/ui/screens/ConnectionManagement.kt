@@ -37,6 +37,7 @@ import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.router.RouterConstants
 import cn.xybbz.ui.components.LazyListComponent
 import cn.xybbz.ui.components.LazyLoadingAndStatus
+import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
@@ -90,7 +91,7 @@ fun ConnectionManagement(
                     )
                 }
             })
-        LazyColumnNotComponent(
+        ScreenLazyColumn(
             modifier = Modifier.fillMaxSize(),
             state = lazyListState,
             contentPadding = PaddingValues(8.dp),
@@ -155,13 +156,6 @@ fun ConnectionManagement(
                             }
                         }
                     }
-                )
-            }
-
-            item {
-                LazyLoadingAndStatus(
-                    text = stringResource(R.string.reached_bottom),
-                    ifLoading = false
                 )
             }
         }

@@ -22,6 +22,8 @@ import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyMusicExtend
+import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.data.remote.RemoteCurrent
 import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -60,7 +62,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
     /**
      * 最近播放的音乐
      */
-    var musicRecentlyList by mutableStateOf<List<XyMusic>>(emptyList())
+    var musicRecentlyList by mutableStateOf<List<XyMusicExtend>>(emptyList())
         private set
 
     /**
@@ -72,7 +74,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
     /**
      * 最多播放的音乐
      */
-    var mostPlayerMusicList by mutableStateOf<List<XyMusic>>(emptyList())
+    var mostPlayerMusicList by mutableStateOf<List<XyMusicExtend>>(emptyList())
         private set
 
     /**
@@ -84,7 +86,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
     /**
      * 推荐音乐
      */
-    var recommendedMusicList by mutableStateOf<List<XyMusic>>(emptyList())
+    var recommendedMusicList by mutableStateOf<List<XyMusicExtend>>(emptyList())
         private set
 
 
@@ -275,19 +277,6 @@ class HomeViewModel @OptIn(UnstableApi::class)
     }
 
 
-    /**
-     * 播放音乐列表
-     * @param [musicList] 音乐清单
-     * @param [onMusicPlayParameter] 关于音乐播放参数
-     * @param [playerTypeEnum] 播放顺序类型
-     */
-    fun playMusicList(
-        musicList: List<XyMusic>,
-        onMusicPlayParameter: OnMusicPlayParameter,
-        playerTypeEnum: PlayerTypeEnum
-    ) {
-        _musicPlayContext.musicList(onMusicPlayParameter, musicList, playerTypeEnum)
-    }
 
     /**
      * 修改歌单名称
@@ -352,7 +341,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
         viewModelScope.launch {
             connectionConfigServer.loginStateFlow.collect { bool ->
                 if (bool) {
-                    db.musicDao.selectRecommendedMusicListFlow(20)
+                    db.musicDao.selectRecommendedMusicExtendListFlow(20)
                         .distinctUntilChanged()
                         .collect {
                             recommendedMusicList = it
@@ -466,7 +455,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
         viewModelScope.launch {
             connectionConfigServer.loginStateFlow.collect { bool ->
                 if (bool) {
-                    db.apkDownloadDao.getAllMusicTasksCountFlow(status = DownloadStatus.COMPLETED)
+                    db.downloadDao.getAllMusicTasksCountFlow(status = DownloadStatus.COMPLETED)
                         .collect {
                             if (it == 0) {
                                 localCount = null
@@ -486,7 +475,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
         viewModelScope.launch {
             connectionConfigServer.loginStateFlow.collect { bool ->
                 if (bool) {
-                    db.apkDownloadDao.getAllMusicTasksDownloadCountFlow(
+                    db.downloadDao.getAllMusicTasksDownloadCountFlow(
                         status = listOf(
                             DownloadStatus.QUEUED,
                             DownloadStatus.DOWNLOADING
@@ -531,6 +520,27 @@ class HomeViewModel @OptIn(UnstableApi::class)
             dailyRecommender.generate()
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "生成每日推荐错误", e)
+        }
+    }
+
+
+    /**
+     * 播放音乐列表
+     * @param [musicList] 音乐清单
+     * @param [onMusicPlayParameter] 关于音乐播放参数
+     * @param [playerTypeEnum] 播放顺序类型
+     */
+    fun musicList(
+        onMusicPlayParameter: OnMusicPlayParameter,
+        musicList: List<XyMusicExtend>,
+        playerTypeEnum: PlayerTypeEnum? = null
+    ){
+        viewModelScope.launch {
+            musicPlayContext.musicList(
+                onMusicPlayParameter,
+                musicList.map { it.toPlayMusic() },
+                playerTypeEnum
+            )
         }
     }
 }

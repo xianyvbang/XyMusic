@@ -26,6 +26,7 @@ fun FavoriteScreen(
         title = stringResource(R.string.my_favorites),
         musicListPage = favoriteMusicListPage,
         favoriteRepository = favoriteViewModel.favoriteRepository,
+        downloadRepository = favoriteViewModel.downloadRepository,
         musicController = favoriteViewModel.musicController,
         getMusicInfo = { favoriteViewModel.getMusicInfo(it) },
         onMusicPlay = { playInfo, index ->

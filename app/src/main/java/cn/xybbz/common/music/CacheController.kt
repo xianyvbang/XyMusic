@@ -19,7 +19,7 @@ import cn.xybbz.api.client.CacheApiClient
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.SettingsConfig
 import cn.xybbz.entity.data.music.CacheTask
-import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyPlayMusic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -89,7 +89,7 @@ class CacheController(
         cacheDataSource = cacheDataSourceFactory.createDataSource()
     }
 
-    fun cacheMedia(music: XyMusic) {
+    fun cacheMedia(music: XyPlayMusic) {
         val url = music.musicUrl
         cacheCoroutineScope.launch(Dispatchers.IO) {
             val dataSpec = DataSpec.Builder()
@@ -104,7 +104,7 @@ class CacheController(
                     if (existingTask.isPaused) {
                         Log.i("=====", "继续缓存: $url")
                         // 重新创建 CacheWriter（因为 cancel() 后不能恢复）
-                        val newWriter = createCacheWriter(dataSpec, music)
+                        val newWriter = createCacheWriter(dataSpec)
                         cacheTask[url] = CacheTask(newWriter, isPaused = false)
                         newWriter.cache()
                     } else {
@@ -112,7 +112,7 @@ class CacheController(
                     }
                 } else {
                     Log.i("=====", "新建缓存: $url")
-                    val writer = createCacheWriter(dataSpec, music)
+                    val writer = createCacheWriter(dataSpec)
                     cacheTask[url] = CacheTask(writer, isPaused = false)
                     writer.cache()
                 }
@@ -123,7 +123,7 @@ class CacheController(
         }
     }
 
-    private fun createCacheWriter(dataSpec: DataSpec, music: XyMusic): CacheWriter {
+    private fun createCacheWriter(dataSpec: DataSpec): CacheWriter {
         return CacheWriter(
             cacheDataSource, // 这里用你初始化好的 CacheDataSource
             dataSpec,

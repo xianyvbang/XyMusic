@@ -23,6 +23,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.DownloadDone
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -86,10 +87,11 @@ fun ItemTrailingContent(
     index: Int? = null,
     media: String? = null,
     enabledPic: Boolean = true,
+    ifDownload: Boolean,
+    ifPlay: Boolean,
     enabled: Boolean = true,
     backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
     brush: Brush? = null,
-    textColor: Color = MaterialTheme.colorScheme.onSurface,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null
@@ -98,7 +100,8 @@ fun ItemTrailingContent(
     val density = LocalDensity.current
     val iconSizeDp = with(density) { 16.sp.toDp() }
 
-    val inlineContentId = "inlineContentId"
+    val inlineContentId = "inlineContentFavoriteId"
+    val inlineIfDownloadId = "inlineContentDownloadId"
 
     val inlineContent = mapOf(
         Pair(
@@ -119,11 +122,33 @@ fun ItemTrailingContent(
                         .padding(end = 2.dp),
                     tint = Color.Red
                 )
-            })
+            }),
+        Pair(
+            inlineIfDownloadId,
+            InlineTextContent(
+                //设置宽高
+                Placeholder(
+                    width = 16.sp,
+                    height = 16.sp,
+                    placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter,
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.DownloadDone,
+                    contentDescription = "已下载",
+                    modifier = Modifier
+                        .size(iconSizeDp)
+                        .padding(end = 2.dp),
+                    tint = Color.Green
+                )
+            }
+        )
     )
 
     ListItem(
-        colors = ListItemDefaults.colors(containerColor = if (brush != null) Color.Transparent else backgroundColor),
+        colors = ListItemDefaults.colors(
+            containerColor = if (brush != null) Color.Transparent else if (ifPlay) Color(0x3B000000) else backgroundColor
+        ),
         modifier = modifier
             .height(XyTheme.dimens.itemHeight)
             .fillMaxWidth()
@@ -141,7 +166,7 @@ fun ItemTrailingContent(
                 maxLines = 1,
                 style = MaterialTheme.typography.bodySmall,
                 overflow = TextOverflow.Ellipsis,
-                color = textColor
+                color = if (ifPlay) Color(0xFFABE2FF) else MaterialTheme.colorScheme.onSurface
             )
         },
         supportingContent = if (!media.isNullOrBlank() || !subordination.isNullOrBlank()) {
@@ -150,6 +175,8 @@ fun ItemTrailingContent(
                     text = buildAnnotatedString {
                         if (favoriteState)
                             appendInlineContent(inlineContentId, "[icon]")
+                        if (ifDownload)
+                            appendInlineContent(inlineIfDownloadId, "[icon]")
                         media?.let {
                             withStyle(
                                 style = SpanStyle(
@@ -163,8 +190,9 @@ fun ItemTrailingContent(
                         subordination?.let {
                             withStyle(
                                 style = SpanStyle(
+                                    fontSize = 12.sp,
                                     fontStyle = MaterialTheme.typography.titleSmall.fontStyle,
-                                    color = textColor
+                                    color = MaterialTheme.colorScheme.onSurface
                                 ), block = {
                                     append(subordination)
                                 }
@@ -212,7 +240,6 @@ fun ItemTrailingArrowRight(
     toneQuality: String? = null,
     enabled: Boolean = true,
     backgroundColor: Color = MaterialTheme.colorScheme.background,
-    textColor: Color = MaterialTheme.colorScheme.onSurface,
     shadowElevation: Dp = ListItemDefaults.Elevation,
     onClick: (() -> Unit)? = null,
     trailingContent: @Composable (() -> Unit)? = null,
@@ -232,7 +259,7 @@ fun ItemTrailingArrowRight(
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                color = textColor
+                color = MaterialTheme.colorScheme.onSurface
             )
         },
         supportingContent = {
@@ -263,7 +290,7 @@ fun ItemTrailingArrowRight(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center,
-                        color = textColor
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }

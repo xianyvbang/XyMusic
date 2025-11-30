@@ -1,6 +1,6 @@
 package cn.xybbz.config.module
 
-import cn.xybbz.entity.data.SelectControl
+import cn.xybbz.config.select.SelectControl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

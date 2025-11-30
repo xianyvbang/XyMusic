@@ -27,11 +27,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyItemText
 import cn.xybbz.viewmodel.SelectLibraryViewModel
@@ -81,7 +81,7 @@ fun SelectLibraryScreen(
                 }
             })
 
-        LazyColumnNotComponent(modifier = Modifier) {
+        ScreenLazyColumn(modifier = Modifier) {
             items(selectLibraryViewModel.libraryList) { library ->
                 Column {
                     Row(
@@ -115,9 +115,10 @@ fun SelectLibraryScreen(
                             },
                             modifier = Modifier
                                 .semantics {
-                                    contentDescription = if (library.id == Constants.MINUS_ONE_INT.toString())
-                                        context.getString(library.name.toInt())
-                                    else library.name
+                                    contentDescription =
+                                        if (library.id == Constants.MINUS_ONE_INT.toString())
+                                            context.getString(library.name.toInt())
+                                        else library.name
                                 }
                         )
                     }

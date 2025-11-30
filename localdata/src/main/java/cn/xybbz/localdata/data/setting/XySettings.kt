@@ -45,11 +45,6 @@ data class XySettings(
      */
     val languageType: LanguageType? = null /*LanguageType.ZH_CN*/,
     /**
-     * 获取数据位置, 默认有限从本地获取,true=本地，false=网络
-     */
-    val isLocal: Boolean = true,
-
-    /**
      * 最新版本获取时间 每次打开如果间隔不超过1小时的话,就不获取新数据
      */
     val latestVersionTime: Long = 0,

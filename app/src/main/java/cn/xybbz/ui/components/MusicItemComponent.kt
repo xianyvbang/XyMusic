@@ -35,10 +35,11 @@ fun MusicItemComponent(
     index: Int? = null,
     enabledPic: Boolean = true,
     onIfFavorite: () -> Boolean,
+    ifDownload: Boolean,
     subordination: String? = null,
     backgroundColor: Color = Color.Transparent,
     brush: Brush? = null,
-    textColor: Color = MaterialTheme.colorScheme.onSurface,
+    ifPlay: Boolean,
     onMusicPlay: (OnMusicPlayParameter) -> Unit,
     ifShowTrailingContent: Boolean = true,
     ifSelect: Boolean = false,
@@ -59,7 +60,8 @@ fun MusicItemComponent(
         bitRate = music.bitRate,
         subordination = subordination,
         onIfFavorite = onIfFavorite,
-        textColor = textColor,
+        ifDownload = ifDownload,
+        ifPlay = ifPlay,
         backgroundColor = backgroundColor,
         brush = brush,
         ifSelect = ifSelect,
@@ -84,10 +86,11 @@ fun MusicItemComponent(
     index: Int? = null,
     enabledPic: Boolean = true,
     onIfFavorite: () -> Boolean,
+    ifDownload: Boolean,
     subordination: String? = null,
     backgroundColor: Color = Color.Transparent,
     brush: Brush? = null,
-    textColor: Color = MaterialTheme.colorScheme.onSurface,
+    ifPlay:Boolean,
     onMusicPlay: (OnMusicPlayParameter) -> Unit,
     ifShowTrailingContent: Boolean = true,
     ifSelect: Boolean = false,
@@ -104,9 +107,10 @@ fun MusicItemComponent(
         index = index,
         media = getMusicMedia(codec, bitRate),
         enabledPic = enabledPic,
+        ifDownload = ifDownload,
         backgroundColor = backgroundColor,
         brush = brush,
-        textColor = textColor,
+        ifPlay = ifPlay,
         modifier = modifier,
         onClick = {
             if (!ifSelect)
@@ -126,7 +130,7 @@ fun MusicItemComponent(
                     IconButton(
                         modifier = Modifier.offset(x = (10).dp),
                         onClick = {
-                            trailingOnClick?.invoke()
+                            trailingOnClick.invoke()
                         },
                     ) {
                         Icon(
@@ -156,14 +160,14 @@ fun MusicItemComponent(
 /**
  * 音乐列表item
  * @param [modifier] 修饰符
- * @param [onMusicData] 关于音乐信息数据
  * @param [index] 索引
- * @param [onMusicPlay] 播放方法
  */
 @Composable
 fun MusicItemNotClickComponent(
     modifier: Modifier = Modifier,
     music: XyMusic,
+    ifDownload: Boolean,
+    ifPlay: Boolean = false,
     subordination: String? = null,
     backgroundColor: Color = MaterialTheme.colorScheme.background,
     brush: Brush? = null
@@ -182,6 +186,8 @@ fun MusicItemNotClickComponent(
         brush = brush,
         modifier = modifier,
         onIfFavorite = { false },
+        ifDownload = ifDownload,
+        ifPlay = ifPlay,
         ifShowTrailingContent = false,
         trailingOnClick = {},
         onMusicPlay = {},
@@ -202,12 +208,13 @@ fun MusicItemIndexComponent(
     modifier: Modifier = Modifier,
     music: XyMusic,
     onIfFavorite: () -> Boolean,
+    ifDownload: Boolean,
     subordination: String? = null,
     index: Int,
-    textColor: Color = MaterialTheme.colorScheme.onSurface,
     backgroundColor: Color = MaterialTheme.colorScheme.background,
     onMusicPlay: (OnMusicPlayParameter) -> Unit,
     ifSelect: Boolean = false,
+    ifPlay: Boolean,
     trailingOnSelectClick: (Boolean) -> Unit,
     trailingOnClick: () -> Unit,
     ifSelectCheckBox: (() -> Boolean)? = null
@@ -224,7 +231,8 @@ fun MusicItemIndexComponent(
         index = index,
         subordination = subordination,
         onIfFavorite = onIfFavorite,
-        textColor = textColor,
+        ifDownload = ifDownload,
+        ifPlay = ifPlay,
         modifier = modifier,
         backgroundColor = backgroundColor,
         ifSelect = ifSelect,

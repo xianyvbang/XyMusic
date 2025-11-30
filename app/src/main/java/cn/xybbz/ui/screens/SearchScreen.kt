@@ -47,11 +47,14 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
 import cn.xybbz.R
+import cn.xybbz.common.music.MusicController
 import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.data.search.SearchHistory
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.RouterConstants
@@ -60,6 +63,7 @@ import cn.xybbz.ui.components.LazyRowComponent
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicArtistCardComponent
 import cn.xybbz.ui.components.MusicItemComponent
+import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SearchRecordComponent
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
@@ -185,7 +189,9 @@ fun SearchScreen(
                     onLoadingState = {
                         searchViewModel.isSearchLoad
                     },
-                    favoriteRepository = searchViewModel.favoriteRepository
+                    favoriteRepository = searchViewModel.favoriteRepository,
+                    downloadRepository = searchViewModel.downloadRepository,
+                    musicController = searchViewModel.musicController
                 )
             } else {
                 HistoryAndHintList(
@@ -251,14 +257,17 @@ fun SearchResultScreen(
     artistList: List<XyArtist>,
     onAddMusic: (XyMusic) -> Unit,
     onLoadingState: () -> Boolean,
-    favoriteRepository: FavoriteRepository
+    favoriteRepository: FavoriteRepository,
+    downloadRepository: DownloadRepository,
+    musicController: MusicController
 ) {
     val navController = LocalNavController.current
 
     val favoriteSet by favoriteRepository.favoriteSet.collectAsState()
+    val downloadMusicIds by downloadRepository.musicIdsFlow.collectAsState()
 
 
-    LazyColumnNotComponent(
+    ScreenLazyColumn(
         modifier = Modifier
             .padding(top = XyTheme.dimens.outerVerticalPadding)
             .fillMaxSize()
@@ -274,7 +283,7 @@ fun SearchResultScreen(
         } else {
             if (artistList.isNotEmpty()) {
                 item {
-                    XyRow{
+                    XyRow {
                         XyItemTitle(
                             text = stringResource(R.string.artist),
                             fontSize = 18.sp,
@@ -298,7 +307,7 @@ fun SearchResultScreen(
 
             if (albumList.isNotEmpty()) {
                 item {
-                    XyRow{
+                    XyRow {
                         XyItemTitle(text = stringResource(R.string.album), fontSize = 18.sp)
                     }
                 }
@@ -323,7 +332,7 @@ fun SearchResultScreen(
 
             if (musicList.isNotEmpty()) {
                 item {
-                    XyRow{
+                    XyRow {
                         XyItemTitle(text = stringResource(R.string.music), fontSize = 18.sp)
                     }
                 }
@@ -339,6 +348,8 @@ fun SearchResultScreen(
                         onIfFavorite = {
                             music.itemId in favoriteSet
                         },
+                        ifDownload = music.itemId in downloadMusicIds,
+                        ifPlay = music.itemId == musicController.musicInfo?.itemId,
                         onMusicPlay = {
                             onAddMusic(
                                 music
@@ -353,16 +364,7 @@ fun SearchResultScreen(
                     )
                 }
             }
-
-            item {
-                LazyLoadingAndStatus(
-                    text = stringResource(R.string.reached_bottom),
-                    ifLoading = false
-                )
-            }
         }
-
-
     }
 }
 

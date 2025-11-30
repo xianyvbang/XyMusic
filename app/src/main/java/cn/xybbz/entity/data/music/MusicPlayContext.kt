@@ -15,7 +15,7 @@ import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.MusicListIndexUtils
 import cn.xybbz.localdata.config.DatabaseClient
-import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.data.player.XyPlayer
 import cn.xybbz.localdata.data.progress.Progress
 import cn.xybbz.localdata.data.setting.SkipTime
@@ -28,12 +28,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.collections.isNotEmpty
+import kotlin.collections.isNullOrEmpty
 
 @Immutable
 data class MusicPlayData(
     var onMusicPlayParameter: OnMusicPlayParameter,
-    var xyMusicList: (suspend () -> List<XyMusic>)? = { emptyList() },
-    var onNextMusicList: (suspend (Int) -> List<XyMusic>?)? = null,
+    var xyMusicList: (suspend () -> List<XyPlayMusic>)? = { emptyList() },
+    var onNextMusicList: (suspend (Int) -> List<XyPlayMusic>?)? = null,
     var pageSize: Int = Constants.MIN_PAGE
 )
 
@@ -59,7 +61,7 @@ class MusicPlayContext @Inject constructor(
      */
     fun musicList(
         onMusicPlayParameter: OnMusicPlayParameter,
-        musicList: List<XyMusic>,
+        musicList: List<XyPlayMusic>,
         playerTypeEnum: PlayerTypeEnum? = null
     ) {
 
@@ -249,7 +251,7 @@ class MusicPlayContext @Inject constructor(
             xyMusicList = {
                 val loadingObject = LoadingObject(id = UUID.randomUUID().toString())
                 loadingObject.show()
-                val musicList = dataSourceManager.getRandomMusicList(
+                val musicList = dataSourceManager.getRandomMusicExtendList(
                     pageNum = 0,
                     pageSize = Constants.UI_LIST_PAGE,
                 ) ?: listOf()
@@ -257,7 +259,7 @@ class MusicPlayContext @Inject constructor(
                 musicList
             },
             onNextMusicList = { pageNum ->
-                dataSourceManager.getRandomMusicList(
+                dataSourceManager.getRandomMusicExtendList(
                     pageNum = pageNum,
                     pageSize = Constants.UI_LIST_PAGE,
                 )
@@ -277,7 +279,7 @@ class MusicPlayContext @Inject constructor(
      * 根据上次播放类型进行添加播放
      */
     fun initPlayList(
-        musicList: List<XyMusic>?,
+        musicList: List<XyPlayMusic>?,
         player: XyPlayer?
     ) {
         if (player != null) {
@@ -318,7 +320,7 @@ class MusicPlayContext @Inject constructor(
                             pageNum = pageNum
                         )
                     } else if (player.dataType == MusicPlayTypeEnum.RANDOM) {
-                        dataSourceManager.getRandomMusicList(
+                        dataSourceManager.getRandomMusicExtendList(
                             pageSize = player.pageSize,
                             pageNum = pageNum
                         )
@@ -362,7 +364,7 @@ class MusicPlayContext @Inject constructor(
     ) {
         coroutineScope.launch {
             //2024年4月17日 10:54:36 albumId 可能为null/空 下面方法未判断
-            val tmpMusicList = mutableListOf<XyMusic>()
+            val tmpMusicList = mutableListOf<XyPlayMusic>()
             var tmpIndex:Int? = null
             val xyMusicList = musicPlayData.xyMusicList?.invoke()
             if (xyMusicList?.isNotEmpty() == true) {

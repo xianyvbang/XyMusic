@@ -18,6 +18,7 @@ import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.flow.Flow
@@ -147,10 +148,10 @@ interface IDataSourceServer {
 
     /**
      * 根据音乐获得歌词信息
-     * @param [music] 音乐id
+     * @param [itemId] 音乐id
      * @return 返回歌词列表
      */
-    suspend fun getMusicLyricList(music: XyMusic): List<LrcEntryData>?
+    suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>?
 
     /**
      * 根据艺术家获得专辑列表
@@ -167,6 +168,11 @@ interface IDataSourceServer {
      * 获得随机音乐
      */
     suspend fun getRandomMusicList(pageSize: Int, pageNum: Int): List<XyMusic>?
+
+    /**
+     * 获得随机音乐
+     */
+    suspend fun getRandomMusicExtendList(pageSize: Int, pageNum: Int): List<XyPlayMusic>?
 
     /**
      * 获取歌单列表
@@ -292,7 +298,7 @@ interface IDataSourceServer {
     suspend fun getMusicList(
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>?
+    ): List<XyPlayMusic>?
 
     /**
      * 根据专辑获得歌曲列表
@@ -301,7 +307,7 @@ interface IDataSourceServer {
         albumId: String,
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>?
+    ): List<XyPlayMusic>?
 
     /**
      * 根据艺术家获得歌曲列表
@@ -310,7 +316,7 @@ interface IDataSourceServer {
         artistId: String,
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>?
+    ): List<XyPlayMusic>?
 
     /**
      * 根据艺术家列表获得歌曲列表
@@ -326,7 +332,7 @@ interface IDataSourceServer {
     suspend fun getMusicListByFavorite(
         pageSize: Int,
         pageNum: Int
-    ): List<XyMusic>?
+    ): List<XyPlayMusic>?
 
 
     /**

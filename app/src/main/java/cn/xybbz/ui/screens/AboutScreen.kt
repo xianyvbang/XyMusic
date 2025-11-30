@@ -1,5 +1,6 @@
 package cn.xybbz.ui.screens
 
+import android.Manifest
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -67,10 +68,14 @@ import cn.xybbz.ui.xy.XyItemBig
 import cn.xybbz.ui.xy.XyItemTextLarge
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.AboutViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalPermissionsApi::class
+)
 @Composable
 fun AboutScreen(
     aboutViewModel: AboutViewModel = hiltViewModel<AboutViewModel>()
@@ -85,7 +90,24 @@ fun AboutScreen(
         mutableStateOf(true)
     }
     val primary = MaterialTheme.colorScheme.primary
+    val permissionState =
+        rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS,onPermissionResult = {bool ->
+            coroutineScope.launch {
+                aboutViewModel.apkUpdateManager.releasesInfo?.assets?.findLast {
+                    it.name.contains(
+                        "apk"
+                    )
+                }?.let { asset ->
+                    aboutViewModel.downloadAndInstall(
+                        asset.url,
+                        asset.name,
+                        asset.size
+                    )
+                }
+            }.invokeOnCompletion {
 
+            }
+        })
 
     LaunchedEffect(apkDownloadInfo) {
         Log.i("=====", "数据变化 ${apkDownloadInfo}")
@@ -218,21 +240,8 @@ fun AboutScreen(
                                             Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
                                             Button(
                                                 onClick = composeClick {
-                                                    coroutineScope.launch {
-                                                        aboutViewModel.apkUpdateManager.releasesInfo?.assets?.findLast {
-                                                            it.name.contains(
-                                                                "apk"
-                                                            )
-                                                        }?.let { asset ->
-                                                            aboutViewModel.downloadAndInstall(
-                                                                asset.url,
-                                                                asset.name,
-                                                                asset.size
-                                                            )
-                                                        }
-                                                    }.invokeOnCompletion {
+                                                    permissionState.launchPermissionRequest()
 
-                                                    }
                                                 },
                                                 enabled = apkDownloadInfo?.status != DownloadStatus.DOWNLOADING,
                                                 shape = RoundedCornerShape(XyTheme.dimens.corner),

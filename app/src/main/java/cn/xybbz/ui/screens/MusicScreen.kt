@@ -29,7 +29,7 @@ import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavController
-import cn.xybbz.entity.data.SelectControl
+import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.ui.components.MusicItemComponent
@@ -53,6 +53,7 @@ fun MusicScreen(
     val mainViewModel = LocalMainViewModel.current
     val homeMusicPager = musicViewModel.homeMusicPager.collectAsLazyPagingItems()
     val favoriteSet by musicViewModel.favoriteRepository.favoriteSet.collectAsState()
+    val downloadMusicIds by musicViewModel.downloadRepository.musicIdsFlow.collectAsState()
     val sortBy by musicViewModel.sortBy.collectAsState()
 
     XyColumnScreen(
@@ -126,18 +127,20 @@ fun MusicScreen(
                 page.itemKey { it.musicId },
                 page.itemContentType { MusicTypeEnum.MUSIC.code }) { index ->
                 // 加上remember就可以防止重组
-                page[index]?.let { musicParent ->
+                page[index]?.let { music ->
                     MusicItemComponent(
-                        itemId = musicParent.musicId,
-                        name = musicParent.name,
-                        album = musicParent.album,
-                        artists = musicParent.artists,
-                        pic = musicParent.pic,
-                        codec = musicParent.codec,
-                        bitRate = musicParent.bitRate,
+                        itemId = music.musicId,
+                        name = music.name,
+                        album = music.album,
+                        artists = music.artists,
+                        pic = music.pic,
+                        codec = music.codec,
+                        bitRate = music.bitRate,
                         onIfFavorite = {
-                            musicParent.musicId in favoriteSet
+                            music.musicId in favoriteSet
                         },
+                        ifDownload = music.musicId in downloadMusicIds,
+                        ifPlay = musicViewModel.musicController.musicInfo?.itemId == music.musicId,
                         onMusicPlay = {
                             musicViewModel.musicPlayContext.music(
                                 onMusicPlayParameter = it,
@@ -146,18 +149,14 @@ fun MusicScreen(
                             )
                         },
                         backgroundColor = Color.Transparent,
-                        textColor = if (musicViewModel.musicController.musicInfo?.itemId == musicParent.musicId)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onSurface,
                         ifSelect = musicViewModel.selectControl.ifOpenSelect,
                         ifSelectCheckBox = {
-                            musicParent.musicId in musicViewModel.selectControl.selectMusicIdList
+                            music.musicId in musicViewModel.selectControl.selectMusicIdList
                         },
                         trailingOnSelectClick = { select ->
                             Log.i("======", "数据是否一起变化${select}")
                             musicViewModel.selectControl.toggleSelection(
-                                musicParent.musicId,
+                                music.musicId,
                                 onIsSelectAll = {
                                     musicViewModel.selectControl.selectMusicIdList.containsAll(
                                         homeMusicPager.itemSnapshotList.items.map { it.musicId }
@@ -166,7 +165,7 @@ fun MusicScreen(
                         },
                         trailingOnClick = {
                             coroutineScope.launch {
-                                musicViewModel.getMusicInfoById(musicParent.musicId)?.show()
+                                musicViewModel.getMusicInfoById(music.musicId)?.show()
                             }
                         }
                     )

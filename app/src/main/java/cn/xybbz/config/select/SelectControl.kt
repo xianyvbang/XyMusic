@@ -1,4 +1,4 @@
-package cn.xybbz.entity.data
+package cn.xybbz.config.select
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
@@ -19,7 +19,6 @@ import cn.xybbz.ui.components.show
 import cn.xybbz.ui.xy.XyItemTextHorizontal
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-
 
 /**
  * 选择列表数据
@@ -221,7 +220,7 @@ class SelectControl {
      * 播放选中列表
      */
     suspend fun addPlayerList(musicController: MusicController, db: DatabaseClient) {
-        val xyMusics = db.musicDao.selectByIds(selectMusicIdList.toList())
+        val xyMusics = db.musicDao.selectExtendByIds(selectMusicIdList.toList())
         musicController.addMusicList(
             musicList = xyMusics,
             isPlayer = true,

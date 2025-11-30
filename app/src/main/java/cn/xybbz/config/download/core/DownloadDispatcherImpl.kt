@@ -10,7 +10,6 @@ import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.download.notification.NotificationController
 import cn.xybbz.config.download.work.DownloadWork
-import cn.xybbz.config.module.DownloadModule_NetWorkMonitorFactory.netWorkMonitor
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.enums.DownloadStatus
@@ -64,7 +63,7 @@ class DownloadDispatcherImpl(
         }
 
         val allTasks =
-            db.apkDownloadDao.getAllTasksSuspend(connectionConfigServer.getConnectionId())
+            db.downloadDao.getAllTasksSuspend(connectionConfigServer.getConnectionId())
         allTasks.forEach { task ->
             when (task.status) {
                 DownloadStatus.QUEUED -> readyTasks.add(task)
@@ -109,7 +108,7 @@ class DownloadDispatcherImpl(
                 task?.let {
                     it.status = DownloadStatus.PAUSED
                     pausedTasks[it.id] = it
-                    db.apkDownloadDao.updateStatus(it.id, DownloadStatus.PAUSED)
+                    db.downloadDao.updateStatus(it.id, DownloadStatus.PAUSED)
                 }
             }
             promoteAndExecute()
@@ -123,13 +122,13 @@ class DownloadDispatcherImpl(
                     it.status = DownloadStatus.QUEUED
                     readyTasks.add(it)
                     // Key Node: Persist state change
-                    db.apkDownloadDao.updateStatus(it.id, DownloadStatus.QUEUED)
+                    db.downloadDao.updateStatus(it.id, DownloadStatus.QUEUED)
                 }
                 failedTasks.remove(id)?.let {
                     it.status = DownloadStatus.QUEUED
                     readyTasks.add(it)
                     // Key Node: Persist state change
-                    db.apkDownloadDao.updateStatus(it.id, DownloadStatus.QUEUED)
+                    db.downloadDao.updateStatus(it.id, DownloadStatus.QUEUED)
                 }
             }
             promoteAndExecute()
@@ -151,7 +150,7 @@ class DownloadDispatcherImpl(
             if (tasksToCancel.isNotEmpty()) {
                 val taskIds = tasksToCancel.map { it.id }
                 // Key Node: Persist state change
-                db.apkDownloadDao.updateStatuses(taskIds, DownloadStatus.CANCEL, time)
+                db.downloadDao.updateStatuses(taskIds, DownloadStatus.CANCEL, time)
 
                 tasksToCancel.forEach { task ->
                     workManager.cancelAllWorkByTag(task.id.toString())
@@ -189,7 +188,7 @@ class DownloadDispatcherImpl(
                     }
                 }
             }
-            db.apkDownloadDao.deleteById(*ids.toLongArray())
+            db.downloadDao.deleteById(*ids.toLongArray())
             promoteAndExecute()
         }
     }
@@ -208,7 +207,7 @@ class DownloadDispatcherImpl(
 
     private suspend fun startDownloadWorker(task: XyDownload) {
         // Key Node: Persist state change just before starting
-        db.apkDownloadDao.updateStatus(task.id, DownloadStatus.DOWNLOADING)
+        db.downloadDao.updateStatus(task.id, DownloadStatus.DOWNLOADING)
         val workRequest = OneTimeWorkRequestBuilder<DownloadWork>()
             .setInputData(workDataOf(Constants.DOWNLOAD_ID to task.id))
             .addTag(task.id.toString())
@@ -264,7 +263,7 @@ class DownloadDispatcherImpl(
                 scope.launch(Dispatchers.IO) {
                     // 批量更新所有正在运行任务的进度
                     runningTasks.values.forEach { runningTask ->
-                        db.apkDownloadDao.updateProgress(
+                        db.downloadDao.updateProgress(
                             runningTask.id,
                             runningTask.progress,
                             runningTask.downloadedBytes,
@@ -300,7 +299,7 @@ class DownloadDispatcherImpl(
                     when (status) {
                         DownloadStatus.COMPLETED -> {
                             if (finalPath != null) {
-                                db.apkDownloadDao.updateOnSuccess(
+                                db.downloadDao.updateOnSuccess(
                                     downloadId,
                                     status,
                                     finalPath,
@@ -309,10 +308,10 @@ class DownloadDispatcherImpl(
                             }
                         }
 
-                        DownloadStatus.PAUSED -> db.apkDownloadDao.updateStatus(downloadId, status)
+                        DownloadStatus.PAUSED -> db.downloadDao.updateStatus(downloadId, status)
                         DownloadStatus.FAILED -> {
                             pausedTasks[task.id] = task
-                            db.apkDownloadDao.updateOnError(
+                            db.downloadDao.updateOnError(
                                 downloadId,
                                 status,
                                 error,
@@ -320,7 +319,7 @@ class DownloadDispatcherImpl(
                             )
                         }
 
-                        DownloadStatus.CANCEL -> db.apkDownloadDao.updateStatus(downloadId, status)
+                        DownloadStatus.CANCEL -> db.downloadDao.updateStatus(downloadId, status)
                         else -> {}
                     }
                 }

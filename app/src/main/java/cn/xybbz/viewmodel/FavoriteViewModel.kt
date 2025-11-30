@@ -7,6 +7,7 @@ import cn.xybbz.api.client.IDataSourceManager
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
+import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.localdata.data.music.XyMusic
@@ -20,17 +21,13 @@ import javax.inject.Inject
 @HiltViewModel
 class FavoriteViewModel @Inject constructor(
     private val dataSourceManager: IDataSourceManager,
-    private val _musicPlayContext: MusicPlayContext,
-    private val connectionConfigServer: ConnectionConfigServer,
-    private val _musicController: MusicController,
-    private val _favoriteRepository: FavoriteRepository,
-    private val _backgroundConfig: BackgroundConfig
+     val musicPlayContext: MusicPlayContext,
+     val connectionConfigServer: ConnectionConfigServer,
+     val musicController: MusicController,
+     val favoriteRepository: FavoriteRepository,
+     val downloadRepository: DownloadRepository,
+     val backgroundConfig: BackgroundConfig
 ) : ViewModel() {
-
-    val musicPlayContext = _musicPlayContext
-    val musicController = _musicController
-    val favoriteRepository = _favoriteRepository
-    val backgroundConfig = _backgroundConfig
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val favoriteMusicList =

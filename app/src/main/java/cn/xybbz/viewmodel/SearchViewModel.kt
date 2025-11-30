@@ -15,6 +15,7 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
+import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -32,13 +33,12 @@ class SearchViewModel @OptIn(UnstableApi::class)
     private val db: DatabaseClient,
     private val dataSourceManager: IDataSourceManager,
     private val connectionConfigServer: ConnectionConfigServer,
-    private val musicController: MusicController,
-    private val _favoriteRepository: FavoriteRepository,
-    private val _backgroundConfig: BackgroundConfig
+    val musicController: MusicController,
+    val favoriteRepository: FavoriteRepository,
+    val downloadRepository: DownloadRepository,
+    val backgroundConfig: BackgroundConfig
 ) : ViewModel() {
 
-    val favoriteRepository = _favoriteRepository
-    val backgroundConfig = _backgroundConfig
 
     /**
      * 搜索历史
@@ -104,14 +104,14 @@ class SearchViewModel @OptIn(UnstableApi::class)
                     musicList = searchData.musics ?: emptyList()
                     albumList = searchData.albums ?: emptyList()
                     artistList = searchData.artists ?: emptyList()
-                    saveSearchHHistory(
+                    saveSearchHistory(
                         SearchHistory(
                             searchQuery = searchQuery,
                             connectionId = connectionConfigServer.getConnectionId()
                         )
                     )
                 } catch (e: Exception) {
-                    Log.e(Constants.LOG_ERROR_PREFIX, "搜索失败: ${e.message}",e)
+                    Log.e(Constants.LOG_ERROR_PREFIX, "搜索失败: ${e.message}", e)
                 }
             }.invokeOnCompletion {
                 isSearchLoad = false
@@ -124,7 +124,7 @@ class SearchViewModel @OptIn(UnstableApi::class)
      * 存储搜索历史
      */
     @Transaction
-    suspend fun saveSearchHHistory(searchHistory: SearchHistory) {
+    suspend fun saveSearchHistory(searchHistory: SearchHistory) {
         //判断数据是否存在
         val searchQuery =
             db.searchHistoryDao.selectOneBySearchQuery(searchHistory.searchQuery)
@@ -135,18 +135,26 @@ class SearchViewModel @OptIn(UnstableApi::class)
 
 
     fun addMusic(music: XyMusic) {
-        musicController.addMusic(
-            music,
-            artistId = "",
-            true
-        )
+        viewModelScope.launch {
+            val download = db.downloadDao.getMusicCompleteTaskByUid(music.itemId)
+            val playMusic = music.toPlayMusic().copy(
+                ifFavoriteStatus = music.itemId in favoriteRepository.favoriteSet.value,
+                filePath = download?.filePath
+            )
+            musicController.addMusic(
+                playMusic,
+                artistId = "",
+                true
+            )
+        }
+
     }
 
     /**
      * 更新是否显示搜索结果
      */
     fun updateIfShowSearchResult(ifShowSearchResult: Boolean) {
-        Log.i("=====","数据调用1")
+        Log.i("=====", "数据调用1")
         this.ifShowSearchResult = ifShowSearchResult
     }
 

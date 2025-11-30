@@ -2,7 +2,6 @@
 
 package cn.xybbz.ui.screens
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.annotation.OptIn
@@ -30,7 +29,7 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.rememberNavController
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavController
-import cn.xybbz.entity.data.SelectControl
+import cn.xybbz.config.select.SelectControl
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.RouterCompose
 import cn.xybbz.router.RouterConstants
@@ -43,9 +42,6 @@ import cn.xybbz.ui.components.MusicBottomMenuComponent
 import cn.xybbz.ui.components.SnackBarPlayerComponent
 import cn.xybbz.viewmodel.MainViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.PermissionStatus
-import com.google.accompanist.permissions.rememberPermissionState
-import com.google.accompanist.permissions.shouldShowRationale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -69,33 +65,13 @@ fun MainScreen() {
 
         //todo putDataSourceState 这个属性应该放在全局的object类里,不是放在mainViewModel里
 
-        val permissionState =
-            rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
-
 
         LifecycleEffect(
             onCreate = {
-//                mainViewModel.clearRemoteCurrent()
-                //todo 通知权限调用应该修改到下载的时候
-                when (permissionState.status) {
-                    is PermissionStatus.Granted -> {
-                        Log.i("permission", "通知权限启用")
-                    }
-
-                    is PermissionStatus.Denied -> {
-                        if (permissionState.status.shouldShowRationale) {
-                            permissionState.launchPermissionRequest()
-                        } else {
-                            Log.w("permission", "通知权限被禁止")
-                        }
-                    }
-                }
-                permissionState.launchPermissionRequest()
                 Log.i("=====", "初始化")
             },
             onStart = {
                 Log.i("=====", "创建")
-
                 mainViewModel.putIterations(1)
             }, onDestroy = {
                 Log.i("=====", "onDestroy")
