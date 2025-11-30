@@ -107,10 +107,7 @@ fun DailyRecommendScreen(
                             musicExtend.music.itemId in favoriteList
                         },
                         ifDownload = musicExtend.music.itemId in downloadMusicIds,
-                        textColor = if (dailyRecommendViewModel.musicController.musicInfo?.itemId == musicExtend.music.itemId)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onSurface,
+                        ifPlay = dailyRecommendViewModel.musicController.musicInfo?.itemId == musicExtend.music.itemId,
                         backgroundColor = Color.Transparent,
                         onMusicPlay = {
                             coroutineScope.launch {

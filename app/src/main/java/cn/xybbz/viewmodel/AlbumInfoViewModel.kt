@@ -17,7 +17,7 @@ import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.favorite.FavoriteRepository
-import cn.xybbz.entity.data.SelectControl
+import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum

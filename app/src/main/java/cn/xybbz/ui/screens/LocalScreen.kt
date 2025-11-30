@@ -89,10 +89,7 @@ fun LocalScreen(localViewModel: LocalViewModel = hiltViewModel<LocalViewModel>()
                             music.itemId in favoriteSet
                         },
                         ifDownload = true,
-                        textColor = if (localViewModel.musicController.musicInfo?.itemId == music.itemId)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onSurface,
+                        ifPlay = localViewModel.musicController.musicInfo?.itemId == music.itemId,
                         backgroundColor = Color.Transparent,
                         onMusicPlay = {
                             localViewModel.musicList(

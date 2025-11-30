@@ -33,7 +33,7 @@ class SearchViewModel @OptIn(UnstableApi::class)
     private val db: DatabaseClient,
     private val dataSourceManager: IDataSourceManager,
     private val connectionConfigServer: ConnectionConfigServer,
-    private val musicController: MusicController,
+    val musicController: MusicController,
     val favoriteRepository: FavoriteRepository,
     val downloadRepository: DownloadRepository,
     val backgroundConfig: BackgroundConfig

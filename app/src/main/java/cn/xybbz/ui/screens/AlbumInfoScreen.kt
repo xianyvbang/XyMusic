@@ -448,11 +448,8 @@ fun AlbumInfoScreen(
                                         music.itemId in favoriteSet
                                     },
                                     ifDownload = music.itemId in downloadMusicIds,
+                                    ifPlay = albumInfoViewModel.musicController.musicInfo?.itemId == music.itemId,
                                     index = index + 1,
-                                    textColor = if (albumInfoViewModel.musicController.musicInfo?.itemId == music.itemId)
-                                        MaterialTheme.colorScheme.primary
-                                    else
-                                        MaterialTheme.colorScheme.onSurface,
                                     subordination =
                                         if (albumInfoViewModel.albumPlayerHistoryProgressMap.containsKey(
                                                 music.itemId

@@ -87,11 +87,11 @@ fun ItemTrailingContent(
     index: Int? = null,
     media: String? = null,
     enabledPic: Boolean = true,
-    ifDownload:Boolean,
+    ifDownload: Boolean,
+    ifPlay: Boolean,
     enabled: Boolean = true,
     backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
     brush: Brush? = null,
-    textColor: Color = MaterialTheme.colorScheme.onSurface,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null
@@ -146,7 +146,9 @@ fun ItemTrailingContent(
     )
 
     ListItem(
-        colors = ListItemDefaults.colors(containerColor = if (brush != null) Color.Transparent else backgroundColor),
+        colors = ListItemDefaults.colors(
+            containerColor = if (brush != null) Color.Transparent else if (ifPlay) Color(0x3B000000) else backgroundColor
+        ),
         modifier = modifier
             .height(XyTheme.dimens.itemHeight)
             .fillMaxWidth()
@@ -164,7 +166,7 @@ fun ItemTrailingContent(
                 maxLines = 1,
                 style = MaterialTheme.typography.bodySmall,
                 overflow = TextOverflow.Ellipsis,
-                color = textColor
+                color = if (ifPlay) Color(0xFFABE2FF) else MaterialTheme.colorScheme.onSurface
             )
         },
         supportingContent = if (!media.isNullOrBlank() || !subordination.isNullOrBlank()) {
@@ -188,8 +190,9 @@ fun ItemTrailingContent(
                         subordination?.let {
                             withStyle(
                                 style = SpanStyle(
+                                    fontSize = 12.sp,
                                     fontStyle = MaterialTheme.typography.titleSmall.fontStyle,
-                                    color = textColor
+                                    color = MaterialTheme.colorScheme.onSurface
                                 ), block = {
                                     append(subordination)
                                 }
@@ -237,7 +240,6 @@ fun ItemTrailingArrowRight(
     toneQuality: String? = null,
     enabled: Boolean = true,
     backgroundColor: Color = MaterialTheme.colorScheme.background,
-    textColor: Color = MaterialTheme.colorScheme.onSurface,
     shadowElevation: Dp = ListItemDefaults.Elevation,
     onClick: (() -> Unit)? = null,
     trailingContent: @Composable (() -> Unit)? = null,
@@ -257,7 +259,7 @@ fun ItemTrailingArrowRight(
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                color = textColor
+                color = MaterialTheme.colorScheme.onSurface
             )
         },
         supportingContent = {
@@ -288,7 +290,7 @@ fun ItemTrailingArrowRight(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center,
-                        color = textColor
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }

@@ -29,7 +29,7 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.rememberNavController
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavController
-import cn.xybbz.entity.data.SelectControl
+import cn.xybbz.config.select.SelectControl
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.RouterCompose
 import cn.xybbz.router.RouterConstants

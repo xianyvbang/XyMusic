@@ -47,12 +47,14 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
 import cn.xybbz.R
+import cn.xybbz.common.music.MusicController
 import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.data.search.SearchHistory
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.RouterConstants
@@ -187,7 +189,8 @@ fun SearchScreen(
                         searchViewModel.isSearchLoad
                     },
                     favoriteRepository = searchViewModel.favoriteRepository,
-                    downloadRepository = searchViewModel.downloadRepository
+                    downloadRepository = searchViewModel.downloadRepository,
+                    musicController = searchViewModel.musicController
                 )
             } else {
                 HistoryAndHintList(
@@ -254,7 +257,8 @@ fun SearchResultScreen(
     onAddMusic: (XyMusic) -> Unit,
     onLoadingState: () -> Boolean,
     favoriteRepository: FavoriteRepository,
-    downloadRepository: DownloadRepository
+    downloadRepository: DownloadRepository,
+    musicController: MusicController
 ) {
     val navController = LocalNavController.current
 
@@ -344,6 +348,7 @@ fun SearchResultScreen(
                             music.itemId in favoriteSet
                         },
                         ifDownload = music.itemId in downloadMusicIds,
+                        ifPlay = music.itemId == musicController.musicInfo?.itemId,
                         onMusicPlay = {
                             onAddMusic(
                                 music

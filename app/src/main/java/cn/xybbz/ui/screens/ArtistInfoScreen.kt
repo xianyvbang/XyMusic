@@ -73,7 +73,7 @@ import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.TabListEnum
 import cn.xybbz.compositionLocal.LocalNavController
-import cn.xybbz.entity.data.SelectControl
+import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -476,10 +476,7 @@ fun ArtistInfoScreen(
                                                             music.itemId in favoriteSet
                                                         },
                                                         ifDownload = music.itemId in downloadMusicIds,
-                                                        textColor = if (artistInfoViewModel.musicController.musicInfo?.itemId == music.itemId)
-                                                            MaterialTheme.colorScheme.primary
-                                                        else
-                                                            MaterialTheme.colorScheme.onSurface,
+                                                        ifPlay = artistInfoViewModel.musicController.musicInfo?.itemId == music.itemId,
                                                         backgroundColor = Color.Transparent,
                                                         trailingOnClick = {
                                                             music.show()

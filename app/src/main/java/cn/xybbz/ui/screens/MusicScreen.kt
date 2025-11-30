@@ -29,7 +29,7 @@ import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavController
-import cn.xybbz.entity.data.SelectControl
+import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.ui.components.MusicItemComponent
@@ -140,6 +140,7 @@ fun MusicScreen(
                             music.musicId in favoriteSet
                         },
                         ifDownload = music.musicId in downloadMusicIds,
+                        ifPlay = musicViewModel.musicController.musicInfo?.itemId == music.musicId,
                         onMusicPlay = {
                             musicViewModel.musicPlayContext.music(
                                 onMusicPlayParameter = it,
@@ -148,10 +149,6 @@ fun MusicScreen(
                             )
                         },
                         backgroundColor = Color.Transparent,
-                        textColor = if (musicViewModel.musicController.musicInfo?.itemId == music.musicId)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onSurface,
                         ifSelect = musicViewModel.selectControl.ifOpenSelect,
                         ifSelectCheckBox = {
                             music.musicId in musicViewModel.selectControl.selectMusicIdList

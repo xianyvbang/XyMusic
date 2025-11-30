@@ -13,7 +13,7 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.download.core.DownloadRequest
-import cn.xybbz.entity.data.SelectControl
+import cn.xybbz.config.select.SelectControl
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.enums.DownloadTypes
 import dagger.hilt.android.lifecycle.HiltViewModel

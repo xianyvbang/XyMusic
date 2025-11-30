@@ -95,10 +95,7 @@ fun MusicPageListComponent(
                                 favoriteList.contains(music.itemId)
                             },
                             ifDownload = music.itemId in downloadMusicIdList,
-                            textColor = if (musicController.musicInfo?.itemId == music.itemId)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.onSurface,
+                            ifPlay = musicController.musicInfo?.itemId == music.itemId,
                             backgroundColor = Color.Transparent,
                             onMusicPlay = {
                                 onMusicPlay(it,index)
