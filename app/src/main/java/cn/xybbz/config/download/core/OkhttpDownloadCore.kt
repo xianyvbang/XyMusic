@@ -7,8 +7,7 @@ import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.exception.CancelDownloadException
 import cn.xybbz.common.utils.FileUtil
-import cn.xybbz.download.core.IDownloadCore
-import cn.xybbz.download.state.DownloadState
+import cn.xybbz.config.download.state.DownloadState
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.enums.DownloadStatus
 import kotlinx.coroutines.Dispatchers
@@ -19,7 +18,6 @@ import retrofit2.awaitResponse
 import java.io.File
 import java.io.RandomAccessFile
 import java.math.RoundingMode
-import kotlin.coroutines.cancellation.CancellationException
 
 class OkhttpDownloadCore(
     private val context: Context

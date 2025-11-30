@@ -9,7 +9,7 @@ import cn.xybbz.common.exception.CancelDownloadException
 import cn.xybbz.config.download.core.DownloadDispatcherImpl
 import cn.xybbz.config.download.core.OkhttpDownloadCore
 import cn.xybbz.config.download.notification.NotificationController
-import cn.xybbz.download.state.DownloadState
+import cn.xybbz.config.download.state.DownloadState
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.enums.DownloadStatus
