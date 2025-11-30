@@ -26,6 +26,7 @@ import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import cn.xybbz.ui.components.MusicItemComponent
+import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
@@ -64,7 +65,7 @@ fun LocalScreen(localViewModel: LocalViewModel = hiltViewModel<LocalViewModel>()
                 }
             })
 
-        LazyColumnNotComponent(
+        ScreenLazyColumn(
             contentPadding = PaddingValues(
                 XyTheme.dimens.outerHorizontalPadding
             ),

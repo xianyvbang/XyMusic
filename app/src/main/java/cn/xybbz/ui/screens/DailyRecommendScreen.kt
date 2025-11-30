@@ -28,6 +28,7 @@ import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.ui.components.LazyLoadingAndStatus
 import cn.xybbz.ui.components.MusicItemComponent
+import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
@@ -89,7 +90,7 @@ fun DailyRecommendScreen(
                 }
             }
         ) {
-            LazyColumnNotComponent() {
+            ScreenLazyColumn {
                 items(
                     dailyRecommendViewModel.recommendedMusicList,
                     key = { extend -> extend.music.itemId },
@@ -125,12 +126,6 @@ fun DailyRecommendScreen(
                                     ?.show()
                             }
                         }
-                    )
-                }
-                item {
-                    LazyLoadingAndStatus(
-                        text = stringResource(R.string.reached_bottom),
-                        ifLoading = false
                     )
                 }
             }

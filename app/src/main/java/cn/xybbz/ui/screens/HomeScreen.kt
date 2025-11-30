@@ -87,6 +87,7 @@ import cn.xybbz.ui.components.BottomSheetObject
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicMusicCardComponent
 import cn.xybbz.ui.components.MusicPlaylistItemComponent
+import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
@@ -384,7 +385,7 @@ fun HomeScreen(
                 )
             }
         ) {
-            LazyColumnNotComponent {
+            ScreenLazyColumn {
                 item {
                     XyRow(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)

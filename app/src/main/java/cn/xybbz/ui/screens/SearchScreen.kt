@@ -63,6 +63,7 @@ import cn.xybbz.ui.components.LazyRowComponent
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicArtistCardComponent
 import cn.xybbz.ui.components.MusicItemComponent
+import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SearchRecordComponent
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
@@ -266,7 +267,7 @@ fun SearchResultScreen(
     val downloadMusicIds by downloadRepository.musicIdsFlow.collectAsState()
 
 
-    LazyColumnNotComponent(
+    ScreenLazyColumn(
         modifier = Modifier
             .padding(top = XyTheme.dimens.outerVerticalPadding)
             .fillMaxSize()
@@ -363,16 +364,7 @@ fun SearchResultScreen(
                     )
                 }
             }
-
-            item {
-                LazyLoadingAndStatus(
-                    text = stringResource(R.string.reached_bottom),
-                    ifLoading = false
-                )
-            }
         }
-
-
     }
 }
 

@@ -58,13 +58,13 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.router.RouterConstants
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.XySelectAllComponent
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyItemTextHorizontal
 import cn.xybbz.viewmodel.DownloadViewModel
@@ -114,7 +114,7 @@ fun DownloadScreen(
             }
         )
 
-        LazyColumnNotComponent(
+        ScreenLazyColumn(
             contentPadding = PaddingValues(
                 XyTheme.dimens.outerHorizontalPadding
             ),
