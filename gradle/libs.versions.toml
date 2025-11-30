@@ -1,6 +1,6 @@
 [versions]
 accompanistVersion = "0.37.3"
-agp = "8.13.0"
+agp = "8.13.1"
 coilComposeVersion = "2.7.0"
 coreSplashscreenVersion = "1.2.0"
 dialogxVersion = "0.0.49"
