@@ -42,7 +42,6 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        Thread.dumpStack() // 打印调用栈
         /* Thread.setDefaultUncaughtExceptionHandler { _, throwable ->
              // 在这里处理异常，可以进行日志记录或其他操作
              throwable.printStackTrace()

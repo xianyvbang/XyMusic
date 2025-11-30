@@ -3,6 +3,7 @@ package cn.xybbz.config
 import android.content.Context
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -60,9 +61,9 @@ class SettingsConfig(
         coroutineScope.launch {
             Log.i("=====", "开始存储设置")
             this@SettingsConfig.settings = db.settingsDao.selectOneData() ?: XySettings()
-            if (this@SettingsConfig.get().languageType != null){
+            if (this@SettingsConfig.get().languageType != null) {
                 this@SettingsConfig.languageType = this@SettingsConfig.get().languageType
-            }else {
+            } else {
                 setDefaultLanguage(applicationContext)
             }
             this@SettingsConfig.cacheUpperLimit = this@SettingsConfig.get().cacheUpperLimit
@@ -70,8 +71,11 @@ class SettingsConfig(
         }
         val packageManager = applicationContext.packageManager
         val packageName = applicationContext.packageName
-        packageInfo =
+        packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0))
+        } else {
+            packageManager.getPackageInfo(packageName, 0)
+        }
     }
 
     fun setSettingsData(settings: XySettings) {
@@ -283,7 +287,7 @@ class SettingsConfig(
     /**
      * 更新最大同时下载数量
      */
-    suspend fun setMaxConcurrentDownloads(maxConcurrentDownloads: Int){
+    suspend fun setMaxConcurrentDownloads(maxConcurrentDownloads: Int) {
         settings = get().copy(maxConcurrentDownloads = maxConcurrentDownloads)
         if (get().id != AllDataEnum.All.code) {
             db.settingsDao.updateMaxConcurrentDownloads(

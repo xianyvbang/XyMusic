@@ -20,6 +20,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Inject
 
@@ -58,28 +59,33 @@ class AboutViewModel @Inject constructor(
             initialValue = null
         )
 
-    suspend fun downloadAndInstall(
-        apkUrl: String,
-        apkName: String,
-        apkSize: Long
+    fun downloadAndInstall(
     ) {
-        //判断是否下载中,如果有下载中则不能继续下载
-        val apkDownload = db.downloadDao.getByTypeAndUrl(DownloadTypes.APK, apkUrl)
-        if (apkDownload != null && apkDownload.status != DownloadStatus.COMPLETED) {
-            downloadManager.resume(apkDownload.id)
-        } else if (apkDownload != null && apkDownload.status == DownloadStatus.COMPLETED) {
-            installApk(
-                downloadManager.applicationContext,
-                File(apkDownload.filePath, apkDownload.fileName)
-            )
-        } else {
-            downloadManager.enqueue(
-                DownloadRequest(
-                    url = apkUrl,
-                    fileName = apkName,
-                    fileSize = apkSize
+        viewModelScope.launch {
+            apkUpdateManager.releasesInfo?.assets?.findLast {
+                it.name.contains(
+                    "apk"
                 )
-            )
+            }?.let { asset ->
+                //判断是否下载中,如果有下载中则不能继续下载
+                val apkDownload = db.downloadDao.getByTypeAndUrl(DownloadTypes.APK, asset.url)
+                if (apkDownload != null && apkDownload.status != DownloadStatus.COMPLETED) {
+                    downloadManager.resume(apkDownload.id)
+                } else if (apkDownload != null && apkDownload.status == DownloadStatus.COMPLETED) {
+                    installApk(
+                        downloadManager.applicationContext,
+                        File(apkDownload.filePath, apkDownload.fileName)
+                    )
+                } else {
+                    downloadManager.enqueue(
+                        DownloadRequest(
+                            url = asset.url,
+                            fileName = asset.name,
+                            fileSize = asset.size
+                        )
+                    )
+                }
+            }
         }
     }
 

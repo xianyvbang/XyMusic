@@ -334,7 +334,7 @@ interface AlbumDao {
           and itemId not in (select albumId from playhistoryalbum)
           and itemId not in (select albumId from maximumplayalbum)
           and itemId not in (select albumId from artistalbum)
-          and ifPlaylist = false
+          and ifPlaylist = 0
     """
     )
     suspend fun removeByNotQuote()
@@ -355,7 +355,7 @@ interface AlbumDao {
     /**
      * 删除全部歌单
      */
-    @Query("delete from xy_album where ifPlaylist = true")
+    @Query("delete from xy_album where ifPlaylist = 1")
     suspend fun removePlaylist()
 
     /**
@@ -406,7 +406,7 @@ interface AlbumDao {
         (select count(musicId) from playlistmusic where connectionId = (select connectionId from xy_settings) and playlistId = xa.itemId) as musicCount 
         from xy_album xa 
         inner join xy_settings xs on xa.connectionId = xs.connectionId
-        where ifPlaylist = true
+        where ifPlaylist = 1
         order by xa.createTime
     """
     )
@@ -421,7 +421,7 @@ interface AlbumDao {
         xa.premiereDate,xa.ifPlaylist,xa.musicCount,xa.createTime
         from xy_album xa 
         inner join xy_settings xs on xa.connectionId = xs.connectionId
-        where ifPlaylist = true
+        where ifPlaylist = 1
         order by xa.createTime
     """
     )
