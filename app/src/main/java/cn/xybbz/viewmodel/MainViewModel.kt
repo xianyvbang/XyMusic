@@ -39,6 +39,7 @@ import cn.xybbz.localdata.data.music.PlayHistoryMusic
 import cn.xybbz.localdata.data.music.PlayQueueMusic
 import cn.xybbz.localdata.data.player.XyPlayer
 import cn.xybbz.localdata.data.progress.Progress
+import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -259,11 +260,9 @@ class MainViewModel @Inject constructor(
                 if (xyMusicList.isNotEmpty()) {
 
                     //先删除数据
-                    db.musicDao.removePlayQueueMusic()
+                    db.musicDao.removeByType(dataType = MusicDataTypeEnum.PLAY_QUEUE)
                     //存储音乐数据
                     db.musicDao.savePlayQueueMusic(xyMusicList)
-                    //删除没有关联的音乐
-                    db.musicDao.removeByNotQuote()
 
                     //存储player设置
                     val player =
@@ -336,7 +335,7 @@ class MainViewModel @Inject constructor(
 
             connectionConfigServer.loginStateFlow.collect {
                 if (it) {
-                    val musicList = db.musicDao.selectPlayQueuePlayMusicList()
+                        val musicList = db.musicDao.selectPlayQueuePlayMusicList()
                     if (dataSourceManager.dataSourceType != null) {
                         val player =
                             db.playerDao.selectPlayerByDataSource()

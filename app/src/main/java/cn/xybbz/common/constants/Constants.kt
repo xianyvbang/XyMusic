@@ -168,4 +168,9 @@ object Constants {
      * 下载唯一id
      */
     const val DOWNLOAD_ID = "download_id"
+
+    /**
+     * app文件夹名称
+     */
+    const val APP_NAME = "XyMusic"
 }

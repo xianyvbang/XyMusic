@@ -3,6 +3,7 @@ package cn.xybbz.config.module
 import android.content.Context
 import android.os.Environment
 import androidx.work.WorkManager
+import cn.xybbz.common.constants.Constants
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.SettingsConfig
 import cn.xybbz.config.download.DownLoadManager
@@ -37,7 +38,7 @@ class DownloadModule {
             db,
             WorkManager.getInstance(applicationContext),
             DownloaderConfig.Builder(applicationContext)
-                .setFinalDirectory(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath)
+                .setFinalDirectory("${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath}/${Constants.APP_NAME}")
                 .setMaxConcurrentDownloads(settings.maxConcurrentDownloads).build(),
             connectionConfigServer,
             notificationController
