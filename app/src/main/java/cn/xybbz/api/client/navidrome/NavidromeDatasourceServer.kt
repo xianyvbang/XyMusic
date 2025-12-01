@@ -1233,9 +1233,8 @@ class NavidromeDatasourceServer @Inject constructor(
         artist: ArtistItem,
         indexNumber: Int,
     ): XyArtist {
-        val transliterator = Transliterator.getInstance("Han-Latin")
         val result =
-            if (artist.orderArtistName.isBlank()) null else transliterator.transliterate(
+            if (artist.orderArtistName.isBlank()) null else toLatinCompat(
                 artist.orderArtistName
             )
         val shortNameStart = if (!result.isNullOrBlank()) result[0] else '#'

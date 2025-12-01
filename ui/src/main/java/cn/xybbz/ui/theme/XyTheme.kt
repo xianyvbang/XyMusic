@@ -1,5 +1,6 @@
 package cn.xybbz.ui.theme
 
+import android.os.Build
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -46,14 +47,14 @@ fun XyTheme(
         LocalXyConfigs provides xyConfigs,
         LocalXyBackgroundBrash provides brash,
     ) {
+
         val colorScheme = when {
-            xyConfigs.isDynamic -> {
+            xyConfigs.isDynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
                 val context = LocalContext.current
                 if (xyConfigs.isDarkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(
                     context
                 )
             }
-
             xyConfigs.isDarkTheme -> DarkColorScheme
             else -> LightColorScheme
         }

@@ -1,6 +1,8 @@
 package cn.xybbz.api.client
 
 import android.content.Context
+import android.icu.text.Transliterator
+import android.os.Build
 import android.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.paging.ExperimentalPagingApi
@@ -50,6 +52,7 @@ import cn.xybbz.page.parent.GenresRemoteMediator
 import cn.xybbz.page.parent.MusicRemoteMediator
 import coil.Coil
 import coil.ImageLoader
+import com.github.promeg.pinyinhelper.Pinyin
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -1016,4 +1019,20 @@ abstract class IDataSourceParentServer(
      * 创建下载链接
      */
     abstract fun createDownloadUrl(musicId: String): String
+
+
+    /**
+     * 汉字转拼音
+     */
+    fun toLatinCompat(text: String): String? {
+        if (text.isBlank()) return null
+
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            Transliterator.getInstance("Han-Latin").transliterate(text)
+        } else {
+            Pinyin.toPinyin(text[0]) // 或其他兼容库
+        }
+
+    }
+
 }

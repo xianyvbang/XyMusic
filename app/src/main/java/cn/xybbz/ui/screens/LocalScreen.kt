@@ -1,7 +1,5 @@
 package cn.xybbz.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
@@ -9,7 +7,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -31,8 +28,6 @@ import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
-import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.LocalViewModel
 import kotlinx.coroutines.launch
@@ -65,12 +60,7 @@ fun LocalScreen(localViewModel: LocalViewModel = hiltViewModel<LocalViewModel>()
                 }
             })
 
-        ScreenLazyColumn(
-            contentPadding = PaddingValues(
-                XyTheme.dimens.outerHorizontalPadding
-            ),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.innerVerticalPadding),
-        ) {
+        ScreenLazyColumn {
             itemsIndexed(
                 downloadMusicList,
                 key = { _, item -> item.id },
