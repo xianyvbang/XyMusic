@@ -2,7 +2,7 @@
 
 <p style="text-align: center;">
     <img alt="release" src="https://img.shields.io/github/v/release/xianyvbang/XyMusic">
-    <img alt="android" src="https://img.shields.io/badge/android-14%2B-blue">
+    <img alt="android" src="https://img.shields.io/badge/android-9%2B-blue">
     <img alt="license" src="https://img.shields.io/github/license/xianyvbang/XyMusic" />
     <img alt="downloads" src="https://img.shields.io/github/downloads/xianyvbang/XyMusic/total" />
     <img alt="issues" src="https://img.shields.io/github/issues/xianyvbang/XyMusic" />
@@ -27,7 +27,6 @@
 |  功能  | Jellyfin | Emby | Subsonic | Navidrome | Plex |
 |:----:|:--------:|:----:|:--------:|:---------:|:----:|
 | 内嵌歌词 |    ✅     |  ✅   |    ✅     |     ✅     |  ✅   |
-| 外置歌词 |    ✅     |      |          |     ✅     |  ✅   |
 | 在线歌词 |    ✅     |  ✅   |          |           |      |
 | 歌手信息 |    ✅     |  ✅   |    ✅     |     ✅     |  ✅   |
 | 专辑信息 |    ✅     |  ✅   |    ✅     |     ✅     |  ✅   |
