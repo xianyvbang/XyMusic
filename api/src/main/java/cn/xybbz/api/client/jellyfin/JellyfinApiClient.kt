@@ -1,38 +1,59 @@
 package cn.xybbz.api.client.jellyfin
 
-import cn.xybbz.api.client.DefaultApiClient
 import cn.xybbz.api.client.DefaultParentApiClient
+import cn.xybbz.api.client.emby.EmbyApiClient
 import cn.xybbz.api.client.jellyfin.service.ArtistsApi
 import cn.xybbz.api.client.jellyfin.service.GenreApi
-import cn.xybbz.api.client.jellyfin.service.ImageApi
 import cn.xybbz.api.client.jellyfin.service.ItemApi
 import cn.xybbz.api.client.jellyfin.service.LibraryApi
 import cn.xybbz.api.client.jellyfin.service.LyricsApi
 import cn.xybbz.api.client.jellyfin.service.PlaylistsApi
-import cn.xybbz.api.client.jellyfin.service.UniversalAudioApi
 import cn.xybbz.api.client.jellyfin.service.UserApi
 import cn.xybbz.api.client.jellyfin.service.UserLibraryApi
 import cn.xybbz.api.client.jellyfin.service.UserViewsApi
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.enums.jellyfin.ImageType
-import cn.xybbz.api.enums.jellyfin.MediaStreamProtocol
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 
+/**
+ * JELLYFIN API 客户端
+ * @author xybbz
+ * @date 2025/12/02
+ * @constructor 创建[EmbyApiClient]
+ */
+
 class JellyfinApiClient : DefaultParentApiClient() {
 
+    /**
+     * 客户端名称
+     */
     private var clientName: String = ""
+
+    /**
+     * 客户端版本
+     */
     private var clientVersion: String = ""
+
+    /**
+     * 设备id
+     */
     var deviceId: String = ""
         private set
+
+    /**
+     * 设备名称
+     */
     private var deviceName: String = ""
+
+    /**
+     * api请求令牌
+     */
     private var accessToken: String? = null
     private lateinit var jellyfinUserApi: UserApi
     private lateinit var jellyfinUserLibraryApi: UserLibraryApi
     private lateinit var jellyfinItemApi: ItemApi
-    private lateinit var jellyfinImageApi: ImageApi
-    private lateinit var jellyfinUniversalAudioApi: UniversalAudioApi
     private lateinit var jellyfinLyricsApi: LyricsApi
     private lateinit var jellyfinUserViewsApi: UserViewsApi
     private lateinit var jellyfinPlaylistsApi: PlaylistsApi
@@ -70,6 +91,10 @@ class JellyfinApiClient : DefaultParentApiClient() {
         this.accessToken = accessToken
     }
 
+    /**
+     * 创建令牌
+     * @return [String]
+     */
     public override fun createToken(): String {
         val params = arrayOf(
             "Client" to clientName,
@@ -119,26 +144,6 @@ class JellyfinApiClient : DefaultParentApiClient() {
             jellyfinItemApi = instance().create(ItemApi::class.java)
         }
         return jellyfinItemApi
-    }
-
-    /**
-     * 获取文件图片
-     */
-    override fun imageApi(restart: Boolean): ImageApi {
-        if (!this::jellyfinImageApi.isInitialized || restart) {
-            jellyfinImageApi = instance().create(ImageApi::class.java)
-        }
-        return jellyfinImageApi
-    }
-
-    /**
-     * 创建音乐流
-     */
-    override fun universalAudioApi(restart: Boolean): UniversalAudioApi {
-        if (!this::jellyfinUniversalAudioApi.isInitialized || restart) {
-            jellyfinUniversalAudioApi = instance().create(UniversalAudioApi::class.java)
-        }
-        return jellyfinUniversalAudioApi
     }
 
     /**
@@ -272,49 +277,12 @@ class JellyfinApiClient : DefaultParentApiClient() {
 
     /**
      * 创建音频URL
-     * @param [itemId] 项目ID
+     * @param [itemId] 项目编号
      * @param [container] 容器
-     * @param [deviceId] 设备ID
-     * @param [userId] 用户id
-     * @param [maxStreamingBitrate] 最大流率比特率
-     * @param [transcodingContainer] 转码容器
-     * @param [transcodingProtocol] 转码协议
      * @param [audioCodec] 音频编解码器
-     * @param [startTimeTicks] 开始时间
-     * @param [enableRedirection] 启用重定向
-     * @param [enableRemoteMedia] 启用远程媒体
+     * @param [static] 是否是静态不转码的
      * @return [String]
      */
-    fun createAudioUrl(
-        itemId: String,
-        container: Collection<String>? = emptyList(),
-        deviceId: String? = null,
-        userId: String? = null,
-        playSessionId: String,
-        maxStreamingBitrate: Int? = null,
-        transcodingContainer: String? = null,
-        transcodingProtocol: MediaStreamProtocol? = null,
-        audioCodec: String? = null,
-        startTimeTicks: Long? = null,
-        enableRedirection: Boolean? = true,
-        enableRemoteMedia: Boolean? = null,
-    ): String {
-        return getUniversalAudioStreamUrl(
-            baseUrl = baseUrl,
-            itemId = itemId,
-            container = container,
-            deviceId = deviceId,
-            userId = userId,
-            playSessionId = playSessionId,
-            maxStreamingBitrate = maxStreamingBitrate,
-            transcodingContainer = transcodingContainer,
-            transcodingProtocol = transcodingProtocol,
-            audioCodec = audioCodec,
-            startTimeTicks = startTimeTicks,
-            enableRedirection = enableRedirection,
-            enableRemoteMedia = enableRemoteMedia
-        )
-    }
 
     fun createAudioUrl(
         itemId: String,
@@ -376,28 +344,6 @@ class JellyfinApiClient : DefaultParentApiClient() {
         fillHeight: Int? = null,
     ): String {
         return "$baseUrl/Artists/${name}/Images/${imageType}/${imageIndex}?fillHeight=${fillHeight}&fillWidth=${fillWidth}&quality=${quality}&tag=${tag}"
-    }
-
-    private fun getUniversalAudioStreamUrl(
-        baseUrl: String,
-        itemId: String,
-        container: Collection<String>? = emptyList(),
-        deviceId: String? = null,
-        userId: String? = null,
-        playSessionId: String? = null,
-        maxStreamingBitrate: Int? = null,
-        transcodingContainer: String? = null,
-        transcodingProtocol: MediaStreamProtocol? = null,
-        audioCodec: String? = null,
-        startTimeTicks: Long? = null,
-        enableRedirection: Boolean? = true,
-        enableRemoteMedia: Boolean? = null,
-    ): String {
-        return "${baseUrl}/Audio/${itemId}/universal?container=${container?.joinToString(",")}" +
-                "&deviceId=${deviceId}&userId=${userId}&maxStreamingBitrate=${maxStreamingBitrate}" +
-                "&transcodingContainer=${transcodingContainer}&transcodingProtocol=${transcodingProtocol}" +
-                "&audioCodec=${audioCodec}&startTimeTicks=${startTimeTicks}&enableRedirection=${enableRedirection}" +
-                "&enableRemoteMedia=${enableRemoteMedia}&playSessionId=${playSessionId}"
     }
 
     private fun getAudioStreamUrl(

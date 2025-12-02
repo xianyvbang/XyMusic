@@ -27,9 +27,19 @@ interface UserLibraryApi : BaseApi {
     suspend fun unmarkFavoriteItem(@Path("itemId") itemId: String): FavoriteResponse
 
 
+    /**
+     * 获取详细信息
+     * @param [itemId] 商品编号
+     * @return [ItemResponse]
+     */
     @GET("/Items/{itemId}")
     suspend fun getItem(@Path("itemId") itemId: String): ItemResponse
 
+    /**
+     * 获取最新音乐列表
+     * @param [itemRequest] 物品请求
+     * @return [List<ItemResponse>]
+     */
     @GET("/Items/Latest")
     suspend fun getLatestMedia(@QueryMap itemRequest: Map<String, String>): List<ItemResponse>
 }

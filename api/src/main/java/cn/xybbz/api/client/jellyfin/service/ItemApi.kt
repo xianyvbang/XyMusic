@@ -11,6 +11,11 @@ import retrofit2.http.QueryMap
  */
 interface ItemApi : BaseApi {
 
+    /**
+     * 获取音频列表
+     * @param [itemRequest] 物品请求
+     * @return [Response<ItemResponse>]
+     */
     @GET("/Items")
     suspend fun getItems(@QueryMap itemRequest: Map<String, String>): Response<ItemResponse>
 

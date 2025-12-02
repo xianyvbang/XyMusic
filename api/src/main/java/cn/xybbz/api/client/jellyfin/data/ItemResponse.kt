@@ -10,6 +10,13 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import java.time.LocalDateTime
 
+
+/**
+ * 数据响应
+ * @author Administrator
+ * @date 2025/12/02
+ * @constructor 创建[ItemResponse]
+ */
 @JsonClass(generateAdapter = true)
 data class ItemResponse(
     /**

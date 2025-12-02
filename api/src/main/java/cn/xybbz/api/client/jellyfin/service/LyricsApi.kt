@@ -7,6 +7,11 @@ import retrofit2.http.Path
 
 interface LyricsApi : BaseApi {
 
+    /**
+     * 获取歌词
+     * @param [itemId] 音乐id
+     * @return [LyricResponse]
+     */
     @GET("/Audio/{itemId}/Lyrics")
     suspend fun getLyrics(@Path("itemId") itemId: String): LyricResponse
 }

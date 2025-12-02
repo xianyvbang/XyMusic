@@ -17,8 +17,8 @@ import retrofit2.http.QueryMap
 interface UserApi : BaseApi {
 
     /**
-     * 按名称进行身份验证
-     * @param [authenticateRequest]
+     * 按用户名和密码进行身份验证
+     * @param [loginRequest] 登录请求
      * @return [AuthenticateResponse]
      */
     @POST("/Users/AuthenticateByName")
@@ -48,14 +48,5 @@ interface UserApi : BaseApi {
      */
     @POST("/emby/Sessions/Playing/Progress")
     suspend fun progress(@Body data: PlaybackStartInfo)
-
-    /**
-     * 获得播放地址
-     */
-    @GET("/Audio/{itemId}/stream")
-    suspend fun getAudioStream(
-        @Path("itemId") itemId: String,
-        @QueryMap getAudioStreamRequest: Map<String, String>
-    ): String
 
 }

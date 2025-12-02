@@ -14,7 +14,7 @@ import retrofit2.http.POST
 interface EmbyUserApi : BaseApi {
 
     /**
-     * 按用户名和米面进行身份验证
+     * 按用户名和密码进行身份验证
      * @param [LoginRequest]
      * @return [AuthenticateResponse]
      */

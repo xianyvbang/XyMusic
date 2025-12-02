@@ -6,7 +6,10 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 /**
- * 视图请求类
+ * 媒体库请求实体类
+ * @author Administrator
+ * @date 2025/12/02
+ * @constructor 创建[ViewRequest]
  */
 @JsonClass(generateAdapter = true)
 data class ViewRequest(
