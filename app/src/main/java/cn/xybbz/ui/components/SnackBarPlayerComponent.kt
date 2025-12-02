@@ -1,7 +1,7 @@
 package cn.xybbz.ui.components
 
 
-import android.Manifest
+import android.os.Build
 import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
@@ -80,7 +80,6 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.viewmodel.SnackBarPlayerViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -105,10 +104,9 @@ fun SnackBarPlayerComponent(
         label = "backgroundColorAnim"
     )
 
-    val permissionState =
-        rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS, onPermissionResult = {
-            snackBarPlayerViewModel.downloadMusics()
-        })
+    val permissionState = downloadPermission {
+        snackBarPlayerViewModel.downloadMusics()
+    }
 
     snackBarPlayerViewModel.musicController.musicInfo?.let {
         MusicPlayerComponent(
@@ -278,7 +276,10 @@ fun SnackBarPlayerComponent(
                             if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
                                 MessageUtils.sendPopTip(R.string.please_select)
                             } else {
-                                permissionState.launchPermissionRequest()
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+                                    permissionState?.launchMultiplePermissionRequest()
+                                else
+                                    snackBarPlayerViewModel.downloadMusics()
                             }
 
                         }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {

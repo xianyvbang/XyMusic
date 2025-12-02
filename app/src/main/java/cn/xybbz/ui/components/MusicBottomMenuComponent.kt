@@ -1,10 +1,10 @@
 package cn.xybbz.ui.components
 
 
-import android.Manifest
 import android.content.Intent
 import android.icu.math.BigDecimal
 import android.icu.text.SimpleDateFormat
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
@@ -97,7 +97,6 @@ import cn.xybbz.ui.xy.XyItemTextPadding
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
@@ -108,7 +107,7 @@ var bottomMenuMusicInfo = mutableStateListOf<XyMusic>()
  * 底部弹出菜单
  * todo 这里要限制一下弹出的高度为最大高度的百分之55
  */
-@OptIn(ExperimentalMaterial3Api::class,ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun MusicBottomMenuComponent(
     musicBottomMenuViewModel: MusicBottomMenuViewModel = hiltViewModel<MusicBottomMenuViewModel>(),
@@ -134,7 +133,7 @@ fun MusicBottomMenuComponent(
     }
 
     var ifCanScheduleExactAlarms by remember {
-        mutableStateOf(musicBottomMenuViewModel.alarmConfig.returnAm().canScheduleExactAlarms())
+        mutableStateOf(musicBottomMenuViewModel.alarmConfig.canScheduleExactAlarm())
     }
 
 
@@ -142,7 +141,7 @@ fun MusicBottomMenuComponent(
         contract = ActivityResultContracts.StartActivityForResult()
     ) {
         val canScheduleExactAlarms =
-            musicBottomMenuViewModel.alarmConfig.returnAm().canScheduleExactAlarms()
+            musicBottomMenuViewModel.alarmConfig.canScheduleExactAlarm()
         ifCanScheduleExactAlarms = canScheduleExactAlarms
         Toast.makeText(
             context,
@@ -163,13 +162,9 @@ fun MusicBottomMenuComponent(
 
     bottomMenuMusicInfo.forEach { music ->
 
-        val permissionState =
-            rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS, onPermissionResult = {
-                coroutineScope.launch {
-                    musicBottomMenuViewModel.downloadMusic(music)
-                }.invokeOnCompletion {
-                }
-            })
+        val permissionState = downloadPermission {
+            musicBottomMenuViewModel.downloadMusic(music)
+        }
 
         val favoriteMusicMap by musicBottomMenuViewModel.favoriteRepository.favoriteSet.collectAsState()
         val downloadMusicIds by musicBottomMenuViewModel.downloadRepository.musicIdsFlow.collectAsState()
@@ -354,8 +349,13 @@ fun MusicBottomMenuComponent(
                             name = "下载"
                         ),
                         onClick = {
-                            permissionState.launchPermissionRequest()
-
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                                permissionState?.launchMultiplePermissionRequest()
+                            } else {
+                                musicBottomMenuViewModel.downloadMusic(music)
+                            }
+                            ifShowBottom = false
+                            music.dismiss()
                         }
                     )
                 }
@@ -553,7 +553,7 @@ fun MusicBottomMenuComponent(
             ifCanScheduleExactAlarms = ifCanScheduleExactAlarms,
             onApplyPermission = {
                 val canScheduleExactAlarms =
-                    musicBottomMenuViewModel.alarmConfig.returnAm().canScheduleExactAlarms()
+                    musicBottomMenuViewModel.alarmConfig.canScheduleExactAlarm()
                 if (!canScheduleExactAlarms) {
                     val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
                         data = "package:${context.packageName}".toUri()
@@ -631,7 +631,7 @@ fun TimerComponent(
             onSetIfTimer(it)
         },
         titleText = stringResource(R.string.timer_close_title),
-        titleSub = stringResource(R.string.timer_close_subtitle),
+        titleSub = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) stringResource(R.string.timer_close_subtitle) else null,
         titleTailContent = if (!ifCanScheduleExactAlarms) {
             {
                 OutlinedButton(

@@ -1,7 +1,7 @@
-package cn.xybbz.download.core
+package cn.xybbz.config.download.core
 
 import cn.xybbz.api.client.ApiConfig
-import cn.xybbz.download.state.DownloadState
+import cn.xybbz.config.download.state.DownloadState
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.enums.DownloadStatus
 import kotlinx.coroutines.flow.Flow

@@ -447,7 +447,7 @@ interface XyMusicDao {
 
     @Query(
         """
-        select musicId from favoritemusic fm where ifFavorite = true and connectionId = (select connectionId from xy_settings) 
+        select musicId from favoritemusic fm where ifFavorite = 1 and connectionId = (select connectionId from xy_settings) 
     """
     )
     fun selectFavoriteList(): Flow<List<String>>

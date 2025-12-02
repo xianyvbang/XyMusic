@@ -70,6 +70,7 @@ import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.router.RouterConstants
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.ItemTrailingArrowRight
@@ -152,7 +153,7 @@ fun ConnectionScreen(
         }, navigationIcon = {
             if (!connectionUiType.isNullOrBlank() && connectionUiType == "0")
                 IconButton(
-                    onClick = {
+                    onClick = composeClick{
                         navHostController.popBackStack()
                     },
                 ) {
@@ -163,13 +164,8 @@ fun ConnectionScreen(
                 }
 
         }, actions = {
-            IconButton(onClick = {
-                navHostController.navigate(RouterConstants.Setting) {
-                    popUpTo(RouterConstants.Home) {
-                        saveState = true
-                    }
-                    restoreState = true
-                }
+            IconButton(onClick = composeClick{
+                navHostController.navigate(RouterConstants.Setting)
             }) {
                 Icon(
                     imageVector = Icons.Rounded.Settings,

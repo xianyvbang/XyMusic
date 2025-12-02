@@ -949,9 +949,8 @@ class SubsonicDatasourceServer @Inject constructor(
         ifFavorite: Boolean,
         index: String? = null
     ): List<XyArtist> {
-        val transliterator = Transliterator.getInstance("Han-Latin")
         val artistList = item.map { artist ->
-            val result = if (index.isNullOrBlank()) null else transliterator.transliterate(index)
+            val result = if (index.isNullOrBlank()) null else toLatinCompat(index)
             val shortNameStart = if (!result.isNullOrBlank()) result[0] else '#'
             val selectChat =
                 if (!CharUtils.isEnglishLetter(shortNameStart)) "#" else shortNameStart.toString()

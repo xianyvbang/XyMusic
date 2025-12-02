@@ -1930,9 +1930,8 @@ class PlexDatasourceServer @Inject constructor(
 
             }
 
-        val transliterator = Transliterator.getInstance("Han-Latin")
         val result =
-            if (artist.title.isBlank()) null else transliterator.transliterate(
+            if (artist.title.isBlank()) null else toLatinCompat(
                 artist.title
             )
         val shortNameStart = if (!result.isNullOrBlank()) result[0] else '#'

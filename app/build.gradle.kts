@@ -13,6 +13,11 @@ if (keystorePropertiesFile.exists()) {
 val versionCodeNumber:String? by project
 val versionString:String? by project
 
+val archs = buildList {
+    add("arm64-v8a")
+    add("armeabi-v7a")
+    add("x86_64")
+}
 
 plugins {
     alias(libs.plugins.android.application)
@@ -29,7 +34,7 @@ android {
 
     defaultConfig {
         applicationId = "cn.xybbz"
-        minSdk = 34
+        minSdk = 28
         targetSdk = 36
 //        versionCode = 1
 //        versionName = "0.0.1"
@@ -93,6 +98,15 @@ android {
         }
     }
 
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            //noinspection ChromeOsAbiSupport
+            include(*archs.toTypedArray())
+            isUniversalApk = true // 额外构建一个
+        }
+    }
 
 }
 composeCompiler {
@@ -173,6 +187,9 @@ dependencies {
 
     //颜色选择工具
     implementation(libs.compose.colorpicker)
+
+    //拼音相关
+    implementation(libs.tinypinyin)
 
     //UI的module
     implementation(project(path = ":ui"))

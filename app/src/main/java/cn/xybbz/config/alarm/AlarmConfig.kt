@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.icu.util.Calendar
+import android.os.Build
 import android.util.Log
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.config.service.ReportReceiver
@@ -73,8 +74,19 @@ class AlarmConfig(
             Intent(application, ReportReceiver::class.java),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        if (am.canScheduleExactAlarms()) {
+        if (canScheduleExactAlarm()) {
             am.setExact(AlarmManager.RTC_WAKEUP, triggerTime, reportPendingIntent)
+        }
+
+    }
+
+    fun canScheduleExactAlarm(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Android 12 (API 31) 及以上
+            am.canScheduleExactAlarms()
+        } else {
+            // Android 11 及以下，不需要权限，也不存在权限限制
+            true
         }
     }
 

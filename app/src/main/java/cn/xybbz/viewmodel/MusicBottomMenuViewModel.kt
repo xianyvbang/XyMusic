@@ -209,22 +209,26 @@ class MusicBottomMenuViewModel @Inject constructor(
         }
     }
 
-    suspend fun downloadMusic(musicData: XyMusic) {
-        val downloadTypes = dataSourceManager.dataSourceType?.getDownloadType() ?: DownloadTypes.APK
-        downloadManager.enqueue(
-            DownloadRequest(
-                url = musicData.downloadUrl,
-                fileName = musicData.name + "." + musicData.container,
-                fileSize = musicData.size ?: 0,
-                uid = musicData.itemId,
-                title = musicData.name,
-                type = downloadTypes,
-                cover = musicData.pic,
-                duration = musicData.runTimeTicks,
-                connectionId = connectionConfigServer.getConnectionId(),
-                music = musicData
+    fun downloadMusic(musicData: XyMusic) {
+        viewModelScope.launch {
+            val downloadTypes = dataSourceManager.dataSourceType?.getDownloadType() ?: DownloadTypes.APK
+            downloadManager.enqueue(
+                DownloadRequest(
+                    url = musicData.downloadUrl,
+                    fileName = musicData.name + "." + musicData.container,
+                    fileSize = musicData.size ?: 0,
+                    uid = musicData.itemId,
+                    title = musicData.name,
+                    type = downloadTypes,
+                    cover = musicData.pic,
+                    duration = musicData.runTimeTicks,
+                    connectionId = connectionConfigServer.getConnectionId(),
+                    music = musicData
+                )
             )
-        )
+            MessageUtils.sendPopTip(R.string.add_download_list)
+        }
+
     }
 
     fun addNextPlayer(itemId: String){

@@ -1,4 +1,4 @@
-package cn.xybbz.download.state
+package cn.xybbz.config.download.state
 
 sealed class DownloadState {
 

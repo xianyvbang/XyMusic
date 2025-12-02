@@ -2,6 +2,7 @@ package cn.xybbz.viewmodel
 
 import android.app.usage.StorageStatsManager
 import android.content.Context
+import android.os.Build
 import android.os.storage.StorageManager
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -18,6 +19,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.Locale
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -60,7 +62,17 @@ class CacheLimitViewModel @Inject constructor(
                 var maxBytes = 0L
 
                 for (volume in storageVolumes) {
-                    val uuid = volume.storageUuid ?: StorageManager.UUID_DEFAULT
+                    val uuid = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        // API 31+
+                        volume.storageUuid ?: StorageManager.UUID_DEFAULT
+                    } else {
+                        // API 28~30
+                        try {
+                            volume.uuid?.let { UUID.fromString(it) } ?: StorageManager.UUID_DEFAULT
+                        }catch (_: Exception){
+                            StorageManager.UUID_DEFAULT
+                        }
+                    }
                     try {
                         val freeBytes = storageStatsManager.getFreeBytes(uuid) / 1024 / 1024 / 1024
                         maxBytes = when {
