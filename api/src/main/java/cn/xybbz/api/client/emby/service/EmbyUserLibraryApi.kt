@@ -12,7 +12,7 @@ import retrofit2.http.QueryMap
 interface EmbyUserLibraryApi : BaseApi {
     /**
      * 标记最喜欢项目
-     * @param [itemId] 项目ID
+     * @param [itemId] 数据id
      * @return [FavoriteResponse]
      */
     @POST("/emby/Users/{userId}/FavoriteItems/{itemId}")
@@ -23,7 +23,7 @@ interface EmbyUserLibraryApi : BaseApi {
 
     /**
      * 取消标记喜欢物品
-     * @param [itemId] 项目ID
+     * @param [itemId] 数据id
      * @return [FavoriteResponse]
      */
     @DELETE("/emby/Users/{userId}/FavoriteItems/{itemId}")
@@ -33,12 +33,24 @@ interface EmbyUserLibraryApi : BaseApi {
     ): FavoriteResponse
 
 
+    /**
+     * 获取详情
+     * @param [userId] 用户ID
+     * @param [itemId] 数据id
+     * @return [ItemResponse]
+     */
     @GET("/emby/Users/{userId}/Items/{itemId}")
     suspend fun getItem(
         @Path("userId") userId: String,
         @Path("itemId") itemId: String
     ): ItemResponse
 
+    /**
+     * 获取最新专辑
+     * @param [userId] 用户ID
+     * @param [itemRequest] 物品请求
+     * @return [List<ItemResponse>]
+     */
     @GET("/emby/Users/{userId}/Items/Latest")
     suspend fun getLatestMedia(
         @Path("userId") userId: String,

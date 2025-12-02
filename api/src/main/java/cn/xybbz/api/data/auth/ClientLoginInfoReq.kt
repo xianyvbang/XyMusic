@@ -1,6 +1,5 @@
-package cn.xybbz.api.client.jellyfin.data
+package cn.xybbz.api.data.auth
 
-import cn.xybbz.api.data.auth.AuthenticateRequest
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
@@ -13,6 +12,9 @@ import com.squareup.moshi.JsonClass
  * @param [password] 密码
  * @param [address] 客户端连接地址
  * @param [connectionId] 连接设置id
+ * @param [serverVersion] 服务端版本
+ * @param [serverName] 服务端名称
+ * @param [serverId] 服务端ID
  */
 @JsonClass(generateAdapter = true)
 data class ClientLoginInfoReq(
@@ -26,15 +28,3 @@ data class ClientLoginInfoReq(
     val serverName: String? = null,
     val serverId: String? = null
 ) : AuthenticateRequest
-
-@JsonClass(generateAdapter = true)
-data class LoginRequest(
-    @param:Json(name = "Username")
-    val username: String,
-    @param:Json(name = "Pw")
-    val password: String
-)
-
-fun ClientLoginInfoReq.toLogin(): LoginRequest {
-    return LoginRequest(this.username, this.password)
-}

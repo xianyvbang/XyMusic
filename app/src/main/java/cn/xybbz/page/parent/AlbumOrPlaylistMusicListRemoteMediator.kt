@@ -2,7 +2,7 @@ package cn.xybbz.page.parent
 
 import androidx.paging.ExperimentalPagingApi
 import cn.xybbz.api.client.IDataSourceParentServer
-import cn.xybbz.api.client.data.AllResponse
+import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.entity.data.Sort
@@ -32,7 +32,7 @@ class AlbumOrPlaylistMusicListRemoteMediator(
     override suspend fun getRemoteServerObjectList(
         loadKey: Int,
         pageSize: Int
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         val sort = sort.value
         return datasourceServer.getRemoteServerMusicListByAlbumOrPlaylist(
             startIndex = loadKey * pageSize,

@@ -1,12 +1,11 @@
 package cn.xybbz.api.client.navidrome
 
 import android.content.Context
-import android.icu.text.Transliterator
 import android.util.Log
 import androidx.room.withTransaction
 import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.api.client.IDataSourceParentServer
-import cn.xybbz.api.client.data.AllResponse
+import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
 import cn.xybbz.api.client.navidrome.data.AlbumItem
 import cn.xybbz.api.client.navidrome.data.ArtistItem
@@ -139,7 +138,7 @@ class NavidromeDatasourceServer @Inject constructor(
         pageSize: Int,
         isFavorite: Boolean?,
         search: String?
-    ): AllResponse<XyArtist> {
+    ): XyResponse<XyArtist> {
         val response =
             getWithTotalCount {
                 navidromeApiClient.artistsApi().getArtists(
@@ -150,7 +149,7 @@ class NavidromeDatasourceServer @Inject constructor(
                 )
             }
         val artists = response.data?.let { convertToArtistList(it) } ?: emptyList()
-        return AllResponse(
+        return XyResponse(
             items = artists,
             totalRecordCount = response.totalCount ?: 0,
             startIndex = startIndex
@@ -460,7 +459,7 @@ class NavidromeDatasourceServer @Inject constructor(
         artistId: String,
         pageSize: Int,
         startIndex: Int
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         return getServerMusicList(
             startIndex = startIndex,
             pageSize = pageSize,
@@ -900,7 +899,7 @@ class NavidromeDatasourceServer @Inject constructor(
         years: List<Int>?,
         parentId: String,
         dataType: MusicDataTypeEnum
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         val sortType: NavidromeOrder = sortType.toNavidromeOrder()
         return getMusicListByAlbumOrPlaylist(
             startIndex = startIndex,
@@ -931,7 +930,7 @@ class NavidromeDatasourceServer @Inject constructor(
         years: List<Int>?,
         artistId: String?,
         genreId: String?
-    ): AllResponse<XyAlbum> {
+    ): XyResponse<XyAlbum> {
         val sortType: NavidromeOrder = sortType.toNavidromeOrder()
         val response = getServerAlbumList(
             startIndex = startIndex,
@@ -957,7 +956,7 @@ class NavidromeDatasourceServer @Inject constructor(
         startIndex: Int,
         pageSize: Int,
         isFavorite: Boolean
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         return getServerMusicList(
             startIndex = startIndex,
             pageSize = pageSize,
@@ -974,7 +973,7 @@ class NavidromeDatasourceServer @Inject constructor(
     override suspend fun getRemoteServerGenreList(
         startIndex: Int,
         pageSize: Int
-    ): AllResponse<XyGenre> {
+    ): XyResponse<XyGenre> {
         return getGenreList(
             startIndex = startIndex,
             pageSize = pageSize
@@ -996,7 +995,7 @@ class NavidromeDatasourceServer @Inject constructor(
         isFavorite: Boolean?,
         sortType: SortTypeEnum?,
         years: List<Int>?
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         val sortType: NavidromeOrder = sortType.toNavidromeOrder2()
         val response = getServerMusicList(
             startIndex = startIndex,
@@ -1023,7 +1022,7 @@ class NavidromeDatasourceServer @Inject constructor(
         genreId: String? = null,
         artistId: String? = null,
         recentlyPlayed: Boolean? = null,
-    ): AllResponse<XyAlbum> {
+    ): XyResponse<XyAlbum> {
 
         val albumList =
             getWithTotalCount {
@@ -1041,7 +1040,7 @@ class NavidromeDatasourceServer @Inject constructor(
                 )
             }
 
-        return AllResponse(
+        return XyResponse(
             items = albumList.data?.let { convertToAlbumList(it) },
             totalRecordCount = albumList.totalCount ?: 0,
             startIndex = startIndex
@@ -1067,7 +1066,7 @@ class NavidromeDatasourceServer @Inject constructor(
         year: Int? = null,
         sortBy: SortType = SortType.TITLE,
         sortOrder: OrderType = OrderType.ASC,
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         val response =
             getWithTotalCount {
                 navidromeApiClient.itemApi().getSong(
@@ -1083,7 +1082,7 @@ class NavidromeDatasourceServer @Inject constructor(
                     year = year,
                 )
             }
-        return AllResponse(
+        return XyResponse(
             items = response.data?.let { convertToMusicList(it, false) },
             totalRecordCount = response.totalCount ?: 0,
             startIndex = startIndex
@@ -1102,7 +1101,7 @@ class NavidromeDatasourceServer @Inject constructor(
         sortOrder: OrderType = OrderType.ASC,
         sortBy: SortType = SortType.NAME,
         year: Int? = null
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         if (dataType == MusicDataTypeEnum.ALBUM) {
             //存储歌曲数据
             return getServerMusicList(
@@ -1126,7 +1125,7 @@ class NavidromeDatasourceServer @Inject constructor(
                     )
                 }
 
-            return AllResponse(
+            return XyResponse(
                 items = playlistMusicList.data?.let { convertToMusicList(it, true) },
                 totalRecordCount = playlistMusicList.totalCount ?: 0,
                 startIndex = startIndex
@@ -1137,22 +1136,22 @@ class NavidromeDatasourceServer @Inject constructor(
     /**
      * 获取歌单列表
      */
-    suspend fun getPlaylistsServer(startIndex: Int, pageSize: Int): AllResponse<XyAlbum> {
+    suspend fun getPlaylistsServer(startIndex: Int, pageSize: Int): XyResponse<XyAlbum> {
         return try {
             val playlists =
                 getWithTotalCount {
                     navidromeApiClient.playlistsApi()
                         .getPlaylists(start = startIndex, end = startIndex + pageSize)
                 }
-            val allResponse = AllResponse(
+            val xyResponse = XyResponse(
                 items = playlists.data?.let { convertToPlaylists(it) },
                 totalRecordCount = playlists.totalCount ?: 0,
                 startIndex = startIndex
             )
-            allResponse
+            xyResponse
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获取歌单失败", e)
-            AllResponse(items = emptyList(), 0, 0)
+            XyResponse(items = emptyList(), 0, 0)
         }
     }
 
@@ -1172,7 +1171,7 @@ class NavidromeDatasourceServer @Inject constructor(
         search: String? = null,
         sortBy: SortType = SortType.NAME,
         sortOrder: OrderType = OrderType.ASC
-    ): AllResponse<XyGenre> {
+    ): XyResponse<XyGenre> {
         val genreResponse = getWithTotalCount {
             navidromeApiClient.genreApi().getGenres(
                 start = startIndex,
@@ -1183,7 +1182,7 @@ class NavidromeDatasourceServer @Inject constructor(
             )
         }
 
-        return AllResponse(
+        return XyResponse(
             items = genreResponse.data?.let { convertToGenreList(it) },
             totalRecordCount = genreResponse.totalCount ?: 0,
             startIndex = startIndex

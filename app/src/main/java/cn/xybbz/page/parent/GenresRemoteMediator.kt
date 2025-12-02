@@ -2,7 +2,7 @@ package cn.xybbz.page.parent
 
 import androidx.paging.ExperimentalPagingApi
 import cn.xybbz.api.client.IDataSourceParentServer
-import cn.xybbz.api.client.data.AllResponse
+import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.genre.XyGenre
@@ -26,7 +26,7 @@ class GenresRemoteMediator(
     override suspend fun getRemoteServerObjectList(
         loadKey: Int,
         pageSize: Int
-    ): AllResponse<XyGenre> {
+    ): XyResponse<XyGenre> {
         return datasourceServer.getRemoteServerGenreList(
             startIndex = loadKey * pageSize,
             pageSize = pageSize

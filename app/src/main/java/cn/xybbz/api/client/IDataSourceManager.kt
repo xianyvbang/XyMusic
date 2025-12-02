@@ -11,7 +11,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.paging.PagingData
 import androidx.room.Transaction
 import cn.xybbz.R
-import cn.xybbz.api.client.data.AllResponse
+import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
 import cn.xybbz.api.client.version.VersionApiClient
 import cn.xybbz.api.exception.ServiceException
@@ -937,7 +937,7 @@ class IDataSourceManager(
         years: List<Int>?,
         parentId: String,
         dataType: MusicDataTypeEnum
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         return dataSourceServer.getRemoteServerMusicListByAlbumOrPlaylist(
             startIndex = startIndex,
             pageSize = pageSize,

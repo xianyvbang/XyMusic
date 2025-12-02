@@ -10,13 +10,11 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
-import retrofit2.http.Path
-import retrofit2.http.QueryMap
 
 interface EmbyUserApi : BaseApi {
 
     /**
-     * 按名称进行身份验证
+     * 按用户名和米面进行身份验证
      * @param [LoginRequest]
      * @return [AuthenticateResponse]
      */
@@ -39,22 +37,15 @@ interface EmbyUserApi : BaseApi {
 
     /**
      * 上报正在播放音乐
+     * @param [data] 数据
      */
     @POST("/emby/Sessions/Playing")
     suspend fun playing(@Body data: PlaybackStartInfo)
 
     /**
      * 上报播放进度
+     * @param [data] 数据
      */
     @POST("/emby/Sessions/Playing/Progress")
     suspend fun progress(@Body data: PlaybackStartInfo)
-
-    /**
-     * 获得播放地址
-     */
-    @GET("/emby/Audio/{itemId}/stream")
-    suspend fun getAudioStream(
-        @Path("itemId") itemId: String,
-        @QueryMap getAudioStreamRequest: Map<String, String>
-    ): String
 }

@@ -9,6 +9,12 @@ import retrofit2.http.QueryMap
 
 interface EmbyUserViewsApi : BaseApi {
 
+    /**
+     * 获得媒体库列表
+     * @param [userId] 用户ID
+     * @param [viewRequest] 请求
+     * @return [Response<ItemResponse>]
+     */
     @GET("/emby/Users/{userId}/Views")
     suspend fun getUserViews(
         @Path("userId") userId: String,

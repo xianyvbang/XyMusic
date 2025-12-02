@@ -1,7 +1,6 @@
 package cn.xybbz.api.adapter
 
 import com.squareup.moshi.FromJson
-import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.ToJson
@@ -9,12 +8,20 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
-class LocalDateTimeAdapter : JsonAdapter<LocalDateTime>() {
+
+/**
+ * LocalDateTime适配器
+ * 将字符串转换成LocalDateTime/将LocalDateTime转换成字符串
+ * @author xybbz
+ * @date 2025/12/02
+ * @constructor 创建[LocalDateAdapter]
+ */
+class LocalDateTimeAdapter {
 
     private val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
     @FromJson
-    override fun fromJson(reader: JsonReader): LocalDateTime? {
+    fun fromJson(reader: JsonReader): LocalDateTime? {
         return if (reader.peek() == JsonReader.Token.NULL) {
             reader.nextNull()
         } else {
@@ -25,7 +32,7 @@ class LocalDateTimeAdapter : JsonAdapter<LocalDateTime>() {
     }
 
     @ToJson
-    override fun toJson(writer: JsonWriter, value: LocalDateTime?) {
+    fun toJson(writer: JsonWriter, value: LocalDateTime?) {
         if (value == null) {
             writer.nullValue()
         } else {

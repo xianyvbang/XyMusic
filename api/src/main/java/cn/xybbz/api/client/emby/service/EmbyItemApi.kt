@@ -2,11 +2,8 @@ package cn.xybbz.api.client.emby.service
 
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.jellyfin.data.ItemResponse
-import cn.xybbz.api.client.jellyfin.data.PlaybackStartInfo
 import cn.xybbz.api.client.jellyfin.data.Response
-import retrofit2.http.Body
 import retrofit2.http.GET
-import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.QueryMap
 
@@ -15,6 +12,12 @@ import retrofit2.http.QueryMap
  */
 interface EmbyItemApi : BaseApi {
 
+    /**
+     * 获得音乐列表
+     * @param userId 用户id
+     * @param itemRequest 请求参数
+     * @return [Response<ItemResponse>]
+     */
     @GET("/emby/Users/{userId}/Items")
     suspend fun getUserItems(
         @Path("userId") userId: String, @QueryMap itemRequest: Map<String, String>

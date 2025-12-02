@@ -5,7 +5,7 @@ import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
-import cn.xybbz.api.client.data.AllResponse
+import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.remote.RemoteCurrent
@@ -100,7 +100,7 @@ abstract class DefaultRemoteMediator<T:Any,K : Any>(
      * @param [loadKey] 页码 从0开始
      * @param [pageSize] 页面大小
      */
-    abstract suspend fun getRemoteServerObjectList(loadKey: Int, pageSize: Int): AllResponse<K>
+    abstract suspend fun getRemoteServerObjectList(loadKey: Int, pageSize: Int): XyResponse<K>
 
     /**
      * 删除本地数据库对象列表

@@ -14,10 +14,10 @@ fun <T> convertToMap(dataClass: T,isConvertList: Boolean = true): Map<String, St
     val adapter: JsonAdapter<Map<String, Any>> = moshi.adapter(type)
     val dataJson = moshi.adapter<T>(dataClass!!::class.java).toJson(dataClass)
     val fromJson = adapter.fromJson(dataJson)
-    if (isConvertList){
-        return (fromJson ?: emptyMap()).toValueString().filterValues { it.isNotBlank() }
+    return if (isConvertList){
+        (fromJson ?: emptyMap()).toValueString().filterValues { it.isNotBlank() }
     }else {
-        return (fromJson ?: emptyMap()).mapValues { it.value.toString() }.filterValues { it.isNotBlank() }
+        (fromJson ?: emptyMap()).mapValues { it.value.toString() }.filterValues { it.isNotBlank() }
     }
 }
 
