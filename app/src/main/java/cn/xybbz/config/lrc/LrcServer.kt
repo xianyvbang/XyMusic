@@ -6,9 +6,9 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.common.enums.LrcDataType
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.CoroutineScopeUtils
-import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.entity.data.LrcEntryData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +19,8 @@ import javax.inject.Singleton
 
 @Singleton
 class LrcServer @Inject constructor(
-    private val musicController: MusicController
+    private val musicController: MusicController,
+    private val ataSourceManager: IDataSourceManager
 ) {
 
     /**
@@ -29,7 +30,12 @@ class LrcServer @Inject constructor(
     val lcrEntryListFlow = _lcrEntryListFlow.asStateFlow()
 
     var indexData by mutableIntStateOf(-1)
-    var lrcText by mutableStateOf("")
+        private set
+    var lrcText by mutableStateOf<String?>(null)
+        private set
+
+    var itemId by mutableStateOf<String?>(null)
+        private set
 
     val lrcCoroutineScope = CoroutineScopeUtils.getIo("LrcServer")
 
@@ -52,36 +58,31 @@ class LrcServer @Inject constructor(
     /**
      * 获得音乐歌词信息
      */
-    fun getMusicLyricList(
-        itemId: String,
-        connectionConfigServer: ConnectionConfigServer,
-        dataSourceManager: IDataSourceManager
-    ) {
+    fun getMusicLyricList() {
         lrcCoroutineScope.launch {
-            try {
-                connectionConfigServer.loginStateFlow.collect { bool ->
-                    if (bool) {
-                        val musicLyricList = dataSourceManager.getMusicLyricList(itemId)
-                        createLrcList(musicLyricList)
-                    }
+            if (_lcrEntryListFlow.value.isNotEmpty())
+                musicController.musicInfo?.itemId?.let { itemId ->
+                    val musicLyricList = ataSourceManager.getMusicLyricList(itemId)
+                    if (!musicLyricList.isNullOrEmpty())
+                        createLrcList(musicLyricList, LrcDataType.NETWORK)
                 }
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
         }
     }
 
     /**
      * 根据歌词列表创建歌词列表
      */
-    fun createLrcList(lrcList: List<LrcEntryData>?) {
+    fun createLrcList(lrcList: List<LrcEntryData>?, lrcDataType: LrcDataType) {
+        /*if (this.itemId == itemId && _lcrEntryListFlow.value.isNotEmpty()){
+            return
+        }*/
+        Log.i("createLrcList2222", "随机数111 ${lrcDataType}   歌词列表：${_lcrEntryListFlow.value}")
         _lcrEntryListFlow.update {
             emptyList()
         }
-        lrcText = ""
+        lrcText = null
         indexData = -1
-        if (lrcList?.isNotEmpty() == true) {
+        if (!lrcList.isNullOrEmpty()) {
             val list = lrcList.sortedBy { it.startTime }
             for (i in list.indices) {
                 if (i == list.size - 1) {
@@ -94,7 +95,7 @@ class LrcServer @Inject constructor(
                 list
             }
         }
-        Log.i("createLrcList", "歌词列表：${_lcrEntryListFlow.value}")
+        Log.i("createLrcList", "随机数111 ${lrcDataType} 歌词列表：${_lcrEntryListFlow.value}")
     }
 
 }

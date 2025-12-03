@@ -34,8 +34,4 @@ class MusicPlayerViewModel @Inject constructor(
     var fontSize by mutableFloatStateOf(1.0f)
 
     val dataList = listOf(R.string.song_tab, R.string.lyrics_tab)
-
-    fun getProgressStateFlow():Flow<Long>{
-        return _musicController.progressStateFlow
-    }
 }

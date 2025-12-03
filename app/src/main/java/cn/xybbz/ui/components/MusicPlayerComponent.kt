@@ -168,25 +168,6 @@ fun MusicPlayerScreen(
         }
     val lcrEntryList by musicPlayerViewModel.lrcServer.lcrEntryListFlow.collectAsState(emptyList())
 
-
-    //播放歌词的位置
-    val playIndex by produceState<Int>(initialValue = 0, lcrEntryList) {
-        //播放进度的flow，每秒钟发射一次
-        musicPlayerViewModel.getProgressStateFlow().collect {
-            lcrEntryList.let { lcrEntryList ->
-                //播放器的播放进度，单位毫秒
-                val index =
-                    lcrEntryList.indexOfFirst { item -> item.startTime <= it && it < item.endTime }
-                if (index >= 0) {
-                    this.value = index
-                }
-            }
-        }
-        awaitDispose {
-            this.value = 0
-        }
-    }
-
     val cacheScheduleData by musicPlayerViewModel.cacheController._cacheSchedule.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
@@ -373,7 +354,7 @@ fun MusicPlayerScreen(
                     }
 
                     XyRow(modifier = Modifier.height(30.dp)) {
-                        LrcViewOneComponent(lrcText = if (lcrEntryList.isNotEmpty()) lcrEntryList[playIndex].text else null)
+                        LrcViewOneComponent(lrcText = musicPlayerViewModel.lrcServer.lrcText)
                     }
 
                     PlayerCurrentPosition(

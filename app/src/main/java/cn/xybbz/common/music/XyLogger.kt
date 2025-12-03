@@ -36,6 +36,7 @@ import androidx.media3.extractor.metadata.id3.BinaryFrame
 import androidx.media3.extractor.metadata.id3.CommentFrame
 import androidx.media3.extractor.metadata.id3.TextInformationFrame
 import androidx.media3.extractor.metadata.vorbis.VorbisComment
+import cn.xybbz.common.enums.LrcDataType
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.config.lrc.LrcServer
 import java.io.IOException
@@ -47,7 +48,10 @@ import kotlin.math.min
 @SuppressLint("UnsafeOptInUsageError")
 
 /** Logs events from [Player] and other core components using [Log].  */
-class XyLogger @JvmOverloads constructor(private val tag: String = DEFAULT_TAG,private val lrcServer: LrcServer) :
+class XyLogger @JvmOverloads constructor(
+    private val tag: String = DEFAULT_TAG,
+    private val lrcServer: LrcServer
+) :
     AnalyticsListener {
     private val window: Timeline.Window
     private val period: Timeline.Period
@@ -555,28 +559,18 @@ class XyLogger @JvmOverloads constructor(private val tag: String = DEFAULT_TAG,p
         for (i in 0..<metadata.length()) {
             val entry = metadata.get(i)
             logd(prefix + entry)
-
-            when(entry){
+            when (entry) {
                 is TextInformationFrame -> {
-                    val lyrics = entry.values.firstOrNull()
-                    if (!lyrics.isNullOrBlank()) {
-                        Log.d("Lyrics", "TXXX Lyrics found: $lyrics")
-                        lrcServer.createLrcList(LrcUtils.parseLrc(lyrics))
-                    }
                 }
+
                 is CommentFrame -> {
-                    // COMM / USLT 都可能中招
-                    if (entry.text.isNotBlank()) {
-                        Log.d("Lyrics", "USLT Lyrics found: ${entry.text}")
-                        lrcServer.createLrcList(LrcUtils.parseLrc(entry.text))
-                    }
                 }
 
                 is BinaryFrame -> {
                     val readMp3Lyrics = readMp3Lyrics(entry)
                     Log.d("Lyrics", "USLT Lyrics found: $readMp3Lyrics")
-                    if (!readMp3Lyrics.isNullOrBlank()){
-                        lrcServer.createLrcList(LrcUtils.parseLrc(readMp3Lyrics))
+                    if (!readMp3Lyrics.isNullOrBlank()) {
+                        lrcServer.createLrcList(LrcUtils.parseLrc(readMp3Lyrics), LrcDataType.FILE)
                     }
                 }
 
@@ -584,11 +578,12 @@ class XyLogger @JvmOverloads constructor(private val tag: String = DEFAULT_TAG,p
                     // flac
                     if (entry.key.equals("LYRICS", true)) {
                         Log.d("Lyrics", "FLAC Lyrics found: ${entry.value}")
-                        lrcServer.createLrcList(LrcUtils.parseLrc(entry.value))
+                        lrcServer.createLrcList(LrcUtils.parseLrc(entry.value), LrcDataType.FILE)
                     }
                 }
             }
         }
+        lrcServer.getMusicLyricList()
     }
 
     fun readMp3Lyrics(entry: BinaryFrame): String? {

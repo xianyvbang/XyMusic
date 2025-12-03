@@ -214,12 +214,6 @@ class MainViewModel @Inject constructor(
                     }
                     db.playerDao.updateIndex(musicController.musicInfo?.itemId ?: "")
                 }
-                //歌词切换
-                lrcServer.getMusicLyricList(
-                    itemId,
-                    connectionConfigServer = connectionConfigServer,
-                    dataSourceManager
-                )
                 //只缓存当前正在播放的音乐,防止过度消耗用户流量
                 /*musicController.musicInfo?.let { musicInfo ->
                     if (!cacheController.ifCache(musicInfo.musicUrl, musicInfo.size ?: 20000)) {
