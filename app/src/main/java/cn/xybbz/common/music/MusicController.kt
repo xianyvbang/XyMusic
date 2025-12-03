@@ -221,32 +221,6 @@ class MusicController(
             seekToNext()
         }
 
-        override fun onMetadata(metadata: Metadata) {
-            for (i in 0 until metadata.length()) {
-                val entry = metadata[i]
-                when (entry) {
-                    is TextInformationFrame -> {
-                        Log.d("TAG", "${entry.id}: ${entry.value}")
-                    }
-                    is CommentFrame -> {
-                        Log.d("TAG", "COMM: ${entry.text}")
-                    }
-                    is BinaryFrame -> {
-                        if (entry.id == "USLT") {
-                            val lyrics = String(entry.data)
-                            Log.d("TAG", "USLT Lyrics = $lyrics")
-                        }
-                    }
-                    is VorbisComment -> {
-                        // FLAC
-                        if (entry.key.equals("LYRICS", true)) {
-                            androidx.media3.common.util.Log.d("Lyrics", "FLAC Lyrics found: ${entry.value}")
-                        }
-                    }
-                }
-            }
-        }
-
         //检测播放何时转换为其他媒体项
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             mediaItem?.localConfiguration?.let { localConfiguration ->

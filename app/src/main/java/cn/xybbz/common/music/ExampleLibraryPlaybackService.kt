@@ -5,11 +5,8 @@ import android.content.IntentFilter
 import android.media.AudioManager
 import android.os.Bundle
 import android.util.Log
-import androidx.core.os.bundleOf
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.ForwardingPlayer
-import androidx.media3.common.Metadata
-import androidx.media3.common.Player
 import androidx.media3.common.util.Assertions
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSourceBitmapLoader
@@ -17,7 +14,6 @@ import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.extractor.metadata.id3.BinaryFrame
 import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
@@ -99,29 +95,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
             .build()
         //这里的可以获得元数据
         exoPlayer?.addAnalyticsListener(XyLogger(lrcServer = lrcServer))
-        exoPlayer?.addListener(object : Player.Listener {
-            override fun onMetadata(metadata: Metadata) {
-                var lyrics: String? = null
 
-                for (i in 0 until metadata.length()) {
-                    val entry = metadata[i]
-                    if (entry is BinaryFrame && entry.id == "USLT") {
-                        lyrics = String(entry.data)
-                    }
-                }
-                Log.d("TAG", "USLT2222 Lyrics = $lyrics")
-                if (!lyrics.isNullOrEmpty()) {
-                    mediaSession?.sessionExtras?.putAll(bundleOf("lyrics" to lyrics))
-                    Log.d("TAG", "USLT Lyrics = $lyrics")
-//                    mediaSession?.media
-                    /*val sessionMetadata = mediaSession.mediaMetadata.buildUpon()
-                        .setExtras(bundleOf("lyrics" to lyrics))
-                        .build()*/
-
-//                    mediaSession.setMediaMetadata(sessionMetadata)
-                }
-            }
-        })
 
         val sessionCommand = SessionCommand(SAVE_TO_FAVORITES, Bundle.EMPTY)
         val removeFavorites = SessionCommand(REMOVE_FROM_FAVORITES, Bundle.EMPTY)
