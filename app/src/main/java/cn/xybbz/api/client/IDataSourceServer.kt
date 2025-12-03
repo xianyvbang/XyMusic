@@ -1,7 +1,7 @@
 package cn.xybbz.api.client
 
 import androidx.paging.PagingData
-import cn.xybbz.api.client.data.AllResponse
+import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
 import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.constants.Constants
@@ -354,7 +354,7 @@ interface IDataSourceServer {
         years: List<Int>? = null,
         parentId: String,
         dataType: MusicDataTypeEnum
-    ): AllResponse<XyMusic>
+    ): XyResponse<XyMusic>
 
     /**
      * 获得OkHttpClient

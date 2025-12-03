@@ -9,6 +9,12 @@ import retrofit2.http.HeaderMap
 import retrofit2.http.Streaming
 import retrofit2.http.Url
 
+/**
+ * 下载方法的基础API
+ * @author xybbz
+ * @date 2025/12/02
+ * @constructor 创建[IDownLoadApi]
+ */
 interface IDownLoadApi {
 
     @GET

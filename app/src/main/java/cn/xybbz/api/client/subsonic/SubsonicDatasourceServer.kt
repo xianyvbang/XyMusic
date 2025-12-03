@@ -1,7 +1,6 @@
 package cn.xybbz.api.client.subsonic
 
 import android.content.Context
-import android.icu.text.Transliterator
 import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.PagingData
@@ -9,7 +8,7 @@ import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.api.client.IDataSourceParentServer
-import cn.xybbz.api.client.data.AllResponse
+import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
 import cn.xybbz.api.client.subsonic.data.AlbumID3
 import cn.xybbz.api.client.subsonic.data.ArtistID3
@@ -133,11 +132,11 @@ class SubsonicDatasourceServer @Inject constructor(
         pageSize: Int,
         isFavorite: Boolean?,
         search: String?
-    ): AllResponse<XyArtist> {
+    ): XyResponse<XyArtist> {
         val response =
             subsonicApiClient.artistsApi().getArtists(connectionConfigServer.libraryId)
         val artists = convertIndexToArtistList(response, false)
-        return AllResponse(
+        return XyResponse(
             items = artists,
             totalRecordCount = artists.size,
             startIndex = 0
@@ -276,14 +275,14 @@ class SubsonicDatasourceServer @Inject constructor(
     suspend fun getMusicListByAlbumOrPlaylist(
         itemId: String,
         dataType: MusicDataTypeEnum
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         if (dataType == MusicDataTypeEnum.ALBUM) {
             val album = subsonicApiClient.itemApi().getAlbum(itemId)
             //存储歌曲数据
             val xyMusics = album.subsonicResponse.album?.song?.let {
                 convertToMusicList(it)
             }
-            return AllResponse(
+            return XyResponse(
                 items = xyMusics,
                 totalRecordCount = xyMusics?.size ?: 0,
                 startIndex = 0
@@ -295,7 +294,7 @@ class SubsonicDatasourceServer @Inject constructor(
             val response = playlist.subsonicResponse.playlist?.entry?.let {
                 convertToMusicList(it)
             }
-            return AllResponse(
+            return XyResponse(
                 items = response,
                 totalRecordCount = response?.size ?: 0,
                 startIndex = 0
@@ -337,7 +336,7 @@ class SubsonicDatasourceServer @Inject constructor(
         artistId: String,
         pageSize: Int,
         startIndex: Int
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         //获得艺术家专辑列表
         val albumIds = db.albumDao.selectListByArtistId(artistId)
         val musicList = mutableListOf<XyMusic>()
@@ -351,7 +350,7 @@ class SubsonicDatasourceServer @Inject constructor(
 
             }
         }
-        return AllResponse<XyMusic>(
+        return XyResponse<XyMusic>(
             items = musicList,
             totalRecordCount = musicList.size,
             startIndex = 0
@@ -827,7 +826,7 @@ class SubsonicDatasourceServer @Inject constructor(
         years: List<Int>?,
         parentId: String,
         dataType: MusicDataTypeEnum
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         return getMusicListByAlbumOrPlaylist(
             itemId = parentId, dataType = dataType
         )
@@ -850,7 +849,7 @@ class SubsonicDatasourceServer @Inject constructor(
         years: List<Int>?,
         artistId: String?,
         genreId: String?
-    ): AllResponse<XyAlbum> {
+    ): XyResponse<XyAlbum> {
         val response = getAlbumList(
             startIndex = startIndex,
             pageSize = pageSize,
@@ -880,9 +879,9 @@ class SubsonicDatasourceServer @Inject constructor(
         startIndex: Int,
         pageSize: Int,
         isFavorite: Boolean
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         val items = getMusicFavoriteData()
-        return AllResponse(
+        return XyResponse(
             items = items,
             totalRecordCount = items?.size ?: 0
         )
@@ -897,9 +896,9 @@ class SubsonicDatasourceServer @Inject constructor(
     override suspend fun getRemoteServerGenreList(
         startIndex: Int,
         pageSize: Int
-    ): AllResponse<XyGenre> {
+    ): XyResponse<XyGenre> {
         val items = getGenreList()
-        return AllResponse(
+        return XyResponse(
             items = items,
             totalRecordCount = items?.size ?: 0
         )
@@ -920,8 +919,8 @@ class SubsonicDatasourceServer @Inject constructor(
         isFavorite: Boolean?,
         sortType: SortTypeEnum?,
         years: List<Int>?
-    ): AllResponse<XyMusic> {
-        return AllResponse(
+    ): XyResponse<XyMusic> {
+        return XyResponse(
             items = emptyList()
         )
     }
@@ -1126,7 +1125,7 @@ class SubsonicDatasourceServer @Inject constructor(
         isFavorite: Boolean? = null,
         years: List<Int>? = null,
         genreId: String? = null
-    ): AllResponse<XyAlbum> {
+    ): XyResponse<XyAlbum> {
 
         var alphabeticalByName = type
         if (isFavorite == true) {
@@ -1148,7 +1147,7 @@ class SubsonicDatasourceServer @Inject constructor(
         )
 
         val size = albumList.subsonicResponse.albumList2?.album?.size ?: 0
-        return AllResponse(
+        return XyResponse(
             items = albumList.subsonicResponse.albumList2?.album?.let {
                 convertToAlbumList(it)
             },

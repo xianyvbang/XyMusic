@@ -1,14 +1,13 @@
 package cn.xybbz.api.client.plex
 
 import android.content.Context
-import android.icu.text.Transliterator
 import android.os.Build
 import android.util.Log
 import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.api.client.IDataSourceParentServer
-import cn.xybbz.api.client.data.AllResponse
+import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
 import cn.xybbz.api.client.plex.data.Directory
 import cn.xybbz.api.client.plex.data.Metadatum
@@ -340,7 +339,7 @@ class PlexDatasourceServer @Inject constructor(
         pageSize: Int,
         isFavorite: Boolean?,
         search: String?
-    ): AllResponse<XyArtist> {
+    ): XyResponse<XyArtist> {
         val response = plexApiClient.itemApi().getSongs(
             sectionKey = connectionConfigServer.libraryId!!,
             type = 8,
@@ -355,7 +354,7 @@ class PlexDatasourceServer @Inject constructor(
         val artistList = response.mediaContainer?.metadata?.let {
             convertToArtistList(it)
         }
-        return AllResponse(
+        return XyResponse(
             items = artistList,
             totalRecordCount = response.mediaContainer?.totalSize ?: 0,
             startIndex = startIndex
@@ -381,7 +380,7 @@ class PlexDatasourceServer @Inject constructor(
         artistId: String,
         pageSize: Int,
         startIndex: Int
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         return getServerMusicList(
             plexListType = PlexListType.all,
             startIndex = startIndex,
@@ -1383,7 +1382,7 @@ class PlexDatasourceServer @Inject constructor(
         years: List<Int>?,
         parentId: String,
         dataType: MusicDataTypeEnum
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         val sortType: PlexOrder = sortType.toPlexOrder()
         val response = getMusicListByAlbumOrPlaylist(
             startIndex = startIndex,
@@ -1415,7 +1414,7 @@ class PlexDatasourceServer @Inject constructor(
         years: List<Int>?,
         artistId: String?,
         genreId: String?
-    ): AllResponse<XyAlbum> {
+    ): XyResponse<XyAlbum> {
         val sortType: PlexOrder = sortType.toPlexOrder()
         val response = getServerAlbumList(
             startIndex = startIndex,
@@ -1441,7 +1440,7 @@ class PlexDatasourceServer @Inject constructor(
         startIndex: Int,
         pageSize: Int,
         isFavorite: Boolean
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         return getServerMusicList(
             startIndex = startIndex,
             pageSize = pageSize,
@@ -1458,7 +1457,7 @@ class PlexDatasourceServer @Inject constructor(
     override suspend fun getRemoteServerGenreList(
         startIndex: Int,
         pageSize: Int
-    ): AllResponse<XyGenre> {
+    ): XyResponse<XyGenre> {
         return getGenreList(
             startIndex = startIndex,
             pageSize = pageSize
@@ -1480,7 +1479,7 @@ class PlexDatasourceServer @Inject constructor(
         isFavorite: Boolean?,
         sortType: SortTypeEnum?,
         years: List<Int>?
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         val sortType: PlexOrder = sortType.toPlexOrder()
         val response = getServerMusicList(
             startIndex = startIndex,
@@ -1496,12 +1495,12 @@ class PlexDatasourceServer @Inject constructor(
     /**
      * 获取歌单列表
      */
-    suspend fun getPlaylistsServer(startIndex: Int, pageSize: Int): AllResponse<XyAlbum> {
+    suspend fun getPlaylistsServer(startIndex: Int, pageSize: Int): XyResponse<XyAlbum> {
         return try {
             val playlists =
                 plexApiClient.playlistsApi()
                     .getPlaylists(start = startIndex, pageSize = pageSize)
-            val allResponse = AllResponse(
+            val xyResponse = XyResponse(
                 items = playlists.mediaContainer?.let { response ->
                     response.metadata?.let {
                         convertToPlaylists(
@@ -1512,10 +1511,10 @@ class PlexDatasourceServer @Inject constructor(
                 totalRecordCount = playlists.mediaContainer?.metadata?.size ?: 0,
                 startIndex = startIndex
             )
-            allResponse
+            xyResponse
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获取歌单失败", e)
-            AllResponse(items = emptyList(), 0, 0)
+            XyResponse(items = emptyList(), 0, 0)
         }
     }
 
@@ -1542,7 +1541,7 @@ class PlexDatasourceServer @Inject constructor(
         albumDecade: String? = null,
         artistTitle: String? = null,
         params: Map<String, String>? = null
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         val response =
             plexApiClient.itemApi().getSongs(
                 sectionKey = connectionConfigServer.libraryId!!,
@@ -1560,7 +1559,7 @@ class PlexDatasourceServer @Inject constructor(
                 genreIds = genreIds?.joinToString(Constants.ARTIST_DELIMITER) { it },
                 params = params ?: mapOf(Pair("1", "1"))
             )
-        return AllResponse(
+        return XyResponse(
             items = response.mediaContainer?.metadata?.let { convertToMusicList(it) },
             totalRecordCount = response.mediaContainer?.totalSize ?: 0,
             startIndex = startIndex
@@ -1584,7 +1583,7 @@ class PlexDatasourceServer @Inject constructor(
         genreIds: List<String>? = null,
         albumDecade: String? = null,
         params: Map<String, String>? = null
-    ): AllResponse<XyAlbum> {
+    ): XyResponse<XyAlbum> {
         val albumResponse = plexApiClient.itemApi().getSongs(
             sectionKey = connectionConfigServer.libraryId!!,
             type = type,
@@ -1600,7 +1599,7 @@ class PlexDatasourceServer @Inject constructor(
             params = params ?: mapOf(Pair("1", "1"))
         )
 
-        return AllResponse(
+        return XyResponse(
             items = albumResponse.mediaContainer?.metadata?.let {
                 convertToAlbumList(
                     it
@@ -1627,7 +1626,7 @@ class PlexDatasourceServer @Inject constructor(
         search: String? = null,
         sortBy: PlexSortType = PlexSortType.TITLE_SORT,
         sortOrder: PlexSortOrder = PlexSortOrder.ASCENDING,
-    ): AllResponse<XyGenre> {
+    ): XyResponse<XyGenre> {
         val genreResponse = plexApiClient.itemApi().getGenres(
             sectionKey = connectionConfigServer.libraryId!!,
             type = type,
@@ -1636,7 +1635,7 @@ class PlexDatasourceServer @Inject constructor(
             sort = "$sortBy:$sortOrder",
             title = search,
         )
-        return AllResponse(
+        return XyResponse(
             items = genreResponse.mediaContainer?.directory?.let { convertToGenreList(it) },
             totalRecordCount = genreResponse.mediaContainer?.totalSize ?: 0,
             startIndex = startIndex
@@ -1647,7 +1646,7 @@ class PlexDatasourceServer @Inject constructor(
     suspend fun getFavoriteMusicList(
         startIndex: Int,
         pageSize: Int,
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
 
         val musicCollection = plexApiClient.userLibraryApi()
             .getCollection(
@@ -1660,7 +1659,7 @@ class PlexDatasourceServer @Inject constructor(
 
         return if (collectionId.isNullOrBlank()) {
 
-            AllResponse(
+            XyResponse(
                 items = null,
                 totalRecordCount = 0,
                 startIndex = startIndex
@@ -1671,7 +1670,7 @@ class PlexDatasourceServer @Inject constructor(
                 start = startIndex,
                 pageSize = pageSize,
             )
-            AllResponse(
+            XyResponse(
                 items = favoriteSongs.mediaContainer?.metadata?.let { convertToMusicList(it) },
                 totalRecordCount = favoriteSongs.mediaContainer?.totalSize ?: 0,
                 startIndex = startIndex
@@ -1694,7 +1693,7 @@ class PlexDatasourceServer @Inject constructor(
         params: Map<String, String>? = null,
         albumDecade: String? = null,
         artistId: String? = null
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         if (dataType == MusicDataTypeEnum.ALBUM) {
             //存储歌曲数据
             return getServerMusicList(
@@ -1722,7 +1721,7 @@ class PlexDatasourceServer @Inject constructor(
                     artistId = artistId
                 )
 
-            return AllResponse(
+            return XyResponse(
                 items = playlistMusicList.mediaContainer?.metadata?.let { convertToMusicList(it) },
                 totalRecordCount = playlistMusicList.mediaContainer?.totalSize ?: 0,
                 startIndex = startIndex

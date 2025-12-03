@@ -1,7 +1,5 @@
 package cn.xybbz.api.client.emby
 
-import cn.xybbz.api.TokenServer.baseUrl
-import cn.xybbz.api.client.DefaultApiClient
 import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.emby.service.EmbyArtistsApi
 import cn.xybbz.api.client.emby.service.EmbyGenreApi
@@ -12,20 +10,47 @@ import cn.xybbz.api.client.emby.service.EmbyPlaylistsApi
 import cn.xybbz.api.client.emby.service.EmbyUserApi
 import cn.xybbz.api.client.emby.service.EmbyUserLibraryApi
 import cn.xybbz.api.client.emby.service.EmbyUserViewsApi
-import cn.xybbz.api.client.jellyfin.JellyfinApiClient
 import cn.xybbz.api.client.jellyfin.buildParameter
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.enums.jellyfin.ImageType
-import cn.xybbz.api.enums.jellyfin.MediaStreamProtocol
 
+/**
+ * EMBY API 客户端
+ * @author xybbz
+ * @date 2025/12/02
+ * @constructor 创建[EmbyApiClient]
+ */
 class EmbyApiClient : DefaultParentApiClient() {
 
+    /**
+     * 客户端名称
+     */
     private var clientName: String = ""
+
+    /**
+     * 客户端版本
+     */
     private var clientVersion: String = ""
+
+    /**
+     * 设备id
+     */
     var deviceId: String = ""
         private set
+
+    /**
+     * 设备名称
+     */
     private var deviceName: String = ""
+
+    /**
+     * api请求令牌
+     */
     private var accessToken: String? = null
+
+    /**
+     * 用户id
+     */
     private var userId: String? = null
 
     private lateinit var embyUserApi: EmbyUserApi
@@ -45,7 +70,7 @@ class EmbyApiClient : DefaultParentApiClient() {
      * @param [clientVersion] 客户端版本
      * @param [deviceId] 设备ID
      * @param [deviceName] 设备名称
-     * @return [JellyfinApiClient]
+     * @return [EmbyApiClient]
      */
     fun createApiClient(
         clientName: String,
@@ -62,7 +87,9 @@ class EmbyApiClient : DefaultParentApiClient() {
 
 
     /**
-     * 更新token信息
+     * 更新访问令牌和用户ID
+     * @param [accessToken] 访问令牌
+     * @param [userId] 用户ID
      */
     fun updateAccessTokenAndUserId(accessToken: String?, userId: String?) {
         this.accessToken = accessToken
@@ -72,6 +99,7 @@ class EmbyApiClient : DefaultParentApiClient() {
 
     /**
      * 获得请求头Map
+     * @return [Map<String, String>]
      */
     public override fun getHeadersMapData(): Map<String, String> {
         val headerMap = mutableMapOf<String, String>()
@@ -82,6 +110,10 @@ class EmbyApiClient : DefaultParentApiClient() {
     }
 
 
+    /**
+     * 创建令牌
+     * @return [String]
+     */
     public override fun createToken(): String {
         val params = arrayOf(
             "UserId" to userId,
@@ -263,51 +295,15 @@ class EmbyApiClient : DefaultParentApiClient() {
         )
     }
 
+
     /**
      * 创建音频URL
-     * @param [itemId] 项目ID
+     * @param [itemId] 项目编号
      * @param [container] 容器
-     * @param [deviceId] 设备ID
-     * @param [userId] 用户id
-     * @param [maxStreamingBitrate] 最大流率比特率
-     * @param [transcodingContainer] 转码容器
-     * @param [transcodingProtocol] 转码协议
      * @param [audioCodec] 音频编解码器
-     * @param [startTimeTicks] 开始时间
-     * @param [enableRedirection] 启用重定向
-     * @param [enableRemoteMedia] 启用远程媒体
+     * @param [static] 是否是静态不转码的
      * @return [String]
      */
-    fun createAudioUrl(
-        itemId: String,
-        container: Collection<String>? = emptyList(),
-        deviceId: String? = null,
-        userId: String? = null,
-        maxStreamingBitrate: Int? = null,
-        transcodingContainer: String? = null,
-        transcodingProtocol: MediaStreamProtocol? = null,
-        audioCodec: String? = null,
-        startTimeTicks: Long? = null,
-        enableRedirection: Boolean? = true,
-        enableRemoteMedia: Boolean? = null,
-    ): String {
-        return getUniversalAudioStreamUrl(
-            baseUrl = baseUrl,
-            itemId = itemId,
-            container = container,
-            deviceId = deviceId,
-            userId = userId,
-            maxStreamingBitrate = maxStreamingBitrate,
-            transcodingContainer = transcodingContainer,
-            transcodingProtocol = transcodingProtocol,
-            audioCodec = audioCodec,
-            startTimeTicks = startTimeTicks,
-            enableRedirection = enableRedirection,
-            enableRemoteMedia = enableRemoteMedia
-        )
-    }
-
-
     fun createAudioUrl(
         itemId: String,
         container: String? = "hls",
@@ -371,27 +367,14 @@ class EmbyApiClient : DefaultParentApiClient() {
         return "$baseUrl/emby/Artists/${name}/Images/${imageType}/${imageIndex}?fillHeight=${fillHeight}&fillWidth=${fillWidth}&quality=${quality}&tag=${tag}"
     }
 
-    private fun getUniversalAudioStreamUrl(
-        baseUrl: String,
-        itemId: String,
-        container: Collection<String>? = emptyList(),
-        deviceId: String? = null,
-        userId: String? = null,
-        maxStreamingBitrate: Int? = null,
-        transcodingContainer: String? = null,
-        transcodingProtocol: MediaStreamProtocol? = null,
-        audioCodec: String? = null,
-        startTimeTicks: Long? = null,
-        enableRedirection: Boolean? = true,
-        enableRemoteMedia: Boolean? = null,
-    ): String {
-        return "${baseUrl}/emby/Audio/${itemId}/universal?container=${container?.joinToString(",")}" +
-                "&deviceId=${deviceId}&userId=${userId}&maxStreamingBitrate=${maxStreamingBitrate}" +
-                "&transcodingContainer=${transcodingContainer}&transcodingProtocol=${transcodingProtocol}" +
-                "&audioCodec=${audioCodec}&startTimeTicks=${startTimeTicks}&enableRedirection=${enableRedirection}" +
-                "&enableRemoteMedia=${enableRemoteMedia}"
-    }
-
+    /**
+     * 创建音频URL
+     * @param [itemId] 项目编号
+     * @param [container] 容器
+     * @param [audioCodec] 音频编解码器
+     * @param [static] 是否是静态不转码的
+     * @return [String]
+     */
     private fun getAudioStreamUrl(
         itemId: String,
         container: String? = "hls",
@@ -407,6 +390,11 @@ class EmbyApiClient : DefaultParentApiClient() {
      * 清空数据
      */
     override fun release() {
-
+        clientName = ""
+        clientVersion = ""
+        deviceId = ""
+        deviceName = ""
+        accessToken = ""
+        userId = null
     }
 }

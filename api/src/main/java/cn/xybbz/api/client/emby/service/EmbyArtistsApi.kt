@@ -8,6 +8,11 @@ import retrofit2.http.QueryMap
 
 interface EmbyArtistsApi : BaseApi {
 
+    /**
+     * 获取专辑列表
+     * @param itemRequest [Map<String, String>]
+     * @return [Response<ItemResponse>]
+     */
     @GET("/emby/Artists")
     suspend fun getArtists(
         @QueryMap itemRequest: Map<String, String>?,

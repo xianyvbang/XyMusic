@@ -8,6 +8,11 @@ import retrofit2.http.QueryMap
 
 interface GenreApi : BaseApi {
 
+    /**
+     * 获取流派
+     * @param [itemRequest] 请求信息
+     * @return [Response<ItemResponse>]
+     */
     @GET("/Genres")
     suspend fun getGenres(@QueryMap itemRequest: Map<String, String>): Response<ItemResponse>
 }

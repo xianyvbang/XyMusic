@@ -12,7 +12,7 @@ import androidx.room.Transaction
 import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.TokenServer
-import cn.xybbz.api.client.data.AllResponse
+import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.ServiceException
@@ -835,7 +835,7 @@ abstract class IDataSourceParentServer(
         pageSize: Int,
         isFavorite: Boolean? = null,
         search: String? = null,
-    ): AllResponse<XyArtist>
+    ): XyResponse<XyArtist>
 
     /**
      * 从远程获得专辑信息
@@ -864,7 +864,7 @@ abstract class IDataSourceParentServer(
         artistId: String,
         pageSize: Int,
         startIndex: Int
-    ): AllResponse<XyMusic>
+    ): XyResponse<XyMusic>
 
     /**
      * 获取远程服务器的专辑和歌单音乐列表
@@ -885,7 +885,7 @@ abstract class IDataSourceParentServer(
         years: List<Int>?,
         parentId: String,
         dataType: MusicDataTypeEnum
-    ): AllResponse<XyMusic>
+    ): XyResponse<XyMusic>
 
     /**
      * 获取远程服务器专辑列表
@@ -904,7 +904,7 @@ abstract class IDataSourceParentServer(
         years: List<Int>? = null,
         artistId: String? = null,
         genreId: String? = null,
-    ): AllResponse<XyAlbum>
+    ): XyResponse<XyAlbum>
 
     /**
      * 获得专辑列表的RemoteMediator
@@ -930,7 +930,7 @@ abstract class IDataSourceParentServer(
         startIndex: Int,
         pageSize: Int,
         isFavorite: Boolean
-    ): AllResponse<XyMusic>
+    ): XyResponse<XyMusic>
 
     /**
      * 获取远程服务器流派列表
@@ -941,7 +941,7 @@ abstract class IDataSourceParentServer(
     abstract suspend fun getRemoteServerGenreList(
         startIndex: Int,
         pageSize: Int
-    ): AllResponse<XyGenre>
+    ): XyResponse<XyGenre>
 
 
     /**
@@ -959,7 +959,7 @@ abstract class IDataSourceParentServer(
         isFavorite: Boolean?,
         sortType: SortTypeEnum?,
         years: List<Int>?
-    ): AllResponse<XyMusic>
+    ): XyResponse<XyMusic>
 
     /**
      * getMusicListByAlbumId

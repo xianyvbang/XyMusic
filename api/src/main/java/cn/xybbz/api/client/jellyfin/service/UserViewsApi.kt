@@ -8,6 +8,11 @@ import retrofit2.http.QueryMap
 
 interface UserViewsApi : BaseApi {
 
+    /**
+     * 获取媒体库
+     * @param [viewRequest] 查看请求
+     * @return [Response<ItemResponse>]
+     */
     @GET("/UserViews")
     suspend fun getUserViews(
         @QueryMap viewRequest: Map<String, String>

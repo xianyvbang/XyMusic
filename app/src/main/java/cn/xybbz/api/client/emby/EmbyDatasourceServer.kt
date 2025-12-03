@@ -7,7 +7,7 @@ import android.util.Log
 import androidx.room.withTransaction
 import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.api.client.IDataSourceParentServer
-import cn.xybbz.api.client.data.AllResponse
+import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
 import cn.xybbz.api.client.jellyfin.data.CreatePlaylistRequest
 import cn.xybbz.api.client.jellyfin.data.ItemRequest
@@ -152,7 +152,7 @@ class EmbyDatasourceServer @Inject constructor(
         pageSize: Int,
         isFavorite: Boolean?,
         search: String?
-    ): AllResponse<XyArtist> {
+    ): XyResponse<XyArtist> {
         val response = embyApiClient.artistsApi().getArtists(
             ItemRequest(
                 limit = pageSize,
@@ -174,7 +174,7 @@ class EmbyDatasourceServer @Inject constructor(
             ).toMap()
         )
         val artistList = convertToArtistList(response.items)
-        return AllResponse(
+        return XyResponse(
             items = artistList,
             totalRecordCount = response.totalRecordCount,
             startIndex = startIndex
@@ -203,7 +203,7 @@ class EmbyDatasourceServer @Inject constructor(
         artistId: String,
         pageSize: Int,
         startIndex: Int
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         val response =
             getServerMusicList(
                 startIndex = startIndex,
@@ -963,7 +963,7 @@ class EmbyDatasourceServer @Inject constructor(
         years: List<Int>?,
         parentId: String,
         dataType: MusicDataTypeEnum
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         val sortType: SearchAndOrder = sortType.toSearchAndOrder()
         val response = getServerMusicList(
             startIndex = startIndex,
@@ -994,7 +994,7 @@ class EmbyDatasourceServer @Inject constructor(
         years: List<Int>?,
         artistId: String?,
         genreId: String?
-    ): AllResponse<XyAlbum> {
+    ): XyResponse<XyAlbum> {
         val sortType: SearchAndOrder = sortType.toSearchAndOrder()
         val response = getAlbumList(
             startIndex = startIndex,
@@ -1020,7 +1020,7 @@ class EmbyDatasourceServer @Inject constructor(
         startIndex: Int,
         pageSize: Int,
         isFavorite: Boolean
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         return getServerMusicList(
             startIndex = startIndex,
             pageSize = pageSize,
@@ -1037,7 +1037,7 @@ class EmbyDatasourceServer @Inject constructor(
     override suspend fun getRemoteServerGenreList(
         startIndex: Int,
         pageSize: Int
-    ): AllResponse<XyGenre> {
+    ): XyResponse<XyGenre> {
         return getGenreList(
             startIndex = startIndex,
             pageSize = pageSize,
@@ -1059,7 +1059,7 @@ class EmbyDatasourceServer @Inject constructor(
         isFavorite: Boolean?,
         sortType: SortTypeEnum?,
         years: List<Int>?
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         val sortType: SearchAndOrder = sortType.toSearchAndOrder()
         val response = getServerMusicList(
             startIndex = startIndex,
@@ -1094,7 +1094,7 @@ class EmbyDatasourceServer @Inject constructor(
         genreIds: List<String>? = null,
         parentId: String? = null,
         path: String? = null,
-    ): AllResponse<XyMusic> {
+    ): XyResponse<XyMusic> {
         val response = embyApiClient.itemApi().getUserItems(
             userId = connectionConfigServer.getUserId(),
             itemRequest = ItemRequest(
@@ -1124,7 +1124,7 @@ class EmbyDatasourceServer @Inject constructor(
                 path = path
             ).toMap()
         )
-        return AllResponse<XyMusic>(
+        return XyResponse<XyMusic>(
             items = convertToMusicList(response.items),
             totalRecordCount = response.totalRecordCount,
             startIndex = response.startIndex ?: 0
@@ -1147,7 +1147,7 @@ class EmbyDatasourceServer @Inject constructor(
         filters: List<ItemFilter>? = null,
         years: List<Int>? = null,
         genreIds: List<String>? = null
-    ): AllResponse<XyAlbum> {
+    ): XyResponse<XyAlbum> {
         val albumResponse = embyApiClient.itemApi().getUserItems(
             userId = connectionConfigServer.getUserId(),
             ItemRequest(
@@ -1180,7 +1180,7 @@ class EmbyDatasourceServer @Inject constructor(
             ).toMap()
         )
 
-        return AllResponse(
+        return XyResponse(
             items = convertToAlbumList(albumResponse.items),
             totalRecordCount = albumResponse.totalRecordCount,
             startIndex = albumResponse.startIndex ?: 0
@@ -1191,7 +1191,7 @@ class EmbyDatasourceServer @Inject constructor(
     /**
      * 获取歌单列表
      */
-    suspend fun getPlaylistsServer(startIndex: Int, pageSize: Int): AllResponse<XyAlbum> {
+    suspend fun getPlaylistsServer(startIndex: Int, pageSize: Int): XyResponse<XyAlbum> {
         return try {
             val playlists =
                 embyApiClient.itemApi().getUserItems(
@@ -1217,15 +1217,15 @@ class EmbyDatasourceServer @Inject constructor(
                         userId = connectionConfigServer.getUserId()
                     ).toMap()
                 )
-            val allResponse = AllResponse(
+            val xyResponse = XyResponse(
                 items = convertToAlbumList(playlists.items, true),
                 totalRecordCount = playlists.totalRecordCount,
                 startIndex = startIndex
             )
-            allResponse
+            xyResponse
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获取歌单失败", e)
-            AllResponse<XyAlbum>(items = emptyList(), 0, 0)
+            XyResponse<XyAlbum>(items = emptyList(), 0, 0)
         }
     }
 
@@ -1247,7 +1247,7 @@ class EmbyDatasourceServer @Inject constructor(
         search: String? = null,
         sortBy: List<ItemSortBy>? = listOf(ItemSortBy.SORT_NAME),
         sortOrder: List<SortOrder>? = listOf(SortOrder.ASCENDING),
-    ): AllResponse<XyGenre> {
+    ): XyResponse<XyGenre> {
         val genreResponse = embyApiClient.genreApi().getGenres(
             itemRequest = ItemRequest(
                 limit = pageSize,
@@ -1266,7 +1266,7 @@ class EmbyDatasourceServer @Inject constructor(
             ).toMap()
         )
 
-        return AllResponse(
+        return XyResponse(
             items = convertToGenreList(genreResponse.items),
             totalRecordCount = genreResponse.totalRecordCount,
             startIndex = startIndex

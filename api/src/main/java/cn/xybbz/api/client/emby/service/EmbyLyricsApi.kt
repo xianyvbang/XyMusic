@@ -7,6 +7,11 @@ import retrofit2.http.Path
 
 interface EmbyLyricsApi : BaseApi {
 
+    /**
+     * 获取歌词
+     * @param [itemId] 音乐id
+     * @return [LyricResponse]
+     */
     @GET("/emby/Audio/{itemId}/Lyrics")
     suspend fun getLyrics(@Path("itemId") itemId: String): LyricResponse
 }

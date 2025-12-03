@@ -123,7 +123,7 @@ abstract class DefaultApiClient : ApiConfig {
     }
 
     /**
-     * 获得token
+     * 创建令牌
      */
     protected open fun createToken(): String {
         return ""
