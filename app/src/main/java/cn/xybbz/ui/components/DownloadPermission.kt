@@ -13,6 +13,7 @@ fun downloadPermission(onPermissionResult: (Map<String, Boolean>) -> Unit = {}):
     val permissionsToRequest = mutableListOf<String>()
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
+        permissionsToRequest.add(Manifest.permission.READ_MEDIA_AUDIO)
     }
     // 为 Android 9 及以下请求外部存储写入权限
     if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {

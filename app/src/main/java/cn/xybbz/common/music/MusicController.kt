@@ -19,6 +19,7 @@ import androidx.media3.common.C
 import androidx.media3.common.FileTypes
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.Metadata
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -28,6 +29,10 @@ import androidx.media3.common.Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANG
 import androidx.media3.common.Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT
 import androidx.media3.common.Player.MEDIA_ITEM_TRANSITION_REASON_SEEK
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.extractor.metadata.id3.BinaryFrame
+import androidx.media3.extractor.metadata.id3.CommentFrame
+import androidx.media3.extractor.metadata.id3.TextInformationFrame
+import androidx.media3.extractor.metadata.vorbis.VorbisComment
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionToken
@@ -199,7 +204,7 @@ class MusicController(
 
         override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
             super.onMediaMetadataChanged(mediaMetadata)
-            Log.i("=====", "获得当前播放信息$mediaMetadata")
+            Log.i("=====", "获得当前播放信息${mediaMetadata}")
             Log.i(
                 "=====",
                 "当前索引${mediaController?.currentMediaItemIndex} --- ${mediaMetadata.title}"
@@ -214,6 +219,32 @@ class MusicController(
             // 获取播放错误信息
             Log.e("=====", "播放报错$error", error)
             seekToNext()
+        }
+
+        override fun onMetadata(metadata: Metadata) {
+            for (i in 0 until metadata.length()) {
+                val entry = metadata[i]
+                when (entry) {
+                    is TextInformationFrame -> {
+                        Log.d("TAG", "${entry.id}: ${entry.value}")
+                    }
+                    is CommentFrame -> {
+                        Log.d("TAG", "COMM: ${entry.text}")
+                    }
+                    is BinaryFrame -> {
+                        if (entry.id == "USLT") {
+                            val lyrics = String(entry.data)
+                            Log.d("TAG", "USLT Lyrics = $lyrics")
+                        }
+                    }
+                    is VorbisComment -> {
+                        // FLAC
+                        if (entry.key.equals("LYRICS", true)) {
+                            androidx.media3.common.util.Log.d("Lyrics", "FLAC Lyrics found: ${entry.value}")
+                        }
+                    }
+                }
+            }
         }
 
         //检测播放何时转换为其他媒体项
@@ -339,7 +370,7 @@ class MusicController(
      * 开始缓存
      */
     fun startCache(music: XyPlayMusic) {
-        if (!music.filePath.isNullOrBlank())
+        if (music.filePath.isNullOrBlank())
             cacheController.cacheMedia(music)
     }
 

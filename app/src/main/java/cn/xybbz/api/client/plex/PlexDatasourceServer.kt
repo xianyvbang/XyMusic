@@ -8,11 +8,11 @@ import cn.xybbz.R
 import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.XyResponse
-import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
 import cn.xybbz.api.client.plex.data.Directory
 import cn.xybbz.api.client.plex.data.Metadatum
 import cn.xybbz.api.client.plex.data.PlaylistMetadatum
 import cn.xybbz.api.client.plex.data.toPlexLogin
+import cn.xybbz.api.data.auth.ClientLoginInfoReq
 import cn.xybbz.api.enums.plex.ImageType
 import cn.xybbz.api.enums.plex.MetadatumType
 import cn.xybbz.api.enums.plex.PlayState

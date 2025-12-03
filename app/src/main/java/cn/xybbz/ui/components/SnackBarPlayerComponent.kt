@@ -276,10 +276,7 @@ fun SnackBarPlayerComponent(
                             if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
                                 MessageUtils.sendPopTip(R.string.please_select)
                             } else {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                                    permissionState?.launchMultiplePermissionRequest()
-                                else
-                                    snackBarPlayerViewModel.downloadMusics()
+                                permissionState?.launchMultiplePermissionRequest()
                             }
 
                         }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {

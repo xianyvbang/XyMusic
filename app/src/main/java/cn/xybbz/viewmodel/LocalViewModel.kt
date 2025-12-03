@@ -37,11 +37,14 @@ class LocalViewModel @Inject constructor(
         onMusicPlayParameter: OnMusicPlayParameter,
         downloadList: List<XyDownload>,
         playerTypeEnum: PlayerTypeEnum? = null
-    ){
+    ) {
         viewModelScope.launch {
             musicPlayContext.musicList(onMusicPlayParameter, downloadList.mapNotNull {
                 val playMusic = it.toPlayMusic()
-                playMusic?.copy(ifFavoriteStatus = playMusic.itemId in favoriteRepository.favoriteSet.value)
+                playMusic?.copy(
+                    ifFavoriteStatus = playMusic.itemId in favoriteRepository.favoriteSet.value,
+                    filePath = it.filePath
+                )
             }, playerTypeEnum)
         }
     }

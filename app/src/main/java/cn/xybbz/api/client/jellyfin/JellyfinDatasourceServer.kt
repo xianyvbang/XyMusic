@@ -9,7 +9,6 @@ import cn.xybbz.R
 import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.XyResponse
-import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
 import cn.xybbz.api.client.jellyfin.data.CreatePlaylistRequest
 import cn.xybbz.api.client.jellyfin.data.ItemRequest
 import cn.xybbz.api.client.jellyfin.data.ItemResponse
@@ -17,6 +16,7 @@ import cn.xybbz.api.client.jellyfin.data.PlaybackStartInfo
 import cn.xybbz.api.client.jellyfin.data.PlaylistUserPermissions
 import cn.xybbz.api.client.jellyfin.data.ViewRequest
 import cn.xybbz.api.client.jellyfin.data.toLogin
+import cn.xybbz.api.data.auth.ClientLoginInfoReq
 import cn.xybbz.api.enums.jellyfin.BaseItemKind
 import cn.xybbz.api.enums.jellyfin.CollectionType
 import cn.xybbz.api.enums.jellyfin.ImageType

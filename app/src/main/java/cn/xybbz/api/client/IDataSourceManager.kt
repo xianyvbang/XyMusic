@@ -12,8 +12,8 @@ import androidx.paging.PagingData
 import androidx.room.Transaction
 import cn.xybbz.R
 import cn.xybbz.api.client.data.XyResponse
-import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
 import cn.xybbz.api.client.version.VersionApiClient
+import cn.xybbz.api.data.auth.ClientLoginInfoReq
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.constants.Constants

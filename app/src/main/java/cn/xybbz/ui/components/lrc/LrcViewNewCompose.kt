@@ -47,10 +47,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.common.utils.LrcUtils.formatTime
-import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
@@ -66,7 +65,8 @@ private val lyricHorizontalPadding = 30.dp
 @Composable
 fun LrcViewNewCompose(
     modifier: Modifier = Modifier,
-    lrcViewModel: LrcViewModel = viewModel(),
+    lcrEntryList: List<LrcEntryData>,
+    lrcViewModel: LrcViewModel = hiltViewModel(),
     listState: LazyListState = rememberLazyListState(),
 ) {
 
@@ -115,11 +115,11 @@ fun LrcViewNewCompose(
 
 
         //播放歌词的位置
-        val playIndex by produceState<Int>(initialValue = 0, LrcServer.lcrEntryList) {
+        val playIndex by produceState<Int>(initialValue = 0, lcrEntryList) {
             //播放进度的flow，每秒钟发射一次
             lrcViewModel.getProgressStateFlow().collect {
                 currentTimeMillis = it
-                LrcServer.lcrEntryList.let { lcrEntryList ->
+                lcrEntryList.let { lcrEntryList ->
                     //播放器的播放进度，单位毫秒
                     val index =
                         lcrEntryList.indexOfFirst { item -> item.startTime <= it && it < item.endTime }
@@ -176,7 +176,7 @@ fun LrcViewNewCompose(
                     vertical = verticalContentPadding
                 ),
             ) {
-                itemsIndexed(LrcServer.lcrEntryList) { index, line ->
+                itemsIndexed(lcrEntryList) { index, line ->
 
                     if (line.wordTimings.size > 1) {
                         KaraokeLyricLineNew(
@@ -205,7 +205,7 @@ fun LrcViewNewCompose(
 
 
                 }
-                if (LrcServer.lcrEntryList.isEmpty())
+                if (lcrEntryList.isEmpty())
                     item {
                         Box(
                             modifier = Modifier.fillMaxSize(),
@@ -217,8 +217,8 @@ fun LrcViewNewCompose(
             }
 
 
-            if (isDragState.value && dragLineIndex in LrcServer.lcrEntryList.indices) {
-                val dragLine = LrcServer.lcrEntryList[dragLineIndex]
+            if (isDragState.value && dragLineIndex in lcrEntryList.indices) {
+                val dragLine = lcrEntryList[dragLineIndex]
 
                 // 绘制辅助线和时间
                 Column(

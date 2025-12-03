@@ -6,7 +6,6 @@ import androidx.room.withTransaction
 import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.XyResponse
-import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
 import cn.xybbz.api.client.navidrome.data.AlbumItem
 import cn.xybbz.api.client.navidrome.data.ArtistItem
 import cn.xybbz.api.client.navidrome.data.Genre
@@ -18,6 +17,7 @@ import cn.xybbz.api.client.navidrome.data.getWithTotalCount
 import cn.xybbz.api.client.navidrome.data.toNavidromeLogin
 import cn.xybbz.api.client.subsonic.data.ScrobbleRequest
 import cn.xybbz.api.constants.ApiConstants
+import cn.xybbz.api.data.auth.ClientLoginInfoReq
 import cn.xybbz.api.enums.navidrome.OrderType
 import cn.xybbz.api.enums.navidrome.SortType
 import cn.xybbz.common.constants.Constants

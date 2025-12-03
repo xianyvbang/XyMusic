@@ -2,7 +2,7 @@ package cn.xybbz.api.client
 
 import androidx.paging.PagingData
 import cn.xybbz.api.client.data.XyResponse
-import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
+import cn.xybbz.api.data.auth.ClientLoginInfoReq
 import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum

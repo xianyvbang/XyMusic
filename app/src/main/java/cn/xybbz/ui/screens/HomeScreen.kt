@@ -96,7 +96,6 @@ import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnComponent
-import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyItemBig
@@ -322,6 +321,15 @@ fun HomeScreen(
 
 
                     IconButton(onClick = {
+                        homeViewModel.saveTmpDownload()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Rounded.AddCircle,
+                            contentDescription = "临时写入数据测试"
+                        )
+                    }
+
+                    IconButton(onClick = {
                         homeViewModel.dataSourceManager.initDataSource()
                     }) {
                         Icon(
@@ -329,6 +337,8 @@ fun HomeScreen(
                             contentDescription = stringResource(R.string.refresh_login)
                         )
                     }
+
+
 
                     IconButton(onClick = {
                         navHostController.navigate(RouterConstants.Setting) {

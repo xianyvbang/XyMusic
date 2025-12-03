@@ -49,6 +49,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -165,6 +166,26 @@ fun MusicPlayerScreen(
         rememberPagerState {
             2
         }
+    val lcrEntryList by musicPlayerViewModel.lrcServer.lcrEntryListFlow.collectAsState(emptyList())
+
+
+    //播放歌词的位置
+    val playIndex by produceState<Int>(initialValue = 0, lcrEntryList) {
+        //播放进度的flow，每秒钟发射一次
+        musicPlayerViewModel.getProgressStateFlow().collect {
+            lcrEntryList.let { lcrEntryList ->
+                //播放器的播放进度，单位毫秒
+                val index =
+                    lcrEntryList.indexOfFirst { item -> item.startTime <= it && it < item.endTime }
+                if (index >= 0) {
+                    this.value = index
+                }
+            }
+        }
+        awaitDispose {
+            this.value = 0
+        }
+    }
 
     val cacheScheduleData by musicPlayerViewModel.cacheController._cacheSchedule.collectAsState()
 
@@ -272,7 +293,10 @@ fun MusicPlayerScreen(
                         }
 
                     } else {
-                        LrcViewNewCompose(listState = listState)
+                        LrcViewNewCompose(
+                            listState = listState,
+                            lcrEntryList = lcrEntryList
+                        )
                     }
                 }
 
@@ -349,7 +373,7 @@ fun MusicPlayerScreen(
                     }
 
                     XyRow(modifier = Modifier.height(30.dp)) {
-                        LrcViewOneComponent()
+                        LrcViewOneComponent(lrcText = if (lcrEntryList.isNotEmpty()) lcrEntryList[playIndex].text else null)
                     }
 
                     PlayerCurrentPosition(

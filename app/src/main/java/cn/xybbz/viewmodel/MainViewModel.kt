@@ -29,9 +29,9 @@ import cn.xybbz.config.SettingsConfig
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.lrc.LrcServer
+import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.update.ApkUpdateManager
 import cn.xybbz.entity.data.PlayerTypeData
-import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.era.XyEraItem
@@ -62,7 +62,8 @@ class MainViewModel @Inject constructor(
     private val alarmConfig: AlarmConfig,
     private val apkUpdateManager: ApkUpdateManager,
     private val favoriteRepository: FavoriteRepository,
-    val selectControl: SelectControl
+    val selectControl: SelectControl,
+    private val lrcServer: LrcServer
 ) : ViewModel() {
 
     val dataSourceManager = _dataSourceManager
@@ -183,7 +184,7 @@ class MainViewModel @Inject constructor(
         /**
          * 音频切换调用方法
          */
-        musicController.setOnChangeMusic {itemId ->
+        musicController.setOnChangeMusic { itemId ->
 
             viewModelScope.launch {
                 //数据变化的时候进行数据变化
@@ -214,7 +215,7 @@ class MainViewModel @Inject constructor(
                     db.playerDao.updateIndex(musicController.musicInfo?.itemId ?: "")
                 }
                 //歌词切换
-                LrcServer.getMusicLyricList(
+                lrcServer.getMusicLyricList(
                     itemId,
                     connectionConfigServer = connectionConfigServer,
                     dataSourceManager
@@ -335,7 +336,7 @@ class MainViewModel @Inject constructor(
 
             connectionConfigServer.loginStateFlow.collect {
                 if (it) {
-                        val musicList = db.musicDao.selectPlayQueuePlayMusicList()
+                    val musicList = db.musicDao.selectPlayQueuePlayMusicList()
                     if (dataSourceManager.dataSourceType != null) {
                         val player =
                             db.playerDao.selectPlayerByDataSource()

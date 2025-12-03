@@ -1,5 +1,6 @@
 package cn.xybbz.common.music
 
+import android.annotation.SuppressLint
 import android.os.SystemClock
 import android.text.TextUtils
 import androidx.annotation.OptIn
@@ -31,19 +32,22 @@ import androidx.media3.exoplayer.audio.AudioSink.AudioTrackConfig
 import androidx.media3.exoplayer.drm.DrmSession
 import androidx.media3.exoplayer.source.LoadEventInfo
 import androidx.media3.exoplayer.source.MediaLoadData
+import androidx.media3.extractor.metadata.id3.BinaryFrame
+import androidx.media3.extractor.metadata.id3.CommentFrame
 import androidx.media3.extractor.metadata.id3.TextInformationFrame
 import androidx.media3.extractor.metadata.vorbis.VorbisComment
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.config.lrc.LrcServer
-import cn.xybbz.localdata.config.DatabaseClient
 import java.io.IOException
+import java.nio.charset.Charset
 import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.min
 
+@SuppressLint("UnsafeOptInUsageError")
 
 /** Logs events from [Player] and other core components using [Log].  */
-class XyLogger @JvmOverloads constructor(private val tag: String = DEFAULT_TAG,private val db: DatabaseClient) :
+class XyLogger @JvmOverloads constructor(private val tag: String = DEFAULT_TAG,private val lrcServer: LrcServer) :
     AnalyticsListener {
     private val window: Timeline.Window
     private val period: Timeline.Period
@@ -551,17 +555,60 @@ class XyLogger @JvmOverloads constructor(private val tag: String = DEFAULT_TAG,p
         for (i in 0..<metadata.length()) {
             val entry = metadata.get(i)
             logd(prefix + entry)
-            if (entry is TextInformationFrame) {
-                val lyrics = entry.values[0]
 
-                Log.d("Lyrics", "Lyrics found: $lyrics")
-                LrcServer.createLrcList(LrcUtils.parseLrc(lyrics))
-            }else if (entry is VorbisComment && entry.key == "LYRICS"){
-                val lyrics = entry.value
-                LrcServer.createLrcList(LrcUtils.parseLrc(lyrics))
-                Log.d("Lyrics", "Lyrics found: $lyrics")
+            when(entry){
+                is TextInformationFrame -> {
+                    val lyrics = entry.values.firstOrNull()
+                    if (!lyrics.isNullOrBlank()) {
+                        Log.d("Lyrics", "TXXX Lyrics found: $lyrics")
+                        lrcServer.createLrcList(LrcUtils.parseLrc(lyrics))
+                    }
+                }
+                is CommentFrame -> {
+                    // COMM / USLT 都可能中招
+                    if (entry.text.isNotBlank()) {
+                        Log.d("Lyrics", "USLT Lyrics found: ${entry.text}")
+                        lrcServer.createLrcList(LrcUtils.parseLrc(entry.text))
+                    }
+                }
+
+                is BinaryFrame -> {
+                    val readMp3Lyrics = readMp3Lyrics(entry)
+                    Log.d("Lyrics", "USLT Lyrics found: $readMp3Lyrics")
+                    if (!readMp3Lyrics.isNullOrBlank()){
+                        lrcServer.createLrcList(LrcUtils.parseLrc(readMp3Lyrics))
+                    }
+                }
+
+                is VorbisComment -> {
+                    // flac
+                    if (entry.key.equals("LYRICS", true)) {
+                        Log.d("Lyrics", "FLAC Lyrics found: ${entry.value}")
+                        lrcServer.createLrcList(LrcUtils.parseLrc(entry.value))
+                    }
+                }
             }
         }
+    }
+
+    fun readMp3Lyrics(entry: BinaryFrame): String? {
+        if (entry.id == "USLT") {
+            val data = entry.data
+            if (data.size < 4) return null
+
+            val encoding = data[0].toInt() and 0xFF
+            val lyrics: String = when (encoding) {
+                0 -> String(data, 4, data.size - 4, Charset.forName("ISO-8859-1"))
+                1 -> String(data, 4, data.size - 4, Charset.forName("UTF-16"))
+                2 -> String(data, 4, data.size - 4, Charset.forName("UTF-16BE"))
+                3 -> String(data, 4, data.size - 4, Charset.forName("UTF-8"))
+                else -> String(data, 4, data.size - 4, Charset.forName("ISO-8859-1"))
+            }
+
+            return lyrics
+        }
+
+        return null
     }
 
     @OptIn(UnstableApi::class)

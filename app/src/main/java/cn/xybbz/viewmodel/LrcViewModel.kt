@@ -2,16 +2,17 @@ package cn.xybbz.viewmodel
 
 import androidx.lifecycle.ViewModel
 import cn.xybbz.common.music.MusicController
+import cn.xybbz.config.lrc.LrcServer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 @HiltViewModel
 class LrcViewModel @Inject constructor(
-    private val _musicController: MusicController
+    private val _musicController: MusicController,
+    val lrcServer: LrcServer
 ): ViewModel() {
 
-    val musicFinalNewController = _musicController
 
     fun getProgressStateFlow():Flow<Long>{
         return _musicController.progressStateFlow

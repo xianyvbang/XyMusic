@@ -162,9 +162,7 @@ fun MusicBottomMenuComponent(
 
     bottomMenuMusicInfo.forEach { music ->
 
-        val permissionState = downloadPermission {
-            musicBottomMenuViewModel.downloadMusic(music)
-        }
+
 
         val favoriteMusicMap by musicBottomMenuViewModel.favoriteRepository.favoriteSet.collectAsState()
         val downloadMusicIds by musicBottomMenuViewModel.downloadRepository.musicIdsFlow.collectAsState()
@@ -209,6 +207,12 @@ fun MusicBottomMenuComponent(
             derivedStateOf {
                 musicBottomMenuViewModel.dataSourceManager.dataSourceType?.ifDelete == true
             }
+        }
+
+        val permissionState = downloadPermission {
+            musicBottomMenuViewModel.downloadMusic(music)
+            ifShowBottom = false
+            music.dismiss()
         }
 
         MusicInfoBottomComponent(
@@ -349,13 +353,8 @@ fun MusicBottomMenuComponent(
                             name = "下载"
                         ),
                         onClick = {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                                permissionState?.launchMultiplePermissionRequest()
-                            } else {
-                                musicBottomMenuViewModel.downloadMusic(music)
-                            }
-                            ifShowBottom = false
-                            music.dismiss()
+                            permissionState?.launchMultiplePermissionRequest()
+
                         }
                     )
                 }

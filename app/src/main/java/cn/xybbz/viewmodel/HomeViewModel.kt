@@ -21,11 +21,12 @@ import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.connection.ConnectionConfig
+import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
-import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.data.remote.RemoteCurrent
 import cn.xybbz.localdata.enums.DownloadStatus
+import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,6 +34,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -275,7 +277,6 @@ class HomeViewModel @OptIn(UnstableApi::class)
     suspend fun savePlaylist(name: String) {
         dataSourceManager.addPlaylist(name)
     }
-
 
 
     /**
@@ -534,12 +535,38 @@ class HomeViewModel @OptIn(UnstableApi::class)
         onMusicPlayParameter: OnMusicPlayParameter,
         musicList: List<XyMusicExtend>,
         playerTypeEnum: PlayerTypeEnum? = null
-    ){
+    ) {
         viewModelScope.launch {
             musicPlayContext.musicList(
                 onMusicPlayParameter,
                 musicList.map { it.toPlayMusic() },
                 playerTypeEnum
+            )
+        }
+    }
+
+    fun saveTmpDownload() {
+        viewModelScope.launch {
+            db.downloadDao.insert(
+                XyDownload(
+                    url = "https://www.baidu.com",
+                    fileName = "test",
+                    filePath = "/storage/emulated/0/Download/XyMusic/说好的幸福呢 - 周杰伦.mp3",
+                    fileSize = 0,
+                    tempFilePath = "test",
+                    typeData = DownloadTypes.JELLYFIN,
+                    progress = 100.0f,
+                    status = DownloadStatus.COMPLETED,
+                    uid = UUID.randomUUID().toString(),
+                    music = XyMusic(
+                        itemId = UUID.randomUUID().toString(),
+                        name = "test",
+                        downloadUrl = "",
+                        connectionId = connectionConfigServer.getConnectionId(),
+                        container = "mp3",
+                    ),
+                    connectionId = connectionConfigServer.getConnectionId()
+                )
             )
         }
     }

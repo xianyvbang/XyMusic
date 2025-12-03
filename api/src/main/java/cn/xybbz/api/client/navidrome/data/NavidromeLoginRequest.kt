@@ -1,6 +1,6 @@
 package cn.xybbz.api.client.navidrome.data
 
-import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
+import cn.xybbz.api.data.auth.ClientLoginInfoReq
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)

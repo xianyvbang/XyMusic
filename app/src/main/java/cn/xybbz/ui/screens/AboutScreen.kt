@@ -1,6 +1,5 @@
 package cn.xybbz.ui.screens
 
-import android.os.Build
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -225,11 +224,7 @@ fun AboutScreen(
                                             Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
                                             Button(
                                                 onClick = composeClick {
-                                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                                                        permissionState?.launchMultiplePermissionRequest()
-                                                    else {
-                                                        aboutViewModel.downloadAndInstall()
-                                                    }
+                                                    permissionState?.launchMultiplePermissionRequest()
                                                 },
                                                 enabled = apkDownloadInfo?.status != DownloadStatus.DOWNLOADING,
                                                 shape = RoundedCornerShape(XyTheme.dimens.corner),

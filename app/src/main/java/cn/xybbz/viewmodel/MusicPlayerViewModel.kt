@@ -4,7 +4,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import cn.xybbz.R
 import cn.xybbz.api.client.IDataSourceManager
 import cn.xybbz.common.music.CacheController
@@ -13,7 +12,7 @@ import cn.xybbz.config.SettingsConfig
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.lrc.LrcServer
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,7 +21,8 @@ class MusicPlayerViewModel @Inject constructor(
     private val _dataSourceManager: IDataSourceManager,
     private val _settingsConfig: SettingsConfig,
     private val _favoriteRepository: FavoriteRepository,
-    private val _cacheController: CacheController
+    private val _cacheController: CacheController,
+    val lrcServer: LrcServer
 ) : ViewModel() {
 
     val musicController = _musicController
@@ -35,13 +35,7 @@ class MusicPlayerViewModel @Inject constructor(
 
     val dataList = listOf(R.string.song_tab, R.string.lyrics_tab)
 
-
-    init {
-        viewModelScope.launch {
-            musicController.progressStateFlow.collect { pos ->
-                LrcServer.getLrcIndex(pos)
-            }
-        }
-
+    fun getProgressStateFlow():Flow<Long>{
+        return _musicController.progressStateFlow
     }
 }

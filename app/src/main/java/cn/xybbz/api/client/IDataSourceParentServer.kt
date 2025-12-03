@@ -13,7 +13,7 @@ import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.data.XyResponse
-import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
+import cn.xybbz.api.data.auth.ClientLoginInfoReq
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.exception.UnauthorizedException

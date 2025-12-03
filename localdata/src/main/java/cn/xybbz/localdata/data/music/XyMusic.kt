@@ -52,7 +52,7 @@ data class XyMusic(
     /**
      * 流派id
      */
-    val genreIds: String?,
+    val genreIds: String? = null,
     /**
      * 连接地址
      */
@@ -69,7 +69,7 @@ data class XyMusic(
     /**
      * 音乐艺术家id->使用"/"分割
      */
-    val artistIds: String?,
+    val artistIds: String? = null,
     /**
      * 专辑艺术家
      */
@@ -86,27 +86,27 @@ data class XyMusic(
     /**
      * 播放次数
      */
-    val playedCount: Int,
+    val playedCount: Int = 0,
 
     /**
      * 是否已经收藏
      */
-    val ifFavoriteStatus: Boolean,
+    val ifFavoriteStatus: Boolean = false,
 
     /**
      * 是否有歌词
      */
-    val ifLyric: Boolean,
+    val ifLyric: Boolean = false,
 
     /**
      * 歌词信息
      */
-    val lyric: String?,
+    val lyric: String? = "",
 
     /**
      * 实际路径
      */
-    val path: String,
+    val path: String = "",
     /**
      * 比特率
      */
@@ -139,11 +139,11 @@ data class XyMusic(
     /**
      * 播放列表Id
      */
-    val playlistItemId: String?,
+    val playlistItemId: String? = null,
     /**
      * 最近播放时间
      */
-    val lastPlayedDate: Long,
+    val lastPlayedDate: Long = System.currentTimeMillis(),
     /**
      * 创建时间
      */

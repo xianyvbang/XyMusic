@@ -12,7 +12,7 @@ import androidx.lifecycle.viewModelScope
 import cn.xybbz.R
 import cn.xybbz.api.client.IDataSourceManager
 import cn.xybbz.api.client.IDataSourceServer
-import cn.xybbz.api.client.jellyfin.data.ClientLoginInfoReq
+import cn.xybbz.api.data.auth.ClientLoginInfoReq
 import cn.xybbz.config.SettingsConfig
 import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.localdata.enums.DataSourceType
