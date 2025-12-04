@@ -1,10 +1,5 @@
 <resources>
     <string name="app_name">咸鱼听歌</string>
-    <string name="add_or_switch_data_sources">新增或切换数据源</string>
-    <string name="notification_content_title">无法恢复播放</string>
-    <string name="notification_content_text">如果媒体通知上仍存在播放按钮，请按下它，否则请打开应用程序开始播放，并将会话重新连接到控制器</string>
-    <string name="notification_channel_name">无法恢复播放</string>
-    <string name="exo_download_notification_channel_name">下载</string>
     <string name="home">首页</string>
     <string name="music">音乐</string>
     <string name="genres">流派</string>
