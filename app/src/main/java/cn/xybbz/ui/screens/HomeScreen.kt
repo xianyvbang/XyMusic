@@ -319,16 +319,6 @@ fun HomeScreen(
                             )
                         }
 
-
-                    IconButton(onClick = {
-                        homeViewModel.saveTmpDownload()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Rounded.AddCircle,
-                            contentDescription = "临时写入数据测试"
-                        )
-                    }
-
                     IconButton(onClick = {
                         homeViewModel.dataSourceManager.initDataSource()
                     }) {
@@ -421,9 +411,7 @@ fun HomeScreen(
                         XyItemTabBigButton(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.local),
-                            sub = if (ifShowCount) homeViewModel.localCount ?: stringResource(
-                                Constants.UNKNOWN
-                            ) else null,
+                            sub = if (ifShowCount) homeViewModel.localCount ?: "0" else null,
                             imageVector = Icons.Rounded.MusicNote,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
@@ -619,7 +607,7 @@ fun HomeScreen(
                         ) {
                             items(
                                 homeViewModel.mostPlayerMusicList,
-                                key = { item -> item.music.itemId }) {musicExtend ->
+                                key = { item -> item.music.itemId }) { musicExtend ->
                                 MusicMusicCardComponent(
                                     onItem = { musicExtend.music },
                                     imageSize = MusicCardImageSize,
