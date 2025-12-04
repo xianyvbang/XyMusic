@@ -1,12 +1,12 @@
 ![XyMusic](https://socialify.git.ci/xianyvbang/XyMusic/image?description=1&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fxianyvbang%2FXyMusic%2Frefs%2Fheads%2Fmain%2Fapp%2Fsrc%2Fmain%2Fres%2Fdrawable%2Flogo.png&name=1&theme=Light)
 
-<p style="text-align: center;">
+<div align="center">
     <img alt="release" src="https://img.shields.io/github/v/release/xianyvbang/XyMusic">
     <img alt="android" src="https://img.shields.io/badge/android-9%2B-blue">
     <img alt="license" src="https://img.shields.io/github/license/xianyvbang/XyMusic" />
     <img alt="downloads" src="https://img.shields.io/github/downloads/xianyvbang/XyMusic/total" />
     <img alt="issues" src="https://img.shields.io/github/issues/xianyvbang/XyMusic" />
-</p>
+</div>
 
 ## 下载
 
@@ -103,4 +103,5 @@
 [播放详情默认图片 作者: OpenClipart-Vectors](https://pixabay.com/zh/vectors/disc-record-retro-vinyl-audio-158357/)
 
 [艺术家详情默认图片 作者: iloarca](https://pixabay.com/zh/photos/singer-concert-red-music-band-4577668/)
+
 
