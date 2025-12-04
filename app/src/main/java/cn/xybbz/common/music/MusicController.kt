@@ -588,40 +588,38 @@ class MusicController(
     /**
      * 将MusicArtistExtend转换成MediaItem
      */
-    private fun musicSetMediaItem(musicExtend: XyPlayMusic): MediaItem {
+    private fun musicSetMediaItem(playMusic: XyPlayMusic): MediaItem {
 
         //设置单个资源
         val bundle = Bundle()
-        bundle.putString("id", musicExtend.itemId)
+        bundle.putString("id", playMusic.itemId)
         val mediaItemBuilder = MediaItem.Builder()
 
-        var musicUrl = musicExtend.musicUrl
-        if (musicExtend.filePath.isNullOrBlank()) {
-            musicUrl += "&playSessionId=${musicExtend.playSessionId}"
+        val pic = playMusic.pic
+
+        var musicUrl = playMusic.musicUrl
+        if (playMusic.filePath.isNullOrBlank()) {
+            musicUrl += "&playSessionId=${playMusic.playSessionId}"
             mediaItemBuilder.setUri(musicUrl)
+            val mediaMetadata = MediaMetadata.Builder()
+                .setTitle(playMusic.name)
+                .setArtworkUri(pic?.toUri())
+                .setArtist(playMusic.artists) // 可以设置其他元数据信息，例如专辑、时长等
+                .setExtras(bundle)
+                .build()
+            mediaItemBuilder .setMediaMetadata(mediaMetadata)
         } else {
-            mediaItemBuilder.setUri(musicExtend.filePath?.toUri())
+            mediaItemBuilder.setUri(playMusic.filePath?.toUri())
+                .setMediaMetadata(MediaMetadata.EMPTY)
         }
-
-        val pic = musicExtend.pic ?: ""
-        val mediaMetadata = MediaMetadata.Builder()
-            .setTitle(musicExtend.name)
-            .setArtworkUri(pic.toUri())
-            //可以存储文件的byte[]
-//            .setArtworkData()
-            .setArtist(musicExtend.artists) // 可以设置其他元数据信息，例如专辑、时长等
-            .setExtras(bundle)
-            .build()
         val normalizeMimeType =
-            MimeTypes.normalizeMimeType(MimeTypes.BASE_TYPE_AUDIO + "/${musicExtend.container}")
-
-        return mediaItemBuilder.setMediaId(musicExtend.itemId)
-            .setMediaMetadata(mediaMetadata)
+            MimeTypes.normalizeMimeType(MimeTypes.BASE_TYPE_AUDIO + "/${playMusic.container}")
+        return mediaItemBuilder.setMediaId(playMusic.itemId)
             //todo 这里的判断临时先用这个判断,后面改成
             .setMimeType(
                 if (FileTypes.inferFileTypeFromMimeType(normalizeMimeType) != -1) normalizeMimeType else MimeTypes.APPLICATION_M3U8
             )
-            .setTag(musicExtend)
+            .setTag(playMusic)
             .build()
     }
 

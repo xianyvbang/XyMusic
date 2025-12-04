@@ -28,8 +28,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
-import kotlin.collections.isNotEmpty
-import kotlin.collections.isNullOrEmpty
 
 @Immutable
 data class MusicPlayData(
@@ -129,7 +127,8 @@ class MusicPlayContext @Inject constructor(
                 val musicList = if (onMusicPlayParameter.albumId != null) {
                     val progress =
                         db.progressDao.selectByAlbumIdOne(onMusicPlayParameter.albumId)
-                    onMusicPlayParameter.musicId = progress?.musicId ?: ""
+                    if (progress != null)
+                        onMusicPlayParameter.musicId = progress.musicId
                     val pageNum = MusicListIndexUtils.getPageNum(
                         progress?.index ?: 0,
                         Constants.ALBUM_MUSIC_LIST_PAGE
@@ -365,7 +364,7 @@ class MusicPlayContext @Inject constructor(
         coroutineScope.launch {
             //2024年4月17日 10:54:36 albumId 可能为null/空 下面方法未判断
             val tmpMusicList = mutableListOf<XyPlayMusic>()
-            var tmpIndex:Int? = null
+            var tmpIndex: Int? = null
             val xyMusicList = musicPlayData.xyMusicList?.invoke()
             if (xyMusicList?.isNotEmpty() == true) {
                 if (musicPlayData.onMusicPlayParameter.musicId.isNotBlank())

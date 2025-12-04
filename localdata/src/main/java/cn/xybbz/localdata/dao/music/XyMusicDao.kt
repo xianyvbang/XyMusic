@@ -580,9 +580,8 @@ interface XyMusicDao {
         from HomeMusic hm
         inner join xy_music mi on hm.musicId = mi.itemId
         left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
-        left join favoritemusic fm on hm.musicId = fm.musicId
+        left join favoritemusic fm on hm.musicId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
         where hm.connectionId = (select connectionId from xy_settings)
-        and fm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
         order by hm.`index`
         limit :limit offset :startIndex 
@@ -637,9 +636,8 @@ interface XyMusicDao {
         from playqueuemusic pqm
         inner join xy_music mi on pqm.musicId = mi.itemId
         left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
-        left join favoritemusic fm on pqm.musicId = fm.musicId
+        left join favoritemusic fm on pqm.musicId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
         where pqm.connectionId = (select connectionId from xy_settings)
-        and fm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
         order by pqm.`index`
     """
@@ -710,11 +708,10 @@ interface XyMusicDao {
         """
         select itemId,xm.pic,xm.name,xm.album,xm.musicUrl,xm.container,xm.artists,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,:playSessionId as playSessionId 
         from xy_music xm 
-        left join favoritemusic fm on xm.itemId = fm.musicId
+        left join favoritemusic fm on xm.itemId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
         left join xy_download xd on xd.uid = xm.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
         where xm.itemId = :itemId
         and xm.connectionId = (select connectionId from xy_settings)
-        and fm.connectionId = (select connectionId from xy_settings)
         limit 1
     """
     )
@@ -732,11 +729,10 @@ interface XyMusicDao {
         """
         select itemId,xm.pic,xm.name,xm.album,xm.musicUrl,xm.container,xm.artists,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,:playSessionId as playSessionId 
         from xy_music xm 
-        left join favoritemusic fm on xm.itemId = fm.musicId
+        left join favoritemusic fm on xm.itemId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
         left join xy_download xd on xd.uid = xm.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
         where xm.itemId in (:itemIds) 
         and xm.connectionId = (select connectionId from xy_settings)
-        and fm.connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun selectExtendByIds(
@@ -976,9 +972,8 @@ interface XyMusicDao {
         from albummusic am
         inner join xy_music xm on am.musicId = xm.itemId
         left join xy_download xd on xd.uid = xm.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
-        left join favoritemusic fm on xm.itemId = fm.musicId
+        left join favoritemusic fm on xm.itemId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
         where am.connectionId = (select connectionId from xy_settings)
-        and fm.connectionId = (select connectionId from xy_settings)
         and xm.connectionId = (select connectionId from xy_settings)
         and  am.albumId = :albumId
         order by am.`index`
@@ -1018,9 +1013,8 @@ interface XyMusicDao {
         from artistmusic am
         inner join xy_music xm on am.musicId = xm.itemId
         left join xy_download xd on xd.uid = xm.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
-        left join favoritemusic fm on xm.itemId = fm.musicId
+        left join favoritemusic fm on xm.itemId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
         where am.connectionId = (select connectionId from xy_settings)
-        and fm.connectionId = (select connectionId from xy_settings)
         and xm.connectionId = (select connectionId from xy_settings)
         and  am.artistId = :artistId
         order by am.`index`

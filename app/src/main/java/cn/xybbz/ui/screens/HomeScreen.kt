@@ -328,8 +328,6 @@ fun HomeScreen(
                         )
                     }
 
-
-
                     IconButton(onClick = {
                         navHostController.navigate(RouterConstants.Setting) {
                             popUpTo(RouterConstants.Home) {
