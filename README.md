@@ -1,4 +1,4 @@
-# 咸鱼音乐
+![XyMusic](https://socialify.git.ci/xianyvbang/XyMusic/image?description=1&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fxianyvbang%2FXyMusic%2Frefs%2Fheads%2Fmain%2Fapp%2Fsrc%2Fmain%2Fres%2Fdrawable%2Flogo.png&name=1&theme=Light)
 
 <p style="text-align: center;">
     <img alt="release" src="https://img.shields.io/github/v/release/xianyvbang/XyMusic">
