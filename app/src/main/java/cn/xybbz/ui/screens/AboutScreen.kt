@@ -131,7 +131,7 @@ fun AboutScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(R.drawable.fish),
+                        painter = painterResource(R.drawable.logo_new),
                         contentScale = ContentScale.Crop,
                         contentDescription = stringResource(R.string.app_icon_info)
                     )

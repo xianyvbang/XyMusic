@@ -36,9 +36,9 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_salted_fish_icon"
+        android:icon="@mipmap/ic_new_logo"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_salted_fish_icon_round"
+        android:roundIcon="@mipmap/ic_new_logo_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Xybbzapp"
         android:usesCleartextTraffic="true">
