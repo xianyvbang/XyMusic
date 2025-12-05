@@ -28,7 +28,6 @@ import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.SettingsConfig
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.favorite.FavoriteRepository
-import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.update.ApkUpdateManager
 import cn.xybbz.entity.data.PlayerTypeData
@@ -42,9 +41,9 @@ import cn.xybbz.localdata.data.progress.Progress
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.time.Year
 import javax.inject.Inject
 
@@ -62,13 +61,15 @@ class MainViewModel @Inject constructor(
     private val alarmConfig: AlarmConfig,
     private val apkUpdateManager: ApkUpdateManager,
     private val favoriteRepository: FavoriteRepository,
-    val selectControl: SelectControl,
-    private val lrcServer: LrcServer
+    val selectControl: SelectControl
 ) : ViewModel() {
 
     val dataSourceManager = _dataSourceManager
     val settingsConfig = _settingsConfig
     val _db = db
+
+    var connectionIsLogIn by mutableStateOf( false)
+        private set
 
     /**
      * 专辑播放历史功能开启数据
@@ -82,12 +83,10 @@ class MainViewModel @Inject constructor(
     //从1900年到当前年份的set列表
     val yearSet by mutableStateOf(DateUtil.getYearSet())
 
-
-    //下载的异步携程
-    var downloadJob: Job? = null
-
     init {
         Log.i("=====", "MainViewModel初始化")
+        val connectionConfig = runBlocking { db.connectionConfigDao.selectConnectionConfig() }
+        connectionIsLogIn = connectionConfig != null
         //加载是否开启专辑播放历史功能数据
         getEnableProgressMapData()
         //初始化年代数据
