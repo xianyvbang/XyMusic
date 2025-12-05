@@ -20,7 +20,6 @@ class ConnectionConfigModule {
         settingsConfig: SettingsConfig
     ): ConnectionConfigServer {
         val connectionConfigServer = ConnectionConfigServer(db, settingsConfig)
-        connectionConfigServer.initData()
         return connectionConfigServer;
     }
 }

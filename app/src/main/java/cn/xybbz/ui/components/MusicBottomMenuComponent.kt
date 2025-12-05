@@ -219,7 +219,7 @@ fun MusicBottomMenuComponent(
             musicInfo = music,
             onIfShowMusicInfo = { ifShowMusicInfo },
             onSetShowMusicInfo = { ifShowMusicInfo = it },
-            dataSourceType = musicBottomMenuViewModel.connectionConfigServer.connectionConfig?.type
+            dataSourceType = musicBottomMenuViewModel.dataSourceManager.dataSourceType
         )
 
 

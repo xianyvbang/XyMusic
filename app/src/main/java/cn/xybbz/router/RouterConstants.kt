@@ -1,5 +1,6 @@
 package cn.xybbz.router
 
+import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -108,7 +109,7 @@ import kotlinx.serialization.Serializable
     @Serializable
     @SerialName("Connection")
     data class Connection(
-        val connectionUiType: String? = null
+        val connectionUiType: ConnectionUiType? = null
     ) : RouterConstants
 
     /**

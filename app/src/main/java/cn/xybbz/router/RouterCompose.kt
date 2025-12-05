@@ -46,7 +46,7 @@ fun RouterCompose(
     val mainViewModel = LocalMainViewModel.current
     NavHost(
         navController = navHostController,
-        startDestination = if (mainViewModel.dataSourceManager.dataSourceType == null) RouterConstants.Connection() else RouterConstants.Screen
+        startDestination = if (mainViewModel.connectionIsLogIn) RouterConstants.Screen else RouterConstants.Connection()
     ) {
 
         /* dialog("test") {
@@ -64,7 +64,7 @@ fun RouterCompose(
         navigation<RouterConstants.Screen>(
             startDestination = RouterConstants.Home
         ) {
-            homeComposable<RouterConstants.Home>() {
+            nodeComposable<RouterConstants.Home>() {
                 HomeScreen(modifier = Modifier)
             }
 

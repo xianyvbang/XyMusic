@@ -64,6 +64,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
+import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.common.enums.img
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalNavController
@@ -115,7 +116,7 @@ private enum class ScreenType {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConnectionScreen(
-    connectionUiType: String?,
+    connectionUiType: ConnectionUiType?,
     modifier: Modifier = Modifier,
     connectionViewModel: ConnectionViewModel = hiltViewModel<ConnectionViewModel>(),
 ) {
@@ -151,7 +152,7 @@ fun ConnectionScreen(
         TopAppBarComponent(title = {
             Text(text = stringResource(R.string.server_connection))
         }, navigationIcon = {
-            if (!connectionUiType.isNullOrBlank() && connectionUiType == "0")
+            if (connectionUiType != null && connectionUiType == ConnectionUiType.ADD_CONNECTION)
                 IconButton(
                     onClick = composeClick{
                         navHostController.popBackStack()
@@ -584,6 +585,9 @@ fun ConnectionScreen(
                                         onClick = {
                                             if (connectionViewModel.dataSourceManager.dataSourceType == null) {
                                                 connectionViewModel.changeDataSource()
+                                                navHostController.navigate(RouterConstants.Screen) {
+                                                    popUpTo<RouterConstants.Connection> { inclusive = true }
+                                                }
                                             } else {
                                                 navHostController.popBackStack()
                                             }

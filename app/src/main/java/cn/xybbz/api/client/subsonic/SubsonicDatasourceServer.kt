@@ -49,7 +49,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
 import javax.inject.Inject
-import kotlin.collections.flatten
 
 class SubsonicDatasourceServer @Inject constructor(
     private val db: DatabaseClient,
@@ -377,12 +376,14 @@ class SubsonicDatasourceServer @Inject constructor(
      */
     override suspend fun getPlaylists(): List<XyAlbum>? {
         db.albumDao.removePlaylist()
-        return connectionConfigServer.connectionConfig?.username?.let { username ->
+        val username = subsonicApiClient.username
+        return if (username.isNotBlank()) {
             val playlists = subsonicApiClient.playlistsApi().getPlaylists(username)
             playlists.subsonicResponse.playlists?.playlist?.let { playlist ->
                 saveBatchAlbum(convertToPlaylists(playlist), MusicDataTypeEnum.PLAYLIST, true)
             }
-        }
+        } else null
+
     }
 
     /**

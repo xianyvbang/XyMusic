@@ -4,12 +4,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 
 /**
  * 用户信息关联
@@ -19,8 +20,11 @@ class ConnectionConfigServer(
     private val settingsConfig: SettingsConfig
 ) {
 
-    var connectionConfig by mutableStateOf<ConnectionConfig?>(null)
-        private set
+    private val scope = CoroutineScopeUtils.getIo(this.javaClass.name)
+
+
+    private var connectionConfig by mutableStateOf<ConnectionConfig?>(null)
+
 
     var libraryId by mutableStateOf<String?>(null)
         private set
@@ -37,11 +41,11 @@ class ConnectionConfigServer(
      * 初始化数据
      */
     fun initData() {
-        val connection = runBlocking {
-            db.connectionConfigDao.selectConnectionConfig()
+        scope.launch {
+            val connection = db.connectionConfigDao.selectConnectionConfig()
+            connectionConfig = connection
+            libraryId = connection?.libraryId
         }
-        connectionConfig = connection
-        libraryId = connection?.libraryId
     }
 
     suspend fun updateConnection() {

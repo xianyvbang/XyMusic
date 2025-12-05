@@ -105,13 +105,15 @@ class IDataSourceManager(
      * 初始化对象信息
      */
     fun initDataSource() {
-        if (connectionConfigServer.connectionConfig != null) {
-            connectionConfigServer.connectionConfig?.let {
-                setDataSourceTypeFun(it.type)
+        connectionConfigServer.initData()
+        datasourceCoroutineScope.launch {
+            val connectionConfig = db.connectionConfigDao.selectConnectionConfig()
+            if (connectionConfig != null) {
+                setDataSourceTypeFun(connectionConfig.type)
                 serverLogin()
             }
-
         }
+
     }
 
     /**

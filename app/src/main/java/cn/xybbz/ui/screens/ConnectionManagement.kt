@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,18 +31,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
+import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.common.enums.img
 import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.router.RouterConstants
-import cn.xybbz.ui.components.LazyListComponent
-import cn.xybbz.ui.components.LazyLoadingAndStatus
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.ItemTrailingArrowRight
-import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.ConnectionManagementViewModel
 
@@ -75,7 +72,7 @@ fun ConnectionManagement(
                 )
             }, actions = {
                 IconButton(onClick = {
-                    navHostController.navigate(RouterConstants.Connection(connectionUiType = "0"))
+                    navHostController.navigate(RouterConstants.Connection(connectionUiType = ConnectionUiType.ADD_CONNECTION))
                 }) {
                     Icon(imageVector = Icons.Rounded.AddCard, contentDescription = "")
                 }
@@ -124,7 +121,7 @@ fun ConnectionManagement(
                             horizontalArrangement = Arrangement.End
                         ) {
                             Switch(
-                                checked = connectionManagementViewModel.connectionConfigServer.connectionConfig?.id == connectionConfig.id,
+                                checked = connectionManagementViewModel.connectionConfigServer.getConnectionId() == connectionConfig.id,
                                 onCheckedChange = {
                                     if (it)
                                         connectionManagementViewModel.changeDataSource(

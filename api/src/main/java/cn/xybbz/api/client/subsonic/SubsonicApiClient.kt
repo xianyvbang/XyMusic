@@ -16,7 +16,8 @@ class SubsonicApiClient : DefaultParentApiClient() {
     /**
      * 用户名
      */
-    private var username: String = ""
+    var username: String = ""
+        private set
 
     /**
      * md5(密码+盐)计算出的身份验证令牌
@@ -170,6 +171,7 @@ class SubsonicApiClient : DefaultParentApiClient() {
         }
         return subsonicLyricsApi
     }
+
 
     /**
      * 获得校验参数组成的Map

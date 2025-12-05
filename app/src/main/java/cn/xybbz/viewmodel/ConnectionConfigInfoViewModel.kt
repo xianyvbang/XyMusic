@@ -128,7 +128,7 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
                 key = encryptAES.aesKey,
                 connectionId = connectionId
             )
-            if (connectionConfigServer.connectionConfig?.id == connectionId) {
+            if (connectionConfigServer.getConnectionId() == connectionId) {
                 viewModelScope.launch {
                     dataSourceManager.initDataSource()
                 }
@@ -146,7 +146,7 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
     @OptIn(UnstableApi::class)
     suspend fun removeThisConnection() {
 
-        if (connectionConfigServer.connectionConfig?.id == connectionId) {
+        if (connectionConfigServer.getConnectionId() == connectionId) {
             //如果当前链接是最后链接,则直接删除数据里的数据
             val connectionCount = db.connectionConfigDao.selectCount()
             if (connectionCount == 0) {
@@ -204,7 +204,7 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
             )
             connectionConfigServer.updateConnection()
             //判断是否需要重新登录
-            if (connectionConfigServer.connectionConfig?.id == connectionId) {
+            if (connectionConfigServer.getConnectionId() == connectionId) {
                 dataSourceManager.initDataSource()
             }
 

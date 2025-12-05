@@ -78,7 +78,7 @@ class SelectLibraryViewModel @AssistedInject constructor(
                 libraryId = tmpData,
                 connectionId = connectionId
             )
-            if (_connectionConfigServer.connectionConfig?.id == connectionId) {
+            if (_connectionConfigServer.getConnectionId() == connectionId) {
                 _connectionConfigServer.updateLibraryId(tmpData)
             }
         }
