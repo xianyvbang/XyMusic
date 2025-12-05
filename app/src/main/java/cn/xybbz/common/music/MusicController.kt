@@ -80,6 +80,9 @@ class MusicController(
     var musicInfo by mutableStateOf<XyPlayMusic?>(null)
         private set
 
+    var picByte: ByteArray? by mutableStateOf(null)
+        private set
+
     //音频总时长
     var duration by mutableLongStateOf(0L)
         private set
@@ -204,6 +207,14 @@ class MusicController(
                 "=====",
                 "当前索引${mediaController?.currentMediaItemIndex} --- ${mediaMetadata.title}"
             )
+            if (musicInfo?.pic.isNullOrBlank()){
+                picByte = mediaMetadata.artworkData
+                musicInfo?.picByte = picByte
+            }else {
+                picByte = null
+                musicInfo?.picByte = null
+            }
+
             //获取当前音乐的index
             setCurrentPositionData(mediaController?.currentPosition ?: 0)
             duration = mediaController?.duration ?: 0
@@ -237,6 +248,9 @@ class MusicController(
                         onNextList?.invoke(pageNum)
                     }
                     musicInfo = originMusicList[curOriginIndex]
+
+
+
                     //如果状态是播放的话
                     if (state != PlayStateEnum.Pause)
                         startCache(originMusicList[curOriginIndex])

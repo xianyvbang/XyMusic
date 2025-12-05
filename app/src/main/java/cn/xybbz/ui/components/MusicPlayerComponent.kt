@@ -49,7 +49,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -96,6 +95,7 @@ import kotlin.math.roundToInt
 @Composable
 fun MusicPlayerComponent(
     music: XyPlayMusic,
+    picByte: ByteArray? = null,
     toNext: () -> Unit,
     backNext: () -> Unit,
     onSetState: (Boolean) -> Unit
@@ -131,6 +131,7 @@ fun MusicPlayerComponent(
     ) {
         MusicPlayerScreen(
             musicDetail = music,
+            picByte = picByte,
             onCloseSheet = {
                 coroutineScope.launch {
                     sheetStateR.hide()
@@ -154,6 +155,7 @@ fun MusicPlayerComponent(
 @Composable
 fun MusicPlayerScreen(
     musicDetail: XyPlayMusic,
+    picByte: ByteArray? = null,
     musicPlayerViewModel: MusicPlayerViewModel = hiltViewModel<MusicPlayerViewModel>(),
     onCloseSheet: () -> Unit,
     onSeekToNext: () -> Unit,
@@ -174,7 +176,7 @@ fun MusicPlayerScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         AsyncImage(
-            model = musicDetail.pic,
+            model = musicDetail.pic ?: picByte,
             contentDescription = stringResource(R.string.album_cover),
             modifier = Modifier
                 .align(Alignment.Center)
@@ -256,7 +258,7 @@ fun MusicPlayerScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             XyImage(
-                                model = musicDetail.pic,
+                                model = musicDetail.pic ?: picByte,
                                 contentDescription = stringResource(R.string.album_cover),
                                 modifier = Modifier
                                     .align(Alignment.Center)

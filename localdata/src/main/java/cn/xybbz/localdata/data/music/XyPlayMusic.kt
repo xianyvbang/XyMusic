@@ -1,5 +1,6 @@
 package cn.xybbz.localdata.data.music
 
+import androidx.room.Ignore
 import java.util.UUID
 
 /**
@@ -11,6 +12,8 @@ data class XyPlayMusic(
      * 音乐图片
      */
     val pic: String?,
+
+
     /**
      * 音乐名称
      */
@@ -49,4 +52,11 @@ data class XyPlayMusic(
      * 文件地址
      */
     val filePath:String?
-)
+){
+    /**
+     * 音乐图片字节码
+     */
+    @Ignore
+    var picByte: ByteArray? = null
+
+}

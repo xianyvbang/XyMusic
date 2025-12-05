@@ -1,7 +1,6 @@
 package cn.xybbz.ui.components
 
 
-import android.os.Build
 import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
@@ -111,6 +110,7 @@ fun SnackBarPlayerComponent(
     snackBarPlayerViewModel.musicController.musicInfo?.let {
         MusicPlayerComponent(
             music = it,
+            snackBarPlayerViewModel.musicController.picByte,
             toNext = {
                 Log.i("=====", "数据调用SnackBarPlayerComponent")
                 snackBarPlayerViewModel.musicController.seekToNext()
@@ -547,7 +547,7 @@ fun AsyncImageCover(
     XyImage(
         modifier = Modifier
             .size(XyTheme.dimens.snackBarPlayerHeight),
-        model = musicController.musicInfo?.pic,
+        model = musicController.musicInfo?.pic ?: musicController.picByte,
         contentScale = ContentScale.Crop,
         contentDescription = stringResource(R.string.music_cover),
         placeholder = painterResource(R.drawable.music_xy_placeholder_foreground),
