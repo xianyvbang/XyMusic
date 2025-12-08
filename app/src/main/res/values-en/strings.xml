@@ -1,85 +1,82 @@
 <resources>
-    <string name="app_name">The salted fish listen to the song</string>
-    <string name="add_or_switch_data_sources">Add or switch data sources</string>
-    <string name="notification_content_title">Unable to resume playback</string>
-    <string name="notification_content_text">If the play button is still present on the media notification, press it, otherwise open the app to start playback and reconnect the session to the controller</string>
-    <string name="notification_channel_name">Unable to resume playback</string>
-    <string name="exo_download_notification_channel_name">Download</string>
+    <string name="app_name">Salted Fish Music</string>
     <string name="home">Home</string>
     <string name="music">Music</string>
-    <string name="genres">genre</string>
+    <string name="genres">Genre</string>
     <string name="search">Search</string>
     <string name="httpInput">Server-side input box icon</string>
     <string name="server">The server address</string>
 
     <!--关于页面-->
-    <string name="about">concerning</string>
+    <string name="about">About</string>
     <string name="app_icon_info">APP icon</string>
-    <string name="current_version">current version</string>
+    <string name="current_version">Current version</string>
     <string name="check_updates">Check for updates</string>
-    <string name="latest_version">The latest version</string>
-    <string name="new_version_detected">A new version is detected</string>
+    <string name="latest_version">Latest version</string>
+    <string name="new_version_detected">New version detected</string>
     <string name="get_latest_version">Getting the latest version, please wait</string>
     <string name="get_latest_version_success">Get the latest version successfully</string>
     <string name="get_latest_version_fail">Getting the latest version failed</string>
-    <string name="new_version_download">There is a new version to download and update</string>
+    <string name="now_new_version">It is already the latest version</string>
+    <string name="new_version_download">There is a new version</string>
     <string name="version_number">Version number</string>
     <string name="current_download_progress">Current download progress</string>
     <string name="download_failed">Download failed</string>
+    <string name="download_screen">Download page</string>
     <string name="cancel_download">Cancel the download</string>
     <string name="download_install">Download and install</string>
     <string name="close">Shut down</string>
     <string name="problem_feedback">Feedback on questions</string>
     <string name="function_not_implemented">Functionality is not implemented</string>
     <string name="official_website">Official website</string>
-    <string name="no_official_website_yet">There is no official website for the time being</string>
+    <string name="no_official_website_yet">No official website yet</string>
 
 
     <!-- 通用-->
-    <string name="return_setting_screen">Go back to Settings</string>
-    <string name="return_home">Back to home</string>
-    <string name="return_album_page">Return to the album list</string>
-    <string name="back_to_genres_list">Returns to the list of genres</string>
-    <string name="back">return</string>
+    <string name="return_setting_screen">Return to settings</string>
+    <string name="return_home">Return to homepage</string>
+    <string name="return_album_page">Return to album list</string>
+    <string name="back_to_genres_list">Return to the list of genres</string>
+    <string name="back">Return</string>
     <string name="username">Username</string>
-    <string name="password">password</string>
-    <string name="all_media_libraries">All media libraries</string>
+    <string name="password">Password</string>
+    <string name="all_media_libraries">All Media Library</string>
 
     <!--    专辑详情-->
-    <string name="album">album</string>
+    <string name="album">Album</string>
     <string name="playlist">Playlist</string>
-    <string name="open_operation_menu">Open the Actions menu</string>
-    <string name="import_playlist">Import the playlist</string>
-    <string name="import_playlist_hint">The imported playlist will match the song name and the singer to the service, which may cause inaccurate data</string>
+    <string name="open_operation_menu">Open the operation menu</string>
+    <string name="import_playlist">Import playlist</string>
+    <string name="import_playlist_hint">Importing a playlist involves matching the song title and artist with the server, which may result in inaccurate data. Please carefully check the data after importing. Importing a playlist will also simultaneously create the playlist on the server.</string>
     <string name="import_info">Import</string>
     <string name="select_all">Select all</string>
-    <string name="deselect_all">Cancel all</string>
+    <string name="deselect_all">Select none</string>
     <string name="pause_playback">Pause playback</string>
-    <string name="resume_playback">Keep playing</string>
+    <string name="resume_playback">Continue playing</string>
     <string name="start_playback">Start playing</string>
-    <string name="close_selection">Close the selection</string>
+    <string name="close_selection">Close selection</string>
     <string name="delete_playback_history">Delete playback history</string>
-    <string name="select">choose</string>
+    <string name="select">Choose</string>
     <string name="album_cover">Album cover</string>
-    <string name="favorite_added">Bookmarked</string>
+    <string name="favorite_added">Already saved</string>
     <string name="favorite_removed">Not collected</string>
-    <string name="enable_playback_history">Turn on Save playback history</string>
-    <string name="export_playlist">Export the playlist</string>
-    <string name="rename_playlist">Rename the playlist</string>
-    <string name="delete_playlist">Delete the playlist</string>
-    <string name="modify_playlist_name">Modify the playlist name</string>
-    <string name="confirm_delete_playlist">Are you sure you want to remove $s\?</string>
+    <string name="enable_playback_history">Enable playback history</string>
+    <string name="export_playlist">Export playlist</string>
+    <string name="rename_playlist">Rename playlist</string>
+    <string name="delete_playlist">Delete playlist</string>
+    <string name="modify_playlist_name">Change playlist name</string>
+    <string name="confirm_delete_playlist">Are you sure you want to delete $s?</string>
 
     <!--    艺术家详情-->
-    <string name="no_description">There is no introduction</string>
+    <string name="no_description">No introduction yet</string>
     <string name="artist_cover">Artist cover</string>
     <!--艺术家-->
-    <string name="artist">artist</string>
-    <string name="get_all_artists">Get all the artists</string>
-    <string name="get_favorite_artists">Only collectible artists are obtained</string>
+    <string name="artist">Artist</string>
+    <string name="get_all_artists">Get all artists</string>
+    <string name="get_favorite_artists">Only collect artists</string>
     <!--    缓存设置页面-->
-    <string name="music_cache_limit_title">Music cache limit</string>
-    <string name="current_auto_cache_limit">Currently, the cache limit is set to %s</string>
+    <string name="music_cache_limit_title">Music caching limit</string>
+    <string name="current_auto_cache_limit">The current automatic cache limit is set to %s</string>
     <string name="auto_cache_limit_description">
 Automatically setting the cache limit is to automatically adjust the music cache limit according to the available memory of the phone.
 
@@ -92,34 +89,34 @@ Automatic calculation rules for the upper limit of cache:
 
     <!--    链接设置-->
     <string name="connection_info">Connection information</string>
-    <string name="user_settings">User settings</string>
-    <string name="copy_success">Successfully copied</string>
-    <string name="media_library_management">Media library management</string>
-    <string name="music_library">Music library</string>
+    <string name="user_settings">User Settings</string>
+    <string name="copy_success">Copy successful</string>
+    <string name="media_library_management">Media Library Management</string>
+    <string name="music_library">Music Library</string>
     <string name="connection_address">Link address</string>
-    <string name="set_alias">Set an alias</string>
-    <string name="delete_connection">Delete the connection</string>
+    <string name="set_alias">Set alias</string>
+    <string name="delete_connection">Delete connection</string>
     <string name="cannot_delete_current_connection">The current connection cannot be deleted</string>
-    <string name="warning">note</string>
-    <string name="confirm_delete_connection">Are you sure you want to delete your current connection information\?</string>
+    <string name="warning">Notice</string>
+    <string name="confirm_delete_connection">Are you sure you want to delete the current connection information?</string>
 
     <!--链接管理页面-->
-    <string name="connection_settings_list">List of connection settings</string>
-    <string name="view_connection_info">View the information in %s</string>
+    <string name="connection_settings_list">Connection settings list</string>
+    <string name="view_connection_info">View information in %s</string>
     <!--链接页面-->
     <string name="server_connection">Server connection</string>
     <string name="connect_to_service">Connect to %s</string>
-    <string name="select_protocol">Select the protocol you want to use to connect to your music library</string>
+    <string name="select_protocol">Choose the protocol you want to use to connect to your music library</string>
     <string name="server_cannot_be_empty">The server address cannot be empty</string>
-    <string name="username_cannot_be_empty">Usernames cannot be empty</string>
-    <string name="connect">connect</string>
-    <string name="reselect">Re-select</string>
+    <string name="username_cannot_be_empty">Username cannot be empty</string>
+    <string name="connect">Connect</string>
+    <string name="reselect">Reselect</string>
     <string name="logging_in">Logging in...</string>
     <string name="login_failed">Login failed</string>
     <string name="reconnect">Reconnect</string>
-    <string name="connection_successful">The connection was successful</string>
-    <string name="connection_success_image">Connect the success GIF</string>
-    <string name="enter_page">Go to the page</string>
+    <string name="connection_successful">Connection successful</string>
+    <string name="connection_success_image">Connection successful GIF</string>
+    <string name="enter_page">Enter page</string>
     <string name="no_music_service_selected">No music service selected</string>
     <string name="music_service">Music services</string>
     <string name="selected_item">Select %s</string>
@@ -127,69 +124,68 @@ Automatic calculation rules for the upper limit of cache:
     <string name="back_to_input_credentials">Return to input</string>
     <!--收藏页面-->
     <string name="my_favorites">My collection</string>
-    <string name="daily_recommendations">Daily recommendations</string>
+    <string name="daily_recommendations">Daily Recommendation</string>
 
     <!--首页-->
 
-    <string name="open_add_or_switch_data_sources">Open the Add or Switch Data Source menu</string>
-    <string name="add_connection">Add a connection</string>
-    <string name="connection_link">link</string>
-    <string name="icon">icon</string>
-    <string name="login_exception_info">Login to the anomaly information</string>
-    <string name="refresh_login">Refresh the login</string>
-    <string name="open_settings_page_button">Open the Settings page button</string>
-    <string name="search_page_switch_button">Search for the page toggle button</string>
-    <string name="all_music">All music</string>
-    <string name="favorite">collection</string>
-    <string name="most_played">Most played</string>
-    <string name="recommended_music">Daily recommendations</string>
-    <string name="random_play">Shuffle</string>
+    <string name="open_add_or_switch_data_sources">Open the menu for adding or switching data sources</string>
+    <string name="add_connection">Add connection</string>
+    <string name="connection_link">Link</string>
+    <string name="icon">Icon</string>
+    <string name="login_exception_info">Login error information</string>
+    <string name="refresh_login">Refresh Login</string>
+    <string name="open_settings_page_button">Open settings page button</string>
+    <string name="search_page_switch_button">Open search page button</string>
+    <string name="all_music">Music</string>
+    <string name="local">Local</string>
+    <string name="favorite">Collect</string>
+    <string name="most_played">Most Played</string>
+    <string name="random_play">Random play</string>
     <string name="list_loop">List loop</string>
-    <string name="latest_albums">latest album</string>
+    <string name="latest_albums">Latest album</string>
     <string name="recently_played_albums">Recently played albums</string>
     <string name="recently_played_music">Recently playing music</string>
-    <string name="playlists">Playlist</string>
     <string name="create_playlist">Create a playlist</string>
-    <string name="refresh_playlist">Refresh the playlist</string>
-    <string name="open_playlist_operations_popup">Open the playlist operation pop-up window</string>
-    <string name="new_playlist">New playlist</string>
-    <string name="no_playlists">There is no playlist yet</string>
+    <string name="refresh_playlist">Refresh playlist</string>
+    <string name="open_playlist_operations_popup">Open playlist operation pop-up window</string>
+    <string name="new_playlist">Create a new playlist</string>
+    <string name="no_playlists">No playlist available</string>
     <string name="no_data">No data available</string>
 
     <!--界面设置-->
     <string name="interface_settings">Interface settings</string>
-    <string name="interface_screen">interface</string>
+    <string name="interface_screen">Interface</string>
     <string name="reset">Reset</string>
-    <string name="single_color_setting">Whether to set a single color</string>
-    <string name="global_gradient_setting">Whether to switch to a global uniform gradient</string>
-    <string name="global_gradient_colors">Global gradient color</string>
-    <string name="home_background_gradient">The background of the homepage is gradient</string>
-    <string name="music_list_background_gradient">The background gradient color of the music list page</string>
-    <string name="album_list_background_gradient">Album list background gradient color</string>
+    <string name="single_color_setting">Should I use a single color setting</string>
+    <string name="global_gradient_setting">Should I switch to a globally uniform gradient color</string>
+    <string name="global_gradient_colors">Global gradient</string>
+    <string name="home_background_gradient">Homepage background gradient</string>
+    <string name="music_list_background_gradient">Gradient background color of music playlist</string>
+    <string name="album_list_background_gradient">Album list background gradient</string>
     <string name="album_detail_background_gradient">Album details background gradient</string>
-    <string name="artist_list_background_gradient">Artist list background gradient color</string>
-    <string name="artist_detail_background_gradient">Artist DetailsBackground gradient</string>
-    <string name="favorite_list_background_gradient">Favorites list background gradient</string>
-    <string name="genre_list_background_gradient">Genre list background gradient color</string>
-    <string name="genre_detail_background_gradient">Genre details background gradient color</string>
-    <string name="settings_page_background_gradient">Set the page background gradient color</string>
-    <string name="about_page_background_gradient">About page background gradients</string>
-    <string name="connection_management_background_gradient">Link management page background gradient</string>
-    <string name="connection_detail_background_gradient">The background of the link details page is gradient</string>
-    <string name="search_page_background_gradient">Search for page background gradients</string>
-    <string name="cache_limit_setting_background_gradient">Cache size sets the page background gradient color</string>
-    <string name="language_switching_background_gradient">Toggle language page background gradient color</string>
-    <string name="storage_management_background_gradient">Storage management page background gradient</string>
-    <string name="bottom_player_gradient">The bottom playbar has a gradient color</string>
-    <string name="bottom_sheet_gradient">A menu gradient pops up at the bottom</string>
-    <string name="dialog_gradient">The pop-up window changes color</string>
-    <string name="error_dialog_gradient">The anomaly/alarm pop-up window changes color</string>
+    <string name="artist_list_background_gradient">Gradient background color for artist list</string>
+    <string name="artist_detail_background_gradient">Artist details background gradient</string>
+    <string name="favorite_list_background_gradient">Gradient background color of the collection list</string>
+    <string name="genre_list_background_gradient">Genre list background gradient</string>
+    <string name="genre_detail_background_gradient">Genre details background gradient</string>
+    <string name="settings_page_background_gradient">Set page background gradient color</string>
+    <string name="about_page_background_gradient">Regarding the gradient color of the page background</string>
+    <string name="connection_management_background_gradient">Gradient background color of the link management page</string>
+    <string name="connection_detail_background_gradient">Gradient background color of link details page</string>
+    <string name="search_page_background_gradient">Gradient background color of search page</string>
+    <string name="cache_limit_setting_background_gradient">Cache size settings page background gradient color</string>
+    <string name="language_switching_background_gradient">Language switch page background gradient</string>
+    <string name="storage_management_background_gradient">Gradient background color of storage management page</string>
+    <string name="bottom_player_gradient">Gradient color in the bottom playback bar</string>
+    <string name="bottom_sheet_gradient">Bottom pop-up menu gradient</string>
+    <string name="dialog_gradient">Pop-up Gradient</string>
+    <string name="error_dialog_gradient">Gradient color of the abnormal/alarm pop-up</string>
     <string name="select_library_background_gradient">Select the background gradient color of the media library page</string>
-    <string name="player_default_background_color">The default background color for the playpage page</string>
+    <string name="player_default_background_color">Default background color of the playback page</string>
 
     <!--    语言页面-->
-    <string name="language">language</string>
-    <string name="selected_language">The language is selected</string>
+    <string name="language">Language</string>
+    <string name="selected_language">Language already selected</string>
     <string name="available_languages">Language is selectable</string>
     <!--    存储管理页面-->
     <string name="storage_management">Storage management</string>

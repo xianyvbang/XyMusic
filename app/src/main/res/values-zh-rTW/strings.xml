@@ -1,10 +1,5 @@
 <resources>
     <string name="app_name">鹹魚聽歌</string>
-    <string name="add_or_switch_data_sources">新增或切換數據源</string>
-    <string name="notification_content_title">無法恢復播放</string>
-    <string name="notification_content_text">如果媒體通知上仍存在播放按鈕，請按下它，否則請打開應用程式開始播放，並將會話重新連接到控制器</string>
-    <string name="notification_channel_name">無法恢復播放</string>
-    <string name="exo_download_notification_channel_name">下載</string>
     <string name="home">首頁</string>
     <string name="music">音樂</string>
     <string name="genres">流派</string>
@@ -22,10 +17,12 @@
     <string name="get_latest_version">正在獲取最新版本，請稍等</string>
     <string name="get_latest_version_success">獲取最新版本成功</string>
     <string name="get_latest_version_fail">獲取最新版本失敗</string>
-    <string name="new_version_download">有新版本下載可更新</string>
+    <string name="now_new_version">已是最新版本</string>
+    <string name="new_version_download">有新版本</string>
     <string name="version_number">版本號</string>
     <string name="current_download_progress">當前下載進度</string>
     <string name="download_failed">下載失敗</string>
+    <string name="download_screen">下載頁面</string>
     <string name="cancel_download">取消下載</string>
     <string name="download_install">下載並安裝</string>
     <string name="close">關閉</string>
@@ -41,7 +38,7 @@
     <string name="return_album_page">返回專輯清單</string>
     <string name="back_to_genres_list">返回流派清單</string>
     <string name="back">返回</string>
-    <string name="username">使用者名</string>
+    <string name="username">使用者名稱</string>
     <string name="password">密碼</string>
     <string name="all_media_libraries">全部媒體庫</string>
 
@@ -53,7 +50,7 @@
     <string name="import_playlist_hint">導入歌單會根據歌曲名稱和歌手到服務中進行匹配，可能造成數據不準確，請導入后仔細查驗，導入歌單也會同步在服務端創建歌單</string>
     <string name="import_info">導入</string>
     <string name="select_all">全選</string>
-    <string name="deselect_all">取消全選</string>
+    <string name="deselect_all">全不選</string>
     <string name="pause_playback">暫停播放</string>
     <string name="resume_playback">繼續播放</string>
     <string name="start_playback">開始播放</string>
@@ -138,17 +135,16 @@
     <string name="login_exception_info">登陸異常資訊</string>
     <string name="refresh_login">刷新登錄</string>
     <string name="open_settings_page_button">打開設置頁面按鈕</string>
-    <string name="search_page_switch_button">搜索頁面切換按鈕</string>
-    <string name="all_music">所有音樂</string>
+    <string name="search_page_switch_button">開啟搜尋頁面按鈕</string>
+    <string name="all_music">音樂</string>
+    <string name="local">本地</string>
     <string name="favorite">收藏</string>
     <string name="most_played">最多播放</string>
-    <string name="recommended_music">每日推薦</string>
     <string name="random_play">隨機播放</string>
     <string name="list_loop">清單迴圈</string>
     <string name="latest_albums">最新專輯</string>
     <string name="recently_played_albums">最近播放專輯</string>
     <string name="recently_played_music">最近播放音樂</string>
-    <string name="playlists">歌單</string>
     <string name="create_playlist">創建歌單</string>
     <string name="refresh_playlist">刷新歌單</string>
     <string name="open_playlist_operations_popup">打開歌單操作彈窗</string>

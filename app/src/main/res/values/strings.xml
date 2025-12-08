@@ -18,7 +18,7 @@
     <string name="get_latest_version_success">获取最新版本成功</string>
     <string name="get_latest_version_fail">获取最新版本失败</string>
     <string name="now_new_version">软件已是最新版本</string>
-    <string name="new_version_download">有新版本下载可更新</string>
+    <string name="new_version_download">有新版本</string>
     <string name="version_number">版本号</string>
     <string name="current_download_progress">当前下载进度</string>
     <string name="download_failed">下载失败</string>
@@ -129,18 +129,16 @@
     <string name="login_exception_info">登陆异常信息</string>
     <string name="refresh_login">刷新登录</string>
     <string name="open_settings_page_button">打开设置页面按钮</string>
-    <string name="search_page_switch_button">搜索页面切换按钮</string>
+    <string name="search_page_switch_button">打开搜索页面按钮</string>
     <string name="all_music">音乐</string>
     <string name="local">本地</string>
     <string name="favorite">收藏</string>
     <string name="most_played">最多播放</string>
-    <string name="recommended_music">每日推荐</string>
     <string name="random_play">随机播放</string>
     <string name="list_loop">列表循环</string>
     <string name="latest_albums">最新专辑</string>
     <string name="recently_played_albums">最近播放专辑</string>
     <string name="recently_played_music">最近播放音乐</string>
-    <string name="playlists">歌单</string>
     <string name="create_playlist">创建歌单</string>
     <string name="refresh_playlist">刷新歌单</string>
     <string name="open_playlist_operations_popup">打开歌单操作弹窗</string>
@@ -156,7 +154,7 @@
     <string name="global_gradient_setting">是否切换为全局统一渐变色</string>
     <string name="global_gradient_colors">全局渐变色</string>
     <string name="home_background_gradient">首页背景渐变色</string>
-    <string name="music_list_background_gradient">音乐列表页背景渐变色</string>
+    <string name="music_list_background_gradient">音乐列表背景渐变色</string>
     <string name="album_list_background_gradient">专辑列表背景渐变色</string>
     <string name="album_detail_background_gradient">专辑详情背景渐变色</string>
     <string name="artist_list_background_gradient">艺术家列表背景渐变色</string>
