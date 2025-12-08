@@ -1,6 +1,5 @@
 package cn.xybbz.localdata.data.music
 
-import androidx.room.Ignore
 import java.util.UUID
 
 /**
@@ -12,8 +11,10 @@ data class XyPlayMusic(
      * 音乐图片
      */
     val pic: String?,
-
-
+    /**
+     * 音乐图片字节码
+     */
+    val picByte: ByteArray? = null,
     /**
      * 音乐名称
      */
@@ -51,12 +52,40 @@ data class XyPlayMusic(
     /**
      * 文件地址
      */
-    val filePath:String?
-){
-    /**
-     * 音乐图片字节码
-     */
-    @Ignore
-    var picByte: ByteArray? = null
+    val filePath: String?
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is XyPlayMusic) return false
+
+        return itemId == other.itemId &&
+                pic == other.pic &&
+                (picByte?.contentEquals(other.picByte) ?: (other.picByte == null)) &&
+                name == other.name &&
+                album == other.album &&
+                musicUrl == other.musicUrl &&
+                playSessionId == other.playSessionId &&
+                container == other.container &&
+                artists == other.artists &&
+                ifFavoriteStatus == other.ifFavoriteStatus &&
+                size == other.size &&
+                filePath == other.filePath
+    }
+
+    override fun hashCode(): Int {
+        var result = itemId.hashCode()
+        result = 31 * result + (pic?.hashCode() ?: 0)
+        result = 31 * result + (picByte?.contentHashCode() ?: 0)
+        result = 31 * result + name.hashCode()
+        result = 31 * result + album.hashCode()
+        result = 31 * result + musicUrl.hashCode()
+        result = 31 * result + playSessionId.hashCode()
+        result = 31 * result + (container?.hashCode() ?: 0)
+        result = 31 * result + (artists?.hashCode() ?: 0)
+        result = 31 * result + ifFavoriteStatus.hashCode()
+        result = 31 * result + (size?.hashCode() ?: 0)
+        result = 31 * result + (filePath?.hashCode() ?: 0)
+        return result
+    }
 
 }

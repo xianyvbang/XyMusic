@@ -68,7 +68,7 @@ class MainViewModel @Inject constructor(
     val settingsConfig = _settingsConfig
     val _db = db
 
-    var connectionIsLogIn by mutableStateOf( false)
+    var connectionIsLogIn by mutableStateOf(false)
         private set
 
     /**
@@ -212,13 +212,18 @@ class MainViewModel @Inject constructor(
                         db.musicDao.deletePlayHistory()
                     }
                     db.playerDao.updateIndex(musicController.musicInfo?.itemId ?: "")
-                }
-                //只缓存当前正在播放的音乐,防止过度消耗用户流量
-                /*musicController.musicInfo?.let { musicInfo ->
-                    if (!cacheController.ifCache(musicInfo.musicUrl, musicInfo.size ?: 20000)) {
-                        cacheController.cacheMedia(musicInfo)
+                    db.musicDao.removePlayQueueMusicPicByte()
+                    if (musicController.musicInfo?.pic.isNullOrBlank()) {
+                        //更新存储封面
+                        val playQueueMusic = db.musicDao.selectPlayQueueByItemId(itemId)
+                        if (playQueueMusic != null && musicController.picByte?.isNotEmpty() == true) {
+                            db.musicDao.updatePlayQueueMusicPicByte(
+                                itemId,
+                                musicController.picByte
+                            )
+                        }
                     }
-                }*/
+                }
             }
         }
         /**

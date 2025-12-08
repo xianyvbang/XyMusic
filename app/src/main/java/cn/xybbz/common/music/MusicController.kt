@@ -209,10 +209,8 @@ class MusicController(
             )
             if (musicInfo?.pic.isNullOrBlank()){
                 picByte = mediaMetadata.artworkData
-                musicInfo?.picByte = picByte
             }else {
                 picByte = null
-                musicInfo?.picByte = null
             }
 
             //获取当前音乐的index
@@ -618,6 +616,7 @@ class MusicController(
             val mediaMetadata = MediaMetadata.Builder()
                 .setTitle(playMusic.name)
                 .setArtworkUri(pic?.toUri())
+                .setArtworkData(playMusic.picByte,null)
                 .setArtist(playMusic.artists) // 可以设置其他元数据信息，例如专辑、时长等
                 .setExtras(bundle)
                 .build()
