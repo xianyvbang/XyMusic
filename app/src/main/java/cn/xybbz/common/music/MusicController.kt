@@ -134,16 +134,19 @@ class MusicController(
     private var onChangeMusic: ((String) -> Unit)? = null
 
     //收藏/取消收藏
-    var onFavorite: ((String) -> Unit)? = null
+    private var onFavorite: ((String) -> Unit)? = null
 
     //加载下一页数据,参数是页码
-    var onNextList: ((Int) -> Unit)? = null
+    private var onNextList: ((Int) -> Unit)? = null
 
     //播放列表增加数据,传值未艺术家id
     private var onAddMusicList: ((String?) -> Unit)? = null
 
     //设置播放模式变化监听方法
     private var onPlayerTypeChange: ((PlayerTypeEnum) -> Unit)? = null
+
+    //更新音乐的图片字节信息方法
+    private var onUpdateMusicPicData: ((String?, ByteArray?) -> Unit)? = null
 
     private lateinit var controllerFuture: ListenableFuture<MediaController>
     private val mediaController: MediaController?
@@ -207,12 +210,13 @@ class MusicController(
                 "=====",
                 "当前索引${mediaController?.currentMediaItemIndex} --- ${mediaMetadata.title}"
             )
-            if (musicInfo?.pic.isNullOrBlank()){
+
+            if (musicInfo?.pic.isNullOrBlank()) {
                 picByte = mediaMetadata.artworkData
-            }else {
+            } else {
                 picByte = null
             }
-
+            onUpdateMusicPicData?.invoke(musicInfo?.itemId, picByte)
             //获取当前音乐的index
             setCurrentPositionData(mediaController?.currentPosition ?: 0)
             duration = mediaController?.duration ?: 0
@@ -246,7 +250,6 @@ class MusicController(
                         onNextList?.invoke(pageNum)
                     }
                     musicInfo = originMusicList[curOriginIndex]
-
 
 
                     //如果状态是播放的话
@@ -616,11 +619,11 @@ class MusicController(
             val mediaMetadata = MediaMetadata.Builder()
                 .setTitle(playMusic.name)
                 .setArtworkUri(pic?.toUri())
-                .setArtworkData(playMusic.picByte,null)
+                .setArtworkData(playMusic.picByte, null)
                 .setArtist(playMusic.artists) // 可以设置其他元数据信息，例如专辑、时长等
                 .setExtras(bundle)
                 .build()
-            mediaItemBuilder .setMediaMetadata(mediaMetadata)
+            mediaItemBuilder.setMediaMetadata(mediaMetadata)
         } else {
             mediaItemBuilder.setUri(playMusic.filePath?.toUri())
                 .setMediaMetadata(MediaMetadata.EMPTY)
@@ -838,6 +841,9 @@ class MusicController(
         this.onPlayerTypeChange = onPlayerTypeChange
     }
 
+    fun setOnUpdateMusicPicDataFun(onUpdateMusicPicData:(String?, ByteArray?) -> Unit){
+        this.onUpdateMusicPicData = onUpdateMusicPicData
+    }
 
     /**
      * 获得下一个的index

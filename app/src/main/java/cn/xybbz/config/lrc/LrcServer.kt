@@ -73,10 +73,6 @@ class LrcServer @Inject constructor(
      * 根据歌词列表创建歌词列表
      */
     fun createLrcList(lrcList: List<LrcEntryData>?, lrcDataType: LrcDataType) {
-        /*if (this.itemId == itemId && _lcrEntryListFlow.value.isNotEmpty()){
-            return
-        }*/
-        Log.i("createLrcList2222", "随机数111 ${lrcDataType}   歌词列表：${_lcrEntryListFlow.value}")
         _lcrEntryListFlow.update {
             emptyList()
         }

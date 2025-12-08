@@ -1106,5 +1106,5 @@ interface XyMusicDao {
      * 更细最新播放音乐的图片数据
      */
     @Query("update playqueuemusic set picByte = :picByte where musicId = :itemId and connectionId = (select connectionId from xy_settings)")
-    fun updatePlayQueueMusicPicByte(itemId: String, picByte: ByteArray?)
+    suspend fun updatePlayQueueMusicPicByte(itemId: String, picByte: ByteArray?)
 }

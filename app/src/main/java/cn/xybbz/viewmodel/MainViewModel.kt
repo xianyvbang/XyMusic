@@ -212,6 +212,7 @@ class MainViewModel @Inject constructor(
                         db.musicDao.deletePlayHistory()
                     }
                     db.playerDao.updateIndex(musicController.musicInfo?.itemId ?: "")
+                    //todo 修改加载位置到获取图片信息哪里
                     db.musicDao.removePlayQueueMusicPicByte()
                     if (musicController.musicInfo?.pic.isNullOrBlank()) {
                         //更新存储封面
@@ -240,6 +241,22 @@ class MainViewModel @Inject constructor(
                 }
             }
 
+        }
+
+        musicController.setOnUpdateMusicPicDataFun{itemId,picByte ->
+            viewModelScope.launch {
+                db.musicDao.removePlayQueueMusicPicByte()
+                if (musicController.musicInfo?.pic.isNullOrBlank() && !itemId.isNullOrBlank()) {
+                    //更新存储封面
+                    val playQueueMusic = db.musicDao.selectPlayQueueByItemId(itemId)
+                    if (playQueueMusic != null && musicController.picByte?.isNotEmpty() == true) {
+                        db.musicDao.updatePlayQueueMusicPicByte(
+                            itemId,
+                            picByte
+                        )
+                    }
+                }
+            }
         }
 
         /**
