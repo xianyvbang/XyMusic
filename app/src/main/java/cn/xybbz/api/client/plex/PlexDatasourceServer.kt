@@ -1926,6 +1926,16 @@ class PlexDatasourceServer @Inject constructor(
                         image.url,
                     )
                 }
+            }
+
+        val artistBackdropImageUrl =
+            artist.image?.let { images ->
+                val image = images.findLast { it.type == ImageType.Background }
+                image?.let {
+                    plexApiClient.getImageUrl(
+                        image.url,
+                    )
+                }
 
             }
 
@@ -1942,6 +1952,7 @@ class PlexDatasourceServer @Inject constructor(
             artistId = artist.ratingKey,
             name = artist.title,
             pic = artistImageUrl,
+            backdrop = artistBackdropImageUrl,
             connectionId = connectionConfigServer.getConnectionId(),
             describe = artist.summary,
             selectChat = selectChat,

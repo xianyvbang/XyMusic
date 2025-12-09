@@ -305,6 +305,7 @@ class PlexApiClient : DefaultParentApiClient() {
      * 获取图像URL
      * [plexFileUrl] plex文件路径
      */
+    //todo 修改图片获取方式
     fun getImageUrl(plexFileUrl: String, width: Int = 297, height: Int = 297): String {
         val tmpPlexFileUrl = "${plexFileUrl}?X-Plex-Token=${accessToken}".encodeUrlParameter()
         return "${baseUrl}/photo/:/transcode?width=${width}&height=${height}&url=${tmpPlexFileUrl}&minSize=1&upscale=1&X-Plex-Token=${accessToken}"

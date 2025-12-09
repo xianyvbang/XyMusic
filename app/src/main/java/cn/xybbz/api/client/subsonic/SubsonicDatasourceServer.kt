@@ -981,6 +981,11 @@ class SubsonicDatasourceServer @Inject constructor(
                     coverArt
                 )
             },
+            backdrop = if (artistId3.coverArt.isNullOrBlank()) null else artistId3.coverArt?.let { coverArt ->
+                subsonicApiClient.getImageUrl(
+                    coverArt
+                )
+            },
             name = artistId3.name,
             connectionId = connectionConfigServer.getConnectionId(),
             selectChat = index ?: "",

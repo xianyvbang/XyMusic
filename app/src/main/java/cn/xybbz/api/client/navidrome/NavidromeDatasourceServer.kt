@@ -1243,6 +1243,7 @@ class NavidromeDatasourceServer @Inject constructor(
         return XyArtist(
             artistId = artist.id,
             pic = artist.smallImageUrl,
+            backdrop = artist.largeImageUrl,
             name = artist.name,
             connectionId = connectionConfigServer.getConnectionId(),
             selectChat = selectChat,
