@@ -33,7 +33,7 @@ data class XyArtist(
     @PrimaryKey
     val artistId: String = "",
     val pic: String? = "",
-    val backdrop:String? = null,
+    val backdrop:String?,
     val describe: String? = "",
     val name: String? = null,
     val sortName: String? = "",
@@ -56,6 +56,7 @@ data class XyArtist(
     constructor(
         artistId: String = "",
         pic: String? = "",
+        backdrop: String?,
         describe: String? = "",
         name: String? = null,
         sortName: String? = "",
@@ -67,6 +68,7 @@ data class XyArtist(
     ) : this(
         artistId = artistId,
         pic = pic,
+        backdrop = backdrop,
         describe = describe,
         name = name,
         sortName = sortName,
