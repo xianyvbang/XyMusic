@@ -1416,6 +1416,18 @@ class JellyfinDatasourceServer @Inject constructor(
                 }
                 else null
 
+            val backdropImageUrl = if (!item.name.isNullOrBlank() && !item.imageTags.isNullOrEmpty()) item.name?.let {
+                jellyfinApiClient.createArtistImageUrl(
+                    name = it,
+                    imageType = ImageType.BACKDROP,
+                    imageIndex = 0,
+                    fillWidth = 1280,
+                    quality = 80,
+                    tag = item.imageTags?.get(ImageType.BACKDROP)
+                )
+            }
+            else null
+
             val sortName = item.sortName
             val shortNameStart = if (!sortName.isNullOrBlank()) sortName[0] else '#'
             val selectChat =
@@ -1424,6 +1436,7 @@ class JellyfinDatasourceServer @Inject constructor(
                 artistId = item.id,
                 name = item.name ?: application.getString(R.string.unknown_artist),
                 pic = artistImageUrl,
+                backdrop = backdropImageUrl,
                 connectionId = connectionConfigServer.getConnectionId(),
                 sortName = sortName,
                 describe = item.overview,
