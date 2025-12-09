@@ -1,5 +1,6 @@
 package cn.xybbz.ui.components.lrc
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -162,93 +163,97 @@ fun LrcViewNewCompose(
 
         }
 
-        Box(modifier = Modifier.width(lyricWidth.dp)) {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .detectDragState { dragging ->
-                        isDragState.value = dragging
-                    },
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-                contentPadding = PaddingValues(
-                    vertical = verticalContentPadding
-                ),
-            ) {
-                itemsIndexed(lcrEntryList) { index, line ->
+        AnimatedContent(targetState = lcrEntryList.isEmpty(),label = "Animated Content"){isEmpty->
+            if (!isEmpty)
+            Box(modifier = Modifier.width(lyricWidth.dp)) {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .detectDragState { dragging ->
+                            isDragState.value = dragging
+                        },
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    contentPadding = PaddingValues(
+                        vertical = verticalContentPadding
+                    ),
+                ) {
+                    itemsIndexed(lcrEntryList) { index, line ->
 
-                    if (line.wordTimings.size > 1) {
-                        KaraokeLyricLineNew(
-                            line = line,
-                            highlight = index == playIndex,
-                            currentTimeMillis = currentTimeMillis,
-                            onClick = {
-                                lrcViewModel.seekTo(line.startTime)
-                                coroutineScope.launch {
-                                    listState.animateScrollToItem(index)
+                        if (line.wordTimings.size > 1) {
+                            KaraokeLyricLineNew(
+                                line = line,
+                                highlight = index == playIndex,
+                                currentTimeMillis = currentTimeMillis,
+                                onClick = {
+                                    lrcViewModel.seekTo(line.startTime)
+                                    coroutineScope.launch {
+                                        listState.animateScrollToItem(index)
+                                    }
                                 }
-                            }
-                        )
-                    } else {
-                        KaraokeLyricLineNew(
-                            line = line,
-                            highlight = index == playIndex,
-                            onClick = {
-                                lrcViewModel.seekTo(line.startTime)
-                                coroutineScope.launch {
-                                    listState.animateScrollToItem(index)
+                            )
+                        } else {
+                            KaraokeLyricLineNew(
+                                line = line,
+                                highlight = index == playIndex,
+                                onClick = {
+                                    lrcViewModel.seekTo(line.startTime)
+                                    coroutineScope.launch {
+                                        listState.animateScrollToItem(index)
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
+
+
                     }
-
 
                 }
-                if (lcrEntryList.isEmpty())
-                    item {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(text = stringResource(R.string.no_lyrics))
-                        }
+
+
+                if (isDragState.value && dragLineIndex in lcrEntryList.indices) {
+                    val dragLine = lcrEntryList[dragLineIndex]
+
+                    // 绘制辅助线和时间
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.Center)
+                            .padding(vertical = 8.dp)
+
+                    ) {
+                        HorizontalDivider(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .fillMaxWidth(),
+                            thickness = 1.dp,
+                            color = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = formatTime(dragLine.startTime),
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .background(Color.Black.copy(alpha = 0.5f))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                        )
                     }
+                }
             }
-
-
-            if (isDragState.value && dragLineIndex in lcrEntryList.indices) {
-                val dragLine = lcrEntryList[dragLineIndex]
-
-                // 绘制辅助线和时间
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.Center)
-                        .padding(vertical = 8.dp)
-
+            else {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    HorizontalDivider(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .fillMaxWidth(),
-                        thickness = 1.dp,
-                        color = Color.Gray
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = formatTime(dragLine.startTime),
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .background(Color.Black.copy(alpha = 0.5f))
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                    )
+                    Text(text = stringResource(R.string.no_lyrics))
                 }
             }
         }
+
     }
 
 }
