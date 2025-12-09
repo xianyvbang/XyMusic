@@ -92,7 +92,7 @@
     <string name="user_settings">用戶設置</string>
     <string name="copy_success">複製成功</string>
     <string name="media_library_management">媒體庫管理</string>
-    <string name="music_library">音樂庫</string>
+    <string name="music_library">媒體庫</string>
     <string name="connection_address">連結位址</string>
     <string name="set_alias">設置別名</string>
     <string name="delete_connection">刪除連接</string>
@@ -190,13 +190,13 @@
     <!--    存储管理页面-->
     <string name="storage_management">存儲管理</string>
     <string name="audio_cache">音訊快取</string>
-    <string name="audio_cache_description">快取音訊數據，清理后無法本地播放</string>
-    <string name="temporary_cache">臨時快取</string>
+    <string name="audio_cache_description">快取音訊資料,清理後將從遠端取得資料進行播放</string>
+    <string name="temporary_cache">臨時緩存</string>
     <string name="temporary_cache_description">臨時緩存是使用過程中產生的臨時緩存，清理臨時緩存不會影響應用的使用</string>
     <string name="database_data">資料庫數據</string>
     <string name="database_data_description">存儲音訊、專輯、藝術家、歌單詳細資訊，清理後會重新從服務端進行獲取</string>
-    <string name="essential_data">必要數據</string>
-    <string name="essential_data_description">包含應用運行所需的必要檔，這部分數據不能清理</string>
+    <string name="essential_data">必需數據</string>
+    <string name="essential_data_description">包含應用程式運行所需的必要文件，這部分資料不能清理</string>
     <string name="clear">清除</string>
     <string name="confirm_delete_database">確定要刪除資料庫資料嗎？</string>
 
@@ -211,29 +211,29 @@
     <!--    设置页面-->
     <string name="settings">設置</string>
     <string name="playback">播放</string>
-    <string name="prioritize_local_data">優先獲取本地數據播放</string>
     <string name="cache_limit">緩存上限</string>
     <string name="album_playback_history">專輯播放歷史</string>
     <string name="allow_simultaneous_playback">允許與其他應用同時播放</string>
-    <string name="song_cache_location">歌曲快取位置</string>
+    <string name="cache_location">快取位置</string>
+    <string name="song_cache_location">歌曲儲存位置</string>
     <string name="connection_management">連接管理</string>
+    <string name="download_max_list">最大同時下載數量</string>
     <string name="more">更多</string>
 
-    <string name="connection_address_cannot_be_empty">鏈接位址不能為空</string>
+    <string name="connection_address_cannot_be_empty">連接地址不能為空</string>
     <string name="alias_cannot_be_empty">別名不能為空</string>
 
     <string name="single_loop">單曲迴圈</string>
     <string name="shuffle_play">隨機播放</string>
     <string name="decade_suffix">年代</string>
 
-    <string name="timer_close_message">定時關閉</string>
     <string name="cancel_timer_close_message">已取消定時關閉</string>
     <string name="trigger_time_prefix">觸發時間</string>
 
     <string name="song_tab">歌曲</string>
     <string name="lyrics_tab">歌詞</string>
 
-    <string name="no_lyrics">暫無字幕</string>
+    <string name="no_lyrics">暫無歌詞</string>
 
     <string name="add_to_playlist">加入歌單</string>
     <string name="songs_count_suffix">首歌</string>
@@ -246,7 +246,6 @@
     <string name="playlist_info_empty">歌單資訊為空</string>
     <string name="playlist_export_success">歌單導出成功</string>
     <string name="please_select_export_format">請選擇匯出歌單的格式</string>
-    <string name="playlist_import_failed">匯出歌單失敗</string>
     <string name="unknown_playlist">未知歌單</string>
 
     <string name="reached_bottom">已經到底了</string>
@@ -261,44 +260,37 @@
     <string name="double_speed">倍速播放</string>
     <string name="play_next">下一首播放</string>
     <string name="share_song">分享歌曲</string>
-    <string name="song_info">歌曲資訊</string>
+    <string name="song_info">歌曲訊息</string>
     <string name="delete_permanently">永久刪除</string>
+    <string name="delete_local_permanently">刪除本機文件</string>
     <string name="delete_warning">注意！！ 會同步刪除服務端中檔</string>
     <string name="exact_alarm_permission_granted">已開啟精確鬧鐘許可權</string>
     <string name="exact_alarm_permission_not_granted">未開啟精確鬧鐘許可權</string>
-    <string name="timer_close_title">定時關閉</string>
     <string name="timer_close_subtitle">定時關閉需要申請精準鬧鐘許可權才能使用</string>
     <string name="apply_permission">申請許可權</string>
     <string name="custom_timer_close">自訂定時關閉事件</string>
     <string name="max_24_hours">最大設置24小時</string>
     <string name="countdown_prefix">倒計時： </string>
-    <string name="timer_close_disabled">關閉</string>
+    <string name="timer_close_disabled">關閉定時</string>
     <string name="custom_timer_suffix">分鐘後</string>
     <string name="timer_close_custom">自訂</string>
     <string name="close_after_playback">播放完后關閉</string>
-    <string name="double_speed_title">倍速播放</string>
-    <string name="skip_head_tail_title">跳過頭尾</string>
     <string name="skip_head_prefix">跳過片頭</string>
     <string name="skip_tail_prefix">跳過片尾</string>
-    <string name="song_info_title">歌曲資訊</string>
     <string name="title">標題</string>
     <string name="album_artist">專輯藝術家</string>
     <string name="media_source">媒體來源</string>
     <string name="duration">時長</string>
-    <string name="bitrate">比特率</string>
-    <string name="sample_rate">採樣率</string>
-    <string name="bit_depth">位深</string>
-    <string name="bit">銜</string>
+    <string name="bitrate">位元率</string>
+    <string name="sample_rate">取樣率</string>
+    <string name="bit_depth">位元深</string>
+    <string name="bit">bit</string>
     <string name="size">大小</string>
     <string name="format">格式</string>
     <string name="play_path">播放路徑</string>
     <string name="actual_path">實際路徑</string>
     <string name="add_time">添加時間</string>
     <string name="artist_list_title">歌手</string>
-    <string name="fifteen_minutes">15分鐘</string>
-    <string name="thirty_minutes">30分鐘</string>
-    <string name="forty_five_minutes">45分鐘</string>
-    <string name="sixty_minutes">60分鐘</string>
     <string name="playback_speed">播放速度</string>
     <string name="normal">正常</string>
 
@@ -315,7 +307,6 @@
     <string name="next_track">下一首</string>
     <string name="music_list">音樂清單</string>
     <string name="pause">暫停中</string>
-    <string name="play">播放中</string>
     <string name="favorite_button">收藏按鈕</string>
 
     <string name="delete_prefix">刪除</string>
@@ -343,7 +334,7 @@
     <string name="server_connection_timeout">服務端連接超時</string>
     <string name="no_connection_selected">未選擇連接</string>
     <string name="login_failed_no_token">登陸失敗，帳號或密碼錯誤</string>
-    <string name="login_success">登陸成功</string>
+    <string name="login_success">登入成功</string>
     <string name="get_server_resources_failed">獲得伺服器資源失敗</string>
     <string name="creating_playlist">建立中...</string>
     <string name="create_playlist_success">創建成功</string>
@@ -373,8 +364,7 @@
     <string name="plex_album_collection_title">鹹魚音樂專輯收藏</string>
     <string name="plex_artist_collection_title">鹹魚音樂藝術家收藏</string>
 
-    <string name="cancel_selection">關閉選擇功能</string>
-    <string name="open_selection_function">打開選擇功能</string>
+    <string name="open_selection_function">打開選擇</string>
     <string name="open_sort_and_filter_menu">打開排序和篩選功能表</string>
 
     <string name="sort_by_create_time_asc">按創建時間排序</string>
@@ -393,5 +383,12 @@
     <string name="plex_resource_error">獲得Plex資源地址失敗</string>
 
     <string name="unknown">未知</string>
+    <string name="add_download_list">已新增至下載列表</string>
+    <string name="minutes">分鐘</string>
+    <string name="remove_download_title">批量刪除下載</string>
+    <string name="confirm_delete_download">注意! 已完成下載的任務,此處只會刪除下載任務,不會刪除音樂檔案, 確定要刪除這%d個下載嗎?</string>
+    <string name="download_list">下載列表</string>
+    <string name="local_music">本地音樂</string>
+    <string name="download_management">下載管理</string>
 
 </resources>

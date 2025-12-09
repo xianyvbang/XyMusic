@@ -148,7 +148,7 @@ fun ExportPlaylistsCompose(
                     fileType = type
                     coroutineScope.launch {
                         if (onPlayTrackList() == null) {
-                            MessageUtils.sendPopTipError(R.string.playlist_import_failed)
+                            MessageUtils.sendPopTipError(R.string.playlist_export_failed)
                             return@launch
                         }
                         /*val initUri = DocumentsContract.buildTreeDocumentUri(
