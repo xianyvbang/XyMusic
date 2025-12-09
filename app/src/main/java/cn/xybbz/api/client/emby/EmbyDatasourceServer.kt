@@ -1306,6 +1306,18 @@ class EmbyDatasourceServer @Inject constructor(
             }
             else null
 
+        val backdropImageUrl = if (!artist.name.isNullOrBlank() && !artist.imageTags.isNullOrEmpty()) artist.name?.let {
+            embyApiClient.createArtistImageUrl(
+                name = it,
+                imageType = ImageType.BACKDROP,
+                imageIndex = 0,
+                fillWidth = 1280,
+                quality = 80,
+                tag = artist.imageTags?.get(ImageType.BACKDROP)
+            )
+        }
+        else null
+
         val sortName = artist.sortName
         val shortNameStart = if (!sortName.isNullOrBlank()) sortName[0] else '#'
         val selectChat =
@@ -1314,6 +1326,7 @@ class EmbyDatasourceServer @Inject constructor(
             artistId = artist.id,
             name = artist.name ?: application.getString(Constants.UNKNOWN_ARTIST),
             pic = artistImageUrl,
+            backdrop = backdropImageUrl,
             connectionId = connectionConfigServer.getConnectionId(),
             sortName = sortName,
             describe = artist.overview,
