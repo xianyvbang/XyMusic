@@ -10,7 +10,7 @@ import java.util.concurrent.Executors
 class DatasourceConfig {
 
     private val dbName = "appData.db"
-    private val migrations = arrayOf(Migration1,Migration2,Migration3,Migration4)
+    private val migrations = arrayOf(Migration1,Migration2,Migration3,Migration4,Migration5)
 
     fun createDatabaseClient(context: Context): DatabaseClient {
         return Room.databaseBuilder(context.applicationContext, DatabaseClient::class.java, dbName)
@@ -72,6 +72,13 @@ class DatasourceConfig {
         override fun migrate(db: SupportSQLiteDatabase) {
             // 数据库的升级语句
             db.execSQL("ALTER TABLE PlayQueueMusic ADD COLUMN picByte BLOB")
+        }
+    }
+
+    private object Migration5 : Migration(5, 6) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // 数据库的升级语句
+            db.execSQL("ALTER TABLE XyArtist ADD COLUMN backdrop TEXT")
         }
     }
 }
