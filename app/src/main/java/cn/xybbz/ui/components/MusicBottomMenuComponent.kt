@@ -163,7 +163,6 @@ fun MusicBottomMenuComponent(
     bottomMenuMusicInfo.forEach { music ->
 
 
-
         val favoriteMusicMap by musicBottomMenuViewModel.favoriteRepository.favoriteSet.collectAsState()
         val downloadMusicIds by musicBottomMenuViewModel.downloadRepository.musicIdsFlow.collectAsState()
         //收藏信息
@@ -629,7 +628,7 @@ fun TimerComponent(
             mainViewModel.putIterations(1)
             onSetIfTimer(it)
         },
-        titleText = stringResource(R.string.timer_close_title),
+        titleText = stringResource(R.string.timer_close),
         titleSub = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) stringResource(R.string.timer_close_subtitle) else null,
         titleTailContent = if (!ifCanScheduleExactAlarms) {
             {
@@ -719,11 +718,11 @@ fun TimerComponent(
                         stringResource(
                             R.string.custom_timer_suffix
                         )
-                    } $number ${stringResource(R.string.timer_close_title)}"
+                    } $number ${stringResource(R.string.timer_close)}"
 
                     else -> "${onSliderTimerEndData().toInt()}${stringResource(R.string.custom_timer_suffix)} $number ${
                         stringResource(
-                            R.string.timer_close_title
+                            R.string.timer_close
                         )
                     }"
                 }
@@ -732,10 +731,10 @@ fun TimerComponent(
 
         XyRow {
             XyItemText(text = stringResource(R.string.timer_close_disabled))
-            XyItemText(text = stringResource(R.string.fifteen_minutes))
-            XyItemText(text = stringResource(R.string.thirty_minutes))
-            XyItemText(text = stringResource(R.string.forty_five_minutes))
-            XyItemText(text = stringResource(R.string.sixty_minutes))
+            XyItemText(text = "15${stringResource(R.string.minutes)}")
+            XyItemText(text = "30${stringResource(R.string.minutes)}")
+            XyItemText(text = "45${stringResource(R.string.minutes)}")
+            XyItemText(text = "60${stringResource(R.string.minutes)}")
             XyItemText(text = stringResource(R.string.timer_close_custom))
         }
 
@@ -783,7 +782,7 @@ private fun DoubleSpeedComponent(
             onSetIfDoubleSpeed(false)
             mainViewModel.putIterations(1)
         },
-        titleText = stringResource(R.string.double_speed_title),
+        titleText = stringResource(R.string.double_speed),
         titleTailContent = {
             OutlinedButton(
                 modifier = Modifier.size(height = 25.dp, width = 50.dp),
@@ -1030,7 +1029,7 @@ fun MusicInfoBottomComponent(
             onSetShowMusicInfo(false)
             mainViewModel.putIterations(1)
         },
-        titleText = stringResource(R.string.song_info_title)
+        titleText = stringResource(R.string.song_info)
     ) {
 
         LazyColumnBottomSheetComponent {

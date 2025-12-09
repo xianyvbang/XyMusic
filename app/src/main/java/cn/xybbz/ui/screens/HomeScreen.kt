@@ -632,7 +632,7 @@ fun HomeScreen(
                         XyRow {
                             XyItemMedium(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(R.string.recommended_music),
+                                text = stringResource(R.string.daily_recommendations),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
 
@@ -651,7 +651,7 @@ fun HomeScreen(
                                     Icon(
                                         imageVector = Icons.Rounded.Shuffle,
                                         contentDescription = stringResource(R.string.random_play) + stringResource(
-                                            R.string.recommended_music
+                                            R.string.daily_recommendations
                                         )
                                     )
                                 }
@@ -666,7 +666,7 @@ fun HomeScreen(
                                     Icon(
                                         imageVector = Icons.Rounded.Repeat,
                                         contentDescription = stringResource(R.string.list_loop) + stringResource(
-                                            R.string.recommended_music
+                                            R.string.daily_recommendations
                                         )
                                     )
                                 }
@@ -864,7 +864,7 @@ fun HomeScreen(
                     XyRow {
                         XyItemMedium(
                             modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                            text = stringResource(R.string.playlists),
+                            text = stringResource(R.string.playlist),
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Box(contentAlignment = Alignment.CenterEnd) {

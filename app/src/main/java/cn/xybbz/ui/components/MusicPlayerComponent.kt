@@ -499,7 +499,7 @@ fun PlayerStateComponent(
                 || musicController.state == PlayStateEnum.Loading
             ) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
             contentDescription = if (musicController.state == PlayStateEnum.Playing) stringResource(
-                R.string.play
+                R.string.playing
             ) else stringResource(R.string.pause),
             modifier = Modifier
                 .size(size)

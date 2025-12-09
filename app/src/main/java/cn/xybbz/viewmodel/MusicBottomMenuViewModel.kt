@@ -169,7 +169,7 @@ class MusicBottomMenuViewModel @Inject constructor(
         alarmConfig.getUpAlarmManagerStartWork(calendar, ifPlayEndClose)
         Log.i("=====", "触发时间${SimpleDateFormat.getTimeInstance().format(calendar.time)}")
         MessageUtils.sendPopTip(
-            SimpleDateFormat.getTimeInstance().format(calendar.time), R.string.timer_close_message
+            SimpleDateFormat.getTimeInstance().format(calendar.time), R.string.timer_close
         )
 
     }

@@ -33,7 +33,7 @@ object PlaylistFileUtils {
             )
         //获取数据并组装数据
         return if (playlist == null) {
-            MessageUtils.sendPopTipError(R.string.playlist_import_failed)
+            MessageUtils.sendPopTipError(R.string.playlist_export_failed)
             null
         } else {
             val musicTrackList = musicListResponse.items?.map {
