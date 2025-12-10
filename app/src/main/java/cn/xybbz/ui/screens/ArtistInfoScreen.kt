@@ -196,15 +196,6 @@ fun ArtistInfoScreen(
 
         val parentMaxHeight = this.maxHeight
 
-        /*Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .brashColor(
-                    topVerticalColor = artistInfoViewModel.backgroundConfig.artistInfoBrash[0],
-                    bottomVerticalColor = artistInfoViewModel.backgroundConfig.artistInfoBrash[1]
-                )
-        )*/
-
         Box(
             modifier = Modifier
                 .height(
@@ -216,7 +207,8 @@ fun ArtistInfoScreen(
                     .fillMaxWidth()
                     .align(Alignment.TopCenter)
                     .height(DefaultImageHeight),
-                model = artistInfoViewModel.artistInfoData?.pic,
+                model = artistInfoViewModel.artistInfoData?.backdrop
+                    ?: artistInfoViewModel.artistInfoData?.pic,
                 contentDescription = stringResource(R.string.artist_cover),
                 fallback = painterResource(R.drawable.artrist_info),
                 placeholder = painterResource(R.drawable.artrist_info),
@@ -453,7 +445,8 @@ fun ArtistInfoScreen(
                                                     musicPlayContext = artistInfoViewModel.musicPlayContext,
                                                     selectControl = artistInfoViewModel.selectControl,
                                                     onSelectAll = {
-                                                        artistInfoViewModel.selectControl.toggleSelectionAll(musicPage.itemSnapshotList.items.map { it.itemId })
+                                                        artistInfoViewModel.selectControl.toggleSelectionAll(
+                                                            musicPage.itemSnapshotList.items.map { it.itemId })
                                                     },
                                                     sortContent = {}
                                                 )
