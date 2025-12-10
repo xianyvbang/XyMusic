@@ -65,7 +65,6 @@ class MainViewModel @Inject constructor(
 ) : ViewModel() {
 
     val dataSourceManager = _dataSourceManager
-    val settingsConfig = _settingsConfig
     val _db = db
 
     var connectionIsLogIn by mutableStateOf(false)
