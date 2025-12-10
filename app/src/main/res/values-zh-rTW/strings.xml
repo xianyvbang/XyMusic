@@ -181,6 +181,7 @@
     <string name="dialog_gradient">彈窗漸變色</string>
     <string name="error_dialog_gradient">異常/告警彈窗漸變色</string>
     <string name="select_library_background_gradient">選擇媒體庫頁面背景漸變色</string>
+    <string name="select_local_music_background_gradient">選擇本地音樂頁面背景漸層色</string>
     <string name="player_default_background_color">播放頁預設背景色</string>
 
     <!--    语言页面-->
@@ -390,5 +391,7 @@
     <string name="download_list">下載列表</string>
     <string name="local_music">本地音樂</string>
     <string name="download_management">下載管理</string>
+    <string name="select_daily_recommend_background_gradient">選擇每日推薦頁背景漸層色</string>
+    <string name="select_download_list_background_gradient">選擇下載清單頁面背景漸層色</string>
 
 </resources>

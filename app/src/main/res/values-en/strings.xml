@@ -181,6 +181,7 @@ Automatic calculation rules for the upper limit of cache:
     <string name="dialog_gradient">Pop-up Gradient</string>
     <string name="error_dialog_gradient">Gradient color of the abnormal/alarm pop-up</string>
     <string name="select_library_background_gradient">Select the background gradient color of the media library page</string>
+    <string name="select_local_music_background_gradient">Select the gradient background color for the local music page</string>
     <string name="player_default_background_color">Default background color of the playback page</string>
 
     <!--    语言页面-->
@@ -390,5 +391,7 @@ Automatic calculation rules for the upper limit of cache:
     <string name="download_list">Download List</string>
     <string name="local_music">Local music</string>
     <string name="download_management">Download Management</string>
+    <string name="select_daily_recommend_background_gradient">Choose the gradient background color for the daily recommendation page</string>
+    <string name="select_download_list_background_gradient">Select the download list page background gradient color</string>
 
 </resources>
