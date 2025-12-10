@@ -119,6 +119,18 @@ data class XyBackgroundConfig(
     /**
      * 播放页渐变色
      */
-    val playerBackground: String = "#FF0C0C0C"
+    val playerBackground: String = "#FF0C0C0C",
+    /**
+     * 每日推荐页背景渐变色
+     */
+    val dailyRecommendBrash: String = "#FF6C1577/#FFCC6877",
+    /**
+     * 下载列表页面背景渐变色
+     */
+    val downloadListBrash: String = "#FF0D9488/#FF0EA5E9",
+    /**
+     * 本地音乐页面背景渐变色
+     */
+    val localMusicBrash: String = "#FF0A7B88/#FFFFBA6C",
     //todo 少了页面设置的背景颜色
 )

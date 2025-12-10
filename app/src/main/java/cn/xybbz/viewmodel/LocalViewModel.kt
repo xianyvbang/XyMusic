@@ -3,6 +3,7 @@ package cn.xybbz.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.common.music.MusicController
+import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
@@ -23,6 +24,7 @@ class LocalViewModel @Inject constructor(
     val favoriteRepository: FavoriteRepository,
     val musicController: MusicController,
     val musicPlayContext: MusicPlayContext,
+    val backgroundConfig: BackgroundConfig
 ) : ViewModel() {
 
     val musicDownloadInfo: StateFlow<List<XyDownload>> =

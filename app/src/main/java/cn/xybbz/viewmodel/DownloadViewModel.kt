@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.localdata.config.DatabaseClient
@@ -24,9 +25,10 @@ import javax.inject.Inject
 @HiltViewModel
 class DownloadViewModel @Inject constructor(
     val favoriteRepository: FavoriteRepository,
-    private val db: DatabaseClient,
+    val db: DatabaseClient,
     private val downLoadManager: DownLoadManager,
-    private val datasourceServer: IDataSourceManager
+    private val datasourceServer: IDataSourceManager,
+    val backgroundConfig: BackgroundConfig,
 ) : ViewModel() {
 
 

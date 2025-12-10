@@ -409,7 +409,9 @@ fun HomeScreen(
                         XyItemTabBigButton(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.local),
-                            sub = if (ifShowCount) homeViewModel.localCount ?: "0" else null,
+                            sub = if (ifShowCount) homeViewModel.localCount ?: stringResource(
+                                Constants.UNKNOWN
+                            ) else null,
                             imageVector = Icons.Rounded.MusicNote,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {

@@ -175,6 +175,9 @@
     <string name="dialog_gradient">弹窗渐变色</string>
     <string name="error_dialog_gradient">异常/告警弹窗渐变色</string>
     <string name="select_library_background_gradient">选择媒体库页面背景渐变色</string>
+    <string name="select_daily_recommend_background_gradient">选择每日推荐页背景渐变色</string>
+    <string name="select_download_list_background_gradient">选择下载列表页面背景渐变色</string>
+    <string name="select_local_music_background_gradient">选择本地音乐页面背景渐变色</string>
     <string name="player_default_background_color">播放页默认背景色</string>
 
     <!--    语言页面-->

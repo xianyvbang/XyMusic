@@ -609,6 +609,68 @@ fun InterfaceSettingScreen(
                             }
                         )
 
+
+                        BrashColorConfigItem(
+                            title = R.string.select_daily_recommend_background_gradient,
+                            onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
+                            onTopColor = { interfaceSettingViewModel.backgroundConfig.dailyRecommendBrash[0] },
+                            onBottomColor = { interfaceSettingViewModel.backgroundConfig.dailyRecommendBrash[1] },
+                            onDefaultColors = {
+                                interfaceSettingViewModel.backgroundConfig.stringToColors(
+                                    interfaceSettingViewModel.backgroundConfig.defaultBackgroundConfig.dailyRecommendBrash
+                                )
+                            },
+                            onSetColors = { colorStrList, colors ->
+                                coroutineScope.launch {
+                                    interfaceSettingViewModel.backgroundConfig.updateDailyRecommendBrash(
+                                        colorStrList,
+                                        colors
+                                    )
+                                }
+                            }
+                        )
+
+
+                        BrashColorConfigItem(
+                            title = R.string.select_download_list_background_gradient,
+                            onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
+                            onTopColor = { interfaceSettingViewModel.backgroundConfig.downloadListBrash[0] },
+                            onBottomColor = { interfaceSettingViewModel.backgroundConfig.downloadListBrash[1] },
+                            onDefaultColors = {
+                                interfaceSettingViewModel.backgroundConfig.stringToColors(
+                                    interfaceSettingViewModel.backgroundConfig.defaultBackgroundConfig.downloadListBrash
+                                )
+                            },
+                            onSetColors = { colorStrList, colors ->
+                                coroutineScope.launch {
+                                    interfaceSettingViewModel.backgroundConfig.updateDownloadListBrash(
+                                        colorStrList,
+                                        colors
+                                    )
+                                }
+                            }
+                        )
+
+                        BrashColorConfigItem(
+                            title = R.string.select_local_music_background_gradient,
+                            onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
+                            onTopColor = { interfaceSettingViewModel.backgroundConfig.localMusicBrash[0] },
+                            onBottomColor = { interfaceSettingViewModel.backgroundConfig.localMusicBrash[1] },
+                            onDefaultColors = {
+                                interfaceSettingViewModel.backgroundConfig.stringToColors(
+                                    interfaceSettingViewModel.backgroundConfig.defaultBackgroundConfig.localMusicBrash
+                                )
+                            },
+                            onSetColors = { colorStrList, colors ->
+                                coroutineScope.launch {
+                                    interfaceSettingViewModel.backgroundConfig.updateLocalMusicBrash(
+                                        colorStrList,
+                                        colors
+                                    )
+                                }
+                            }
+                        )
+
                     }
 
                     ColorConfigItem(

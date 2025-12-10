@@ -205,6 +205,25 @@ class BackgroundConfig(
     var playerBackground by mutableStateOf<Color>(Color(0xFF0C0C0C), structuralEqualityPolicy())
         private set
 
+    /**
+     * 每日推荐页背景渐变色
+     */
+    var dailyRecommendBrash by mutableStateOf<List<Color>>(emptyList(), structuralEqualityPolicy())
+        private set
+
+    /**
+     * 下载列表页面背景渐变色
+     */
+    var downloadListBrash by mutableStateOf<List<Color>>(emptyList(), structuralEqualityPolicy())
+        private set
+
+    /**
+     * 本地音乐页面背景渐变色
+     */
+    var localMusicBrash by mutableStateOf<List<Color>>(emptyList(), structuralEqualityPolicy())
+        private set
+
+
     fun load() {
         coroutineScope.launch {
             backgroundConfig = db.backgroundConfigDao.selectOne()
@@ -235,6 +254,9 @@ class BackgroundConfig(
             errorAlertDialogBrash = stringToColors(get().errorAlertDialogBrash)
             selectLibraryBrash = stringToColors(get().selectLibraryBrash)
             playerBackground = stringToColor(get().playerBackground)
+            dailyRecommendBrash = stringToColors(get().dailyRecommendBrash)
+            downloadListBrash = stringToColors(get().downloadListBrash)
+            localMusicBrash = stringToColors(get().localMusicBrash)
 
         }
     }
@@ -544,6 +566,40 @@ class BackgroundConfig(
         this.playerBackground = color
         backgroundConfig =
             get().copy(playerBackground = colorString)
+        saveOrUpdate()
+    }
+
+
+    /**
+     * 设置每日推荐页背景渐变色
+     */
+    suspend fun updateDailyRecommendBrash(colorStrings: List<String>, colors: List<Color>) {
+        this.dailyRecommendBrash = colors
+        val brashStr = colorStrings.joinToString(Constants.SLASH_DELIMITER) { it }
+        backgroundConfig =
+            get().copy(dailyRecommendBrash = brashStr)
+        saveOrUpdate()
+    }
+
+    /**
+     * 设置下载列表页面背景渐变色
+     */
+    suspend fun updateDownloadListBrash(colorStrings: List<String>, colors: List<Color>) {
+        this.downloadListBrash = colors
+        val brashStr = colorStrings.joinToString(Constants.SLASH_DELIMITER) { it }
+        backgroundConfig =
+            get().copy(downloadListBrash = brashStr)
+        saveOrUpdate()
+    }
+
+    /**
+     * 设置本地音乐页面背景渐变色
+     */
+    suspend fun updateLocalMusicBrash(colorStrings: List<String>, colors: List<Color>) {
+        this.localMusicBrash = colors
+        val brashStr = colorStrings.joinToString(Constants.SLASH_DELIMITER) { it }
+        backgroundConfig =
+            get().copy(localMusicBrash = brashStr)
         saveOrUpdate()
     }
 

@@ -42,7 +42,10 @@ fun LocalScreen(localViewModel: LocalViewModel = hiltViewModel<LocalViewModel>()
     val favoriteSet by localViewModel.favoriteRepository.favoriteSet.collectAsState()
 
     XyColumnScreen(
-        modifier = Modifier.brashColor(Color(0xFF0A7B88), Color(0xFFFFBA6C))
+        modifier = Modifier.brashColor(
+            topVerticalColor = localViewModel.backgroundConfig.localMusicBrash[0],
+            bottomVerticalColor = localViewModel.backgroundConfig.localMusicBrash[0]
+        )
     ) {
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),

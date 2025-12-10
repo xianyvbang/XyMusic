@@ -82,8 +82,8 @@ fun DownloadScreen(
     XyColumnScreen(
         modifier = Modifier
             .brashColor(
-                Color(0xFF0D9488),
-                Color(0xFF0EA5E9)
+                topVerticalColor = downloadViewModel.backgroundConfig.downloadListBrash[0],
+                bottomVerticalColor = downloadViewModel.backgroundConfig.downloadListBrash[0]
             )
     ) {
         MultiSelectTopAppEnd(

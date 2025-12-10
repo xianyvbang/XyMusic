@@ -7,7 +7,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -26,14 +25,12 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalNavController
-import cn.xybbz.ui.components.LazyLoadingAndStatus
 import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
-import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.DailyRecommendViewModel
 import kotlinx.coroutines.launch
@@ -57,8 +54,8 @@ fun DailyRecommendScreen(
     XyColumnScreen(
         modifier = Modifier
             .brashColor(
-                topVerticalColor = dailyRecommendViewModel.backgroundConfig.favoriteBrash[0],
-                bottomVerticalColor = dailyRecommendViewModel.backgroundConfig.favoriteBrash[0]
+                topVerticalColor = dailyRecommendViewModel.backgroundConfig.dailyRecommendBrash[0],
+                bottomVerticalColor = dailyRecommendViewModel.backgroundConfig.dailyRecommendBrash[0]
             )
     ) {
         TopAppBarComponent(
