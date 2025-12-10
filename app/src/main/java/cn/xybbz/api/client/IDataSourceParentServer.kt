@@ -643,7 +643,7 @@ abstract class IDataSourceParentServer(
      */
     override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
         var artistInfo: XyArtist? = db.artistDao.selectById(artistId)
-        if (artistInfo == null || artistInfo.describe.isNullOrBlank()) {
+        if (artistInfo == null) {
             artistInfo = selectArtistInfoByRemotely(artistId)
         } else {
             val ifFavorite = db.artistDao.selectFavoriteById(artistId) == true
@@ -848,7 +848,7 @@ abstract class IDataSourceParentServer(
     /**
      * 从远程获得艺术家信息
      */
-    abstract suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist?
+    abstract override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist?
 
 
     /**

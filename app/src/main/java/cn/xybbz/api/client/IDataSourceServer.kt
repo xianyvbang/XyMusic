@@ -238,6 +238,11 @@ interface IDataSourceServer {
     suspend fun selectArtistInfoById(artistId: String): XyArtist?
 
     /**
+     * 从远程获得艺术家信息
+     */
+    suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist?
+
+    /**
      * 获得媒体库列表
      */
     suspend fun selectMediaLibrary()

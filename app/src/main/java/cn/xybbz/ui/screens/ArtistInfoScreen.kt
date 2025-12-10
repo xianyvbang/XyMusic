@@ -221,7 +221,7 @@ fun ArtistInfoScreen(
             ){
                 item {
                     BasicText(
-                        text = artistInfoViewModel.artistInfoData?.describe
+                        text = artistInfoViewModel.artistDescribe
                             ?: "",
                         modifier = Modifier,
                         color = {
@@ -407,7 +407,7 @@ fun ArtistInfoScreen(
                             )
                             Spacer(modifier = Modifier.height(XyTheme.dimens.corner))
                             BasicText(
-                                text = artistInfoViewModel.artistInfoData?.describe
+                                text = artistInfoViewModel.artistDescribe
                                     ?: stringResource(R.string.no_description),
                                 modifier = Modifier.debounceClickable(enabled = isOverflow) {
                                     ifOpenDescribe = true

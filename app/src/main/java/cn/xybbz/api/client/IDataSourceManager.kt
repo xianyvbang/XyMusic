@@ -760,6 +760,18 @@ class IDataSourceManager(
     }
 
     /**
+     * 从远程获得艺术家信息
+     */
+    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist? {
+        return try {
+            dataSourceServer.selectArtistInfoByRemotely(artistId)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "根据id从远程获得艺术家信息失败", e)
+            null
+        }
+    }
+
+    /**
      * 获得最多播放
      */
     override suspend fun getMostPlayerMusicList() {

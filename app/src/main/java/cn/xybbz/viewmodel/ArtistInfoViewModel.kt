@@ -52,6 +52,12 @@ class ArtistInfoViewModel @AssistedInject constructor(
         private set
 
     /**
+     * 艺术家描述
+     */
+    var artistDescribe by mutableStateOf<String?>(null)
+        private set
+
+    /**
      * 是否收藏
      */
     var ifFavorite by mutableStateOf(false)
@@ -80,11 +86,15 @@ class ArtistInfoViewModel @AssistedInject constructor(
                 ifFavorite = artistInfoTmp.ifFavorite
             }
         }
+        viewModelScope.launch {
+            artistDescribe = dataSourceManager.selectArtistInfoByRemotely(artistId)?.describe
+        }
     }
+
     /**
      * 更新收藏信息
      */
-    fun updateFavorite(ifFavorite: Boolean){
+    fun updateFavorite(ifFavorite: Boolean) {
         this.ifFavorite = ifFavorite
     }
 }
