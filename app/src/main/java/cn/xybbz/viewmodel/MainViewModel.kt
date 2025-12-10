@@ -243,18 +243,24 @@ class MainViewModel @Inject constructor(
 
         }
 
-        musicController.setOnUpdateMusicPicDataFun{itemId,picByte ->
+        musicController.setOnUpdateMusicPicDataFun { itemId, picByte ->
             viewModelScope.launch {
-                db.musicDao.removePlayQueueMusicPicByte()
                 if (musicController.musicInfo?.pic.isNullOrBlank() && !itemId.isNullOrBlank()) {
+                    //判断传过来的itemId和有picByte不为空的playQueueMusic的musicId一致,并且playQueueMusic的图片字节不为空,则不清空数据
+                    val picByteNotNullPlayQueueMusic = db.musicDao.selectPlayQueueByPicByteNotNull()
+                    if (picByteNotNullPlayQueueMusic != null && picByteNotNullPlayQueueMusic.musicId != itemId) {
+                        db.musicDao.removePlayQueueMusicPicByte()
+                    }
                     //更新存储封面
                     val playQueueMusic = db.musicDao.selectPlayQueueByItemId(itemId)
-                    if (playQueueMusic != null && musicController.picByte?.isNotEmpty() == true) {
+                    if (playQueueMusic != null && picByte?.isNotEmpty() == true) {
                         db.musicDao.updatePlayQueueMusicPicByte(
                             itemId,
                             picByte
                         )
                     }
+                } else {
+                    db.musicDao.removePlayQueueMusicPicByte()
                 }
             }
         }

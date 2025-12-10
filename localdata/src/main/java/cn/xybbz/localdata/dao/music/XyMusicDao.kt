@@ -652,6 +652,12 @@ interface XyMusicDao {
     """)
     suspend fun selectPlayQueueByItemId(itemId:String): PlayQueueMusic?
 
+
+    @Query("""
+        select * from playqueuemusic where connectionId = (select connectionId from xy_settings) and picByte is not null limit 1
+    """)
+    suspend fun selectPlayQueueByPicByteNotNull(): PlayQueueMusic?
+
     /**
      * 获得歌单中音乐的数据
      */
