@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
@@ -33,6 +34,7 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.PlayCircle
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,8 +49,10 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -88,6 +92,8 @@ import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.LazyColumnParentComponent
+import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
@@ -143,6 +149,10 @@ fun ArtistInfoScreen(
             (scrollOffset / maxScrollPx).coerceIn(0f, 1f)
         }
     }
+    //是否文本描述超过最大行数
+    var isOverflow by remember { mutableStateOf(false) }
+    //是否打开描述信息页面
+    var ifOpenDescribe by remember { mutableStateOf(false) }
 
     // 使用 animateFloatAsState 实现平滑过渡
     val topBarAlpha by animateFloatAsState(
@@ -195,6 +205,36 @@ fun ArtistInfoScreen(
                 .calculateTopPadding() /*- (DefaultImageHeight.times(0.2f))*/
 
         val parentMaxHeight = this.maxHeight
+
+        ModalBottomSheetExtendComponent(
+            modifier = Modifier.statusBarsPadding(),
+            onIfDisplay = { ifOpenDescribe },
+            onClose = { bool -> ifOpenDescribe = bool },
+            titleText = artistInfoViewModel.artistInfoData?.name ?: "",
+            dragHandle = { BottomSheetDefaults.DragHandle(height = 2.dp) }
+        ) {
+            LazyColumnParentComponent(
+                verticalArrangement = Arrangement.Top,
+                contentPadding = PaddingValues(
+                    horizontal = XyTheme.dimens.outerHorizontalPadding
+                ),
+            ){
+                item {
+                    BasicText(
+                        text = artistInfoViewModel.artistInfoData?.describe
+                            ?: "",
+                        modifier = Modifier,
+                        color = {
+                            Color.White
+                        },
+                        style = MaterialTheme.typography.titleSmall.copy(lineHeight = 15.sp),
+                        overflow = TextOverflow.Visible,
+
+                        )
+                }
+            }
+
+        }
 
         Box(
             modifier = Modifier
@@ -369,15 +409,21 @@ fun ArtistInfoScreen(
                             BasicText(
                                 text = artistInfoViewModel.artistInfoData?.describe
                                     ?: stringResource(R.string.no_description),
-                                modifier = Modifier,
+                                modifier = Modifier.debounceClickable(enabled = isOverflow) {
+                                    ifOpenDescribe = true
+                                },
                                 color = {
                                     Color.White.copy(alpha = (topBarAlpha - 1) * -1)
                                 },
                                 style = MaterialTheme.typography.titleSmall.copy(lineHeight = 15.sp),
                                 maxLines = 3,
                                 overflow = TextOverflow.Ellipsis,
+                                onTextLayout = { textLayoutResult ->
+                                    // 是否超过最大行数
+                                    isOverflow = textLayoutResult.hasVisualOverflow
+                                }
 
-                                )
+                            )
                         }
                     }
 
