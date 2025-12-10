@@ -13,9 +13,6 @@ object TokenServer {
     var headerMap: Map<String, String> = emptyMap()
         private set
 
-    var baseUrl: String = ""
-        private set
-
     var tokenHeaderName = ApiConstants.AUTHORIZATION
         private set
 
@@ -50,10 +47,6 @@ object TokenServer {
         setTokenData("")
         setQueryMapData(emptyMap())
         setHeaderMapData(emptyMap())
-    }
-
-    fun setBaseUrlData(baseUrl: String) {
-        TokenServer.baseUrl = baseUrl
     }
 
     /**

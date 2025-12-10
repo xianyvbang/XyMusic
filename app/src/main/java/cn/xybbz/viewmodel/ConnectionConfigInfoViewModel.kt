@@ -9,7 +9,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import cn.xybbz.R
-import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.IDataSourceManager
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.DatabaseUtils
@@ -190,7 +189,6 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
         }
         //更新链接地址
         viewModelScope.launch {
-            TokenServer.setBaseUrlData(baseUrl = tmpAddress)
             //更新所有数据使得列表失效
             db.albumDao.updateUrlByConnectionId(address, tmpAddress)
             db.musicDao.updateUrlByConnectionId(address, tmpAddress)
@@ -200,7 +198,7 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
             address = tmpAddress
             db.connectionConfigDao.updateAddress(
                 address = address,
-                connectionId = connectionId.toLong()
+                connectionId = connectionId
             )
             connectionConfigServer.updateConnection()
             //判断是否需要重新登录
