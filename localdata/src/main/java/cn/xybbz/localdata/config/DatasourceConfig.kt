@@ -78,7 +78,7 @@ class DatasourceConfig {
     private object Migration5 : Migration(5, 6) {
         override fun migrate(db: SupportSQLiteDatabase) {
             // 数据库的升级语句
-            db.execSQL("ALTER TABLE XyArtist ADD COLUMN backdrop TEXT")
+            db.execSQL("ALTER TABLE xy_artist ADD COLUMN backdrop TEXT")
         }
     }
 }
