@@ -174,7 +174,7 @@ fun RouterCompose(
                 LocalScreen()
             }
 
-            extremityComposable<RouterConstants.SetBackground> {
+            extremityComposable<RouterConstants.SetBackgroundImage> {
                 SetBackgroundImageScreen()
             }
         }

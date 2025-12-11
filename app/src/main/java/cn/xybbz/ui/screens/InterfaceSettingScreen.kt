@@ -1,8 +1,5 @@
 package cn.xybbz.ui.screens
 
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,7 +13,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,14 +26,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.router.RouterConstants
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.SettingItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
@@ -51,12 +46,10 @@ import cn.xybbz.ui.xy.XyButtonNotPadding
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyItemSwitcherNotTextColor
-import cn.xybbz.ui.xy.XyItemTextPadding
 import cn.xybbz.ui.xy.XyItemTitlePadding
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyRowButton
 import cn.xybbz.viewmodel.InterfaceSettingViewModel
-import coil.compose.AsyncImage
 import com.github.skydoves.colorpicker.compose.AlphaSlider
 import com.github.skydoves.colorpicker.compose.AlphaTile
 import com.github.skydoves.colorpicker.compose.BrightnessSlider
@@ -77,16 +70,7 @@ fun InterfaceSettingScreen(
 
     val navHostController = LocalNavController.current
     val coroutineScope = rememberCoroutineScope()
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
-    val context = LocalContext.current
 
-
-    // 打开系统相册
-    val pickImageLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        imageUri = uri
-    }
 
     XyColumnScreen(
         modifier = Modifier.brashColor(
@@ -113,36 +97,26 @@ fun InterfaceSettingScreen(
                         contentDescription = stringResource(R.string.return_setting_screen)
                     )
                 }
+            },
+            actions = {
+                TextButton(onClick = {
+                    coroutineScope.launch {
+                        interfaceSettingViewModel.backgroundConfig.reset()
+                    }
+                }) {
+                    Text(stringResource(R.string.reset))
+                }
             }
         )
 
         LazyColumnNotComponent {
             item {
-                XyRow {
-                    XyItemTextPadding(
-                        text = stringResource(R.string.interface_screen),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                SettingRoundedSurfaceColumn {
+                    SettingItemComponent(title = "设置背景图片", trailingContent = {
 
-                    TextButton(onClick = {
-                        coroutineScope.launch {
-                            interfaceSettingViewModel.backgroundConfig.reset()
-                        }
                     }) {
-                        Text(stringResource(R.string.reset))
+                        navHostController.navigate(RouterConstants.SetBackgroundImage)
                     }
-                }
-
-            }
-            item {
-                SettingItemComponent(title = "设置图片",trailingContent = {
-                    AsyncImage(
-                        model = imageUri,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop
-                    )
-                }) {
-                    pickImageLauncher.launch("image/*")
                 }
             }
             item {
