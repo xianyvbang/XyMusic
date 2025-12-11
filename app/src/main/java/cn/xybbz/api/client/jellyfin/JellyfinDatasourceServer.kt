@@ -439,7 +439,7 @@ class JellyfinDatasourceServer @Inject constructor(
         pageSize: Int,
         pageNum: Int
     ): List<XyPlayMusic>? {
-        var selectMusicList=
+        var selectMusicList =
             super.getMusicList(pageSize = pageSize, pageNum = pageNum)
 
         if (selectMusicList.isNullOrEmpty()) {
@@ -719,7 +719,7 @@ class JellyfinDatasourceServer @Inject constructor(
         jellyfinApiClient.playlistsApi().addItemToPlaylist(
             playlistId = playlistId,
             ids = musicIds.joinToString(Constants.ARTIST_DELIMITER) { it })
-        return super.saveMusicPlaylist(playlistId,musicIds)
+        return super.saveMusicPlaylist(playlistId, musicIds)
     }
 
     /**
@@ -1182,14 +1182,11 @@ class JellyfinDatasourceServer @Inject constructor(
                 sortBy = listOf(ItemSortBy.SORT_NAME),
                 sortOrder = listOf(SortOrder.ASCENDING),
                 fields = listOf(
-                    ItemFields.PRIMARY_IMAGE_ASPECT_RATIO,
                     ItemFields.SORT_NAME,
-                    ItemFields.EXTERNAL_URLS,
                 ),
-//                includeItemTypes = listOf(BaseItemKind.MUSIC_ARTIST),
                 imageTypeLimit = 1,
                 enableImageTypes = listOf(
-                    ImageType.PRIMARY, ImageType.BACKDROP, ImageType.BANNER, ImageType.THUMB
+                    ImageType.PRIMARY, ImageType.BACKDROP
                 ),
                 searchTerm = search,
                 isFavorite = isFavorite,
@@ -1403,7 +1400,10 @@ class JellyfinDatasourceServer @Inject constructor(
     fun convertToArtistList(items: List<ItemResponse>): List<XyArtist> {
         val xyArtists = items.mapIndexed { index, item ->
             val artistImageUrl =
-                if (!item.name.isNullOrBlank() && !item.imageTags.isNullOrEmpty()) item.name?.let {
+                if (!item.name.isNullOrBlank() && !item.imageTags.isNullOrEmpty() && item.imageTags?.containsKey(
+                        ImageType.PRIMARY
+                    ) == true
+                ) item.name?.let {
                     jellyfinApiClient.createArtistImageUrl(
                         name = it,
                         imageType = ImageType.PRIMARY,
@@ -1416,17 +1416,19 @@ class JellyfinDatasourceServer @Inject constructor(
                 }
                 else null
 
-            val backdropImageUrl = if (!item.name.isNullOrBlank() && !item.imageTags.isNullOrEmpty()) item.name?.let {
-                jellyfinApiClient.createArtistImageUrl(
-                    name = it,
-                    imageType = ImageType.BACKDROP,
-                    imageIndex = 0,
-                    fillWidth = 1280,
-                    quality = 80,
-                    tag = item.imageTags?.get(ImageType.BACKDROP)
-                )
-            }
-            else null
+            val backdropImageUrl =
+                if (!item.backdropImageTags.isNullOrEmpty()) item.name?.let {
+                    jellyfinApiClient.createArtistImageUrl(
+                        name = it,
+                        imageType = ImageType.BACKDROP,
+                        imageIndex = 0,
+                        fillHeight = 1080,
+                        fillWidth = 1920,
+                        quality = 100,
+                        tag = item.backdropImageTags?.get(0)
+                    )
+                }
+                else null
 
             val sortName = item.sortName
             val shortNameStart = if (!sortName.isNullOrBlank()) sortName[0] else '#'

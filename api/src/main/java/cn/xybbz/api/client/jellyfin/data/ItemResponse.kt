@@ -110,6 +110,12 @@ data class ItemResponse(
     val imageTags: Map<ImageType, String>? = null,
 
     /**
+     * backdrop image tags
+     */
+    @param:Json(name = "BackdropImageTags")
+    val backdropImageTags: List<String>? = null,
+
+    /**
      * The name of the sort.
      */
     @param:Json(name = "SortName")
