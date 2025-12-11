@@ -10,7 +10,15 @@ import java.util.concurrent.Executors
 class DatasourceConfig {
 
     private val dbName = "appData.db"
-    private val migrations = arrayOf(Migration1,Migration2,Migration3,Migration4,Migration5,Migration_6_7)
+    private val migrations = arrayOf(
+        Migration1,
+        Migration2,
+        Migration3,
+        Migration4,
+        Migration5,
+        Migration_6_7,
+        Migration_7_8
+    )
 
     fun createDatabaseClient(context: Context): DatabaseClient {
         return Room.databaseBuilder(context.applicationContext, DatabaseClient::class.java, dbName)
@@ -84,20 +92,39 @@ class DatasourceConfig {
 
     private object Migration_6_7 : Migration(6, 7) {
         override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL("""
+            db.execSQL(
+                """
             ALTER TABLE xy_background_config 
             ADD COLUMN dailyRecommendBrash TEXT NOT NULL DEFAULT '#FF6C1577/#FFCC6877'
-        """.trimIndent())
+        """.trimIndent()
+            )
 
-            db.execSQL("""
+            db.execSQL(
+                """
             ALTER TABLE xy_background_config 
             ADD COLUMN downloadListBrash TEXT NOT NULL DEFAULT '#FF0D9488/#FF0EA5E9'
-        """.trimIndent())
+        """.trimIndent()
+            )
 
-            db.execSQL("""
+            db.execSQL(
+                """
             ALTER TABLE xy_background_config 
             ADD COLUMN localMusicBrash TEXT NOT NULL DEFAULT '#FF0A7B88/#FFFFBA6C'
-        """.trimIndent())
+        """.trimIndent()
+            )
+        }
+    }
+
+
+    private object Migration_7_8 : Migration(7, 8) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // 在 xy_settings 表中新增 imageFilePath 字段，默认值为 NULL
+            db.execSQL(
+                """
+            ALTER TABLE xy_settings 
+            ADD COLUMN imageFilePath TEXT
+            """
+            )
         }
     }
 

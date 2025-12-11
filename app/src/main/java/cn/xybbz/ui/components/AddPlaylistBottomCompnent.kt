@@ -110,7 +110,7 @@ fun AddPlaylistBottomComponent(
                     "${context.getString(R.string.new_playlist)}${playlistBottomViewModel.playlists.size}"
                 )
                 AlertDialogObject(
-                    title = R.string.new_playlist,
+                    title = context.getString(R.string.new_playlist),
                     content = {
                         XyEdit(text = playlistName, onChange = {
                             playlistName = it

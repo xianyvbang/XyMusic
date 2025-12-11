@@ -129,7 +129,7 @@ fun SettingScreen(
             item {
                 SettingRoundedSurfaceColumn {
 
-                    SettingItemComponent(title = R.string.cache_limit) {
+                    SettingItemComponent(title = stringResource(R.string.cache_limit)) {
                         navController.navigate(RouterConstants.CacheLimit)
                     }
 
@@ -156,7 +156,7 @@ fun SettingScreen(
                     }
 
                     SettingItemComponent(
-                        title = R.string.cache_location,
+                        title = stringResource(R.string.cache_location),
                         bottomInfo = settingsViewModel.settingsConfig.cacheFilePath,
                         maxLines = Int.MAX_VALUE,
                         imageVector = null
@@ -195,7 +195,7 @@ fun SettingScreen(
             }
             item {
                 SettingRoundedSurfaceColumn {
-                    SettingItemComponent(title = R.string.connection_management) {
+                    SettingItemComponent(title = stringResource(R.string.connection_management)) {
                         navController.navigate(RouterConstants.ConnectionManagement)
                     }
                 }
@@ -219,7 +219,7 @@ fun SettingScreen(
             item {
                 SettingRoundedSurfaceColumn {
                     SettingItemComponent(
-                        title = R.string.download_max_list,
+                        title = stringResource(R.string.download_max_list),
                         info = settingsViewModel.settingDataNow.maxConcurrentDownloads.toString(),
                         imageVector = Icons.Rounded.KeyboardArrowDown,
                         trailingContent = {
@@ -303,7 +303,7 @@ fun SettingScreen(
                     }
 
                     SettingItemComponent(
-                        title = R.string.song_cache_location,
+                        title = stringResource(R.string.song_cache_location),
                         bottomInfo = settingsViewModel.downLoadManager.getConfig().finalDirectory,
                         maxLines = Int.MAX_VALUE,
                         imageVector = null
@@ -344,19 +344,19 @@ fun SettingScreen(
             item {
                 SettingRoundedSurfaceColumn {
 
-                    SettingItemComponent(title = R.string.storage_management) {
+                    SettingItemComponent(title = stringResource(R.string.storage_management)) {
                         navController.navigate(RouterConstants.MemoryManagement)
                     }
 
-                    SettingItemComponent(title = R.string.interface_settings) {
+                    SettingItemComponent(title = stringResource(R.string.interface_settings)) {
                         navController.navigate(RouterConstants.InterfaceSetting)
                     }
 
-                    SettingItemComponent(title = R.string.language) {
+                    SettingItemComponent(title = stringResource(R.string.language)) {
                         navController.navigate(RouterConstants.LanguageConfig)
                     }
 
-                    SettingItemComponent(title = R.string.about) {
+                    SettingItemComponent(title = stringResource(R.string.about)) {
                         //版本信息,检查更新
                         navController.navigate(RouterConstants.About)
                     }

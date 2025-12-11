@@ -51,11 +51,11 @@ import javax.inject.Inject
 @OptIn(UnstableApi::class)
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val db: DatabaseClient,
+    val db: DatabaseClient,
     private val musicController: MusicController,
-    private val _dataSourceManager: IDataSourceManager,
+    val dataSourceManager: IDataSourceManager,
     private val connectionConfigServer: ConnectionConfigServer,
-    private val _settingsConfig: SettingsConfig,
+    val settingsConfig: SettingsConfig,
     private val musicPlayContext: MusicPlayContext,
     private val cacheController: CacheController,
     private val alarmConfig: AlarmConfig,
@@ -64,8 +64,6 @@ class MainViewModel @Inject constructor(
     val selectControl: SelectControl
 ) : ViewModel() {
 
-    val dataSourceManager = _dataSourceManager
-    val _db = db
 
     var connectionIsLogIn by mutableStateOf(false)
         private set
@@ -171,7 +169,7 @@ class MainViewModel @Inject constructor(
          */
         musicController.setFavoriteMusic {
             viewModelScope.launch {
-                _dataSourceManager.setFavoriteData(
+                dataSourceManager.setFavoriteData(
                     type = MusicTypeEnum.MUSIC,
                     itemId = it,
                     musicController = musicController,
@@ -381,7 +379,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             musicController.musicInfo?.let {
                 //判断是否需要存储播放历史
-                if (_settingsConfig.get().ifEnableAlbumHistory || (enableProgressMap.containsKey(
+                if (settingsConfig.get().ifEnableAlbumHistory || (enableProgressMap.containsKey(
                         it.album
                     ) && enableProgressMap[it.album] == true)
                 ) {

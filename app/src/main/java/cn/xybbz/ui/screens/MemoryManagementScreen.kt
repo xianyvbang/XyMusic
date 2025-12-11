@@ -105,7 +105,7 @@ fun MemoryManagementScreen(
                     cacheSize = memoryManagementViewModel.databaseSize,
                     onClick = {
                         AlertDialogObject(
-                            title = R.string.warning,
+                            title = context.getString(R.string.warning),
                             content = {
                                 XyItemTextHorizontal(
                                     text = stringResource(R.string.confirm_delete_database)

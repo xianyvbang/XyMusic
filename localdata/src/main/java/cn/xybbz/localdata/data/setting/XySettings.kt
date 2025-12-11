@@ -18,7 +18,6 @@ data class XySettings(
      * 桌面歌词
      */
     val ifDesktopLyrics: Int = Constants.NO,
-
     /**
      * 倍速播放速度
      *  0.5f -> "0.5倍"
@@ -27,7 +26,6 @@ data class XySettings(
      *  2f -> "2倍"
      */
     val doubleSpeed: Float = 1f,
-
     /**
      * 连接id
      */
@@ -56,9 +54,12 @@ data class XySettings(
      * 最新版本下载地址
      */
     val lasestApkUrl:String = "",
-
     /**
      * 最大同时下载数量
      */
-    val maxConcurrentDownloads:Int = 3
+    val maxConcurrentDownloads:Int = 3,
+    /**
+     * 背景图片地址
+     */
+    val imageFilePath: String? = null
 )

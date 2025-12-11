@@ -1,5 +1,6 @@
 package cn.xybbz.config.select
 
+import android.content.Context
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,7 +28,8 @@ import kotlinx.coroutines.launch
  * @constructor 创建[SelectControl]
  */
 @Immutable
-class SelectControl {
+class SelectControl(val application: Context) {
+
 
 
     //选中音乐列表id
@@ -64,7 +66,7 @@ class SelectControl {
     val onRemoveSelectListResource: ((IDataSourceManager, CoroutineScope) -> Unit) =
         { dataSourceManager, viewModelScope ->
             AlertDialogObject(
-                title = R.string.delete_permanently,
+                title = application.getString(R.string.delete_permanently),
                 content = {
                     XyItemTextHorizontal(
                         text = stringResource(R.string.delete_warning)
@@ -124,17 +126,6 @@ class SelectControl {
 
     //状态变化
     var onOpenChange: ((Boolean) -> Unit)? = null
-
-    constructor(ifOpenSelect: Boolean) : this() {
-        this.ifOpenSelect = ifOpenSelect
-    }
-
-    constructor(ifOpenSelect: Boolean, itemId: String) : this() {
-        this.ifOpenSelect = ifOpenSelect
-        this.playlistId = itemId
-    }
-
-    constructor()
 
     fun show(
         ifOpenSelect: Boolean,

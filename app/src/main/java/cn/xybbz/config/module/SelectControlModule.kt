@@ -1,9 +1,11 @@
 package cn.xybbz.config.module
 
+import android.content.Context
 import cn.xybbz.config.select.SelectControl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -13,7 +15,7 @@ class SelectControlModule {
 
     @Singleton
     @Provides
-    fun selectListData(): SelectControl {
-        return SelectControl()
+    fun selectListData(@ApplicationContext context: Context): SelectControl {
+        return SelectControl(context)
     }
 }

@@ -143,7 +143,7 @@ fun ConnectionConfigInfoScreen(
                         }
                     }
                     SettingItemComponent(
-                        title = R.string.password,
+                        title = stringResource(R.string.password),
                         content = {
                             XyEdit(
                                 text = connectionConfigInfoViewModel.password ?: "",
@@ -175,7 +175,7 @@ fun ConnectionConfigInfoScreen(
                     )
                 ) {
                     SettingItemComponent(
-                        title = R.string.music_library,
+                        title = stringResource(R.string.music_library),
                         info = if (connectionConfigInfoViewModel.library.id == Constants.MINUS_ONE_INT.toString())
                             stringResource(connectionConfigInfoViewModel.library.name.toInt())
                         else connectionConfigInfoViewModel.library.name,
@@ -191,7 +191,7 @@ fun ConnectionConfigInfoScreen(
                     )
 
                     SettingItemComponent(
-                        title = R.string.connection_address,
+                        title = stringResource(R.string.connection_address),
                         info = connectionConfigInfoViewModel.address,
                         onClick = {
                             connectionConfigInfoViewModel.updateTmpAddress(
@@ -212,7 +212,7 @@ fun ConnectionConfigInfoScreen(
                         onCloseRequest = { connectionConfigInfoViewModel.reductionAddress() })
 
                     SettingItemComponent(
-                        title = R.string.set_alias,
+                        title = stringResource(R.string.set_alias),
                         info = connectionConfigInfoViewModel.connectionName,
                         content = {
                             XyEdit(
@@ -236,7 +236,7 @@ fun ConnectionConfigInfoScreen(
                                 )
                             } else {
                                 AlertDialogObject(
-                                    title = R.string.warning,
+                                    title = context.getString(R.string.warning),
                                     content = {
                                         XyItemTextHorizontal(
                                             text = stringResource(R.string.confirm_delete_connection)

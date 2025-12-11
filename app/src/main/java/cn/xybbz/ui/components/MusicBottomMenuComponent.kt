@@ -482,20 +482,25 @@ fun MusicBottomMenuComponent(
                             imageVector = Icons.Outlined.DeleteForever,
                             text = stringResource(R.string.delete_permanently),
                             onClick = {
-                                AlertDialogObject(title = R.string.delete_permanently, content = {
-                                    XyItemTextHorizontal(
-                                        text = stringResource(R.string.delete_warning)
-                                    )
-                                }, ifWarning = true, onConfirmation = {
-                                    coroutineScope.launch {
-                                        sheetState.hide()
-                                        musicBottomMenuViewModel.removeMusicResource(music)
-                                    }.invokeOnCompletion {
-                                        ifShowBottom = false
-                                        music.dismiss()
-                                    }
+                                AlertDialogObject(
+                                    title = context.getString(R.string.delete_permanently),
+                                    content = {
+                                        XyItemTextHorizontal(
+                                            text = stringResource(R.string.delete_warning)
+                                        )
+                                    },
+                                    ifWarning = true,
+                                    onConfirmation = {
+                                        coroutineScope.launch {
+                                            sheetState.hide()
+                                            musicBottomMenuViewModel.removeMusicResource(music)
+                                        }.invokeOnCompletion {
+                                            ifShowBottom = false
+                                            music.dismiss()
+                                        }
 
-                                }, onDismissRequest = {}).show()
+                                    },
+                                    onDismissRequest = {}).show()
                             })
 
                 }
@@ -672,39 +677,43 @@ fun TimerComponent(
             enabled = ifCanScheduleExactAlarms,
             onValueChange = {
                 if (it >= 75f) {
-                    AlertDialogObject(title = R.string.custom_timer_close, content = {
-                        XyEdit(
-                            text = customInputValue,
-                            onChange = { input ->
-                                val pattern = Regex("[^0-9]") // 定义正则表达式，匹配至少1位数字
-                                var replace = input.replace(pattern, "")
-                                if (replace.length >= 4) {
-                                    MessageUtils.sendPopTipError(R.string.max_24_hours)
-                                    replace = replace.substring(0, 4)
-                                } else {
-                                    isError = false
+                    AlertDialogObject(
+                        title = context.getString(R.string.custom_timer_close),
+                        content = {
+                            XyEdit(
+                                text = customInputValue,
+                                onChange = { input ->
+                                    val pattern = Regex("[^0-9]") // 定义正则表达式，匹配至少1位数字
+                                    var replace = input.replace(pattern, "")
+                                    if (replace.length >= 4) {
+                                        MessageUtils.sendPopTipError(R.string.max_24_hours)
+                                        replace = replace.substring(0, 4)
+                                    } else {
+                                        isError = false
+                                    }
+                                    customInputValue = replace
+                                },
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = Done
+                                ),
+                                singleLine = true,
+                                modifier = Modifier.semantics {
+                                    if (isError) error(context.getString(R.string.max_24_hours))
                                 }
-                                customInputValue = replace
-                            },
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = Done
-                            ),
-                            singleLine = true,
-                            modifier = Modifier.semantics {
-                                if (isError) error(context.getString(R.string.max_24_hours))
+                            )
+                        },
+                        onDismissRequest = {
+                            customInputValue = ""
+                            onSetSliderTimerEndData(0F)
+                        },
+                        onConfirmation = {
+                            if (!isError) {
+                                Log.i("=====", "调用设置${customInputValue}")
+                                onSetTimerInfo(customInputValue.toLong(), true)
                             }
-                        )
-                    }, onDismissRequest = {
-                        customInputValue = ""
-                        onSetSliderTimerEndData(0F)
-                    }, onConfirmation = {
-                        if (!isError) {
-                            Log.i("=====", "调用设置${customInputValue}")
-                            onSetTimerInfo(customInputValue.toLong(), true)
-                        }
-                        customInputValue = ""
-                    }).show()
+                            customInputValue = ""
+                        }).show()
                 } else {
                     onSetTimerInfo(it.toLong(), true)
                 }

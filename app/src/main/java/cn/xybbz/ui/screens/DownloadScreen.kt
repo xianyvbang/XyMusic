@@ -43,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -77,6 +78,7 @@ import kotlin.math.pow
 fun DownloadScreen(
     downloadViewModel: DownloadViewModel = hiltViewModel<DownloadViewModel>()
 ) {
+    val context = LocalContext.current
 
     val tasks by downloadViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
     XyColumnScreen(
@@ -96,7 +98,7 @@ fun DownloadScreen(
             onCancel = { downloadViewModel.performBatchCancel() },
             onDelete = {
                 if (downloadViewModel.selectedTaskIds.isNotEmpty())
-                    AlertDialogObject(title = R.string.remove_download_title, content = {
+                    AlertDialogObject(title = context.getString(R.string.remove_download_title), content = {
                         XyItemTextHorizontal(
                             text = stringResource(
                                 R.string.confirm_delete_download,
