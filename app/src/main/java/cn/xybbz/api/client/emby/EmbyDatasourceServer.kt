@@ -160,13 +160,11 @@ class EmbyDatasourceServer @Inject constructor(
                 sortBy = listOf(ItemSortBy.SORT_NAME),
                 sortOrder = listOf(SortOrder.ASCENDING),
                 fields = listOf(
-                    ItemFields.PRIMARY_IMAGE_ASPECT_RATIO,
                     ItemFields.SORT_NAME,
-                    ItemFields.EXTERNAL_URLS,
                 ),
                 imageTypeLimit = 1,
                 enableImageTypes = listOf(
-                    ImageType.PRIMARY, ImageType.BACKDROP, ImageType.BANNER, ImageType.THUMB
+                    ImageType.PRIMARY, ImageType.BACKDROP
                 ),
                 searchTerm = search,
                 isFavorite = isFavorite,
@@ -1293,7 +1291,10 @@ class EmbyDatasourceServer @Inject constructor(
         indexNumber: Int,
     ): XyArtist {
         val artistImageUrl =
-            if (!artist.name.isNullOrBlank() && !artist.imageTags.isNullOrEmpty()) artist.name?.let {
+            if (!artist.name.isNullOrBlank() && !artist.imageTags.isNullOrEmpty() && artist.imageTags?.containsKey(
+                    ImageType.PRIMARY
+                ) == true
+            ) artist.name?.let {
                 embyApiClient.createArtistImageUrl(
                     name = it,
                     imageType = ImageType.PRIMARY,
@@ -1306,17 +1307,19 @@ class EmbyDatasourceServer @Inject constructor(
             }
             else null
 
-        val backdropImageUrl = if (!artist.name.isNullOrBlank() && !artist.imageTags.isNullOrEmpty()) artist.name?.let {
-            embyApiClient.createArtistImageUrl(
-                name = it,
-                imageType = ImageType.BACKDROP,
-                imageIndex = 0,
-                fillWidth = 1280,
-                quality = 80,
-                tag = artist.imageTags?.get(ImageType.BACKDROP)
-            )
-        }
-        else null
+        val backdropImageUrl =
+            if (!artist.backdropImageTags.isNullOrEmpty()) artist.name?.let {
+                embyApiClient.createArtistImageUrl(
+                    name = it,
+                    imageType = ImageType.BACKDROP,
+                    imageIndex = 0,
+                    fillHeight = 1080,
+                    fillWidth = 1920,
+                    quality = 100,
+                    tag = artist.backdropImageTags?.get(0)
+                )
+            }
+            else null
 
         val sortName = artist.sortName
         val shortNameStart = if (!sortName.isNullOrBlank()) sortName[0] else '#'
