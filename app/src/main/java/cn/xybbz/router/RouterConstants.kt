@@ -202,5 +202,12 @@ import kotlinx.serialization.Serializable
     @Serializable
     @SerialName("Local")
     data object Local : RouterConstants
+
+    /**
+     * 设置背景图片页面
+     */
+    @Serializable
+    @SerialName("SetBackgroundImage")
+    data object SetBackgroundImage : RouterConstants
 }
 
