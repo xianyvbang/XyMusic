@@ -139,6 +139,8 @@ fun ArtistInfoScreen(
         DefaultImageHeight
     val density = LocalDensity.current
 
+    val tabHeightDp = XyTheme.dimens.itemHeight * 0.6f
+
     val current by remember {
         derivedStateOf {
             val maxScrollPx = with(density) { imageOffsetDp.toPx() } // 最大滚动距离
@@ -201,7 +203,7 @@ fun ArtistInfoScreen(
             .fillMaxSize()
     ) {
         val maxHeight =
-            this.maxHeight - XyTheme.dimens.itemHeight - TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
+            this.maxHeight - tabHeightDp - TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
                 .calculateTopPadding() /*- (DefaultImageHeight.times(0.2f))*/
 
         val parentMaxHeight = this.maxHeight
@@ -218,7 +220,7 @@ fun ArtistInfoScreen(
                 contentPadding = PaddingValues(
                     horizontal = XyTheme.dimens.outerHorizontalPadding
                 ),
-            ){
+            ) {
                 item {
                     BasicText(
                         text = artistInfoViewModel.artistDescribe
@@ -448,10 +450,11 @@ fun ArtistInfoScreen(
                                 containerColor = Color.Transparent,
                                 selectedTabIndex = horPagerState.currentPage,
                                 divider = {},
-                                modifier = Modifier.height(XyTheme.dimens.itemHeight)
+                                modifier = Modifier.height(tabHeightDp),
                             ) {
                                 TabListEnum.entries.forEachIndexed { index, it ->
                                     Tab(
+                                        modifier = Modifier.height(tabHeightDp),
                                         selected = horPagerState.currentPage == index,
                                         onClick = {
                                             coroutineScope
