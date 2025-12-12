@@ -282,7 +282,7 @@ fun AlbumInfoScreen(
                                         },
                                         onClick = importPlaylistsCompose(onCreatePlaylist = {
                                             AlertDialogObject(
-                                                title = R.string.import_playlist,
+                                                title = context.getString(R.string.import_playlist),
                                                 content = {
                                                     XyItemTextHorizontal(
                                                         text = stringResource(R.string.import_playlist_hint)
@@ -326,7 +326,7 @@ fun AlbumInfoScreen(
                                         onClick = {
                                             ifShowMenu = false
                                             AlertDialogObject(
-                                                title = R.string.modify_playlist_name,
+                                                title = context.getString(R.string.modify_playlist_name),
                                                 content = {
                                                     XyEdit(
                                                         text = albumInfoViewModel.xyAlbumInfoData?.name
@@ -360,7 +360,7 @@ fun AlbumInfoScreen(
                                         onClick = {
                                             ifShowMenu = false
                                             AlertDialogObject(
-                                                title = R.string.delete_playlist,
+                                                title = context.getString(R.string.delete_playlist),
                                                 content = {
                                                     XyItemTextHorizontal(
                                                         text = stringResource(
@@ -777,7 +777,7 @@ private fun StickyHeaderOperationParent(
 
     val mainViewModel = LocalMainViewModel.current
     StickyHeaderOperation(
-        onMusicListPage = {musicListPage},
+        onMusicListPage = { musicListPage },
         albumInfoViewModel = albumInfoViewModel,
         sortContent = {
             SelectSortBottomSheetComponent(

@@ -32,6 +32,7 @@ import cn.xybbz.ui.screens.MemoryManagementScreen
 import cn.xybbz.ui.screens.MusicScreen
 import cn.xybbz.ui.screens.SearchScreen
 import cn.xybbz.ui.screens.SelectLibraryScreen
+import cn.xybbz.ui.screens.SetBackgroundImageScreen
 import cn.xybbz.ui.screens.SettingScreen
 
 @Composable
@@ -64,7 +65,7 @@ fun RouterCompose(
         navigation<RouterConstants.Screen>(
             startDestination = RouterConstants.Home
         ) {
-            nodeComposable<RouterConstants.Home>() {
+            nodeComposable<RouterConstants.Home> {
                 HomeScreen(modifier = Modifier)
             }
 
@@ -171,6 +172,10 @@ fun RouterCompose(
 
             nodeComposable<RouterConstants.Local> {
                 LocalScreen()
+            }
+
+            extremityComposable<RouterConstants.SetBackgroundImage> {
+                SetBackgroundImageScreen()
             }
         }
     }

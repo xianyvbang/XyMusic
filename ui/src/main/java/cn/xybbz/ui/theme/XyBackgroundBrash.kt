@@ -1,5 +1,6 @@
 package cn.xybbz.ui.theme
 
+import android.net.Uri
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 class XyBackgroundBrash(
     ifChangeOneColor: Boolean,
     ifGlobalBrash: Boolean,
+    backgroundImageUri: Uri?,
     globalBrash: List<Color>
 ) {
 
@@ -24,6 +26,11 @@ class XyBackgroundBrash(
     val ifGlobalBrash by mutableStateOf(ifGlobalBrash, structuralEqualityPolicy())
 
     /**
+     * 背景图片Uri
+     */
+    val backgroundImageUri by mutableStateOf(backgroundImageUri, structuralEqualityPolicy())
+
+    /**
      * 全局统一渐变色
      */
     val globalBrash by mutableStateOf(globalBrash, structuralEqualityPolicy())
@@ -32,9 +39,11 @@ class XyBackgroundBrash(
 fun xyBackgroundBrash(
     ifChangeOneColor: Boolean = false,
     ifGlobalBrash: Boolean = false,
+    backgroundImageUri: Uri? = null,
     globalBrash: List<Color> = listOf(Color(0xFF600015), Color(0xFF04727E))
 ): XyBackgroundBrash = XyBackgroundBrash(
     ifChangeOneColor = ifChangeOneColor,
     ifGlobalBrash = ifGlobalBrash,
+    backgroundImageUri = backgroundImageUri,
     globalBrash = globalBrash
 )

@@ -51,7 +51,7 @@ val alertDialogObjectList = mutableStateListOf<AlertDialogObject>()
  * @param [confirmText] 确认文字
  */
 data class AlertDialogObject(
-    @param:StringRes val title: Int? = null,
+    val title: String? = null,
     val content: @Composable ((AlertDialogObject) -> Unit)? = null,
     val modifier: Modifier = Modifier,
     val ifWarning: Boolean = false,
@@ -95,7 +95,7 @@ fun AlertDialogComponent() {
                 XyItemOutSpacer()
                 it.title?.let { title ->
                     XyItemTitle(
-                        text = stringResource(title),
+                        text = title,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 18.sp,
                         color = if (it.ifWarning) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurface

@@ -895,7 +895,7 @@ fun HomeScreen(
                                                 context.getString(R.string.new_playlist) + homeViewModel.playlists.size
 
                                             AlertDialogObject(
-                                                title = R.string.create_playlist,
+                                                title = context.getString(R.string.create_playlist),
                                                 content = {
                                                     XyEdit(text = playlistName, onChange = {
                                                         playlistName = it
@@ -955,7 +955,7 @@ fun HomeScreen(
                             },
                             removePlaylistClick = {
                                 AlertDialogObject(
-                                    title = R.string.delete_playlist,
+                                    title = context.getString(R.string.delete_playlist),
                                     content = {
                                         XyItemTextHorizontal(
                                             text = stringResource(
@@ -978,7 +978,7 @@ fun HomeScreen(
                             editPlaylistClick = {
                                 playlistName = item.name
                                 AlertDialogObject(
-                                    title = R.string.modify_playlist_name,
+                                    title = context.getString(R.string.modify_playlist_name),
                                     content = {
                                         XyEdit(text = item.name, onChange = {
                                             playlistName = it

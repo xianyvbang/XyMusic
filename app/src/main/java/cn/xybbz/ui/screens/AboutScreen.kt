@@ -149,7 +149,7 @@ fun AboutScreen(
             }
             item {
                 SettingItemComponent(
-                    title = R.string.current_version,
+                    title = stringResource(R.string.current_version),
                     info = "v${aboutViewModel.apkUpdateManager.currentVersion}"
                 ) {
 
@@ -158,7 +158,7 @@ fun AboutScreen(
             }
             item {
                 SettingItemComponent(
-                    title = R.string.check_updates,
+                    title = stringResource(R.string.check_updates),
                     info = if (aboutViewModel.apkUpdateManager.ifMaxVersion) stringResource(R.string.latest_version) else "${
                         stringResource(
                             R.string.new_version_detected
@@ -171,7 +171,7 @@ fun AboutScreen(
                             aboutViewModel.apkUpdateManager.initLatestVersion(true)
                         if (initLatestVersion && !aboutViewModel.apkUpdateManager.ifMaxVersion) {
                             AlertDialogObject(
-                                title = R.string.new_version_download,
+                                title = context.getString(R.string.new_version_download),
                                 content = {
                                     XyColumn(backgroundColor = Color.Transparent) {
                                         LazyColumnBottomSheetComponent(
@@ -259,13 +259,13 @@ fun AboutScreen(
                 }
             }
             item {
-                SettingItemComponent(title = R.string.problem_feedback) {
+                SettingItemComponent(title = stringResource(R.string.problem_feedback)) {
                     MessageUtils.sendPopTip(context.getString(R.string.function_not_implemented))
                 }
             }
 
             item {
-                SettingItemComponent(title = R.string.official_website) {
+                SettingItemComponent(title = stringResource(R.string.official_website)) {
                     MessageUtils.sendPopTip(context.getString(R.string.no_official_website_yet))
                 }
             }

@@ -1,7 +1,6 @@
 package cn.xybbz.ui.components
 
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -36,7 +35,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun SettingItemComponent(
-    @StringRes title: Int,
+    title: String,
     modifier: Modifier = Modifier,
     info: String? = null,
     bottomInfo: String? = null,
@@ -57,7 +56,7 @@ fun SettingItemComponent(
 
     SettingParentItemComponent(
         modifier = modifier,
-        title = stringResource(title),
+        title = title,
         bottomInfo = bottomInfo,
         enabled = enabled,
         onClick = {
@@ -128,7 +127,7 @@ fun SettingItemComponent(
                                 imageVector = imageVector,
                                 contentDescription = stringResource(
                                     R.string.enter_settings,
-                                    stringResource(title)
+                                    title
                                 )
                             )
                         }

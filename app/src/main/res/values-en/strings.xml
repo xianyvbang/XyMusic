@@ -393,5 +393,10 @@ Automatic calculation rules for the upper limit of cache:
     <string name="download_management">Download Management</string>
     <string name="select_daily_recommend_background_gradient">Choose the gradient background color for the daily recommendation page</string>
     <string name="select_download_list_background_gradient">Select the download list page background gradient color</string>
+    <string name="background_image">Background image</string>
+    <string name="background_image_setting">Background image settings</string>
+    <string name="return_interface_settings">Return to interface settings</string>
+    <string name="select_image">Select image</string>
+    <string name="clear_image">Clear images</string>
 
 </resources>

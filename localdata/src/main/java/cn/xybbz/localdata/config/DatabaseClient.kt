@@ -60,7 +60,7 @@ import cn.xybbz.localdata.data.setting.XyBackgroundConfig
 import cn.xybbz.localdata.data.setting.XySettings
 
 @Database(
-    version = 7,
+    version = 9,
     entities = [XyMusic::class, XyAlbum::class, XySettings::class, SkipTime::class,
         RemoteCurrent::class, SearchHistory::class, Progress::class, XyArtist::class,
         EnableProgress::class, XyLibrary::class, XyPlayer::class, ConnectionConfig::class,

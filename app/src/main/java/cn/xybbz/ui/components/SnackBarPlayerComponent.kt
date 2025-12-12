@@ -143,7 +143,7 @@ fun SnackBarPlayerComponent(
                 if (snackBarPlayerViewModel.musicController.originMusicList.isEmpty()) {
                     mainViewModel.putSheetState(false)
                     coroutineScope.launch {
-                        mainViewModel._db.playerDao.removeByDatasource()
+                        mainViewModel.db.playerDao.removeByDatasource()
                     }
                     colorPurple = Color.Transparent
                 }

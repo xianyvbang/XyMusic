@@ -1,6 +1,5 @@
 package cn.xybbz.ui.screens
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,7 +13,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -34,7 +32,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.router.RouterConstants
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.SettingItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.dismiss
 import cn.xybbz.ui.components.show
@@ -46,7 +46,6 @@ import cn.xybbz.ui.xy.XyButtonNotPadding
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyItemSwitcherNotTextColor
-import cn.xybbz.ui.xy.XyItemTextPadding
 import cn.xybbz.ui.xy.XyItemTitlePadding
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyRowButton
@@ -71,6 +70,7 @@ fun InterfaceSettingScreen(
 
     val navHostController = LocalNavController.current
     val coroutineScope = rememberCoroutineScope()
+
 
     XyColumnScreen(
         modifier = Modifier.brashColor(
@@ -97,26 +97,27 @@ fun InterfaceSettingScreen(
                         contentDescription = stringResource(R.string.return_setting_screen)
                     )
                 }
+            },
+            actions = {
+                TextButton(onClick = {
+                    coroutineScope.launch {
+                        interfaceSettingViewModel.backgroundConfig.reset()
+                    }
+                }) {
+                    Text(stringResource(R.string.reset))
+                }
             }
         )
 
         LazyColumnNotComponent {
             item {
-                XyRow {
-                    XyItemTextPadding(
-                        text = stringResource(R.string.interface_screen),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                SettingRoundedSurfaceColumn {
+                    SettingItemComponent(title = "设置背景图片", trailingContent = {
 
-                    TextButton(onClick = {
-                        coroutineScope.launch {
-                            interfaceSettingViewModel.backgroundConfig.reset()
-                        }
                     }) {
-                        Text(stringResource(R.string.reset))
+                        navHostController.navigate(RouterConstants.SetBackgroundImage)
                     }
                 }
-
             }
             item {
                 RoundedSurfaceColumnPadding(color = Color.Black.copy(alpha = 0.3f)) {
@@ -140,7 +141,7 @@ fun InterfaceSettingScreen(
 
                     if (interfaceSettingViewModel.backgroundConfig.ifGlobalBrash)
                         BrashColorConfigItem(
-                            title = R.string.global_gradient_colors,
+                            title = stringResource(R.string.global_gradient_colors),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.globalBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.globalBrash[1] },
@@ -161,7 +162,7 @@ fun InterfaceSettingScreen(
                     else {
 
                         BrashColorConfigItem(
-                            title = R.string.home_background_gradient,
+                            title = stringResource(R.string.home_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.homeBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.homeBrash[1] },
@@ -181,7 +182,7 @@ fun InterfaceSettingScreen(
                         )
 
                         BrashColorConfigItem(
-                            title = R.string.music_list_background_gradient,
+                            title = stringResource(R.string.music_list_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.musicBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.musicBrash[1] },
@@ -201,7 +202,7 @@ fun InterfaceSettingScreen(
                         )
 
                         BrashColorConfigItem(
-                            title = R.string.album_list_background_gradient,
+                            title = stringResource(R.string.album_list_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.albumBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.albumBrash[1] },
@@ -221,7 +222,7 @@ fun InterfaceSettingScreen(
                         )
 
                         BrashColorConfigItem(
-                            title = R.string.album_detail_background_gradient,
+                            title = stringResource(R.string.album_detail_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.albumInfoBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.albumInfoBrash[1] },
@@ -241,7 +242,7 @@ fun InterfaceSettingScreen(
                         )
 
                         BrashColorConfigItem(
-                            title = R.string.artist_list_background_gradient,
+                            title = stringResource(R.string.artist_list_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.artistBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.artistBrash[1] },
@@ -261,7 +262,7 @@ fun InterfaceSettingScreen(
                         )
 
                         BrashColorConfigItem(
-                            title = R.string.artist_detail_background_gradient,
+                            title = stringResource(R.string.artist_detail_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.artistInfoBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.artistInfoBrash[1] },
@@ -281,7 +282,7 @@ fun InterfaceSettingScreen(
                         )
 
                         BrashColorConfigItem(
-                            title = R.string.favorite_list_background_gradient,
+                            title = stringResource(R.string.favorite_list_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.favoriteBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.favoriteBrash[1] },
@@ -301,7 +302,7 @@ fun InterfaceSettingScreen(
                         )
 
                         BrashColorConfigItem(
-                            title = R.string.genre_list_background_gradient,
+                            title = stringResource(R.string.genre_list_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.genresBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.genresBrash[1] },
@@ -321,7 +322,7 @@ fun InterfaceSettingScreen(
                         )
 
                         BrashColorConfigItem(
-                            title = R.string.genre_detail_background_gradient,
+                            title = stringResource(R.string.genre_detail_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.genresInfoBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.genresInfoBrash[1] },
@@ -341,7 +342,7 @@ fun InterfaceSettingScreen(
                         )
 
                         BrashColorConfigItem(
-                            title = R.string.settings_page_background_gradient,
+                            title = stringResource(R.string.settings_page_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.settingsBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.settingsBrash[1] },
@@ -361,7 +362,7 @@ fun InterfaceSettingScreen(
                         )
 
                         BrashColorConfigItem(
-                            title = R.string.about_page_background_gradient,
+                            title = stringResource(R.string.about_page_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.aboutBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.aboutBrash[1] },
@@ -381,7 +382,7 @@ fun InterfaceSettingScreen(
                         )
 
                         BrashColorConfigItem(
-                            title = R.string.connection_management_background_gradient,
+                            title = stringResource(R.string.connection_management_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.connectionManagerBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.connectionManagerBrash[1] },
@@ -402,7 +403,7 @@ fun InterfaceSettingScreen(
 
 
                         BrashColorConfigItem(
-                            title = R.string.connection_detail_background_gradient,
+                            title = stringResource(R.string.connection_detail_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.connectionInfoBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.connectionInfoBrash[1] },
@@ -423,7 +424,7 @@ fun InterfaceSettingScreen(
 
 
                         BrashColorConfigItem(
-                            title = R.string.search_page_background_gradient,
+                            title = stringResource(R.string.search_page_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.searchBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.searchBrash[1] },
@@ -444,7 +445,7 @@ fun InterfaceSettingScreen(
 
 
                         BrashColorConfigItem(
-                            title = R.string.cache_limit_setting_background_gradient,
+                            title = stringResource(R.string.cache_limit_setting_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.cacheLimitBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.cacheLimitBrash[1] },
@@ -465,7 +466,7 @@ fun InterfaceSettingScreen(
 
 
                         BrashColorConfigItem(
-                            title = R.string.language_switching_background_gradient,
+                            title = stringResource(R.string.language_switching_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.languageBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.languageBrash[1] },
@@ -486,7 +487,7 @@ fun InterfaceSettingScreen(
 
 
                         BrashColorConfigItem(
-                            title = R.string.storage_management_background_gradient,
+                            title = stringResource(R.string.storage_management_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.memoryManagementBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.memoryManagementBrash[1] },
@@ -507,7 +508,7 @@ fun InterfaceSettingScreen(
 
 
                         BrashColorConfigItem(
-                            title = R.string.bottom_player_gradient,
+                            title = stringResource(R.string.bottom_player_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.bottomPlayerBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.bottomPlayerBrash[1] },
@@ -528,7 +529,7 @@ fun InterfaceSettingScreen(
 
 
                         BrashColorConfigItem(
-                            title = R.string.bottom_sheet_gradient,
+                            title = stringResource(R.string.bottom_sheet_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.bottomSheetBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.bottomSheetBrash[1] },
@@ -549,7 +550,7 @@ fun InterfaceSettingScreen(
 
 
                         BrashColorConfigItem(
-                            title = R.string.dialog_gradient,
+                            title = stringResource(R.string.dialog_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.alertDialogBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.alertDialogBrash[1] },
@@ -570,7 +571,7 @@ fun InterfaceSettingScreen(
 
 
                         BrashColorConfigItem(
-                            title = R.string.error_dialog_gradient,
+                            title = stringResource(R.string.error_dialog_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.errorAlertDialogBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.errorAlertDialogBrash[1] },
@@ -590,7 +591,7 @@ fun InterfaceSettingScreen(
                         )
 
                         BrashColorConfigItem(
-                            title = R.string.select_library_background_gradient,
+                            title = stringResource(R.string.select_library_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.selectLibraryBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.selectLibraryBrash[1] },
@@ -611,7 +612,7 @@ fun InterfaceSettingScreen(
 
 
                         BrashColorConfigItem(
-                            title = R.string.select_daily_recommend_background_gradient,
+                            title = stringResource(R.string.select_daily_recommend_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.dailyRecommendBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.dailyRecommendBrash[1] },
@@ -632,7 +633,7 @@ fun InterfaceSettingScreen(
 
 
                         BrashColorConfigItem(
-                            title = R.string.select_download_list_background_gradient,
+                            title = stringResource(R.string.select_download_list_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.downloadListBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.downloadListBrash[1] },
@@ -652,7 +653,7 @@ fun InterfaceSettingScreen(
                         )
 
                         BrashColorConfigItem(
-                            title = R.string.select_local_music_background_gradient,
+                            title = stringResource(R.string.select_local_music_background_gradient),
                             onIfChangeOneColor = { interfaceSettingViewModel.backgroundConfig.ifChangeOneColor },
                             onTopColor = { interfaceSettingViewModel.backgroundConfig.localMusicBrash[0] },
                             onBottomColor = { interfaceSettingViewModel.backgroundConfig.localMusicBrash[1] },
@@ -674,7 +675,7 @@ fun InterfaceSettingScreen(
                     }
 
                     ColorConfigItem(
-                        title = R.string.player_default_background_color,
+                        title = stringResource(R.string.player_default_background_color),
                         onColor = { interfaceSettingViewModel.backgroundConfig.playerBackground },
                         onDefaultColor = {
                             interfaceSettingViewModel.backgroundConfig.stringToColor(
@@ -777,7 +778,7 @@ private fun PreviewColorItem(
 
 @Composable
 private fun BrashColorConfigItem(
-    @StringRes title: Int,
+    title: String,
     modifier: Modifier = Modifier,
     onIfChangeOneColor: () -> Boolean = { false },
     onTopColor: () -> Color,
@@ -872,7 +873,7 @@ private fun BrashColorConfigItem(
 
     }) {
         XyItemTitlePadding(
-            modifier = Modifier, text = stringResource(title), paddingValues = PaddingValues(
+            modifier = Modifier, text = title, paddingValues = PaddingValues(
                 vertical = XyTheme.dimens.innerVerticalPadding
             )
         )
@@ -893,7 +894,7 @@ private fun BrashColorConfigItem(
 
 @Composable
 private fun ColorConfigItem(
-    @StringRes title: Int,
+    title: String,
     modifier: Modifier = Modifier,
     onColor: () -> Color,
     onDefaultColor: () -> Color,
@@ -951,7 +952,7 @@ private fun ColorConfigItem(
 
     }) {
         XyItemTitlePadding(
-            modifier = Modifier, text = stringResource(title), paddingValues = PaddingValues(
+            modifier = Modifier, text = title, paddingValues = PaddingValues(
                 vertical = XyTheme.dimens.innerVerticalPadding
             )
         )

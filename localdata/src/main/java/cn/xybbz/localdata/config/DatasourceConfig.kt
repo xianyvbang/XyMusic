@@ -10,7 +10,16 @@ import java.util.concurrent.Executors
 class DatasourceConfig {
 
     private val dbName = "appData.db"
-    private val migrations = arrayOf(Migration1,Migration2,Migration3,Migration4,Migration5,Migration_6_7)
+    private val migrations = arrayOf(
+        Migration1,
+        Migration2,
+        Migration3,
+        Migration4,
+        Migration5,
+        Migration_6_7,
+        Migration_7_8,
+        Migration_8_9
+    )
 
     fun createDatabaseClient(context: Context): DatabaseClient {
         return Room.databaseBuilder(context.applicationContext, DatabaseClient::class.java, dbName)
@@ -84,22 +93,103 @@ class DatasourceConfig {
 
     private object Migration_6_7 : Migration(6, 7) {
         override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL("""
+            db.execSQL(
+                """
             ALTER TABLE xy_background_config 
             ADD COLUMN dailyRecommendBrash TEXT NOT NULL DEFAULT '#FF6C1577/#FFCC6877'
-        """.trimIndent())
+        """.trimIndent()
+            )
 
-            db.execSQL("""
+            db.execSQL(
+                """
             ALTER TABLE xy_background_config 
             ADD COLUMN downloadListBrash TEXT NOT NULL DEFAULT '#FF0D9488/#FF0EA5E9'
-        """.trimIndent())
+        """.trimIndent()
+            )
 
-            db.execSQL("""
+            db.execSQL(
+                """
             ALTER TABLE xy_background_config 
             ADD COLUMN localMusicBrash TEXT NOT NULL DEFAULT '#FF0A7B88/#FFFFBA6C'
-        """.trimIndent())
+        """.trimIndent()
+            )
         }
     }
 
+
+    private object Migration_7_8 : Migration(7, 8) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // 在 xy_settings 表中新增 imageFilePath 字段，默认值为 NULL
+            db.execSQL(
+                """
+            ALTER TABLE xy_settings 
+            ADD COLUMN imageFilePath TEXT
+            """
+            )
+        }
+    }
+    private object Migration_8_9 : Migration(8, 9) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // 1. 创建新表（移除 imageFilePath 字段）
+            db.execSQL(
+                """
+            CREATE TABLE IF NOT EXISTS xy_settings_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                cacheUpperLimit TEXT NOT NULL,
+                ifDesktopLyrics INTEGER NOT NULL,
+                doubleSpeed REAL NOT NULL,
+                connectionId INTEGER,
+                ifEnableAlbumHistory INTEGER NOT NULL,
+                ifHandleAudioFocus INTEGER NOT NULL,
+                languageType TEXT,
+                latestVersionTime INTEGER NOT NULL,
+                latestVersion TEXT NOT NULL,
+                lasestApkUrl TEXT NOT NULL,
+                maxConcurrentDownloads INTEGER NOT NULL
+            )
+            """.trimIndent()
+            )
+
+            // 2. 从旧表拷贝所有保留下来的字段到新表
+            db.execSQL(
+                """
+            INSERT INTO xy_settings_new (
+                id, 
+                cacheUpperLimit, 
+                ifDesktopLyrics, 
+                doubleSpeed, 
+                connectionId, 
+                ifEnableAlbumHistory, 
+                ifHandleAudioFocus, 
+                languageType, 
+                latestVersionTime, 
+                latestVersion, 
+                lasestApkUrl,
+                maxConcurrentDownloads
+            )
+            SELECT 
+                id, 
+                cacheUpperLimit, 
+                ifDesktopLyrics, 
+                doubleSpeed, 
+                connectionId, 
+                ifEnableAlbumHistory, 
+                ifHandleAudioFocus, 
+                languageType, 
+                latestVersionTime, 
+                latestVersion, 
+                lasestApkUrl,
+                maxConcurrentDownloads
+            FROM xy_settings
+            """.trimIndent()
+            )
+
+            // 3. 删除旧表
+            db.execSQL("DROP TABLE xy_settings")
+
+            // 4. 将新表重命名为正式表名
+            db.execSQL("ALTER TABLE xy_settings_new RENAME TO xy_settings")
+        }
+    }
 
 }

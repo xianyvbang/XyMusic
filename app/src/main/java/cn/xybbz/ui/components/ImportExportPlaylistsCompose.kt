@@ -92,7 +92,7 @@ inline fun getExportPlaylistsAlertDialogObject(
     )
     return {
         onClick()
-        AlertDialogObject(title = R.string.export_playlist, content = {
+        AlertDialogObject(title = context.getString(R.string.export_playlist), content = {
             ExportPlaylistsCompose(
                 onPlayTrackList = {
                     playlist = onPlayTrackList()

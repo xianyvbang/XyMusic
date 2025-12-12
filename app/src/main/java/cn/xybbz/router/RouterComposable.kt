@@ -1,10 +1,18 @@
 package cn.xybbz.router
 
 import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import cn.xybbz.R
+import cn.xybbz.ui.theme.XyTheme
+import coil.compose.AsyncImage
 
 /**
  * 首页使用
@@ -14,7 +22,16 @@ inline fun <reified T : Any> NavGraphBuilder.homeComposable(noinline content: @C
     composable<T>(
         enterTransition = homeRouterAnimate.enter, exitTransition = homeRouterAnimate.exit
     ) {
-        content(it)
+        Box {
+            AsyncImage(
+                model = XyTheme.brash.backgroundImageUri,
+                contentDescription = stringResource(R.string.background_image),
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            content(it)
+        }
+
     }
 }
 
@@ -29,7 +46,15 @@ inline fun <reified T : Any> NavGraphBuilder.nodeComposable(noinline content: @C
         popEnterTransition = nodeRouterAnimate.popEnter,
         popExitTransition = nodeRouterAnimate.popExit
     ) {
-        content(it)
+        Box {
+            AsyncImage(
+                model = XyTheme.brash.backgroundImageUri,
+                contentDescription = stringResource(R.string.background_image),
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            content(it)
+        }
     }
 }
 
@@ -44,6 +69,14 @@ inline fun <reified T : Any> NavGraphBuilder.extremityComposable(noinline conten
         popEnterTransition = extremityRouterAnimate.popEnter,
         popExitTransition = extremityRouterAnimate.popExit
     ) {
-        content(it)
+        Box {
+            AsyncImage(
+                model = XyTheme.brash.backgroundImageUri,
+                contentDescription = stringResource(R.string.background_image),
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            content(it)
+        }
     }
 }
