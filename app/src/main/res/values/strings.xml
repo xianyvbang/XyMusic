@@ -388,5 +388,10 @@
     <string name="local_music">本地音乐</string>
     <string name="add_download_list">已添加到下载列表</string>
     <string name="minutes">分钟</string>
+    <string name="background_image">背景图片</string>
+    <string name="background_image_setting">背景图片设置</string>
+    <string name="return_interface_settings">返回界面设置</string>
+    <string name="select_image">选择图片</string>
+    <string name="clear_image">清除图片</string>
 
 </resources>

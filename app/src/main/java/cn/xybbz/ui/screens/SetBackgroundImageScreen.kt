@@ -27,6 +27,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,7 +55,11 @@ import cn.xybbz.viewmodel.SetBackgroundImageViewModel
 @Composable
 fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageViewModel = hiltViewModel()) {
 
-    val ifSelectImage by remember { derivedStateOf { setBackgroundImageViewModel.backgroundConfig.imageFilePath != null } }
+    val ifSelectImage by remember {
+        derivedStateOf {
+            setBackgroundImageViewModel.backgroundConfig.imageFilePath != null
+        }
+    }
     val navHostController = LocalNavController.current
 
     val context = LocalContext.current
@@ -73,16 +78,7 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
                 Log.d("PhotoPicker", "No media selected")
             }
         }
-
-
-
-    Box() {
-        /*AsyncImage(
-            model = XyTheme.brash.backgroundImageUri,
-            contentDescription = "背景图片",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )*/
+    key(XyTheme.brash.backgroundImageUri) {
         XyColumnScreen(
             modifier = Modifier.brashColor(
                 Color(0xFF610015),
@@ -94,7 +90,7 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
                 modifier = Modifier.statusBarsPadding(),
                 title = {
                     Text(
-                        text = "背景图片设置",
+                        text = stringResource(R.string.background_image_setting),
                         fontWeight = FontWeight.W900
                     )
                 },
@@ -106,7 +102,7 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "返回界面设置"
+                            contentDescription = stringResource(R.string.return_interface_settings)
                         )
                     }
                 },
@@ -118,13 +114,13 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
                         TextButton(onClick = composeClick() {
                             pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                         }) {
-                            Text(text = "选择图片")
+                            Text(text = stringResource(R.string.select_image))
                         }
 
                         TextButton(onClick = composeClick() {
                             setBackgroundImageViewModel.updateBackgroundImageUri(null)
                         }, enabled = ifSelectImage) {
-                            Text(text = "清除图片")
+                            Text(text = stringResource(R.string.clear_image))
                         }
                     }
                 }
@@ -134,7 +130,7 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                if (ifSelectImage)
+                if (!ifSelectImage)
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()

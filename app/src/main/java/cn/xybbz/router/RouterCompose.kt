@@ -65,7 +65,7 @@ fun RouterCompose(
         navigation<RouterConstants.Screen>(
             startDestination = RouterConstants.Home
         ) {
-            nodeComposable<RouterConstants.Home>() {
+            nodeComposable<RouterConstants.Home> {
                 HomeScreen(modifier = Modifier)
             }
 

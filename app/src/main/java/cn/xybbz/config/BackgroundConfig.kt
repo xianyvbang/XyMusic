@@ -327,7 +327,7 @@ class BackgroundConfig(
     suspend fun updateBackgroundImageUri(backgroundImageUri: Uri?) {
         imageFilePath = backgroundImageUri
         backgroundConfig =
-            get().copy(imageFilePath = backgroundImageUri.toString())
+            get().copy(imageFilePath = backgroundImageUri?.toString())
         saveOrUpdate()
         updateXyBackgroundBrash()
     }
