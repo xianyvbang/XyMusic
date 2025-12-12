@@ -42,6 +42,7 @@ import cn.xybbz.ui.components.LifecycleEffect
 import cn.xybbz.ui.components.LoadingCompose
 import cn.xybbz.ui.components.MusicBottomMenuComponent
 import cn.xybbz.ui.components.SnackBarPlayerComponent
+import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.viewmodel.MainViewModel
 import coil.compose.AsyncImage
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -107,7 +108,7 @@ fun MainScreen() {
         ) {
             Box {
                 AsyncImage(
-                    model = mainViewModel.settingsConfig.get().imageFilePath,
+                    model = XyTheme.brash.backgroundImageUri,
                     contentDescription = "背景图片",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop

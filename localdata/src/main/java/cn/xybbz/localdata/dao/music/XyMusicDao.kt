@@ -676,7 +676,7 @@ interface XyMusicDao {
      */
     @Query(
         """
-        select mi.* from maximumplaymusic mpm
+        select mi.*,xd.filePath as filePath from maximumplaymusic mpm
         inner join xy_music mi on mpm.musicId = mi.itemId
         left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
          where mpm.connectionId = (select connectionId from xy_settings)

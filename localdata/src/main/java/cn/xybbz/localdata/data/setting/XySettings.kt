@@ -57,9 +57,5 @@ data class XySettings(
     /**
      * 最大同时下载数量
      */
-    val maxConcurrentDownloads:Int = 3,
-    /**
-     * 背景图片地址
-     */
-    val imageFilePath: String? = null
+    val maxConcurrentDownloads:Int = 3
 )

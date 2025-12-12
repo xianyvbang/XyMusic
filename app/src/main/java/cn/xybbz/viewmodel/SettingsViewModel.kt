@@ -20,11 +20,10 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     val settingsConfig: SettingsConfig,
     private val db: DatabaseClient,
-    private val _backgroundConfig: BackgroundConfig,
+    val backgroundConfig: BackgroundConfig,
     val downLoadManager: DownLoadManager
 ) : ViewModel() {
 
-    val backgroundConfig = _backgroundConfig
 
     /**
      * 设置信息

@@ -19,7 +19,7 @@ data class XyRecentHistory(
     /**
      * 歌曲id
      */
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = false)
     val songId: String,
 
     /**

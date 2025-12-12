@@ -1,12 +1,14 @@
 package cn.xybbz.config
 
 import android.content.Context
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.compose.ui.graphics.Color
 import androidx.core.graphics.toColorInt
+import androidx.core.net.toUri
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.AllDataEnum
 import cn.xybbz.common.utils.CoroutineScopeUtils
@@ -27,17 +29,15 @@ class BackgroundConfig(
 
     val defaultBackgroundConfig: XyBackgroundConfig = XyBackgroundConfig()
 
-    var xyBackgroundBrash by mutableStateOf(xyBackgroundBrash())
-        private set
+
 
     private val coroutineScope = CoroutineScopeUtils.getIo("background")
 
 
     /**
      * 图片地址
-     * todo 暂未使用该字段
      */
-    var imageFilePath by mutableStateOf<String?>("", structuralEqualityPolicy())
+    var imageFilePath by mutableStateOf<Uri?>(null, structuralEqualityPolicy())
         private set
 
     /**
@@ -202,7 +202,7 @@ class BackgroundConfig(
     /**
      * 播放页渐变色
      */
-    var playerBackground by mutableStateOf<Color>(Color(0xFF0C0C0C), structuralEqualityPolicy())
+    var playerBackground by mutableStateOf(Color(0xFF0C0C0C), structuralEqualityPolicy())
         private set
 
     /**
@@ -223,11 +223,18 @@ class BackgroundConfig(
     var localMusicBrash by mutableStateOf<List<Color>>(emptyList(), structuralEqualityPolicy())
         private set
 
+    var xyBackgroundBrash by mutableStateOf(xyBackgroundBrash(
+        ifChangeOneColor = ifChangeOneColor,
+        ifGlobalBrash = ifGlobalBrash,
+        backgroundImageUri = imageFilePath,
+        globalBrash = globalBrash
+    ))
+        private set
 
     fun load() {
         coroutineScope.launch {
             backgroundConfig = db.backgroundConfigDao.selectOne()
-            imageFilePath = get().imageFilePath
+            imageFilePath = get().imageFilePath?.toUri()
             ifChangeOneColor = get().ifChangeOneColor
             ifGlobalBrash = get().ifGlobalBrash
             globalBrash = stringToColors(get().globalBrash)
@@ -257,7 +264,7 @@ class BackgroundConfig(
             dailyRecommendBrash = stringToColors(get().dailyRecommendBrash)
             downloadListBrash = stringToColors(get().downloadListBrash)
             localMusicBrash = stringToColors(get().localMusicBrash)
-
+            updateXyBackgroundBrash()
         }
     }
 
@@ -274,6 +281,7 @@ class BackgroundConfig(
         xyBackgroundBrash = xyBackgroundBrash(
             ifChangeOneColor = ifChangeOneColor,
             ifGlobalBrash = ifGlobalBrash,
+            backgroundImageUri = imageFilePath,
             globalBrash = globalBrash
         )
     }
@@ -309,6 +317,17 @@ class BackgroundConfig(
         val globalBrashStr = colorStrings.joinToString(Constants.SLASH_DELIMITER) { it }
         backgroundConfig =
             get().copy(globalBrash = globalBrashStr)
+        saveOrUpdate()
+        updateXyBackgroundBrash()
+    }
+
+    /**
+     * 设置背景图片
+     */
+    suspend fun updateBackgroundImageUri(backgroundImageUri: Uri?) {
+        imageFilePath = backgroundImageUri
+        backgroundConfig =
+            get().copy(imageFilePath = backgroundImageUri.toString())
         saveOrUpdate()
         updateXyBackgroundBrash()
     }

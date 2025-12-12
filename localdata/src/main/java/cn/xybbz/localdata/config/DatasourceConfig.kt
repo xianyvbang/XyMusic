@@ -17,7 +17,8 @@ class DatasourceConfig {
         Migration4,
         Migration5,
         Migration_6_7,
-        Migration_7_8
+        Migration_7_8,
+        Migration_8_9
     )
 
     fun createDatabaseClient(context: Context): DatabaseClient {
@@ -127,6 +128,68 @@ class DatasourceConfig {
             )
         }
     }
+    private object Migration_8_9 : Migration(8, 9) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // 1. 创建新表（移除 imageFilePath 字段）
+            db.execSQL(
+                """
+            CREATE TABLE IF NOT EXISTS xy_settings_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                cacheUpperLimit TEXT NOT NULL,
+                ifDesktopLyrics INTEGER NOT NULL,
+                doubleSpeed REAL NOT NULL,
+                connectionId INTEGER,
+                ifEnableAlbumHistory INTEGER NOT NULL,
+                ifHandleAudioFocus INTEGER NOT NULL,
+                languageType TEXT,
+                latestVersionTime INTEGER NOT NULL,
+                latestVersion TEXT NOT NULL,
+                lasestApkUrl TEXT NOT NULL,
+                maxConcurrentDownloads INTEGER NOT NULL
+            )
+            """.trimIndent()
+            )
 
+            // 2. 从旧表拷贝所有保留下来的字段到新表
+            db.execSQL(
+                """
+            INSERT INTO xy_settings_new (
+                id, 
+                cacheUpperLimit, 
+                ifDesktopLyrics, 
+                doubleSpeed, 
+                connectionId, 
+                ifEnableAlbumHistory, 
+                ifHandleAudioFocus, 
+                languageType, 
+                latestVersionTime, 
+                latestVersion, 
+                lasestApkUrl,
+                maxConcurrentDownloads
+            )
+            SELECT 
+                id, 
+                cacheUpperLimit, 
+                ifDesktopLyrics, 
+                doubleSpeed, 
+                connectionId, 
+                ifEnableAlbumHistory, 
+                ifHandleAudioFocus, 
+                languageType, 
+                latestVersionTime, 
+                latestVersion, 
+                lasestApkUrl,
+                maxConcurrentDownloads
+            FROM xy_settings
+            """.trimIndent()
+            )
+
+            // 3. 删除旧表
+            db.execSQL("DROP TABLE xy_settings")
+
+            // 4. 将新表重命名为正式表名
+            db.execSQL("ALTER TABLE xy_settings_new RENAME TO xy_settings")
+        }
+    }
 
 }

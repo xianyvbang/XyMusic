@@ -24,6 +24,7 @@ import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.CacheController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.DateUtil
+import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.SettingsConfig
 import cn.xybbz.config.alarm.AlarmConfig
@@ -56,6 +57,7 @@ class MainViewModel @Inject constructor(
     val dataSourceManager: IDataSourceManager,
     private val connectionConfigServer: ConnectionConfigServer,
     val settingsConfig: SettingsConfig,
+    val backgroundConfig: BackgroundConfig,
     private val musicPlayContext: MusicPlayContext,
     private val cacheController: CacheController,
     private val alarmConfig: AlarmConfig,

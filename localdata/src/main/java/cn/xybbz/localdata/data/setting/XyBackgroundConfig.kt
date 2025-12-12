@@ -13,7 +13,6 @@ data class XyBackgroundConfig(
     val id: Long = 0,
     /**
      * 图片地址
-     * todo 暂未使用该字段
      */
     val imageFilePath: String? = null,
     /**
