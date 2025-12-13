@@ -29,6 +29,7 @@ import cn.xybbz.R
 import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
@@ -62,8 +63,8 @@ fun CacheLimitScreen(
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
             title = {
-                Text(
-                    text = stringResource(R.string.music_cache_limit_title)
+                TopAppBarTitle(
+                    title = stringResource(R.string.music_cache_limit_title)
                 )
             }, navigationIcon = {
                 IconButton(

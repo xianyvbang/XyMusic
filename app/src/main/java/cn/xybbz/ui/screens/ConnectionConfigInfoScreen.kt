@@ -37,6 +37,7 @@ import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.SettingItemComponent
 import cn.xybbz.ui.components.SettingParentItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.theme.XyTheme
@@ -88,9 +89,8 @@ fun ConnectionConfigInfoScreen(
                     )
                 }
             }, title = {
-                Text(
-                    text = stringResource(R.string.connection_info),
-                    fontWeight = FontWeight.W900
+                TopAppBarTitle(
+                    title = stringResource(R.string.connection_info)
                 )
             })
 

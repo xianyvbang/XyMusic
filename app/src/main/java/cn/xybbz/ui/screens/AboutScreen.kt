@@ -54,6 +54,7 @@ import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.SettingItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.downloadPermission
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
@@ -106,8 +107,8 @@ fun AboutScreen(
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
             title = {
-                Text(
-                    text = stringResource(R.string.about)
+                TopAppBarTitle(
+                    title = stringResource(R.string.about)
                 )
             }, navigationIcon = {
                 IconButton(

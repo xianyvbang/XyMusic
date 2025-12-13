@@ -36,6 +36,7 @@ import cn.xybbz.router.RouterConstants
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.SettingItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.dismiss
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
@@ -81,9 +82,8 @@ fun InterfaceSettingScreen(
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
             title = {
-                Text(
-                    text = stringResource(R.string.interface_settings),
-                    fontWeight = FontWeight.W900
+                TopAppBarTitle(
+                    title = stringResource(R.string.interface_settings)
                 )
             },
             navigationIcon = {

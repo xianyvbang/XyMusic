@@ -61,6 +61,7 @@ import cn.xybbz.router.RouterConstants
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.XySelectAllComponent
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
@@ -395,34 +396,6 @@ fun MultiSelectTopAppEnd(
                                     contentDescription = "Cancel selected"
                                 )
                             }
-
-
-                            /*Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.End,
-                                modifier = Modifier.clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) {
-                                    onSelectAll()
-                                }) {
-                                Text(
-                                    text = if (isSelectAll) stringResource(R.string.deselect_all) else stringResource(
-                                        R.string.select_all
-                                    ),
-                                    fontWeight = FontWeight.W900
-                                )
-                                IconButton(
-                                    modifier = Modifier.background(Color.Red)*//*offset(x = (10).dp)*//*,
-                                    onClick = {
-                                        onSelectAll()
-                                    },
-                                ) {
-                                    RadioButton(selected = isSelectAll, onClick = {
-                                        onSelectAll()
-                                    })
-                                }
-                            }*/
                         }
                     }
                 })
@@ -431,9 +404,8 @@ fun MultiSelectTopAppEnd(
             TopAppBarComponent(
                 modifier = Modifier.statusBarsPadding(),
                 title = {
-                    Text(
-                        text = stringResource(R.string.download_list),
-                        fontWeight = FontWeight.W900
+                    TopAppBarTitle(
+                        title = stringResource(R.string.download_list)
                     )
                 }, navigationIcon = {
 

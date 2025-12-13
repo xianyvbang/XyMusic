@@ -30,6 +30,7 @@ import cn.xybbz.ui.components.IndexBar
 import cn.xybbz.ui.components.MusicArtistCardComponent
 import cn.xybbz.ui.components.SwipeRefreshVerticalGridListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.ArtistViewModel
@@ -62,9 +63,8 @@ fun ArtistScreen(
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
             title = {
-                Text(
-                    text = stringResource(R.string.artist),
-                    fontWeight = FontWeight.W900
+                TopAppBarTitle(
+                    title = stringResource(R.string.artist)
                 )
             }, navigationIcon = {
                 IconButton(
