@@ -566,6 +566,7 @@ fun AsyncImageCover(
             }
         },
         onError = {
+            onSetColor.invoke(Color.Transparent)
         }
     )
 }
