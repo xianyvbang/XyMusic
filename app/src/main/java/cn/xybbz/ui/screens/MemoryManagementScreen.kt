@@ -13,7 +13,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -28,6 +27,7 @@ import cn.xybbz.R
 import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.theme.XyTheme
@@ -63,9 +63,8 @@ fun MemoryManagementScreen(
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
             title = {
-                Text(
-                    text = stringResource(R.string.storage_management),
-                    fontWeight = FontWeight.W900
+                TopAppBarTitle(
+                    title = stringResource(R.string.storage_management)
                 )
             },
             navigationIcon = {

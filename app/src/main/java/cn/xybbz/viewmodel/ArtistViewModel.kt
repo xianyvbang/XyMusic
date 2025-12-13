@@ -30,12 +30,11 @@ import javax.inject.Inject
 @HiltViewModel
 class ArtistViewModel @Inject constructor(
     private val dataSourceManager: IDataSourceManager,
-    private val connectionConfigServer: ConnectionConfigServer,
+    connectionConfigServer: ConnectionConfigServer,
     private val db: DatabaseClient,
-    private val _backgroundConfig: BackgroundConfig
+    val backgroundConfig: BackgroundConfig
 ) : ViewModel() {
 
-     val backgroundConfig = _backgroundConfig
 
     private val _sortType = MutableStateFlow(ArtistFilter())
 
@@ -61,7 +60,8 @@ class ArtistViewModel @Inject constructor(
     var artistListPage =
         connectionConfigServer.loginStateFlow.flatMapLatest { bool ->
             if (bool) {
-                dataSourceManager.selectArtistFlowList().distinctUntilChanged()
+                dataSourceManager.selectArtistFlowList()
+                    .distinctUntilChanged()
                     .cachedIn(viewModelScope)
             } else {
                 emptyFlow()

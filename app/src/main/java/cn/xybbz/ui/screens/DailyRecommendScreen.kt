@@ -28,6 +28,7 @@ import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
@@ -61,9 +62,8 @@ fun DailyRecommendScreen(
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
             title = {
-                Text(
-                    text = stringResource(R.string.daily_recommendations),
-                    fontWeight = FontWeight.W900
+                TopAppBarTitle(
+                    title = stringResource(R.string.daily_recommendations)
                 )
             }, navigationIcon = {
                 IconButton(onClick = composeClick { navController.popBackStack() }) {

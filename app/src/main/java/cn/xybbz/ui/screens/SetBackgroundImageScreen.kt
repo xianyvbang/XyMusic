@@ -34,13 +34,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.common.constants.UiConstants.MusicCardImageSize
 import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
@@ -89,9 +89,8 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
             TopAppBarComponent(
                 modifier = Modifier.statusBarsPadding(),
                 title = {
-                    Text(
-                        text = stringResource(R.string.background_image_setting),
-                        fontWeight = FontWeight.W900
+                    TopAppBarTitle(
+                        title = stringResource(R.string.background_image_setting)
                     )
                 },
                 navigationIcon = {

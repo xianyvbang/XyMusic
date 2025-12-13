@@ -40,7 +40,7 @@ fun <Key : Any, Value : Any> bigPager(
     return Pager(
         PagingConfig(
             pageSize = Constants.PAGE_SIZE_ALL,  // 每一页个数
-            prefetchDistance = 10,
+            prefetchDistance = 0,
         ), remoteMediator = remoteMediator
     ) {
         pagingSourceFactory()

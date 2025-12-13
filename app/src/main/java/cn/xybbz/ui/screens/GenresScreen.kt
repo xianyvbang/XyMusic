@@ -22,6 +22,7 @@ import cn.xybbz.router.RouterConstants
 import cn.xybbz.ui.components.MusicGenreCardComponent
 import cn.xybbz.ui.components.SwipeRefreshVerticalGridListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.xy.XyColumnScreen
@@ -48,9 +49,8 @@ fun GenresScreen(
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
             title = {
-                Text(
-                    text = stringResource(R.string.genres),
-                    fontWeight = FontWeight.W900
+                TopAppBarTitle(
+                    title = stringResource(R.string.genres)
                 )
             }, navigationIcon = {
                 IconButton(onClick = composeClick { navController.popBackStack() }) {

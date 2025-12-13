@@ -31,6 +31,7 @@ import cn.xybbz.R
 import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.localdata.enums.LanguageType
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
@@ -65,9 +66,8 @@ fun LanguageConfigScreen(
             TopAppBarComponent(
                 modifier = Modifier.statusBarsPadding(),
                 title = {
-                    Text(
-                        text = stringResource(R.string.language),
-                        fontWeight = FontWeight.W900
+                    TopAppBarTitle(
+                        title = stringResource(R.string.language)
                     )
                 },
                 navigationIcon = {

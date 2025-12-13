@@ -14,7 +14,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -29,6 +28,7 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
@@ -65,8 +65,8 @@ fun SelectLibraryScreen(
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
             title = {
-                Text(
-                    text = stringResource(R.string.media_library_selection)
+                TopAppBarTitle(
+                    title = stringResource(R.string.media_library_selection)
                 )
             }, navigationIcon = {
                 IconButton(

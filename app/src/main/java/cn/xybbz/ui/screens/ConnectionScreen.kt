@@ -71,6 +71,7 @@ import cn.xybbz.compositionLocal.LocalNavController
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.router.RouterConstants
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
@@ -150,7 +151,7 @@ fun ConnectionScreen(
     ) {
 
         TopAppBarComponent(title = {
-            Text(text = stringResource(R.string.server_connection))
+            TopAppBarTitle(title = stringResource(R.string.server_connection))
         }, navigationIcon = {
             if (connectionUiType != null && connectionUiType == ConnectionUiType.ADD_CONNECTION)
                 IconButton(
