@@ -69,7 +69,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.music.MusicController
@@ -529,7 +529,7 @@ fun PlayerStateComponent(
 @Composable
 private fun FavoriteMusicIconComponent(
     musicDetail: XyPlayMusic,
-    dataSourceManager: IDataSourceManager,
+    dataSourceManager: DataSourceManager,
     musicController: MusicController,
     favoriteRepository: FavoriteRepository
 ) {

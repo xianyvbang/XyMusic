@@ -3,7 +3,7 @@ package cn.xybbz.viewmodel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -18,9 +18,9 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class AlbumViewModel @Inject constructor(
-     val dataSourceManager: IDataSourceManager,
-     val connectionConfigServer: ConnectionConfigServer,
-     val backgroundConfig: BackgroundConfig
+    val dataSourceManager: DataSourceManager,
+    val connectionConfigServer: ConnectionConfigServer,
+    val backgroundConfig: BackgroundConfig
 ) : PageListViewModel() {
 
 

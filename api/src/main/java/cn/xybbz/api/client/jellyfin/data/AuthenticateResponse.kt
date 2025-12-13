@@ -1,6 +1,5 @@
 package cn.xybbz.api.client.jellyfin.data
 
-import cn.xybbz.api.data.auth.AuthenticateResponse
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
@@ -21,7 +20,7 @@ data class AuthenticateResponse(
     val serverId: String?,
     @param:Json(name = "User")
     val user: User?
-) : AuthenticateResponse
+)
 
 /**
  * 用户

@@ -9,7 +9,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.room.Transaction
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.PlaylistFileUtils
 import cn.xybbz.common.utils.PlaylistParser
@@ -40,7 +40,7 @@ import kotlinx.coroutines.launch
 class AlbumInfoViewModel @AssistedInject constructor(
     @Assisted private val itemId: String,
     @Assisted private val dataType: MusicDataTypeEnum,
-    val dataSourceManager: IDataSourceManager,
+    val dataSourceManager: DataSourceManager,
     private val db: DatabaseClient,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicController,

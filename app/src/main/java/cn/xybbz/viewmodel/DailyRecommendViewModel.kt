@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
@@ -27,7 +27,7 @@ import javax.inject.Inject
 @HiltViewModel
 class DailyRecommendViewModel @Inject constructor(
     private val db: DatabaseClient,
-    private val dataSourceManager: IDataSourceManager,
+    private val dataSourceManager: DataSourceManager,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicController,
     val favoriteRepository: FavoriteRepository,

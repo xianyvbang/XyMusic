@@ -9,7 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import cn.xybbz.R
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.DatabaseUtils
 import cn.xybbz.common.utils.DefaultObjectUtils
@@ -30,7 +30,7 @@ import kotlinx.coroutines.launch
 class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
 @AssistedInject constructor(
     @Assisted private val connectionId: Long,
-    private val dataSourceManager: IDataSourceManager,
+    private val dataSourceManager: DataSourceManager,
     private val _connectionConfigServer: ConnectionConfigServer,
     private val db: DatabaseClient,
     private val musicController: MusicController,

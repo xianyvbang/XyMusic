@@ -1,6 +1,10 @@
 package cn.xybbz.api.client.subsonic
 
+import android.util.Log
+import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.DefaultParentApiClient
+import cn.xybbz.api.client.data.ClientLoginInfoReq
+import cn.xybbz.api.client.data.LoginSuccessData
 import cn.xybbz.api.client.subsonic.service.SubsonicArtistsApi
 import cn.xybbz.api.client.subsonic.service.SubsonicGenreApi
 import cn.xybbz.api.client.subsonic.service.SubsonicItemApi
@@ -219,6 +223,23 @@ class SubsonicApiClient : DefaultParentApiClient() {
      */
     override fun createDownloadUrl(itemId: String): String {
         return baseUrl + "/rest/download?id=${itemId}"
+    }
+
+    /**
+     * 登陆接口
+     */
+    override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
+        val systemInfo = userApi().postPingSystem()
+        Log.i("=====", "服务器信息 $systemInfo")
+        updateVersion(systemInfo.subsonicResponse.version)
+        TokenServer.updateLoginRetry(false)
+        return LoginSuccessData(
+            userId = clientLoginInfoReq.username,
+            accessToken = "",
+            serverId = "",
+            serverName = systemInfo.subsonicResponse.type,
+            version = systemInfo.subsonicResponse.version
+        )
     }
 
 }

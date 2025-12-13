@@ -5,20 +5,19 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import cn.xybbz.R
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.CacheController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.SettingsConfig
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.lrc.LrcServer
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 @HiltViewModel
 class MusicPlayerViewModel @Inject constructor(
     private val _musicController: MusicController,
-    private val _dataSourceManager: IDataSourceManager,
+    private val _dataSourceManager: DataSourceManager,
     private val _settingsConfig: SettingsConfig,
     private val _favoriteRepository: FavoriteRepository,
     private val _cacheController: CacheController,

@@ -3,7 +3,7 @@ package cn.xybbz.viewmodel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
@@ -26,16 +26,16 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class MusicViewModel @Inject constructor(
-     val dataSourceManager: IDataSourceManager,
+    val dataSourceManager: DataSourceManager,
     private val db: DatabaseClient,
-     val settingsConfig: SettingsConfig,
-     val musicPlayContext: MusicPlayContext,
-     val musicController: MusicController,
-     val connectionConfigServer: ConnectionConfigServer,
-     val selectControl: SelectControl,
-     val favoriteRepository: FavoriteRepository,
-     val downloadRepository: DownloadRepository,
-     val backgroundConfig: BackgroundConfig
+    val settingsConfig: SettingsConfig,
+    val musicPlayContext: MusicPlayContext,
+    val musicController: MusicController,
+    val connectionConfigServer: ConnectionConfigServer,
+    val selectControl: SelectControl,
+    val favoriteRepository: FavoriteRepository,
+    val downloadRepository: DownloadRepository,
+    val backgroundConfig: BackgroundConfig
 ) : PageListViewModel() {
 
 

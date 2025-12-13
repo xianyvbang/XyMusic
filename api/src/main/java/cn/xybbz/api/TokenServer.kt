@@ -17,6 +17,12 @@ object TokenServer {
         private set
 
     /**
+     * 是否完成登陆重试
+     */
+    var loginRetry = false
+        private set
+
+    /**
      * 是否为Subsonic
      */
     var ifSubsonic = false
@@ -58,5 +64,9 @@ object TokenServer {
 
     fun updateIfSubsonic(ifSubsonic: Boolean) {
         this.ifSubsonic = ifSubsonic
+    }
+
+    fun updateLoginRetry(loginRetry: Boolean) {
+        this.loginRetry = loginRetry
     }
 }

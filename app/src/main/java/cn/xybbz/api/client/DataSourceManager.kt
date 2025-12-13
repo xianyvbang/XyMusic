@@ -11,9 +11,10 @@ import androidx.media3.common.util.UnstableApi
 import androidx.paging.PagingData
 import androidx.room.Transaction
 import cn.xybbz.R
+import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.version.VersionApiClient
-import cn.xybbz.api.data.auth.ClientLoginInfoReq
+import cn.xybbz.api.events.ReLoginEvent
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.constants.Constants
@@ -46,8 +47,12 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -60,7 +65,7 @@ import javax.inject.Provider
  * @author xybbz
  * @date 2024/06/12
  */
-class IDataSourceManager(
+class DataSourceManager(
     private val application: Context,
     private val db: DatabaseClient,
     private val dataSources: Map<DataSourceType, @JvmSuppressWildcards Provider<IDataSourceParentServer>>,
@@ -82,6 +87,10 @@ class IDataSourceManager(
     lateinit var dataSourceServer: IDataSourceParentServer
         private set
 
+    val dataSourceServerFlow = MutableStateFlow<IDataSourceParentServer?>(null)
+
+
+
     //加载状态
     var loading by mutableStateOf(false)
         private set
@@ -101,6 +110,22 @@ class IDataSourceManager(
     var errorMessage by mutableStateOf("")
         private set
 
+
+    @kotlin.OptIn(ExperimentalCoroutinesApi::class)
+    fun startEventBus() {
+        datasourceCoroutineScope.launch {
+            dataSourceServerFlow
+                .filterNotNull()
+                .flatMapLatest { server ->
+                    server.defaultParentApiClient.eventBus.events
+                }
+                .onEach { event ->
+                    if (event is ReLoginEvent.Unauthorized) serverLogin()
+                }
+                .launchIn(datasourceCoroutineScope)
+        }
+    }
+
     /**
      * 初始化对象信息
      */
@@ -119,13 +144,14 @@ class IDataSourceManager(
     /**
      * 根据下载类型获得数据源
      */
-    override fun getApiClient(downloadTypes: DownloadTypes): ApiConfig {
+    fun getApiClient(downloadTypes: DownloadTypes): ApiConfig {
         return when (downloadTypes) {
             DownloadTypes.APK -> {
                 versionApiClient
             }
+
             else -> {
-                dataSourceServer.getApiClient(downloadTypes)
+                dataSourceServer.defaultParentApiClient
             }
         }
     }
@@ -154,11 +180,6 @@ class IDataSourceManager(
         return when (loginState) {
             is ClientLoginInfoState.Connected -> {
                 Log.i("=====", "连接中")
-                LoginStateData(loading = true)
-            }
-
-            is ClientLoginInfoState.ConnectionSuccess -> {
-                Log.i("=====", "服务端连接成功")
                 LoginStateData(loading = true)
             }
 
@@ -244,14 +265,16 @@ class IDataSourceManager(
         Log.i("=====", "数据源开始切换")
         getDataSourceServerByType(dataSourceType, false)?.let {
             dataSourceServer = it
+            dataSourceServerFlow.value = it
 
         }
         Log.i("=====", "数据源切换完成")
     }
 
     fun setDataSourceTypeFun(type: DataSourceType?) {
-        updateDataSourceType(type)
         switchDataSource(dataSourceType = type)
+        updateDataSourceType(type)
+
     }
 
     fun updateDataSourceType(type: DataSourceType?) {

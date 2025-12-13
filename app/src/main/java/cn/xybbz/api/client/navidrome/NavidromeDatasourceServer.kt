@@ -3,7 +3,6 @@ package cn.xybbz.api.client.navidrome
 import android.content.Context
 import android.util.Log
 import androidx.room.withTransaction
-import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.navidrome.data.AlbumItem
@@ -14,10 +13,8 @@ import cn.xybbz.api.client.navidrome.data.PlaylistItemData
 import cn.xybbz.api.client.navidrome.data.PlaylistUpdateRequest
 import cn.xybbz.api.client.navidrome.data.SongItem
 import cn.xybbz.api.client.navidrome.data.getWithTotalCount
-import cn.xybbz.api.client.navidrome.data.toNavidromeLogin
 import cn.xybbz.api.client.subsonic.data.ScrobbleRequest
 import cn.xybbz.api.constants.ApiConstants
-import cn.xybbz.api.data.auth.ClientLoginInfoReq
 import cn.xybbz.api.enums.navidrome.OrderType
 import cn.xybbz.api.enums.navidrome.SortType
 import cn.xybbz.common.constants.Constants
@@ -27,7 +24,6 @@ import cn.xybbz.common.utils.CharUtils
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.ConnectionConfigServer
-import cn.xybbz.entity.api.LoginSuccessData
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.NavidromeOrder
 import cn.xybbz.entity.data.SearchData
@@ -40,7 +36,6 @@ import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
-import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
@@ -57,55 +52,14 @@ class NavidromeDatasourceServer @Inject constructor(
 ) : IDataSourceParentServer(
     db,
     connectionConfigServer,
-    application
+    application,
+    navidromeApiClient
 ) {
     /**
      * 获得当前数据源类型
      */
     override fun getDataSourceType(): DataSourceType {
         return DataSourceType.NAVIDROME
-    }
-
-    /**
-     * 登录功能
-     */
-    override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
-        val responseData = navidromeApiClient.userApi().login(clientLoginInfoReq.toNavidromeLogin())
-        Log.i("=====", "返回响应值: $responseData")
-        val packageManager = application.packageManager
-        val packageName = application.packageName
-        val packageInfo = packageManager.getPackageInfo(packageName, 0)
-        val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
-        val appName = packageManager.getApplicationLabel(applicationInfo).toString()
-        val versionName = packageInfo.versionName
-        val versionCode = packageInfo.longVersionCode
-        navidromeApiClient.createSubsonicApiClient(
-            username = clientLoginInfoReq.username,
-            passwordMd5 = responseData.subsonicToken,
-            encryptedSalt = responseData.subsonicSalt,
-            protocolVersion = DataSourceType.SUBSONIC.version,
-            clientName = "${appName}:${versionName}.${versionCode}",
-            token = responseData.token,
-            id = responseData.id
-        )
-        setToken()
-        val systemInfo = navidromeApiClient.userApi().postPingSystem()
-        Log.i("=====", "服务器信息 $systemInfo")
-
-        return LoginSuccessData(
-            userId = responseData.id,
-            accessToken = responseData.token,
-            serverId = "",
-            serverName = systemInfo.subsonicResponse.type,
-            version = systemInfo.subsonicResponse.serverVersion
-        )
-    }
-
-    /**
-     * 连通性检测
-     */
-    override suspend fun postPingSystem(): Boolean {
-        return true
     }
 
     /**
@@ -164,13 +118,6 @@ class NavidromeDatasourceServer @Inject constructor(
             val artist = navidromeApiClient.artistsApi().getArtist(artistId)
             artist?.let { artist -> convertToArtist(artist, 0) }
         }
-    }
-
-    /**
-     * 根据下载类型获得数据源
-     */
-    override fun getApiClient(downloadTypes: DownloadTypes): ApiConfig {
-        return navidromeApiClient
     }
 
     /**

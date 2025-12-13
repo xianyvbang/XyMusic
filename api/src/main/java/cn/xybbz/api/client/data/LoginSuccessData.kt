@@ -1,4 +1,4 @@
-package cn.xybbz.entity.api
+package cn.xybbz.api.client.data
 
 /**
  * 登录成功后数据

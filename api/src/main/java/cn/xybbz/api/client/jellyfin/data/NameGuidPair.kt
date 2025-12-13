@@ -1,4 +1,4 @@
-package cn.xybbz.api.data.item
+package cn.xybbz.api.client.jellyfin.data
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass

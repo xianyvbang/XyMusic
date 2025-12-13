@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import androidx.paging.filter
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.entity.data.ArtistFilter
@@ -29,7 +29,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class ArtistViewModel @Inject constructor(
-    private val dataSourceManager: IDataSourceManager,
+    private val dataSourceManager: DataSourceManager,
     connectionConfigServer: ConnectionConfigServer,
     private val db: DatabaseClient,
     val backgroundConfig: BackgroundConfig

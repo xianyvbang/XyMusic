@@ -7,6 +7,8 @@ import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.base.IDownLoadApi
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.constants.ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
+import cn.xybbz.api.events.ReLoginEventBus
+import cn.xybbz.api.okhttp.DefaultAuthenticator
 import cn.xybbz.api.okhttp.LoggingInterceptor
 import cn.xybbz.api.okhttp.NetWorkInterceptor
 import cn.xybbz.api.okhttp.plex.PlexQueryInterceptor
@@ -38,6 +40,8 @@ abstract class DefaultApiClient : ApiConfig {
 
     var headerMap: Map<String, String> = emptyMap()
         private set
+
+    val eventBus = ReLoginEventBus()
 
 
     /**
@@ -83,11 +87,11 @@ abstract class DefaultApiClient : ApiConfig {
      * 获得okhttp客户端
      */
     protected open fun getOkHttpClient(ifTmp: Boolean = false): OkHttpClient {
-        if (!ifTmp){
+        if (!ifTmp) {
             updateTokenHeaderName()
             updateIfSubsonic()
         }
-        apiOkHttpClient = OkHttpClient.Builder()
+        val okHttpClientBuilder = OkHttpClient.Builder()
             .addInterceptor(
                 NetWorkInterceptor(
                     { if (ifTmp) tokenHeaderName else TokenServer.tokenHeaderName },
@@ -101,10 +105,20 @@ abstract class DefaultApiClient : ApiConfig {
             .writeTimeout(DEFAULT_TIMEOUT_MILLISECONDS, TimeUnit.MILLISECONDS)
             .addNetworkInterceptor(PlexQueryInterceptor())
             .addNetworkInterceptor(LoggingInterceptor())
-            .addNetworkInterceptor(SubsonicNetworkStatusInterceptor(ifSubsonic = { if (ifTmp) ifSubsonic else TokenServer.ifSubsonic }))
+            .authenticator(
+                DefaultAuthenticator(
+                    eventBus,
+                    onLoginRetry = { TokenServer.loginRetry },
+                    onSetLoginRetry = { TokenServer.updateLoginRetry(it) })
+            )
             .followRedirects(true)
             .followSslRedirects(true)
             .retryOnConnectionFailure(true)
+
+        if (if (ifTmp) ifSubsonic else TokenServer.ifSubsonic) {
+            okHttpClientBuilder.addNetworkInterceptor(SubsonicNetworkStatusInterceptor())
+        }
+        apiOkHttpClient = okHttpClientBuilder
             // 可以添加其他配置，比如连接超时、读写超时等
             .build()
         return apiOkHttpClient

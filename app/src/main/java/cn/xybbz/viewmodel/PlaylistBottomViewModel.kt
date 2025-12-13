@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -21,7 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 class PlaylistBottomViewModel @Inject constructor(
     private val db: DatabaseClient,
-    val dataSourceManager: IDataSourceManager,
+    val dataSourceManager: DataSourceManager,
     private val connectionConfigServer: ConnectionConfigServer,
 
     ) : ViewModel() {

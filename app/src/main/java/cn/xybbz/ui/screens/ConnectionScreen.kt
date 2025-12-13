@@ -411,7 +411,7 @@ fun ConnectionScreen(
                                                     connectionViewModel.setTmpAddressData(
                                                         connectionViewModel.address
                                                     )
-                                                    connectionViewModel.inputAddress()
+                                                    connectionViewModel.inputAddress(context)
                                                 }
                                             }
                                         } else {
@@ -538,7 +538,7 @@ fun ConnectionScreen(
                                                     connectionViewModel.setSelectUrlIndexData(
                                                         connectionViewModel.selectUrlIndex
                                                     )
-                                                    connectionViewModel.inputAddress()
+                                                    connectionViewModel.inputAddress(context)
                                                 }
                                             }) {
                                             Text(text = stringResource(R.string.connect))

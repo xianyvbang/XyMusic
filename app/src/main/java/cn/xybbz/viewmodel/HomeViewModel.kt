@@ -8,7 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.common.music.MusicController
@@ -42,7 +42,7 @@ import javax.inject.Inject
 class HomeViewModel @OptIn(UnstableApi::class)
 @Inject constructor(
     private val db: DatabaseClient,
-    val dataSourceManager: IDataSourceManager,
+    val dataSourceManager: DataSourceManager,
     val connectionConfigServer: ConnectionConfigServer,
     private val _musicPlayContext: MusicPlayContext,
     private val musicController: MusicController,

@@ -1,7 +1,12 @@
 package cn.xybbz.api.client.jellyfin
 
+import android.util.Log
+import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.DefaultParentApiClient
+import cn.xybbz.api.client.data.ClientLoginInfoReq
+import cn.xybbz.api.client.data.LoginSuccessData
 import cn.xybbz.api.client.emby.EmbyApiClient
+import cn.xybbz.api.client.jellyfin.data.toLogin
 import cn.xybbz.api.client.jellyfin.service.ArtistsApi
 import cn.xybbz.api.client.jellyfin.service.GenreApi
 import cn.xybbz.api.client.jellyfin.service.ItemApi
@@ -13,6 +18,8 @@ import cn.xybbz.api.client.jellyfin.service.UserLibraryApi
 import cn.xybbz.api.client.jellyfin.service.UserViewsApi
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.enums.jellyfin.ImageType
+import cn.xybbz.api.exception.ConnectionException
+import cn.xybbz.api.exception.UnauthorizedException
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -212,6 +219,40 @@ class JellyfinApiClient : DefaultParentApiClient() {
      */
     override fun createDownloadUrl(itemId: String): String {
         return baseUrl + "/Items/${itemId}/Download"
+    }
+
+    /**
+     * 登陆接口
+     */
+    override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
+
+        try {
+            val pingData = userApi().postPingSystem()
+            Log.i("=====", "ping数据返回: $pingData")
+        } catch (e: Exception) {
+            e.printStackTrace()
+            when (e) {
+                !is UnauthorizedException -> {
+                    throw ConnectionException()
+                }
+            }
+        }
+
+        val responseData =
+            userApi().authenticateByName(clientLoginInfoReq.toLogin())
+        Log.i("=====", "返回响应值: $responseData")
+        updateAccessToken(responseData.accessToken)
+        updateTokenOrHeadersOrQuery()
+        val systemInfo = userApi().getSystemInfo()
+        Log.i("=====", "服务器信息 $systemInfo")
+        TokenServer.updateLoginRetry(false)
+        return LoginSuccessData(
+            userId = responseData.user?.id,
+            accessToken = responseData.accessToken,
+            serverId = responseData.serverId,
+            serverName = systemInfo.serverName,
+            version = systemInfo.version
+        )
     }
 
     /**

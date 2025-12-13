@@ -8,7 +8,7 @@ import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import cn.xybbz.R
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.CoroutineScopeUtils
@@ -63,7 +63,7 @@ class SelectControl(val application: Context) {
     val scope = CoroutineScopeUtils.getIo("SelectControl")
 
     //永久删除所选音乐资源-从硬盘上删除
-    val onRemoveSelectListResource: ((IDataSourceManager, CoroutineScope) -> Unit) =
+    val onRemoveSelectListResource: ((DataSourceManager, CoroutineScope) -> Unit) =
         { dataSourceManager, viewModelScope ->
             AlertDialogObject(
                 title = application.getString(R.string.delete_permanently),
@@ -95,13 +95,13 @@ class SelectControl(val application: Context) {
     }
 
     //从歌单中删除选中音乐
-    val onRemovePlaylistMusic: (IDataSourceManager, CoroutineScope) -> Unit =
+    val onRemovePlaylistMusic: (DataSourceManager, CoroutineScope) -> Unit =
         { dataSourceManager, viewModelScope ->
             removePlaylistMusic(dataSourceManager, viewModelScope)
         }
 
     //取消收藏
-    val onRemoveFavorite: (IDataSourceManager, CoroutineScope, MusicController) -> Unit =
+    val onRemoveFavorite: (DataSourceManager, CoroutineScope, MusicController) -> Unit =
         { dataSourceManager, viewModelScope, musicController ->
             viewModelScope.launch {
                 OperationTipUtils.operationTipProgress() { loadingObject ->
@@ -194,7 +194,7 @@ class SelectControl(val application: Context) {
      * 删除选中数据
      */
     fun removeSelectListResource(
-        dataSourceManager: IDataSourceManager,
+        dataSourceManager: DataSourceManager,
         viewModelScope: CoroutineScope
     ) {
         if (selectMusicIdList.isNotEmpty()) {
@@ -238,7 +238,7 @@ class SelectControl(val application: Context) {
      * 从歌单中移除相应音乐
      */
     fun removePlaylistMusic(
-        dataSourceManager: IDataSourceManager,
+        dataSourceManager: DataSourceManager,
         viewModelScope: CoroutineScope
     ) {
         viewModelScope.launch {

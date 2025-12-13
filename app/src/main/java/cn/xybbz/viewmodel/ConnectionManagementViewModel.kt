@@ -7,7 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.DataSourceChangeUtils
 import cn.xybbz.config.BackgroundConfig
@@ -22,7 +22,7 @@ import javax.inject.Inject
 @OptIn(UnstableApi::class)
 class ConnectionManagementViewModel @Inject constructor(
     private val _connectionConfigServer: ConnectionConfigServer,
-    private val _dataSourceManager: IDataSourceManager,
+    private val _dataSourceManager: DataSourceManager,
     private val db: DatabaseClient,
     private val musicController: MusicController,
     private val _backgroundConfig: BackgroundConfig

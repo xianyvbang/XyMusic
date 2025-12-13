@@ -1,5 +1,6 @@
 package cn.xybbz.viewmodel
 
+import android.content.Context
 import android.util.Log
 import android.webkit.URLUtil
 import androidx.compose.runtime.getValue
@@ -10,9 +11,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.R
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.IDataSourceServer
-import cn.xybbz.api.data.auth.ClientLoginInfoReq
+import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.config.SettingsConfig
 import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.localdata.enums.DataSourceType
@@ -28,7 +29,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ConnectionViewModel @Inject constructor(
     private val _settingsConfig: SettingsConfig,
-    private val _dataSourceManager: IDataSourceManager
+    private val _dataSourceManager: DataSourceManager
 ) : ViewModel() {
 
     val settingsConfig = _settingsConfig
@@ -85,13 +86,11 @@ class ConnectionViewModel @Inject constructor(
     var errorMessage by mutableStateOf("")
         private set
 
-    suspend fun inputAddress() {
+    suspend fun inputAddress(application: Context) {
 
-        if (dataSourceType == null) {
-            return
-        }
+        val tmpDatasource = dataSourceType ?: return
 
-        if (address.isBlank() && dataSourceType?.ifInputUrl == true) {
+        if (address.isBlank() && tmpDatasource.ifInputUrl) {
             return
         }
 
@@ -100,21 +99,26 @@ class ConnectionViewModel @Inject constructor(
         }
         loading = true
         clearLoginStatus()
-        var ifEnable = false
         if (_dataSourceManager.dataSourceType == null) {
-            _dataSourceManager.switchDataSource(dataSourceType)
+            _dataSourceManager.switchDataSource(tmpDatasource)
             tmpDataSourceParentServer = _dataSourceManager
-            ifEnable = true
         } else if (tmpDataSourceParentServer == null) {
             tmpDataSourceParentServer =
-                dataSourceType?.let { _dataSourceManager.getDataSourceServerByType(it, true) }
+                _dataSourceManager.getDataSourceServerByType(tmpDatasource, true)
         }
+
+        val packageManager = application.packageManager
+        val packageName = application.packageName
+        val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
+        val appName = packageManager.getApplicationLabel(applicationInfo).toString()
 
         val clientLoginInfoReq =
             ClientLoginInfoReq(
                 address = tmpAddress,
                 username = username,
                 password = password,
+                appName = appName,
+                clientVersion = tmpDatasource.version,
                 serverId = plexInfo?.serverId,
                 serverVersion = plexInfo?.serverVersion,
                 serverName = plexInfo?.serverName
@@ -262,7 +266,9 @@ class ConnectionViewModel @Inject constructor(
             ClientLoginInfoReq(
                 address = tmpAddress,
                 username = username,
-                password = password
+                password = password,
+                appName = "",
+                clientVersion = ""
             )
         try {
             val resources = tmpDataSourceParentServer?.getResources(clientLoginInfoReq)

@@ -3,7 +3,6 @@ package cn.xybbz.api.okhttp
 import android.util.Log
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.exception.ServiceException
-import cn.xybbz.api.exception.UnauthorizedException
 import okhttp3.Interceptor
 import okhttp3.RequestBody
 import okhttp3.Response
@@ -79,17 +78,18 @@ class LoggingInterceptor : Interceptor {
         }
         val originalResponse = chain.proceed(request)
         if (!originalResponse.isSuccessful && originalResponse.code !in 301..304) {
-            if (originalResponse.code == ApiConstants.UNAUTHORIZED) {
-                throw UnauthorizedException(
+            if (originalResponse.code != ApiConstants.UNAUTHORIZED) {
+                /*throw UnauthorizedException(
                     msg = "请求接口---> ${request.url.encodedPath} ${originalResponse.message}",
                     statusCode = originalResponse.code,
                     responsePhrase = "登陆失败"
-                )
-            } else {
+                )*/
                 throw ServiceException(
                     message = originalResponse.message,
                     code = originalResponse.code
                 )
+            } else {
+
             }
         }
         return originalResponse

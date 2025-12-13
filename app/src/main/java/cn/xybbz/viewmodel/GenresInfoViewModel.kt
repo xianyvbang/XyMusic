@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.localdata.data.genre.XyGenre
@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 @HiltViewModel(assistedFactory = GenresInfoViewModel.Factory::class)
 class GenresInfoViewModel @AssistedInject constructor(
     @Assisted private val genreId: String,
-    private val _dataSourceManager: IDataSourceManager,
+    private val _dataSourceManager: DataSourceManager,
     private val connectionConfigServer: ConnectionConfigServer,
     private val _backgroundConfig: BackgroundConfig
 ) : ViewModel() {

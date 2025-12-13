@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import androidx.room.Transaction
 import cn.xybbz.R
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.CacheController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.MessageUtils
@@ -26,7 +26,7 @@ class SnackBarPlayerViewModel @Inject constructor(
     val musicController: MusicController,
     val db: DatabaseClient,
     private val cacheController: CacheController,
-    val dataSourceManager: IDataSourceManager,
+    val dataSourceManager: DataSourceManager,
     val selectControl: SelectControl,
     private val downloadManager: DownLoadManager,
     val connectionConfigServer: ConnectionConfigServer

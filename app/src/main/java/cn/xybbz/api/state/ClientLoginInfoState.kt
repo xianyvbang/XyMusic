@@ -8,12 +8,6 @@ sealed class ClientLoginInfoState {
     data class Connected(val address: String) : ClientLoginInfoState()
 
     /**
-     * 链接成功返回信息
-     */
-    data object ConnectionSuccess :
-        ClientLoginInfoState()
-
-    /**
      * 服务端超时
      */
     data object ServiceTimeOutState : ClientLoginInfoState()

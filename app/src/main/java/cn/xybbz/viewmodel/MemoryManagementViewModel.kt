@@ -14,7 +14,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import androidx.room.withTransaction
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.CacheController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
@@ -31,7 +31,7 @@ class MemoryManagementViewModel @Inject constructor(
     private val cacheController: CacheController,
     private val db: DatabaseClient,
     private val settingsConfig: SettingsConfig,
-    private val dataSourceManager: IDataSourceManager,
+    private val dataSourceManager: DataSourceManager,
     private val musicController: MusicController,
     private val _backgroundConfig: BackgroundConfig
 ) : ViewModel() {

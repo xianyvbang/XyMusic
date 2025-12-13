@@ -3,7 +3,7 @@ package cn.xybbz.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
@@ -20,13 +20,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FavoriteViewModel @Inject constructor(
-    private val dataSourceManager: IDataSourceManager,
-     val musicPlayContext: MusicPlayContext,
-     val connectionConfigServer: ConnectionConfigServer,
-     val musicController: MusicController,
-     val favoriteRepository: FavoriteRepository,
-     val downloadRepository: DownloadRepository,
-     val backgroundConfig: BackgroundConfig
+    private val dataSourceManager: DataSourceManager,
+    val musicPlayContext: MusicPlayContext,
+    val connectionConfigServer: ConnectionConfigServer,
+    val musicController: MusicController,
+    val favoriteRepository: FavoriteRepository,
+    val downloadRepository: DownloadRepository,
+    val backgroundConfig: BackgroundConfig
 ) : ViewModel() {
 
     @OptIn(ExperimentalCoroutinesApi::class)

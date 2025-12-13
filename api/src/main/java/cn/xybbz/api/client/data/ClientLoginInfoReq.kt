@@ -1,4 +1,4 @@
-package cn.xybbz.api.data.auth
+package cn.xybbz.api.client.data
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
@@ -11,6 +11,8 @@ import com.squareup.moshi.JsonClass
  * @param [username] 用户名
  * @param [password] 密码
  * @param [address] 客户端连接地址
+ * @param [appName] 客户端应用名称
+ * @param [clientVersion] 服务客户端支持版本
  * @param [connectionId] 连接设置id
  * @param [serverVersion] 服务端版本
  * @param [serverName] 服务端名称
@@ -23,8 +25,10 @@ data class ClientLoginInfoReq(
     @param:Json(name = "Pw")
     val password: String,
     val address: String,
+    val appName:String,
+    val clientVersion:String,
     val connectionId: Long? = null,
     val serverVersion: String? = null,
     val serverName: String? = null,
     val serverId: String? = null
-) : AuthenticateRequest
+)

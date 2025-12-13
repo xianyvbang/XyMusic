@@ -1,8 +1,12 @@
 package cn.xybbz.api.client.plex
 
-import cn.xybbz.api.client.DefaultApiClient
+import android.util.Log
+import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.DefaultParentApiClient
+import cn.xybbz.api.client.data.ClientLoginInfoReq
+import cn.xybbz.api.client.data.LoginSuccessData
 import cn.xybbz.api.client.jellyfin.encodeUrlParameter
+import cn.xybbz.api.client.plex.data.toPlexLogin
 import cn.xybbz.api.client.plex.service.PlexItemApi
 import cn.xybbz.api.client.plex.service.PlexLibraryApi
 import cn.xybbz.api.client.plex.service.PlexLyricsApi
@@ -11,6 +15,7 @@ import cn.xybbz.api.client.plex.service.PlexUserApi
 import cn.xybbz.api.client.plex.service.PlexUserLibraryApi
 import cn.xybbz.api.client.plex.service.PlexUserViewsApi
 import cn.xybbz.api.constants.ApiConstants
+import cn.xybbz.api.exception.ServiceException
 
 class PlexApiClient : DefaultParentApiClient() {
 
@@ -291,6 +296,52 @@ class PlexApiClient : DefaultParentApiClient() {
         return "$baseUrl$itemId?download=1"
     }
 
+    /**
+     * 登陆接口
+     */
+    override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
+        var loginSuccessData = LoginSuccessData(
+            userId = userId,
+            accessToken = createToken(),
+            serverId = clientLoginInfoReq.serverId,
+            serverName = clientLoginInfoReq.serverName,
+            version = clientLoginInfoReq.serverVersion
+        )
+        if (createToken().isBlank()){
+            loginSuccessData = plexLogin(clientLoginInfoReq)
+        }
+        try {
+            val postPingSystem = userApi().postPingSystem()
+            Log.i("=====", postPingSystem.toString())
+            //获得machineIdentifier
+            updateMachineIdentifier(postPingSystem.mediaContainer?.machineIdentifier)
+        } catch (e: Exception) {
+            Log.i("error", "ping服务器失败", e)
+            throw ServiceException("ping服务器失败")
+        }
+        TokenServer.updateLoginRetry(false)
+        return loginSuccessData
+    }
+
+
+    suspend fun plexLogin(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
+        val responseData =
+            userApi().authenticateByName(
+                "https://plex.tv/api/v2/users/signin",
+                clientLoginInfoReq.toPlexLogin()
+            )
+        Log.i("=====", "返回响应值: $responseData")
+        updateAccessToken(responseData.authToken)
+        updateServerInfo(userId = responseData.id)
+        updateTokenOrHeadersOrQuery()
+        return LoginSuccessData(
+            userId = userId,
+            accessToken = createToken(),
+            serverId = clientLoginInfoReq.serverId,
+            serverName = clientLoginInfoReq.serverName,
+            version = clientLoginInfoReq.serverVersion
+        )
+    }
     /**
      * 歌词接口
      */

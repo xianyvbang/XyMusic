@@ -12,8 +12,8 @@ import androidx.room.Transaction
 import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.TokenServer
+import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
-import cn.xybbz.api.data.auth.ClientLoginInfoReq
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.exception.UnauthorizedException
@@ -23,7 +23,6 @@ import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.config.ConnectionConfigServer
-import cn.xybbz.entity.api.LoginSuccessData
 import cn.xybbz.entity.data.EncryptAesData
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.config.DatabaseClient
@@ -69,6 +68,7 @@ abstract class IDataSourceParentServer(
     private val db: DatabaseClient,
     private val connectionConfigServer: ConnectionConfigServer,
     private val application: Context,
+    val defaultParentApiClient:DefaultParentApiClient
 ) : IDataSourceServer {
 
     private var ifTmpObject = false
@@ -113,39 +113,21 @@ abstract class IDataSourceParentServer(
                 username = clientLoginInfoReq.username,
                 password = clientLoginInfoReq.password
             )
-            if (getDataSourceType().ifInputUrl)
-                try {
-                    val postPingSystem = postPingSystem()
-                    if (postPingSystem) {
-                        Log.i("=====", "是否连通: $postPingSystem")
-                        emit(ClientLoginInfoState.ConnectionSuccess)
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    when (e) {
-                        is UnauthorizedException -> {
-                            throw e
-                        }
-
-                        else -> {
-                            throw ConnectionException()
-                        }
-                    }
-                }
 
             //获得服务端信息
             val responseData =
-                login(clientLoginInfoReq)
+                defaultParentApiClient.login(clientLoginInfoReq)
             Log.i("=====", "返回响应值: $responseData")
 
             //开始校验版本
-            if (responseData.version != null) {
-                val versionAtLeast = isVersionAtLeast(responseData.version)
+            val version = responseData.version
+            if (!version.isNullOrBlank()) {
+                val versionAtLeast = isVersionAtLeast(version)
                 if (!versionAtLeast) {
                     throw ServiceException(
                         application.getString(
                             R.string.server_version_too_low,
-                            responseData.version,
+                            version,
                             getDataSourceType().version
                         )
                     )
@@ -174,7 +156,7 @@ abstract class IDataSourceParentServer(
                     currentPassword = encryptAES.aesData,
                     iv = encryptAES.aesIv,
                     key = encryptAES.aesKey,
-                    serverVersion = responseData.version,
+                    serverVersion = version,
                     updateTime = System.currentTimeMillis(),
                     lastLoginTime = System.currentTimeMillis(),
                     deviceId = deviceId
@@ -191,7 +173,7 @@ abstract class IDataSourceParentServer(
                 currentPassword = encryptAES.aesData,
                 iv = encryptAES.aesIv,
                 key = encryptAES.aesKey,
-                serverVersion = responseData.version,
+                serverVersion = version,
                 deviceId = deviceId
             )
 
@@ -247,16 +229,6 @@ abstract class IDataSourceParentServer(
     }
 
     /**
-     * 登录功能
-     */
-    abstract suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData
-
-    /**
-     * 连通性检测
-     */
-    abstract suspend fun postPingSystem(): Boolean
-
-    /**
      * 获得设备id
      */
     open fun getDeviceId(): String {
@@ -297,6 +269,11 @@ abstract class IDataSourceParentServer(
 
         val address = connectionConfig.address
 
+        val packageManager = application.packageManager
+        val packageName = application.packageName
+        val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
+        val appName = packageManager.getApplicationLabel(applicationInfo).toString()
+
         //判断是否能连接
         return flow {
             var password = connectionConfig.currentPassword
@@ -315,6 +292,8 @@ abstract class IDataSourceParentServer(
                         username = connectionConfig.username,
                         password = password,
                         address = address,
+                        appName = appName,
+                        clientVersion = getDataSourceType().version,
                         connectionId = connectionConfig.id,
                         serverVersion = connectionConfig.serverVersion,
                         serverName = connectionConfig.serverName,

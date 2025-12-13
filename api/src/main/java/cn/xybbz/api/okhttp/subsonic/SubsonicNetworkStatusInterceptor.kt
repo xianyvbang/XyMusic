@@ -13,8 +13,7 @@ import com.squareup.moshi.Types
 import okhttp3.Interceptor
 import okhttp3.Response
 
-//todo 这里 if (header != "application/octet-stream" && header?.contains("audio") == false && ifSubsonic())的判断需要考虑使用其他方式
-class SubsonicNetworkStatusInterceptor(private val ifSubsonic: () -> Boolean) : Interceptor {
+class SubsonicNetworkStatusInterceptor() : Interceptor {
 
     lateinit var adapter: JsonAdapter<SubsonicResponse<SubsonicParentResponse>>
 
@@ -23,36 +22,45 @@ class SubsonicNetworkStatusInterceptor(private val ifSubsonic: () -> Boolean) : 
         val request = chain.request()
 
         val originalResponse = chain.proceed(request)
-        // 对成功响应先peek出来检查
-        val header = originalResponse.header("content-type")
-        if (header != ApiConstants.DOWNLOAD_ACCEPT && header?.contains("audio") == false && ifSubsonic()) {
+
+        val contentType = originalResponse.body.contentType()?.toString() ?: ""
+        val contentLength = originalResponse.body.contentLength()
+
+        val isStream = contentType.startsWith("audio/")
+                || contentType.startsWith("video/")
+                || contentType.startsWith("image/")
+                || contentType == ApiConstants.DOWNLOAD_ACCEPT
+                || contentLength > 1024 * 1024
+
+        if (isStream) {
             getJsonAdapter()
-            val peekedBody = originalResponse.peekBody(Long.MAX_VALUE).string()
+            val source = originalResponse.body.source()
+            source.request(1024) // 读取前 1KB
+            val buffer = source.buffer
+            val peek = buffer.clone().readUtf8() // clone 不消费原 buffer
 
-            if (peekedBody.startsWith("{")) {
-                if (peekedBody.isNotBlank()) {
-                    val result = try {
-                        adapter.fromJson(peekedBody)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        null
-                    }
+            if (peek.isNotBlank()) {
+                val result = try {
+                    adapter.fromJson(peek)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    null
+                }
 
-                    if (result?.subsonicResponse?.status == Status.Failed) {
-                        Log.e("error","接口报错响应:${result.subsonicResponse}")
-                        val error = result.subsonicResponse.error
-                        if (error?.code == 40) {
-                            throw UnauthorizedException(
-                                msg = "请求接口---> ${request.url.encodedPath} ${error.message}",
-                                statusCode = originalResponse.code,
-                                responsePhrase = peekedBody
-                            )
-                        } else {
-                            throw ServiceException(
-                                message = error?.message ?: "",
-                                code = error?.code ?: 500
-                            )
-                        }
+                if (result?.subsonicResponse?.status == Status.Failed) {
+                    Log.e("error","接口报错响应:${result.subsonicResponse}")
+                    val error = result.subsonicResponse.error
+                    if (error?.code == 40) {
+                        throw UnauthorizedException(
+                            msg = "请求接口---> ${request.url.encodedPath} ${error.message}",
+                            statusCode = originalResponse.code,
+                            responsePhrase = peek
+                        )
+                    } else {
+                        throw ServiceException(
+                            message = error?.message ?: "",
+                            code = error?.code ?: 500
+                        )
                     }
                 }
             }

@@ -3,7 +3,7 @@ package cn.xybbz.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class GenresViewModel @Inject constructor(
-    private val dataSourceManager: IDataSourceManager,
+    private val dataSourceManager: DataSourceManager,
     private val connectionConfigServer: ConnectionConfigServer,
     private val _backgroundConfig: BackgroundConfig
 ) : ViewModel() {

@@ -20,6 +20,7 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import cn.xybbz.R
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.ImageApiClient
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
@@ -64,6 +65,9 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
     lateinit var imageApiClient: ImageApiClient
     @Inject
     lateinit var lrcServer: LrcServer
+
+    @Inject
+    lateinit var dataSourceManager: DataSourceManager
 
     override fun onCreate() {
         super.onCreate()
