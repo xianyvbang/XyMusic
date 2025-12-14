@@ -92,10 +92,6 @@ class SubsonicApiClient : DefaultParentApiClient() {
         return this
     }
 
-    fun updateVersion(protocolVersion: String) {
-        this.protocolVersion = protocolVersion
-    }
-
     /**
      * 艺术家接口
      */
@@ -231,7 +227,6 @@ class SubsonicApiClient : DefaultParentApiClient() {
     override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
         val systemInfo = userApi().postPingSystem()
         Log.i("=====", "服务器信息 $systemInfo")
-        updateVersion(systemInfo.subsonicResponse.version)
         TokenServer.updateLoginRetry(false)
         return LoginSuccessData(
             userId = clientLoginInfoReq.username,
@@ -242,4 +237,13 @@ class SubsonicApiClient : DefaultParentApiClient() {
         )
     }
 
+    override suspend fun loginAfter(
+        accessToken: String?,
+        userId: String?,
+        subsonicToken: String?,
+        subsonicSalt: String?,
+        clientLoginInfoReq: ClientLoginInfoReq
+    ) {
+
+    }
 }

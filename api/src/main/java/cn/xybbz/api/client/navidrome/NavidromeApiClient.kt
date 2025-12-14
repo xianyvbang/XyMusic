@@ -193,16 +193,13 @@ class NavidromeApiClient : DefaultParentApiClient() {
     override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
         val responseData = userApi().login(clientLoginInfoReq.toNavidromeLogin())
         Log.i("=====", "返回响应值: $responseData")
-        createSubsonicApiClient(
-            username = clientLoginInfoReq.username,
-            passwordMd5 = responseData.subsonicToken,
-            encryptedSalt = responseData.subsonicSalt,
-            protocolVersion = clientLoginInfoReq.clientVersion,
-            clientName = clientLoginInfoReq.appName,
-            token = responseData.token,
-            id = responseData.id
+        loginAfter(
+            accessToken = responseData.token,
+            userId = responseData.id,
+            subsonicToken = responseData.subsonicToken,
+            subsonicSalt = responseData.subsonicSalt,
+            clientLoginInfoReq = clientLoginInfoReq
         )
-        updateTokenOrHeadersOrQuery()
         val systemInfo = userApi().postPingSystem()
         Log.i("=====", "服务器信息 $systemInfo")
         TokenServer.updateLoginRetry(false)
@@ -211,8 +208,31 @@ class NavidromeApiClient : DefaultParentApiClient() {
             accessToken = responseData.token,
             serverId = "",
             serverName = systemInfo.subsonicResponse.type,
-            version = systemInfo.subsonicResponse.serverVersion
+            version = systemInfo.subsonicResponse.serverVersion,
+            navidromeExtendToken = responseData.subsonicToken,
+            navidromeExtendSalt = responseData.subsonicSalt,
         )
+    }
+
+    override suspend fun loginAfter(
+        accessToken: String?,
+        userId: String?,
+        subsonicToken: String?,
+        subsonicSalt: String?,
+        clientLoginInfoReq: ClientLoginInfoReq
+    ) {
+        if (!subsonicToken.isNullOrBlank() && !subsonicSalt.isNullOrBlank()
+            && !accessToken.isNullOrBlank() && !userId.isNullOrBlank())
+            createSubsonicApiClient(
+                username = clientLoginInfoReq.username,
+                passwordMd5 = subsonicToken,
+                encryptedSalt = subsonicSalt,
+                protocolVersion = clientLoginInfoReq.clientVersion,
+                clientName = clientLoginInfoReq.appName,
+                token = accessToken,
+                id = userId
+            )
+        updateTokenOrHeadersOrQuery()
     }
 
     /**

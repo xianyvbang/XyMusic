@@ -307,14 +307,17 @@ class PlexApiClient : DefaultParentApiClient() {
             serverName = clientLoginInfoReq.serverName,
             version = clientLoginInfoReq.serverVersion
         )
-        if (createToken().isBlank()){
+        if (createToken().isBlank()) {
             loginSuccessData = plexLogin(clientLoginInfoReq)
         }
+
         try {
             val postPingSystem = userApi().postPingSystem()
             Log.i("=====", postPingSystem.toString())
             //获得machineIdentifier
-            updateMachineIdentifier(postPingSystem.mediaContainer?.machineIdentifier)
+            pingAfter(postPingSystem.mediaContainer?.machineIdentifier)
+            loginSuccessData =
+                loginSuccessData.copy(machineIdentifier = postPingSystem.mediaContainer?.machineIdentifier)
         } catch (e: Exception) {
             Log.i("error", "ping服务器失败", e)
             throw ServiceException("ping服务器失败")
@@ -323,6 +326,21 @@ class PlexApiClient : DefaultParentApiClient() {
         return loginSuccessData
     }
 
+    override suspend fun loginAfter(
+        accessToken: String?,
+        userId: String?,
+        subsonicToken: String?,
+        subsonicSalt: String?,
+        clientLoginInfoReq: ClientLoginInfoReq
+    ) {
+        updateAccessToken(accessToken)
+        updateServerInfo(userId = userId)
+        updateTokenOrHeadersOrQuery()
+    }
+
+    override suspend fun pingAfter(machineIdentifier: String?) {
+        updateMachineIdentifier(machineIdentifier)
+    }
 
     suspend fun plexLogin(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
         val responseData =
@@ -331,9 +349,10 @@ class PlexApiClient : DefaultParentApiClient() {
                 clientLoginInfoReq.toPlexLogin()
             )
         Log.i("=====", "返回响应值: $responseData")
-        updateAccessToken(responseData.authToken)
-        updateServerInfo(userId = responseData.id)
-        updateTokenOrHeadersOrQuery()
+        loginAfter(
+            responseData.authToken, responseData.id,
+            clientLoginInfoReq = clientLoginInfoReq
+        )
         return LoginSuccessData(
             userId = userId,
             accessToken = createToken(),
@@ -342,6 +361,7 @@ class PlexApiClient : DefaultParentApiClient() {
             version = clientLoginInfoReq.serverVersion
         )
     }
+
     /**
      * 歌词接口
      */

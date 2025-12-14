@@ -120,7 +120,7 @@ class DataSourceManager(
                     server.defaultParentApiClient.eventBus.events
                 }
                 .onEach { event ->
-                    if (event is ReLoginEvent.Unauthorized) serverLogin()
+                    if (event is ReLoginEvent.Unauthorized) serverLogin(true)
                 }
                 .launchIn(datasourceCoroutineScope)
         }
@@ -135,7 +135,7 @@ class DataSourceManager(
             val connectionConfig = db.connectionConfigDao.selectConnectionConfig()
             if (connectionConfig != null) {
                 setDataSourceTypeFun(connectionConfig.type)
-                serverLogin()
+                serverLogin(false)
             }
         }
 
@@ -159,9 +159,9 @@ class DataSourceManager(
     /**
      * 登陆服务端
      */
-    fun serverLogin() {
+    fun serverLogin(ifLogin: Boolean) {
         datasourceCoroutineScope.launch {
-            autoLogin()?.onEach { loginState ->
+            autoLogin(ifLogin)?.onEach { loginState ->
                 loginStatus = loginState
                 ifLoginError = false
                 val loginSateInfo = getLoginSateInfo(loginState)
@@ -249,7 +249,6 @@ class DataSourceManager(
      * 变更数据源
      */
     fun changeDataSource() {
-        connectionConfigServer.updateLoginStates(false)
         initDataSource()
     }
 
@@ -318,14 +317,14 @@ class DataSourceManager(
         return dataSourceServer.addClientAndLogin(clientLoginInfoReq)
     }
 
-    override suspend fun autoLogin(): Flow<ClientLoginInfoState>? {
+    override suspend fun autoLogin(ifLogin: Boolean): Flow<ClientLoginInfoState>? {
         MessageUtils.sendPopTipHint(
             R.string.logging_in,
             delay = 5000
         )
         loading = true
         Log.i("=====", "开始登录.............")
-        return dataSourceServer.autoLogin()
+        return dataSourceServer.autoLogin(ifLogin)
     }
 
     /**

@@ -212,7 +212,7 @@ class EmbyApiClient : DefaultParentApiClient() {
             if (pingData.isSuccessful) {
                 val raw = pingData.body()?.string()
                 Log.i("=====", "ping数据返回: $raw")// "Ping"
-            }else {
+            } else {
                 throw ConnectionException()
             }
         } catch (e: Exception) {
@@ -226,8 +226,11 @@ class EmbyApiClient : DefaultParentApiClient() {
         val responseData =
             userApi().authenticateByName(clientLoginInfoReq.toLogin())
         Log.i("=====", "返回响应值: $responseData")
-        updateAccessTokenAndUserId(responseData.accessToken, responseData.user?.id)
-        updateTokenOrHeadersOrQuery()
+        loginAfter(
+            responseData.accessToken,
+            responseData.user?.id,
+            clientLoginInfoReq = clientLoginInfoReq
+        )
         val systemInfo = userApi().getSystemInfo()
         Log.i("=====", "服务器信息 $systemInfo")
         TokenServer.updateLoginRetry(false)
@@ -238,6 +241,17 @@ class EmbyApiClient : DefaultParentApiClient() {
             serverName = systemInfo.serverName,
             version = systemInfo.version
         )
+    }
+
+    override suspend fun loginAfter(
+        accessToken: String?,
+        userId: String?,
+        subsonicToken: String?,
+        subsonicSalt: String?,
+        clientLoginInfoReq: ClientLoginInfoReq
+    ) {
+        updateAccessTokenAndUserId(accessToken, userId)
+        updateTokenOrHeadersOrQuery()
     }
 
     /**

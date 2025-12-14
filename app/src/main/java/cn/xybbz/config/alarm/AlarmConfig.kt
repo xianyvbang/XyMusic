@@ -39,10 +39,10 @@ class AlarmConfig(
         this.calendar = calendar
         // 6.0及以上
 
-        Log.i("=====","当前时间${calendar.timeInMillis}, 当前: ${System.currentTimeMillis()}")
+        Log.i("=====", "当前时间${calendar.timeInMillis}, 当前: ${System.currentTimeMillis()}")
 //        am!!.setExactAndAllowWhileIdle(
 
-        val intent = Intent(application, AlertService::class.java).apply{
+        val intent = Intent(application, AlertService::class.java).apply {
             putExtra("ifPlayEndClose", ifPlayEndClose)
         }
         //不同的任务requesCode需要定义成不同的，否则，后面的会把前面的任务给覆盖掉
@@ -58,9 +58,10 @@ class AlarmConfig(
 
     fun cancelAllAlarm() {
         try {
-            am.cancel(pendingIntent)
+            if (this::pendingIntent.isInitialized)
+                am.cancel(pendingIntent)
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "取消定时关闭",e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "取消定时关闭", e)
         }
     }
 
@@ -95,14 +96,14 @@ class AlarmConfig(
             am.cancel(reportPendingIntent)
         } catch (e: Exception) {
             e.printStackTrace()
-            Log.e(Constants.LOG_ERROR_PREFIX, "取消定时关闭",e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "取消定时关闭", e)
         }
     }
 
     /**
      * 返回AlarmManager
      */
-    fun returnAm():AlarmManager{
+    fun returnAm(): AlarmManager {
         return am
     }
 }

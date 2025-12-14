@@ -241,8 +241,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
         val responseData =
             userApi().authenticateByName(clientLoginInfoReq.toLogin())
         Log.i("=====", "返回响应值: $responseData")
-        updateAccessToken(responseData.accessToken)
-        updateTokenOrHeadersOrQuery()
+        loginAfter(responseData.accessToken, clientLoginInfoReq = clientLoginInfoReq)
         val systemInfo = userApi().getSystemInfo()
         Log.i("=====", "服务器信息 $systemInfo")
         TokenServer.updateLoginRetry(false)
@@ -253,6 +252,17 @@ class JellyfinApiClient : DefaultParentApiClient() {
             serverName = systemInfo.serverName,
             version = systemInfo.version
         )
+    }
+
+    override suspend fun loginAfter(
+        accessToken: String?,
+        userId: String?,
+        subsonicToken: String?,
+        subsonicSalt: String?,
+        clientLoginInfoReq: ClientLoginInfoReq
+    ) {
+        updateAccessToken(accessToken)
+        updateTokenOrHeadersOrQuery()
     }
 
     /**

@@ -46,7 +46,7 @@ interface IDataSourceServer {
      * 自动登录
      * @return [Flow<ClientLoginInfoState>?]
      */
-    suspend fun autoLogin(): Flow<ClientLoginInfoState>?
+    suspend fun autoLogin(ifLogin: Boolean = false): Flow<ClientLoginInfoState>?
 
 
     /**

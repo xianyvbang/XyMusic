@@ -14,4 +14,15 @@ abstract class DefaultParentApiClient:DefaultApiClient() {
      */
     abstract suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData
 
+    abstract suspend fun loginAfter(
+        accessToken: String?,
+        userId: String? = null,
+        subsonicToken: String? = null,
+        subsonicSalt: String? = null,
+        clientLoginInfoReq: ClientLoginInfoReq
+    )
+
+    open suspend fun pingAfter(machineIdentifier:String? = null){}
+
+
 }

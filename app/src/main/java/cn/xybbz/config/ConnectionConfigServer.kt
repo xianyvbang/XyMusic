@@ -1,5 +1,6 @@
 package cn.xybbz.config
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -80,6 +81,7 @@ class ConnectionConfigServer(
     }
 
     fun updateLoginStates(value: Boolean) {
+        Log.i("===============","登录状态变化$value")
         _loginStateFlow.value = value
     }
 

@@ -68,7 +68,7 @@ abstract class IDataSourceParentServer(
     private val db: DatabaseClient,
     private val connectionConfigServer: ConnectionConfigServer,
     private val application: Context,
-    val defaultParentApiClient:DefaultParentApiClient
+    val defaultParentApiClient: DefaultParentApiClient
 ) : IDataSourceServer {
 
     private var ifTmpObject = false
@@ -135,6 +135,7 @@ abstract class IDataSourceParentServer(
             } else {
                 throw ServiceException(application.getString(R.string.server_version_cannot_be_obtained))
             }
+            //todo 如果有token 则下面的独立出来方法,然后自动登录中考虑跟登录有什么差异
 
             val accessToken =
                 responseData.accessToken
@@ -159,7 +160,10 @@ abstract class IDataSourceParentServer(
                     serverVersion = version,
                     updateTime = System.currentTimeMillis(),
                     lastLoginTime = System.currentTimeMillis(),
-                    deviceId = deviceId
+                    deviceId = deviceId,
+                    navidromeExtendToken = responseData.navidromeExtendToken,
+                    navidromeExtendSalt = responseData.navidromeExtendSalt,
+                    machineIdentifier = responseData.machineIdentifier
                 )
             } ?: ConnectionConfig(
                 serverId = responseData.serverId ?: "",
@@ -174,14 +178,46 @@ abstract class IDataSourceParentServer(
                 iv = encryptAES.aesIv,
                 key = encryptAES.aesKey,
                 serverVersion = version,
-                deviceId = deviceId
+                deviceId = deviceId,
+                navidromeExtendToken = responseData.navidromeExtendToken,
+                navidromeExtendSalt = responseData.navidromeExtendSalt,
+                machineIdentifier = responseData.machineIdentifier
             )
 
 
+            emitAll(loginAfter(connectionConfig))
+        }.flowOn(Dispatchers.IO).catch {
+            it.printStackTrace()
+            connectionConfigServer.updateLoginStates(true)
+            when (it) {
+                is SocketTimeoutException -> {
+                    emit(ClientLoginInfoState.ServiceTimeOutState)
+                }
+
+                is ConnectionException -> {
+                    emit(ClientLoginInfoState.ConnectError)
+                }
+
+                is UnauthorizedException -> {
+                    emit(ClientLoginInfoState.UnauthorizedErrorState)
+                }
+
+                else -> {
+                    emit(ClientLoginInfoState.ErrorState(it))
+                }
+            }
+        }
+    }
+
+    /**
+     * 登录后的数据
+     */
+    private fun loginAfter(connectionConfig: ConnectionConfig): Flow<ClientLoginInfoState> {
+        return flow {
             db.withTransaction {
-                val connectionId = if (clientLoginInfoReq.connectionId != null) {
+                val connectionId = if (connectionConfig.id != 0L) {
                     db.connectionConfigDao.update(connectionConfig)
-                    clientLoginInfoReq.connectionId!!
+                    connectionConfig.id
                 } else {
                     db.connectionConfigDao.save(connectionConfig)
                 }
@@ -205,27 +241,8 @@ abstract class IDataSourceParentServer(
             }
 
             emit(ClientLoginInfoState.UserLoginSuccess)
-        }.flowOn(Dispatchers.IO).catch {
-            it.printStackTrace()
-            connectionConfigServer.updateLoginStates(true)
-            when (it) {
-                is SocketTimeoutException -> {
-                    emit(ClientLoginInfoState.ServiceTimeOutState)
-                }
-
-                is ConnectionException -> {
-                    emit(ClientLoginInfoState.ConnectError)
-                }
-
-                is UnauthorizedException -> {
-                    emit(ClientLoginInfoState.UnauthorizedErrorState)
-                }
-
-                else -> {
-                    emit(ClientLoginInfoState.ErrorState(it))
-                }
-            }
         }
+
     }
 
     /**
@@ -260,7 +277,7 @@ abstract class IDataSourceParentServer(
     /**
      * 自动登录
      */
-    override suspend fun autoLogin(): Flow<ClientLoginInfoState> {
+    override suspend fun autoLogin(ifLogin: Boolean): Flow<ClientLoginInfoState> {
 
         //获得启用的连接信息
         val connectionConfig = db.connectionConfigDao.selectConnectionConfig() ?: return flowOf(
@@ -286,21 +303,42 @@ abstract class IDataSourceParentServer(
                     )
                 )
             }
-            emitAll(
-                addClientAndLogin(
-                    clientLoginInfoReq = ClientLoginInfoReq(
-                        username = connectionConfig.username,
-                        password = password,
-                        address = address,
-                        appName = appName,
-                        clientVersion = getDataSourceType().version,
-                        connectionId = connectionConfig.id,
-                        serverVersion = connectionConfig.serverVersion,
-                        serverName = connectionConfig.serverName,
-                        serverId = connectionConfig.serverId,
+            val clientLoginInfoReq = ClientLoginInfoReq(
+                username = connectionConfig.username,
+                password = password,
+                address = address,
+                appName = appName,
+                clientVersion = getDataSourceType().version,
+                connectionId = connectionConfig.id,
+                serverVersion = connectionConfig.serverVersion,
+                serverName = connectionConfig.serverName,
+                serverId = connectionConfig.serverId,
+            )
+            if (ifLogin || connectionConfig.accessToken.isNullOrBlank()) {
+                emitAll(
+                    addClientAndLogin(
+                        clientLoginInfoReq = clientLoginInfoReq
                     )
                 )
-            )
+            } else {
+                //保存客户端数据
+                createApiClient(
+                    address,
+                    connectionConfig.deviceId,
+                    username = connectionConfig.username,
+                    password = password
+                )
+                defaultParentApiClient.loginAfter(
+                    connectionConfig.accessToken,
+                    connectionConfig.userId,
+                    connectionConfig.navidromeExtendToken,
+                    connectionConfig.navidromeExtendSalt,
+                    clientLoginInfoReq = clientLoginInfoReq
+                )
+                defaultParentApiClient.pingAfter(connectionConfig.machineIdentifier)
+                emitAll(loginAfter(connectionConfig))
+            }
+
 
         }.flowOn(Dispatchers.IO).catch {
             Log.e(Constants.LOG_ERROR_PREFIX, "自动登录异常 ${it.message}", it)

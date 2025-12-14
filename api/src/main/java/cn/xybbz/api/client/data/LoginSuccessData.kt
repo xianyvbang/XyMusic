@@ -13,5 +13,19 @@ data class LoginSuccessData(
     val accessToken: String?,
     val serverId: String?,
     val serverName: String? = null,
-    val version: String? = null
+    val version: String? = null,
+    /**
+     * navidrome扩展SubsonicToken
+     */
+    val navidromeExtendToken: String? = null,
+
+    /**
+     * navidrome扩展扩展SubsonicSalt
+     */
+    val navidromeExtendSalt: String? = null,
+
+    /**
+     * plex的机器标识符
+     */
+    val machineIdentifier:String? = null
 )
