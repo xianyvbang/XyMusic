@@ -16,6 +16,7 @@ import cn.xybbz.localdata.dao.music.XyMusicDao
 import cn.xybbz.localdata.dao.player.XyPlayerDao
 import cn.xybbz.localdata.dao.progress.EnableProgressDao
 import cn.xybbz.localdata.dao.progress.ProgressDao
+import cn.xybbz.localdata.dao.proxy.XyProxyConfigDao
 import cn.xybbz.localdata.dao.recommend.XyRecentHistoryDao
 import cn.xybbz.localdata.dao.remote.RemoteCurrentDao
 import cn.xybbz.localdata.dao.search.SearchHistoryDao
@@ -52,6 +53,7 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.player.XyPlayer
 import cn.xybbz.localdata.data.progress.EnableProgress
 import cn.xybbz.localdata.data.progress.Progress
+import cn.xybbz.localdata.data.proxy.XyProxyConfig
 import cn.xybbz.localdata.data.recommend.XyRecentHistory
 import cn.xybbz.localdata.data.remote.RemoteCurrent
 import cn.xybbz.localdata.data.search.SearchHistory
@@ -60,7 +62,7 @@ import cn.xybbz.localdata.data.setting.XyBackgroundConfig
 import cn.xybbz.localdata.data.setting.XySettings
 
 @Database(
-    version = 10,
+    version = 11,
     entities = [XyMusic::class, XyAlbum::class, XySettings::class, SkipTime::class,
         RemoteCurrent::class, SearchHistory::class, Progress::class, XyArtist::class,
         EnableProgress::class, XyLibrary::class, XyPlayer::class, ConnectionConfig::class,
@@ -69,7 +71,7 @@ import cn.xybbz.localdata.data.setting.XySettings
         MaximumPlayMusic::class, NewestAlbum::class, NewestMusic::class, PlayHistoryMusic::class,
         PlaylistMusic::class, PlayQueueMusic::class, XyDataCount::class, PlayHistoryAlbum::class,
         MaximumPlayAlbum::class, FavoriteAlbum::class, FavoriteArtist::class, XyBackgroundConfig::class,
-        XyRecentHistory::class, RecommendedMusic::class, XyDownload::class],
+        XyRecentHistory::class, RecommendedMusic::class, XyDownload::class, XyProxyConfig::class],
     exportSchema = true
 )
 @TypeConverters(XyMusicTypeConverter::class)
@@ -111,6 +113,8 @@ abstract class DatabaseClient : RoomDatabase() {
 
     val downloadDao: XyDownloadDao by lazy { createXyDownloadDao() }
 
+    val proxyConfigDao: XyProxyConfigDao by lazy { createXyProxyConfigDao() }
+
 
     abstract fun createMusicDao(): XyMusicDao
 
@@ -147,5 +151,7 @@ abstract class DatabaseClient : RoomDatabase() {
     abstract fun createXyRecentHistoryDao(): XyRecentHistoryDao
 
     abstract fun createXyDownloadDao(): XyDownloadDao
+
+    abstract fun createXyProxyConfigDao(): XyProxyConfigDao
 
 }

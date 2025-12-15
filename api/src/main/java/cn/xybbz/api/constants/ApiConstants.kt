@@ -13,6 +13,7 @@ object ApiConstants {
     const val ACCEPT: String = "Accept"
 
     const val AUTHORIZATION = "Authorization"
+    const val PROXY_AUTHORIZATION = "Proxy-Authorization"
 
     const val NAVIDROME_AUTHORIZATION = "X-Nd-Authorization"
     const val EMBY_AUTHORIZATION = "X-Emby-Token"

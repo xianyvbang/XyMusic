@@ -7,14 +7,18 @@ import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.base.IDownLoadApi
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.constants.ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
+import cn.xybbz.api.enums.ProxyMode
 import cn.xybbz.api.events.ReLoginEventBus
 import cn.xybbz.api.okhttp.DefaultAuthenticator
 import cn.xybbz.api.okhttp.LoggingInterceptor
 import cn.xybbz.api.okhttp.NetWorkInterceptor
 import cn.xybbz.api.okhttp.plex.PlexQueryInterceptor
+import cn.xybbz.api.okhttp.proxy.DynamicProxySelector
+import cn.xybbz.api.okhttp.proxy.ProxyManager
 import cn.xybbz.api.okhttp.subsonic.SubsonicNetworkStatusInterceptor
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import okhttp3.Credentials
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -92,6 +96,18 @@ abstract class DefaultApiClient : ApiConfig {
             updateIfSubsonic()
         }
         val okHttpClientBuilder = OkHttpClient.Builder()
+            .proxySelector(ProxyManager.proxySelector())
+            .proxyAuthenticator { _, response ->
+                val cfg = (ProxyManager.proxySelector() as DynamicProxySelector).config
+                if (cfg.mode == ProxyMode.HTTP && cfg.username != null) {
+                    val credential = Credentials.basic(cfg.username, cfg.password!!)
+                    response.request.newBuilder()
+                        .header(ApiConstants.PROXY_AUTHORIZATION, credential)
+                        .build()
+                } else {
+                    response.request
+                }
+            }
             .addInterceptor(
                 NetWorkInterceptor(
                     { if (ifTmp) tokenHeaderName else TokenServer.tokenHeaderName },
