@@ -183,8 +183,6 @@ abstract class IDataSourceParentServer(
                 navidromeExtendSalt = responseData.navidromeExtendSalt,
                 machineIdentifier = responseData.machineIdentifier
             )
-
-
             emitAll(loginAfter(connectionConfig))
         }.flowOn(Dispatchers.IO).catch {
             it.printStackTrace()

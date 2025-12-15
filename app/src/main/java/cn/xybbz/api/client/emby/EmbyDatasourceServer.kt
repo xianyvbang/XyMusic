@@ -85,9 +85,8 @@ class EmbyDatasourceServer @Inject constructor(
         val packageName = application.packageName
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
         val versionName = packageInfo.versionName
-        val versionCode = packageInfo.longVersionCode
         embyApiClient.createApiClient(
-            "Android", "${versionName}.${versionCode}", deviceId, deviceName
+            "Android", "$versionName", deviceId, deviceName
         )
         //提前写入没有sessionToken的Authenticate请求头,不然登录请求都会报错
         setToken()

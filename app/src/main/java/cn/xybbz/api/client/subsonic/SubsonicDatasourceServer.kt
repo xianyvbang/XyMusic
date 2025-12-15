@@ -79,13 +79,12 @@ class SubsonicDatasourceServer @Inject constructor(
         val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
         val appName = packageManager.getApplicationLabel(applicationInfo).toString()
         val versionName = packageInfo.versionName
-        val versionCode = packageInfo.longVersionCode
 
         val encryptMd5 = PasswordUtils.encryptMd5(password)
 
         subsonicApiClient.createApiClient(
             username, encryptMd5.passwordMd5, encryptMd5.encryptedSalt, getDataSourceType().version,
-            "${appName}:${versionName}.${versionCode}"
+            "${appName}:${versionName}"
         )
         setToken()
         subsonicApiClient.setRetrofitData(address, ifTmpObject())
