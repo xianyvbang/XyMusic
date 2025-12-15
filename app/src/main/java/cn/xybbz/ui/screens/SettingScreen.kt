@@ -348,6 +348,10 @@ fun SettingScreen(
                         navController.navigate(RouterConstants.MemoryManagement)
                     }
 
+                    SettingItemComponent(title = stringResource(R.string.poxy_config)) {
+                        navController.navigate(RouterConstants.ProxyConfig)
+                    }
+
                     SettingItemComponent(title = stringResource(R.string.interface_settings)) {
                         navController.navigate(RouterConstants.InterfaceSetting)
                     }

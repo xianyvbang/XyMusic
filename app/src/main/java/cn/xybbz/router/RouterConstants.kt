@@ -209,5 +209,12 @@ import kotlinx.serialization.Serializable
     @Serializable
     @SerialName("SetBackgroundImage")
     data object SetBackgroundImage : RouterConstants
+
+    /**
+     * 设置代理页面
+     */
+    @Serializable
+    @SerialName("ProxyConfig")
+    data object ProxyConfig : RouterConstants
 }
 

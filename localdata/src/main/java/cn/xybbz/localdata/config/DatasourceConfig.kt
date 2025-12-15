@@ -221,6 +221,7 @@ class DatasourceConfig {
             CREATE TABLE IF NOT EXISTS xy_proxy_config (
                 id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                 mode TEXT NOT NULL,
+                enabled INTEGER NOT NULL,
                 host TEXT,
                 port INTEGER,
                 username TEXT,

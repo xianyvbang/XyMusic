@@ -398,5 +398,6 @@ Automatic calculation rules for the upper limit of cache:
     <string name="return_interface_settings">Return to interface settings</string>
     <string name="select_image">Select image</string>
     <string name="clear_image">Clear images</string>
+    <string name="poxy_config">Proxy settings</string>
 
 </resources>

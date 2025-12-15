@@ -17,5 +17,20 @@ interface XyProxyConfigDao {
     suspend fun getConfig(): XyProxyConfig?
 
     @Query("SELECT * FROM xy_proxy_config limit 1")
-     fun getConfigFlow(): Flow<XyProxyConfig?>
+    fun getConfigFlow(): Flow<XyProxyConfig?>
+
+    @Query("UPDATE xy_proxy_config SET enabled = :enabled WHERE id = :id")
+    suspend fun updateEnabled(enabled: Boolean, id: Long)
+
+    @Query("UPDATE xy_proxy_config SET host = :host WHERE id = :id")
+    suspend fun updateHost(host: String, id: Long)
+
+    @Query("UPDATE xy_proxy_config SET port = :port WHERE id = :id")
+    suspend fun updatePort(port: Int, id: Long)
+
+    @Query("UPDATE xy_proxy_config SET username = :username WHERE id = :id")
+    suspend fun updateUsername(username: String, id: Long)
+
+    @Query("UPDATE xy_proxy_config SET password = :password WHERE id = :id")
+    suspend fun updatePassword(password: String, id: Long)
 }
