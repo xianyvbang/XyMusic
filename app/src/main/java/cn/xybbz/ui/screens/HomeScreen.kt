@@ -259,7 +259,7 @@ fun HomeScreen(
                                         coroutineScope.launch {
                                             ifShowConnectionMenu = false
                                             homeViewModel.changeDataSource(connection)
-                                            homeViewModel.initGetData()
+//                                            homeViewModel.tryRefreshHome()
                                         }.invokeOnCompletion {
 
                                         }
@@ -371,7 +371,7 @@ fun HomeScreen(
             isRefreshing = homeViewModel.isRefreshing,
             onRefresh = {
                 coroutineScope.launch {
-                    homeViewModel.refreshDataAll(isRefresh = true)
+                    homeViewModel.onManualRefresh()
                 }.invokeOnCompletion {
                 }
             },

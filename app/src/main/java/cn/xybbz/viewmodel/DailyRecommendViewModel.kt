@@ -20,6 +20,7 @@ import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -44,27 +45,37 @@ class DailyRecommendViewModel @Inject constructor(
     var recommendedMusicList by mutableStateOf<List<XyMusicExtend>>(emptyList())
         private set
 
-    init {
+    private var recommendedMusicJob: Job? = null
 
-        getRecommendedMusicList()
+    init {
+        observeLoginSuccessForRecommendedMusic()
     }
 
     /**
      * 获得推荐音乐列表
      */
-    private fun getRecommendedMusicList() {
+    private fun observeLoginSuccessForRecommendedMusic() {
         viewModelScope.launch {
-            connectionConfigServer.loginStateFlow.collect { bool ->
-                if (bool) {
-                    db.musicDao.selectRecommendedMusicExtendListFlow(50)
-                        .distinctUntilChanged()
-                        .collect {
-                            recommendedMusicList = it
-                        }
-                }
+            connectionConfigServer.loginSuccessEvent.collect {
+                startRecommendedMusicObserver()
             }
         }
     }
+
+    private fun startRecommendedMusicObserver() {
+        // 取消旧 Job 避免重复订阅
+        recommendedMusicJob?.cancel()
+
+        recommendedMusicJob = viewModelScope.launch {
+            db.musicDao
+                .selectRecommendedMusicExtendListFlow(50)
+                .distinctUntilChanged()
+                .collect { list ->
+                    recommendedMusicList = list
+                }
+        }
+    }
+
 
     /**
      * 获得音乐数据

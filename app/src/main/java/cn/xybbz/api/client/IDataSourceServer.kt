@@ -60,14 +60,14 @@ interface IDataSourceServer {
      * 获得专辑列表数据
      */
     fun selectAlbumFlowList(
-        sort: StateFlow<Sort>
+        sort: Sort
     ): Flow<PagingData<XyAlbum>>
 
     /**
      * 获得音乐列表数据
      */
     fun selectMusicFlowList(
-        sortByFlow: StateFlow<Sort>
+        sort: Sort
     ): Flow<PagingData<HomeMusic>>
 
     /**

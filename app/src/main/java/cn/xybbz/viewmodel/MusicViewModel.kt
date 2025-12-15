@@ -18,8 +18,6 @@ import cn.xybbz.localdata.data.music.XyMusic
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import javax.inject.Inject
 
@@ -41,19 +39,15 @@ class MusicViewModel @Inject constructor(
 
     // 单例Pager Flow
     // 暴露一个 Flow<PagingData<XyMusic>>
-    val homeMusicPager: Flow<PagingData<HomeMusic>> =
-        connectionConfigServer.loginStateFlow
-            .flatMapLatest { loggedIn ->
-                if (loggedIn) {
-                    dataSourceManager
-                        .selectMusicFlowList(_sortType) // PagingSource + RemoteMediator
-                        .distinctUntilChanged()
-                        .cachedIn(viewModelScope)
-                } else {
-                    emptyFlow()
+    val musicListPage: Flow<PagingData<HomeMusic>> =
+        connectionConfigServer.loginSuccessEvent
+            .flatMapLatest {
+                _sortType.flatMapLatest { sort ->
+                    dataSourceManager.selectMusicFlowList(sort)
                 }
             }
-            .cachedIn(viewModelScope)
+            .cachedIn(viewModelScope) // 只调用一次
+
 
     suspend fun getMusicInfoById(musicId: String): XyMusic? = db.musicDao.selectById(musicId)
 

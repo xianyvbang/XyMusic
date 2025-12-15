@@ -345,7 +345,7 @@ class DataSourceManager(
      * 获得专辑数据
      */
     override fun selectAlbumFlowList(
-        sort: StateFlow<Sort>
+        sort: Sort
     ): Flow<PagingData<XyAlbum>> {
         return dataSourceServer.selectAlbumFlowList(sort)
     }
@@ -354,9 +354,9 @@ class DataSourceManager(
      * 获得音乐数据
      */
     override fun selectMusicFlowList(
-        sortByFlow: StateFlow<Sort>
+        sort: Sort
     ): Flow<PagingData<HomeMusic>> {
-        return dataSourceServer.selectMusicFlowList(sortByFlow)
+        return dataSourceServer.selectMusicFlowList(sort)
     }
 
     /**

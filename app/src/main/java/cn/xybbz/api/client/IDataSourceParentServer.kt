@@ -473,7 +473,7 @@ abstract class IDataSourceParentServer(
      */
     @OptIn(ExperimentalPagingApi::class)
     override fun selectAlbumFlowList(
-        sort: StateFlow<Sort>
+        sort: Sort
     ): Flow<PagingData<XyAlbum>> {
         return defaultPager(
             pageSize = Constants.UI_LIST_PAGE,
@@ -561,14 +561,14 @@ abstract class IDataSourceParentServer(
      */
     @OptIn(ExperimentalPagingApi::class)
     override fun selectMusicFlowList(
-        sortByFlow: StateFlow<Sort>
+        sort: Sort
     ): Flow<PagingData<HomeMusic>> {
         return defaultPager(
             remoteMediator = MusicRemoteMediator(
                 db = db,
                 datasourceServer = this,
                 connectionId = connectionConfigServer.getConnectionId(),
-                sortByFlow = sortByFlow
+                sort = sort
             )
         ) {
             db.musicDao.selectHomeMusicListPage()

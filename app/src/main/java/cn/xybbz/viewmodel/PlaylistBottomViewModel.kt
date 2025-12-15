@@ -11,6 +11,7 @@ import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -35,30 +36,40 @@ class PlaylistBottomViewModel @Inject constructor(
     var isInit by mutableStateOf(false)
         private set
 
+    private var playlistJob: Job? = null
+
+
     init {
-        initPlaylist()
+        observeLoginSuccessForPlaylist()
         isInit = true
     }
 
-    /**
-     * 获得歌单数据
-     */
-    private fun initPlaylist() {
+    private fun observeLoginSuccessForPlaylist() {
         viewModelScope.launch {
-            connectionConfigServer.loginStateFlow.collect { bool ->
-                if (bool) {
-//                    getServerPlaylists()
-                    db.albumDao.selectPlaylistFlow()
-                        .distinctUntilChanged()
-                        .collect {
-                            if (it.isNotEmpty()) {
-                                playlists = it
-                            }
-                        }
-                }
+            connectionConfigServer.loginSuccessEvent.collect {
+                startPlaylistObserver()
             }
         }
     }
+    /**
+     * 获得歌单数据
+     */
+    private fun startPlaylistObserver() {
+        // 取消之前的 Job，避免重复订阅
+        playlistJob?.cancel()
+
+        playlistJob = viewModelScope.launch {
+            db.albumDao
+                .selectPlaylistFlow()
+                .distinctUntilChanged()
+                .collect { list ->
+                    if (list.isNotEmpty()) {
+                        playlists = list
+                    }
+                }
+        }
+    }
+
 
     suspend fun getServerPlaylists() {
         Log.i("=====","获得歌单数据")

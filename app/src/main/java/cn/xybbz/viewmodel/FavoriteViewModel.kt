@@ -13,9 +13,7 @@ import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.localdata.data.music.XyMusic
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 @HiltViewModel
@@ -31,13 +29,12 @@ class FavoriteViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val favoriteMusicList =
-        connectionConfigServer.loginStateFlow.flatMapLatest { bool ->
-            if (bool) {
-                dataSourceManager.selectFavoriteMusicFlowList().distinctUntilChanged()
-            } else {
-                flow { }
+        connectionConfigServer.loginSuccessEvent
+            .flatMapLatest {
+                dataSourceManager.selectFavoriteMusicFlowList()
             }
-        }.cachedIn(viewModelScope)
+            .cachedIn(viewModelScope)
+
 
 
     /**

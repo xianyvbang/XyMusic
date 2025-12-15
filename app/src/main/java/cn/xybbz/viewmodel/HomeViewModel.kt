@@ -11,6 +11,7 @@ import androidx.media3.common.util.UnstableApi
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.RemoteIdConstants
+import cn.xybbz.common.enums.HomeRefreshReason
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.DataSourceChangeUtils
 import cn.xybbz.config.BackgroundConfig
@@ -21,21 +22,17 @@ import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.connection.ConnectionConfig
-import cn.xybbz.localdata.data.download.XyDownload
-import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.remote.RemoteCurrent
 import cn.xybbz.localdata.enums.DownloadStatus
-import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import java.util.UUID
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel
@@ -159,114 +156,214 @@ class HomeViewModel @OptIn(UnstableApi::class)
     var isLoadingPlaylist by mutableStateOf(false)
         private set
 
+    private var mostPlayerMusicJob: Job? = null
+    private var mostPlayerAlbumJob: Job? = null
+    private var newAlbumJob: Job? = null
+    private var playlistsJob: Job? = null
+    private var playRecordMusicJob: Job? = null
+    private var playRecordAlbumJob: Job? = null
+    private var recommendedMusicJob: Job? = null
+    private var dataCountJob: Job? = null
+    private var localMusicCountJob: Job? = null
+    private var downloadCountJob: Job? = null
+
+
+
     init {
-        viewModelScope.launch {
-            val cacheTimeout =
-                TimeUnit.MILLISECONDS.convert(Constants.HOME_PAGE_TIME_FAILURE, TimeUnit.MINUTES)
-            val remoteCurrent = db.remoteCurrentDao.remoteKeyById(RemoteIdConstants.HOME_REFRESH)
-            if (System.currentTimeMillis() - (remoteCurrent?.createTime
-                    ?: 0) >= cacheTimeout
-            ) {
-                initGetData({
-                    viewModelScope.launch {
-                        db.remoteCurrentDao.deleteById(RemoteIdConstants.HOME_REFRESH)
-                        db.remoteCurrentDao.insertOrReplace(
-                            RemoteCurrent(
-                                id = RemoteIdConstants.HOME_REFRESH,
-                                nextKey = 0,
-                                total = 0,
-                                connectionId = connectionConfigServer.getConnectionId()
-                            )
-                        )
-                    }
-                }, true)
-            }
-        }
-        getPlaylists()
-        getMostPlayerMusicList()
-        getMostPlayerAlbumList()
-        getNewAlbumList()
-        getPlayRecordMusicList()
-        getPlayRecordAlbumList()
-        getRecommendedMusicList()
-        //获取数据数量
-        getDataCount()
-        //获得本地音乐数量
-        getLocalMusicCount()
-        //下载中的任务数量
-        getDownloadCount()
+        observeLoginSuccess()
+        observeLoginSuccessRoomData()
         getConnectionListData()
     }
 
+    private fun observeLoginSuccessRoomData() {
+        viewModelScope.launch {
+            connectionConfigServer.loginSuccessEvent.collect {
+                Log.i("=====","登陆成功出发")
+                startHomeDataObservers()
+            }
+        }
+    }
+
+    private fun startHomeDataObservers() {
+        mostPlayerMusicJob?.cancel()
+        mostPlayerAlbumJob?.cancel()
+        newAlbumJob?.cancel()
+        playlistsJob?.cancel()
+        playRecordMusicJob?.cancel()
+        playRecordAlbumJob?.cancel()
+        recommendedMusicJob?.cancel()
+
+        observeMostPlayerMusicList()
+        observeMostPlayerAlbumList()
+        observeNewAlbumList()
+        observePlaylists()
+        observePlayRecordMusic()
+        observePlayRecordAlbum()
+        observeRecommendedMusic()
+        startDataCountObserver()
+        startDownloadDataObservers()
+    }
 
     /**
      * 获得最多播放音乐列表
      */
-    private fun getMostPlayerMusicList() {
-        viewModelScope.launch {
-            connectionConfigServer.loginStateFlow.collect { bool ->
-                if (bool) {
-                    db.musicDao.selectLimitMusicListFlow(MusicDataTypeEnum.MAXIMUM_PLAY, 20)
-                        .distinctUntilChanged()
-                        .collect {
-                            mostPlayerMusicList = it
-                        }
+    private fun observeMostPlayerMusicList() {
+        mostPlayerMusicJob = viewModelScope.launch {
+            db.musicDao
+                .selectLimitMusicListFlow(
+                    MusicDataTypeEnum.MAXIMUM_PLAY,
+                    20
+                )
+                .distinctUntilChanged()
+                .collect {
+                    Log.i("======","Room数据出发")
+
+                    mostPlayerMusicList = it
                 }
-            }
         }
     }
 
     /**
      * 获得最多播放专辑列表
      */
-    private fun getMostPlayerAlbumList() {
-        viewModelScope.launch {
-            connectionConfigServer.loginStateFlow.collect { bool ->
-                if (bool) {
-
-                    db.albumDao.selectMaximumPlayAlbumListFlow(20).distinctUntilChanged()
-                        .collect {
-                            mostPlayerAlbumList = it
-                        }
+    private fun observeMostPlayerAlbumList() {
+        mostPlayerAlbumJob = viewModelScope.launch {
+            db.albumDao
+                .selectMaximumPlayAlbumListFlow(20)
+                .distinctUntilChanged()
+                .collect {
+                    mostPlayerAlbumList = it
                 }
-            }
         }
     }
 
     /**
      * 获得最新专辑列表
      */
-    private fun getNewAlbumList() {
-        viewModelScope.launch {
-            connectionConfigServer.loginStateFlow.collect { bool ->
-                if (bool) {
-                    db.albumDao.selectNewestListPageFlow(20)
-                        .distinctUntilChanged()
-                        .collect {
-                            newAlbumList = it
-                        }
+    private fun observeNewAlbumList() {
+        newAlbumJob = viewModelScope.launch {
+            db.albumDao
+                .selectNewestListPageFlow(20)
+                .distinctUntilChanged()
+                .collect {
+                    newAlbumList = it
                 }
-
-            }
-
         }
     }
 
     /**
      * 获得歌单信息
      */
-    private fun getPlaylists() {
-        viewModelScope.launch {
-            connectionConfigServer.loginStateFlow.collect { bool ->
-                if (bool) {
+    private fun observePlaylists() {
+        playlistsJob = viewModelScope.launch {
+            db.albumDao
+                .selectPlaylistFlow()
+                .collect {
+                    playlists = it
+                    isLoadingPlaylist = false
+                }
+        }
+    }
 
-                    db.albumDao.selectPlaylistFlow().collect {
-                        playlists = it
-                        isLoadingPlaylist = false
-                    }
+    /**
+     * 获得最近播放音乐
+     */
+    private fun observePlayRecordMusic() {
+        playRecordMusicJob = viewModelScope.launch {
+            db.musicDao
+                .selectLimitMusicListFlow(
+                    MusicDataTypeEnum.PLAY_HISTORY,
+                    20
+                )
+                .distinctUntilChanged()
+                .collect {
+                    musicRecentlyList = it
+                }
+        }
+    }
+
+    /**
+     * 获得最近播放专辑
+     */
+    private fun observePlayRecordAlbum() {
+        playRecordAlbumJob = viewModelScope.launch {
+            db.albumDao
+                .selectPlayHistoryAlbumListFlow(20)
+                .distinctUntilChanged()
+                .collect {
+                    albumRecentlyList = it
+                }
+        }
+    }
+
+    /**
+     * 获得推荐音乐列表
+     */
+    private fun observeRecommendedMusic() {
+        recommendedMusicJob = viewModelScope.launch {
+            db.musicDao
+                .selectRecommendedMusicExtendListFlow(20)
+                .distinctUntilChanged()
+                .collect {
+                    recommendedMusicList = it
+                }
+        }
+    }
+
+    /**
+     * 获取数据数量
+     */
+    private fun startDataCountObserver() {
+        dataCountJob?.cancel()
+        if (dataSourceManager.dataSourceType?.ifShowCount != true) return
+
+        dataCountJob = viewModelScope.launch {
+            db.dataCountDao.selectOneFlow().collect { dataCountEntity ->
+                if (dataCountEntity != null) {
+                    musicCount = dataCountEntity.musicCount.toString()
+                    albumCount = dataCountEntity.albumCount.toString()
+                    artistCount = dataCountEntity.artistCount.toString()
+                    playlistCount = dataCountEntity.playlistCount.toString()
+                    genreCount = dataCountEntity.genreCount.toString()
+                    favoriteCount = dataCountEntity.favoriteCount.toString()
+                } else {
+                    musicCount = null
+                    albumCount = null
+                    artistCount = null
+                    playlistCount = null
+                    genreCount = null
+                    favoriteCount = null
                 }
             }
+        }
+    }
 
+    /**
+     * 获得本地音乐数量
+     */
+    private fun startDownloadDataObservers() {
+        // 取消之前的 Job，避免重复监听
+        localMusicCountJob?.cancel()
+        downloadCountJob?.cancel()
+
+        // 本地音乐数量
+        localMusicCountJob = viewModelScope.launch {
+            db.downloadDao
+                .getAllMusicTasksCountFlow(status = DownloadStatus.COMPLETED)
+                .collect { count ->
+                    localCount = if (count == 0) null else count.toString()
+                }
+        }
+
+        // 下载列表数量
+        downloadCountJob = viewModelScope.launch {
+            db.downloadDao
+                .getAllMusicTasksDownloadCountFlow(
+                    status = listOf(DownloadStatus.QUEUED, DownloadStatus.DOWNLOADING)
+                )
+                .collect { count ->
+                    downloadCount = count
+                }
         }
     }
 
@@ -301,58 +398,6 @@ class HomeViewModel @OptIn(UnstableApi::class)
     }
 
     /**
-     * 获得最近播放音乐
-     */
-    fun getPlayRecordMusicList() {
-        viewModelScope.launch {
-            connectionConfigServer.loginStateFlow.collect { bool ->
-                if (bool) {
-                    db.musicDao.selectLimitMusicListFlow(MusicDataTypeEnum.PLAY_HISTORY, 20)
-                        .distinctUntilChanged()
-                        .collect {
-                            musicRecentlyList = it
-                        }
-                }
-            }
-        }
-    }
-
-    /**
-     * 获得最近播放专辑
-     */
-    fun getPlayRecordAlbumList() {
-        viewModelScope.launch {
-            connectionConfigServer.loginStateFlow.collect { bool ->
-                if (bool) {
-                    db.albumDao.selectPlayHistoryAlbumListFlow(20)
-                        .distinctUntilChanged()
-                        .collect {
-                            albumRecentlyList = it
-                        }
-                }
-            }
-        }
-    }
-
-    /**
-     * 获得推荐音乐列表
-     */
-
-    fun getRecommendedMusicList() {
-        viewModelScope.launch {
-            connectionConfigServer.loginStateFlow.collect { bool ->
-                if (bool) {
-                    db.musicDao.selectRecommendedMusicExtendListFlow(20)
-                        .distinctUntilChanged()
-                        .collect {
-                            recommendedMusicList = it
-                        }
-                }
-            }
-        }
-    }
-
-    /**
      * 获得服务端歌单
      */
     suspend fun getServerPlaylists() {
@@ -360,16 +405,76 @@ class HomeViewModel @OptIn(UnstableApi::class)
         dataSourceManager.getPlaylists()
     }
 
+    /**
+     * 手动刷新
+     */
+    fun onManualRefresh() {
+        viewModelScope.launch {
+            tryRefreshHome(
+                reason = HomeRefreshReason.Manual
+            )
+        }
+    }
+
+    /**
+     * 登陆成功后监听一次
+     */
+    private fun observeLoginSuccess() {
+        viewModelScope.launch {
+            connectionConfigServer.loginSuccessEvent.collect {
+
+                Log.i("=====", "登陆出发")
+                tryRefreshHome(
+                    isRefresh = true,
+                    reason = HomeRefreshReason.Login
+                )
+            }
+        }
+    }
 
     /**
      * 初始化获得数据
      */
-    suspend fun initGetData(onEnd: ((Boolean) -> Unit)? = null, isRefresh: Boolean = false) {
-        connectionConfigServer.loginStateFlow.collect { bool ->
-            if (bool) {
-                refreshDataAll(onEnd, isRefresh)
-            }
+    suspend fun tryRefreshHome(
+        isRefresh: Boolean = false,
+        reason: HomeRefreshReason,
+        onEnd: ((Boolean) -> Unit)? = null,
+    ) {
+        if (!shouldRefresh(reason)) {
+            onEnd?.invoke(false)
+            return
         }
+        refreshDataAll(onEnd, isRefresh)
+        updateHomeRefreshTime()
+    }
+
+    /**
+     * 判断是否可以刷新
+     */
+    private suspend fun shouldRefresh(reason: HomeRefreshReason): Boolean {
+        // 手动刷新：永远刷新
+        if (reason == HomeRefreshReason.Manual) return true
+
+        val remoteCurrent = db.remoteCurrentDao
+            .remoteKeyById(RemoteIdConstants.HOME_REFRESH)
+
+        val lastTime = remoteCurrent?.createTime ?: 0L
+        val now = System.currentTimeMillis()
+
+        return now - lastTime >= Constants.HOME_PAGE_TIME_FAILURE * 60_000
+    }
+
+    /**
+     * 更新刷新时间
+     */
+    private suspend fun updateHomeRefreshTime() {
+        db.remoteCurrentDao.insertOrReplace(
+            RemoteCurrent(
+                id = RemoteIdConstants.HOME_REFRESH,
+                connectionId = connectionConfigServer.getConnectionId(),
+                createTime = System.currentTimeMillis()
+            )
+        )
     }
 
     /**
@@ -420,77 +525,6 @@ class HomeViewModel @OptIn(UnstableApi::class)
     }
 
     /**
-     * 获取数据数量
-     */
-    private fun getDataCount() {
-        if (dataSourceManager.dataSourceType?.ifShowCount == true)
-            viewModelScope.launch {
-                connectionConfigServer.loginStateFlow.collect { bool ->
-                    if (bool) {
-                        db.dataCountDao.selectOneFlow().collect {
-                            if (it != null) {
-                                musicCount = it.musicCount.toString()
-                                albumCount = it.albumCount.toString()
-                                artistCount = it.artistCount.toString()
-                                playlistCount = it.playlistCount.toString()
-                                genreCount = it.genreCount.toString()
-                                favoriteCount = it.favoriteCount.toString()
-                            } else {
-                                musicCount = null
-                                albumCount = null
-                                artistCount = null
-                                playlistCount = null
-                                genreCount = null
-                                favoriteCount = null
-                            }
-                        }
-                    }
-                }
-            }
-    }
-
-    /**
-     * 获得本地音乐数量
-     */
-    private fun getLocalMusicCount() {
-        viewModelScope.launch {
-            connectionConfigServer.loginStateFlow.collect { bool ->
-                if (bool) {
-                    db.downloadDao.getAllMusicTasksCountFlow(status = DownloadStatus.COMPLETED)
-                        .collect {
-                            if (it == 0) {
-                                localCount = null
-                            } else {
-                                localCount = it.toString()
-                            }
-                        }
-                }
-            }
-        }
-    }
-
-    /**
-     * 获得下载列表数量
-     */
-    private fun getDownloadCount() {
-        viewModelScope.launch {
-            connectionConfigServer.loginStateFlow.collect { bool ->
-                if (bool) {
-                    db.downloadDao.getAllMusicTasksDownloadCountFlow(
-                        status = listOf(
-                            DownloadStatus.QUEUED,
-                            DownloadStatus.DOWNLOADING
-                        )
-                    )
-                        .collect {
-                            downloadCount = it
-                        }
-                }
-            }
-        }
-    }
-
-    /**
      * 获取连接信息
      */
     private fun getConnectionListData() {
@@ -500,7 +534,6 @@ class HomeViewModel @OptIn(UnstableApi::class)
             }
         }
     }
-
 
     /**
      * 切换连接服务
@@ -524,7 +557,6 @@ class HomeViewModel @OptIn(UnstableApi::class)
         }
     }
 
-
     /**
      * 播放音乐列表
      * @param [musicList] 音乐清单
@@ -541,32 +573,6 @@ class HomeViewModel @OptIn(UnstableApi::class)
                 onMusicPlayParameter,
                 musicList.map { it.toPlayMusic() },
                 playerTypeEnum
-            )
-        }
-    }
-
-    fun saveTmpDownload() {
-        viewModelScope.launch {
-            db.downloadDao.insert(
-                XyDownload(
-                    url = "https://www.baidu.com",
-                    fileName = "test",
-                    filePath = "/storage/emulated/0/Download/XyMusic/说好的幸福呢 - 周杰伦.mp3",
-                    fileSize = 0,
-                    tempFilePath = "test",
-                    typeData = DownloadTypes.JELLYFIN,
-                    progress = 100.0f,
-                    status = DownloadStatus.COMPLETED,
-                    uid = UUID.randomUUID().toString(),
-                    music = XyMusic(
-                        itemId = UUID.randomUUID().toString(),
-                        name = "test",
-                        downloadUrl = "",
-                        connectionId = connectionConfigServer.getConnectionId(),
-                        container = "mp3",
-                    ),
-                    connectionId = connectionConfigServer.getConnectionId()
-                )
             )
         }
     }

@@ -9,7 +9,6 @@ import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import kotlinx.coroutines.flow.StateFlow
 
 /**
  * 专辑的网络数据加载
@@ -26,7 +25,7 @@ class AlbumRemoteMediator(
     private val db: DatabaseClient,
     private val datasourceServer: IDataSourceParentServer,
     private val connectionId: Long,
-    private val sort: StateFlow<Sort>
+    private val sort: Sort
 ) : DefaultRemoteMediator<XyAlbum,XyAlbum>(
     db,
     RemoteIdConstants.ALBUM + dataSource + connectionId,
@@ -42,7 +41,7 @@ class AlbumRemoteMediator(
         loadKey: Int,
         pageSize: Int
     ): XyResponse<XyAlbum> {
-        val sort = sort.value
+        val sort = sort
         return datasourceServer.getRemoteServerAlbumList(
             startIndex = loadKey * pageSize,
             pageSize = pageSize,
