@@ -32,13 +32,12 @@ class SubsonicNetworkStatusInterceptor() : Interceptor {
                 || contentType == ApiConstants.DOWNLOAD_ACCEPT
                 || contentLength > 1024 * 1024
 
-        if (isStream) {
+        if (!isStream) {
             getJsonAdapter()
             val source = originalResponse.body.source()
             source.request(1024) // 读取前 1KB
             val buffer = source.buffer
             val peek = buffer.clone().readUtf8() // clone 不消费原 buffer
-
             if (peek.isNotBlank()) {
                 val result = try {
                     adapter.fromJson(peek)
