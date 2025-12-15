@@ -223,7 +223,7 @@ abstract class IDataSourceParentServer(
                     connectionConfigServer.setConnectionConfigData(connectionConfig.copy(id = connectionId))
                     selectMediaLibrary()
                     MessageUtils.sendDismiss()
-                    setServerOkHttpClient()
+                    setCoilImageOkHttpClient()
                     connectionConfigServer.updateLoginStates(true)
                     initFavoriteData()
                     try {
@@ -265,7 +265,7 @@ abstract class IDataSourceParentServer(
      * 设置okhttp到数据源
      */
     @androidx.annotation.OptIn(UnstableApi::class)
-    open suspend fun setServerOkHttpClient() {
+    open suspend fun setCoilImageOkHttpClient() {
         val imageLoader = ImageLoader.Builder(application)
             .okHttpClient(getOkhttpClient())
             .build()
