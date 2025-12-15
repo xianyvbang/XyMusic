@@ -178,7 +178,6 @@ class HomeViewModel @OptIn(UnstableApi::class)
     private fun observeLoginSuccessRoomData() {
         viewModelScope.launch {
             connectionConfigServer.loginSuccessEvent.collect {
-                Log.i("=====","登陆成功出发")
                 startHomeDataObservers()
             }
         }
@@ -216,8 +215,6 @@ class HomeViewModel @OptIn(UnstableApi::class)
                 )
                 .distinctUntilChanged()
                 .collect {
-                    Log.i("======","Room数据出发")
-
                     mostPlayerMusicList = it
                 }
         }
@@ -422,8 +419,6 @@ class HomeViewModel @OptIn(UnstableApi::class)
     private fun observeLoginSuccess() {
         viewModelScope.launch {
             connectionConfigServer.loginSuccessEvent.collect {
-
-                Log.i("=====", "登陆出发")
                 tryRefreshHome(
                     isRefresh = true,
                     reason = HomeRefreshReason.Login
