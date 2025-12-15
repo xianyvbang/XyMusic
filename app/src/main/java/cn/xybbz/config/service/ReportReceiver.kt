@@ -6,7 +6,7 @@ import android.content.Intent
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.CoroutineScopeUtils
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.alarm.AlarmConfig
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -23,7 +23,7 @@ class ReportReceiver : BroadcastReceiver() {
     lateinit var musicController: MusicController
 
     @Inject
-    lateinit var datasourceManager: IDataSourceManager
+    lateinit var datasourceManager: DataSourceManager
 
 
     override fun onReceive(context: Context, intent: Intent?) {

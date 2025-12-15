@@ -8,7 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.media3.common.util.UnstableApi
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.CoroutineScopeUtils
@@ -46,7 +46,7 @@ var ifNextPageNumList by mutableStateOf(false)
  * 音乐播放请求上下文
  */
 class MusicPlayContext @Inject constructor(
-    private val dataSourceManager: IDataSourceManager,
+    private val dataSourceManager: DataSourceManager,
     private val musicController: MusicController,
     private val db: DatabaseClient
 ) {

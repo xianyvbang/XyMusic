@@ -10,7 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.R
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.MusicController
@@ -39,7 +39,7 @@ class MusicBottomMenuViewModel @Inject constructor(
     private val settingsConfig: SettingsConfig,
     private val db: DatabaseClient,
     val musicController: MusicController,
-    val dataSourceManager: IDataSourceManager,
+    val dataSourceManager: DataSourceManager,
     val alarmConfig: AlarmConfig,
     val connectionConfigServer: ConnectionConfigServer,
     val favoriteRepository: FavoriteRepository,

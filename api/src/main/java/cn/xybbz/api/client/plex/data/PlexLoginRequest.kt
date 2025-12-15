@@ -1,6 +1,6 @@
 package cn.xybbz.api.client.plex.data
 
-import cn.xybbz.api.data.auth.ClientLoginInfoReq
+import cn.xybbz.api.client.data.ClientLoginInfoReq
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)

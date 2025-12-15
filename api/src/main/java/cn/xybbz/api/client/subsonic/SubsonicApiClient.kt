@@ -1,6 +1,10 @@
 package cn.xybbz.api.client.subsonic
 
+import android.util.Log
+import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.DefaultParentApiClient
+import cn.xybbz.api.client.data.ClientLoginInfoReq
+import cn.xybbz.api.client.data.LoginSuccessData
 import cn.xybbz.api.client.subsonic.service.SubsonicArtistsApi
 import cn.xybbz.api.client.subsonic.service.SubsonicGenreApi
 import cn.xybbz.api.client.subsonic.service.SubsonicItemApi
@@ -86,10 +90,6 @@ class SubsonicApiClient : DefaultParentApiClient() {
         this.clientName = clientName
         this.responseFormat = responseFormat
         return this
-    }
-
-    fun updateVersion(protocolVersion: String) {
-        this.protocolVersion = protocolVersion
     }
 
     /**
@@ -221,4 +221,29 @@ class SubsonicApiClient : DefaultParentApiClient() {
         return baseUrl + "/rest/download?id=${itemId}"
     }
 
+    /**
+     * 登陆接口
+     */
+    override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
+        val systemInfo = userApi().postPingSystem()
+        Log.i("=====", "服务器信息 $systemInfo")
+        TokenServer.updateLoginRetry(false)
+        return LoginSuccessData(
+            userId = clientLoginInfoReq.username,
+            accessToken = "",
+            serverId = "",
+            serverName = systemInfo.subsonicResponse.type,
+            version = systemInfo.subsonicResponse.version
+        )
+    }
+
+    override suspend fun loginAfter(
+        accessToken: String?,
+        userId: String?,
+        subsonicToken: String?,
+        subsonicSalt: String?,
+        clientLoginInfoReq: ClientLoginInfoReq
+    ) {
+
+    }
 }

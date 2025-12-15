@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.squareup.okhttp)
     implementation(libs.moshi.kotlin)
     ksp(libs.moshi.kotlin.codegen)
+    implementation(libs.kotlinx.coroutines.core)
 
     //json
 //    implementation(libs.google.gson)

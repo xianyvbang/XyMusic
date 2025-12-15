@@ -5,7 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.LrcDataType
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.CoroutineScopeUtils
@@ -20,7 +20,7 @@ import javax.inject.Singleton
 @Singleton
 class LrcServer @Inject constructor(
     private val musicController: MusicController,
-    private val ataSourceManager: IDataSourceManager
+    private val ataSourceManager: DataSourceManager
 ) {
 
     /**

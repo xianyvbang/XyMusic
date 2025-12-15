@@ -5,20 +5,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.filter
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.entity.data.ArtistFilter
 import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.data.artist.XyArtistExt
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -29,7 +30,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class ArtistViewModel @Inject constructor(
-    private val dataSourceManager: IDataSourceManager,
+    private val dataSourceManager: DataSourceManager,
     connectionConfigServer: ConnectionConfigServer,
     private val db: DatabaseClient,
     val backgroundConfig: BackgroundConfig
@@ -57,23 +58,23 @@ class ArtistViewModel @Inject constructor(
      * 艺术家列表
      */
     @OptIn(ExperimentalCoroutinesApi::class)
-    var artistListPage =
-        connectionConfigServer.loginStateFlow.flatMapLatest { bool ->
-            if (bool) {
+    // 先定义 artistListPage
+    val artistListPage: Flow<PagingData<XyArtistExt>> =
+        connectionConfigServer.loginSuccessEvent
+            .flatMapLatest {
                 dataSourceManager.selectArtistFlowList()
-                    .distinctUntilChanged()
-                    .cachedIn(viewModelScope)
-            } else {
-                emptyFlow()
             }
-        }.cachedIn(viewModelScope)
+            .cachedIn(viewModelScope)
 
-    val artistList=
+
+    val artistList: Flow<PagingData<XyArtistExt>> =
         combine(artistListPage, sortBy) { pagingData, favorite ->
             pagingData.filter { artist ->
                 favorite.isFavorite == null || artist.favorite == favorite.isFavorite
             }
-        }.cachedIn(viewModelScope)
+        }
+            .cachedIn(viewModelScope) // 外层只缓存一次
+
 
 
     fun setFavoriteFilterData(isFavorite: Boolean?) {

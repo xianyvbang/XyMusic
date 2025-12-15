@@ -1,7 +1,7 @@
 package cn.xybbz.config.module
 
 import android.content.Context
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.emby.EmbyApiClient
 import cn.xybbz.api.client.emby.EmbyDatasourceServer
@@ -119,8 +119,8 @@ class DataSourceModule {
         alarmConfig: AlarmConfig,
         favoriteRepository: FavoriteRepository,
         versionApiClient: VersionApiClient
-    ): IDataSourceManager {
-        val dataSourceManager = IDataSourceManager(
+    ): DataSourceManager {
+        val dataSourceManager = DataSourceManager(
             application = application,
             db,
             dataSources,
@@ -129,6 +129,7 @@ class DataSourceModule {
             favoriteRepository,
             versionApiClient
         )
+        dataSourceManager.startEventBus()
         dataSourceManager.initDataSource()
         return dataSourceManager
     }

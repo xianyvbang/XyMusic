@@ -1,7 +1,11 @@
 package cn.xybbz.api.client.navidrome
 
-import cn.xybbz.api.client.DefaultApiClient
+import android.util.Log
+import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.DefaultParentApiClient
+import cn.xybbz.api.client.data.ClientLoginInfoReq
+import cn.xybbz.api.client.data.LoginSuccessData
+import cn.xybbz.api.client.navidrome.data.toNavidromeLogin
 import cn.xybbz.api.client.navidrome.service.NavidromeArtistsApi
 import cn.xybbz.api.client.navidrome.service.NavidromeGenreApi
 import cn.xybbz.api.client.navidrome.service.NavidromeItemApi
@@ -181,6 +185,54 @@ class NavidromeApiClient : DefaultParentApiClient() {
      */
     override fun createDownloadUrl(itemId: String): String {
         return baseUrl + "/rest/download?id=${itemId}"
+    }
+
+    /**
+     * 登陆接口
+     */
+    override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
+        val responseData = userApi().login(clientLoginInfoReq.toNavidromeLogin())
+        Log.i("=====", "返回响应值: $responseData")
+        loginAfter(
+            accessToken = responseData.token,
+            userId = responseData.id,
+            subsonicToken = responseData.subsonicToken,
+            subsonicSalt = responseData.subsonicSalt,
+            clientLoginInfoReq = clientLoginInfoReq
+        )
+        val systemInfo = userApi().postPingSystem()
+        Log.i("=====", "服务器信息 $systemInfo")
+        TokenServer.updateLoginRetry(false)
+        return LoginSuccessData(
+            userId = responseData.id,
+            accessToken = responseData.token,
+            serverId = "",
+            serverName = systemInfo.subsonicResponse.type,
+            version = systemInfo.subsonicResponse.serverVersion,
+            navidromeExtendToken = responseData.subsonicToken,
+            navidromeExtendSalt = responseData.subsonicSalt,
+        )
+    }
+
+    override suspend fun loginAfter(
+        accessToken: String?,
+        userId: String?,
+        subsonicToken: String?,
+        subsonicSalt: String?,
+        clientLoginInfoReq: ClientLoginInfoReq
+    ) {
+        if (!subsonicToken.isNullOrBlank() && !subsonicSalt.isNullOrBlank()
+            && !accessToken.isNullOrBlank() && !userId.isNullOrBlank())
+            createSubsonicApiClient(
+                username = clientLoginInfoReq.username,
+                passwordMd5 = subsonicToken,
+                encryptedSalt = subsonicSalt,
+                protocolVersion = clientLoginInfoReq.clientVersion,
+                clientName = clientLoginInfoReq.appName,
+                token = accessToken,
+                id = userId
+            )
+        updateTokenOrHeadersOrQuery()
     }
 
     /**

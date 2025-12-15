@@ -7,7 +7,7 @@ import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.favorite.FavoriteRepository
@@ -27,7 +27,7 @@ class DownloadViewModel @Inject constructor(
     val favoriteRepository: FavoriteRepository,
     val db: DatabaseClient,
     private val downLoadManager: DownLoadManager,
-    private val datasourceServer: IDataSourceManager,
+    private val datasourceServer: DataSourceManager,
     val backgroundConfig: BackgroundConfig,
 ) : ViewModel() {
 

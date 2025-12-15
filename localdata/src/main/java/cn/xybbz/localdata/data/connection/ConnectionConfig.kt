@@ -87,5 +87,20 @@ data class ConnectionConfig(
     /**
      * 第一次链接时间
      */
-    val createTime: Long = System.currentTimeMillis()
+    val createTime: Long = System.currentTimeMillis(),
+
+    /**
+     * navidrome扩展SubsonicToken
+     */
+    val navidromeExtendToken: String? = null,
+
+    /**
+     * navidrome扩展扩展SubsonicSalt
+     */
+    val navidromeExtendSalt: String? = null,
+
+    /**
+     * plex的机器标识符
+     */
+    val machineIdentifier:String? = null
 )

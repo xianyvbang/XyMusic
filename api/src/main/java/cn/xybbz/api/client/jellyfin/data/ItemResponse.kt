@@ -1,6 +1,6 @@
 package cn.xybbz.api.client.jellyfin.data
 
-import cn.xybbz.api.data.item.NameGuidPair
+import cn.xybbz.api.client.jellyfin.data.NameGuidPair
 import cn.xybbz.api.enums.jellyfin.CollectionType
 import cn.xybbz.api.enums.jellyfin.ImageType
 import cn.xybbz.api.enums.jellyfin.MediaProtocol

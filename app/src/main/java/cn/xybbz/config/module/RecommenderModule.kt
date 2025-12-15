@@ -1,6 +1,6 @@
 package cn.xybbz.config.module
 
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.recommender.DailyRecommender
 import cn.xybbz.config.recommender.RecentHistoryCache
 import cn.xybbz.localdata.config.DatabaseClient
@@ -17,7 +17,7 @@ class RecommenderModule {
     @Singleton
     @Provides
     fun dailyRecommender(
-        dataSourceManager: IDataSourceManager,
+        dataSourceManager: DataSourceManager,
         db: DatabaseClient
     ): DailyRecommender {
         val dailyRecommender = DailyRecommender(dataSourceManager, db, RecentHistoryCache(db))

@@ -18,7 +18,8 @@ class DatasourceConfig {
         Migration5,
         Migration_6_7,
         Migration_7_8,
-        Migration_8_9
+        Migration_8_9,
+        Migration_9_10
     )
 
     fun createDatabaseClient(context: Context): DatabaseClient {
@@ -189,6 +190,26 @@ class DatasourceConfig {
 
             // 4. 将新表重命名为正式表名
             db.execSQL("ALTER TABLE xy_settings_new RENAME TO xy_settings")
+        }
+    }
+
+
+    private object Migration_9_10 : Migration(9, 10) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // navidrome 扩展 Subsonic Token
+            db.execSQL(
+                "ALTER TABLE xy_connection_config ADD COLUMN navidromeExtendToken TEXT"
+            )
+
+            // navidrome 扩展 Subsonic Salt
+            db.execSQL(
+                "ALTER TABLE xy_connection_config ADD COLUMN navidromeExtendSalt TEXT"
+            )
+
+            // 设备唯一标识（machineIdentifier）
+            db.execSQL(
+                "ALTER TABLE xy_connection_config ADD COLUMN machineIdentifier TEXT"
+            )
         }
     }
 

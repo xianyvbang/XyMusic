@@ -7,6 +7,7 @@ import cn.xybbz.common.utils.FileNameResolver
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.enums.DownloadStatus
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
@@ -20,19 +21,29 @@ class DownloadImpl(
 
     val scope = CoroutineScopeUtils.getIo("downloadImpl")
     private val listeners = CopyOnWriteArrayList<DownloadListener>()
-
+    private var taskUpdateJob: Job? = null
     init {
-        scope.launch {
-            downloadDispatcher.connectionConfigServer.loginStateFlow.collect {
-                if (it) {
-                    downloadDispatcher.rehydrate()
-                    downloadDispatcher.taskUpdateEventFlow.collect { updatedTask ->
-                        // 当收到来自 Dispatcher 的更新事件时，通知所有外部监听器
-                        notifyListeners(updatedTask)
-                    }
-                }
-            }
+        observeLoginSuccessForDispatcher()
+    }
 
+    private fun observeLoginSuccessForDispatcher() {
+        scope.launch {
+            downloadDispatcher.connectionConfigServer.loginSuccessEvent.collect {
+                startTaskUpdateObserver()
+            }
+        }
+    }
+
+    private fun startTaskUpdateObserver() {
+        // 取消之前的 Job，避免重复监听
+        taskUpdateJob?.cancel()
+
+        // 重新订阅 Dispatcher 更新事件
+        taskUpdateJob = scope.launch {
+            downloadDispatcher.rehydrate()
+            downloadDispatcher.taskUpdateEventFlow.collect { updatedTask ->
+                notifyListeners(updatedTask)
+            }
         }
     }
 

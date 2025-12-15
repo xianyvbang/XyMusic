@@ -5,16 +5,15 @@ import android.icu.math.BigDecimal
 import android.os.Build
 import android.util.Log
 import androidx.room.withTransaction
-import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.api.client.IDataSourceParentServer
+import cn.xybbz.api.client.data.ClientLoginInfoReq
+import cn.xybbz.api.client.data.LoginSuccessData
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.jellyfin.data.CreatePlaylistRequest
 import cn.xybbz.api.client.jellyfin.data.ItemRequest
 import cn.xybbz.api.client.jellyfin.data.ItemResponse
 import cn.xybbz.api.client.jellyfin.data.PlaybackStartInfo
 import cn.xybbz.api.client.jellyfin.data.ViewRequest
-import cn.xybbz.api.client.jellyfin.data.toLogin
-import cn.xybbz.api.data.auth.ClientLoginInfoReq
 import cn.xybbz.api.enums.jellyfin.BaseItemKind
 import cn.xybbz.api.enums.jellyfin.CollectionType
 import cn.xybbz.api.enums.jellyfin.ImageType
@@ -32,7 +31,6 @@ import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.ConnectionConfigServer
-import cn.xybbz.entity.api.LoginSuccessData
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchAndOrder
 import cn.xybbz.entity.data.SearchData
@@ -45,7 +43,6 @@ import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
-import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
@@ -63,52 +60,14 @@ class EmbyDatasourceServer @Inject constructor(
 ) : IDataSourceParentServer(
     db,
     connectionConfigServer,
-    application
+    application,
+    embyApiClient
 ) {
     /**
      * 获得当前数据源类型
      */
     override fun getDataSourceType(): DataSourceType {
         return DataSourceType.EMBY
-    }
-
-    /**
-     * 登录功能
-     */
-    override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
-        val responseData =
-            embyApiClient.userApi().authenticateByName(clientLoginInfoReq.toLogin())
-        Log.i("=====", "返回响应值: $responseData")
-        embyApiClient.updateAccessTokenAndUserId(responseData.accessToken, responseData.user?.id)
-        setToken()
-        val systemInfo = embyApiClient.userApi().getSystemInfo()
-        Log.i("=====", "服务器信息 $systemInfo")
-        return LoginSuccessData(
-            userId = responseData.user?.id,
-            accessToken = responseData.accessToken,
-            serverId = responseData.serverId,
-            serverName = systemInfo.serverName,
-            version = systemInfo.version
-        )
-    }
-
-    /**
-     * 连通性检测
-     */
-    override suspend fun postPingSystem(): Boolean {
-        return try {
-            val pingData = embyApiClient.userApi().postPingSystem()
-            if (pingData.isSuccessful) {
-                val raw = pingData.body()?.string()
-                Log.i("=====", "ping数据返回: $raw")// "Ping"
-                true
-            } else {
-                false
-            }
-        } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "连通性检测失败", e)
-            false
-        }
     }
 
     /**
@@ -126,9 +85,8 @@ class EmbyDatasourceServer @Inject constructor(
         val packageName = application.packageName
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
         val versionName = packageInfo.versionName
-        val versionCode = packageInfo.longVersionCode
         embyApiClient.createApiClient(
-            "Android", "${versionName}.${versionCode}", deviceId, deviceName
+            "Android", "$versionName", deviceId, deviceName
         )
         //提前写入没有sessionToken的Authenticate请求头,不然登录请求都会报错
         setToken()
@@ -209,13 +167,6 @@ class EmbyDatasourceServer @Inject constructor(
                 artistIds = listOf(artistId)
             )
         return response
-    }
-
-    /**
-     * 根据下载类型获得数据源
-     */
-    override fun getApiClient(downloadTypes: DownloadTypes): ApiConfig {
-        return embyApiClient
     }
 
     /**

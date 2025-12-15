@@ -1,6 +1,10 @@
 package cn.xybbz.api.client.emby
 
+import android.util.Log
+import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.DefaultParentApiClient
+import cn.xybbz.api.client.data.ClientLoginInfoReq
+import cn.xybbz.api.client.data.LoginSuccessData
 import cn.xybbz.api.client.emby.service.EmbyArtistsApi
 import cn.xybbz.api.client.emby.service.EmbyGenreApi
 import cn.xybbz.api.client.emby.service.EmbyItemApi
@@ -11,8 +15,11 @@ import cn.xybbz.api.client.emby.service.EmbyUserApi
 import cn.xybbz.api.client.emby.service.EmbyUserLibraryApi
 import cn.xybbz.api.client.emby.service.EmbyUserViewsApi
 import cn.xybbz.api.client.jellyfin.buildParameter
+import cn.xybbz.api.client.jellyfin.data.toLogin
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.enums.jellyfin.ImageType
+import cn.xybbz.api.exception.ConnectionException
+import cn.xybbz.api.exception.UnauthorizedException
 
 /**
  * EMBY API 客户端
@@ -192,6 +199,59 @@ class EmbyApiClient : DefaultParentApiClient() {
      */
     override fun createDownloadUrl(itemId: String): String {
         return baseUrl + "/Items/${itemId}/Download"
+    }
+
+    /**
+     * 登陆接口
+     */
+    override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
+
+        try {
+            val pingData = userApi().postPingSystem()
+            Log.i("=====", "是否连通: $pingData")
+            if (pingData.isSuccessful) {
+                val raw = pingData.body()?.string()
+                Log.i("=====", "ping数据返回: $raw")// "Ping"
+            } else {
+                throw ConnectionException()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            when (e) {
+                !is UnauthorizedException -> {
+                    throw ConnectionException()
+                }
+            }
+        }
+        val responseData =
+            userApi().authenticateByName(clientLoginInfoReq.toLogin())
+        Log.i("=====", "返回响应值: $responseData")
+        loginAfter(
+            responseData.accessToken,
+            responseData.user?.id,
+            clientLoginInfoReq = clientLoginInfoReq
+        )
+        val systemInfo = userApi().getSystemInfo()
+        Log.i("=====", "服务器信息 $systemInfo")
+        TokenServer.updateLoginRetry(false)
+        return LoginSuccessData(
+            userId = responseData.user?.id,
+            accessToken = responseData.accessToken,
+            serverId = responseData.serverId,
+            serverName = systemInfo.serverName,
+            version = systemInfo.version
+        )
+    }
+
+    override suspend fun loginAfter(
+        accessToken: String?,
+        userId: String?,
+        subsonicToken: String?,
+        subsonicSalt: String?,
+        clientLoginInfoReq: ClientLoginInfoReq
+    ) {
+        updateAccessTokenAndUserId(accessToken, userId)
+        updateTokenOrHeadersOrQuery()
     }
 
     /**

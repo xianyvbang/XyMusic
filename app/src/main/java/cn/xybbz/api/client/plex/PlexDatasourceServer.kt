@@ -5,14 +5,13 @@ import android.os.Build
 import android.util.Log
 import androidx.room.withTransaction
 import cn.xybbz.R
-import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.api.client.IDataSourceParentServer
+import cn.xybbz.api.client.data.ClientLoginInfoReq
+import cn.xybbz.api.client.data.LoginSuccessData
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.plex.data.Directory
 import cn.xybbz.api.client.plex.data.Metadatum
 import cn.xybbz.api.client.plex.data.PlaylistMetadatum
-import cn.xybbz.api.client.plex.data.toPlexLogin
-import cn.xybbz.api.data.auth.ClientLoginInfoReq
 import cn.xybbz.api.enums.plex.ImageType
 import cn.xybbz.api.enums.plex.MetadatumType
 import cn.xybbz.api.enums.plex.PlayState
@@ -20,7 +19,6 @@ import cn.xybbz.api.enums.plex.PlexListType
 import cn.xybbz.api.enums.plex.PlexSortOrder
 import cn.xybbz.api.enums.plex.PlexSortType
 import cn.xybbz.api.exception.ConnectionException
-import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
@@ -28,7 +26,6 @@ import cn.xybbz.common.utils.CharUtils
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.ConnectionConfigServer
-import cn.xybbz.entity.api.LoginSuccessData
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.PlexOrder
 import cn.xybbz.entity.data.ResourceData
@@ -43,7 +40,6 @@ import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
-import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
@@ -61,7 +57,8 @@ class PlexDatasourceServer @Inject constructor(
 ) : IDataSourceParentServer(
     db,
     connectionConfigServer,
-    application
+    application,
+    plexApiClient
 ) {
 
     /**
@@ -71,57 +68,10 @@ class PlexDatasourceServer @Inject constructor(
         return DataSourceType.PLEX
     }
 
-    /**
-     * 登录功能
-     */
-    override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
-        if (plexApiClient.createToken().isBlank())
-            plexLogin(clientLoginInfoReq)
-        postPingSystem()
-        return LoginSuccessData(
-            userId = plexApiClient.userId,
-            accessToken = plexApiClient.createToken(),
-            serverId = clientLoginInfoReq.serverId,
-            serverName = clientLoginInfoReq.serverName,
-            version = clientLoginInfoReq.serverVersion
-        )
-    }
-
     private suspend fun plexLogin(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
-        val responseData =
-            plexApiClient.userApi().authenticateByName(
-                "https://plex.tv/api/v2/users/signin",
-                clientLoginInfoReq.toPlexLogin()
-            )
-        Log.i("=====", "返回响应值: $responseData")
-        plexApiClient.updateAccessToken(responseData.authToken)
-        plexApiClient.updateServerInfo(userId = responseData.id)
-        setToken()
-        return LoginSuccessData(
-            userId = plexApiClient.userId,
-            accessToken = plexApiClient.createToken(),
-            serverId = clientLoginInfoReq.serverId,
-            serverName = clientLoginInfoReq.serverName,
-            version = clientLoginInfoReq.serverVersion
-        )
+        return plexApiClient.plexLogin(clientLoginInfoReq)
     }
 
-    /**
-     * 连通性检测
-     */
-    override suspend fun postPingSystem(): Boolean {
-        try {
-            val postPingSystem = plexApiClient.userApi().postPingSystem()
-            Log.i("=====", postPingSystem.toString())
-            //获得machineIdentifier
-            plexApiClient.updateMachineIdentifier(postPingSystem.mediaContainer?.machineIdentifier)
-        } catch (e: Exception) {
-            Log.i(Constants.LOG_ERROR_PREFIX, "ping服务器失败", e)
-            throw ServiceException("ping服务器失败")
-        }
-
-        return true
-    }
 
     /**
      * 获得所有收藏数据
@@ -245,9 +195,10 @@ class PlexDatasourceServer @Inject constructor(
         val packageName = application.packageName
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
         val versionName = packageInfo.versionName
-        val versionCode = packageInfo.longVersionCode
+        val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
+        val appName = packageManager.getApplicationLabel(applicationInfo).toString()
         plexApiClient.createApiClient(
-            "XyMusic", deviceId, "${versionName}.${versionCode}", Build.BRAND, Build.MODEL
+            appName, deviceId, "$versionName", Build.BRAND, Build.MODEL
         )
         //提前写入没有sessionToken的Authenticate请求头,不然登录请求都会报错
         setToken()
@@ -255,13 +206,6 @@ class PlexDatasourceServer @Inject constructor(
             plexApiClient.setRetrofitData("http://localhost", ifTmpObject())
         else
             plexApiClient.setRetrofitData(address, ifTmpObject())
-    }
-
-    /**
-     * 根据下载类型获得数据源
-     */
-    override fun getApiClient(downloadTypes: DownloadTypes): ApiConfig {
-        return plexApiClient
     }
 
     /**

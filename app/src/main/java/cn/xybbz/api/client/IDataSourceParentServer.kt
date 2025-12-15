@@ -12,8 +12,8 @@ import androidx.room.Transaction
 import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.TokenServer
+import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
-import cn.xybbz.api.data.auth.ClientLoginInfoReq
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.exception.UnauthorizedException
@@ -23,7 +23,6 @@ import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.config.ConnectionConfigServer
-import cn.xybbz.entity.api.LoginSuccessData
 import cn.xybbz.entity.data.EncryptAesData
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.config.DatabaseClient
@@ -69,6 +68,7 @@ abstract class IDataSourceParentServer(
     private val db: DatabaseClient,
     private val connectionConfigServer: ConnectionConfigServer,
     private val application: Context,
+    val defaultParentApiClient: DefaultParentApiClient
 ) : IDataSourceServer {
 
     private var ifTmpObject = false
@@ -113,39 +113,21 @@ abstract class IDataSourceParentServer(
                 username = clientLoginInfoReq.username,
                 password = clientLoginInfoReq.password
             )
-            if (getDataSourceType().ifInputUrl)
-                try {
-                    val postPingSystem = postPingSystem()
-                    if (postPingSystem) {
-                        Log.i("=====", "是否连通: $postPingSystem")
-                        emit(ClientLoginInfoState.ConnectionSuccess)
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    when (e) {
-                        is UnauthorizedException -> {
-                            throw e
-                        }
-
-                        else -> {
-                            throw ConnectionException()
-                        }
-                    }
-                }
 
             //获得服务端信息
             val responseData =
-                login(clientLoginInfoReq)
+                defaultParentApiClient.login(clientLoginInfoReq)
             Log.i("=====", "返回响应值: $responseData")
 
             //开始校验版本
-            if (responseData.version != null) {
-                val versionAtLeast = isVersionAtLeast(responseData.version)
+            val version = responseData.version
+            if (!version.isNullOrBlank()) {
+                val versionAtLeast = isVersionAtLeast(version)
                 if (!versionAtLeast) {
                     throw ServiceException(
                         application.getString(
                             R.string.server_version_too_low,
-                            responseData.version,
+                            version,
                             getDataSourceType().version
                         )
                     )
@@ -153,6 +135,7 @@ abstract class IDataSourceParentServer(
             } else {
                 throw ServiceException(application.getString(R.string.server_version_cannot_be_obtained))
             }
+            //todo 如果有token 则下面的独立出来方法,然后自动登录中考虑跟登录有什么差异
 
             val accessToken =
                 responseData.accessToken
@@ -174,10 +157,13 @@ abstract class IDataSourceParentServer(
                     currentPassword = encryptAES.aesData,
                     iv = encryptAES.aesIv,
                     key = encryptAES.aesKey,
-                    serverVersion = responseData.version,
+                    serverVersion = version,
                     updateTime = System.currentTimeMillis(),
                     lastLoginTime = System.currentTimeMillis(),
-                    deviceId = deviceId
+                    deviceId = deviceId,
+                    navidromeExtendToken = responseData.navidromeExtendToken,
+                    navidromeExtendSalt = responseData.navidromeExtendSalt,
+                    machineIdentifier = responseData.machineIdentifier
                 )
             } ?: ConnectionConfig(
                 serverId = responseData.serverId ?: "",
@@ -191,38 +177,13 @@ abstract class IDataSourceParentServer(
                 currentPassword = encryptAES.aesData,
                 iv = encryptAES.aesIv,
                 key = encryptAES.aesKey,
-                serverVersion = responseData.version,
-                deviceId = deviceId
+                serverVersion = version,
+                deviceId = deviceId,
+                navidromeExtendToken = responseData.navidromeExtendToken,
+                navidromeExtendSalt = responseData.navidromeExtendSalt,
+                machineIdentifier = responseData.machineIdentifier
             )
-
-
-            db.withTransaction {
-                val connectionId = if (clientLoginInfoReq.connectionId != null) {
-                    db.connectionConfigDao.update(connectionConfig)
-                    clientLoginInfoReq.connectionId!!
-                } else {
-                    db.connectionConfigDao.save(connectionConfig)
-                }
-                if (!ifTmpObject()) {
-                    connectionConfigServer.setConnectionConfigData(connectionConfig.copy(id = connectionId))
-                    selectMediaLibrary()
-                    MessageUtils.sendDismiss()
-                    setServerOkHttpClient()
-                    connectionConfigServer.updateLoginStates(true)
-                    initFavoriteData()
-                    try {
-                        getDataInfoCount(connectionId)
-                    } catch (e: Exception) {
-                        Log.i(
-                            Constants.LOG_ERROR_PREFIX,
-                            "获取音乐/专辑/艺术家/收藏/流派数量异常",
-                            e
-                        )
-                    }
-                }
-            }
-
-            emit(ClientLoginInfoState.UserLoginSuccess)
+            emitAll(loginAfter(connectionConfig))
         }.flowOn(Dispatchers.IO).catch {
             it.printStackTrace()
             connectionConfigServer.updateLoginStates(true)
@@ -247,14 +208,40 @@ abstract class IDataSourceParentServer(
     }
 
     /**
-     * 登录功能
+     * 登录后的数据
      */
-    abstract suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData
+    private fun loginAfter(connectionConfig: ConnectionConfig): Flow<ClientLoginInfoState> {
+        return flow {
+            db.withTransaction {
+                val connectionId = if (connectionConfig.id != 0L) {
+                    db.connectionConfigDao.update(connectionConfig)
+                    connectionConfig.id
+                } else {
+                    db.connectionConfigDao.save(connectionConfig)
+                }
+                if (!ifTmpObject()) {
+                    connectionConfigServer.setConnectionConfigData(connectionConfig.copy(id = connectionId))
+                    selectMediaLibrary()
+                    MessageUtils.sendDismiss()
+                    setCoilImageOkHttpClient()
+                    connectionConfigServer.updateLoginStates(true)
+                    initFavoriteData()
+                    try {
+                        getDataInfoCount(connectionId)
+                    } catch (e: Exception) {
+                        Log.i(
+                            Constants.LOG_ERROR_PREFIX,
+                            "获取音乐/专辑/艺术家/收藏/流派数量异常",
+                            e
+                        )
+                    }
+                }
+            }
 
-    /**
-     * 连通性检测
-     */
-    abstract suspend fun postPingSystem(): Boolean
+            emit(ClientLoginInfoState.UserLoginSuccess)
+        }
+
+    }
 
     /**
      * 获得设备id
@@ -278,7 +265,7 @@ abstract class IDataSourceParentServer(
      * 设置okhttp到数据源
      */
     @androidx.annotation.OptIn(UnstableApi::class)
-    open suspend fun setServerOkHttpClient() {
+    open suspend fun setCoilImageOkHttpClient() {
         val imageLoader = ImageLoader.Builder(application)
             .okHttpClient(getOkhttpClient())
             .build()
@@ -288,7 +275,7 @@ abstract class IDataSourceParentServer(
     /**
      * 自动登录
      */
-    override suspend fun autoLogin(): Flow<ClientLoginInfoState> {
+    override suspend fun autoLogin(ifLogin: Boolean): Flow<ClientLoginInfoState> {
 
         //获得启用的连接信息
         val connectionConfig = db.connectionConfigDao.selectConnectionConfig() ?: return flowOf(
@@ -296,6 +283,11 @@ abstract class IDataSourceParentServer(
         )
 
         val address = connectionConfig.address
+
+        val packageManager = application.packageManager
+        val packageName = application.packageName
+        val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
+        val appName = packageManager.getApplicationLabel(applicationInfo).toString()
 
         //判断是否能连接
         return flow {
@@ -309,19 +301,42 @@ abstract class IDataSourceParentServer(
                     )
                 )
             }
-            emitAll(
-                addClientAndLogin(
-                    clientLoginInfoReq = ClientLoginInfoReq(
-                        username = connectionConfig.username,
-                        password = password,
-                        address = address,
-                        connectionId = connectionConfig.id,
-                        serverVersion = connectionConfig.serverVersion,
-                        serverName = connectionConfig.serverName,
-                        serverId = connectionConfig.serverId,
+            val clientLoginInfoReq = ClientLoginInfoReq(
+                username = connectionConfig.username,
+                password = password,
+                address = address,
+                appName = appName,
+                clientVersion = getDataSourceType().version,
+                connectionId = connectionConfig.id,
+                serverVersion = connectionConfig.serverVersion,
+                serverName = connectionConfig.serverName,
+                serverId = connectionConfig.serverId,
+            )
+            if (ifLogin || connectionConfig.accessToken.isNullOrBlank()) {
+                emitAll(
+                    addClientAndLogin(
+                        clientLoginInfoReq = clientLoginInfoReq
                     )
                 )
-            )
+            } else {
+                //保存客户端数据
+                createApiClient(
+                    address,
+                    connectionConfig.deviceId,
+                    username = connectionConfig.username,
+                    password = password
+                )
+                defaultParentApiClient.loginAfter(
+                    connectionConfig.accessToken,
+                    connectionConfig.userId,
+                    connectionConfig.navidromeExtendToken,
+                    connectionConfig.navidromeExtendSalt,
+                    clientLoginInfoReq = clientLoginInfoReq
+                )
+                defaultParentApiClient.pingAfter(connectionConfig.machineIdentifier)
+                emitAll(loginAfter(connectionConfig))
+            }
+
 
         }.flowOn(Dispatchers.IO).catch {
             Log.e(Constants.LOG_ERROR_PREFIX, "自动登录异常 ${it.message}", it)
@@ -456,7 +471,7 @@ abstract class IDataSourceParentServer(
      */
     @OptIn(ExperimentalPagingApi::class)
     override fun selectAlbumFlowList(
-        sort: StateFlow<Sort>
+        sort: Sort
     ): Flow<PagingData<XyAlbum>> {
         return defaultPager(
             pageSize = Constants.UI_LIST_PAGE,
@@ -544,14 +559,14 @@ abstract class IDataSourceParentServer(
      */
     @OptIn(ExperimentalPagingApi::class)
     override fun selectMusicFlowList(
-        sortByFlow: StateFlow<Sort>
+        sort: Sort
     ): Flow<PagingData<HomeMusic>> {
         return defaultPager(
             remoteMediator = MusicRemoteMediator(
                 db = db,
                 datasourceServer = this,
                 connectionId = connectionConfigServer.getConnectionId(),
-                sortByFlow = sortByFlow
+                sort = sort
             )
         ) {
             db.musicDao.selectHomeMusicListPage()

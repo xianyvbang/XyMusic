@@ -1,5 +1,6 @@
 package cn.xybbz.config
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -7,8 +8,10 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
@@ -34,7 +37,14 @@ class ConnectionConfigServer(
      */
     private val _loginStateFlow = MutableStateFlow(false)
 
-    val loginStateFlow: StateFlow<Boolean> = _loginStateFlow.asStateFlow()
+    private val loginStateFlow: StateFlow<Boolean> = _loginStateFlow.asStateFlow()
+
+    private val _loginSuccessEvent = MutableSharedFlow<Unit>(
+        replay = 1,
+        extraBufferCapacity = 1
+    )
+    val loginSuccessEvent = _loginSuccessEvent.asSharedFlow()
+
 
 
     /**
@@ -60,7 +70,8 @@ class ConnectionConfigServer(
             settingsConfig.saveConnectionId(connectionId = userInfo.id)
             libraryId = userInfo.libraryId
         } else {
-            _loginStateFlow.value = false
+            updateLoginStates(false)
+            Log.i("===============","登录状态变化2 false")
             this.connectionConfig = null
             settingsConfig.saveConnectionId(connectionId = null)
         }
@@ -80,7 +91,13 @@ class ConnectionConfigServer(
     }
 
     fun updateLoginStates(value: Boolean) {
+        Log.i("===============","登录状态变化$value")
         _loginStateFlow.value = value
+        if (value){
+            scope.launch {
+                _loginSuccessEvent.emit(Unit)
+            }
+        }
     }
 
     fun updateLibraryId(libraryId: String?) {

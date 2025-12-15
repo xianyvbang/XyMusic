@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 @HiltViewModel(assistedFactory = ArtistInfoViewModel.Factory::class)
 class ArtistInfoViewModel @AssistedInject constructor(
     @Assisted private val artistId: String,
-    val dataSourceManager: IDataSourceManager,
+    val dataSourceManager: DataSourceManager,
     val musicPlayContext: MusicPlayContext,
     val connectionConfigServer: ConnectionConfigServer,
     val musicController: MusicController,

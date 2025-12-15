@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
@@ -20,6 +20,7 @@ import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -27,7 +28,7 @@ import javax.inject.Inject
 @HiltViewModel
 class DailyRecommendViewModel @Inject constructor(
     private val db: DatabaseClient,
-    private val dataSourceManager: IDataSourceManager,
+    private val dataSourceManager: DataSourceManager,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicController,
     val favoriteRepository: FavoriteRepository,
@@ -44,27 +45,37 @@ class DailyRecommendViewModel @Inject constructor(
     var recommendedMusicList by mutableStateOf<List<XyMusicExtend>>(emptyList())
         private set
 
-    init {
+    private var recommendedMusicJob: Job? = null
 
-        getRecommendedMusicList()
+    init {
+        observeLoginSuccessForRecommendedMusic()
     }
 
     /**
      * 获得推荐音乐列表
      */
-    private fun getRecommendedMusicList() {
+    private fun observeLoginSuccessForRecommendedMusic() {
         viewModelScope.launch {
-            connectionConfigServer.loginStateFlow.collect { bool ->
-                if (bool) {
-                    db.musicDao.selectRecommendedMusicExtendListFlow(50)
-                        .distinctUntilChanged()
-                        .collect {
-                            recommendedMusicList = it
-                        }
-                }
+            connectionConfigServer.loginSuccessEvent.collect {
+                startRecommendedMusicObserver()
             }
         }
     }
+
+    private fun startRecommendedMusicObserver() {
+        // 取消旧 Job 避免重复订阅
+        recommendedMusicJob?.cancel()
+
+        recommendedMusicJob = viewModelScope.launch {
+            db.musicDao
+                .selectRecommendedMusicExtendListFlow(50)
+                .distinctUntilChanged()
+                .collect { list ->
+                    recommendedMusicList = list
+                }
+        }
+    }
+
 
     /**
      * 获得音乐数据

@@ -83,7 +83,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import cn.xybbz.R
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.enums.SortTypeEnum
@@ -639,7 +639,7 @@ private fun MusicAlbumInfoComponent(
     onSetIfFavorite: (Boolean) -> Unit,
     onIfSavePlaybackHistory: () -> Boolean,
     onSetIfSavePlaybackHistory: (Boolean) -> Unit,
-    dataSourceManager: IDataSourceManager,
+    dataSourceManager: DataSourceManager,
     musicController: MusicController,
     ifShowPlaybackHistory: Boolean = true
 ) {

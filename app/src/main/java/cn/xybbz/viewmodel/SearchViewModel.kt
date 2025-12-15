@@ -10,7 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import androidx.room.Transaction
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
@@ -31,7 +31,7 @@ import javax.inject.Inject
 class SearchViewModel @OptIn(UnstableApi::class)
 @Inject constructor(
     private val db: DatabaseClient,
-    private val dataSourceManager: IDataSourceManager,
+    private val dataSourceManager: DataSourceManager,
     private val connectionConfigServer: ConnectionConfigServer,
     val musicController: MusicController,
     val favoriteRepository: FavoriteRepository,

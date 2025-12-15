@@ -1,7 +1,7 @@
 package cn.xybbz.common.utils
 
 import cn.xybbz.R
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 
@@ -18,7 +18,7 @@ object PlaylistFileUtils {
      * @param [playlistId] 播放列表ID
      */
     suspend fun createTrackList(
-        dataSourceManager: IDataSourceManager,
+        dataSourceManager: DataSourceManager,
         playlistId: String
     ): PlaylistParser.Playlist? {
 

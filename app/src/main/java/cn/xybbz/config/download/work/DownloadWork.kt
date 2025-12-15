@@ -3,7 +3,7 @@ package cn.xybbz.config.download.work
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.exception.CancelDownloadException
 import cn.xybbz.config.download.core.DownloadDispatcherImpl
@@ -22,7 +22,7 @@ class DownloadWork @AssistedInject constructor(
     @Assisted workerParams: WorkerParameters,
     private val db: DatabaseClient,
     private val callback: DownloadDispatcherImpl,
-    private val dataSourceManager: IDataSourceManager,
+    private val dataSourceManager: DataSourceManager,
     private val notificationController: NotificationController
 ) :
     CoroutineWorker(appContext, workerParams) {

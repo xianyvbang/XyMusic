@@ -1,8 +1,8 @@
 package cn.xybbz.api.client
 
 import androidx.paging.PagingData
+import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
-import cn.xybbz.api.data.auth.ClientLoginInfoReq
 import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
@@ -19,7 +19,6 @@ import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyPlayMusic
-import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,10 +38,6 @@ interface IDataSourceServer {
     fun updateIfTmpObject(ifTmp: Boolean)
 
     /**
-     * 根据下载类型获得数据源
-     */
-    fun getApiClient(downloadTypes: DownloadTypes): ApiConfig
-    /**
      * 用户登录逻辑
      */
     suspend fun addClientAndLogin(clientLoginInfoReq: ClientLoginInfoReq): Flow<ClientLoginInfoState>?
@@ -51,7 +46,7 @@ interface IDataSourceServer {
      * 自动登录
      * @return [Flow<ClientLoginInfoState>?]
      */
-    suspend fun autoLogin(): Flow<ClientLoginInfoState>?
+    suspend fun autoLogin(ifLogin: Boolean = false): Flow<ClientLoginInfoState>?
 
 
     /**
@@ -65,14 +60,14 @@ interface IDataSourceServer {
      * 获得专辑列表数据
      */
     fun selectAlbumFlowList(
-        sort: StateFlow<Sort>
+        sort: Sort
     ): Flow<PagingData<XyAlbum>>
 
     /**
      * 获得音乐列表数据
      */
     fun selectMusicFlowList(
-        sortByFlow: StateFlow<Sort>
+        sort: Sort
     ): Flow<PagingData<HomeMusic>>
 
     /**

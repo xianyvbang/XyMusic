@@ -9,7 +9,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.room.Transaction
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.PlaylistFileUtils
 import cn.xybbz.common.utils.PlaylistParser
@@ -32,7 +32,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 
@@ -40,7 +39,7 @@ import kotlinx.coroutines.launch
 class AlbumInfoViewModel @AssistedInject constructor(
     @Assisted private val itemId: String,
     @Assisted private val dataType: MusicDataTypeEnum,
-    val dataSourceManager: IDataSourceManager,
+    val dataSourceManager: DataSourceManager,
     private val db: DatabaseClient,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicController,
@@ -91,7 +90,7 @@ class AlbumInfoViewModel @AssistedInject constructor(
     var ifSavePlaybackHistory by mutableStateOf(false)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val xyMusicList: Flow<PagingData<XyMusic>> = connectionConfigServer.loginStateFlow
+    /*val xyMusicList: Flow<PagingData<XyMusic>> = connectionConfigServer.loginStateFlow
         .flatMapLatest { loggedIn ->
             if (loggedIn) {
                 dataSourceManager.selectMusicListByParentId(
@@ -103,7 +102,18 @@ class AlbumInfoViewModel @AssistedInject constructor(
             } else {
                 emptyFlow()
             }
-        }.cachedIn(viewModelScope)
+        }.cachedIn(viewModelScope)*/
+
+    val xyMusicList: Flow<PagingData<XyMusic>> = connectionConfigServer.loginSuccessEvent
+        .flatMapLatest {
+            dataSourceManager.selectMusicListByParentId(
+                itemId = itemId,
+                dataType = dataType,
+                sort = sortBy
+            )
+        }
+        .cachedIn(viewModelScope) // 只调用一次 cachedIn
+
 
     init {
         getPlayerHistoryProgressList()

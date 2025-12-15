@@ -18,7 +18,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import androidx.room.withTransaction
 import cn.xybbz.R
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.CacheController
@@ -42,6 +42,7 @@ import cn.xybbz.localdata.data.progress.Progress
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -54,7 +55,7 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     val db: DatabaseClient,
     private val musicController: MusicController,
-    val dataSourceManager: IDataSourceManager,
+    val dataSourceManager: DataSourceManager,
     private val connectionConfigServer: ConnectionConfigServer,
     val settingsConfig: SettingsConfig,
     val backgroundConfig: BackgroundConfig,
@@ -82,12 +83,16 @@ class MainViewModel @Inject constructor(
     //从1900年到当前年份的set列表
     val yearSet by mutableStateOf(DateUtil.getYearSet())
 
+    private var enableProgressJob: Job? = null
+    private var playerListJob: Job? = null
+
+
     init {
         Log.i("=====", "MainViewModel初始化")
         val connectionConfig = runBlocking { db.connectionConfigDao.selectConnectionConfig() }
         connectionIsLogIn = connectionConfig != null
         //加载是否开启专辑播放历史功能数据
-        getEnableProgressMapData()
+        observeLoginSuccessForAndProgress()
         //初始化年代数据
         initEraData()
         //音乐服务初始化
@@ -311,58 +316,59 @@ class MainViewModel @Inject constructor(
         musicController.initController {
             // 查询是否存在播放列表,如果存在将内容写入
             viewModelScope.launch {
-                loadPlayerList()
+                startPlayerListObserver()
             }
         }
     }
 
+
+    private fun observeLoginSuccessForAndProgress() {
+        viewModelScope.launch {
+            connectionConfigServer.loginSuccessEvent.collect {
+                startEnableProgressObserver()
+            }
+        }
+    }
     /**
      * 获得专辑是否开启播放历史数据
      */
-    private fun getEnableProgressMapData() {
-        viewModelScope.launch {
-            connectionConfigServer.loginStateFlow.collect { bool ->
-                if (bool) {
-                    db.enableProgressDao.getAlbumEnableProgressMap().distinctUntilChanged()
-                        .collect {
-                            if (it.isNotEmpty()) {
-                                enableProgressMap.clear()
-                                enableProgressMap.putAll(it)
-                            }
-                        }
-                }
-            }
+    private fun startEnableProgressObserver() {
+        enableProgressJob?.cancel()
 
+        enableProgressJob = viewModelScope.launch {
+            db.enableProgressDao
+                .getAlbumEnableProgressMap()
+                .distinctUntilChanged()
+                .collect { map ->
+                    if (map.isNotEmpty()) {
+                        enableProgressMap.clear()
+                        enableProgressMap.putAll(map)
+                    }
+                }
         }
     }
+
 
     /**
      * 加载播放列表里的数据
      */
-    private fun loadPlayerList() {
-        viewModelScope.launch {
+    private fun startPlayerListObserver() {
+        playerListJob?.cancel()
 
-            connectionConfigServer.loginStateFlow.collect {
-                if (it) {
-                    val musicList = db.musicDao.selectPlayQueuePlayMusicList()
-                    if (dataSourceManager.dataSourceType != null) {
-                        val player =
-                            db.playerDao.selectPlayerByDataSource()
-                        if (musicList.isNotEmpty()) {
-                            viewModelScope.launch {
-                                musicPlayContext.initPlayList(
-                                    musicList = musicList,
-                                    player = player
-                                )
-                                musicController.pause()
-                            }
-                        }
-                    }
-                }
+        playerListJob = viewModelScope.launch {
+            // 先读取播放队列
+            val musicList = db.musicDao.selectPlayQueuePlayMusicList()
+            if (dataSourceManager.dataSourceType != null && musicList.isNotEmpty()) {
+                val player = db.playerDao.selectPlayerByDataSource()
+                musicPlayContext.initPlayList(
+                    musicList = musicList,
+                    player = player
+                )
+                musicController.pause()
             }
         }
-
     }
+
 
     //设置播放进度
     private fun setPlayerProgress(progress: Long) {

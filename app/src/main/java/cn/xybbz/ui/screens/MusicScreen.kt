@@ -49,7 +49,7 @@ fun MusicScreen(
 
     val coroutineScope = rememberCoroutineScope()
     val mainViewModel = LocalMainViewModel.current
-    val homeMusicPager = musicViewModel.homeMusicPager.collectAsLazyPagingItems()
+    val homeMusicPager = musicViewModel.musicListPage.collectAsLazyPagingItems()
     val favoriteSet by musicViewModel.favoriteRepository.favoriteSet.collectAsState()
     val downloadMusicIds by musicViewModel.downloadRepository.musicIdsFlow.collectAsState()
     val sortBy by musicViewModel.sortBy.collectAsState()

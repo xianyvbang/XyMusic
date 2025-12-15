@@ -1,7 +1,7 @@
 package cn.xybbz.config.recommender
 
 import android.util.Log
-import cn.xybbz.api.client.IDataSourceManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
@@ -24,7 +24,7 @@ data class RecommenderConfig(
  * 但生成过程会先缩小候选集以避免对整个库遍历。
  */
 class DailyRecommender(
-    private val repo: IDataSourceManager,
+    private val repo: DataSourceManager,
     private val db: DatabaseClient,
     private val recentHistory: RecentHistoryCache,
     private val config: RecommenderConfig = RecommenderConfig()

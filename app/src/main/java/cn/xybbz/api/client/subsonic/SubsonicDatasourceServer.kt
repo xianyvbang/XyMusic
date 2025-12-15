@@ -6,7 +6,6 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.PagingData
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
-import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.subsonic.data.AlbumID3
@@ -17,7 +16,6 @@ import cn.xybbz.api.client.subsonic.data.ScrobbleRequest
 import cn.xybbz.api.client.subsonic.data.SongID3
 import cn.xybbz.api.client.subsonic.data.SubsonicArtistsResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
-import cn.xybbz.api.data.auth.ClientLoginInfoReq
 import cn.xybbz.api.enums.jellyfin.CollectionType
 import cn.xybbz.api.enums.subsonic.AlbumType
 import cn.xybbz.api.enums.subsonic.Status
@@ -29,7 +27,6 @@ import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.ConnectionConfigServer
-import cn.xybbz.entity.api.LoginSuccessData
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.Sort
@@ -42,11 +39,9 @@ import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
-import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.page.defaultLocalPager
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
 import javax.inject.Inject
 
@@ -58,40 +53,14 @@ class SubsonicDatasourceServer @Inject constructor(
 ) : IDataSourceParentServer(
     db,
     connectionConfigServer,
-    application
+    application,
+    subsonicApiClient
 ) {
     /**
      * 获得当前数据源类型
      */
     override fun getDataSourceType(): DataSourceType {
         return DataSourceType.SUBSONIC
-    }
-
-    /**
-     * 登录功能
-     */
-    override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
-        return LoginSuccessData(
-            userId = clientLoginInfoReq.username,
-            accessToken = "",
-            serverId = "",
-            serverName = getDataSourceType().title,
-            version = subsonicApiClient.protocolVersion
-        )
-    }
-
-    /**
-     * 连通性检测
-     */
-    override suspend fun postPingSystem(): Boolean {
-        return try {
-            val pingData = subsonicApiClient.userApi().postPingSystem()
-            subsonicApiClient.updateVersion(pingData.subsonicResponse.version)
-            Log.i("=====", "ping数据返回: $pingData")
-            pingData.subsonicResponse.status == Status.Ok
-        } catch (e: Exception) {
-            throw e
-        }
     }
 
     /**
@@ -110,13 +79,12 @@ class SubsonicDatasourceServer @Inject constructor(
         val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
         val appName = packageManager.getApplicationLabel(applicationInfo).toString()
         val versionName = packageInfo.versionName
-        val versionCode = packageInfo.longVersionCode
 
         val encryptMd5 = PasswordUtils.encryptMd5(password)
 
         subsonicApiClient.createApiClient(
             username, encryptMd5.passwordMd5, encryptMd5.encryptedSalt, getDataSourceType().version,
-            "${appName}:${versionName}.${versionCode}"
+            "${appName}:${versionName}"
         )
         setToken()
         subsonicApiClient.setRetrofitData(address, ifTmpObject())
@@ -143,23 +111,15 @@ class SubsonicDatasourceServer @Inject constructor(
     }
 
     /**
-     * 根据下载类型获得数据源
-     */
-    override fun getApiClient(downloadTypes: DownloadTypes): ApiConfig {
-        return subsonicApiClient
-    }
-
-    /**
      * 获得音乐列表数据 Subsonic没办法一次性获得所有音乐
      */
     override fun selectMusicFlowList(
-        sortByFlow: StateFlow<Sort>
+        sort: Sort
     ): Flow<PagingData<HomeMusic>> {
         return defaultLocalPager {
-            val sortBy = sortByFlow.value
-            val yearList = sortBy.yearList
+            val yearList = sort.yearList
             db.musicDao.selectHomeMusicListPageByYear(
-                ifFavorite = sortBy.isFavorite,
+                ifFavorite = sort.isFavorite,
                 if (yearList.isNullOrEmpty()) null else yearList[0],
                 if (yearList.isNullOrEmpty()) null else yearList[yearList.size - 1]
             )
