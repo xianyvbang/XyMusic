@@ -92,7 +92,7 @@ fun ProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = hiltViewModel
                     }
 
                     SettingParentItemComponent(title = "代理地址", trailingContent = {
-                        Row(modifier = Modifier.width(200.dp)) {
+                        Row(modifier = Modifier.width(300.dp)) {
                             XyEdit(
                                 text = "127.0.0.1:8096",
                                 onChange = {},
