@@ -32,7 +32,7 @@ class NetWorkInterceptor(
 
             val headerMap = headerMap()
             if (!headerMap.isNullOrEmpty()) {
-                headerMap.forEach { key, value ->
+                headerMap.forEach { (key, value) ->
                     requestNewBuilder.addHeader(key, value)
                 }
             }
@@ -44,7 +44,7 @@ class NetWorkInterceptor(
                 val originalUrl = request.url
                 // 拼接默认参数
                 val newUrlBuilder = originalUrl.newBuilder()
-                queryMap.forEach { key, value ->
+                queryMap.forEach { (key, value) ->
                     newUrlBuilder.addQueryParameter(key, value)
                 }
                 val newUrl = newUrlBuilder.build()
@@ -77,7 +77,8 @@ class LoggingInterceptor : Interceptor {
             Log.i("api", "请求体: ${bodyToString(it)}")
         }
         val originalResponse = chain.proceed(request)
-        if (!originalResponse.isSuccessful && originalResponse.code !in 301..304) {
+
+        if (!originalResponse.isSuccessful && !originalResponse.isRedirect ) {
             if (originalResponse.code != ApiConstants.UNAUTHORIZED) {
                 /*throw UnauthorizedException(
                     msg = "请求接口---> ${request.url.encodedPath} ${originalResponse.message}",
@@ -88,8 +89,6 @@ class LoggingInterceptor : Interceptor {
                     message = originalResponse.message,
                     code = originalResponse.code
                 )
-            } else {
-
             }
         }
         return originalResponse
