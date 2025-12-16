@@ -117,11 +117,7 @@ fun ProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = hiltViewModel
             item {
                 ProxyConfigComponent(
                     proxyConfigViewModel.addressValue,
-                    proxyConfigViewModel.usernameValue,
-                    proxyConfigViewModel.passwordValue,
-                    updateAddress = { proxyConfigViewModel.updateAddress(it) },
-                    updateUsername = { proxyConfigViewModel.updateUsername(it) },
-                    updatePassword = { proxyConfigViewModel.updatePassword(it) }
+                    updateAddress = { proxyConfigViewModel.updateAddress(it) }
                 )
             }
 
@@ -170,17 +166,9 @@ private fun ProxyConfigInput(
 @Composable
 fun ProxyConfigComponent(
     addressValue: TextFieldValue,
-    usernameValue: TextFieldValue,
-    passwordValue: TextFieldValue,
     updateAddress: (String) -> Unit,
-    updateUsername: (String) -> Unit,
-    updatePassword: (String) -> Unit
 ) {
 
-
-    var showPassword by remember {
-        mutableStateOf(false)
-    }
     SettingRoundedSurfaceColumn {
         SettingParentItemComponent(title = "代理地址", trailingContent = {
             Row(
@@ -199,55 +187,5 @@ fun ProxyConfigComponent(
             }
 
         })
-
-        SettingParentItemComponent(
-            title = stringResource(R.string.username),
-            trailingContent = {
-                Row(
-                    modifier = Modifier.width(200.dp),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    ProxyConfigInput(
-                        text = usernameValue,
-                        onChange = { newValue ->
-                            val newText = newValue.text
-                            updateUsername(newText)
-                        }
-                    )
-                }
-
-            })
-
-        SettingParentItemComponent(
-            title = stringResource(R.string.password),
-            trailingContent = {
-                Row(
-                    modifier = Modifier.width(200.dp),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    ProxyConfigInput(
-                        text = passwordValue,
-                        onChange = { newValue ->
-                            val newText = newValue.text
-                            updatePassword(newText)
-                        },
-                        visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        actionContent = {
-                            IconButton(onClick = composeClick {
-                                showPassword = !showPassword
-                            }) {
-                                Icon(
-                                    imageVector = if (showPassword) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
-                                    contentDescription = if (showPassword) "关闭显示密码" else "显示密码",
-                                    modifier = Modifier, tint = Color.White
-                                )
-                            }
-                        }
-                    )
-                }
-            })
     }
 }

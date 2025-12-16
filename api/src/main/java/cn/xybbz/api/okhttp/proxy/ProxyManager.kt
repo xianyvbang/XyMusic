@@ -11,7 +11,6 @@ object ProxyManager {
 
     fun updateProxy(config: ProxyConfig) {
         proxySelector.update(config)
-        SocksAuthenticator.apply(config)
     }
 
     fun clearProxy() {

@@ -1,5 +1,6 @@
 package cn.xybbz.config.proxy
 
+import android.R.attr.host
 import android.webkit.URLUtil
 import cn.xybbz.api.client.data.ProxyConfig
 import cn.xybbz.api.okhttp.proxy.ProxyManager
@@ -37,10 +38,9 @@ class ProxyConfigServer(private val db: DatabaseClient) {
             val parseHostPortSafe = parseHostPortSafe(address = addressTmp)
             ProxyManager.updateProxy(
                 ProxyConfig(
+                    enabled = proxyConfig.enabled,
                     host = parseHostPortSafe.first,
-                    port = parseHostPortSafe.second,
-                    username = proxyConfig.username,
-                    password = proxyConfig.password
+                    port = parseHostPortSafe.second
                 )
             )
         } else
@@ -66,30 +66,6 @@ class ProxyConfigServer(private val db: DatabaseClient) {
         proxyConfig = get().copy(address = address)
         if (proxyConfig.id != AllDataEnum.All.code) {
             db.proxyConfigDao.updateAddress(address, get().id)
-        } else {
-            val configId =
-                db.proxyConfigDao.save(proxyConfig)
-            proxyConfig = get().copy(id = configId)
-        }
-        updateProxyConfig()
-    }
-
-    suspend fun updateUsername(username: String) {
-        proxyConfig = get().copy(username = username)
-        if (proxyConfig.id != AllDataEnum.All.code) {
-            db.proxyConfigDao.updateUsername(username, get().id)
-        } else {
-            val configId =
-                db.proxyConfigDao.save(proxyConfig)
-            proxyConfig = get().copy(id = configId)
-        }
-        updateProxyConfig()
-    }
-
-    suspend fun updatePassword(password: String) {
-        proxyConfig = get().copy(password = password)
-        if (proxyConfig.id != AllDataEnum.All.code) {
-            db.proxyConfigDao.updatePassword(password, get().id)
         } else {
             val configId =
                 db.proxyConfigDao.save(proxyConfig)

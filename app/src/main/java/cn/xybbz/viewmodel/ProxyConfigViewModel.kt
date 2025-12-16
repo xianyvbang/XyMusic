@@ -9,7 +9,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.constants.ApiConstants
-import cn.xybbz.api.okhttp.proxy.SocksAuthenticator
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
@@ -51,12 +50,6 @@ class ProxyConfigViewModel @Inject constructor(
     var addressValue by mutableStateOf(TextFieldValue(text = "", selection = TextRange(0)))
         private set
 
-    var usernameValue by mutableStateOf(TextFieldValue(text = "", selection = TextRange(0)))
-        private set
-
-    var passwordValue by mutableStateOf(TextFieldValue(text = "", selection = TextRange(0)))
-        private set
-
     init {
         getProxyConfig()
     }
@@ -68,12 +61,6 @@ class ProxyConfigViewModel @Inject constructor(
             val addressTmp = proxyConfig?.address ?: ""
             addressValue =
                 TextFieldValue(text = addressTmp, selection = TextRange(addressTmp.length))
-            val usernameTmp = proxyConfig?.username ?: ""
-            usernameValue =
-                TextFieldValue(text = usernameTmp, selection = TextRange(usernameTmp.length))
-            val passwordTmp = proxyConfig?.password ?: ""
-            passwordValue =
-                TextFieldValue(text = passwordTmp, selection = TextRange(passwordTmp.length))
         }
     }
 
@@ -89,28 +76,11 @@ class ProxyConfigViewModel @Inject constructor(
         }
     }
 
-
-    fun updateUsername(username: String) {
-        viewModelScope.launch {
-            usernameValue =
-                TextFieldValue(text = username, selection = TextRange(username.length))
-        }
-    }
-
-    fun updatePassword(password: String) {
-        viewModelScope.launch {
-            passwordValue =
-                TextFieldValue(text = password, selection = TextRange(password.length))
-        }
-    }
-
     fun saveConfig() {
         viewModelScope.launch {
             //TODO 改成统一传入,而不是每个都update一下配置
             poxyConfigServer.updateEnabled(enabled)
             poxyConfigServer.updateAddress(addressValue.text)
-            poxyConfigServer.updateUsername(usernameValue.text)
-            poxyConfigServer.updatePassword(passwordValue.text)
         }
     }
 
@@ -151,10 +121,6 @@ class ProxyConfigViewModel @Inject constructor(
             .url(address)
             .head() // 用 HEAD，快，不下内容
             .build()
-        val username = usernameValue.text
-        val password = passwordValue.text
-        SocksAuthenticator.apply(username, password)
-
         val addressTmp = poxyConfigServer.getAddress(addressValue.text)
 
         val (host, port) = poxyConfigServer.parseHostPortSafe(addressTmp)
@@ -183,17 +149,7 @@ class ProxyConfigViewModel @Inject constructor(
                     )
                 }
 
-            })
-            .proxyAuthenticator { _, response ->
-                if (username.isNotBlank() && password.isNotBlank()) {
-                    val credential = Credentials.basic(username, password)
-                    response.request.newBuilder()
-                        .header(ApiConstants.PROXY_AUTHORIZATION, credential)
-                        .build()
-                } else {
-                    response.request
-                }
-            }.build()
+            }).build()
         try {
             client.newCall(request).execute().use { response ->
                 response.isSuccessful || response.isRedirect
@@ -202,9 +158,6 @@ class ProxyConfigViewModel @Inject constructor(
         } catch (e: Exception) {
             e.printStackTrace()
             false
-        } finally {
-            //todo 因为测试有延迟,可能删除的时候把保存的代理验证的数据删除了
-            SocksAuthenticator.clear()
         }
 
 

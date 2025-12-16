@@ -96,17 +96,6 @@ abstract class DefaultApiClient : ApiConfig {
         }
         val okHttpClientBuilder = OkHttpClient.Builder()
             .proxySelector(ProxyManager.proxySelector())
-            .proxyAuthenticator { _, response ->
-                val cfg = (ProxyManager.proxySelector() as DynamicProxySelector).config
-                if (cfg.username != null && cfg.password != null) {
-                    val credential = Credentials.basic(cfg.username, cfg.password)
-                    response.request.newBuilder()
-                        .header(ApiConstants.PROXY_AUTHORIZATION, credential)
-                        .build()
-                } else {
-                    response.request
-                }
-            }
             .addInterceptor(
                 NetWorkInterceptor(
                     { if (ifTmp) tokenHeaderName else TokenServer.tokenHeaderName },

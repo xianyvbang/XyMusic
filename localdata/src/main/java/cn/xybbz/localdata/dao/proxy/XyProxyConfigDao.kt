@@ -24,10 +24,4 @@ interface XyProxyConfigDao {
 
     @Query("UPDATE xy_proxy_config SET address = :address WHERE id = :id")
     suspend fun updateAddress(address: String, id: Long)
-
-    @Query("UPDATE xy_proxy_config SET username = :username WHERE id = :id")
-    suspend fun updateUsername(username: String, id: Long)
-
-    @Query("UPDATE xy_proxy_config SET password = :password WHERE id = :id")
-    suspend fun updatePassword(password: String, id: Long)
 }

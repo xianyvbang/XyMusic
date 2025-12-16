@@ -221,9 +221,7 @@ class DatasourceConfig {
             CREATE TABLE IF NOT EXISTS xy_proxy_config (
                 id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                 enabled INTEGER NOT NULL,
-                address TEXT NOT NULL,
-                username TEXT,
-                password TEXT
+                address TEXT NOT NULL
             )
             """.trimIndent()
             )
