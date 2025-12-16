@@ -22,11 +22,8 @@ interface XyProxyConfigDao {
     @Query("UPDATE xy_proxy_config SET enabled = :enabled WHERE id = :id")
     suspend fun updateEnabled(enabled: Boolean, id: Long)
 
-    @Query("UPDATE xy_proxy_config SET host = :host WHERE id = :id")
-    suspend fun updateHost(host: String, id: Long)
-
-    @Query("UPDATE xy_proxy_config SET port = :port WHERE id = :id")
-    suspend fun updatePort(port: Int, id: Long)
+    @Query("UPDATE xy_proxy_config SET address = :address WHERE id = :id")
+    suspend fun updateAddress(address: String, id: Long)
 
     @Query("UPDATE xy_proxy_config SET username = :username WHERE id = :id")
     suspend fun updateUsername(username: String, id: Long)

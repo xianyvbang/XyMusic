@@ -7,7 +7,6 @@ import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.base.IDownLoadApi
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.constants.ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
-import cn.xybbz.api.enums.ProxyMode
 import cn.xybbz.api.events.ReLoginEventBus
 import cn.xybbz.api.okhttp.DefaultAuthenticator
 import cn.xybbz.api.okhttp.LoggingInterceptor
@@ -99,8 +98,8 @@ abstract class DefaultApiClient : ApiConfig {
             .proxySelector(ProxyManager.proxySelector())
             .proxyAuthenticator { _, response ->
                 val cfg = (ProxyManager.proxySelector() as DynamicProxySelector).config
-                if (cfg.mode == ProxyMode.HTTP && cfg.username != null) {
-                    val credential = Credentials.basic(cfg.username, cfg.password!!)
+                if (cfg.username != null && cfg.password != null) {
+                    val credential = Credentials.basic(cfg.username, cfg.password)
                     response.request.newBuilder()
                         .header(ApiConstants.PROXY_AUTHORIZATION, credential)
                         .build()

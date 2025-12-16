@@ -1,13 +1,15 @@
 package cn.xybbz.config.proxy
 
+import android.webkit.URLUtil
 import cn.xybbz.api.client.data.ProxyConfig
-import cn.xybbz.api.enums.ProxyMode
 import cn.xybbz.api.okhttp.proxy.ProxyManager
+import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.AllDataEnum
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.proxy.XyProxyConfig
 import kotlinx.coroutines.launch
+import java.net.URI
 
 class ProxyConfigServer(private val db: DatabaseClient) {
 
@@ -17,7 +19,7 @@ class ProxyConfigServer(private val db: DatabaseClient) {
 
     fun initConfig() {
         scope.launch {
-            proxyConfig = db.proxyConfigDao.getConfig() ?: XyProxyConfig(mode = ProxyMode.NONE.name)
+            proxyConfig = db.proxyConfigDao.getConfig() ?: XyProxyConfig()
             updateProxyConfig()
         }
     }
@@ -30,23 +32,24 @@ class ProxyConfigServer(private val db: DatabaseClient) {
      * 更新配置
      */
     fun updateProxyConfig() {
-        if (proxyConfig.enabled)
+        if (proxyConfig.enabled) {
+            val addressTmp = getAddress(proxyConfig.address)
+            val parseHostPortSafe = parseHostPortSafe(address = addressTmp)
             ProxyManager.updateProxy(
                 ProxyConfig(
-                    mode = ProxyMode.getProxyMode(proxyConfig.mode),
-                    host = proxyConfig.host,
-                    port = proxyConfig.port,
+                    host = parseHostPortSafe.first,
+                    port = parseHostPortSafe.second,
                     username = proxyConfig.username,
                     password = proxyConfig.password
                 )
             )
-        else
+        } else
             ProxyManager.clearProxy()
     }
 
     suspend fun updateEnabled(enabled: Boolean) {
         proxyConfig = get().copy(enabled = enabled)
-        if (proxyConfig.id == AllDataEnum.All.code) {
+        if (proxyConfig.id != AllDataEnum.All.code) {
             db.proxyConfigDao.updateEnabled(enabled, get().id)
         } else {
             val configId =
@@ -57,24 +60,12 @@ class ProxyConfigServer(private val db: DatabaseClient) {
     }
 
     /**
-     * 更新host
+     * 更新address
      */
-    suspend fun updateHost(host: String) {
-        proxyConfig = get().copy(host = host)
-        if (proxyConfig.id == AllDataEnum.All.code) {
-            db.proxyConfigDao.updateHost(host, get().id)
-        } else {
-            val configId =
-                db.proxyConfigDao.save(proxyConfig)
-            proxyConfig = get().copy(id = configId)
-        }
-        updateProxyConfig()
-    }
-
-    suspend fun updatePort(port: Int) {
-        proxyConfig = get().copy(port = port)
-        if (proxyConfig.id == AllDataEnum.All.code) {
-            db.proxyConfigDao.updatePort(port, get().id)
+    suspend fun updateAddress(address: String) {
+        proxyConfig = get().copy(address = address)
+        if (proxyConfig.id != AllDataEnum.All.code) {
+            db.proxyConfigDao.updateAddress(address, get().id)
         } else {
             val configId =
                 db.proxyConfigDao.save(proxyConfig)
@@ -85,7 +76,7 @@ class ProxyConfigServer(private val db: DatabaseClient) {
 
     suspend fun updateUsername(username: String) {
         proxyConfig = get().copy(username = username)
-        if (proxyConfig.id == AllDataEnum.All.code) {
+        if (proxyConfig.id != AllDataEnum.All.code) {
             db.proxyConfigDao.updateUsername(username, get().id)
         } else {
             val configId =
@@ -97,7 +88,7 @@ class ProxyConfigServer(private val db: DatabaseClient) {
 
     suspend fun updatePassword(password: String) {
         proxyConfig = get().copy(password = password)
-        if (proxyConfig.id == AllDataEnum.All.code) {
+        if (proxyConfig.id != AllDataEnum.All.code) {
             db.proxyConfigDao.updatePassword(password, get().id)
         } else {
             val configId =
@@ -107,5 +98,26 @@ class ProxyConfigServer(private val db: DatabaseClient) {
         updateProxyConfig()
     }
 
+    fun parseHostPortSafe(address: String): Pair<String, Int> {
+        require(address.isNotBlank()) { "address is blank" }
+
+        val uri = URI(
+            if (URLUtil.isNetworkUrl(address)) address
+            else "http://$address"
+        )
+        require(uri.host != null && uri.port != -1) {
+            "Invalid host:port format"
+        }
+
+        return uri.host to uri.port
+    }
+
+    fun getAddress(address: String): String{
+        var addressTmp = address
+        if (addressTmp.isBlank()) {
+            addressTmp = Constants.DEFAULT_PROXY_ADDRESS
+        }
+        return addressTmp
+    }
 
 }

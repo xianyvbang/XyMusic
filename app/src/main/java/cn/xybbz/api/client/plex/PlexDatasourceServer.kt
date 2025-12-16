@@ -195,10 +195,8 @@ class PlexDatasourceServer @Inject constructor(
         val packageName = application.packageName
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
         val versionName = packageInfo.versionName
-        val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
-        val appName = packageManager.getApplicationLabel(applicationInfo).toString()
         plexApiClient.createApiClient(
-            appName, deviceId, "$versionName", Build.BRAND, Build.MODEL
+            Constants.APP_NAME, deviceId, "$versionName", Build.BRAND, Build.MODEL
         )
         //提前写入没有sessionToken的Authenticate请求头,不然登录请求都会报错
         setToken()

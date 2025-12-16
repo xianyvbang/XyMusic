@@ -58,7 +58,7 @@ class ConnectionConfigServer(
         }
     }
 
-    suspend fun updateConnection() {
+    suspend fun updateConnectionAddress() {
         val connection = db.connectionConfigDao.selectConnectionConfig()
         connectionConfig = connection
         libraryId = connection?.libraryId
@@ -84,6 +84,10 @@ class ConnectionConfigServer(
 
     fun getConnectionId(): Long {
         return connectionConfig?.id ?: Constants.ZERO.toLong()
+    }
+
+    fun getAddress():String {
+        return connectionConfig?.address ?: ""
     }
 
     fun clear() {

@@ -8,9 +8,7 @@ data class XyProxyConfig(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val enabled: Boolean = false,
-    val mode: String,
-    val host: String? = null,
-    val port: Int? = null,
+    val address: String = "",
     val username: String? = null,
     val password: String? = null
 )

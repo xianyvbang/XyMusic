@@ -78,6 +78,13 @@ object MessageUtils {
             .setBackgroundColor(successColor)
     }
 
+    fun sendPopTipSuccess(message: String, delay: Long = 2000): PopTip {
+        popTip?.dismiss()
+        return PopTip.show(message)
+            .setRadius(RADIUS_PX).autoDismiss(delay)
+            .setBackgroundColor(successColor)
+    }
+
     fun sendPopTipHint(@StringRes resId: Int, delay: Long = 2000) {
         popTip?.dismiss()
         val newPopTip = PopTip.show(PopTip.getApplicationContext().getString(resId))

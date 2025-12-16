@@ -200,7 +200,7 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
                 address = address,
                 connectionId = connectionId
             )
-            connectionConfigServer.updateConnection()
+            connectionConfigServer.updateConnectionAddress()
             //判断是否需要重新登录
             if (connectionConfigServer.getConnectionId() == connectionId) {
                 dataSourceManager.initDataSource()
