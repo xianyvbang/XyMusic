@@ -130,6 +130,7 @@ class MainViewModel @Inject constructor(
                     is PlayerEvent.NextList -> {
                         onNextList()
                     }
+
                     is PlayerEvent.Pause -> {
                         onPause(it.musicId, it.playSessionId, it.musicUrl)
                     }
@@ -298,7 +299,7 @@ class MainViewModel @Inject constructor(
                 }
                 //更新存储封面
                 val playQueueMusic = db.musicDao.selectPlayQueueByItemId(musicId)
-                if (playQueueMusic != null && picByte?.isNotEmpty() == true) {
+                if (playQueueMusic != null && playQueueMusic.picByte == null && picByte?.isNotEmpty() == true) {
                     db.musicDao.updatePlayQueueMusicPicByte(
                         musicId,
                         picByte
@@ -360,7 +361,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun onNextList(){
+    fun onNextList() {
         ifNextPageNumList = true
         viewModelScope.launch {
             val newPageNum = musicController.pageNum + 1
