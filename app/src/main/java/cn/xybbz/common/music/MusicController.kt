@@ -43,7 +43,9 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import com.google.common.util.concurrent.ListenableFuture
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 
@@ -114,6 +116,11 @@ class MusicController(
     //当前播放模式
     var playType by mutableStateOf(PlayerTypeEnum.SEQUENTIAL_PLAYBACK)
         private set
+
+    //事件发送流
+    private val _events = MutableSharedFlow<PlayerEvent>()
+    val events = _events.asSharedFlow()
+
 
     //设置删除播放历史进度
     private var removePlaybackProgress: ((String) -> Unit)? = null
