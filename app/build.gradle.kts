@@ -191,9 +191,6 @@ dependencies {
     //拼音相关
     implementation(libs.tinypinyin)
 
-    //启动初始化
-    implementation(libs.androidx.startup.runtime)
-
     //UI的module
     implementation(project(path = ":ui"))
     //api的module

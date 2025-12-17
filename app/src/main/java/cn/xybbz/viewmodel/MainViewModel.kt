@@ -26,7 +26,7 @@ import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
-import cn.xybbz.config.SettingsConfig
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.select.SelectControl
@@ -57,7 +57,7 @@ class MainViewModel @Inject constructor(
     private val musicController: MusicController,
     val dataSourceManager: DataSourceManager,
     private val connectionConfigServer: ConnectionConfigServer,
-    val settingsConfig: SettingsConfig,
+    val settingsManager: SettingsManager,
     val backgroundConfig: BackgroundConfig,
     private val musicPlayContext: MusicPlayContext,
     private val cacheController: CacheController,
@@ -375,7 +375,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             musicController.musicInfo?.let {
                 //判断是否需要存储播放历史
-                if (settingsConfig.get().ifEnableAlbumHistory || (enableProgressMap.containsKey(
+                if (settingsManager.get().ifEnableAlbumHistory || (enableProgressMap.containsKey(
                         it.album
                     ) && enableProgressMap[it.album] == true)
                 ) {

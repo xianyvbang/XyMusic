@@ -10,14 +10,14 @@ import cn.xybbz.api.client.version.data.ReleasesData
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.GitHubVersionVersionUtils
 import cn.xybbz.common.utils.MessageUtils
-import cn.xybbz.config.SettingsConfig
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.localdata.enums.DownloadTypes
 
 class ApkUpdateManager(
     private val db: DatabaseClient,
-    private val settingsConfig: SettingsConfig,
+    private val settingsManager: SettingsManager,
     private val versionApiClient: VersionApiClient,
 
     ) {
@@ -53,13 +53,13 @@ class ApkUpdateManager(
             MessageUtils.sendPopTipSuccess(R.string.get_latest_version)
         val apkDownload = db.downloadDao.getOne(DownloadTypes.APK)
         if (apkDownload?.status == DownloadStatus.DOWNLOADING) return true
-        val versionName = settingsConfig.packageInfo.versionName
+        val versionName = settingsManager.packageInfo.versionName
         var ifGetVersionSuccess = true
         val currentTimeMillis = System.currentTimeMillis()
 
         val ifDownloadApk = ifDownloadApk(ifCheck)
         if (ifDownloadApk) {
-            latestVersion = settingsConfig.get().latestVersion
+            latestVersion = settingsManager.get().latestVersion
 
         } else {
             try {
@@ -68,13 +68,13 @@ class ApkUpdateManager(
                 this.releasesInfo = releasesInfo
                 if (releasesInfo != null) {
                     latestVersion = releasesInfo.tagName
-                    settingsConfig.setLatestVersion(releasesInfo.tagName)
+                    settingsManager.setLatestVersion(releasesInfo.tagName)
 
                     val assetItem = releasesInfo.assets.findLast { it.name.contains("apk") }
                     if (assetItem != null) {
-                        settingsConfig.setLastApkUrl(assetItem.browserDownloadUrl)
+                        settingsManager.setLastApkUrl(assetItem.browserDownloadUrl)
                     }
-                    settingsConfig.setLatestVersionTime(currentTimeMillis)
+                    settingsManager.setLatestVersionTime(currentTimeMillis)
                 } else {
                     ifGetVersionSuccess = false
                 }
@@ -103,9 +103,9 @@ class ApkUpdateManager(
      * 是否已经完成下载,或者下载时间不超过1小时
      */
     fun ifDownloadApk(ifCheck: Boolean): Boolean {
-        val versionName = settingsConfig.packageInfo.versionName
+        val versionName = settingsManager.packageInfo.versionName
         currentVersion = if (versionName.isNullOrBlank()) "" else versionName
-        val latestVersionTime = settingsConfig.get().latestVersionTime
+        val latestVersionTime = settingsManager.get().latestVersionTime
         val currentTimeMillis = System.currentTimeMillis()
         val ifGetVersion = (currentTimeMillis - latestVersionTime) >= (1 * 60 * 60 * 1000)
         return ifCheck && !ifGetVersion

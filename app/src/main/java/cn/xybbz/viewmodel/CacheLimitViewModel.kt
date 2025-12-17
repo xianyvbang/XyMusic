@@ -11,7 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.SettingsConfig
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -24,7 +24,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CacheLimitViewModel @Inject constructor(
-    private val settingsConfig: SettingsConfig,
+    private val settingsManager: SettingsManager,
     private val _backgroundConfig: BackgroundConfig
 ) : ViewModel() {
 
@@ -32,7 +32,7 @@ class CacheLimitViewModel @Inject constructor(
     /**
      * 缓存上限
      */
-    var cacheUpperLimit by mutableStateOf(settingsConfig.cacheUpperLimit)
+    var cacheUpperLimit by mutableStateOf(settingsManager.cacheUpperLimit)
         private set
 
     /**
@@ -45,7 +45,7 @@ class CacheLimitViewModel @Inject constructor(
     fun setCacheUpperLimitData(data: CacheUpperLimitEnum) {
         cacheUpperLimit = data
         viewModelScope.launch {
-            settingsConfig.setCacheUpperLimit(
+            settingsManager.setCacheUpperLimit(
                 cacheUpperLimit
             )
         }

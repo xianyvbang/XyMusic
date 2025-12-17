@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.CoroutineScopeUtils
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -20,7 +21,7 @@ import kotlinx.coroutines.launch
  */
 class ConnectionConfigServer(
     private val db: DatabaseClient,
-    private val settingsConfig: SettingsConfig
+    private val settingsManager: SettingsManager
 ) {
 
     private val scope = CoroutineScopeUtils.getIo(this.javaClass.name)
@@ -67,13 +68,13 @@ class ConnectionConfigServer(
     suspend fun setConnectionConfigData(userInfo: ConnectionConfig?) {
         if (userInfo != null) {
             this.connectionConfig = userInfo
-            settingsConfig.saveConnectionId(connectionId = userInfo.id)
+            settingsManager.saveConnectionId(connectionId = userInfo.id)
             libraryId = userInfo.libraryId
         } else {
             updateLoginStates(false)
             Log.i("===============","登录状态变化2 false")
             this.connectionConfig = null
-            settingsConfig.saveConnectionId(connectionId = null)
+            settingsManager.saveConnectionId(connectionId = null)
         }
     }
 

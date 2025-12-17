@@ -18,7 +18,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.CacheController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.SettingsConfig
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -30,7 +30,7 @@ import javax.inject.Inject
 class MemoryManagementViewModel @Inject constructor(
     private val cacheController: CacheController,
     private val db: DatabaseClient,
-    private val settingsConfig: SettingsConfig,
+    private val settingsManager: SettingsManager,
     private val dataSourceManager: DataSourceManager,
     private val musicController: MusicController,
     private val _backgroundConfig: BackgroundConfig
@@ -236,7 +236,7 @@ class MemoryManagementViewModel @Inject constructor(
             //取消缓存
             musicController.clearPlayerList()
             dataSourceManager.release()
-            settingsConfig.setSettingsData()
+            settingsManager.setSettingsData()
         }
     }
 

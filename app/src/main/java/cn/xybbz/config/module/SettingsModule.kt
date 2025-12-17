@@ -1,7 +1,7 @@
 package cn.xybbz.config.module
 
 import android.content.Context
-import cn.xybbz.config.SettingsConfig
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import dagger.Module
 import dagger.Provides
@@ -17,12 +17,12 @@ class SettingsModule {
 
     @Singleton
     @Provides
-    fun settingsConfig(
+    fun settingsManager(
         db: DatabaseClient,
         @ApplicationContext applicationContext: Context
-    ): SettingsConfig {
-        val settingsConfig = SettingsConfig(db, applicationContext)
-        settingsConfig.setSettingsData()
-        return settingsConfig;
+    ): SettingsManager {
+        val settingsManager = SettingsManager(db, applicationContext)
+        settingsManager.setSettingsData()
+        return settingsManager;
     }
 }

@@ -92,7 +92,6 @@ class DataSourceModule {
     }
 
 
-    @Singleton
     @Provides
     fun plexDatasourceServer(
         db: DatabaseClient,
@@ -129,8 +128,6 @@ class DataSourceModule {
             favoriteRepository,
             versionApiClient
         )
-        dataSourceManager.startEventBus()
-        dataSourceManager.initDataSource()
         return dataSourceManager
     }
 

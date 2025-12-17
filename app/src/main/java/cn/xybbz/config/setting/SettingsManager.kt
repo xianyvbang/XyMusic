@@ -1,4 +1,4 @@
-package cn.xybbz.config
+package cn.xybbz.config.setting
 
 import android.content.Context
 import android.content.pm.PackageInfo
@@ -19,8 +19,7 @@ import com.hjq.language.MultiLanguages
 import kotlinx.coroutines.launch
 import java.util.Locale
 
-
-class SettingsConfig(
+class SettingsManager(
     private val db: DatabaseClient,
     private val applicationContext: Context
 ) {
@@ -60,13 +59,13 @@ class SettingsConfig(
     fun setSettingsData() {
         coroutineScope.launch {
             Log.i("=====", "开始存储设置")
-            this@SettingsConfig.settings = db.settingsDao.selectOneData() ?: XySettings()
-            if (this@SettingsConfig.get().languageType != null) {
-                this@SettingsConfig.languageType = this@SettingsConfig.get().languageType
+            this@SettingsManager.settings = db.settingsDao.selectOneData() ?: XySettings()
+            if (this@SettingsManager.get().languageType != null) {
+                this@SettingsManager.languageType = this@SettingsManager.get().languageType
             } else {
                 setDefaultLanguage(applicationContext)
             }
-            this@SettingsConfig.cacheUpperLimit = this@SettingsConfig.get().cacheUpperLimit
+            this@SettingsManager.cacheUpperLimit = this@SettingsManager.get().cacheUpperLimit
             Log.i("api", "动态设置数据--读取配置")
         }
         val packageManager = applicationContext.packageManager
@@ -77,12 +76,6 @@ class SettingsConfig(
             packageManager.getPackageInfo(packageName, 0)
         }
     }
-
-    fun setSettingsData(settings: XySettings) {
-        this.settings = settings
-        Log.i("api", "动态设置数据--设置配置")
-    }
-
 
     /**
      * 设置缓存上限
@@ -220,7 +213,7 @@ class SettingsConfig(
      */
     fun setDefaultLanguage(context: Context) {
         val systemLanguage = MultiLanguages.getSystemLanguage(context)
-        this.languageType = LanguageType.getThis(systemLanguage.toLanguageTag())
+        this.languageType = LanguageType.Companion.getThis(systemLanguage.toLanguageTag())
     }
 
     /**

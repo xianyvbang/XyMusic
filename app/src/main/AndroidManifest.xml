@@ -90,14 +90,6 @@
                 android:name="androidx.work.impl.WorkManagerInitializer"
                 android:value="androidx.startup"
                 tools:node="remove" />
-
-            <meta-data
-                android:name="cn.xybbz.config.initializers.DownloadManagerInitializer"
-                android:value="androidx.startup" />
-
-            <meta-data
-                android:name="cn.xybbz.config.initializers.ProxyConfigServerInitializer"
-                android:value="androidx.startup" />
         </provider>
 
         <receiver

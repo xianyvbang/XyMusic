@@ -1,7 +1,7 @@
 package cn.xybbz.config.module
 
 import cn.xybbz.config.ConnectionConfigServer
-import cn.xybbz.config.SettingsConfig
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import dagger.Module
 import dagger.Provides
@@ -17,9 +17,8 @@ class ConnectionConfigModule {
     @Provides
     fun connectionConfigServer(
         db: DatabaseClient,
-        settingsConfig: SettingsConfig
+        settingsManager: SettingsManager
     ): ConnectionConfigServer {
-        val connectionConfigServer = ConnectionConfigServer(db, settingsConfig)
-        return connectionConfigServer;
+        return ConnectionConfigServer(db, settingsManager)
     }
 }

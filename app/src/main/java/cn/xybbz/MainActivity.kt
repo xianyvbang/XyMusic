@@ -27,14 +27,12 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-
     @Inject
     lateinit var backgroundConfig: BackgroundConfig
 
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d("MainActivity", "调用两次")
-        DialogX.init(this)
         //启动页面
         installSplashScreen()
         super.onCreate(savedInstanceState)

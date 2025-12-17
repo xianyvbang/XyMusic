@@ -7,13 +7,13 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheEvictor
 import androidx.media3.datasource.cache.CacheSpan
-import cn.xybbz.config.SettingsConfig
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import java.util.TreeSet
 
 
 @UnstableApi
-class XyCacheEvictor(private val settingsConfig: SettingsConfig) : CacheEvictor {
+class XyCacheEvictor(private val settingsManager: SettingsManager) : CacheEvictor {
 
 
     private var leastRecentlyUsed: TreeSet<CacheSpan>? = null
@@ -23,8 +23,8 @@ class XyCacheEvictor(private val settingsConfig: SettingsConfig) : CacheEvictor 
     init {
         this.leastRecentlyUsed =
             TreeSet<CacheSpan>(XyCacheEvictor::compare)
-        onChangeMaxSize(settingsConfig.get().cacheUpperLimit)
-        settingsConfig.setOnCacheUpperLimitListener {
+        onChangeMaxSize(settingsManager.get().cacheUpperLimit)
+        settingsManager.setOnCacheUpperLimitListener {
             onChangeMaxSize(it)
         }
     }
@@ -60,7 +60,7 @@ class XyCacheEvictor(private val settingsConfig: SettingsConfig) : CacheEvictor 
     }
 
     private fun evictCache(cache: Cache, requiredSpace: Long) {
-        while (currentSize + requiredSpace > settingsConfig.maxBytes && !leastRecentlyUsed!!.isEmpty()) {
+        while (currentSize + requiredSpace > settingsManager.maxBytes && !leastRecentlyUsed!!.isEmpty()) {
             cache.removeSpan(leastRecentlyUsed!!.first())
         }
     }
@@ -75,7 +75,7 @@ class XyCacheEvictor(private val settingsConfig: SettingsConfig) : CacheEvictor 
 
             val gigabytes = availROMSize / (1024.0 * 1024.0 * 1024.0)
 
-            settingsConfig.maxBytes = when {
+            settingsManager.maxBytes = when {
                 gigabytes > 100 -> 16L * 1024 * 1024 * 1024
                 gigabytes > 50 && gigabytes <= 100 -> 8L * 1024 * 1024 * 1024
                 gigabytes > 10 -> 4L * 1024 * 1024 * 1024
@@ -83,7 +83,7 @@ class XyCacheEvictor(private val settingsConfig: SettingsConfig) : CacheEvictor 
             }
 
         } else {
-            settingsConfig.maxBytes = cacheUpperLimit.value * 1024 * 1024L
+            settingsManager.maxBytes = cacheUpperLimit.value * 1024 * 1024L
         }
     }
 
