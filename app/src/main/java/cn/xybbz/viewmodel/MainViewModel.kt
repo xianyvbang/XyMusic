@@ -163,7 +163,9 @@ class MainViewModel @Inject constructor(
         musicController.initController {
             // 查询是否存在播放列表,如果存在将内容写入
             viewModelScope.launch {
-                startPlayerListObserver()
+                connectionConfigServer.loginSuccessEvent.collect {
+                    startPlayerListObserver()
+                }
             }
         }
     }
