@@ -1,6 +1,5 @@
 package cn.xybbz.config.proxy
 
-import android.R.attr.host
 import android.webkit.URLUtil
 import cn.xybbz.api.client.data.ProxyConfig
 import cn.xybbz.api.okhttp.proxy.ProxyManager
@@ -47,26 +46,11 @@ class ProxyConfigServer(private val db: DatabaseClient) {
             ProxyManager.clearProxy()
     }
 
-    suspend fun updateEnabled(enabled: Boolean) {
-        proxyConfig = get().copy(enabled = enabled)
+    suspend fun updateAddressAndEnabled(address: String, enabled: Boolean){
+        proxyConfig = get().copy(address = address, enabled = enabled)
         if (proxyConfig.id != AllDataEnum.All.code) {
-            db.proxyConfigDao.updateEnabled(enabled, get().id)
-        } else {
-            val configId =
-                db.proxyConfigDao.save(proxyConfig)
-            proxyConfig = get().copy(id = configId)
-        }
-        updateProxyConfig()
-    }
-
-    /**
-     * 更新address
-     */
-    suspend fun updateAddress(address: String) {
-        proxyConfig = get().copy(address = address)
-        if (proxyConfig.id != AllDataEnum.All.code) {
-            db.proxyConfigDao.updateAddress(address, get().id)
-        } else {
+            db.proxyConfigDao.updateAddressAndEnabled(address, enabled, get().id)
+        }else {
             val configId =
                 db.proxyConfigDao.save(proxyConfig)
             proxyConfig = get().copy(id = configId)

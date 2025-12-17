@@ -19,7 +19,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.Credentials
 import okhttp3.Request
 import java.io.IOException
 import java.net.InetSocketAddress
@@ -28,6 +27,7 @@ import java.net.ProxySelector
 import java.net.Socket
 import java.net.SocketAddress
 import java.net.URI
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel
@@ -78,13 +78,10 @@ class ProxyConfigViewModel @Inject constructor(
 
     fun saveConfig() {
         viewModelScope.launch {
-            //TODO 改成统一传入,而不是每个都update一下配置
-            poxyConfigServer.updateEnabled(enabled)
-            poxyConfigServer.updateAddress(addressValue.text)
+            poxyConfigServer.updateAddressAndEnabled(addressValue.text, enabled)
         }
     }
 
-    //todo 测试的okhttp需要自己创建?
     fun testProxyConfig() {
         viewModelScope.launch {
             val testSate = testProxy() && testUrlProxy()
@@ -126,7 +123,8 @@ class ProxyConfigViewModel @Inject constructor(
         val (host, port) = poxyConfigServer.parseHostPortSafe(addressTmp)
 
         val client = dataSourceManager.getOkhttpClient().newBuilder()
-            .proxySelector(object :ProxySelector() {
+            .connectTimeout(1000, TimeUnit.MILLISECONDS)
+            .proxySelector(object : ProxySelector() {
                 override fun connectFailed(
                     uri: URI?,
                     sa: SocketAddress?,
