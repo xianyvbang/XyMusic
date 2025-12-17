@@ -83,7 +83,22 @@
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
-            tools:node="remove"></provider>
+            android:exported="false"
+            tools:node="merge">
+            <!-- If you are using androidx.startup to initialize other components -->
+            <meta-data
+                android:name="androidx.work.impl.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+
+            <meta-data
+                android:name="cn.xybbz.config.initializers.DownloadManagerInitializer"
+                android:value="androidx.startup" />
+
+            <meta-data
+                android:name="cn.xybbz.config.initializers.ProxyConfigServerInitializer"
+                android:value="androidx.startup" />
+        </provider>
 
         <receiver
             android:name=".config.service.alert.AlertService"
