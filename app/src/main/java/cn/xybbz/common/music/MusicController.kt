@@ -38,6 +38,7 @@ import cn.xybbz.common.constants.Constants.MUSIC_POSITION_UPDATE_INTERVAL
 import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
 import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
 import cn.xybbz.common.enums.PlayStateEnum
+import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
@@ -47,6 +48,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 
 /**
@@ -59,6 +61,7 @@ class MusicController(
     private val favoriteRepository: FavoriteRepository
 ) {
 
+    val scope = CoroutineScopeUtils.getIo("MusicController")
     // 原始歌曲列表
     var originMusicList by mutableStateOf(emptyList<XyPlayMusic>())
         private set
@@ -118,39 +121,11 @@ class MusicController(
         private set
 
     //事件发送流
-    private val _events = MutableSharedFlow<PlayerEvent>()
+    private val _events = MutableSharedFlow<PlayerEvent>(
+        replay = 0,
+        extraBufferCapacity = 16
+    )
     val events = _events.asSharedFlow()
-
-
-    //设置删除播放历史进度
-    private var removePlaybackProgress: ((String) -> Unit)? = null
-
-    //暂停
-    private var onPause: ((String, String, String) -> Unit)? = null
-
-    //播放
-    private var onPlay: ((String, String) -> Unit)? = null
-
-    //进度跳转
-    private var onSeekTo: ((Long, String, String) -> Unit)? = null
-
-    //手动切换音频之前
-    private var onManualChangeMusic: (() -> Unit)? = null
-
-    //音频切换
-    private var onChangeMusic: ((String) -> Unit)? = null
-
-    //收藏/取消收藏
-    private var onFavorite: ((String) -> Unit)? = null
-
-    //加载下一页数据,参数是页码
-    private var onNextList: ((Int) -> Unit)? = null
-
-    //播放列表增加数据,传值未艺术家id
-    private var onAddMusicList: ((String?) -> Unit)? = null
-
-    //设置播放模式变化监听方法
-    private var onPlayerTypeChange: ((PlayerTypeEnum) -> Unit)? = null
 
     //更新音乐的图片字节信息方法
     private var onUpdateMusicPicData: ((String?, ByteArray?) -> Unit)? = null
@@ -169,12 +144,16 @@ class MusicController(
                 state = PlayStateEnum.Playing
                 duration = mediaController?.duration ?: 0
                 musicInfo?.let {
-                    onPlay?.invoke(it.itemId, it.playSessionId)
+                    scope.launch {
+                        _events.emit(PlayerEvent.Play(it.itemId, it.playSessionId))
+                    }
                 }
             } else if (state != PlayStateEnum.Loading) {
                 state = PlayStateEnum.Pause
                 musicInfo?.let {
-                    onPause?.invoke(it.itemId, it.playSessionId, it.musicUrl)
+                    scope.launch {
+                        _events.emit(PlayerEvent.Pause(it.itemId, it.playSessionId, it.musicUrl))
+                    }
                 }
             }
         }
@@ -223,7 +202,9 @@ class MusicController(
             } else {
                 picByte = null
             }
-            onUpdateMusicPicData?.invoke(musicInfo?.itemId, picByte)
+            scope.launch {
+                _events.emit(PlayerEvent.UpdateMusicPicData(musicInfo?.itemId, picByte))
+            }
             //获取当前音乐的index
             setCurrentPositionData(mediaController?.currentPosition ?: 0)
             duration = mediaController?.duration ?: 0
@@ -243,18 +224,24 @@ class MusicController(
                     //手动切换
                     if (reason == MEDIA_ITEM_TRANSITION_REASON_SEEK || reason == MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
                         musicInfo?.let {
-                            onManualChangeMusic?.invoke()
+                            scope.launch {
+                                _events.emit(PlayerEvent.BeforeChangeMusic)
+                            }
                         }
                     }
                     //自动播放
                     if (reason == MEDIA_ITEM_TRANSITION_REASON_REPEAT || reason == MEDIA_ITEM_TRANSITION_REASON_AUTO) {
                         musicInfo?.let {
-                            removePlaybackProgress?.invoke(it.itemId)
+                            scope.launch {
+                                _events.emit(PlayerEvent.RemovePlaybackProgress(it.itemId))
+                            }
                         }
                     }
                     curOriginIndex = mediaController?.currentMediaItemIndex ?: 0
                     if (originMusicList.isNotEmpty() && curOriginIndex >= originMusicList.size - 1) {
-                        onNextList?.invoke(pageNum)
+                        scope.launch {
+                            _events.emit(PlayerEvent.NextList(pageNum))
+                        }
                     }
                     musicInfo = originMusicList[curOriginIndex]
 
@@ -266,7 +253,9 @@ class MusicController(
                         updateButtonCommend(
                             it.itemId in favoriteRepository.favoriteSet.value
                         )
-                        onChangeMusic?.invoke(it.itemId)
+                        scope.launch {
+                            _events.emit(PlayerEvent.ChangeMusic(it.itemId))
+                        }
                         //判断音乐播放进度是否为0,如果为0则不处理,不为0则需要跳转到相应的进度
                         if (musicCurrentPositionMap.containsKey(it.itemId)) {
                             musicCurrentPositionMap[it.itemId]?.let { position ->
@@ -295,7 +284,9 @@ class MusicController(
         ) {
             if (reason == DISCONTINUITY_REASON_SEEK) {
                 musicInfo?.let {
-                    onSeekTo?.invoke(newPosition.positionMs, it.itemId, it.playSessionId)
+                    scope.launch {
+                        _events.emit(PlayerEvent.PositionSeekTo(newPosition.positionMs, it.itemId, it.playSessionId))
+                    }
                 }
             }
             super.onPositionDiscontinuity(oldPosition, newPosition, reason)
@@ -424,7 +415,9 @@ class MusicController(
      */
     fun setPlayTypeData(playerTypeEnum: PlayerTypeEnum) {
         playType = playerTypeEnum
-        onPlayerTypeChange?.invoke(playerTypeEnum)
+        scope.launch {
+            _events.emit(PlayerEvent.PlayerTypeChange(playerTypeEnum))
+        }
         generateRealMusicList()
     }
 
@@ -458,8 +451,9 @@ class MusicController(
                     seekToIndex(media.nextMediaItemIndex)
                 }
             }
-            onAddMusicList?.invoke(artistId)
-//            prepare()
+            scope.launch {
+                _events.emit(PlayerEvent.AddMusicList(artistId))
+            }
         }
 
     }
@@ -498,7 +492,9 @@ class MusicController(
             }
 
         }
-        onAddMusicList?.invoke(artistId)
+        scope.launch {
+            _events.emit(PlayerEvent.AddMusicList(artistId))
+        }
     }
 
 
@@ -602,8 +598,9 @@ class MusicController(
                 this@MusicController.pause()
                 state = PlayStateEnum.Pause
             }
-            onAddMusicList?.invoke(artistId)
-
+            scope.launch {
+                _events.emit(PlayerEvent.AddMusicList(artistId))
+            }
         }
     }
 
@@ -744,63 +741,6 @@ class MusicController(
     }
 
     /**
-     * 设置删除播放进度历史方法
-     */
-    fun setRemovePlaybackProgressFun(onRemoveProgress: (String) -> Unit) {
-        removePlaybackProgress = onRemoveProgress
-    }
-
-    /**
-     * 设置播放方法
-     */
-    fun setOnPlay(onPlayFun: (String, String) -> Unit) {
-        onPlay = onPlayFun
-    }
-
-    /**
-     * 设置暂停方法
-     */
-    fun setOnPauseFun(onPauseFun: (String, String, String) -> Unit) {
-        onPause = onPauseFun
-    }
-
-    /**
-     * 设置进度跳转方法
-     */
-    fun setOnSeekTo(onSeekToFun: (Long, String, String) -> Unit) {
-        onSeekTo = onSeekToFun
-    }
-
-    /**
-     * 设置手动音频切换方法
-     */
-    fun setOnManualChangeMusic(onManualChangeMusic: () -> Unit) {
-        this.onManualChangeMusic = onManualChangeMusic
-    }
-
-    /**
-     * 音频切换调用方法
-     */
-    fun setOnChangeMusic(onChangeMusic: (String) -> Unit) {
-        this.onChangeMusic = onChangeMusic
-    }
-
-
-    /**
-     * 收藏/取消收藏方法
-     */
-    fun setFavoriteMusic(onFavorite: (String) -> Unit) {
-        this.onFavorite = onFavorite
-    }
-
-    /**
-     * 设置读取下一个列表的方法
-     */
-    fun setOnNextListFun(onNextList: ((Int) -> Unit)? = null) {
-        this.onNextList = onNextList
-    }
-
-    /**
      * 更新当前音乐的收藏信息->更新UI数据
      */
     fun updateCurrentFavorite(isFavorite: Boolean) {
@@ -834,20 +774,6 @@ class MusicController(
         }
     }
 
-    /**
-     * 设置音乐列表变化时调用的方法
-     */
-    fun setOnAddMusicListFun(onAddMusicList: (String?) -> Unit) {
-        this.onAddMusicList = onAddMusicList
-    }
-
-    /**
-     * 播放模式变化方法
-     */
-    fun setOnPlayerTypeChangeFun(onPlayerTypeChange: (PlayerTypeEnum) -> Unit) {
-        this.onPlayerTypeChange = onPlayerTypeChange
-    }
-
     fun setOnUpdateMusicPicDataFun(onUpdateMusicPicData:(String?, ByteArray?) -> Unit){
         this.onUpdateMusicPicData = onUpdateMusicPicData
     }
@@ -871,7 +797,8 @@ class MusicController(
      * 调用onFavorite
      */
     fun invokingOnFavorite(itemId: String) {
-        this.onFavorite?.invoke(itemId)
-//        favoriteRepository.toggle(id = itemId)
+        scope.launch {
+            _events.emit(PlayerEvent.Favorite(itemId))
+        }
     }
 }

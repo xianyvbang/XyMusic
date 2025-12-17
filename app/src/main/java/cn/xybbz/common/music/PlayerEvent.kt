@@ -6,13 +6,13 @@ sealed class PlayerEvent {
     //设置删除播放历史进度
     data class RemovePlaybackProgress(val musicId: String) : PlayerEvent()
     //暂停
-    data class Pause(val musicId: String, val artistId: String, val albumId: String) : PlayerEvent()
+    data class Pause(val musicId: String, val playSessionId: String, val musicUrl: String) : PlayerEvent()
     //播放
-    data class Play(val musicId: String, val artistId: String) : PlayerEvent()
+    data class Play(val musicId: String, val playSessionId: String) : PlayerEvent()
     //进度跳转
-    data class SeekTo(val position: Long, val musicId: String, val artistId: String) : PlayerEvent()
+    data class PositionSeekTo(val positionMs: Long, val musicId: String, val playSessionId: String) : PlayerEvent()
     //手动切换音频之前
-    object ManualChangeMusic : PlayerEvent()
+    object BeforeChangeMusic : PlayerEvent()
     //音频切换
     data class ChangeMusic(val musicId: String) : PlayerEvent()
     //收藏/取消收藏
