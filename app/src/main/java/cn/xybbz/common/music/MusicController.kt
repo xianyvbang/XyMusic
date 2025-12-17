@@ -127,9 +127,6 @@ class MusicController(
     )
     val events = _events.asSharedFlow()
 
-    //更新音乐的图片字节信息方法
-    private var onUpdateMusicPicData: ((String?, ByteArray?) -> Unit)? = null
-
     private lateinit var controllerFuture: ListenableFuture<MediaController>
     private val mediaController: MediaController?
         get() = if (controllerFuture.isDone) controllerFuture.get() else null
@@ -203,7 +200,9 @@ class MusicController(
                 picByte = null
             }
             scope.launch {
-                _events.emit(PlayerEvent.UpdateMusicPicData(musicInfo?.itemId, picByte))
+                musicInfo?.let {
+                    _events.emit(PlayerEvent.UpdateMusicPicData(it.itemId, picByte))
+                }
             }
             //获取当前音乐的index
             setCurrentPositionData(mediaController?.currentPosition ?: 0)
@@ -772,10 +771,6 @@ class MusicController(
             val sessionCommand = SessionCommand(SAVE_TO_FAVORITES, Bundle.EMPTY)
             mediaController?.sendCustomCommand(sessionCommand, args)
         }
-    }
-
-    fun setOnUpdateMusicPicDataFun(onUpdateMusicPicData:(String?, ByteArray?) -> Unit){
-        this.onUpdateMusicPicData = onUpdateMusicPicData
     }
 
     /**

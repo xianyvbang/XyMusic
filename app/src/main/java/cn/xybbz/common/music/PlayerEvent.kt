@@ -24,7 +24,7 @@ sealed class PlayerEvent {
     //设置播放模式变化监听方法
     data class PlayerTypeChange(val playerType: PlayerTypeEnum) : PlayerEvent()
     //更新音乐的图片字节信息方法
-    data class UpdateMusicPicData(val musicId: String?, val data: ByteArray?) : PlayerEvent() {
+    data class UpdateMusicPicData(val musicId: String, val data: ByteArray?) : PlayerEvent() {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
@@ -38,7 +38,7 @@ sealed class PlayerEvent {
         }
 
         override fun hashCode(): Int {
-            var result = musicId?.hashCode() ?: 0
+            var result = musicId.hashCode()
             result = 31 * result + (data?.contentHashCode() ?: 0)
             return result
         }

@@ -51,6 +51,8 @@ class MusicPlayContext @Inject constructor(
     private val db: DatabaseClient
 ) {
 
+    var musicPlayData: MusicPlayData? = null
+
     private val playCoroutineScope = CoroutineScopeUtils.getMain(this.javaClass.name)
 
 
@@ -361,6 +363,7 @@ class MusicPlayContext @Inject constructor(
         coroutineScope: CoroutineScope,
         musicPlayTypeEnum: MusicPlayTypeEnum
     ) {
+        this.musicPlayData = musicPlayData
         coroutineScope.launch {
             //2024年4月17日 10:54:36 albumId 可能为null/空 下面方法未判断
             val tmpMusicList = mutableListOf<XyPlayMusic>()
@@ -408,21 +411,6 @@ class MusicPlayContext @Inject constructor(
                             }
                         }
 
-                        musicController.setOnNextListFun { _ ->
-                            ifNextPageNumList = true
-                            coroutineScope.launch {
-                                val newPageNum = musicController.pageNum + 1
-                                val newMusicList = musicPlayData.onNextMusicList?.invoke(newPageNum)
-                                if (!newMusicList.isNullOrEmpty()) {
-                                    musicController.setPageNumData(newPageNum)
-                                    if (newMusicList.isNotEmpty())
-                                        musicController.addMusicList(
-                                            newMusicList,
-                                            musicPlayData.onMusicPlayParameter.artistId
-                                        )
-                                }
-                            }.invokeOnCompletion { ifNextPageNumList = false }
-                        }
                         musicController.initMusicList(
                             musicDataList = tmpMusicList,
                             musicCurrentPositionMapData = progressMap ?: emptyMap(),
