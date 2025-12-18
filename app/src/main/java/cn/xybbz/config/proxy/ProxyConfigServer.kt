@@ -32,7 +32,7 @@ class ProxyConfigServer(private val db: DatabaseClient) {
      * 更新配置
      */
     fun updateProxyConfig() {
-        if (proxyConfig.enabled) {
+        if (proxyConfig.enabled && proxyConfig.address.isNotBlank()) {
             val addressTmp = getAddress(proxyConfig.address)
             val parseHostPortSafe = parseHostPortSafe(address = addressTmp)
             ProxyManager.updateProxy(

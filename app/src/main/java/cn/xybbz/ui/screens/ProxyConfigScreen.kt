@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.rounded.Visibility
-import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -17,17 +15,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -41,7 +32,6 @@ import cn.xybbz.ui.components.SettingParentItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.ext.brashColor
-import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
@@ -91,7 +81,7 @@ fun ProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = hiltViewModel
                         proxyConfigViewModel.saveConfig()
                     }
                 }) {
-                    Text("保存")
+                    Text(stringResource(R.string.save))
                 }
             }
         )
@@ -103,7 +93,7 @@ fun ProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = hiltViewModel
             item {
                 SettingRoundedSurfaceColumn {
                     MusicSettingSwitchItemComponent(
-                        title = "开启代理",
+                        title = stringResource(R.string.open_proxy),
                         ifChecked = proxyConfigViewModel.enabled
                     ) { bol ->
                         coroutineScope.launch {
@@ -124,8 +114,8 @@ fun ProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = hiltViewModel
             item {
                 SettingRoundedSurfaceColumn {
                     SettingItemComponent(
-                        title = "测试连接",
-                        info = "",
+                        title = stringResource(R.string.test_connection),
+                        info = proxyConfigViewModel.connectionConfigServer.getAddress(),
                         imageVector = null,
                         onClick = {
                             proxyConfigViewModel.testProxyConfig()
