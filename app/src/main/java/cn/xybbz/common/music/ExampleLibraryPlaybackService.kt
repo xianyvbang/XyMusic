@@ -25,7 +25,7 @@ import cn.xybbz.api.client.ImageApiClient
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
 import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
-import cn.xybbz.config.SettingsConfig
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.localdata.config.DatabaseClient
 import com.google.common.collect.ImmutableList
@@ -56,7 +56,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
     lateinit var musicController: MusicController
 
     @Inject
-    lateinit var settingsConfig: SettingsConfig
+    lateinit var settingsManager: SettingsManager
 
     @Inject
     lateinit var db: DatabaseClient
@@ -94,7 +94,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
         exoPlayer = exoPlayerBuilder
             .setAudioAttributes(
                 AudioAttributes.DEFAULT, /* handleAudioFocus= */
-                settingsConfig.get().ifHandleAudioFocus
+                settingsManager.get().ifHandleAudioFocus
             )
             .build()
         //这里的可以获得元数据

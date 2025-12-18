@@ -7,7 +7,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
-import cn.xybbz.config.SettingsConfig
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.select.SelectControl
@@ -26,7 +26,7 @@ import javax.inject.Inject
 class MusicViewModel @Inject constructor(
     val dataSourceManager: DataSourceManager,
     private val db: DatabaseClient,
-    val settingsConfig: SettingsConfig,
+    val settingsManager: SettingsManager,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicController,
     val connectionConfigServer: ConnectionConfigServer,

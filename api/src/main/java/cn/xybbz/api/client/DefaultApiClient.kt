@@ -12,9 +12,12 @@ import cn.xybbz.api.okhttp.DefaultAuthenticator
 import cn.xybbz.api.okhttp.LoggingInterceptor
 import cn.xybbz.api.okhttp.NetWorkInterceptor
 import cn.xybbz.api.okhttp.plex.PlexQueryInterceptor
+import cn.xybbz.api.okhttp.proxy.DynamicProxySelector
+import cn.xybbz.api.okhttp.proxy.ProxyManager
 import cn.xybbz.api.okhttp.subsonic.SubsonicNetworkStatusInterceptor
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import okhttp3.Credentials
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -92,6 +95,7 @@ abstract class DefaultApiClient : ApiConfig {
             updateIfSubsonic()
         }
         val okHttpClientBuilder = OkHttpClient.Builder()
+            .proxySelector(ProxyManager.proxySelector())
             .addInterceptor(
                 NetWorkInterceptor(
                     { if (ifTmp) tokenHeaderName else TokenServer.tokenHeaderName },

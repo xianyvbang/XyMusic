@@ -394,4 +394,6 @@
     <string name="select_image">选择图片</string>
     <string name="clear_image">清除图片</string>
 
+    <string name="poxy_config">代理设置</string>
+
 </resources>

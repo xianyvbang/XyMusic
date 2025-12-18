@@ -30,6 +30,7 @@ import cn.xybbz.ui.screens.LanguageConfigScreen
 import cn.xybbz.ui.screens.LocalScreen
 import cn.xybbz.ui.screens.MemoryManagementScreen
 import cn.xybbz.ui.screens.MusicScreen
+import cn.xybbz.ui.screens.ProxyConfigScreen
 import cn.xybbz.ui.screens.SearchScreen
 import cn.xybbz.ui.screens.SelectLibraryScreen
 import cn.xybbz.ui.screens.SetBackgroundImageScreen
@@ -176,6 +177,10 @@ fun RouterCompose(
 
             extremityComposable<RouterConstants.SetBackgroundImage> {
                 SetBackgroundImageScreen()
+            }
+
+            extremityComposable<RouterConstants.ProxyConfig> {
+                ProxyConfigScreen()
             }
         }
     }

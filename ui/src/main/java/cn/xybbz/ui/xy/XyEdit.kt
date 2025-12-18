@@ -20,6 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import cn.xybbz.ui.theme.XyTheme
 
@@ -55,6 +57,7 @@ fun XyEdit(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = false,
+    textStyle: TextStyle = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurface),
     visualTransformation: VisualTransformation = VisualTransformation.None,
     actionContent: (@Composable () -> Unit)? = null
 ) {
@@ -67,7 +70,7 @@ fun XyEdit(
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         singleLine = singleLine,
-        textStyle = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurface),
+        textStyle = textStyle,
         visualTransformation = visualTransformation,
         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
         decorationBox = { innerTextField ->
@@ -86,6 +89,73 @@ fun XyEdit(
                 ) {
                     innerTextField()
                     if (hint != null && text.isEmpty()) {
+                        Text(
+                            text = hint,
+                            color = hintColor
+                        )
+                    }
+                }
+                if (actionContent != null) {
+                    actionContent()
+                } else {
+                    Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
+                }
+            }
+        }
+    )
+}
+
+
+@Composable
+fun XyEdit(
+    text: TextFieldValue,
+    onChange: (TextFieldValue) -> Unit,
+    modifier: Modifier = Modifier,
+    backgroundColor: Color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f),
+    hint: String? = null,
+    hintColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    readOnly: Boolean = false,
+    paddingValues: PaddingValues = PaddingValues(
+        horizontal = XyTheme.dimens.innerHorizontalPadding,
+        vertical = XyTheme.dimens.innerVerticalPadding
+    ),
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    singleLine: Boolean = false,
+    textContentAlignment: Alignment = Alignment.TopStart,
+    textStyle: TextStyle = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurface),
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    actionContent: (@Composable () -> Unit)? = null
+) {
+    BasicTextField(
+        value = text,
+        onValueChange = onChange,
+        modifier = modifier
+            .padding(paddingValues),
+        readOnly = readOnly,
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
+        singleLine = singleLine,
+        textStyle = textStyle,
+        visualTransformation = visualTransformation,
+        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+        decorationBox = { innerTextField ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(XyTheme.dimens.corner))
+                    .background(color = backgroundColor),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(vertical = XyTheme.dimens.contentPadding),
+                    contentAlignment = textContentAlignment
+                ) {
+                    innerTextField()
+                    if (hint != null && text.text.isEmpty()) {
                         Text(
                             text = hint,
                             color = hintColor

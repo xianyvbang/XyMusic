@@ -7,7 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.SettingsConfig
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.download.core.DownloaderConfig
 import cn.xybbz.localdata.config.DatabaseClient
@@ -18,7 +18,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    val settingsConfig: SettingsConfig,
+    val settingsManager: SettingsManager,
     private val db: DatabaseClient,
     val backgroundConfig: BackgroundConfig,
     val downLoadManager: DownLoadManager
@@ -29,7 +29,7 @@ class SettingsViewModel @Inject constructor(
      * 设置信息
      */
     var settingDataNow by mutableStateOf(
-        settingsConfig.get()
+        settingsManager.get()
     )
 
     init {
@@ -50,7 +50,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     suspend fun setMaxConcurrentDownloads(maxConcurrentDownloads: Int, context: Context) {
-        settingsConfig.setMaxConcurrentDownloads(maxConcurrentDownloads)
+        settingsManager.setMaxConcurrentDownloads(maxConcurrentDownloads)
         downLoadManager.updateConfig(
             DownloaderConfig.Builder(context).setMaxConcurrentDownloads(maxConcurrentDownloads)
                 .build()

@@ -17,7 +17,7 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
 import cn.xybbz.api.client.CacheApiClient
 import cn.xybbz.common.utils.CoroutineScopeUtils
-import cn.xybbz.config.SettingsConfig
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.music.CacheTask
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap
 @SuppressLint("UnsafeOptInUsageError")
 class CacheController(
     private val context: Context,
-    private val settingsConfig: SettingsConfig,
+    private val settingsManager: SettingsManager,
     private val cacheApiClient: CacheApiClient
 ) {
 
@@ -66,11 +66,11 @@ class CacheController(
         // 设置缓存目录和缓存机制，如果不需要清除缓存可以使用NoOpCacheEvictor
 
         val cacheDir = File(cacheParentDirectory, "example_media_cache")
-        settingsConfig.updateCacheFilePath(cacheDir.path)
+        settingsManager.updateCacheFilePath(cacheDir.path)
         cache = SimpleCache(
             cacheDir,
             //读取配置
-            XyCacheEvictor(settingsConfig), ExampleDatabaseProvider(context)
+            XyCacheEvictor(settingsManager), ExampleDatabaseProvider(context)
         )
 
         // 根据缓存目录创建缓存数据源

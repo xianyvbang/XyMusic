@@ -23,16 +23,18 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.CacheController
 import cn.xybbz.common.music.MusicController
+import cn.xybbz.common.music.PlayerEvent
 import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
-import cn.xybbz.config.SettingsConfig
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.select.SelectControl
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.update.ApkUpdateManager
 import cn.xybbz.entity.data.PlayerTypeData
 import cn.xybbz.entity.data.music.MusicPlayContext
+import cn.xybbz.entity.data.music.ifNextPageNumList
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.era.XyEraItem
 import cn.xybbz.localdata.data.music.PlayHistoryMusic
@@ -57,7 +59,7 @@ class MainViewModel @Inject constructor(
     private val musicController: MusicController,
     val dataSourceManager: DataSourceManager,
     private val connectionConfigServer: ConnectionConfigServer,
-    val settingsConfig: SettingsConfig,
+    val settingsManager: SettingsManager,
     val backgroundConfig: BackgroundConfig,
     private val musicPlayContext: MusicPlayContext,
     private val cacheController: CacheController,
@@ -105,206 +107,52 @@ class MainViewModel @Inject constructor(
      * 初始化音乐播放控制器
      */
     private fun musicControllerInit() {
-        musicController.setRemovePlaybackProgressFun {
-            viewModelScope.launch {
-                db.progressDao.removeByMusicId(musicId = it)
-            }
-        }
 
-        musicController.setOnPlay { itemId, playSessionId ->
-            //调用上报接口
-            viewModelScope.launch {
-                dataSourceManager.reportPlaying(
-                    itemId,
-                    playSessionId = playSessionId,
-                    positionTicks = musicController.currentPosition
-                )
-            }
-            viewModelScope.launch {
-                dataSourceManager.reportProgress(
-                    itemId,
-                    playSessionId = playSessionId,
-                    positionTicks = musicController.currentPosition
-                )
-                alarmConfig.scheduleNextReport()
-            }
-            /*if (!cacheController.ifCache(it.musicUrl, it.size ?: 20000)) {
-                cacheController.cacheMedia(it)
-            }*/
-        }
-
-        musicController.setOnPauseFun { itemId, playSessionId, musicUrl ->
-            viewModelScope.launch {
-                dataSourceManager.reportPlaying(
-                    itemId,
-                    playSessionId = playSessionId,
-                    true,
-                    musicController.currentPosition
-                )
-            }
-            viewModelScope.launch {
-                dataSourceManager.reportProgress(
-                    itemId,
-                    playSessionId = playSessionId,
-                    positionTicks = musicController.currentPosition
-                )
-            }
-            cacheController.pauseCache(musicUrl)
-            Log.i("=====", "调用暂停方法")
-            setPlayerProgress(musicController.currentPosition)
-        }
-
-        musicController.setOnSeekTo { millSeconds, itemId, playSessionId ->
-            setPlayerProgress(millSeconds)
-
-            viewModelScope.launch {
-                dataSourceManager.reportProgress(
-                    itemId,
-                    playSessionId = playSessionId,
-                    positionTicks = millSeconds
-                )
-            }
-        }
-        /**
-         * 设置手动音频切换方法
-         */
-        musicController.setOnManualChangeMusic {
-            setPlayerProgress(musicController.currentPosition)
-        }
-        /**
-         * 设置收藏状态
-         */
-        musicController.setFavoriteMusic {
-            viewModelScope.launch {
-                dataSourceManager.setFavoriteData(
-                    type = MusicTypeEnum.MUSIC,
-                    itemId = it,
-                    musicController = musicController,
-                    ifFavorite = it in favoriteRepository.favoriteSet.value
-                )
-            }
-        }
-        /**
-         * 音频切换调用方法
-         */
-        musicController.setOnChangeMusic { itemId ->
-
-            viewModelScope.launch {
-                //数据变化的时候进行数据变化
-                putIterations(0)
-                db.withTransaction {
-                    db.musicDao.updateByPlayedCount(
-                        itemId
-                    )
-                    val recordMusic =
-                        db.musicDao.selectById(itemId)
-
-                    if (recordMusic != null) {
-                        val index = db.musicDao.selectPlayHistoryIndexAsc() ?: -1
-                        db.musicDao.savePlayHistoryMusic(
-                            listOf(
-                                PlayHistoryMusic(
-                                    musicId = itemId,
-                                    index = index - 1,
-                                    connectionId = connectionConfigServer.getConnectionId()
-                                )
-                            )
-                        )
+        viewModelScope.launch {
+            musicController.events.collect {
+                when (it) {
+                    is PlayerEvent.AddMusicList -> {
+                        onAddMusicList(it.artistId)
                     }
-                    val recordCount = db.musicDao.selectPlayHistoryCount()
-                    if (recordCount > 20) {
-                        db.musicDao.deletePlayHistory()
+
+                    PlayerEvent.BeforeChangeMusic -> {
+                        onBeforeChangeMusic()
                     }
-                    db.playerDao.updateIndex(musicController.musicInfo?.itemId ?: "")
-                }
-            }
-        }
-        /**
-         * 设置播放类型
-         */
-        musicController.setOnPlayerTypeChangeFun {
-            viewModelScope.launch {
-                val player =
-                    db.playerDao.selectPlayerByDataSource()
-                if (player != null) {
-                    setPlayerType(it)
-                } else {
-                    savePlayerType(it)
-                }
-            }
 
-        }
-
-        musicController.setOnUpdateMusicPicDataFun { itemId, picByte ->
-            viewModelScope.launch {
-                if (musicController.musicInfo?.pic.isNullOrBlank() && !itemId.isNullOrBlank()) {
-                    //判断传过来的itemId和有picByte不为空的playQueueMusic的musicId一致,并且playQueueMusic的图片字节不为空,则不清空数据
-                    val picByteNotNullPlayQueueMusic = db.musicDao.selectPlayQueueByPicByteNotNull()
-                    if (picByteNotNullPlayQueueMusic != null && picByteNotNullPlayQueueMusic.musicId != itemId) {
-                        db.musicDao.removePlayQueueMusicPicByte()
+                    is PlayerEvent.ChangeMusic -> {
+                        onOnChangeMusic(it.musicId)
                     }
-                    //更新存储封面
-                    val playQueueMusic = db.musicDao.selectPlayQueueByItemId(itemId)
-                    if (playQueueMusic != null && picByte?.isNotEmpty() == true) {
-                        db.musicDao.updatePlayQueueMusicPicByte(
-                            itemId,
-                            picByte
-                        )
+
+                    is PlayerEvent.Favorite -> {
+                        onFavoriteMusic(it.musicId)
                     }
-                } else {
-                    db.musicDao.removePlayQueueMusicPicByte()
-                }
-            }
-        }
 
-        /**
-         * 设置音乐列表变化时调用的方法
-         */
-        musicController.setOnAddMusicListFun { artist ->
-            viewModelScope.launch {
-                var index = db.musicDao.selectPlayQueueIndex() ?: -1
-                val xyMusicList = musicController.originMusicList.map {
-                    index += 1
-                    PlayQueueMusic(
-                        musicId = it.itemId,
-                        index = index,
-                        connectionId = connectionConfigServer.getConnectionId()
-                    )
-                }
-                if (xyMusicList.isNotEmpty()) {
+                    is PlayerEvent.NextList -> {
+                        onNextList()
+                    }
 
-                    //先删除数据
-                    db.musicDao.removeByType(dataType = MusicDataTypeEnum.PLAY_QUEUE)
-                    //存储音乐数据
-                    db.musicDao.savePlayQueueMusic(xyMusicList)
+                    is PlayerEvent.Pause -> {
+                        onPause(it.musicId, it.playSessionId, it.musicUrl)
+                    }
 
-                    //存储player设置
-                    val player =
-                        db.playerDao.selectPlayerByDataSource()
-                    val xyPlayer = XyPlayer(
-                        connectionId = connectionConfigServer.getConnectionId(),
-                        dataType = musicController.playDataType,
-                        musicId = musicController.musicInfo?.itemId ?: "",
-                        headTime = musicController.headTime,
-                        endTime = musicController.endTime,
-                        playerType = musicController.playType,
-                        pageNum = musicController.pageNum,
-                        ifSkip = musicController.headTime > 0,
-                        albumId = musicController.musicInfo?.album ?: "",
-                        artistId = artist,
-                        pageSize = musicController.pageSize
-                    )
-                    if (player != null) {
-                        db.playerDao.updateById(
-                            xyPlayer.copy(
-                                id = player.id,
-                                artistId = player.artistId
-                            )
-                        )
-                    } else {
-                        db.playerDao.save(
-                            xyPlayer
-                        )
+                    is PlayerEvent.Play -> {
+                        onPlay(it.musicId, it.playSessionId)
+                    }
+
+                    is PlayerEvent.PlayerTypeChange -> {
+                        onPlayerTypeChange(it.playerType)
+                    }
+
+                    is PlayerEvent.PositionSeekTo -> {
+                        onPositionSeekTo(it.positionMs, it.musicId, it.playSessionId)
+                    }
+
+                    is PlayerEvent.RemovePlaybackProgress -> {
+                        removePlaybackProgress(it.musicId)
+                    }
+
+                    is PlayerEvent.UpdateMusicPicData -> {
+                        onUpdateMusicPicData(it.musicId, it.data)
                     }
                 }
             }
@@ -316,9 +164,217 @@ class MainViewModel @Inject constructor(
         musicController.initController {
             // 查询是否存在播放列表,如果存在将内容写入
             viewModelScope.launch {
-                startPlayerListObserver()
+                connectionConfigServer.loginSuccessEvent.collect {
+                    startPlayerListObserver()
+                }
             }
         }
+    }
+
+    fun removePlaybackProgress(musicId: String) {
+        viewModelScope.launch {
+            db.progressDao.removeByMusicId(musicId)
+        }
+    }
+
+    fun onPlay(musicId: String, playSessionId: String) {
+        viewModelScope.launch {
+            dataSourceManager.reportPlaying(
+                musicId,
+                playSessionId = playSessionId,
+                positionTicks = musicController.currentPosition
+            )
+        }
+        viewModelScope.launch {
+            dataSourceManager.reportProgress(
+                musicId,
+                playSessionId = playSessionId,
+                positionTicks = musicController.currentPosition
+            )
+            alarmConfig.scheduleNextReport()
+        }
+    }
+
+    fun onPause(musicId: String, playSessionId: String, musicUrl: String) {
+        viewModelScope.launch {
+            dataSourceManager.reportPlaying(
+                musicId,
+                playSessionId = playSessionId,
+                true,
+                musicController.currentPosition
+            )
+        }
+        viewModelScope.launch {
+            dataSourceManager.reportProgress(
+                musicId,
+                playSessionId = playSessionId,
+                positionTicks = musicController.currentPosition
+            )
+        }
+        cacheController.pauseCache(musicUrl)
+        Log.i("=====", "调用暂停方法")
+        setPlayerProgress(musicController.currentPosition)
+    }
+
+    fun onPositionSeekTo(millSeconds: Long, itemId: String, playSessionId: String) {
+        setPlayerProgress(millSeconds)
+        viewModelScope.launch {
+            dataSourceManager.reportProgress(
+                itemId,
+                playSessionId = playSessionId,
+                positionTicks = millSeconds
+            )
+        }
+    }
+
+    /**
+     * 设置手动音频切换方法
+     */
+    fun onBeforeChangeMusic() {
+        setPlayerProgress(musicController.currentPosition)
+    }
+
+    fun onFavoriteMusic(musicId: String) {
+        viewModelScope.launch {
+            dataSourceManager.setFavoriteData(
+                type = MusicTypeEnum.MUSIC,
+                itemId = musicId,
+                musicController = musicController,
+                ifFavorite = musicId in favoriteRepository.favoriteSet.value
+            )
+        }
+    }
+
+    fun onOnChangeMusic(musicId: String) {
+        viewModelScope.launch {
+            //数据变化的时候进行数据变化
+            putIterations(0)
+            db.withTransaction {
+                db.musicDao.updateByPlayedCount(
+                    musicId
+                )
+                val recordMusic =
+                    db.musicDao.selectById(musicId)
+
+                if (recordMusic != null) {
+                    val index = db.musicDao.selectPlayHistoryIndexAsc() ?: -1
+                    db.musicDao.savePlayHistoryMusic(
+                        listOf(
+                            PlayHistoryMusic(
+                                musicId = musicId,
+                                index = index - 1,
+                                connectionId = connectionConfigServer.getConnectionId()
+                            )
+                        )
+                    )
+                }
+                val recordCount = db.musicDao.selectPlayHistoryCount()
+                if (recordCount > 20) {
+                    db.musicDao.deletePlayHistory()
+                }
+                db.playerDao.updateIndex(musicId)
+            }
+        }
+    }
+
+    fun onPlayerTypeChange(playerTypeEnum: PlayerTypeEnum) {
+        viewModelScope.launch {
+            val player =
+                db.playerDao.selectPlayerByDataSource()
+            if (player != null) {
+                setPlayerType(playerTypeEnum)
+            } else {
+                savePlayerType(playerTypeEnum)
+            }
+        }
+    }
+
+    fun onUpdateMusicPicData(musicId: String, picByte: ByteArray?) {
+        viewModelScope.launch {
+            if (musicController.musicInfo?.pic.isNullOrBlank() && musicId.isNotBlank()) {
+                //判断传过来的itemId和有picByte不为空的playQueueMusic的musicId一致,并且playQueueMusic的图片字节不为空,则不清空数据
+                val picByteNotNullPlayQueueMusic = db.musicDao.selectPlayQueueByPicByteNotNull()
+                if (picByteNotNullPlayQueueMusic != null && picByteNotNullPlayQueueMusic.musicId != musicId) {
+                    db.musicDao.removePlayQueueMusicPicByte()
+                }
+                //更新存储封面
+                val playQueueMusic = db.musicDao.selectPlayQueueByItemId(musicId)
+                if (playQueueMusic != null && playQueueMusic.picByte == null && picByte?.isNotEmpty() == true) {
+                    db.musicDao.updatePlayQueueMusicPicByte(
+                        musicId,
+                        picByte
+                    )
+                }
+            } else {
+                db.musicDao.removePlayQueueMusicPicByte()
+            }
+        }
+    }
+
+    fun onAddMusicList(artistId: String?) {
+        viewModelScope.launch {
+            var index = db.musicDao.selectPlayQueueIndex() ?: -1
+            val xyMusicList = musicController.originMusicList.map {
+                index += 1
+                PlayQueueMusic(
+                    musicId = it.itemId,
+                    index = index,
+                    connectionId = connectionConfigServer.getConnectionId()
+                )
+            }
+            if (xyMusicList.isNotEmpty()) {
+
+                //先删除数据
+                db.musicDao.removeByType(dataType = MusicDataTypeEnum.PLAY_QUEUE)
+                //存储音乐数据
+                db.musicDao.savePlayQueueMusic(xyMusicList)
+
+                //存储player设置
+                val player =
+                    db.playerDao.selectPlayerByDataSource()
+                val xyPlayer = XyPlayer(
+                    connectionId = connectionConfigServer.getConnectionId(),
+                    dataType = musicController.playDataType,
+                    musicId = musicController.musicInfo?.itemId ?: "",
+                    headTime = musicController.headTime,
+                    endTime = musicController.endTime,
+                    playerType = musicController.playType,
+                    pageNum = musicController.pageNum,
+                    ifSkip = musicController.headTime > 0,
+                    albumId = musicController.musicInfo?.album ?: "",
+                    artistId = artistId,
+                    pageSize = musicController.pageSize
+                )
+                if (player != null) {
+                    db.playerDao.updateById(
+                        xyPlayer.copy(
+                            id = player.id,
+                            artistId = player.artistId
+                        )
+                    )
+                } else {
+                    db.playerDao.save(
+                        xyPlayer
+                    )
+                }
+            }
+        }
+    }
+
+    fun onNextList() {
+        ifNextPageNumList = true
+        viewModelScope.launch {
+            val newPageNum = musicController.pageNum + 1
+            val newMusicList = musicPlayContext.musicPlayData?.onNextMusicList?.invoke(newPageNum)
+            if (!newMusicList.isNullOrEmpty()) {
+                musicController.setPageNumData(newPageNum)
+                if (newMusicList.isNotEmpty())
+                    musicController.addMusicList(
+                        newMusicList,
+                        musicPlayContext.musicPlayData?.onMusicPlayParameter?.artistId
+                    )
+            }
+        }.invokeOnCompletion { ifNextPageNumList = false }
     }
 
 
@@ -329,6 +385,7 @@ class MainViewModel @Inject constructor(
             }
         }
     }
+
     /**
      * 获得专辑是否开启播放历史数据
      */
@@ -375,7 +432,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             musicController.musicInfo?.let {
                 //判断是否需要存储播放历史
-                if (settingsConfig.get().ifEnableAlbumHistory || (enableProgressMap.containsKey(
+                if (settingsManager.get().ifEnableAlbumHistory || (enableProgressMap.containsKey(
                         it.album
                     ) && enableProgressMap[it.album] == true)
                 ) {

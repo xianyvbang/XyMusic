@@ -16,7 +16,7 @@ import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.ConnectionConfigServer
-import cn.xybbz.config.SettingsConfig
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.download.DownloadRepository
@@ -36,7 +36,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MusicBottomMenuViewModel @Inject constructor(
-    private val settingsConfig: SettingsConfig,
+    private val settingsManager: SettingsManager,
     private val db: DatabaseClient,
     val musicController: MusicController,
     val dataSourceManager: DataSourceManager,
@@ -108,7 +108,7 @@ class MusicBottomMenuViewModel @Inject constructor(
      * 存储倍速播放
      */
     suspend fun setDoubleSpeed(value: Float) {
-        settingsConfig.saveOrUpdateDoubleSpeed(value)
+        settingsManager.saveOrUpdateDoubleSpeed(value)
     }
 
     /**

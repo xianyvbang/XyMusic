@@ -398,5 +398,6 @@
     <string name="return_interface_settings">返回介面設定</string>
     <string name="select_image">選擇圖片</string>
     <string name="clear_image">清除圖片</string>
+    <string name="poxy_config">代理設定</string>
 
 </resources>

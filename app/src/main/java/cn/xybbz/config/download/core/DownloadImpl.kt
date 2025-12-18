@@ -22,7 +22,7 @@ class DownloadImpl(
     val scope = CoroutineScopeUtils.getIo("downloadImpl")
     private val listeners = CopyOnWriteArrayList<DownloadListener>()
     private var taskUpdateJob: Job? = null
-    init {
+    override fun initData() {
         observeLoginSuccessForDispatcher()
     }
 

@@ -19,7 +19,8 @@ class DatasourceConfig {
         Migration_6_7,
         Migration_7_8,
         Migration_8_9,
-        Migration_9_10
+        Migration_9_10,
+        Migration_10_11,
     )
 
     fun createDatabaseClient(context: Context): DatabaseClient {
@@ -209,6 +210,20 @@ class DatasourceConfig {
             // 设备唯一标识（machineIdentifier）
             db.execSQL(
                 "ALTER TABLE xy_connection_config ADD COLUMN machineIdentifier TEXT"
+            )
+        }
+    }
+
+    private object Migration_10_11 : Migration(10, 11) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+            CREATE TABLE IF NOT EXISTS xy_proxy_config (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                enabled INTEGER NOT NULL,
+                address TEXT NOT NULL
+            )
+            """.trimIndent()
             )
         }
     }

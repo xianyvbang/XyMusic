@@ -167,96 +167,101 @@ fun AboutScreen(
                     }:${aboutViewModel.apkUpdateManager.latestVersion}",
                     ifOpenBadge = !aboutViewModel.apkUpdateManager.ifMaxVersion
                 ) {
-                    coroutineScope.launch {
-                        val initLatestVersion =
-                            aboutViewModel.apkUpdateManager.initLatestVersion(true)
-                        if (initLatestVersion && !aboutViewModel.apkUpdateManager.ifMaxVersion) {
-                            AlertDialogObject(
-                                title = context.getString(R.string.new_version_download),
-                                content = {
-                                    XyColumn(backgroundColor = Color.Transparent) {
-                                        LazyColumnBottomSheetComponent(
-                                            modifier = Modifier.height(
-                                                300.dp
-                                            )
-                                        ) {
-                                            item {
-                                                XyItemTextLarge(text = "${aboutViewModel.apkUpdateManager.releasesInfo?.body}")
-                                            }
-                                        }
-                                        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                                        XyItemTextLarge(text = "${stringResource(R.string.version_number)}: ${aboutViewModel.apkUpdateManager.latestVersion}")
-                                        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                                        LinearProgressIndicator(
-                                            progress = {
-                                                if ((apkDownloadInfo?.totalBytes
-                                                        ?: 0) > 0
-                                                ) ((apkDownloadInfo?.progress ?: 0f) / 100f) else 0f
-                                            },
-                                            drawStopIndicator = {
-                                                drawStopIndicator(
-                                                    drawScope = this,
-                                                    stopSize = 0.dp,
-                                                    color = primary,
-                                                    strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+                    if (false)
+
+                        coroutineScope.launch {
+                            val initLatestVersion =
+                                aboutViewModel.apkUpdateManager.initLatestVersion(true)
+                            if (initLatestVersion && !aboutViewModel.apkUpdateManager.ifMaxVersion) {
+                                AlertDialogObject(
+                                    title = context.getString(R.string.new_version_download),
+                                    content = {
+                                        XyColumn(backgroundColor = Color.Transparent) {
+                                            LazyColumnBottomSheetComponent(
+                                                modifier = Modifier.height(
+                                                    300.dp
                                                 )
-                                            },
-                                        )
-                                        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                                        BasicText(text = "${stringResource(R.string.current_download_progress)}: ${apkDownloadInfo?.progress ?: 0f}%")
-                                        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                                        if (apkDownloadInfo?.status == DownloadStatus.FAILED) {
-                                            XyItemTextLarge(
-                                                text = stringResource(R.string.download_failed),
-                                                color = MaterialTheme.colorScheme.onErrorContainer
+                                            ) {
+                                                item {
+                                                    XyItemTextLarge(text = "${aboutViewModel.apkUpdateManager.releasesInfo?.body}")
+                                                }
+                                            }
+                                            Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
+                                            XyItemTextLarge(text = "${stringResource(R.string.version_number)}: ${aboutViewModel.apkUpdateManager.latestVersion}")
+                                            Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
+                                            LinearProgressIndicator(
+                                                progress = {
+                                                    if ((apkDownloadInfo?.totalBytes
+                                                            ?: 0) > 0
+                                                    ) ((apkDownloadInfo?.progress
+                                                        ?: 0f) / 100f) else 0f
+                                                },
+                                                drawStopIndicator = {
+                                                    drawStopIndicator(
+                                                        drawScope = this,
+                                                        stopSize = 0.dp,
+                                                        color = primary,
+                                                        strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+                                                    )
+                                                },
                                             )
                                             Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                                        }
-
-                                        Row {
-                                            XyButton(
-                                                modifier = Modifier.weight(1f),
-                                                onClick = {
-                                                    aboutViewModel.cancelDownload()
-                                                },
-                                                text = stringResource(R.string.cancel_download),
-                                                enabled = apkDownloadInfo?.status == DownloadStatus.DOWNLOADING
-                                            )
-                                            Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
-                                            Button(
-                                                onClick = composeClick {
-                                                    permissionState?.launchMultiplePermissionRequest()
-                                                },
-                                                enabled = apkDownloadInfo?.status != DownloadStatus.DOWNLOADING,
-                                                shape = RoundedCornerShape(XyTheme.dimens.corner),
-                                                modifier = Modifier.weight(1f),
-                                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                                            ) {
-                                                if (apkDownloadInfo?.status == DownloadStatus.DOWNLOADING)
-                                                    ContainedLoadingIndicator(
-                                                        modifier = Modifier.size(
-                                                            30.dp
-                                                        )
-                                                    )
-//                                            CircularWavyProgressIndicator()
-                                                Text(
-                                                    text = stringResource(R.string.download_install),
-                                                    modifier = Modifier
-                                                        .fillMaxWidth(),
-                                                    color = Color.White,
-                                                    textAlign = TextAlign.Center,
-                                                    overflow = TextOverflow.Ellipsis,
-                                                    maxLines = 1
+                                            BasicText(text = "${stringResource(R.string.current_download_progress)}: ${apkDownloadInfo?.progress ?: 0f}%")
+                                            Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
+                                            if (apkDownloadInfo?.status == DownloadStatus.FAILED) {
+                                                XyItemTextLarge(
+                                                    text = stringResource(R.string.download_failed),
+                                                    color = MaterialTheme.colorScheme.onErrorContainer
                                                 )
+                                                Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
+                                            }
+
+                                            Row {
+                                                XyButton(
+                                                    modifier = Modifier.weight(1f),
+                                                    onClick = {
+                                                        aboutViewModel.cancelDownload()
+                                                    },
+                                                    text = stringResource(R.string.cancel_download),
+                                                    enabled = apkDownloadInfo?.status == DownloadStatus.DOWNLOADING
+                                                )
+                                                Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
+                                                Button(
+                                                    onClick = composeClick {
+                                                        permissionState?.launchMultiplePermissionRequest()
+                                                    },
+                                                    enabled = apkDownloadInfo?.status != DownloadStatus.DOWNLOADING,
+                                                    shape = RoundedCornerShape(XyTheme.dimens.corner),
+                                                    modifier = Modifier.weight(1f),
+                                                    colors = ButtonDefaults.buttonColors(
+                                                        containerColor = MaterialTheme.colorScheme.primary
+                                                    )
+                                                ) {
+                                                    if (apkDownloadInfo?.status == DownloadStatus.DOWNLOADING)
+                                                        ContainedLoadingIndicator(
+                                                            modifier = Modifier.size(
+                                                                30.dp
+                                                            )
+                                                        )
+//                                            CircularWavyProgressIndicator()
+                                                    Text(
+                                                        text = stringResource(R.string.download_install),
+                                                        modifier = Modifier
+                                                            .fillMaxWidth(),
+                                                        color = Color.White,
+                                                        textAlign = TextAlign.Center,
+                                                        overflow = TextOverflow.Ellipsis,
+                                                        maxLines = 1
+                                                    )
+                                                }
                                             }
                                         }
-                                    }
 
-                                },
-                                dismissText = R.string.close,
-                                onDismissRequest = {}).show()
+                                    },
+                                    dismissText = R.string.close,
+                                    onDismissRequest = {}).show()
+                            }
                         }
-                    }
                 }
             }
             item {

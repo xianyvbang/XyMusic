@@ -17,7 +17,7 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
-import cn.xybbz.config.SettingsConfig
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import dagger.assisted.Assisted
@@ -34,7 +34,7 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
     private val _connectionConfigServer: ConnectionConfigServer,
     private val db: DatabaseClient,
     private val musicController: MusicController,
-    private val settingsConfig: SettingsConfig,
+    private val settingsManager: SettingsManager,
     private val _backgroundConfig: BackgroundConfig
 ) : ViewModel() {
 
@@ -155,7 +155,7 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
                 )
                 musicController.clearPlayerList()
                 dataSourceManager.release()
-                settingsConfig.setSettingsData()
+                settingsManager.setSettingsData()
             } else {
                 MessageUtils.sendPopTip(
                     R.string.cannot_delete_current_connection,
@@ -200,7 +200,7 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
                 address = address,
                 connectionId = connectionId
             )
-            connectionConfigServer.updateConnection()
+            connectionConfigServer.updateConnectionAddress()
             //判断是否需要重新登录
             if (connectionConfigServer.getConnectionId() == connectionId) {
                 dataSourceManager.initDataSource()

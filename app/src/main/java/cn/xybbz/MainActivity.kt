@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.media3.common.util.UnstableApi
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.ui.screens.MainScreen
 import cn.xybbz.ui.theme.XyTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -28,16 +27,12 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-
     @Inject
     lateinit var backgroundConfig: BackgroundConfig
-    @Inject
-    lateinit var downLoadManager: DownLoadManager
 
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d("MainActivity", "调用两次")
-        DialogX.init(this)
         //启动页面
         installSplashScreen()
         super.onCreate(savedInstanceState)

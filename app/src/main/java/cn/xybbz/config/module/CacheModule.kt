@@ -5,7 +5,7 @@ import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import cn.xybbz.api.client.CacheApiClient
 import cn.xybbz.common.music.CacheController
-import cn.xybbz.config.SettingsConfig
+import cn.xybbz.config.setting.SettingsManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,9 +22,9 @@ class CacheModule {
     @Provides
     fun cacheController(
         @ApplicationContext context: Context,
-        settingsConfig: SettingsConfig,
+        settingsManager: SettingsManager,
         cacheApiClient: CacheApiClient
     ): CacheController {
-        return CacheController(context, settingsConfig,cacheApiClient)
+        return CacheController(context, settingsManager,cacheApiClient)
     }
 }

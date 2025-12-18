@@ -20,9 +20,7 @@ class BackgroundModel {
         db: DatabaseClient,
         @ApplicationContext applicationContext: Context
     ): BackgroundConfig {
-        val backgroundConfig = BackgroundConfig(db, applicationContext)
-        backgroundConfig.load()
-        return backgroundConfig;
+        return BackgroundConfig(db, applicationContext)
     }
 
 

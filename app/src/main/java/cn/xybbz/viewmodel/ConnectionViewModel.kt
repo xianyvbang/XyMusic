@@ -14,7 +14,7 @@ import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.IDataSourceServer
 import cn.xybbz.api.client.data.ClientLoginInfoReq
-import cn.xybbz.config.SettingsConfig
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.localdata.enums.DataSourceType
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,11 +28,11 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class ConnectionViewModel @Inject constructor(
-    private val _settingsConfig: SettingsConfig,
+    private val _settingsManager: SettingsManager,
     private val _dataSourceManager: DataSourceManager
 ) : ViewModel() {
 
-    val settingsConfig = _settingsConfig
+    val settingsConfig = _settingsManager
     val dataSourceManager = _dataSourceManager
 
     var dataSourceType by mutableStateOf<DataSourceType?>(null)

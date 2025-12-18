@@ -138,7 +138,7 @@ fun SettingScreen(
                         ifChecked = settingsViewModel.settingDataNow.ifEnableAlbumHistory
                     ) { bol ->
                         coroutineScope.launch {
-                            settingsViewModel.settingsConfig.setIfEnableAlbumHistory(
+                            settingsViewModel.settingsManager.setIfEnableAlbumHistory(
                                 bol
                             )
                         }
@@ -149,7 +149,7 @@ fun SettingScreen(
                         ifChecked = settingsViewModel.settingDataNow.ifHandleAudioFocus
                     ) { bol ->
                         coroutineScope.launch {
-                            settingsViewModel.settingsConfig.setIfHandleAudioFocus(
+                            settingsViewModel.settingsManager.setIfHandleAudioFocus(
                                 bol
                             )
                         }
@@ -157,15 +157,15 @@ fun SettingScreen(
 
                     SettingItemComponent(
                         title = stringResource(R.string.cache_location),
-                        bottomInfo = settingsViewModel.settingsConfig.cacheFilePath,
+                        bottomInfo = settingsViewModel.settingsManager.cacheFilePath,
                         maxLines = Int.MAX_VALUE,
                         imageVector = null
                     ) {
-                        if (settingsViewModel.settingsConfig.cacheFilePath.isNotBlank()) {
+                        if (settingsViewModel.settingsManager.cacheFilePath.isNotBlank()) {
                             val clipData =
                                 ClipData.newPlainText(
                                     "label",
-                                    settingsViewModel.settingsConfig.cacheFilePath
+                                    settingsViewModel.settingsManager.cacheFilePath
                                 )
                             coroutineScope.launch {
                                 clipboardManager.setClipEntry(ClipEntry(clipData))
@@ -308,7 +308,7 @@ fun SettingScreen(
                         maxLines = Int.MAX_VALUE,
                         imageVector = null
                     ) {
-                        if (settingsViewModel.settingsConfig.cacheFilePath.isNotBlank()) {
+                        if (settingsViewModel.settingsManager.cacheFilePath.isNotBlank()) {
                             val clipData =
                                 ClipData.newPlainText(
                                     "label",
@@ -346,6 +346,10 @@ fun SettingScreen(
 
                     SettingItemComponent(title = stringResource(R.string.storage_management)) {
                         navController.navigate(RouterConstants.MemoryManagement)
+                    }
+
+                    SettingItemComponent(title = stringResource(R.string.poxy_config)) {
+                        navController.navigate(RouterConstants.ProxyConfig)
                     }
 
                     SettingItemComponent(title = stringResource(R.string.interface_settings)) {
