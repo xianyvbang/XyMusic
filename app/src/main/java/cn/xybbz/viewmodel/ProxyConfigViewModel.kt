@@ -35,7 +35,7 @@ class ProxyConfigViewModel @Inject constructor(
     val db: DatabaseClient,
     val backgroundConfig: BackgroundConfig,
     val poxyConfigServer: ProxyConfigServer,
-    private val connectionConfigServer: ConnectionConfigServer,
+    val connectionConfigServer: ConnectionConfigServer,
     private val dataSourceManager: DataSourceManager
 ) : ViewModel() {
 
@@ -97,18 +97,21 @@ class ProxyConfigViewModel @Inject constructor(
     suspend fun testProxy(
         timeoutMs: Int = ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS.toInt(),
     ): Boolean = withContext(Dispatchers.IO) {
-        val addressTmp = poxyConfigServer.getAddress(addressValue.text)
-        val (host, port) = poxyConfigServer.parseHostPortSafe(addressTmp)
+        if (addressValue.text.isNotBlank()){
+            val addressTmp = poxyConfigServer.getAddress(addressValue.text)
+            val (host, port) = poxyConfigServer.parseHostPortSafe(addressTmp)
 
-        try {
-            Socket().use {
-                it.connect(InetSocketAddress(host, port), timeoutMs)
+            try {
+                Socket().use {
+                    it.connect(InetSocketAddress(host, port), timeoutMs)
+                }
+                true
+            } catch (e: Exception) {
+                e.printStackTrace()
+                false
             }
-            true
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false
-        }
+        }else true
+
     }
 
 
@@ -118,36 +121,41 @@ class ProxyConfigViewModel @Inject constructor(
             .url(address)
             .head() // 用 HEAD，快，不下内容
             .build()
-        val addressTmp = poxyConfigServer.getAddress(addressValue.text)
-
-        val (host, port) = poxyConfigServer.parseHostPortSafe(addressTmp)
-
-        val client = dataSourceManager.getOkhttpClient().newBuilder()
+        val okHttpClientBuilder = dataSourceManager.getOkhttpClient().newBuilder()
             .connectTimeout(1000, TimeUnit.MILLISECONDS)
-            .proxySelector(object : ProxySelector() {
-                override fun connectFailed(
-                    uri: URI?,
-                    sa: SocketAddress?,
-                    ioe: IOException?
-                ) {
+        if (addressValue.text.isNotBlank()){
+            val addressTmp = poxyConfigServer.getAddress(addressValue.text)
 
-                }
+            val (host, port) = poxyConfigServer.parseHostPortSafe(addressTmp)
 
-                override fun select(uri: URI?): List<Proxy?> {
-                    return listOf(
-                        Proxy(
-                            Proxy.Type.HTTP,
-                            InetSocketAddress(host, port)
-                        ),
-                        Proxy(
-                            Proxy.Type.SOCKS,
-                            InetSocketAddress(host, port)
-                        ),
-                        Proxy.NO_PROXY
-                    )
-                }
+            okHttpClientBuilder
+                .proxySelector(object : ProxySelector() {
+                    override fun connectFailed(
+                        uri: URI?,
+                        sa: SocketAddress?,
+                        ioe: IOException?
+                    ) {
 
-            }).build()
+                    }
+
+                    override fun select(uri: URI?): List<Proxy?> {
+                        return listOf(
+                            Proxy(
+                                Proxy.Type.HTTP,
+                                InetSocketAddress(host, port)
+                            ),
+                            Proxy(
+                                Proxy.Type.SOCKS,
+                                InetSocketAddress(host, port)
+                            ),
+                            Proxy.NO_PROXY
+                        )
+                    }
+
+                })
+        }
+
+        val client = okHttpClientBuilder.build()
         try {
             client.newCall(request).execute().use { response ->
                 response.isSuccessful || response.isRedirect

@@ -399,5 +399,8 @@ Automatic calculation rules for the upper limit of cache:
     <string name="select_image">Select image</string>
     <string name="clear_image">Clear images</string>
     <string name="poxy_config">Proxy settings</string>
+    <string name="test_connection">Test connection</string>
+    <string name="open_proxy">Enable Proxy</string>
+    <string name="save">Save</string>
 
 </resources>

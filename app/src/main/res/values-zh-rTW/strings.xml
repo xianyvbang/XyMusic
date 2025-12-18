@@ -399,5 +399,8 @@
     <string name="select_image">選擇圖片</string>
     <string name="clear_image">清除圖片</string>
     <string name="poxy_config">代理設定</string>
+    <string name="test_connection">測試連接</string>
+    <string name="open_proxy">開啟代理</string>
+    <string name="save">儲存</string>
 
 </resources>
