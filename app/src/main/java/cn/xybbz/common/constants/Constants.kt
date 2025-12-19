@@ -170,6 +170,11 @@ object Constants {
     const val DOWNLOAD_ID = "download_id"
 
     /**
+     * 登陆后获取数据的worker参数
+     */
+    const val CONNECTION_ID = "connection_id"
+
+    /**
      * app文件夹名称
      */
     const val APP_NAME = "XyMusic"

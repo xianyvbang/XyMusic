@@ -36,4 +36,9 @@ object RemoteIdConstants {
      * 首页刷新
      */
     const val HOME_REFRESH = "homeRefresh"
+
+    /**
+     * 媒体库和收藏数据
+     */
+    const val MEDIA_LIBRARY_AND_FAVORITE = "mediaLibraryAndFavorite"
 }
