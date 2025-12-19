@@ -33,6 +33,7 @@ import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.update.ApkUpdateManager
+import cn.xybbz.config.update.VersionCheckScheduler
 import cn.xybbz.entity.data.PlayerTypeData
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.entity.data.music.ifNextPageNumList
@@ -64,10 +65,10 @@ class MainViewModel @Inject constructor(
     private val musicPlayContext: MusicPlayContext,
     private val cacheController: CacheController,
     private val alarmConfig: AlarmConfig,
-    private val apkUpdateManager: ApkUpdateManager,
     private val favoriteRepository: FavoriteRepository,
     val selectControl: SelectControl,
-    private val mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler
+    private val mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
+    private val versionCheckScheduler: VersionCheckScheduler
 ) : ViewModel() {
 
 
@@ -654,9 +655,7 @@ class MainViewModel @Inject constructor(
      * 初始化版本信息获取
      */
     fun initGetVersionInfo() {
-        viewModelScope.launch {
-            apkUpdateManager.initLatestVersion()
-        }
+        versionCheckScheduler.enqueueIfNeeded()
     }
 
     /**

@@ -19,6 +19,8 @@ class MediaLibraryAndFavoriteSyncScheduler @Inject constructor(
     private val connectionConfigServer: ConnectionConfigServer
 ) {
 
+    val tag = "media_sync"
+
     suspend fun enqueueIfNeeded() {
         if (!shouldSync()) return
         val constraints = Constraints.Builder()
@@ -28,18 +30,18 @@ class MediaLibraryAndFavoriteSyncScheduler @Inject constructor(
         val request = OneTimeWorkRequestBuilder<MediaLibraryAndFavoriteSyncWorker>()
             .setInputData(workDataOf(Constants.CONNECTION_ID to connectionConfigServer.getConnectionId()))
             .setConstraints(constraints)
-            .addTag("media_sync")
+            .addTag(tag)
             .build()
 
         workManager.enqueueUniqueWork(
-            "media_sync",
+            tag,
             ExistingWorkPolicy.KEEP,
             request
         )
     }
 
     fun cancel() {
-        workManager.cancelUniqueWork("media_sync")
+        workManager.cancelUniqueWork(tag)
     }
 
     suspend fun shouldSync(): Boolean {
