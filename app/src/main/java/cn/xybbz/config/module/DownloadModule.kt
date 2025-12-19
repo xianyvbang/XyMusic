@@ -31,12 +31,13 @@ class DownloadModule {
         @ApplicationContext applicationContext: Context,
         connectionConfigServer: ConnectionConfigServer,
         notificationController: NotificationController,
-        settingsManager: SettingsManager
+        settingsManager: SettingsManager,
+        workManager: WorkManager
     ): DownloadDispatcherImpl {
         val settings = settingsManager.get()
         val downloadDispatcherImpl = DownloadDispatcherImpl(
             db,
-            WorkManager.getInstance(applicationContext),
+            workManager,
             DownloaderConfig.Builder(applicationContext)
                 .setFinalDirectory("${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath}/${Constants.APP_NAME}")
                 .setMaxConcurrentDownloads(settings.maxConcurrentDownloads).build(),

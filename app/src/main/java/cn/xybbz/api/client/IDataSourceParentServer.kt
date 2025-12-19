@@ -221,12 +221,12 @@ abstract class IDataSourceParentServer(
                 }
                 if (!ifTmpObject()) {
                     connectionConfigServer.setConnectionConfigData(connectionConfig.copy(id = connectionId))
-                    selectMediaLibrary()
+//                    selectMediaLibrary()
                     MessageUtils.sendDismiss()
                     setCoilImageOkHttpClient()
                     connectionConfigServer.updateLoginStates(true)
-                    initFavoriteData()
-                    try {
+//                    initFavoriteData()
+                   /* try {
                         getDataInfoCount(connectionId)
                     } catch (e: Exception) {
                         Log.i(
@@ -234,7 +234,7 @@ abstract class IDataSourceParentServer(
                             "获取音乐/专辑/艺术家/收藏/流派数量异常",
                             e
                         )
-                    }
+                    }*/
                 }
             }
 

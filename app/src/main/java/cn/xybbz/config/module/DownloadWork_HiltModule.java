@@ -25,4 +25,10 @@ public interface DownloadWork_HiltModule {
   @IntoMap
   @StringKey("cn.xybbz.config.download.work.DownloadWork")
   WorkerAssistedFactory<? extends ListenableWorker> bind(DownloadWork_AssistedFactory factory);
+
+
+  @Binds
+  @IntoMap
+  @StringKey("cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncWorker")
+  WorkerAssistedFactory<? extends ListenableWorker> bind2(MediaLibraryAndFavoriteSyncWork_AssistedFactory factory);
 }

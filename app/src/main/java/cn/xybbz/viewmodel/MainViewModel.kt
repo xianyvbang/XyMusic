@@ -19,6 +19,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.CacheController
@@ -47,7 +48,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.time.Year
 import javax.inject.Inject
 
@@ -66,7 +66,8 @@ class MainViewModel @Inject constructor(
     private val alarmConfig: AlarmConfig,
     private val apkUpdateManager: ApkUpdateManager,
     private val favoriteRepository: FavoriteRepository,
-    val selectControl: SelectControl
+    val selectControl: SelectControl,
+    private val mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler
 ) : ViewModel() {
 
 
@@ -87,12 +88,12 @@ class MainViewModel @Inject constructor(
 
     private var enableProgressJob: Job? = null
     private var playerListJob: Job? = null
+    private var mediaLibraryAndFavoriteSynJob: Job? = null
 
 
     init {
         Log.i("=====", "MainViewModel初始化")
-        val connectionConfig = runBlocking { db.connectionConfigDao.selectConnectionConfig() }
-        connectionIsLogIn = connectionConfig != null
+        connectionIsLogIn = connectionConfigServer.getConnectionId() != Constants.ZERO.toLong()
         //加载是否开启专辑播放历史功能数据
         observeLoginSuccessForAndProgress()
         //初始化年代数据
@@ -101,6 +102,8 @@ class MainViewModel @Inject constructor(
         musicControllerInit()
         //初始化版本信息获取
         initGetVersionInfo()
+        //初始化媒体库和收藏信息
+        initMediaLibraryAndFavoriteSync()
     }
 
     /**
@@ -454,6 +457,25 @@ class MainViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    /**
+     * 加载收藏和媒体库
+     */
+    fun initMediaLibraryAndFavoriteSync() {
+        viewModelScope.launch {
+            connectionConfigServer.loginSuccessEvent.collect {
+                startMediaLibraryAndFavoriteSync()
+            }
+        }
+    }
+
+    fun startMediaLibraryAndFavoriteSync(){
+        mediaLibraryAndFavoriteSynJob?.cancel()
+        mediaLibraryAndFavoriteSyncScheduler.cancel()
+        mediaLibraryAndFavoriteSynJob = viewModelScope.launch {
+            mediaLibraryAndFavoriteSyncScheduler.enqueueIfNeeded()
         }
     }
 
