@@ -318,10 +318,6 @@ class DataSourceManager(
     }
 
     override suspend fun autoLogin(ifLogin: Boolean): Flow<ClientLoginInfoState>? {
-        MessageUtils.sendPopTipHint(
-            R.string.logging_in,
-            delay = 5000
-        )
         loading = true
         Log.i("=====", "开始登录.............")
         return dataSourceServer.autoLogin(ifLogin)

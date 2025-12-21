@@ -135,8 +135,6 @@ abstract class IDataSourceParentServer(
             } else {
                 throw ServiceException(application.getString(R.string.server_version_cannot_be_obtained))
             }
-            //todo 如果有token 则下面的独立出来方法,然后自动登录中考虑跟登录有什么差异
-
             val accessToken =
                 responseData.accessToken
             val userId =
@@ -277,6 +275,7 @@ abstract class IDataSourceParentServer(
      */
     override suspend fun autoLogin(ifLogin: Boolean): Flow<ClientLoginInfoState> {
 
+
         //获得启用的连接信息
         val connectionConfig = db.connectionConfigDao.selectConnectionConfig() ?: return flowOf(
             ClientLoginInfoState.SelectServer
@@ -291,6 +290,7 @@ abstract class IDataSourceParentServer(
 
         //判断是否能连接
         return flow {
+
             var password = connectionConfig.currentPassword
             if (connectionConfig.key.isNotBlank() && connectionConfig.iv.isNotBlank() && connectionConfig.currentPassword.isNotBlank()) {
                 password = PasswordUtils.decryptAES(
@@ -313,6 +313,11 @@ abstract class IDataSourceParentServer(
                 serverId = connectionConfig.serverId,
             )
             if (ifLogin || connectionConfig.accessToken.isNullOrBlank()) {
+
+                MessageUtils.sendPopTipHint(
+                    R.string.logging_in,
+                    delay = 5000
+                )
                 emitAll(
                     addClientAndLogin(
                         clientLoginInfoReq = clientLoginInfoReq

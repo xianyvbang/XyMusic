@@ -32,7 +32,6 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.d("MainActivity", "调用两次")
         //启动页面
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -44,15 +43,9 @@ class MainActivity : ComponentActivity() {
              // 退出应用程序
  //            exitProcess(1)
          }*/
-        DialogX.onlyOnePopTip = false
-        //是否默认可以关闭
-        DialogX.cancelableTipDialog = false
         enableEdgeToEdge()
 
         setContent {
-
-            DialogX.globalTheme = DialogX.THEME.DARK
-
             XyTheme(
                 brash = backgroundConfig.xyBackgroundBrash
 //                xyBackground = backgroundConfig.xyBackground
