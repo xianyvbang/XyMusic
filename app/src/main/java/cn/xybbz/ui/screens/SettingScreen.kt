@@ -149,6 +149,17 @@ fun SettingScreen(
                         ifChecked = settingsViewModel.settingDataNow.ifHandleAudioFocus
                     ) { bol ->
                         coroutineScope.launch {
+                            settingsViewModel.settingsManager.setIfEnableSyncPlayProgress(
+                                bol
+                            )
+                        }
+                    }
+
+                    MusicSettingSwitchItemComponent(
+                        title = stringResource(R.string.enabled_sync_play_progress),
+                        ifChecked = settingsViewModel.settingDataNow.ifEnableSyncPlayProgress
+                    ) { bol ->
+                        coroutineScope.launch {
                             settingsViewModel.settingsManager.setIfHandleAudioFocus(
                                 bol
                             )

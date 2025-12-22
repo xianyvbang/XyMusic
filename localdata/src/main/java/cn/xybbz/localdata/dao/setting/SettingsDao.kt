@@ -66,4 +66,7 @@ interface SettingsDao {
 
     @Query("update xy_settings set maxConcurrentDownloads = :maxConcurrentDownloads where id = :id")
     suspend fun updateMaxConcurrentDownloads(maxConcurrentDownloads: Int, id: Long)
+
+    @Query("update xy_settings set ifEnableSyncPlayProgress = :ifEnableSyncPlayProgress where id = :id")
+    suspend fun updateIfEnableSyncPlayProgress(ifEnableSyncPlayProgress: Boolean, id: Long)
 }

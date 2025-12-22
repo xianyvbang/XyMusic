@@ -180,6 +180,24 @@ class SettingsManager(
     }
 
     /**
+     * 设置是否开启所播放进度同步
+     */
+    suspend fun setIfEnableSyncPlayProgress(ifEnableSyncPlayProgress: Boolean) {
+        settings = get().copy(ifEnableSyncPlayProgress = ifEnableSyncPlayProgress)
+        if (get().id != AllDataEnum.All.code) {
+            db.settingsDao.updateIfEnableSyncPlayProgress(
+                ifEnableSyncPlayProgress = ifEnableSyncPlayProgress,
+                get().id
+            )
+
+        } else {
+            val settingId =
+                db.settingsDao.save(XySettings(ifEnableSyncPlayProgress = ifEnableSyncPlayProgress))
+            settings = get().copy(id = settingId)
+        }
+    }
+
+    /**
      * 更新语言设置
      */
     suspend fun setLanguageTypeData(languageType: LanguageType, context: Context) {

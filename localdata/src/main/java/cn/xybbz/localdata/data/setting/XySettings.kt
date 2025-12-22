@@ -57,5 +57,9 @@ data class XySettings(
     /**
      * 最大同时下载数量
      */
-    val maxConcurrentDownloads:Int = 3
+    val maxConcurrentDownloads:Int = 3,
+    /**
+     * 是否同步播放进度
+     */
+    val ifEnableSyncPlayProgress: Boolean = true
 )

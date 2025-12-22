@@ -21,6 +21,7 @@ class DatasourceConfig {
         Migration_8_9,
         Migration_9_10,
         Migration_10_11,
+        Migration_11_12,
     )
 
     fun createDatabaseClient(context: Context): DatabaseClient {
@@ -228,4 +229,14 @@ class DatasourceConfig {
         }
     }
 
+    private object Migration_11_12 : Migration(11, 12) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+            ALTER TABLE xy_settings
+            ADD COLUMN ifEnableSyncPlayProgress INTEGER NOT NULL DEFAULT 1
+            """
+            )
+        }
+    }
 }

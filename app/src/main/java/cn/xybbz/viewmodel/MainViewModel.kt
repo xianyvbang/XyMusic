@@ -32,7 +32,6 @@ import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.config.update.ApkUpdateManager
 import cn.xybbz.config.update.VersionCheckScheduler
 import cn.xybbz.entity.data.PlayerTypeData
 import cn.xybbz.entity.data.music.MusicPlayContext
@@ -182,39 +181,45 @@ class MainViewModel @Inject constructor(
     }
 
     fun onPlay(musicId: String, playSessionId: String) {
-        viewModelScope.launch {
-            dataSourceManager.reportPlaying(
-                musicId,
-                playSessionId = playSessionId,
-                positionTicks = musicController.currentPosition
-            )
+        if (settingsManager.get().ifEnableSyncPlayProgress) {
+            viewModelScope.launch {
+                dataSourceManager.reportPlaying(
+                    musicId,
+                    playSessionId = playSessionId,
+                    positionTicks = musicController.currentPosition
+                )
+            }
+            viewModelScope.launch {
+                dataSourceManager.reportProgress(
+                    musicId,
+                    playSessionId = playSessionId,
+                    positionTicks = musicController.currentPosition
+                )
+                alarmConfig.scheduleNextReport()
+            }
         }
-        viewModelScope.launch {
-            dataSourceManager.reportProgress(
-                musicId,
-                playSessionId = playSessionId,
-                positionTicks = musicController.currentPosition
-            )
-            alarmConfig.scheduleNextReport()
-        }
+
     }
 
     fun onPause(musicId: String, playSessionId: String, musicUrl: String) {
-        viewModelScope.launch {
-            dataSourceManager.reportPlaying(
-                musicId,
-                playSessionId = playSessionId,
-                true,
-                musicController.currentPosition
-            )
+        if (settingsManager.get().ifEnableSyncPlayProgress) {
+            viewModelScope.launch {
+                dataSourceManager.reportPlaying(
+                    musicId,
+                    playSessionId = playSessionId,
+                    true,
+                    musicController.currentPosition
+                )
+            }
+            viewModelScope.launch {
+                dataSourceManager.reportProgress(
+                    musicId,
+                    playSessionId = playSessionId,
+                    positionTicks = musicController.currentPosition
+                )
+            }
         }
-        viewModelScope.launch {
-            dataSourceManager.reportProgress(
-                musicId,
-                playSessionId = playSessionId,
-                positionTicks = musicController.currentPosition
-            )
-        }
+
         cacheController.pauseCache(musicUrl)
         Log.i("=====", "调用暂停方法")
         setPlayerProgress(musicController.currentPosition)
@@ -222,13 +227,14 @@ class MainViewModel @Inject constructor(
 
     fun onPositionSeekTo(millSeconds: Long, itemId: String, playSessionId: String) {
         setPlayerProgress(millSeconds)
-        viewModelScope.launch {
-            dataSourceManager.reportProgress(
-                itemId,
-                playSessionId = playSessionId,
-                positionTicks = millSeconds
-            )
-        }
+        if (settingsManager.get().ifEnableSyncPlayProgress)
+            viewModelScope.launch {
+                dataSourceManager.reportProgress(
+                    itemId,
+                    playSessionId = playSessionId,
+                    positionTicks = millSeconds
+                )
+            }
     }
 
     /**
@@ -472,7 +478,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun startMediaLibraryAndFavoriteSync(){
+    fun startMediaLibraryAndFavoriteSync() {
         mediaLibraryAndFavoriteSynJob?.cancel()
         mediaLibraryAndFavoriteSyncScheduler.cancel()
         mediaLibraryAndFavoriteSynJob = viewModelScope.launch {

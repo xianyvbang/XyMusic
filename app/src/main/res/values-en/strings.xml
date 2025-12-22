@@ -215,6 +215,7 @@ Automatic calculation rules for the upper limit of cache:
     <string name="cache_limit">Cache limit</string>
     <string name="album_playback_history">Album Play History</string>
     <string name="allow_simultaneous_playback">Allows simultaneous playback with other applications</string>
+    <string name="enabled_sync_play_progress">Enable playback progress synchronization</string>
     <string name="cache_location">Cache location</string>
     <string name="song_cache_location">Song storage location</string>
     <string name="connection_management">Connection Management</string>
