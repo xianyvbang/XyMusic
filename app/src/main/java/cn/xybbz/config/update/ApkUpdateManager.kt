@@ -39,7 +39,7 @@ class ApkUpdateManager(
 
 
     init {
-
+        currentVersion = settingsManager.get().latestVersion
     }
 
     /**

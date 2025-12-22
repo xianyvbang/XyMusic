@@ -3,7 +3,7 @@ accompanistVersion = "0.37.3"
 agp = "8.13.2"
 coilComposeVersion = "2.7.0"
 coreSplashscreenVersion = "1.2.0"
-dialogxVersion = "0.0.49"
+dialogxVersion = "0.0.50"
 kotlin = "2.2.21"
 coreKtx = "1.17.0"
 junit = "4.13.2"
@@ -49,7 +49,7 @@ androidx-room-paging = { module = "androidx.room:room-paging", version.ref = "ro
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtxVersion" }
-dialogx = { module = "com.kongzue.dialogx:DialogX", version.ref = "dialogxVersion" }
+dialogx = { module = "com.github.kongzue.DialogX:DialogX", version.ref = "dialogxVersion" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJsonVersion" }
 moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshiKotlinVersion" }
 moshi-kotlin-codegen = { module = "com.squareup.moshi:moshi-kotlin-codegen", version.ref = "moshiKotlinVersion" }

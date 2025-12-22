@@ -18,17 +18,22 @@ import dagger.multibindings.StringKey;
 @Module
 @InstallIn(SingletonComponent.class)
 @OriginatingElement(
-    topLevelClass = DownloadWork.class
+        topLevelClass = DownloadWork.class
 )
 public interface DownloadWork_HiltModule {
-  @Binds
-  @IntoMap
-  @StringKey("cn.xybbz.config.download.work.DownloadWork")
-  WorkerAssistedFactory<? extends ListenableWorker> bind(DownloadWork_AssistedFactory factory);
+    @Binds
+    @IntoMap
+    @StringKey("cn.xybbz.config.download.work.DownloadWork")
+    WorkerAssistedFactory<? extends ListenableWorker> bind(DownloadWork_AssistedFactory factory);
 
 
-  @Binds
-  @IntoMap
-  @StringKey("cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncWorker")
-  WorkerAssistedFactory<? extends ListenableWorker> bind2(MediaLibraryAndFavoriteSyncWork_AssistedFactory factory);
+    @Binds
+    @IntoMap
+    @StringKey("cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncWorker")
+    WorkerAssistedFactory<? extends ListenableWorker> bind2(MediaLibraryAndFavoriteSyncWork_AssistedFactory factory);
+
+    @Binds
+    @IntoMap
+    @StringKey("cn.xybbz.config.update.VersionCheckWorker")
+    WorkerAssistedFactory<? extends ListenableWorker> bind3(VersionCheckWork_AssistedFactory factory);
 }

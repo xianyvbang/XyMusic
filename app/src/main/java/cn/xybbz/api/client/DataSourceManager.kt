@@ -129,13 +129,13 @@ class DataSourceManager(
     /**
      * 初始化对象信息
      */
-    fun initDataSource() {
+    fun initDataSource(ifLogin: Boolean = false) {
         startEventBus()
         datasourceCoroutineScope.launch {
             val connectionConfig = db.connectionConfigDao.selectConnectionConfig()
             if (connectionConfig != null) {
                 setDataSourceTypeFun(connectionConfig.type)
-                serverLogin(false)
+                serverLogin(ifLogin)
             }
         }
 
