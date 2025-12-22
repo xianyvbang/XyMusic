@@ -3,6 +3,7 @@ package cn.xybbz.config.module
 import android.content.Context
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
+import cn.xybbz.common.music.AudioFadeController
 import cn.xybbz.common.music.CacheController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.favorite.FavoriteRepository
@@ -23,9 +24,11 @@ class MusicControllerModule {
     fun musicController(
         @ApplicationContext application: Context,
         cheController: CacheController,
-        favoriteRepository: FavoriteRepository
+        favoriteRepository: FavoriteRepository,
+        audioFadeController: AudioFadeController
     ): MusicController {
-        val controller = MusicController(application, cheController,favoriteRepository)
+        val controller =
+            MusicController(application, cheController, favoriteRepository, audioFadeController)
         return controller
     }
 }

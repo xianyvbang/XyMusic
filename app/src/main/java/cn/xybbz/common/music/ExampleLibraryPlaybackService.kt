@@ -3,6 +3,7 @@ package cn.xybbz.common.music
 import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
+import android.media.AudioTrack
 import android.os.Bundle
 import android.util.Log
 import androidx.media3.common.AudioAttributes
@@ -14,6 +15,10 @@ import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.audio.AudioOutput
+import androidx.media3.exoplayer.audio.AudioOutputProvider
+import androidx.media3.exoplayer.audio.AudioTrackAudioOutputProvider
+import androidx.media3.exoplayer.audio.ForwardingAudioOutputProvider
 import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
@@ -25,8 +30,8 @@ import cn.xybbz.api.client.ImageApiClient
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
 import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
-import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.lrc.LrcServer
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
@@ -49,6 +54,11 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
     //是否注册BecomingNoisyReceiver true:注册, false:未注册
     private var ifRegister: Boolean = false
 
+    lateinit var audioTrack: AudioTrack
+
+
+
+
     @Inject
     lateinit var cacheController: CacheController
 
@@ -63,11 +73,16 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
 
     @Inject
     lateinit var imageApiClient: ImageApiClient
+
     @Inject
     lateinit var lrcServer: LrcServer
 
     @Inject
     lateinit var dataSourceManager: DataSourceManager
+
+    @Inject
+    lateinit var fadeController: AudioFadeController
+
 
     override fun onCreate() {
         super.onCreate()
@@ -81,9 +96,10 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
         val renderersFactory = DefaultRenderersFactory(this)
             .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
 
-        val exoPlayerBuilder = ExoPlayer.Builder(this,renderersFactory)
+        val exoPlayerBuilder = ExoPlayer.Builder(this, renderersFactory)
         // 设置逐步加载数据的缓存数据源
-
+        val defaultProvider =
+            AudioTrackAudioOutputProvider.Builder(this).build()
         cacheController.getMediaSourceFactory()?.let {
             exoPlayerBuilder.setMediaSourceFactory(it)
             Log.i("catch", "设置缓存工厂")
@@ -96,7 +112,17 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                 AudioAttributes.DEFAULT, /* handleAudioFocus= */
                 settingsManager.get().ifHandleAudioFocus
             )
+            .setAudioOutputProvider(object : ForwardingAudioOutputProvider(defaultProvider) {
+                override fun getAudioOutput(config: AudioOutputProvider.OutputConfig): AudioOutput {
+                    Log.i("music", "创建 AudioTrack")
+                    val output = defaultProvider.getAudioOutput(config)
+                    audioTrack = output.audioTrack
+                    fadeController.attach(audioTrack)
+                    return output
+                }
+            })
             .build()
+
         //这里的可以获得元数据
         exoPlayer?.addAnalyticsListener(XyLogger(lrcServer = lrcServer))
 

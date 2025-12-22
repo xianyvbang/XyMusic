@@ -58,7 +58,8 @@ import kotlinx.coroutines.launch
 class MusicController(
     private val application: Context,
     private val cacheController: CacheController,
-    private val favoriteRepository: FavoriteRepository
+    private val favoriteRepository: FavoriteRepository,
+    private var fadeController: AudioFadeController
 ) {
 
     val scope = CoroutineScopeUtils.getIo("MusicController")
@@ -138,6 +139,7 @@ class MusicController(
             // 播放状态变化回调
             Log.i("=====", "当前播放状态$isPlaying")
             if (isPlaying) {
+                fadeController.fadeIn()
                 state = PlayStateEnum.Playing
                 duration = mediaController?.duration ?: 0
                 musicInfo?.let {
@@ -356,10 +358,12 @@ class MusicController(
     }
 
     fun pause() {
-        Log.i("=====", "点击暂停")
-        mediaController?.pause()
+        fadeController.fadeOut()
         state = PlayStateEnum.Pause
-
+        Handler(mediaController?.applicationLooper!!).postDelayed({
+            Log.i("=====", "点击暂停")
+            mediaController?.pause()
+        }, 1200)
     }
 
     fun seekTo(millSeconds: Long) {
@@ -371,10 +375,15 @@ class MusicController(
     }
 
     fun seekToIndex(index: Int) {
-        Log.i("=====", "调用seekToIndex")
-        setCurrentPositionData(Constants.ZERO.toLong())
-        mediaController?.seekToDefaultPosition(index)
-        mediaController?.play()
+        fadeController.fadeOut()
+        Handler(mediaController?.applicationLooper!!).postDelayed({
+            Log.i("=====", "调用seekToIndex")
+            setCurrentPositionData(Constants.ZERO.toLong())
+            mediaController?.seekToDefaultPosition(index)
+            resume()
+            // 新歌淡入会在 onIsPlayingChanged(true) 触发
+        }, 500)
+
     }
 
     /**
@@ -679,9 +688,15 @@ class MusicController(
      * 获取当前播放模式下的下一首歌曲
      */
     fun seekToNext() {
-        mediaController?.seekToNextMediaItem()
-        Log.i("=====", "调用seekToNext")
-        resume()
+
+        fadeController.fadeOut()
+        Handler(mediaController?.applicationLooper!!).postDelayed({
+            mediaController?.seekToNextMediaItem()
+            Log.i("=====", "调用seekToNext")
+            resume()
+        }, 500)
+
+
     }
 
     /**
