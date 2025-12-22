@@ -87,11 +87,8 @@ fun AboutScreen(
     val context = LocalContext.current
 
     val apkDownloadInfo by aboutViewModel.apkDownloadInfo.collectAsStateWithLifecycle()
-    var enabledGetVersion by remember {
-        mutableStateOf(true)
-    }
     val primary = MaterialTheme.colorScheme.primary
-    val permissionState = downloadPermission {
+    val permissionState = downloadPermission(ifDownloadApk = true) {
         aboutViewModel.downloadAndInstall()
     }
     LaunchedEffect(apkDownloadInfo) {

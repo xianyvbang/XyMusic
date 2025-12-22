@@ -1,5 +1,6 @@
 package cn.xybbz.config.update
 
+import android.os.Build
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +51,10 @@ class ApkUpdateManager(
 
         if (ifCheck)
             MessageUtils.sendPopTipSuccess(R.string.get_latest_version)
+
+        val abis = Build.SUPPORTED_ABIS
+        Log.d("ABI", abis.joinToString())
+
         val apkDownload = db.downloadDao.getOne(DownloadTypes.APK)
         if (apkDownload?.status == DownloadStatus.DOWNLOADING) return true
         val versionName = settingsManager.packageInfo.versionName
@@ -65,8 +70,13 @@ class ApkUpdateManager(
                 latestVersion = releasesInfo.tagName
                 settingsManager.setLatestVersion(releasesInfo.tagName)
 
-                val assetItem = releasesInfo.assets.findLast { it.name.contains("apk") }
+                val assetItem = releasesInfo.assets.findLast {
+                    it.name.contains("apk") && abis.any { abi ->
+                        it.name.contains(abi)
+                    }
+                }
                 if (assetItem != null) {
+                    Log.i("======", "读取的APK下载信息: $assetItem")
                     settingsManager.setLastApkUrl(assetItem.browserDownloadUrl)
                 }
                 settingsManager.setLatestVersionTime(currentTimeMillis)
