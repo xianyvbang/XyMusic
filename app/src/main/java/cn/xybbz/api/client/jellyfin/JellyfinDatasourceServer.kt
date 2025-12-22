@@ -547,7 +547,6 @@ class JellyfinDatasourceServer @Inject constructor(
         if (!musicList.isNullOrEmpty())
             db.withTransaction {
                 db.musicDao.removeByType(MusicDataTypeEnum.PLAY_HISTORY)
-
                 saveBatchMusic(musicList, MusicDataTypeEnum.PLAY_HISTORY)
             }
     }

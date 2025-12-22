@@ -303,10 +303,11 @@ fun HomeScreen(
                                                     overflow = TextOverflow.Visible,
                                                     style = MaterialTheme.typography.titleSmall
                                                 )
-                                                HorizontalDivider()
-                                                XyItemText(text = homeViewModel.dataSourceManager.errorMessage)
+                                                if (homeViewModel.dataSourceManager.errorMessage.isNotBlank()){
+                                                    HorizontalDivider()
+                                                    XyItemText(text = homeViewModel.dataSourceManager.errorMessage)
+                                                }
                                             }
-
                                         }
                                     }
                                 }

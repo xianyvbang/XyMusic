@@ -161,10 +161,12 @@ class DataSourceManager(
      */
     fun serverLogin(ifLogin: Boolean) {
         datasourceCoroutineScope.launch {
+            ifLoginError = false
             autoLogin(ifLogin)?.onEach { loginState ->
                 loginStatus = loginState
-                ifLoginError = false
+//                ifLoginError = false
                 val loginSateInfo = getLoginSateInfo(loginState)
+                Log.i("error","${loginSateInfo}")
                 errorHint = loginSateInfo.errorHint ?: R.string.empty_info
                 errorMessage = loginSateInfo.errorMessage ?: ""
                 ifLoginError = loginSateInfo.isError

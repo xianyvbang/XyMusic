@@ -113,7 +113,7 @@ interface XyMusicDao {
             }
 
             MusicDataTypeEnum.PLAY_HISTORY -> {
-                /*var index = selectPlayHistoryIndex() ?: -1
+                var index = selectPlayHistoryIndex() ?: -1
                 savePlayHistoryMusic(data.map {
                     index += 1
                     PlayHistoryMusic(
@@ -121,7 +121,7 @@ interface XyMusicDao {
                         index = index,
                         connectionId = connectionId
                     )
-                })*/
+                })
             }
 
             MusicDataTypeEnum.PLAY_QUEUE -> {
