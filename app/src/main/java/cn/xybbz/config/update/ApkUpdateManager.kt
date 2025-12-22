@@ -19,8 +19,7 @@ class ApkUpdateManager(
     private val db: DatabaseClient,
     private val settingsManager: SettingsManager,
     private val versionApiClient: VersionApiClient,
-
-    ) {
+) {
 
     //最新版本的版本号
     var latestVersion by mutableStateOf("")
@@ -40,7 +39,7 @@ class ApkUpdateManager(
 
 
     init {
-
+        currentVersion = settingsManager.get().latestVersion
     }
 
     /**
@@ -56,33 +55,27 @@ class ApkUpdateManager(
         val versionName = settingsManager.packageInfo.versionName
         var ifGetVersionSuccess = true
         val currentTimeMillis = System.currentTimeMillis()
+        currentVersion = versionName ?: ""
+        latestVersion = settingsManager.get().latestVersion
+        try {
+            val releasesInfo = versionApiClient.downloadApi().getLatestReleasesInfo()
+            Log.i("======", "返回github信息: ${releasesInfo}")
+            this.releasesInfo = releasesInfo
+            if (releasesInfo != null) {
+                latestVersion = releasesInfo.tagName
+                settingsManager.setLatestVersion(releasesInfo.tagName)
 
-        val ifDownloadApk = ifDownloadApk(ifCheck)
-        if (ifDownloadApk) {
-            latestVersion = settingsManager.get().latestVersion
-
-        } else {
-            try {
-                val releasesInfo = versionApiClient.downloadApi().getLatestReleasesInfo()
-                Log.i("======", "返回github信息: ${releasesInfo}")
-                this.releasesInfo = releasesInfo
-                if (releasesInfo != null) {
-                    latestVersion = releasesInfo.tagName
-                    settingsManager.setLatestVersion(releasesInfo.tagName)
-
-                    val assetItem = releasesInfo.assets.findLast { it.name.contains("apk") }
-                    if (assetItem != null) {
-                        settingsManager.setLastApkUrl(assetItem.browserDownloadUrl)
-                    }
-                    settingsManager.setLatestVersionTime(currentTimeMillis)
-                } else {
-                    ifGetVersionSuccess = false
+                val assetItem = releasesInfo.assets.findLast { it.name.contains("apk") }
+                if (assetItem != null) {
+                    settingsManager.setLastApkUrl(assetItem.browserDownloadUrl)
                 }
-            } catch (e: Exception) {
-                Log.e(Constants.LOG_ERROR_PREFIX, "获取github版本号失败", e)
+                settingsManager.setLatestVersionTime(currentTimeMillis)
+            } else {
                 ifGetVersionSuccess = false
             }
-
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取github版本号失败", e)
+            ifGetVersionSuccess = false
         }
         if (!versionName.isNullOrBlank()) {
             ifMaxVersion =

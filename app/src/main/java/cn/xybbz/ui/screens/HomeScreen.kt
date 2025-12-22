@@ -320,7 +320,7 @@ fun HomeScreen(
                         }
 
                     IconButton(onClick = {
-                        homeViewModel.dataSourceManager.initDataSource()
+                        homeViewModel.dataSourceManager.initDataSource(true)
                     }) {
                         Icon(
                             imageVector = Icons.Rounded.Refresh,

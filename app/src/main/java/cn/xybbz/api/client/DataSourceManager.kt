@@ -129,13 +129,13 @@ class DataSourceManager(
     /**
      * 初始化对象信息
      */
-    fun initDataSource() {
+    fun initDataSource(ifLogin: Boolean = false) {
         startEventBus()
         datasourceCoroutineScope.launch {
             val connectionConfig = db.connectionConfigDao.selectConnectionConfig()
             if (connectionConfig != null) {
                 setDataSourceTypeFun(connectionConfig.type)
-                serverLogin(false)
+                serverLogin(ifLogin)
             }
         }
 
@@ -318,10 +318,6 @@ class DataSourceManager(
     }
 
     override suspend fun autoLogin(ifLogin: Boolean): Flow<ClientLoginInfoState>? {
-        MessageUtils.sendPopTipHint(
-            R.string.logging_in,
-            delay = 5000
-        )
         loading = true
         Log.i("=====", "开始登录.............")
         return dataSourceServer.autoLogin(ifLogin)

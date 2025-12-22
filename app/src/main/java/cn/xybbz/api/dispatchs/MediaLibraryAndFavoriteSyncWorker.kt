@@ -50,7 +50,8 @@ class MediaLibraryAndFavoriteSyncWorker @AssistedInject constructor(
             }
             Result.success()
         } catch (e: Exception) {
-            Result.retry()
+            Log.e(Constants.LOG_ERROR_PREFIX, "同步媒体库,收藏和数量异常", e)
+            Result.failure()
         }
     }
 }

@@ -37,6 +37,11 @@ class XyApplication : Application(),Configuration.Provider {
         super.onCreate()
         MultiLanguages.init(this)
         DialogX.init(this)
+        DialogX.DEBUGMODE = true;
+        DialogX.onlyOnePopTip = false
+        //是否默认可以关闭
+        DialogX.cancelableTipDialog = false
+        DialogX.globalTheme = DialogX.THEME.DARK
         settingsManager.setSettingsData()
         backgroundConfig.load()
         proxyConfigServer.initConfig()
