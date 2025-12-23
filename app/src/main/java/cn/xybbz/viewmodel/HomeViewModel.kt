@@ -20,7 +20,6 @@ import cn.xybbz.config.recommender.DailyRecommender
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.DatabaseClient
-import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.remote.RemoteCurrent
@@ -31,8 +30,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @HiltViewModel
@@ -53,83 +56,134 @@ class HomeViewModel @OptIn(UnstableApi::class)
         private set
 
     /**
-     * 最新专辑
+     * 最多播放的音乐
      */
-    var newAlbumList by mutableStateOf<List<XyAlbum>>(emptyList())
-        private set
+    val mostPlayerMusicListFlow: StateFlow<List<XyMusicExtend>> =
+        db.musicDao
+            .selectLimitMusicListFlow(
+                MusicDataTypeEnum.MAXIMUM_PLAY,
+                20
+            )
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = runBlocking {
+                    db.musicDao.selectMaximumPlayMusicExtendList(
+                        20
+                    )
+                }
+            )
+
+    /**
+     * 获得最新专辑列表
+     */
+    val newAlbumListFlow = db.albumDao
+        .selectNewestListFlow(20)
+        .distinctUntilChanged()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = runBlocking {
+                db.albumDao.selectNewestList(
+                    20
+                )
+            }
+        )
 
     /**
      * 最近播放的音乐
      */
-    var musicRecentlyList by mutableStateOf<List<XyMusicExtend>>(emptyList())
-        private set
+    val musicRecentlyListFlow = db.musicDao
+        .selectLimitMusicListFlow(
+            MusicDataTypeEnum.PLAY_HISTORY,
+            20
+        )
+        .distinctUntilChanged()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = runBlocking {
+                db.musicDao.selectPlayHistoryMusicExtendList(
+                    20
+                )
+            }
+        )
 
     /**
      * 最近播放的专辑
      */
-    var albumRecentlyList by mutableStateOf<List<XyAlbum>>(emptyList())
-        private set
-
-    /**
-     * 最多播放的音乐
-     */
-    var mostPlayerMusicList by mutableStateOf<List<XyMusicExtend>>(emptyList())
-        private set
+    val albumRecentlyListFlow = db.albumDao
+        .selectPlayHistoryAlbumListFlow(20)
+        .distinctUntilChanged()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = runBlocking {
+                db.albumDao.selectPlayHistoryAlbumList(
+                    20
+                )
+            }
+        )
 
     /**
      * 最多播放的专辑
      */
-    var mostPlayerAlbumList by mutableStateOf<List<XyAlbum>>(emptyList())
-        private set
+    val mostPlayerAlbumListFlow = db.albumDao
+        .selectMaximumPlayAlbumListFlow(20)
+        .distinctUntilChanged()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = runBlocking {
+                db.albumDao.selectMaximumPlayAlbumList(
+                    20
+                )
+            }
+        )
 
     /**
      * 推荐音乐
      */
-    var recommendedMusicList by mutableStateOf<List<XyMusicExtend>>(emptyList())
-        private set
-
+   val recommendedMusicListFlow = db.musicDao
+    .selectRecommendedMusicExtendListFlow(20)
+    .distinctUntilChanged()
+       .stateIn(
+           scope = viewModelScope,
+           started = SharingStarted.Eagerly,
+           initialValue = runBlocking {
+               db.musicDao.selectRecommendedMusicExtendList(
+                   20
+               )
+           }
+       )
 
     /**
      * 歌单列表
      */
-    var playlists by mutableStateOf(listOf<XyAlbum>())
-        private set
+    val playlistsFlow = db.albumDao
+            .selectPlaylistFlow()
+        .distinctUntilChanged()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = runBlocking {
+                db.albumDao.selectPlaylist()
+            }
+        )
 
     /**
-     * 音乐数量
+     * 音乐数量,专辑数量,艺术家数量,歌单数量,流派数量,收藏数量
      */
-    var musicCount by mutableStateOf<String?>(null)
-        private set
-
-    /**
-     * 专辑数量
-     */
-    var albumCount by mutableStateOf<String?>(null)
-        private set
-
-    /**
-     * 艺术家数量
-     */
-    var artistCount by mutableStateOf<String?>(null)
-        private set
-
-    /**
-     * 歌单数量
-     */
-    var playlistCount by mutableStateOf<String?>(null)
-        private set
-
-    /**
-     * 流派数量
-     */
-    var genreCount by mutableStateOf<String?>(null)
-        private set
-
-    /**
-     * 收藏数量
-     */
-    var favoriteCount by mutableStateOf<String?>(null)
-        private set
+    val dataCountFlow = db.dataCountDao
+        .selectOneFlow()
+        .distinctUntilChanged()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = runBlocking {
+                db.dataCountDao.selectOne()
+            }
+        )
 
     /**
      * 本地音乐数量
@@ -150,23 +204,8 @@ class HomeViewModel @OptIn(UnstableApi::class)
     var connectionList by mutableStateOf<List<ConnectionConfig>>(emptyList())
         private set
 
-    /**
-     * 歌单是否加载中
-     */
-    var isLoadingPlaylist by mutableStateOf(false)
-        private set
-
-    private var mostPlayerMusicJob: Job? = null
-    private var mostPlayerAlbumJob: Job? = null
-    private var newAlbumJob: Job? = null
-    private var playlistsJob: Job? = null
-    private var playRecordMusicJob: Job? = null
-    private var playRecordAlbumJob: Job? = null
-    private var recommendedMusicJob: Job? = null
-    private var dataCountJob: Job? = null
     private var localMusicCountJob: Job? = null
     private var downloadCountJob: Job? = null
-
 
 
     init {
@@ -177,162 +216,12 @@ class HomeViewModel @OptIn(UnstableApi::class)
 
     private fun observeLoginSuccessRoomData() {
         viewModelScope.launch {
-            connectionConfigServer.loginSuccessEvent.collect {
-                startHomeDataObservers()
-            }
+            startHomeDataObservers()
         }
     }
 
     private fun startHomeDataObservers() {
-        mostPlayerMusicJob?.cancel()
-        mostPlayerAlbumJob?.cancel()
-        newAlbumJob?.cancel()
-        playlistsJob?.cancel()
-        playRecordMusicJob?.cancel()
-        playRecordAlbumJob?.cancel()
-        recommendedMusicJob?.cancel()
-
-        observeMostPlayerMusicList()
-        observeMostPlayerAlbumList()
-        observeNewAlbumList()
-        observePlaylists()
-        observePlayRecordMusic()
-        observePlayRecordAlbum()
-        observeRecommendedMusic()
-        startDataCountObserver()
         startDownloadDataObservers()
-    }
-
-    /**
-     * 获得最多播放音乐列表
-     */
-    private fun observeMostPlayerMusicList() {
-        mostPlayerMusicJob = viewModelScope.launch {
-            db.musicDao
-                .selectLimitMusicListFlow(
-                    MusicDataTypeEnum.MAXIMUM_PLAY,
-                    20
-                )
-                .distinctUntilChanged()
-                .collect {
-                    mostPlayerMusicList = it
-                }
-        }
-    }
-
-    /**
-     * 获得最多播放专辑列表
-     */
-    private fun observeMostPlayerAlbumList() {
-        mostPlayerAlbumJob = viewModelScope.launch {
-            db.albumDao
-                .selectMaximumPlayAlbumListFlow(20)
-                .distinctUntilChanged()
-                .collect {
-                    mostPlayerAlbumList = it
-                }
-        }
-    }
-
-    /**
-     * 获得最新专辑列表
-     */
-    private fun observeNewAlbumList() {
-        newAlbumJob = viewModelScope.launch {
-            db.albumDao
-                .selectNewestListPageFlow(20)
-                .distinctUntilChanged()
-                .collect {
-                    newAlbumList = it
-                }
-        }
-    }
-
-    /**
-     * 获得歌单信息
-     */
-    private fun observePlaylists() {
-        playlistsJob = viewModelScope.launch {
-            db.albumDao
-                .selectPlaylistFlow()
-                .collect {
-                    playlists = it
-                    isLoadingPlaylist = false
-                }
-        }
-    }
-
-    /**
-     * 获得最近播放音乐
-     */
-    private fun observePlayRecordMusic() {
-        playRecordMusicJob = viewModelScope.launch {
-            db.musicDao
-                .selectLimitMusicListFlow(
-                    MusicDataTypeEnum.PLAY_HISTORY,
-                    20
-                )
-                .distinctUntilChanged()
-                .collect {
-                    musicRecentlyList = it
-                }
-        }
-    }
-
-    /**
-     * 获得最近播放专辑
-     */
-    private fun observePlayRecordAlbum() {
-        playRecordAlbumJob = viewModelScope.launch {
-            db.albumDao
-                .selectPlayHistoryAlbumListFlow(20)
-                .distinctUntilChanged()
-                .collect {
-                    albumRecentlyList = it
-                }
-        }
-    }
-
-    /**
-     * 获得推荐音乐列表
-     */
-    private fun observeRecommendedMusic() {
-        recommendedMusicJob = viewModelScope.launch {
-            db.musicDao
-                .selectRecommendedMusicExtendListFlow(20)
-                .distinctUntilChanged()
-                .collect {
-                    recommendedMusicList = it
-                }
-        }
-    }
-
-    /**
-     * 获取数据数量
-     */
-    private fun startDataCountObserver() {
-        dataCountJob?.cancel()
-        if (dataSourceManager.dataSourceType?.ifShowCount != true) return
-
-        dataCountJob = viewModelScope.launch {
-            db.dataCountDao.selectOneFlow().collect { dataCountEntity ->
-                if (dataCountEntity != null) {
-                    musicCount = dataCountEntity.musicCount.toString()
-                    albumCount = dataCountEntity.albumCount.toString()
-                    artistCount = dataCountEntity.artistCount.toString()
-                    playlistCount = dataCountEntity.playlistCount.toString()
-                    genreCount = dataCountEntity.genreCount.toString()
-                    favoriteCount = dataCountEntity.favoriteCount.toString()
-                } else {
-                    musicCount = null
-                    albumCount = null
-                    artistCount = null
-                    playlistCount = null
-                    genreCount = null
-                    favoriteCount = null
-                }
-            }
-        }
     }
 
     /**

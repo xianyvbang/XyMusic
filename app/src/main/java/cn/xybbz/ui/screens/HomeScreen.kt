@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -54,6 +53,7 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -117,6 +117,14 @@ fun HomeScreen(
     SideEffect {
         Log.d("=====", "HomeScreen重组一次")
     }
+    val mostPlayerMusicList by homeViewModel.mostPlayerMusicListFlow.collectAsState()
+    val newAlbumList by homeViewModel.newAlbumListFlow.collectAsState()
+    val musicRecentlyList by homeViewModel.musicRecentlyListFlow.collectAsState()
+    val albumRecentlyList by homeViewModel.albumRecentlyListFlow.collectAsState()
+    val mostPlayerAlbumList by homeViewModel.mostPlayerAlbumListFlow.collectAsState()
+    val recommendedMusicList by homeViewModel.recommendedMusicListFlow.collectAsState()
+    val playlists by homeViewModel.playlistsFlow.collectAsState()
+    val dataCount by homeViewModel.dataCountFlow.collectAsState()
     val context = LocalContext.current
     val navHostController = LocalNavController.current
     val sheetState = rememberModalBottomSheetState(
@@ -140,19 +148,19 @@ fun HomeScreen(
     /**
      * 是否显示无数据信息
      */
-    val ifShowNotData by remember {
+    /*val ifShowNotData by remember {
         derivedStateOf {
             homeViewModel.newAlbumList.isEmpty() && homeViewModel.musicRecentlyList.isEmpty()
-                    && homeViewModel.mostPlayerMusicList.isEmpty()
+                    && mostPlayerMusicList.isEmpty()
         }
-    }
+    }*/
 
     /**
      * 歌单列表是否存在
      */
     val ifShowPlaylist by remember {
         derivedStateOf {
-            homeViewModel.playlists.isNotEmpty()
+            playlists.isNotEmpty()
         }
     }
 
@@ -392,7 +400,7 @@ fun HomeScreen(
                         XyItemTabBigButton(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.all_music),
-                            sub = if (ifShowCount) homeViewModel.musicCount ?: stringResource(
+                            sub = if (ifShowCount) dataCount?.musicCount?.toString() ?: stringResource(
                                 Constants.UNKNOWN
                             ) else null,
                             imageVector = Icons.Rounded.MusicNote,
@@ -428,7 +436,7 @@ fun HomeScreen(
                         XyItemTabBigButton(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.album),
-                            sub = if (ifShowCount) homeViewModel.albumCount ?: stringResource(
+                            sub = if (ifShowCount) dataCount?.albumCount?.toString() ?: stringResource(
                                 Constants.UNKNOWN
                             ) else null,
                             imageVector = Icons.Rounded.Album,
@@ -448,7 +456,7 @@ fun HomeScreen(
                         XyItemTabBigButton(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.artist),
-                            sub = if (ifShowCount) homeViewModel.artistCount ?: stringResource(
+                            sub = if (ifShowCount) dataCount?.artistCount?.toString() ?: stringResource(
                                 Constants.UNKNOWN
                             ) else null,
                             imageVector = Icons.Rounded.Person,
@@ -465,7 +473,7 @@ fun HomeScreen(
                         XyItemTabBigButton(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.favorite),
-                            sub = if (ifShowCount) homeViewModel.favoriteCount ?: stringResource(
+                            sub = if (ifShowCount) dataCount?.favoriteCount?.toString() ?: stringResource(
                                 Constants.UNKNOWN
                             ) else null,
                             imageVector = Icons.Rounded.Favorite,
@@ -483,7 +491,7 @@ fun HomeScreen(
                         XyItemTabBigButton(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.genres),
-                            sub = if (ifShowCount) homeViewModel.genreCount ?: stringResource(
+                            sub = if (ifShowCount) dataCount?.genreCount?.toString() ?: stringResource(
                                 Constants.UNKNOWN
                             ) else null,
                             imageVector = Icons.AutoMirrored.Rounded.Label,
@@ -500,7 +508,7 @@ fun HomeScreen(
                     }
                 }
 
-                if (ifShowNotData) {
+                /*if (ifShowNotData) {
                     item {
                         Box(
                             modifier = Modifier
@@ -514,9 +522,9 @@ fun HomeScreen(
                             )
                         }
                     }
-                }
+                }*/
 
-                if (homeViewModel.mostPlayerAlbumList.isNotEmpty()) {
+                if (mostPlayerAlbumList.isNotEmpty()) {
                     item {
                         XyRow {
                             XyItemMedium(
@@ -534,7 +542,7 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
                         ) {
                             items(
-                                homeViewModel.mostPlayerAlbumList,
+                                mostPlayerAlbumList,
                                 key = { item -> item.itemId }) { album ->
                                 MusicAlbumCardComponent(
                                     onItem = { album },
@@ -553,7 +561,7 @@ fun HomeScreen(
                     }
                 }
 
-                if (homeViewModel.mostPlayerMusicList.isNotEmpty()) {
+                if (mostPlayerMusicList.isNotEmpty()) {
                     item {
                         XyRow {
                             XyItemMedium(
@@ -567,9 +575,9 @@ fun HomeScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 IconButton(onClick = composeClick {
-                                    if (homeViewModel.mostPlayerMusicList.isNotEmpty())
+                                    if (mostPlayerMusicList.isNotEmpty())
                                         homeViewModel.musicList(
-                                            musicList = homeViewModel.mostPlayerMusicList,
+                                            musicList = mostPlayerMusicList,
                                             onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
                                             playerTypeEnum = PlayerTypeEnum.RANDOM_PLAY
                                         )
@@ -582,9 +590,9 @@ fun HomeScreen(
                                     )
                                 }
                                 IconButton(onClick = composeClick {
-                                    if (homeViewModel.mostPlayerMusicList.isNotEmpty())
+                                    if (mostPlayerMusicList.isNotEmpty())
                                         homeViewModel.musicList(
-                                            musicList = homeViewModel.mostPlayerMusicList,
+                                            musicList = mostPlayerMusicList,
                                             onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
                                             playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
                                         )
@@ -607,7 +615,7 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
                         ) {
                             items(
-                                homeViewModel.mostPlayerMusicList,
+                                mostPlayerMusicList,
                                 key = { item -> item.music.itemId }) { musicExtend ->
                                 MusicMusicCardComponent(
                                     onItem = { musicExtend.music },
@@ -620,7 +628,7 @@ fun HomeScreen(
                                                 albumId = musicExtend.music
                                                     .album
                                             ),
-                                            homeViewModel.mostPlayerMusicList
+                                            mostPlayerMusicList
                                         )
                                     }
                                 )
@@ -630,7 +638,7 @@ fun HomeScreen(
                 }
 
 
-                if (homeViewModel.recommendedMusicList.isNotEmpty()) {
+                if (recommendedMusicList.isNotEmpty()) {
                     item {
                         XyRow {
                             XyItemMedium(
@@ -644,9 +652,9 @@ fun HomeScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 IconButton(onClick = composeClick {
-                                    if (homeViewModel.recommendedMusicList.isNotEmpty())
+                                    if (recommendedMusicList.isNotEmpty())
                                         homeViewModel.musicList(
-                                            musicList = homeViewModel.recommendedMusicList,
+                                            musicList = recommendedMusicList,
                                             onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
                                             playerTypeEnum = PlayerTypeEnum.RANDOM_PLAY
                                         )
@@ -659,9 +667,9 @@ fun HomeScreen(
                                     )
                                 }
                                 IconButton(onClick = composeClick {
-                                    if (homeViewModel.mostPlayerMusicList.isNotEmpty())
+                                    if (recommendedMusicList.isNotEmpty())
                                         homeViewModel.musicList(
-                                            musicList = homeViewModel.recommendedMusicList,
+                                            musicList = recommendedMusicList,
                                             onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
                                             playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
                                         )
@@ -690,7 +698,7 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
                         ) {
                             items(
-                                homeViewModel.recommendedMusicList.take(5),
+                                recommendedMusicList.take(5),
                                 key = { item -> item.music.itemId }) { musicExtend ->
                                 MusicMusicCardComponent(
                                     onItem = { musicExtend.music },
@@ -703,7 +711,7 @@ fun HomeScreen(
                                                 albumId = musicExtend.music
                                                     .album
                                             ),
-                                            homeViewModel.recommendedMusicList
+                                            recommendedMusicList
                                         )
                                     }
                                 )
@@ -712,7 +720,7 @@ fun HomeScreen(
                     }
                 }
 
-                if (homeViewModel.newAlbumList.isNotEmpty()) {
+                if (newAlbumList.isNotEmpty()) {
                     item {
                         XyRow {
                             XyItemMedium(
@@ -729,7 +737,7 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
                         ) {
                             items(
-                                homeViewModel.newAlbumList,
+                                newAlbumList,
                                 key = { item -> item.itemId }) { album ->
                                 MusicAlbumCardComponent(
                                     onItem = { album },
@@ -748,7 +756,7 @@ fun HomeScreen(
                     }
                 }
 
-                if (homeViewModel.albumRecentlyList.isNotEmpty()) {
+                if (albumRecentlyList.isNotEmpty()) {
                     item {
                         XyRow {
                             XyItemMedium(
@@ -766,7 +774,7 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
                         ) {
                             items(
-                                homeViewModel.albumRecentlyList,
+                                albumRecentlyList,
                                 key = { item -> item.itemId }) { album ->
                                 MusicAlbumCardComponent(
                                     onItem = { album },
@@ -785,7 +793,7 @@ fun HomeScreen(
                     }
                 }
 
-                if (homeViewModel.musicRecentlyList.isNotEmpty()) {
+                if (musicRecentlyList.isNotEmpty()) {
                     item {
                         XyRow {
                             XyItemMedium(
@@ -799,9 +807,9 @@ fun HomeScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 IconButton(onClick = composeClick {
-                                    if (homeViewModel.musicRecentlyList.isNotEmpty())
+                                    if (musicRecentlyList.isNotEmpty())
                                         homeViewModel.musicList(
-                                            musicList = homeViewModel.musicRecentlyList,
+                                            musicList = musicRecentlyList,
                                             onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
                                             playerTypeEnum = PlayerTypeEnum.RANDOM_PLAY
                                         )
@@ -814,9 +822,9 @@ fun HomeScreen(
                                     )
                                 }
                                 IconButton(onClick = composeClick {
-                                    if (homeViewModel.musicRecentlyList.isNotEmpty())
+                                    if (musicRecentlyList.isNotEmpty())
                                         homeViewModel.musicList(
-                                            musicList = homeViewModel.musicRecentlyList,
+                                            musicList = musicRecentlyList,
                                             onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
                                             playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
                                         )
@@ -841,7 +849,7 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
                         ) {
                             items(
-                                homeViewModel.musicRecentlyList,
+                                musicRecentlyList,
                                 key = { item -> item.music.itemId }) { musicExtend ->
                                 MusicMusicCardComponent(
                                     onItem = { musicExtend.music },
@@ -854,7 +862,7 @@ fun HomeScreen(
                                                 albumId = musicExtend.music
                                                     .album
                                             ),
-                                            homeViewModel.musicRecentlyList
+                                            musicRecentlyList
                                         )
                                     }
                                 )
@@ -893,7 +901,7 @@ fun HomeScreen(
                                             ifShowPlaylistMenu = false
                                             //新增歌单
                                             playlistName =
-                                                context.getString(R.string.new_playlist) + homeViewModel.playlists.size
+                                                context.getString(R.string.new_playlist) + playlists.size
 
                                             AlertDialogObject(
                                                 title = context.getString(R.string.create_playlist),
@@ -940,7 +948,7 @@ fun HomeScreen(
                         }
                     }
                 }
-                itemsIndexed(homeViewModel.playlists) { _, item ->
+                itemsIndexed(playlists) { _, item ->
                     //歌单信息
                     XyRow {
                         MusicPlaylistItemComponent(

@@ -508,7 +508,7 @@ interface XyMusicDao {
      * 获得音乐分页信息
      * @return [List<XyMusic>]
      */
-    suspend fun selectLimitMusicListFlow(
+    fun selectLimitMusicListFlow(
         dataType: MusicDataTypeEnum,
         limit: Int
     ): Flow<List<XyMusicExtend>> {
@@ -611,6 +611,21 @@ interface XyMusicDao {
         limit: Int
     ): Flow<List<XyMusicExtend>>
 
+    @Query(
+        """
+        select mi.*,xd.filePath from PlayHistoryMusic phm
+        inner join xy_music mi on phm.musicId = mi.itemId
+        left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
+         where phm.connectionId = (select connectionId from xy_settings)
+        and mi.connectionId = (select connectionId from xy_settings)
+        order by phm.`index`
+        limit :limit
+    """
+    )
+    suspend fun selectPlayHistoryMusicExtendList(
+        limit: Int
+    ): List<XyMusicExtend>
+
     /**
      * 获得播放历史的limit条数据
      */
@@ -692,6 +707,22 @@ interface XyMusicDao {
 
     @Query(
         """
+        select mi.*,xd.filePath as filePath from maximumplaymusic mpm
+        inner join xy_music mi on mpm.musicId = mi.itemId
+        left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
+         where mpm.connectionId = (select connectionId from xy_settings)
+        and mi.connectionId = (select connectionId from xy_settings)
+        order by mpm.`index`
+        limit :limit
+    """
+    )
+    suspend fun selectMaximumPlayMusicExtendList(
+        limit: Int
+    ): List<XyMusicExtend>
+
+
+    @Query(
+        """
         select mi.*,xd.filePath from RecommendedMusic mpm
         inner join xy_music mi on mpm.musicId = mi.itemId
         left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
@@ -704,6 +735,21 @@ interface XyMusicDao {
     fun selectRecommendedMusicExtendListFlow(
         limit: Int
     ): Flow<List<XyMusicExtend>>
+
+    @Query(
+        """
+        select mi.*,xd.filePath from RecommendedMusic mpm
+        inner join xy_music mi on mpm.musicId = mi.itemId
+        left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
+        where mpm.connectionId = (select connectionId from xy_settings)
+        and mi.connectionId = (select connectionId from xy_settings)
+        order by mpm.cachedAt, mpm.`index` desc 
+        limit :limit
+    """
+    )
+    suspend fun selectRecommendedMusicExtendList(
+        limit: Int
+    ): List<XyMusicExtend>
 
 
     /**

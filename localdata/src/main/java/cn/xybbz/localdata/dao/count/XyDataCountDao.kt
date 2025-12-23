@@ -22,6 +22,9 @@ interface XyDataCountDao {
     @Query("select * from xy_data_count where connectionId = (select connectionId from xy_settings)")
     fun selectOneFlow(): Flow<XyDataCount?>
 
+    @Query("select * from xy_data_count where connectionId = (select connectionId from xy_settings)")
+    suspend fun selectOne(): XyDataCount?
+
     @Query("select * from xy_data_count where connectionId = :connectionId")
     fun selectOneByConnectionId(connectionId: Long): Flow<XyDataCount?>
 }

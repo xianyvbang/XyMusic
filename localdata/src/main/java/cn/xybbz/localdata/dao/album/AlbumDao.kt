@@ -394,7 +394,19 @@ interface AlbumDao {
         limit :limit
     """
     )
-    fun selectNewestListPageFlow(limit: Int): Flow<List<XyAlbum>>
+    fun selectNewestListFlow(limit: Int): Flow<List<XyAlbum>>
+
+    @Query(
+        """
+        select xa.itemId,xa.pic,xa.name,xa.artistIds,xa.artists,xa.genreIds,xa.connectionId,xa.year,
+        xa.premiereDate,xa.ifPlaylist,xa.musicCount,xa.createTime from newestalbum na
+        inner join xy_album xa on na.albumId = xa.itemId
+        inner join xy_settings xs on xa.connectionId = xs.connectionId and na.connectionId = xs.connectionId
+        order by `index`
+        limit :limit
+    """
+    )
+    suspend fun selectNewestList(limit: Int): List<XyAlbum>
 
     /**
      * 根据数据源获得歌单列表数据
@@ -417,8 +429,9 @@ interface AlbumDao {
      */
     @Query(
         """
-        select xa.itemId,xa.pic,xa.name,xa.artistIds,xa.artists,xa.genreIds,xa.connectionId,xa.year,
-        xa.premiereDate,xa.ifPlaylist,xa.musicCount,xa.createTime
+         select xa.itemId,xa.pic,xa.name,xa.artistIds,xa.artists,xa.genreIds,xa.connectionId,xa.year,
+        xa.premiereDate,xa.ifPlaylist,xa.musicCount,xa.createTime,
+        (select count(musicId) from playlistmusic where connectionId = (select connectionId from xy_settings) and playlistId = xa.itemId) as musicCount 
         from xy_album xa 
         inner join xy_settings xs on xa.connectionId = xs.connectionId
         where ifPlaylist = 1
@@ -465,6 +478,20 @@ interface AlbumDao {
         limit: Int
     ): Flow<List<XyAlbum>>
 
+    @Query(
+        """
+        select xa.itemId,xa.pic,xa.name,xa.artistIds,xa.artists,xa.genreIds,xa.connectionId,xa.year,
+        xa.premiereDate,xa.ifPlaylist,xa.musicCount,xa.createTime from maximumplayalbum mpm
+        inner join xy_album xa on mpm.albumId = xa.itemId
+        inner join xy_settings xs on xa.connectionId = xs.connectionId and mpm.connectionId = xs.connectionId
+        order by `index`
+        limit :limit
+    """
+    )
+    suspend fun selectMaximumPlayAlbumList(
+        limit: Int
+    ): List<XyAlbum>
+
     /**
      * 获得播放历史的limit条数据
      */
@@ -481,6 +508,20 @@ interface AlbumDao {
     fun selectPlayHistoryAlbumListFlow(
         limit: Int
     ): Flow<List<XyAlbum>>
+
+    @Query(
+        """
+        select xa.itemId,xa.pic,xa.name,xa.artistIds,xa.artists,xa.genreIds,xa.connectionId,xa.year,
+        xa.premiereDate,xa.ifPlaylist,xa.musicCount,xa.createTime from playhistoryalbum phm
+        inner join xy_album xa on phm.albumId = xa.itemId
+        inner join xy_settings xs on xa.connectionId = xs.connectionId and phm.connectionId = xs.connectionId
+        order by `index`
+        limit :limit
+    """
+    )
+    suspend fun selectPlayHistoryAlbumList(
+        limit: Int
+    ): List<XyAlbum>
 
     @Query(
         """
