@@ -72,13 +72,13 @@ import cn.xybbz.common.utils.DateUtil.millisecondsToTime
 import cn.xybbz.common.utils.DateUtil.toDateStr
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalMainViewModel
-import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.entity.data.MusicItemMenuData
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.setting.SkipTime
 import cn.xybbz.localdata.enums.DataSourceType
-import cn.xybbz.router.RouterConstants.ArtistInfo
+import cn.xybbz.router.ArtistInfo
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnBottomSheetComponent
 import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
@@ -115,7 +115,7 @@ fun MusicBottomMenuComponent(
 ) {
     val mainViewModel = LocalMainViewModel.current
 
-    val navHostController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
@@ -396,7 +396,7 @@ fun MusicBottomMenuComponent(
                                             ifShowArtistList = true
                                             musicBottomMenuViewModel.getArtistInfos(artistIds)
                                         } else {
-                                            navHostController.navigate(ArtistInfo(artistIds))
+                                            navigator.navigate(ArtistInfo(artistIds))
                                         }
                                     }.invokeOnCompletion {
                                         ifShowBottom = false
@@ -1137,7 +1137,7 @@ fun ArtistItemListBottomSheet(
         skipPartiallyExpanded = false
     )
     val mainViewModel = LocalMainViewModel.current
-    val navHostController = LocalNavController.current
+    val navHostController = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
 
     ModalBottomSheetExtendComponent(

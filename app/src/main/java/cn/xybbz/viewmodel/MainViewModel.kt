@@ -74,6 +74,10 @@ class MainViewModel @Inject constructor(
     var connectionIsLogIn by mutableStateOf(false)
         private set
 
+    var ifShowSnackBar by mutableStateOf(false)
+        private set
+
+
     /**
      * 专辑播放历史功能开启数据
      */
@@ -94,6 +98,7 @@ class MainViewModel @Inject constructor(
     init {
         Log.i("=====", "MainViewModel初始化")
         connectionIsLogIn = connectionConfigServer.getConnectionId() != Constants.ZERO.toLong()
+        updateIfShowSnackBar(connectionIsLogIn)
         //加载是否开启专辑播放历史功能数据
         observeLoginSuccessForAndProgress()
         //初始化年代数据
@@ -662,6 +667,10 @@ class MainViewModel @Inject constructor(
      */
     fun initGetVersionInfo() {
         versionCheckScheduler.enqueueIfNeeded()
+    }
+
+    fun updateIfShowSnackBar(ifShowSnackBar: Boolean) {
+        this.ifShowSnackBar = ifShowSnackBar
     }
 
     /**

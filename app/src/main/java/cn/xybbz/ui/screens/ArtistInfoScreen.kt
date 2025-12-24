@@ -76,12 +76,12 @@ import androidx.paging.compose.itemKey
 import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.TabListEnum
-import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import cn.xybbz.router.RouterConstants
+import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.LazyListComponent
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicItemComponent
@@ -126,9 +126,10 @@ fun ArtistInfoScreen(
         artistInfoViewModel.albumList.collectAsLazyPagingItems()
     val favoriteSet by artistInfoViewModel.favoriteRepository.favoriteSet.collectAsState()
     val downloadMusicIds by artistInfoViewModel.downloadRepository.musicIdsFlow.collectAsState()
+    val ifOpenSelect by artistInfoViewModel.selectControl.uiState.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val lazyListState1 = rememberLazyListState()
     val lazyListState = rememberLazyListState()
     val parentState = rememberLazyListState()
@@ -340,7 +341,7 @@ fun ArtistInfoScreen(
                             ) {
                                 IconButton(
                                     onClick = {
-                                        navController.popBackStack()
+                                        navigator.goBack()
                                     },
                                 ) {
                                     Icon(
@@ -497,6 +498,7 @@ fun ArtistInfoScreen(
                                                         artistInfoViewModel.selectControl.toggleSelectionAll(
                                                             musicPage.itemSnapshotList.items.map { it.itemId })
                                                     },
+                                                    ifOpenSelect = ifOpenSelect,
                                                     sortContent = {}
                                                 )
                                             }
@@ -534,7 +536,7 @@ fun ArtistInfoScreen(
                                                                 )
                                                             }
                                                         },
-                                                        ifSelect = artistInfoViewModel.selectControl.ifOpenSelect,
+                                                        ifSelect = ifOpenSelect,
                                                         ifSelectCheckBox = { artistInfoViewModel.selectControl.selectMusicIdList.any { it == music.itemId } },
                                                         trailingOnSelectClick = { select ->
                                                             artistInfoViewModel.selectControl.toggleSelection(
@@ -568,8 +570,8 @@ fun ArtistInfoScreen(
                                                         modifier = Modifier,
                                                         onItem = { album },
                                                         onRouter = {
-                                                            navController.navigate(
-                                                                RouterConstants.AlbumInfo(
+                                                            navigator.navigate(
+                                                                AlbumInfo(
                                                                     it,
                                                                     MusicDataTypeEnum.ALBUM
                                                                 )
@@ -600,6 +602,7 @@ private fun ArtistMusicListOperation(
     artistId: String,
     musicPlayContext: MusicPlayContext,
     selectControl: SelectControl,
+    ifOpenSelect:Boolean,
     onSelectAll: () -> Unit,
     sortContent: @Composable () -> Unit
 ) {
@@ -609,7 +612,7 @@ private fun ArtistMusicListOperation(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) {
-                if (selectControl.ifOpenSelect) {
+                if (ifOpenSelect) {
                     onSelectAll()
                 } else {
                     musicPlayContext.artist(
@@ -629,7 +632,7 @@ private fun ArtistMusicListOperation(
     ) {
 
 
-        if (selectControl.ifOpenSelect) {
+        if (ifOpenSelect) {
             XySelectAllComponent(
                 isSelectAll = selectControl.isSelectAll,
                 onSelectAll = onSelectAll

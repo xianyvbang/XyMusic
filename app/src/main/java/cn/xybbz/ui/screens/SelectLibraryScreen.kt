@@ -25,7 +25,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
@@ -52,7 +52,7 @@ fun SelectLibraryScreen(
     )
 ) {
     val context = LocalContext.current
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
 
 
@@ -71,7 +71,7 @@ fun SelectLibraryScreen(
             }, navigationIcon = {
                 IconButton(
                     onClick = {
-                        navController.popBackStack()
+                        navigator.goBack()
                     },
                 ) {
                     Icon(

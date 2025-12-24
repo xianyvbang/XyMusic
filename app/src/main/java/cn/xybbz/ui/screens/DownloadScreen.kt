@@ -53,11 +53,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.R
-import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.DownloadStatus
-import cn.xybbz.router.RouterConstants
+import cn.xybbz.router.Setting
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
@@ -340,7 +340,7 @@ fun MultiSelectTopAppEnd(
     onDelete: () -> Unit,
     onSelectAll: () -> Unit
 ) {
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
 
     AnimatedContent(isMultiSelectMode, label = "animated content") {
         if (it) {
@@ -409,7 +409,7 @@ fun MultiSelectTopAppEnd(
                     )
                 }, navigationIcon = {
 
-                    IconButton(onClick = composeClick { navController.popBackStack() }) {
+                    IconButton(onClick = composeClick { navigator.goBack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.return_home)
@@ -431,7 +431,7 @@ fun MultiSelectTopAppEnd(
                         }
 
                         IconButton(onClick = {
-                            navController.navigate(RouterConstants.Setting)
+                            navigator.navigate(Setting)
                         }) {
                             Icon(
                                 imageVector = Icons.Rounded.Settings,

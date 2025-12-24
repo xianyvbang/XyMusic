@@ -7,18 +7,16 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import cn.xybbz.R
-import cn.xybbz.compositionLocal.LocalNavController
-import cn.xybbz.router.RouterConstants
+import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.router.GenreInfo
 import cn.xybbz.ui.components.MusicGenreCardComponent
 import cn.xybbz.ui.components.SwipeRefreshVerticalGridListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
@@ -36,7 +34,7 @@ import cn.xybbz.viewmodel.GenresViewModel
 fun GenresScreen(
     genresViewModel: GenresViewModel = hiltViewModel<GenresViewModel>()
 ) {
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val genreLazyPagingItems = genresViewModel.genresPage.collectAsLazyPagingItems()
 
 
@@ -53,7 +51,7 @@ fun GenresScreen(
                     title = stringResource(R.string.genres)
                 )
             }, navigationIcon = {
-                IconButton(onClick = composeClick { navController.popBackStack() }) {
+                IconButton(onClick = composeClick { navigator.goBack() }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.return_home)
@@ -76,7 +74,7 @@ fun GenresScreen(
                         onItem = { genre },
                         enabled = !it,
                         onRouter = {
-                            navController.navigate(RouterConstants.GenreInfo(genre.itemId))
+                            navigator.navigate(GenreInfo(genre.itemId))
                         }
                     )
                 }

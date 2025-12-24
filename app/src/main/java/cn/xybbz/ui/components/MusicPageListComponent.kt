@@ -19,7 +19,7 @@ import androidx.paging.compose.itemKey
 import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.MusicController
-import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
@@ -44,7 +44,7 @@ fun MusicPageListComponent(
 ) {
 
     val coroutineScope = rememberCoroutineScope()
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val favoriteList by favoriteRepository.favoriteSet.collectAsState()
     val downloadMusicIdList by downloadRepository.musicIdsFlow.collectAsState()
 
@@ -63,7 +63,7 @@ fun MusicPageListComponent(
                     title = title
                 )
             }, navigationIcon = {
-                IconButton(onClick = composeClick { navController.popBackStack() }) {
+                IconButton(onClick = composeClick { navigator.goBack() }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.return_home)

@@ -31,10 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -49,7 +46,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.R
 import cn.xybbz.common.utils.MessageUtils
-import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.SettingItemComponent
@@ -81,7 +78,7 @@ import kotlinx.coroutines.launch
 fun AboutScreen(
     aboutViewModel: AboutViewModel = hiltViewModel<AboutViewModel>()
 ) {
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
 
     val context = LocalContext.current
@@ -110,7 +107,7 @@ fun AboutScreen(
             }, navigationIcon = {
                 IconButton(
                     onClick = {
-                        navController.popBackStack()
+                        navigator.goBack()
                     },
                 ) {
                     Icon(

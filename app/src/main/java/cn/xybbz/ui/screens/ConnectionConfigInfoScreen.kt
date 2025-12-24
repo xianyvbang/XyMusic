@@ -13,7 +13,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -25,14 +24,13 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.MessageUtils
-import cn.xybbz.compositionLocal.LocalNavController
-import cn.xybbz.router.RouterConstants
+import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.router.SelectLibrary
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.SettingItemComponent
 import cn.xybbz.ui.components.SettingParentItemComponent
@@ -64,7 +62,7 @@ fun ConnectionConfigInfoScreen(
     )
 ) {
     val clipboardManager = LocalClipboard.current
-    val navHostController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -80,7 +78,7 @@ fun ConnectionConfigInfoScreen(
             navigationIcon = {
                 IconButton(
                     onClick = {
-                        navHostController.popBackStack()
+                        navigator.goBack()
                     },
                 ) {
                     Icon(
@@ -181,8 +179,8 @@ fun ConnectionConfigInfoScreen(
                         else connectionConfigInfoViewModel.library.name,
                         enabled = connectionConfigInfoViewModel.connectionConfigServer.getConnectionId() == connectionId,
                         onRouter = {
-                            navHostController.navigate(
-                                RouterConstants.SelectLibrary(
+                            navigator.navigate(
+                                SelectLibrary(
                                     connectionId,
                                     connectionConfigInfoViewModel.connectionConfig?.libraryId
                                 )
@@ -247,7 +245,7 @@ fun ConnectionConfigInfoScreen(
                                         coroutineScope.launch {
                                             connectionConfigInfoViewModel.removeThisConnection()
                                         }.invokeOnCompletion {
-                                            navHostController.popBackStack()
+                                            navigator.goBack()
                                         }
                                     }
                                 ).show()

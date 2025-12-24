@@ -18,7 +18,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
-import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
@@ -35,7 +35,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun LocalScreen(localViewModel: LocalViewModel = hiltViewModel<LocalViewModel>()) {
 
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
     val downloadMusicList by localViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
     val favoriteSet by localViewModel.favoriteRepository.favoriteSet.collectAsState()
@@ -53,7 +53,7 @@ fun LocalScreen(localViewModel: LocalViewModel = hiltViewModel<LocalViewModel>()
                     title = stringResource(R.string.local_music)
                 )
             }, navigationIcon = {
-                IconButton(onClick = composeClick { navController.popBackStack() }) {
+                IconButton(onClick = composeClick { navigator.goBack() }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.return_home)

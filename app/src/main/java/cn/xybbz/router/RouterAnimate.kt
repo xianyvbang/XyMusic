@@ -1,6 +1,7 @@
 package cn.xybbz.router
 
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.EaseIn
@@ -9,32 +10,25 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.navigation.NavBackStackEntry
+import androidx.compose.animation.togetherWith
+import androidx.navigation3.scene.Scene
 
 /**
  * 路由动画常量
  */
 sealed class RouterAnimate(
-    val enter: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition,
-    val exit: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition,
-    val popEnter: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition,
-    val popExit: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition
+    val enter: AnimatedContentTransitionScope<Scene<*>>.() -> ContentTransform?,
+    val popExit: AnimatedContentTransitionScope<Scene<*>>.() -> ContentTransform?
 ) {
     /**
      * 最初节点
      */
     data object HomeRouterAnimate: RouterAnimate(
         enter = {
-            EnterTransition.None
-        },
-        exit = {
-            ExitTransition.None
-        },
-        popEnter = {
-            EnterTransition.None
+            EnterTransition.None togetherWith ExitTransition.None
         },
         popExit = {
-            ExitTransition.None
+            EnterTransition.None togetherWith ExitTransition.None
         }
     )
 
@@ -47,12 +41,10 @@ sealed class RouterAnimate(
                     slideIntoContainer(
                         animationSpec = tween(300, easing = EaseIn),
                         towards = AnimatedContentTransitionScope.SlideDirection.Start
-                    )
+                    ) togetherWith ExitTransition.None
         },
-        exit = { ExitTransition.None },
-        popEnter = { EnterTransition.None },
         popExit = {
-            fadeOut(animationSpec = tween(300, easing = LinearEasing)) +
+            EnterTransition.None togetherWith fadeOut(animationSpec = tween(300, easing = LinearEasing)) +
                     slideOutOfContainer(
                         animationSpec = tween(300, easing = EaseOut),
                         towards = AnimatedContentTransitionScope.SlideDirection.End
@@ -67,16 +59,10 @@ sealed class RouterAnimate(
         enter = {
             slideIntoContainer(
                 AnimatedContentTransitionScope.SlideDirection.Left
-            )
-        },
-        exit = {
-            ExitTransition.None
-        },
-        popEnter = {
-            EnterTransition.None
+            ) togetherWith ExitTransition.None
         },
         popExit = {
-            slideOutOfContainer(
+            EnterTransition.None togetherWith  slideOutOfContainer(
                 AnimatedContentTransitionScope.SlideDirection.Right
             )
         }

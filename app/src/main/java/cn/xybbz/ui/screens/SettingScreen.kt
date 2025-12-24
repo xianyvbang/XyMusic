@@ -36,8 +36,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.common.utils.MessageUtils
-import cn.xybbz.compositionLocal.LocalNavController
-import cn.xybbz.router.RouterConstants
+import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.router.About
+import cn.xybbz.router.CacheLimit
+import cn.xybbz.router.ConnectionManagement
+import cn.xybbz.router.InterfaceSetting
+import cn.xybbz.router.LanguageConfig
+import cn.xybbz.router.MemoryManagement
+import cn.xybbz.router.ProxyConfig
 import cn.xybbz.ui.components.MusicSettingSwitchItemComponent
 import cn.xybbz.ui.components.SettingItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
@@ -67,7 +73,7 @@ fun SettingScreen(
     settingsViewModel: SettingsViewModel = hiltViewModel<SettingsViewModel>()
 ) {
 
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
 
     var ifShowMaxConcurrentDownloads by remember {
@@ -96,7 +102,7 @@ fun SettingScreen(
             }, navigationIcon = {
                 IconButton(
                     onClick = {
-                        navController.popBackStack()
+                        navigator.goBack()
                     },
                 ) {
                     Icon(
@@ -130,7 +136,7 @@ fun SettingScreen(
                 SettingRoundedSurfaceColumn {
 
                     SettingItemComponent(title = stringResource(R.string.cache_limit)) {
-                        navController.navigate(RouterConstants.CacheLimit)
+                        navigator.navigate(CacheLimit)
                     }
 
                     MusicSettingSwitchItemComponent(
@@ -207,7 +213,7 @@ fun SettingScreen(
             item {
                 SettingRoundedSurfaceColumn {
                     SettingItemComponent(title = stringResource(R.string.connection_management)) {
-                        navController.navigate(RouterConstants.ConnectionManagement)
+                        navigator.navigate(ConnectionManagement)
                     }
                 }
             }
@@ -356,24 +362,24 @@ fun SettingScreen(
                 SettingRoundedSurfaceColumn {
 
                     SettingItemComponent(title = stringResource(R.string.storage_management)) {
-                        navController.navigate(RouterConstants.MemoryManagement)
+                        navigator.navigate(MemoryManagement)
                     }
 
                     SettingItemComponent(title = stringResource(R.string.poxy_config)) {
-                        navController.navigate(RouterConstants.ProxyConfig)
+                        navigator.navigate(ProxyConfig)
                     }
 
                     SettingItemComponent(title = stringResource(R.string.interface_settings)) {
-                        navController.navigate(RouterConstants.InterfaceSetting)
+                        navigator.navigate(InterfaceSetting)
                     }
 
                     SettingItemComponent(title = stringResource(R.string.language)) {
-                        navController.navigate(RouterConstants.LanguageConfig)
+                        navigator.navigate(LanguageConfig)
                     }
 
                     SettingItemComponent(title = stringResource(R.string.about)) {
                         //版本信息,检查更新
-                        navController.navigate(RouterConstants.About)
+                        navigator.navigate(About)
                     }
 
                 }

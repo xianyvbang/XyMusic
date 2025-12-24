@@ -20,21 +20,20 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.common.enums.img
-import cn.xybbz.compositionLocal.LocalNavController
-import cn.xybbz.router.RouterConstants
+import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.router.Connection
+import cn.xybbz.router.ConnectionInfo
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
@@ -53,7 +52,7 @@ import cn.xybbz.viewmodel.ConnectionManagementViewModel
 fun ConnectionManagement(
     connectionManagementViewModel: ConnectionManagementViewModel = hiltViewModel<ConnectionManagementViewModel>()
 ) {
-    val navHostController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val lazyListState = rememberLazyListState()
 
     XyColumnScreen(
@@ -72,14 +71,14 @@ fun ConnectionManagement(
                 )
             }, actions = {
                 IconButton(onClick = {
-                    navHostController.navigate(RouterConstants.Connection(connectionUiType = ConnectionUiType.ADD_CONNECTION))
+                    navigator.navigate(Connection(connectionUiType = ConnectionUiType.ADD_CONNECTION))
                 }) {
                     Icon(imageVector = Icons.Rounded.AddCard, contentDescription = "")
                 }
             }, navigationIcon = {
                 IconButton(
                     onClick = {
-                        navHostController.popBackStack()
+                        navigator.goBack()
                     },
                 ) {
                     Icon(
@@ -113,7 +112,7 @@ fun ConnectionManagement(
                     subordination = connectionConfig.address,
                     img = connectionConfig.type.img.let { img -> painterResource(img) },
                     onClick = {
-                        navHostController.navigate(RouterConstants.ConnectionInfo(connectionConfig.id))
+                        navigator.navigate(ConnectionInfo(connectionConfig.id))
                     },
                     trailingContent = {
                         Row(
@@ -136,8 +135,8 @@ fun ConnectionManagement(
                             )
                             IconButton(
                                 onClick = composeClick {
-                                    navHostController.navigate(
-                                        RouterConstants.ConnectionInfo(
+                                    navigator.navigate(
+                                        ConnectionInfo(
                                             connectionConfig.id
                                         )
                                     )
