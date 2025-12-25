@@ -79,9 +79,6 @@ import cn.xybbz.common.constants.UiConstants.MusicCardImageSize
 import cn.xybbz.common.enums.img
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
-import cn.xybbz.extension.PlaceholderHighlight
-import cn.xybbz.extension.placeholder
-import cn.xybbz.extension.shimmer
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import cn.xybbz.router.Album
@@ -405,12 +402,7 @@ fun HomeScreen(
                     ) {
                         XyItemTabBigButton(
                             modifier = Modifier
-                                .weight(1f)
-                                /*.placeholder(
-                                    visible = true,
-                                    color = Color.White,
-                                    highlight = PlaceholderHighlight.shimmer(Color(0xFF707070)),
-                                )*/,
+                                .weight(1f),
                             text = stringResource(R.string.all_music),
                             sub = if (ifShowCount) dataCount?.musicCount?.toString()
                                 ?: stringResource(
