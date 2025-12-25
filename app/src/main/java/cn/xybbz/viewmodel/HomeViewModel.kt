@@ -43,13 +43,12 @@ class HomeViewModel @OptIn(UnstableApi::class)
     private val db: DatabaseClient,
     val dataSourceManager: DataSourceManager,
     val connectionConfigServer: ConnectionConfigServer,
-    private val _musicPlayContext: MusicPlayContext,
+    val musicPlayContext: MusicPlayContext,
     private val musicController: MusicController,
     val backgroundConfig: BackgroundConfig,
     private val dailyRecommender: DailyRecommender
 ) : ViewModel() {
 
-    val musicPlayContext = _musicPlayContext
 
     var isRefreshing by mutableStateOf(false)
         private set
