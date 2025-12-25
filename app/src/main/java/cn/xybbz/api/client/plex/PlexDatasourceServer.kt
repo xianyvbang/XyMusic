@@ -833,9 +833,6 @@ class PlexDatasourceServer @Inject constructor(
         return response.items?.let {
             saveBatchAlbum(it, MusicDataTypeEnum.PLAYLIST, true)
         }
-        /* return db.withTransaction {
-
-         }*/
     }
 
     /**
