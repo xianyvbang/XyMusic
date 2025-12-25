@@ -77,11 +77,22 @@ import cn.xybbz.R
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.UiConstants.MusicCardImageSize
 import cn.xybbz.common.enums.img
-import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
-import cn.xybbz.router.RouterConstants
+import cn.xybbz.router.Album
+import cn.xybbz.router.AlbumInfo
+import cn.xybbz.router.Artist
+import cn.xybbz.router.ConnectionManagement
+import cn.xybbz.router.DailyRecommend
+import cn.xybbz.router.Download
+import cn.xybbz.router.FavoriteList
+import cn.xybbz.router.Genres
+import cn.xybbz.router.Local
+import cn.xybbz.router.Music
+import cn.xybbz.router.Search
+import cn.xybbz.router.Setting
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.BottomSheetObject
 import cn.xybbz.ui.components.MusicAlbumCardComponent
@@ -126,7 +137,7 @@ fun HomeScreen(
     val playlists by homeViewModel.playlistsFlow.collectAsState()
     val dataCount by homeViewModel.dataCountFlow.collectAsState()
     val context = LocalContext.current
-    val navHostController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = false
     )
@@ -230,10 +241,7 @@ fun HomeScreen(
                                 },
                                 onClick = {
                                     ifShowConnectionMenu = false
-                                    navHostController.navigate(RouterConstants.ConnectionManagement) {
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
+                                    navigator.navigate(ConnectionManagement)
                                 }),
                             *homeViewModel.connectionList.map { connection ->
                                 MenuItemDefaultData(
@@ -338,12 +346,7 @@ fun HomeScreen(
                     }
 
                     IconButton(onClick = {
-                        navHostController.navigate(RouterConstants.Setting) {
-                            popUpTo(RouterConstants.Home) {
-                                saveState = true
-                            }
-                            restoreState = true
-                        }
+                        navigator.navigate(Setting)
                     }) {
                         Icon(
                             imageVector = Icons.Rounded.Settings,
@@ -351,7 +354,7 @@ fun HomeScreen(
                         )
                     }
                     IconButton(onClick = {
-                        navHostController.navigate(RouterConstants.Search)
+                        navigator.navigate(Search)
                     }) {
                         Icon(
                             imageVector = Icons.Rounded.Search,
@@ -360,7 +363,7 @@ fun HomeScreen(
                     }
 
                     IconButton(onClick = {
-                        navHostController.navigate(RouterConstants.Download)
+                        navigator.navigate(Download)
                     }) {
                         BadgedBox(badge = {
                             if (homeViewModel.downloadCount > 0) {
@@ -406,7 +409,7 @@ fun HomeScreen(
                             imageVector = Icons.Rounded.MusicNote,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
-                                navHostController.navigate(RouterConstants.Music)
+                                navigator.navigate(Music)
                             },
                             brush = Brush.linearGradient(
                                 colors = listOf(Color(0xff3b82f6), Color(0xff8b5cf6)),
@@ -424,7 +427,7 @@ fun HomeScreen(
                             imageVector = Icons.Rounded.MusicNote,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
-                                navHostController.navigate(RouterConstants.Local)
+                                navigator.navigate(Local)
                             },
                             brush = Brush.linearGradient(
                                 colors = listOf(Color(0xFF0A7B88), Color(0xFFFFBA6C)),
@@ -442,10 +445,7 @@ fun HomeScreen(
                             imageVector = Icons.Rounded.Album,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
-                                navHostController.navigate(RouterConstants.Album) {
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
+                                navigator.navigate(Album)
                             },
                             brush = Brush.linearGradient(
                                 colors = listOf(Color(0xffec4899), Color(0xffa855f7)),
@@ -462,7 +462,7 @@ fun HomeScreen(
                             imageVector = Icons.Rounded.Person,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
-                                navHostController.navigate(RouterConstants.Artist)
+                                navigator.navigate(Artist)
                             },
                             brush = Brush.linearGradient(
                                 colors = listOf(Color(0xff10b981), Color(0xff06b6d4)),
@@ -479,7 +479,7 @@ fun HomeScreen(
                             imageVector = Icons.Rounded.Favorite,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
-                                navHostController.navigate(RouterConstants.FavoriteList)
+                                navigator.navigate(FavoriteList)
                             },
                             brush = Brush.linearGradient(
                                 colors = listOf(Color(0xfff97316), Color(0xfffb7185)),
@@ -497,7 +497,7 @@ fun HomeScreen(
                             imageVector = Icons.AutoMirrored.Rounded.Label,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
-                                navHostController.navigate(RouterConstants.Genres)
+                                navigator.navigate(Genres)
                             },
                             brush = Brush.linearGradient(
                                 colors = listOf(Color(0xffc026d3), Color(0xff7e22ce)),
@@ -548,8 +548,8 @@ fun HomeScreen(
                                     onItem = { album },
                                     imageSize = MusicCardImageSize,
                                     onRouter = {
-                                        navHostController.navigate(
-                                            RouterConstants.AlbumInfo(
+                                        navigator.navigate(
+                                            AlbumInfo(
                                                 it,
                                                 MusicDataTypeEnum.ALBUM
                                             )
@@ -683,7 +683,7 @@ fun HomeScreen(
                                 }
 
                                 TextButton(onClick = composeClick {
-                                    navHostController.navigate(RouterConstants.DailyRecommend)
+                                    navigator.navigate(DailyRecommend)
                                 }, contentPadding = PaddingValues()) {
                                     XyItemTextLarge(text = "查看更多", color = Color(0xFFC6E5F5))
                                 }
@@ -743,8 +743,8 @@ fun HomeScreen(
                                     onItem = { album },
                                     imageSize = MusicCardImageSize,
                                     onRouter = {
-                                        navHostController.navigate(
-                                            RouterConstants.AlbumInfo(
+                                        navigator.navigate(
+                                            AlbumInfo(
                                                 it,
                                                 MusicDataTypeEnum.ALBUM
                                             )
@@ -780,8 +780,8 @@ fun HomeScreen(
                                     onItem = { album },
                                     imageSize = MusicCardImageSize,
                                     onRouter = {
-                                        navHostController.navigate(
-                                            RouterConstants.AlbumInfo(
+                                        navigator.navigate(
+                                            AlbumInfo(
                                                 it,
                                                 MusicDataTypeEnum.ALBUM
                                             )
@@ -955,8 +955,8 @@ fun HomeScreen(
                             name = item.name,
                             imgUrl = item.pic,
                             onClick = {
-                                navHostController.navigate(
-                                    RouterConstants.AlbumInfo(
+                                navigator.navigate(
+                                    AlbumInfo(
                                         item.itemId,
                                         MusicDataTypeEnum.PLAYLIST
                                     )

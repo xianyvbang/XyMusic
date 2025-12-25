@@ -21,9 +21,9 @@ import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.compositionLocal.LocalMainViewModel
-import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import cn.xybbz.router.RouterConstants
+import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.SelectSortBottomSheetComponent
 import cn.xybbz.ui.components.SwipeRefreshVerticalGridListComponent
@@ -39,7 +39,7 @@ fun AlbumScreen(
     albumViewModel: AlbumViewModel = hiltViewModel<AlbumViewModel>()
 ) {
 
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
 
     val albumPageListItems =
         albumViewModel.albumPageList.collectAsLazyPagingItems()
@@ -65,7 +65,7 @@ fun AlbumScreen(
             }, navigationIcon = {
                 IconButton(
                     onClick = {
-                        navController.popBackStack()
+                        navigator.goBack()
                     },
                 ) {
                     Icon(
@@ -136,8 +136,8 @@ fun AlbumScreen(
                     enabled = !it,
                     onRouter = {itemId->
                         //取消刷新
-                        navController.navigate(
-                            RouterConstants.AlbumInfo(
+                        navigator.navigate(
+                            AlbumInfo(
                                 itemId,
                                 MusicDataTypeEnum.ALBUM
                             )

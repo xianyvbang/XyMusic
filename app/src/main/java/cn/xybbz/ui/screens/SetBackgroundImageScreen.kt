@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.common.constants.UiConstants.MusicCardImageSize
-import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.ext.brashColor
@@ -60,7 +60,7 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
             setBackgroundImageViewModel.backgroundConfig.imageFilePath != null
         }
     }
-    val navHostController = LocalNavController.current
+    val navigator = LocalNavigator.current
 
     val context = LocalContext.current
 
@@ -96,7 +96,7 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
                 navigationIcon = {
                     IconButton(
                         onClick = {
-                            navHostController.popBackStack()
+                            navigator.goBack()
                         },
                     ) {
                         Icon(

@@ -7,7 +7,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
@@ -20,11 +19,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
-import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
@@ -43,7 +41,7 @@ fun DailyRecommendScreen(
 ) {
 
     val coroutineScope = rememberCoroutineScope()
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val favoriteList by dailyRecommendViewModel.favoriteRepository.favoriteSet.collectAsState()
     val downloadMusicIds by dailyRecommendViewModel.downloadRepository.musicIdsFlow.collectAsState()
     val state = rememberPullToRefreshState()
@@ -66,7 +64,7 @@ fun DailyRecommendScreen(
                     title = stringResource(R.string.daily_recommendations)
                 )
             }, navigationIcon = {
-                IconButton(onClick = composeClick { navController.popBackStack() }) {
+                IconButton(onClick = composeClick { navigator.goBack() }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.return_home)

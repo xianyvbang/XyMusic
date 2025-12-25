@@ -19,9 +19,9 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
-import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import cn.xybbz.router.RouterConstants
+import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.SwipeRefreshVerticalGridListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
@@ -44,7 +44,7 @@ fun GenresInfoScreen(
     SideEffect {
         Log.d("=====", "MusicAudiobookInfoScreen重组一次")
     }
-    val navHostController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val albumListPage =
         genresInfoViewModel.albumList.collectAsLazyPagingItems()
 
@@ -67,7 +67,7 @@ fun GenresInfoScreen(
             navigationIcon = {
                 IconButton(
                     onClick = {
-                        navHostController.popBackStack()
+                        navigator.goBack()
                     },
                 ) {
                     Icon(
@@ -91,8 +91,8 @@ fun GenresInfoScreen(
                         modifier = Modifier,
                         onItem = { album },
                         onRouter = {
-                            navHostController.navigate(
-                                RouterConstants.AlbumInfo(it, MusicDataTypeEnum.ALBUM)
+                            navigator.navigate(
+                                AlbumInfo(it, MusicDataTypeEnum.ALBUM)
                             )
                         }
                     )

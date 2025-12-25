@@ -66,9 +66,10 @@ import cn.xybbz.R
 import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.common.enums.img
 import cn.xybbz.common.utils.MessageUtils
-import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.DataSourceType
-import cn.xybbz.router.RouterConstants
+import cn.xybbz.router.Home
+import cn.xybbz.router.Setting
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.ext.composeClick
@@ -122,7 +123,7 @@ fun ConnectionScreen(
 ) {
 
     val context = LocalContext.current
-    val navHostController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
     var ifSelectDataSource by remember {
         mutableStateOf(ScreenType.SELECT_DATA_SOURCE)
@@ -155,7 +156,7 @@ fun ConnectionScreen(
             if (connectionUiType != null && connectionUiType == ConnectionUiType.ADD_CONNECTION)
                 IconButton(
                     onClick = composeClick{
-                        navHostController.popBackStack()
+                        navigator.goBack()
                     },
                 ) {
                     Icon(
@@ -166,7 +167,7 @@ fun ConnectionScreen(
 
         }, actions = {
             IconButton(onClick = composeClick{
-                navHostController.navigate(RouterConstants.Setting)
+                navigator.navigate(Setting)
             }) {
                 Icon(
                     imageVector = Icons.Rounded.Settings,
@@ -585,11 +586,9 @@ fun ConnectionScreen(
                                         onClick = {
                                             if (connectionViewModel.dataSourceManager.dataSourceType == null) {
                                                 connectionViewModel.changeDataSource()
-                                                navHostController.navigate(RouterConstants.Screen) {
-                                                    popUpTo<RouterConstants.Connection> { inclusive = true }
-                                                }
+                                                navigator.navigate(Home)
                                             } else {
-                                                navHostController.popBackStack()
+                                                navigator.goBack()
                                             }
 
                                         }) {

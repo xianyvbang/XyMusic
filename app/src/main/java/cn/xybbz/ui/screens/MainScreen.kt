@@ -12,27 +12,27 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
-import androidx.navigation.NavController
-import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation3.runtime.NavKey
 import cn.xybbz.compositionLocal.LocalMainViewModel
-import cn.xybbz.compositionLocal.LocalNavController
-import cn.xybbz.config.select.SelectControl
+import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import cn.xybbz.router.AlbumInfo
+import cn.xybbz.router.Connection
+import cn.xybbz.router.Home
+import cn.xybbz.router.Navigator
+import cn.xybbz.router.OnDestinationChangedListener
 import cn.xybbz.router.RouterCompose
-import cn.xybbz.router.RouterConstants
+import cn.xybbz.router.rememberNavigationState
 import cn.xybbz.ui.components.AddPlaylistBottomComponent
 import cn.xybbz.ui.components.AlertDialogComponent
 import cn.xybbz.ui.components.BottomSheetCompose
@@ -44,22 +44,61 @@ import cn.xybbz.viewmodel.MainViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 
 @ExperimentalPermissionsApi
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(UnstableApi::class)
 @Composable
-fun MainScreen() {
-    val navController = rememberNavController()
+fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
+    val coroutineScope = rememberCoroutineScope()
+   val ifOpenSelect by mainViewModel.selectControl.uiState.collectAsState()
+
+    val navigationState = rememberNavigationState(
+        startRoute = if (mainViewModel.connectionIsLogIn) Home else Connection(),
+        topLevelRoutes = setOf(Home, Connection())
+    )
+
+    val navigator = remember {
+        val navigator = Navigator(
+            navigationState
+        )
+        navigator.addOnDestinationChangedListener(object : OnDestinationChangedListener {
+            override fun onDestinationChanged(
+                navigator: Navigator,
+                destination: NavKey
+            ) {
+                mainViewModel.updateIfShowSnackBar(destination != Connection)
+                val isSelected = destination != navigationState.topLevelRoute
+                Log.i("route", "是否选择${isSelected}")
+            }
+        })
+        navigator.addOnDestinationChangedListener(object : OnDestinationChangedListener {
+            override fun onDestinationChanged(
+                navigator: Navigator,
+                destination: NavKey
+            ) {
+                coroutineScope.launch(Dispatchers.Main.immediate) {
+                    withFrameNanos{
+                        if (ifOpenSelect) {
+                            mainViewModel.selectControl.dismiss()
+                        }
+                    }
+
+                }
+            }
+
+        })
+        navigator
+    }
+
     SideEffect {
         Log.d("=====", "MainScreen重组一次")
     }
 
     CompositionLocalProvider(
-        LocalMainViewModel provides hiltViewModel<MainViewModel>(),
-        LocalNavController provides navController
+        LocalMainViewModel provides mainViewModel,
+        LocalNavigator provides navigator
     ) {
         val mainViewModel = LocalMainViewModel.current
 
@@ -94,17 +133,19 @@ fun MainScreen() {
         AlertDialogComponent()
         BottomSheetCompose()
         MusicBottomMenuComponent(onAlbumRouter = { albumId ->
-            navController.navigate(RouterConstants.AlbumInfo(albumId, MusicDataTypeEnum.ALBUM))
+            navigator.navigate(AlbumInfo(albumId, MusicDataTypeEnum.ALBUM))
         })
         AddPlaylistBottomComponent()
-        navController.CurrentSelectChange(mainViewModel.selectControl)
         Scaffold(
             snackbarHost = {
                 SnackBarHostUi()
             },
         ) {
             Box {
-                RouterCompose(paddingValues = it)
+                RouterCompose(
+                    paddingValues = it,
+                    navigationState = navigationState
+                )
                 LoadingCompose(modifier = Modifier.align(alignment = Alignment.Center))
 
             }
@@ -116,9 +157,10 @@ fun MainScreen() {
 @Composable
 private fun SnackBarHostUi(modifier: Modifier = Modifier) {
     val mainViewModel = LocalMainViewModel.current
-    val navController = LocalNavController.current
-    val currentSnackBarHostScreen by navController.currentSnackBarHostScreen()
-    if (!currentSnackBarHostScreen)
+    LaunchedEffect(mainViewModel.ifShowSnackBar) {
+        Log.i("=====","是否显示currentSnackBarHostScreen ${mainViewModel.ifShowSnackBar}")
+    }
+    if (mainViewModel.ifShowSnackBar)
         Column(modifier = Modifier.then(modifier)) {
             SnackBarPlayerComponent(
                 onClick = {
@@ -126,45 +168,4 @@ private fun SnackBarHostUi(modifier: Modifier = Modifier) {
                 })
 
         }
-}
-
-@Composable
-private fun NavController.currentSnackBarHostScreen(): MutableState<Boolean> {
-    val currentScreen = remember { mutableStateOf(true) }
-    LaunchedEffect(key1 = this) {
-        val listener = NavController.OnDestinationChangedListener { _, destination, _ ->
-            currentScreen.value =
-                destination.hierarchy.any { route ->
-                    route.hasRoute(RouterConstants.Connection::class)
-                }
-
-        }
-        addOnDestinationChangedListener(listener)
-    }
-    return currentScreen
-}
-
-@Composable
-private fun NavController.CurrentSelectChange(selectControl: SelectControl) {
-    val coroutineScope = rememberCoroutineScope()
-
-    var needDismiss by remember { mutableStateOf(false) }
-    LaunchedEffect(key1 = this) {
-        val listener = NavController.OnDestinationChangedListener { _, _, _ ->
-            coroutineScope.launch {
-                withContext(Dispatchers.IO) {
-                    if (selectControl.ifOpenSelect)
-                        needDismiss = true
-                }
-            }
-        }
-        addOnDestinationChangedListener(listener)
-    }
-
-    if (needDismiss) {
-        LaunchedEffect(true) {
-            selectControl.dismiss()
-            needDismiss = false
-        }
-    }
 }

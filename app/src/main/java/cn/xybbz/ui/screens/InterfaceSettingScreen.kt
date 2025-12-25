@@ -27,12 +27,11 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
-import cn.xybbz.compositionLocal.LocalNavController
-import cn.xybbz.router.RouterConstants
+import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.router.SetBackgroundImage
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.SettingItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
@@ -69,7 +68,7 @@ fun InterfaceSettingScreen(
     interfaceSettingViewModel: InterfaceSettingViewModel = hiltViewModel<InterfaceSettingViewModel>()
 ) {
 
-    val navHostController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
 
 
@@ -89,7 +88,7 @@ fun InterfaceSettingScreen(
             navigationIcon = {
                 IconButton(
                     onClick = {
-                        navHostController.popBackStack()
+                        navigator.goBack()
                     },
                 ) {
                     Icon(
@@ -115,7 +114,7 @@ fun InterfaceSettingScreen(
                     SettingItemComponent(title = "设置背景图片", trailingContent = {
 
                     }) {
-                        navHostController.navigate(RouterConstants.SetBackgroundImage)
+                        navigator.navigate(SetBackgroundImage)
                     }
                 }
             }

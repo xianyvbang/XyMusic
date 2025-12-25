@@ -25,7 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
-import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.MusicSettingSwitchItemComponent
 import cn.xybbz.ui.components.SettingItemComponent
 import cn.xybbz.ui.components.SettingParentItemComponent
@@ -47,7 +47,7 @@ import kotlinx.coroutines.launch
 fun ProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = hiltViewModel()) {
 
 
-    val navHostController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
 
     XyColumnScreen(
@@ -66,7 +66,7 @@ fun ProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = hiltViewModel
             navigationIcon = {
                 IconButton(
                     onClick = {
-                        navHostController.popBackStack()
+                        navigator.goBack()
                     },
                 ) {
                     Icon(

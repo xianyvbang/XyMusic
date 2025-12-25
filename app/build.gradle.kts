@@ -139,7 +139,12 @@ dependencies {
 //    //跟ListItem差不多,只是可以自定义位置
     implementation(libs.androidx.constraintlayout)
     //路由导航
-    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.navigation3.runtime)
+
+    // If using the ViewModel add-on library
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+
     //权限
     implementation(libs.accompanist.permissions)
     //图片加载

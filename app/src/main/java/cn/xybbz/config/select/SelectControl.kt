@@ -1,7 +1,6 @@
 package cn.xybbz.config.select
 
 import android.content.Context
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateSetOf
@@ -19,6 +18,9 @@ import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.xy.XyItemTextHorizontal
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
@@ -27,7 +29,6 @@ import kotlinx.coroutines.launch
  * @date 2025/01/18
  * @constructor 创建[SelectControl]
  */
-@Immutable
 class SelectControl(val application: Context) {
 
 
@@ -42,8 +43,13 @@ class SelectControl(val application: Context) {
         private set
 
     //是否显示按钮
-    var ifOpenSelect by mutableStateOf(false)
-        private set
+    /*var ifOpenSelect by mutableStateOf(false)
+        private set*/
+
+    private val _uiState = MutableStateFlow(
+        false
+    )
+    val uiState = _uiState.asStateFlow()
 
     //是否为本地页面操作
     var ifLocal by mutableStateOf(false)
@@ -149,7 +155,9 @@ class SelectControl(val application: Context) {
         ifPlaylist: Boolean,
         ifLocal: Boolean = false
     ) {
-        this.ifOpenSelect = ifOpenSelect
+//        this.ifOpenSelect = ifOpenSelect
+
+        _uiState.update { ifOpenSelect }
         if (ifPlaylist)
             this.playlistId = playlistId
         else
@@ -161,11 +169,10 @@ class SelectControl(val application: Context) {
     }
 
     fun clearData() {
-        scope.launch {
-            selectMusicIdList.clear()
-        }
+        selectMusicIdList.clear()
         isSelectAll = false
-        ifOpenSelect = false
+//        ifOpenSelect = false
+        _uiState.update { false }
         ifEnableButton = false
         this.ifPlaylist = false
         onOpenChange?.invoke(false)

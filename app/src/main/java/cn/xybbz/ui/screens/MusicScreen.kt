@@ -25,7 +25,7 @@ import androidx.paging.compose.itemKey
 import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalMainViewModel
-import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
@@ -53,6 +53,7 @@ fun MusicScreen(
     val favoriteSet by musicViewModel.favoriteRepository.favoriteSet.collectAsState()
     val downloadMusicIds by musicViewModel.downloadRepository.musicIdsFlow.collectAsState()
     val sortBy by musicViewModel.sortBy.collectAsState()
+    val ifOpenSelect by musicViewModel.selectControl.uiState.collectAsState()
 
     XyColumnScreen(
         modifier = Modifier
@@ -79,6 +80,7 @@ fun MusicScreen(
                 }
             },
             selectControl = musicViewModel.selectControl,
+            ifOpenSelect = ifOpenSelect,
             sortOrFilterContent = {
                 SelectSortBottomSheetComponent(
                     onIfYearFilter = { musicViewModel.dataSourceManager.dataSourceType?.ifYearFilter },
@@ -147,7 +149,7 @@ fun MusicScreen(
                             )
                         },
                         backgroundColor = Color.Transparent,
-                        ifSelect = musicViewModel.selectControl.ifOpenSelect,
+                        ifSelect = ifOpenSelect,
                         ifSelectCheckBox = {
                             music.musicId in musicViewModel.selectControl.selectMusicIdList
                         },
@@ -185,10 +187,11 @@ fun MusicSelectTopBarComponent(
     onRandomPlayerClick: () -> Unit,
 //    musicListCount: () -> Int,
     onSelectAll: () -> Unit,
+    ifOpenSelect:Boolean,
     selectControl: SelectControl,
     sortOrFilterContent: @Composable () -> Unit
 ) {
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
 
     /*val selectListSize by remember {
@@ -205,7 +208,7 @@ fun MusicSelectTopBarComponent(
     TopAppBarComponent(
         modifier = modifier,
         title = {
-            if (selectControl.ifOpenSelect) {
+            if (ifOpenSelect) {
 
                 XySelectAllComponent(
                     isSelectAll = selectControl.isSelectAll,
@@ -219,7 +222,7 @@ fun MusicSelectTopBarComponent(
         }, navigationIcon = {
             IconButton(
                 onClick = {
-                    navController.popBackStack()
+                    navigator.goBack()
                 },
             ) {
                 Icon(
@@ -230,7 +233,7 @@ fun MusicSelectTopBarComponent(
 
 
         }, actions = {
-            if (selectControl.ifOpenSelect) {
+            if (ifOpenSelect) {
                 IconButton(onClick = {
                     selectControl.dismiss()
                 }) {

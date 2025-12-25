@@ -14,7 +14,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
@@ -26,7 +25,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
-import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
@@ -47,7 +46,7 @@ fun CacheLimitScreen(
 ) {
 
     val context = LocalContext.current
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
@@ -69,7 +68,7 @@ fun CacheLimitScreen(
             }, navigationIcon = {
                 IconButton(
                     onClick = {
-                        navController.popBackStack()
+                        navigator.goBack()
                     },
                 ) {
                     Icon(
@@ -100,7 +99,10 @@ fun CacheLimitScreen(
                         XyItemText(
                             text = it.message,
                             sub = if (it == CacheUpperLimitEnum.Auto)
-                                stringResource(R.string.current_auto_cache_limit,cacheLimitViewModel.cacheSizeInfo)
+                                stringResource(
+                                    R.string.current_auto_cache_limit,
+                                    cacheLimitViewModel.cacheSizeInfo
+                                )
                             else null,
                             modifier = Modifier.weight(1f)
                         )

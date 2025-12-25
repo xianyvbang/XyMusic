@@ -48,16 +48,16 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
 import cn.xybbz.R
 import cn.xybbz.common.music.MusicController
-import cn.xybbz.compositionLocal.LocalNavController
+import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.data.search.SearchHistory
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import cn.xybbz.router.RouterConstants
+import cn.xybbz.router.AlbumInfo
+import cn.xybbz.router.ArtistInfo
 import cn.xybbz.ui.components.LazyLoadingAndStatus
 import cn.xybbz.ui.components.LazyRowComponent
 import cn.xybbz.ui.components.MusicAlbumCardComponent
@@ -68,7 +68,6 @@ import cn.xybbz.ui.components.SearchRecordComponent
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyItemTextLarge
 import cn.xybbz.ui.xy.XyItemTitle
@@ -81,7 +80,7 @@ import cn.xybbz.viewmodel.SearchViewModel
 fun SearchScreen(
     searchViewModel: SearchViewModel = hiltViewModel<SearchViewModel>()
 ) {
-    val navHostController = LocalNavController.current
+    val navigator = LocalNavigator.current
 
     var textFieldValue by remember {
         mutableStateOf(TextFieldValue(text = "", selection = TextRange("".length)))
@@ -165,7 +164,7 @@ fun SearchScreen(
             },
             navigationIcon = {
                 IconButton(onClick = {
-                    navHostController.popBackStack()
+                    navigator.goBack()
                 }) {
                     Icon(
                         Icons.AutoMirrored.Rounded.ArrowBack,
@@ -261,7 +260,7 @@ fun SearchResultScreen(
     downloadRepository: DownloadRepository,
     musicController: MusicController
 ) {
-    val navController = LocalNavController.current
+    val navigator = LocalNavigator.current
 
     val favoriteSet by favoriteRepository.favoriteSet.collectAsState()
     val downloadMusicIds by downloadRepository.musicIdsFlow.collectAsState()
@@ -297,7 +296,7 @@ fun SearchResultScreen(
                             MusicArtistCardComponent(
                                 onItem = { artist },
                                 onRouter = {
-                                    navController.navigate(RouterConstants.ArtistInfo(it))
+                                    navigator.navigate(ArtistInfo(it))
                                 }
                             )
                         }
@@ -317,8 +316,8 @@ fun SearchResultScreen(
                             MusicAlbumCardComponent(
                                 onItem = { album },
                                 onRouter = {
-                                    navController.navigate(
-                                        RouterConstants.AlbumInfo(
+                                    navigator.navigate(
+                                        AlbumInfo(
                                             it,
                                             MusicDataTypeEnum.ALBUM
                                         )
