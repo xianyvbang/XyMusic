@@ -43,6 +43,7 @@ import cn.xybbz.ui.components.SnackBarPlayerComponent
 import cn.xybbz.viewmodel.MainViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 
@@ -51,12 +52,13 @@ import kotlinx.coroutines.launch
 @OptIn(UnstableApi::class)
 @Composable
 fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
+
     val coroutineScope = rememberCoroutineScope()
-   val ifOpenSelect by mainViewModel.selectControl.uiState.collectAsState()
+    val ifOpenSelect by mainViewModel.selectControl.uiState.collectAsState()
 
     val navigationState = rememberNavigationState(
-        startRoute = if (mainViewModel.connectionIsLogIn) Home else Connection(),
-        topLevelRoutes = setOf(Home, Connection())
+        startRoute = Home,
+        topLevelRoutes = setOf(Home)
     )
 
     val navigator = remember {
@@ -105,9 +107,6 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
 
         LifecycleEffect(
             onCreate = {
-                if (!mainViewModel.connectionIsLogIn){
-                    navigator.navigate(Connection())
-                }
                 Log.i("=====", "初始化")
             },
             onStart = {
@@ -142,14 +141,20 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
                 SnackBarHostUi()
             },
         ) {
-            Box {
-                RouterCompose(
-                    paddingValues = it,
-                    navigationState = navigationState
-                )
-                LoadingCompose(modifier = Modifier.align(alignment = Alignment.Center))
 
+            if(!mainViewModel.connectionIsLogIn){
+                ConnectionScreen(connectionUiType = null)
+            }else {
+                Box {
+                    RouterCompose(
+                        paddingValues = it,
+                        navigationState = navigationState
+                    )
+                    LoadingCompose(modifier = Modifier.align(alignment = Alignment.Center))
+
+                }
             }
+
         }
     }
 }
