@@ -128,14 +128,14 @@ fun HomeScreen(
     SideEffect {
         Log.d("=====", "HomeScreen重组一次")
     }
-    val mostPlayerMusicList by homeViewModel.mostPlayerMusicListFlow.collectAsState()
-    val newAlbumList by homeViewModel.newAlbumListFlow.collectAsState()
-    val musicRecentlyList by homeViewModel.musicRecentlyListFlow.collectAsState()
-    val albumRecentlyList by homeViewModel.albumRecentlyListFlow.collectAsState()
-    val mostPlayerAlbumList by homeViewModel.mostPlayerAlbumListFlow.collectAsState()
-    val recommendedMusicList by homeViewModel.recommendedMusicListFlow.collectAsState()
-    val playlists by homeViewModel.playlistsFlow.collectAsState()
-    val dataCount by homeViewModel.dataCountFlow.collectAsState()
+    val mostPlayerMusicList by homeViewModel.homeDataRepository.mostPlayedMusic.collectAsState()
+    val newAlbumList by homeViewModel.homeDataRepository.newestAlbums.collectAsState()
+    val musicRecentlyList by homeViewModel.homeDataRepository.recentMusic.collectAsState()
+    val albumRecentlyList by homeViewModel.homeDataRepository.recentAlbums.collectAsState()
+    val mostPlayerAlbumList by homeViewModel.homeDataRepository.mostPlayedAlbums.collectAsState()
+    val recommendedMusicList by homeViewModel.homeDataRepository.recommendedMusic.collectAsState()
+    val playlists by homeViewModel.homeDataRepository.playlists.collectAsState()
+    val dataCount by homeViewModel.homeDataRepository.dataCount.collectAsState()
     val context = LocalContext.current
     val navigator = LocalNavigator.current
     val sheetState = rememberModalBottomSheetState(
