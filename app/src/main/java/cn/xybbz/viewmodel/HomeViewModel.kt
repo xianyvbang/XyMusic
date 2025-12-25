@@ -16,6 +16,7 @@ import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.DataSourceChangeUtils
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
+import cn.xybbz.config.HomeDataRepository
 import cn.xybbz.config.recommender.DailyRecommender
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
@@ -46,7 +47,8 @@ class HomeViewModel @OptIn(UnstableApi::class)
     val musicPlayContext: MusicPlayContext,
     private val musicController: MusicController,
     val backgroundConfig: BackgroundConfig,
-    private val dailyRecommender: DailyRecommender
+    private val dailyRecommender: DailyRecommender,
+    val homeDataRepository: HomeDataRepository
 ) : ViewModel() {
 
 
@@ -100,7 +102,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
-            initialValue =emptyList()/* runBlocking {
+            initialValue = emptyList()/* runBlocking {
                 db.musicDao.selectPlayHistoryMusicExtendList(
                     20
                 )
@@ -116,7 +118,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
-            initialValue =emptyList()/* runBlocking {
+            initialValue = emptyList()/* runBlocking {
                 db.albumDao.selectPlayHistoryAlbumList(
                     20
                 )
@@ -132,7 +134,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
-            initialValue =emptyList()/* runBlocking {
+            initialValue = emptyList()/* runBlocking {
                 db.albumDao.selectMaximumPlayAlbumList(
                     20
                 )
@@ -142,29 +144,29 @@ class HomeViewModel @OptIn(UnstableApi::class)
     /**
      * 推荐音乐
      */
-   val recommendedMusicListFlow = db.musicDao
-    .selectRecommendedMusicExtendListFlow(20)
-    .distinctUntilChanged()
-       .stateIn(
-           scope = viewModelScope,
-           started = SharingStarted.Eagerly,
-           initialValue =emptyList()/* runBlocking {
+    val recommendedMusicListFlow = db.musicDao
+        .selectRecommendedMusicExtendListFlow(20)
+        .distinctUntilChanged()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = emptyList()/* runBlocking {
                db.musicDao.selectRecommendedMusicExtendList(
                    20
                )
            }*/
-       )
+        )
 
     /**
      * 歌单列表
      */
     val playlistsFlow = db.albumDao
-            .selectPlaylistFlow()
+        .selectPlaylistFlow()
         .distinctUntilChanged()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
-            initialValue =emptyList()/* runBlocking {
+            initialValue = emptyList()/* runBlocking {
                 db.albumDao.selectPlaylist()
             }*/
         )

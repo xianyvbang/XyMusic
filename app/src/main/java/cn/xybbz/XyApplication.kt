@@ -6,6 +6,7 @@ import androidx.work.Configuration
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.ConnectionConfigServer
+import cn.xybbz.config.HomeDataRepository
 import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.proxy.ProxyConfigServer
 import cn.xybbz.config.setting.SettingsManager
@@ -15,22 +16,31 @@ import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
 @HiltAndroidApp
-class XyApplication : Application(),Configuration.Provider {
+class XyApplication : Application(), Configuration.Provider {
 
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
+
     @Inject
     lateinit var dataSourceManager: DataSourceManager
+
     @Inject
     lateinit var connectionConfigServer: ConnectionConfigServer
+
     @Inject
     lateinit var proxyConfigServer: ProxyConfigServer
+
     @Inject
     lateinit var settingsManager: SettingsManager
+
     @Inject
     lateinit var backgroundConfig: BackgroundConfig
+
     @Inject
     lateinit var downloadManager: DownLoadManager
+
+    @Inject
+    lateinit var homeDataRepository: HomeDataRepository
 
     override fun onCreate() {
         // 初始化语种切换框架
