@@ -672,14 +672,4 @@ class MainViewModel @Inject constructor(
     fun updateIfShowSnackBar(ifShowSnackBar: Boolean) {
         this.ifShowSnackBar = ifShowSnackBar
     }
-
-    /**
-     * 清空分页信息
-     */
-
-    fun clearRemoteCurrent() {
-        viewModelScope.launch {
-            db.remoteCurrentDao.removeAll()
-        }
-    }
 }
