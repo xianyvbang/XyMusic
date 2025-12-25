@@ -68,9 +68,7 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
                 navigator: Navigator,
                 destination: NavKey
             ) {
-                mainViewModel.updateIfShowSnackBar(destination != Connection)
-                val isSelected = destination != navigationState.topLevelRoute
-                Log.i("route", "是否选择${isSelected}")
+                mainViewModel.updateIfShowSnackBar(destination !is Connection)
             }
         })
         navigator.addOnDestinationChangedListener(object : OnDestinationChangedListener {
@@ -79,7 +77,7 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
                 destination: NavKey
             ) {
                 coroutineScope.launch(Dispatchers.Main.immediate) {
-                    withFrameNanos{
+                    withFrameNanos {
                         if (ifOpenSelect) {
                             mainViewModel.selectControl.dismiss()
                         }
@@ -107,6 +105,9 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
 
         LifecycleEffect(
             onCreate = {
+                if (!mainViewModel.connectionIsLogIn){
+                    navigator.navigate(Connection())
+                }
                 Log.i("=====", "初始化")
             },
             onStart = {
@@ -158,7 +159,7 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
 private fun SnackBarHostUi(modifier: Modifier = Modifier) {
     val mainViewModel = LocalMainViewModel.current
     LaunchedEffect(mainViewModel.ifShowSnackBar) {
-        Log.i("=====","是否显示currentSnackBarHostScreen ${mainViewModel.ifShowSnackBar}")
+        Log.i("=====", "是否显示currentSnackBarHostScreen ${mainViewModel.ifShowSnackBar}")
     }
     if (mainViewModel.ifShowSnackBar)
         Column(modifier = Modifier.then(modifier)) {

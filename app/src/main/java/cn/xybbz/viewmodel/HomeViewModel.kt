@@ -35,7 +35,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @HiltViewModel
@@ -67,11 +66,11 @@ class HomeViewModel @OptIn(UnstableApi::class)
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.Eagerly,
-                initialValue = runBlocking {
+                initialValue = emptyList() /*runBlocking {
                     db.musicDao.selectMaximumPlayMusicExtendList(
                         20
                     )
-                }
+                }*/
             )
 
     /**
@@ -83,11 +82,11 @@ class HomeViewModel @OptIn(UnstableApi::class)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
-            initialValue = runBlocking {
+            initialValue = emptyList() /*runBlocking {
                 db.albumDao.selectNewestList(
                     20
                 )
-            }
+            }*/
         )
 
     /**
@@ -102,11 +101,11 @@ class HomeViewModel @OptIn(UnstableApi::class)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
-            initialValue = runBlocking {
+            initialValue =emptyList()/* runBlocking {
                 db.musicDao.selectPlayHistoryMusicExtendList(
                     20
                 )
-            }
+            }*/
         )
 
     /**
@@ -118,11 +117,11 @@ class HomeViewModel @OptIn(UnstableApi::class)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
-            initialValue = runBlocking {
+            initialValue =emptyList()/* runBlocking {
                 db.albumDao.selectPlayHistoryAlbumList(
                     20
                 )
-            }
+            }*/
         )
 
     /**
@@ -134,11 +133,11 @@ class HomeViewModel @OptIn(UnstableApi::class)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
-            initialValue = runBlocking {
+            initialValue =emptyList()/* runBlocking {
                 db.albumDao.selectMaximumPlayAlbumList(
                     20
                 )
-            }
+            }*/
         )
 
     /**
@@ -150,11 +149,11 @@ class HomeViewModel @OptIn(UnstableApi::class)
        .stateIn(
            scope = viewModelScope,
            started = SharingStarted.Eagerly,
-           initialValue = runBlocking {
+           initialValue =emptyList()/* runBlocking {
                db.musicDao.selectRecommendedMusicExtendList(
                    20
                )
-           }
+           }*/
        )
 
     /**
@@ -166,9 +165,9 @@ class HomeViewModel @OptIn(UnstableApi::class)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
-            initialValue = runBlocking {
+            initialValue =emptyList()/* runBlocking {
                 db.albumDao.selectPlaylist()
-            }
+            }*/
         )
 
     /**
@@ -180,9 +179,9 @@ class HomeViewModel @OptIn(UnstableApi::class)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
-            initialValue = runBlocking {
+            initialValue = null/*runBlocking {
                 db.dataCountDao.selectOne()
-            }
+            }*/
         )
 
     /**

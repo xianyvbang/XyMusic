@@ -79,6 +79,9 @@ import cn.xybbz.common.constants.UiConstants.MusicCardImageSize
 import cn.xybbz.common.enums.img
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
+import cn.xybbz.extension.PlaceholderHighlight
+import cn.xybbz.extension.placeholder
+import cn.xybbz.extension.shimmer
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import cn.xybbz.router.Album
@@ -319,7 +322,7 @@ fun HomeScreen(
                                                     overflow = TextOverflow.Visible,
                                                     style = MaterialTheme.typography.titleSmall
                                                 )
-                                                if (homeViewModel.dataSourceManager.errorMessage.isNotBlank()){
+                                                if (homeViewModel.dataSourceManager.errorMessage.isNotBlank()) {
                                                     HorizontalDivider()
                                                     XyItemText(text = homeViewModel.dataSourceManager.errorMessage)
                                                 }
@@ -401,11 +404,18 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         XyItemTabBigButton(
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                /*.placeholder(
+                                    visible = true,
+                                    color = Color.White,
+                                    highlight = PlaceholderHighlight.shimmer(Color(0xFF707070)),
+                                )*/,
                             text = stringResource(R.string.all_music),
-                            sub = if (ifShowCount) dataCount?.musicCount?.toString() ?: stringResource(
-                                Constants.UNKNOWN
-                            ) else null,
+                            sub = if (ifShowCount) dataCount?.musicCount?.toString()
+                                ?: stringResource(
+                                    Constants.UNKNOWN
+                                ) else null,
                             imageVector = Icons.Rounded.MusicNote,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
@@ -439,9 +449,10 @@ fun HomeScreen(
                         XyItemTabBigButton(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.album),
-                            sub = if (ifShowCount) dataCount?.albumCount?.toString() ?: stringResource(
-                                Constants.UNKNOWN
-                            ) else null,
+                            sub = if (ifShowCount) dataCount?.albumCount?.toString()
+                                ?: stringResource(
+                                    Constants.UNKNOWN
+                                ) else null,
                             imageVector = Icons.Rounded.Album,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
@@ -456,9 +467,10 @@ fun HomeScreen(
                         XyItemTabBigButton(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.artist),
-                            sub = if (ifShowCount) dataCount?.artistCount?.toString() ?: stringResource(
-                                Constants.UNKNOWN
-                            ) else null,
+                            sub = if (ifShowCount) dataCount?.artistCount?.toString()
+                                ?: stringResource(
+                                    Constants.UNKNOWN
+                                ) else null,
                             imageVector = Icons.Rounded.Person,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
@@ -473,9 +485,10 @@ fun HomeScreen(
                         XyItemTabBigButton(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.favorite),
-                            sub = if (ifShowCount) dataCount?.favoriteCount?.toString() ?: stringResource(
-                                Constants.UNKNOWN
-                            ) else null,
+                            sub = if (ifShowCount) dataCount?.favoriteCount?.toString()
+                                ?: stringResource(
+                                    Constants.UNKNOWN
+                                ) else null,
                             imageVector = Icons.Rounded.Favorite,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
@@ -491,9 +504,10 @@ fun HomeScreen(
                         XyItemTabBigButton(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.genres),
-                            sub = if (ifShowCount) dataCount?.genreCount?.toString() ?: stringResource(
-                                Constants.UNKNOWN
-                            ) else null,
+                            sub = if (ifShowCount) dataCount?.genreCount?.toString()
+                                ?: stringResource(
+                                    Constants.UNKNOWN
+                                ) else null,
                             imageVector = Icons.AutoMirrored.Rounded.Label,
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
