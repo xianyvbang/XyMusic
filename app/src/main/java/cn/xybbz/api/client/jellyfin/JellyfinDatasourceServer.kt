@@ -1277,7 +1277,8 @@ class JellyfinDatasourceServer @Inject constructor(
             ifFavorite = item.userData?.isFavorite == true,
             ifPlaylist = ifPlaylist,
             createTime = item.dateCreated?.atZone(ZoneId.systemDefault())?.toEpochSecond() ?: 0L,
-            musicCount = item.songCount?.toLong() ?: 0L
+            musicCount = if (ifPlaylist) (item.childCount?.toLong()
+                ?: 0L) else (item.songCount?.toLong() ?: 0L)
         )
     }
 

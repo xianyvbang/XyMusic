@@ -1408,7 +1408,8 @@ class EmbyDatasourceServer @Inject constructor(
             ifFavorite = album.userData?.isFavorite == true,
             ifPlaylist = ifPlaylist,
             createTime = album.dateCreated?.atZone(ZoneId.systemDefault())?.toEpochSecond() ?: 0L,
-            musicCount = album.songCount?.toLong() ?: 0L
+            musicCount = if (ifPlaylist) (album.childCount?.toLong()
+                ?: 0L) else (album.songCount?.toLong() ?: 0L)
         )
     }
 
