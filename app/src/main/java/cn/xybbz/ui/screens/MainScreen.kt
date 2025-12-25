@@ -61,9 +61,8 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
 
     val navigator = remember {
         val navigator = Navigator(
-            navigationState,
-            onNavigateToRestrictedKey = { Connection() },
-            isLoggedIn = { mainViewModel.connectionIsLogIn })
+            navigationState
+        )
         navigator.addOnDestinationChangedListener(object : OnDestinationChangedListener {
             override fun onDestinationChanged(
                 navigator: Navigator,

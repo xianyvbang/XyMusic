@@ -7,8 +7,6 @@ import androidx.navigation3.runtime.NavKey
  */
 class Navigator(
     val state: NavigationState,
-    private val onNavigateToRestrictedKey: (targetKey: RouterConstants?) -> RouterConstants,
-    private val isLoggedIn: () -> Boolean,
 ) {
 
     val onDestinationChangedListeners = mutableListOf<OnDestinationChangedListener>()

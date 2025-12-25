@@ -11,8 +11,6 @@ import kotlinx.serialization.Serializable
  * @author 刘梦龙
  * @date 2024/03/06
  * @constructor 创建[RouterConstants]
- * @param [router] 路由地址
- * @param [type] 类型 0 NavigationBar打开展示 1普通页面
  */
 @Serializable
 sealed class RouterConstants() : NavKey
@@ -211,5 +209,3 @@ sealed class RouterConstants() : NavKey
     @Serializable
     @SerialName("ProxyConfig")
     data object ProxyConfig : RouterConstants()
-
-

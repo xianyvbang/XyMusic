@@ -9,7 +9,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.ui.NavDisplay
 import cn.xybbz.R
 import cn.xybbz.ui.screens.AboutScreen
 import cn.xybbz.ui.screens.AlbumInfoScreen
@@ -40,60 +39,10 @@ import cn.xybbz.ui.theme.XyTheme
 import coil.compose.AsyncImage
 
 /**
- * 首页使用
- */
-inline fun <reified T: NavKey> EntryProviderScope<NavKey>.homeComposable(noinline content: @Composable (T) -> Unit,) {
-    val homeRouterAnimate = RouterAnimate.HomeRouterAnimate
-    entry<T>(
-        metadata = NavDisplay.transitionSpec(homeRouterAnimate.enter) + NavDisplay.transitionSpec(
-            homeRouterAnimate.popExit
-        )
-    ) {
-        Box {
-            AsyncImage(
-                model = XyTheme.brash.backgroundImageUri,
-                contentDescription = stringResource(R.string.background_image),
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-            content(it)
-        }
-
-    }
-}
-
-/**
  * 节点页面
  */
 inline fun <reified T : NavKey> EntryProviderScope<NavKey>.nodeComposable(noinline content: @Composable (T) -> Unit) {
-    val nodeRouterAnimate = RouterAnimate.NodeRouterAnimate
-    entry<T>(
-        /*metadata = NavDisplay.transitionSpec(nodeRouterAnimate.enter) + NavDisplay.transitionSpec(
-            nodeRouterAnimate.popExit
-        )*/
-    ) {
-        Box {
-            AsyncImage(
-                model = XyTheme.brash.backgroundImageUri,
-                contentDescription = stringResource(R.string.background_image),
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-            content(it)
-        }
-    }
-}
-
-/**
- * 最内层页面
- */
-inline fun <reified T : NavKey> EntryProviderScope<NavKey>.extremityComposable(noinline content: @Composable (T) -> Unit) {
-    val extremityRouterAnimate = RouterAnimate.ExtremityRouterAnimate
-    entry<T>(
-        /*metadata = NavDisplay.transitionSpec(extremityRouterAnimate.enter) + NavDisplay.transitionSpec(
-            extremityRouterAnimate.popExit
-        )*/
-    ) {
+    entry<T> {
         Box {
             AsyncImage(
                 model = XyTheme.brash.backgroundImageUri,
@@ -161,7 +110,7 @@ val entryProvider = entryProvider{
         MemoryManagementScreen()
     }
 
-    extremityComposable<ArtistInfo> {artistInfo->
+    nodeComposable<ArtistInfo> {artistInfo->
         ArtistInfoScreen(
             artistId = { artistInfo.artistId })
     }
@@ -179,7 +128,7 @@ val entryProvider = entryProvider{
         GenresScreen()
     }
 
-    extremityComposable<GenreInfo> {genreInfo->
+    nodeComposable<GenreInfo> {genreInfo->
         GenresInfoScreen(
             genreId = genreInfo.genreId
         )
@@ -189,18 +138,18 @@ val entryProvider = entryProvider{
         AboutScreen()
     }
 
-    extremityComposable<CacheLimit> {
+    nodeComposable<CacheLimit> {
         CacheLimitScreen()
     }
 
-    extremityComposable<SelectLibrary> {selectLibrary->
+    nodeComposable<SelectLibrary> {selectLibrary->
         SelectLibraryScreen(
             connectionId = selectLibrary.connectionId,
             thisLibraryId = selectLibrary.libraryId
         )
     }
 
-    extremityComposable<DailyRecommend> {
+    nodeComposable<DailyRecommend> {
         DailyRecommendScreen()
     }
 
@@ -212,11 +161,11 @@ val entryProvider = entryProvider{
         LocalScreen()
     }
 
-    extremityComposable<SetBackgroundImage> {
+    nodeComposable<SetBackgroundImage> {
         SetBackgroundImageScreen()
     }
 
-    extremityComposable<ProxyConfig> {
+    nodeComposable<ProxyConfig> {
         ProxyConfigScreen()
     }
 }

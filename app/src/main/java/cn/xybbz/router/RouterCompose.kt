@@ -1,9 +1,6 @@
 package cn.xybbz.router
 
 import android.util.Log
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -25,20 +22,9 @@ fun RouterCompose(
         entries = navigationState.toEntries(entryProvider),
         onBack = { navigator.goBack() },
         sceneStrategy = remember { DialogSceneStrategy() },
-        predictivePopTransitionSpec = {
-            slideInHorizontally(initialOffsetX = { -it }) togetherWith
-                    slideOutHorizontally(targetOffsetX = { it })
-        },
-        transitionSpec = {
-            // Slide in from right when navigating forward
-            slideInHorizontally(initialOffsetX = { it }) togetherWith
-                    slideOutHorizontally(targetOffsetX = { -it })
-        },
-        popTransitionSpec = {
-            // Slide in from left when navigating back
-            slideInHorizontally(initialOffsetX = { -it }) togetherWith
-                    slideOutHorizontally(targetOffsetX = { it })
-        }
+        predictivePopTransitionSpec = RouterAnimate.DEFAULT.predictivePopTransitionSpec,
+        transitionSpec = RouterAnimate.DEFAULT.transitionSpec,
+        popTransitionSpec = RouterAnimate.DEFAULT.popTransitionSpec
     )
 
 }
