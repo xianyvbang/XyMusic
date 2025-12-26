@@ -335,13 +335,17 @@ class SubsonicDatasourceServer @Inject constructor(
      * 获取歌单列表
      */
     override suspend fun getPlaylists(): List<XyAlbum>? {
-        db.albumDao.removePlaylist()
         val username = subsonicApiClient.username
         return if (username.isNotBlank()) {
             val playlists = subsonicApiClient.playlistsApi().getPlaylists(username)
-            playlists.subsonicResponse.playlists?.playlist?.let { playlist ->
-                saveBatchAlbum(convertToPlaylists(playlist), MusicDataTypeEnum.PLAYLIST, true)
+            db.withTransaction{
+                db.albumDao.removePlaylist()
+                playlists.subsonicResponse.playlists?.playlist?.let { playlist ->
+                    saveBatchAlbum(convertToPlaylists(playlist), MusicDataTypeEnum.PLAYLIST, true)
+                }
             }
+
+
         } else null
 
     }

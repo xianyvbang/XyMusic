@@ -6,8 +6,6 @@ import android.os.Build
 import android.util.Log
 import androidx.room.withTransaction
 import cn.xybbz.api.client.IDataSourceParentServer
-import cn.xybbz.api.client.data.ClientLoginInfoReq
-import cn.xybbz.api.client.data.LoginSuccessData
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.jellyfin.data.CreatePlaylistRequest
 import cn.xybbz.api.client.jellyfin.data.ItemRequest
@@ -464,10 +462,12 @@ class EmbyDatasourceServer @Inject constructor(
      * 获取歌单列表
      */
     override suspend fun getPlaylists(): List<XyAlbum>? {
-        db.albumDao.removePlaylist()
         val response = getPlaylistsServer(0, 10000)
-        return response.items?.let {
-            saveBatchAlbum(it, MusicDataTypeEnum.PLAYLIST, true)
+        return db.withTransaction {
+            db.albumDao.removePlaylist()
+            response.items?.let {
+                saveBatchAlbum(it, MusicDataTypeEnum.PLAYLIST, true)
+            }
         }
     }
 

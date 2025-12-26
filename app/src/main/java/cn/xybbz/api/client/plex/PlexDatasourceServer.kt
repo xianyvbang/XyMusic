@@ -829,10 +829,13 @@ class PlexDatasourceServer @Inject constructor(
      */
     override suspend fun getPlaylists(): List<XyAlbum>? {
         val response = getPlaylistsServer(0, 10000)
-        db.albumDao.removePlaylist()
-        return response.items?.let {
-            saveBatchAlbum(it, MusicDataTypeEnum.PLAYLIST, true)
+        return db.withTransaction{
+            db.albumDao.removePlaylist()
+             response.items?.let {
+                 saveBatchAlbum(it, MusicDataTypeEnum.PLAYLIST, true)
+            }
         }
+
     }
 
     /**

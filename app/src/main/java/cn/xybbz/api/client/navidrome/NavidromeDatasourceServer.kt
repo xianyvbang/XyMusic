@@ -429,11 +429,13 @@ class NavidromeDatasourceServer @Inject constructor(
      * 获取歌单列表
      */
     override suspend fun getPlaylists(): List<XyAlbum>? {
-        db.albumDao.removePlaylist()
         val allResponse = getPlaylistsServer(0, 0)
-        if (!allResponse.items.isNullOrEmpty()) {
-            allResponse.items?.let {
-                saveBatchAlbum(it, MusicDataTypeEnum.PLAYLIST, true)
+        db.withTransaction{
+            db.albumDao.removePlaylist()
+            if (!allResponse.items.isNullOrEmpty()) {
+                allResponse.items?.let {
+                    saveBatchAlbum(it, MusicDataTypeEnum.PLAYLIST, true)
+                }
             }
         }
         return allResponse.items

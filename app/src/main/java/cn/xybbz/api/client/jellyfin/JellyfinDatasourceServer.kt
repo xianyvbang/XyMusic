@@ -556,10 +556,13 @@ class JellyfinDatasourceServer @Inject constructor(
      * @return [List<XyPlaylist>?]
      */
     override suspend fun getPlaylists(): List<XyAlbum>? {
-        db.albumDao.removePlaylist()
+
         val response = getPlaylistsServer(0, 10000)
-        return response.items?.let {
-            saveBatchAlbum(it, MusicDataTypeEnum.PLAYLIST, true)
+        return db.withTransaction {
+            db.albumDao.removePlaylist()
+            response.items?.let {
+                saveBatchAlbum(it, MusicDataTypeEnum.PLAYLIST, true)
+            }
         }
     }
 
