@@ -8,7 +8,7 @@ import androidx.work.WorkManager
 import androidx.work.workDataOf
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.RemoteIdConstants
-import cn.xybbz.config.ConnectionConfigServer
+import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.localdata.config.DatabaseClient
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.minutes

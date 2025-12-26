@@ -32,7 +32,6 @@ import androidx.compose.material.icons.filled.Http
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
@@ -68,8 +67,6 @@ import cn.xybbz.common.enums.img
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.DataSourceType
-import cn.xybbz.router.Home
-import cn.xybbz.router.Setting
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.ext.composeClick
@@ -155,7 +152,7 @@ fun ConnectionScreen(
         }, navigationIcon = {
             if (connectionUiType != null && connectionUiType == ConnectionUiType.ADD_CONNECTION)
                 IconButton(
-                    onClick = composeClick{
+                    onClick = composeClick {
                         navigator.goBack()
                     },
                 ) {
@@ -165,15 +162,6 @@ fun ConnectionScreen(
                     )
                 }
 
-        }, actions = {
-            IconButton(onClick = composeClick{
-                navigator.navigate(Setting)
-            }) {
-                Icon(
-                    imageVector = Icons.Rounded.Settings,
-                    contentDescription = stringResource(R.string.open_settings_page_button)
-                )
-            }
         })
 
         AnimatedVisibility(visible = ifSelectDataSource != ScreenType.SELECT_DATA_SOURCE) {
@@ -586,7 +574,9 @@ fun ConnectionScreen(
                                         onClick = {
                                             if (connectionViewModel.dataSourceManager.dataSourceType == null) {
                                                 connectionViewModel.changeDataSource()
-                                                navigator.navigate(Home)
+                                                connectionViewModel.connectionConfigServer.updateIfConnectionConfig(
+                                                    true
+                                                )
                                             } else {
                                                 navigator.goBack()
                                             }

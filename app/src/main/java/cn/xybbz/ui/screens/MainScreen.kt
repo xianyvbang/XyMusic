@@ -11,7 +11,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -31,6 +30,7 @@ import cn.xybbz.router.Connection
 import cn.xybbz.router.Home
 import cn.xybbz.router.Navigator
 import cn.xybbz.router.OnDestinationChangedListener
+import cn.xybbz.router.RootNavTransition
 import cn.xybbz.router.RouterCompose
 import cn.xybbz.router.rememberNavigationState
 import cn.xybbz.ui.components.AddPlaylistBottomComponent
@@ -51,12 +51,13 @@ import kotlinx.coroutines.launch
 @OptIn(UnstableApi::class)
 @Composable
 fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
+
     val coroutineScope = rememberCoroutineScope()
-   val ifOpenSelect by mainViewModel.selectControl.uiState.collectAsState()
+    val ifOpenSelect by mainViewModel.selectControl.uiState.collectAsState()
 
     val navigationState = rememberNavigationState(
-        startRoute = if (mainViewModel.connectionIsLogIn) Home else Connection(),
-        topLevelRoutes = setOf(Home, Connection())
+        startRoute = Home,
+        topLevelRoutes = setOf(Home)
     )
 
     val navigator = remember {
@@ -68,7 +69,7 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
                 navigator: Navigator,
                 destination: NavKey
             ) {
-                mainViewModel.updateIfShowSnackBar(destination !is Connection)
+                mainViewModel.connectionConfigServer.updateIfShowSnackBar(destination !is Connection)
             }
         })
         navigator.addOnDestinationChangedListener(object : OnDestinationChangedListener {
@@ -105,9 +106,6 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
 
         LifecycleEffect(
             onCreate = {
-                if (!mainViewModel.connectionIsLogIn){
-                    navigator.navigate(Connection())
-                }
                 Log.i("=====", "初始化")
             },
             onStart = {
@@ -142,14 +140,23 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
                 SnackBarHostUi()
             },
         ) {
-            Box {
-                RouterCompose(
-                    paddingValues = it,
-                    navigationState = navigationState
-                )
-                LoadingCompose(modifier = Modifier.align(alignment = Alignment.Center))
 
+            RootNavTransition(!mainViewModel.connectionConfigServer.ifConnectionConfig) { bool ->
+                if (bool) {
+                    ConnectionScreen(connectionUiType = null)
+                } else {
+                    Box {
+                        RouterCompose(
+                            paddingValues = it,
+                            navigationState = navigationState
+                        )
+                        LoadingCompose(modifier = Modifier.align(alignment = Alignment.Center))
+
+                    }
+                }
             }
+
+
         }
     }
 }
@@ -158,10 +165,7 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
 @Composable
 private fun SnackBarHostUi(modifier: Modifier = Modifier) {
     val mainViewModel = LocalMainViewModel.current
-    LaunchedEffect(mainViewModel.ifShowSnackBar) {
-        Log.i("=====", "是否显示currentSnackBarHostScreen ${mainViewModel.ifShowSnackBar}")
-    }
-    if (mainViewModel.ifShowSnackBar)
+    if (mainViewModel.connectionConfigServer.ifShowSnackBar)
         Column(modifier = Modifier.then(modifier)) {
             SnackBarPlayerComponent(
                 onClick = {

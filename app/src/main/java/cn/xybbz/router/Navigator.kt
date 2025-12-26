@@ -36,8 +36,8 @@ class Navigator(
             state.topLevelRoute = startRoute
             route = startRoute
         } else {
-            val key = currentStack.removeLastOrNull()
-            route = key
+            currentStack.removeLastOrNull()
+            route = currentStack.last()
         }
 
         route?.let {

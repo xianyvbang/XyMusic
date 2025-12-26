@@ -25,6 +25,9 @@ interface ConnectionConfigDao {
     @Query("select * from xy_connection_config where id = (select connectionId from xy_settings) ")
     suspend fun selectConnectionConfig(): ConnectionConfig?
 
+    @Query("select * from xy_connection_config where id = (select connectionId from xy_settings) ")
+    fun selectConnectionConfigFlow(): Flow<ConnectionConfig?>
+
     @Query("select * from xy_connection_config")
     suspend fun selectAllData(): List<ConnectionConfig>
 

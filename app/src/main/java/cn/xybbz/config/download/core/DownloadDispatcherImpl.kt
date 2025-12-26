@@ -7,7 +7,7 @@ import androidx.work.WorkManager
 import androidx.work.workDataOf
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.CoroutineScopeUtils
-import cn.xybbz.config.ConnectionConfigServer
+import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.download.notification.NotificationController
 import cn.xybbz.config.download.work.DownloadWork
 import cn.xybbz.localdata.config.DatabaseClient

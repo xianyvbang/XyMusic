@@ -27,8 +27,8 @@ import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.music.PlayerEvent
 import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.alarm.AlarmConfig
+import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.setting.SettingsManager
@@ -58,7 +58,7 @@ class MainViewModel @Inject constructor(
     val db: DatabaseClient,
     private val musicController: MusicController,
     val dataSourceManager: DataSourceManager,
-    private val connectionConfigServer: ConnectionConfigServer,
+    val connectionConfigServer: ConnectionConfigServer,
     val settingsManager: SettingsManager,
     val backgroundConfig: BackgroundConfig,
     private val musicPlayContext: MusicPlayContext,
@@ -69,14 +69,6 @@ class MainViewModel @Inject constructor(
     private val mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     private val versionCheckScheduler: VersionCheckScheduler
 ) : ViewModel() {
-
-
-    var connectionIsLogIn by mutableStateOf(false)
-        private set
-
-    var ifShowSnackBar by mutableStateOf(false)
-        private set
-
 
     /**
      * 专辑播放历史功能开启数据
@@ -97,8 +89,6 @@ class MainViewModel @Inject constructor(
 
     init {
         Log.i("=====", "MainViewModel初始化")
-        connectionIsLogIn = connectionConfigServer.getConnectionId() != Constants.ZERO.toLong()
-        updateIfShowSnackBar(connectionIsLogIn)
         //加载是否开启专辑播放历史功能数据
         observeLoginSuccessForAndProgress()
         //初始化年代数据
@@ -669,7 +659,4 @@ class MainViewModel @Inject constructor(
         versionCheckScheduler.enqueueIfNeeded()
     }
 
-    fun updateIfShowSnackBar(ifShowSnackBar: Boolean) {
-        this.ifShowSnackBar = ifShowSnackBar
-    }
 }

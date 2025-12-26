@@ -25,8 +25,8 @@ import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.common.utils.PlaylistParser
-import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.alarm.AlarmConfig
+import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.entity.data.LoginStateData
 import cn.xybbz.entity.data.LrcEntryData
@@ -131,6 +131,10 @@ class DataSourceManager(
      */
     fun initDataSource(ifLogin: Boolean = false) {
         startEventBus()
+        login(ifLogin)
+    }
+
+    fun login(ifLogin: Boolean = false){
         datasourceCoroutineScope.launch {
             val connectionConfig = db.connectionConfigDao.selectConnectionConfig()
             if (connectionConfig != null) {
@@ -138,7 +142,6 @@ class DataSourceManager(
                 serverLogin(ifLogin)
             }
         }
-
     }
 
     /**
@@ -251,7 +254,7 @@ class DataSourceManager(
      * 变更数据源
      */
     fun changeDataSource() {
-        initDataSource()
+        login()
     }
 
     /**

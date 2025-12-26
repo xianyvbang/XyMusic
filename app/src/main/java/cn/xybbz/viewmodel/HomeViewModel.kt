@@ -15,8 +15,8 @@ import cn.xybbz.common.enums.HomeRefreshReason
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.DataSourceChangeUtils
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.ConnectionConfigServer
 import cn.xybbz.config.HomeDataRepository
+import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.recommender.DailyRecommender
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
@@ -370,7 +370,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
             if (dataSourceManager.ifLoginError) {
                 if (isRefresh) {
                     connectionConfigServer.updateLoginStates(false)
-                    dataSourceManager.initDataSource()
+                    dataSourceManager.login(true)
                 }
             } else {
                 val mostPlayerMusicAsync = async {
