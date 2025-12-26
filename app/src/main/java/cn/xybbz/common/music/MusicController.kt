@@ -607,7 +607,7 @@ class MusicController(
                 state = PlayStateEnum.Pause
             }
             scope.launch {
-                _events.emit(PlayerEvent.AddMusicList(artistId))
+                _events.emit(PlayerEvent.AddMusicList(artistId,ifInitPlayerList))
             }
         }
     }

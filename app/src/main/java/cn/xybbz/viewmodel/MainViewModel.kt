@@ -110,7 +110,7 @@ class MainViewModel @Inject constructor(
             musicController.events.collect {
                 when (it) {
                     is PlayerEvent.AddMusicList -> {
-                        onAddMusicList(it.artistId)
+                        onAddMusicList(it.artistId, it.ifInitPlayerList)
                     }
 
                     PlayerEvent.BeforeChangeMusic -> {
@@ -297,14 +297,21 @@ class MainViewModel @Inject constructor(
     fun onUpdateMusicPicData(musicId: String, picByte: ByteArray?) {
         viewModelScope.launch {
             if (musicController.musicInfo?.pic.isNullOrBlank() && musicId.isNotBlank()) {
+                Log.i("image", "更新图片数据 --- ${musicId}")
                 //判断传过来的itemId和有picByte不为空的playQueueMusic的musicId一致,并且playQueueMusic的图片字节不为空,则不清空数据
                 val picByteNotNullPlayQueueMusic = db.musicDao.selectPlayQueueByPicByteNotNull()
                 if (picByteNotNullPlayQueueMusic != null && picByteNotNullPlayQueueMusic.musicId != musicId) {
                     db.musicDao.removePlayQueueMusicPicByte()
+                    Log.i("image", "清空图片数据")
                 }
                 //更新存储封面
                 val playQueueMusic = db.musicDao.selectPlayQueueByItemId(musicId)
+                Log.i(
+                    "image",
+                    "更新图片数据1${playQueueMusic} ----- 图片数据${picByte?.isNotEmpty()}"
+                )
                 if (playQueueMusic != null && playQueueMusic.picByte == null && picByte?.isNotEmpty() == true) {
+                    Log.i("image", "更新图片数据2${musicId} --- ")
                     db.musicDao.updatePlayQueueMusicPicByte(
                         musicId,
                         picByte
@@ -316,54 +323,55 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun onAddMusicList(artistId: String?) {
-        viewModelScope.launch {
-            var index = db.musicDao.selectPlayQueueIndex() ?: -1
-            val xyMusicList = musicController.originMusicList.map {
-                index += 1
-                PlayQueueMusic(
-                    musicId = it.itemId,
-                    index = index,
-                    connectionId = connectionConfigServer.getConnectionId()
-                )
-            }
-            if (xyMusicList.isNotEmpty()) {
-
-                //先删除数据
-                db.musicDao.removeByType(dataType = MusicDataTypeEnum.PLAY_QUEUE)
-                //存储音乐数据
-                db.musicDao.savePlayQueueMusic(xyMusicList)
-
-                //存储player设置
-                val player =
-                    db.playerDao.selectPlayerByDataSource()
-                val xyPlayer = XyPlayer(
-                    connectionId = connectionConfigServer.getConnectionId(),
-                    dataType = musicController.playDataType,
-                    musicId = musicController.musicInfo?.itemId ?: "",
-                    headTime = musicController.headTime,
-                    endTime = musicController.endTime,
-                    playerType = musicController.playType,
-                    pageNum = musicController.pageNum,
-                    ifSkip = musicController.headTime > 0,
-                    albumId = musicController.musicInfo?.album ?: "",
-                    artistId = artistId,
-                    pageSize = musicController.pageSize
-                )
-                if (player != null) {
-                    db.playerDao.updateById(
-                        xyPlayer.copy(
-                            id = player.id,
-                            artistId = player.artistId
-                        )
-                    )
-                } else {
-                    db.playerDao.save(
-                        xyPlayer
+    fun onAddMusicList(artistId: String?, ifInitPlayerList: Boolean) {
+        if (!ifInitPlayerList)
+            viewModelScope.launch {
+                var index = db.musicDao.selectPlayQueueIndex() ?: -1
+                val xyMusicList = musicController.originMusicList.map {
+                    index += 1
+                    PlayQueueMusic(
+                        musicId = it.itemId,
+                        index = index,
+                        connectionId = connectionConfigServer.getConnectionId()
                     )
                 }
+                if (xyMusicList.isNotEmpty()) {
+
+                    //先删除数据
+                    db.musicDao.removeByType(dataType = MusicDataTypeEnum.PLAY_QUEUE)
+                    //存储音乐数据
+                    db.musicDao.savePlayQueueMusic(xyMusicList)
+
+                    //存储player设置
+                    val player =
+                        db.playerDao.selectPlayerByDataSource()
+                    val xyPlayer = XyPlayer(
+                        connectionId = connectionConfigServer.getConnectionId(),
+                        dataType = musicController.playDataType,
+                        musicId = musicController.musicInfo?.itemId ?: "",
+                        headTime = musicController.headTime,
+                        endTime = musicController.endTime,
+                        playerType = musicController.playType,
+                        pageNum = musicController.pageNum,
+                        ifSkip = musicController.headTime > 0,
+                        albumId = musicController.musicInfo?.album ?: "",
+                        artistId = artistId,
+                        pageSize = musicController.pageSize
+                    )
+                    if (player != null) {
+                        db.playerDao.updateById(
+                            xyPlayer.copy(
+                                id = player.id,
+                                artistId = player.artistId
+                            )
+                        )
+                    } else {
+                        db.playerDao.save(
+                            xyPlayer
+                        )
+                    }
+                }
             }
-        }
     }
 
     fun onNextList() {

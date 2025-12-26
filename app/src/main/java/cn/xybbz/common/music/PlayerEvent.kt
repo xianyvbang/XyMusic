@@ -20,7 +20,7 @@ sealed class PlayerEvent {
     //加载下一页数据,参数是页码
     data class NextList(val page: Int) : PlayerEvent()
     //播放列表增加数据,传值是艺术家id
-    data class AddMusicList(val artistId: String?) : PlayerEvent()
+    data class AddMusicList(val artistId: String?,/*是否为还原播放列表*/val ifInitPlayerList: Boolean = false) : PlayerEvent()
     //设置播放模式变化监听方法
     data class PlayerTypeChange(val playerType: PlayerTypeEnum) : PlayerEvent()
     //更新音乐的图片字节信息方法
