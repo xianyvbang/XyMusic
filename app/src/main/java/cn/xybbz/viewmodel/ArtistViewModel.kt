@@ -10,7 +10,7 @@ import androidx.paging.cachedIn
 import androidx.paging.filter
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.ConnectionConfigServer
+import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.entity.data.ArtistFilter
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtistExt

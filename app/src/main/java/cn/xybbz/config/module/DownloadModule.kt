@@ -4,7 +4,7 @@ import android.content.Context
 import android.os.Environment
 import androidx.work.WorkManager
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.config.ConnectionConfigServer
+import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.download.core.DownloadDispatcherImpl
 import cn.xybbz.config.download.core.DownloaderConfig

@@ -1124,7 +1124,7 @@ interface XyMusicDao {
     @Query(
         """
         update xy_music set pic = REPLACE(pic,:oldAddress,:newAddress),
-        musicUrl = REPLACE(pic,:oldAddress,:newAddress)
+        musicUrl = REPLACE(musicUrl,:oldAddress,:newAddress)
         where pic like :oldAddress || '%' or musicUrl like :oldAddress || '%'
     """
     )

@@ -1,6 +1,7 @@
 package cn.xybbz.viewmodel
 
 import android.graphics.Color
+import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -16,7 +17,7 @@ import cn.xybbz.common.utils.DefaultObjectUtils
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.ConnectionConfigServer
+import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
@@ -129,7 +130,7 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
             )
             if (connectionConfigServer.getConnectionId() == connectionId) {
                 viewModelScope.launch {
-                    dataSourceManager.initDataSource()
+                    dataSourceManager.login(true)
                 }
             }
 
@@ -200,10 +201,10 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
                 address = address,
                 connectionId = connectionId
             )
-            connectionConfigServer.updateConnectionAddress()
             //判断是否需要重新登录
             if (connectionConfigServer.getConnectionId() == connectionId) {
-                dataSourceManager.initDataSource()
+                Log.i("connection","数据加载3")
+                dataSourceManager.login(true)
             }
 
         }

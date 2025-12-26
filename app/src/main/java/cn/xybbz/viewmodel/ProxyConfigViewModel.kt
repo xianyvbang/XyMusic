@@ -11,7 +11,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.ConnectionConfigServer
+import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.proxy.ProxyConfigServer
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.proxy.XyProxyConfig

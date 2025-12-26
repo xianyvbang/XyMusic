@@ -9,7 +9,7 @@ import androidx.lifecycle.viewModelScope
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.DefaultObjectUtils
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.ConnectionConfigServer
+import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.library.XyLibrary
 import dagger.assisted.Assisted

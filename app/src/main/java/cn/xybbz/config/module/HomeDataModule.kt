@@ -1,6 +1,6 @@
 package cn.xybbz.config.module
 
-import cn.xybbz.config.ConnectionConfigServer
+import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.HomeDataRepository
 import cn.xybbz.localdata.config.DatabaseClient
 import dagger.Module

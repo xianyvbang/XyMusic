@@ -14,7 +14,7 @@ import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.IDataSourceServer
 import cn.xybbz.api.client.data.ClientLoginInfoReq
-import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.localdata.enums.DataSourceType
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,12 +28,10 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class ConnectionViewModel @Inject constructor(
-    private val _settingsManager: SettingsManager,
-    private val _dataSourceManager: DataSourceManager
+    val dataSourceManager: DataSourceManager,
+    val connectionConfigServer: ConnectionConfigServer
 ) : ViewModel() {
 
-    val settingsConfig = _settingsManager
-    val dataSourceManager = _dataSourceManager
 
     var dataSourceType by mutableStateOf<DataSourceType?>(null)
         private set
@@ -99,12 +97,12 @@ class ConnectionViewModel @Inject constructor(
         }
         loading = true
         clearLoginStatus()
-        if (_dataSourceManager.dataSourceType == null) {
-            _dataSourceManager.switchDataSource(tmpDatasource)
-            tmpDataSourceParentServer = _dataSourceManager
+        if (dataSourceManager.dataSourceType == null) {
+            dataSourceManager.switchDataSource(tmpDatasource)
+            tmpDataSourceParentServer = dataSourceManager
         } else if (tmpDataSourceParentServer == null) {
             tmpDataSourceParentServer =
-                _dataSourceManager.getDataSourceServerByType(tmpDatasource, true)
+                dataSourceManager.getDataSourceServerByType(tmpDatasource, true)
         }
 
         val packageManager = application.packageManager
@@ -126,7 +124,7 @@ class ConnectionViewModel @Inject constructor(
         tmpDataSourceParentServer?.addClientAndLogin(clientLoginInfoReq)?.onEach {
             Log.i("=====", "数据获取${it}")
 
-            val loginSateInfo = _dataSourceManager.getLoginSateInfo(it)
+            val loginSateInfo = dataSourceManager.getLoginSateInfo(it)
             loading = loginSateInfo.loading
             errorHint = loginSateInfo.errorHint ?: R.string.empty_info
             errorMessage = loginSateInfo.errorMessage ?: ""
@@ -239,7 +237,7 @@ class ConnectionViewModel @Inject constructor(
      * 切换数据源
      */
     fun changeDataSource() {
-        _dataSourceManager.updateDataSourceType(dataSourceType)
+        dataSourceManager.updateDataSourceType(dataSourceType)
     }
 
     /**
@@ -254,12 +252,12 @@ class ConnectionViewModel @Inject constructor(
 
     suspend fun getResources() {
         clearLoginStatus()
-        tmpDataSourceParentServer = _dataSourceManager
-        if (_dataSourceManager.dataSourceType == null) {
-            _dataSourceManager.switchDataSource(dataSourceType)
+        tmpDataSourceParentServer = dataSourceManager
+        if (dataSourceManager.dataSourceType == null) {
+            dataSourceManager.switchDataSource(dataSourceType)
         } else {
             tmpDataSourceParentServer =
-                dataSourceType?.let { _dataSourceManager.getDataSourceServerByType(it, true) }
+                dataSourceType?.let { dataSourceManager.getDataSourceServerByType(it, true) }
         }
 
         val clientLoginInfoReq =
