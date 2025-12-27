@@ -830,59 +830,18 @@ class MusicController(
     }
 
     fun nextDataChange() {
-//        curOriginIndex = mediaController?.nextMediaItemIndex ?: 0
         updateMusicInfo()
     }
 
     fun previousDataChange() {
-//        curOriginIndex = mediaController?.previousMediaItemIndex ?: 0
         updateMusicInfo()
     }
 
     fun seekToIndexDataChange(index: Int) {
-//        curOriginIndex = index
         updateMusicInfo()
     }
 
     fun updateMusicInfo() {
-        //手动切换
-        /*musicInfo?.let {
-            scope.launch {
-                _events.emit(PlayerEvent.BeforeChangeMusic)
-            }
-        }
-        if (originMusicList.isNotEmpty() && curOriginIndex >= originMusicList.size - 1) {
-            scope.launch {
-                _events.emit(PlayerEvent.NextList(pageNum))
-            }
-        }
-        Log.i("music","数据索引变化: ${curOriginIndex}")
-        musicInfo = originMusicList[curOriginIndex]
 
-
-        //如果状态是播放的话
-        if (state != PlayStateEnum.Pause)
-            startCache(originMusicList[curOriginIndex])
-        musicInfo?.let {
-            updateButtonCommend(
-                it.itemId in favoriteRepository.favoriteSet.value
-            )
-            scope.launch {
-                _events.emit(PlayerEvent.ChangeMusic(it.itemId))
-            }
-            //判断音乐播放进度是否为0,如果为0则不处理,不为0则需要跳转到相应的进度
-            if (musicCurrentPositionMap.containsKey(it.itemId)) {
-                musicCurrentPositionMap[it.itemId]?.let { position ->
-                    if (position > 0 && position > mediaController?.currentPosition!!) {
-                        seekTo(position)
-                    } else if (headTime > 0 && headTime > mediaController?.currentPosition!!) {
-                        seekTo(headTime)
-                    }
-                }
-
-            } else {
-                Log.i("=====", "音乐 ${it.name}没有播放进度")
-            }
-        }*/
     }
 }

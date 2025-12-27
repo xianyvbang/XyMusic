@@ -30,6 +30,7 @@ import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.favorite.FavoriteRepository
+import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.update.VersionCheckScheduler
@@ -67,7 +68,8 @@ class MainViewModel @Inject constructor(
     private val favoriteRepository: FavoriteRepository,
     val selectControl: SelectControl,
     private val mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
-    private val versionCheckScheduler: VersionCheckScheduler
+    private val versionCheckScheduler: VersionCheckScheduler,
+    private val lrcServer: LrcServer
 ) : ViewModel() {
 
     /**
@@ -252,6 +254,7 @@ class MainViewModel @Inject constructor(
 
     fun onOnChangeMusic(musicId: String) {
         viewModelScope.launch {
+            lrcServer.clear()
             //数据变化的时候进行数据变化
             putIterations(0)
             db.withTransaction {
