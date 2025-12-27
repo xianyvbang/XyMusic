@@ -111,6 +111,7 @@ class ConnectionConfigServer(
 
     fun updateIfConnectionConfig(ifConnectionConfig: Boolean) {
         this.ifConnectionConfig = ifConnectionConfig
+        this.ifShowSnackBar = ifConnectionConfig
     }
 
 }
