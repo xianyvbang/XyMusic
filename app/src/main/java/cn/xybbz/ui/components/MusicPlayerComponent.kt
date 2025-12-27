@@ -3,6 +3,7 @@ package cn.xybbz.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -504,7 +505,7 @@ fun PlayerStateComponent(
             modifier = Modifier
                 .size(size)
                 .clip(CircleShape)
-                .debounceClickable {
+                .clickable {
                     if (musicController.state != PlayStateEnum.Pause) {
                         musicController.pause()
                     } else {

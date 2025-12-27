@@ -15,13 +15,13 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.MessageUtils
-import cn.xybbz.config.connection.ConnectionConfigServer
-import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.alarm.AlarmConfig
+import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.download.core.DownloadRequest
 import cn.xybbz.config.favorite.FavoriteRepository
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
@@ -48,6 +48,8 @@ class MusicBottomMenuViewModel @Inject constructor(
 ) : ViewModel() {
 
 
+    var volumeValue by mutableStateOf(0.0f)
+        private set
 
     /**
      * 播放速度
@@ -211,7 +213,8 @@ class MusicBottomMenuViewModel @Inject constructor(
 
     fun downloadMusic(musicData: XyMusic) {
         viewModelScope.launch {
-            val downloadTypes = dataSourceManager.dataSourceType?.getDownloadType() ?: DownloadTypes.APK
+            val downloadTypes =
+                dataSourceManager.dataSourceType?.getDownloadType() ?: DownloadTypes.APK
             downloadManager.enqueue(
                 DownloadRequest(
                     url = musicData.downloadUrl,
@@ -231,7 +234,7 @@ class MusicBottomMenuViewModel @Inject constructor(
 
     }
 
-    fun addNextPlayer(itemId: String){
+    fun addNextPlayer(itemId: String) {
         viewModelScope.launch {
             val playMusic = db.musicDao.selectExtendById(itemId)
             playMusic?.let {
@@ -239,6 +242,15 @@ class MusicBottomMenuViewModel @Inject constructor(
             }
         }
 
+    }
+
+    fun refreshVolume() {
+        this.volumeValue = musicController.getVolume()
+    }
+
+    fun updateVolume(value: Float) {
+        musicController.updateVolume(value)
+        this.volumeValue = value
     }
 
 }

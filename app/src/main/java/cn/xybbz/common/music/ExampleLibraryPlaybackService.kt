@@ -30,6 +30,7 @@ import cn.xybbz.api.client.ImageApiClient
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
 import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
+import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
@@ -55,8 +56,6 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
     private var ifRegister: Boolean = false
 
     lateinit var audioTrack: AudioTrack
-
-
 
 
     @Inject
@@ -151,20 +150,35 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                 Log.i("music", "音乐播放")
                 registerReceiver(myNoisyAudioStreamReceiver, intentFilter)
                 ifRegister = true
+                val state = musicController.state
+
+                Log.i("music", "播放状态2222 ${state}")
+                musicController.updateState(PlayStateEnum.Playing)
                 super.play()
+                Log.i("music", "播放状态2222 ${state}")
+                fadeController.fadeIn()
             }
 
             override fun pause() {
+//                fadeController.release()
                 Log.i("music", "音乐暂停")
                 if (ifRegister)
                     unregisterReceiver(myNoisyAudioStreamReceiver)
                 ifRegister = false
-                super.pause()
+                musicController.updateState(PlayStateEnum.Pause)
+                fadeController.fadeOut {
+                    super.pause()
+                }
             }
 
             override fun seekToNext() {
                 Log.i("music", "下一首音乐")
                 musicController.seekToNext()
+            }
+
+            override fun seekToPrevious() {
+                Log.i("music", "上一首音乐")
+                musicController.seekToPrevious()
             }
 
         }

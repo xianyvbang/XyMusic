@@ -6,74 +6,81 @@ import android.os.Handler
 import android.os.Looper
 
 class AudioFadeController(
-    private val fadeDurationMs: Long = 1200L
+    private val fadeDurationMs: Long = 300L
 ) {
 
-    private var fadeIn: VolumeShaper? = null
-    private var fadeOut: VolumeShaper? = null
     private var currentTrack: AudioTrack? = null
-
-    private var isFading = false
+    private var volumeShaper: VolumeShaper? = null
+    private var pauseToken = 0
+    private var released = false  // 新增标志
 
     fun attach(track: AudioTrack) {
         if (currentTrack === track) return
-
         release()
         currentTrack = track
-
-        fadeIn = track.createVolumeShaper(
-            VolumeShaper.Configuration.Builder()
-                .setDuration(fadeDurationMs)
-                .setCurve(
-                    floatArrayOf(0f, 1f),
-                    floatArrayOf(0f, 1f)
-                )
-                .build()
-        )
-
-        fadeOut = track.createVolumeShaper(
-            VolumeShaper.Configuration.Builder()
-                .setDuration(fadeDurationMs)
-                .setCurve(
-                    floatArrayOf(0f, 1f),
-                    floatArrayOf(1f, 0f)
-                )
-                .build()
-        )
+        released = false
     }
 
     fun fadeIn() {
-        if (isFading) return
-        isFading = true
+        val track = currentTrack ?: return
+        if (released) return
+        pauseToken++
+        try {
+            volumeShaper?.close()
+            volumeShaper = track.createVolumeShaper(
+                VolumeShaper.Configuration.Builder()
+                    .setDuration(fadeDurationMs)
+                    .setCurve(
+                        floatArrayOf(0f, 1f),
+                        floatArrayOf(0f, 1f)
+                    )
+                    .build()
+            )
 
-        fadeOut?.apply(VolumeShaper.Operation.REVERSE)
-        fadeIn?.apply(VolumeShaper.Operation.PLAY)
-
-        resetFlagLater()
+            volumeShaper?.apply(VolumeShaper.Operation.PLAY)
+        }catch (e: Exception){
+            e.printStackTrace()
+        }
     }
 
-    fun fadeOut() {
-        if (isFading) return
-        isFading = true
-
-        fadeIn?.apply(VolumeShaper.Operation.REVERSE)
-        fadeOut?.apply(VolumeShaper.Operation.PLAY)
-
-        resetFlagLater()
-    }
-
-    private fun resetFlagLater() {
-        Handler(Looper.getMainLooper()).postDelayed({
-            isFading = false
-        }, fadeDurationMs)
+    fun fadeOut(onEnd: () -> Unit) {
+        val track = currentTrack ?: run {
+            onEnd()
+            return
+        }
+        if (released) {
+            onEnd()
+            return
+        }
+        val token = ++pauseToken
+        try{
+            volumeShaper?.close()
+            volumeShaper = track.createVolumeShaper(
+                VolumeShaper.Configuration.Builder()
+                    .setDuration(fadeDurationMs)
+                    .setCurve(
+                        floatArrayOf(0f, 1f),
+                        floatArrayOf(1f, 0f)
+                    )
+                    .build()
+            )
+            volumeShaper?.apply(VolumeShaper.Operation.PLAY)
+            Handler(Looper.getMainLooper()).postDelayed({
+                if (token == pauseToken) {
+                    onEnd()
+                }
+            }, fadeDurationMs)
+        }catch (e: Exception){
+            e.printStackTrace()
+            onEnd()
+        }
     }
 
     fun release() {
-        fadeIn?.close()
-        fadeOut?.close()
-        fadeIn = null
-        fadeOut = null
+        volumeShaper?.close()
+        volumeShaper = null
         currentTrack = null
-        isFading = false
+        released = true
     }
 }
+

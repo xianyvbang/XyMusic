@@ -28,6 +28,7 @@ import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
@@ -857,5 +858,53 @@ fun XyItemSlider(
             onValueChangeFinished = onValueChangeFinished,
             interactionSource = interactionSource
         )
+    }
+}
+
+@Composable
+fun XyItemHorizontalSlider(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    iconVector: ImageVector? = null,
+    iconPaddingValues: PaddingValues = PaddingValues(0.dp),
+    iconColor: Color? = null,
+    text: String,
+    sub: String? = null
+) {
+    XyRowHeightSmall(
+        modifier = Modifier
+            .clip(RoundedCornerShape(XyTheme.dimens.corner))
+    ) {
+        Row(
+            modifier = Modifier,
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            iconVector?.let {
+                Icon(
+                    imageVector = iconVector,
+                    modifier = Modifier.padding(iconPaddingValues),
+                    contentDescription = text,
+                    tint = iconColor ?: LocalContentColor.current,
+                )
+            }
+
+            XyItemText(text = text)
+        }
+        Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
+        XySmallSlider(
+            modifier = Modifier.weight(7f),
+            progress = value,
+            onProgressChanged = onValueChange,
+            cacheProgressBarColor = Color.Transparent,
+        )
+        sub?.let {
+            Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
+            XyItemText(
+                text = sub,
+                modifier = Modifier.weight(2f),
+                color = Color(0xFFCBCBCB)
+            )
+        }
     }
 }

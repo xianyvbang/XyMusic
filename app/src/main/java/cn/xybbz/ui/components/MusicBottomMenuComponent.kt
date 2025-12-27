@@ -87,6 +87,7 @@ import cn.xybbz.ui.xy.XyButtonHorizontalPadding
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnNotHorizontalPadding
 import cn.xybbz.ui.xy.XyEdit
+import cn.xybbz.ui.xy.XyItemHorizontalSlider
 import cn.xybbz.ui.xy.XyItemSlider
 import cn.xybbz.ui.xy.XyItemSwitcherNotTextColor
 import cn.xybbz.ui.xy.XyItemTabButton
@@ -158,11 +159,13 @@ fun MusicBottomMenuComponent(
         onSetShowArtistList = { ifShowArtistList = it },
     )
 
-
-
     bottomMenuMusicInfo.forEach { music ->
 
-
+        LaunchedEffect(Unit) {
+            musicBottomMenuViewModel.refreshVolume()
+            //更新权限信息
+            ifCanScheduleExactAlarms = musicBottomMenuViewModel.alarmConfig.canScheduleExactAlarm()
+        }
         val favoriteMusicMap by musicBottomMenuViewModel.favoriteRepository.favoriteSet.collectAsState()
         val downloadMusicIds by musicBottomMenuViewModel.downloadRepository.musicIdsFlow.collectAsState()
         //收藏信息
@@ -366,6 +369,17 @@ fun MusicBottomMenuComponent(
                         ), tileMode = TileMode.Repeated
                     )
                 ) {
+
+                    XyItemHorizontalSlider(
+                        value = musicBottomMenuViewModel.volumeValue,
+                        onValueChange = {
+                            musicBottomMenuViewModel.updateVolume(it)
+                        },
+                        iconVector = Icons.AutoMirrored.Outlined.PlaylistAdd,
+                        text = "调节音量",
+                        sub = (musicBottomMenuViewModel.volumeValue * 100).toInt().toString(),
+                    )
+
                     IconBottomMenuHor(
                         imageVector = Icons.AutoMirrored.Outlined.PlaylistAdd,
                         text = stringResource(R.string.play_next),
