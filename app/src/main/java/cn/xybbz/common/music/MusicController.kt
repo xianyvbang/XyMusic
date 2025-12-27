@@ -140,7 +140,7 @@ class MusicController(
             // 播放状态变化回调
             Log.i("=====", "当前播放状态$isPlaying")
             if (isPlaying) {
-                duration = mediaController?.duration ?: 0
+                updateDuration(mediaController?.duration ?: 0)
                 musicInfo?.let {
                     scope.launch {
                         _events.emit(PlayerEvent.Play(it.itemId, it.playSessionId))
@@ -170,7 +170,7 @@ class MusicController(
                 }
 
                 Player.STATE_READY -> {
-                    duration = mediaController?.duration!!
+                    updateDuration(mediaController?.duration ?:0)
                     // 可以开始播放 恢复播放
                     updateState(PlayStateEnum.Playing)
                     Log.i("=====", "STATE_READY")
@@ -205,7 +205,6 @@ class MusicController(
             }
             //获取当前音乐的index
             setCurrentPositionData(mediaController?.currentPosition ?: 0)
-            duration = mediaController?.duration ?: 0
         }
 
         override fun onPlayerError(error: PlaybackException) {
@@ -244,7 +243,7 @@ class MusicController(
                         }
                     }
                     musicInfo = originMusicList[curOriginIndex]
-                    duration = musicInfo?.runTimeTicks ?: 0
+                    updateDuration(musicInfo?.runTimeTicks ?: 0)
 
                     //如果状态是播放的话
                     if (state != PlayStateEnum.Pause)
@@ -722,7 +721,7 @@ class MusicController(
         musicCurrentPositionMap.clear()
         curOriginIndex = Constants.MINUS_ONE_INT
         musicInfo = null
-        duration = Constants.ZERO.toLong()
+        updateDuration(Constants.ZERO.toLong())
         setCurrentPositionData(Constants.ZERO.toLong())
         updateState(PlayStateEnum.None)
         headTime = Constants.ZERO.toLong()
@@ -843,5 +842,9 @@ class MusicController(
 
     fun updateMusicInfo() {
 
+    }
+
+    fun updateDuration(duration:Long){
+        this.duration = duration
     }
 }
