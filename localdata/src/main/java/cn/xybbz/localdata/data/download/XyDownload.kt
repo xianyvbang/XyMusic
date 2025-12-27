@@ -1,6 +1,5 @@
 package cn.xybbz.localdata.data.download
 
-import android.R.attr.name
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import cn.xybbz.localdata.data.music.XyMusic
@@ -49,7 +48,8 @@ data class XyDownload(
                 container = music.container,
                 artists = music.artists,
                 size = music.size,
-                filePath = filePath
+                filePath = filePath,
+                runTimeTicks = music.runTimeTicks,
             )
         }
     }

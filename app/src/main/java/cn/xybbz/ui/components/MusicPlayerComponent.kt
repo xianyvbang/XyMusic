@@ -236,7 +236,7 @@ fun MusicPlayerScreen(
                         onClick = {
                         },
                     ) {
-
+                        // todo 加个隐藏按钮操作,打开开发者页面
                     }
                 }
             )
@@ -470,7 +470,7 @@ private fun PlayerCurrentPosition(
 
             MusicProgressBar(
                 currentTime = musicController.currentPosition,
-                musicController.duration,
+                totalTime = musicController.duration,
                 progress = progress,
                 cacheProgress = onCacheProgress(),
                 onProgressChanged = { newProgress ->

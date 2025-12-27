@@ -220,7 +220,7 @@ class MusicController(
             mediaItem?.localConfiguration?.let { localConfiguration ->
                 if (localConfiguration.tag == null) {
 
-                    Log.i("======","诶切换类型 ${reason}")
+                    Log.i("======", "诶切换类型 ${reason}")
                     //手动切换
                     if (reason == MEDIA_ITEM_TRANSITION_REASON_SEEK || reason == MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
                         musicInfo?.let {
@@ -244,7 +244,7 @@ class MusicController(
                         }
                     }
                     musicInfo = originMusicList[curOriginIndex]
-
+                    duration = musicInfo?.runTimeTicks ?: 0
 
                     //如果状态是播放的话
                     if (state != PlayStateEnum.Pause)
