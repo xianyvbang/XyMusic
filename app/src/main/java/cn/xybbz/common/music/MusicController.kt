@@ -170,7 +170,7 @@ class MusicController(
                 }
 
                 Player.STATE_READY -> {
-                    updateDuration(mediaController?.duration ?:0)
+                    updateDuration(mediaController?.duration ?: 0)
                     // 可以开始播放 恢复播放
                     updateState(PlayStateEnum.Playing)
                     Log.i("=====", "STATE_READY")
@@ -406,12 +406,17 @@ class MusicController(
      * 获取当前播放模式下的上一首歌曲
      */
     fun seekToPrevious() {
-        fadeController.fadeOut {
-            previousDataChange()
-            mediaController?.seekToPreviousMediaItem()
-            Log.i("=====", "调用seekToPrevious")
-            resume()
-            fadeController.fadeIn()
+        Log.i("=====", "调用seekToPrevious ${mediaController?.hasPreviousMediaItem()}")
+        if (playType == PlayerTypeEnum.SINGLE_LOOP && mediaController?.hasPreviousMediaItem() != true) {
+            seekToIndex((mediaController?.mediaItemCount ?: 1) - 1)
+        } else {
+            fadeController.fadeOut {
+                previousDataChange()
+                mediaController?.seekToPreviousMediaItem()
+                Log.i("=====", "调用seekToPrevious")
+                resume()
+                fadeController.fadeIn()
+            }
         }
     }
 
@@ -419,13 +424,18 @@ class MusicController(
      * 获取当前播放模式下的下一首歌曲
      */
     fun seekToNext() {
-        fadeController.fadeOut {
-            nextDataChange()
-            mediaController?.seekToNextMediaItem()
-            Log.i("=====", "调用seekToNext")
-            resume()
-            fadeController.fadeIn()
+        if (playType == PlayerTypeEnum.SINGLE_LOOP && mediaController?.hasNextMediaItem() != true) {
+            seekToIndex(0)
+        } else {
+            fadeController.fadeOut {
+                nextDataChange()
+                mediaController?.seekToNextMediaItem()
+                Log.i("=====", "调用seekToNext")
+                resume()
+                fadeController.fadeIn()
+            }
         }
+
     }
 
     fun clear() {
@@ -844,7 +854,7 @@ class MusicController(
 
     }
 
-    fun updateDuration(duration:Long){
+    fun updateDuration(duration: Long) {
         this.duration = duration
     }
 }
