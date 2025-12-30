@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.viewmodel
 
 import android.icu.text.SimpleDateFormat
@@ -22,6 +40,7 @@ import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.download.core.DownloadRequest
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.config.volume.VolumeServer
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
@@ -44,12 +63,16 @@ class MusicBottomMenuViewModel @Inject constructor(
     val connectionConfigServer: ConnectionConfigServer,
     val favoriteRepository: FavoriteRepository,
     val downloadRepository: DownloadRepository,
-    val downloadManager: DownLoadManager
+    val downloadManager: DownLoadManager,
+    val volumeServer: VolumeServer,
 ) : ViewModel() {
 
 
-    var volumeValue by mutableStateOf(0.0f)
+    var volumeValue by mutableStateOf(0f)
         private set
+
+    private var volumeMaxValue: Int = 0
+    private var volume: Int = 0
 
     /**
      * 播放速度
@@ -71,6 +94,7 @@ class MusicBottomMenuViewModel @Inject constructor(
 
     init {
         getDoubleSpeed()
+        initVolume()
     }
 
     //region 定时关闭
@@ -245,12 +269,18 @@ class MusicBottomMenuViewModel @Inject constructor(
     }
 
     fun refreshVolume() {
-        this.volumeValue = musicController.getVolume()
+        this.volumeValue = (volume.toFloat() / volumeMaxValue)
     }
 
     fun updateVolume(value: Float) {
-        musicController.updateVolume(value)
+        volumeServer.updateVolume((value * 100).toInt())
         this.volumeValue = value
+    }
+
+    fun initVolume() {
+        volumeMaxValue = volumeServer.getMaxVolume()
+        volume = volumeServer.getStreamVolume()
+        refreshVolume()
     }
 
 }

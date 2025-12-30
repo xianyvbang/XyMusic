@@ -34,4 +34,12 @@ class VolumeServer {
             0
         )
     }
+
+    fun getMaxVolume(): Int {
+        return audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+    }
+
+    fun getStreamVolume(): Int {
+        return audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+    }
 }
