@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.common.music
 
 import android.content.Intent
@@ -30,6 +48,7 @@ import cn.xybbz.api.client.ImageApiClient
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
 import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
+import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
@@ -55,8 +74,6 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
     private var ifRegister: Boolean = false
 
     lateinit var audioTrack: AudioTrack
-
-
 
 
     @Inject
@@ -151,20 +168,37 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                 Log.i("music", "音乐播放")
                 registerReceiver(myNoisyAudioStreamReceiver, intentFilter)
                 ifRegister = true
+                val state = musicController.state
+
+                Log.i("music", "播放状态2222 ${state}")
+                musicController.updateState(PlayStateEnum.Playing)
+                musicController.reportedPlayEvent()
                 super.play()
+                Log.i("music", "播放状态2222 ${state}")
+                fadeController.fadeIn()
             }
 
             override fun pause() {
+//                fadeController.release()
                 Log.i("music", "音乐暂停")
                 if (ifRegister)
                     unregisterReceiver(myNoisyAudioStreamReceiver)
                 ifRegister = false
-                super.pause()
+                musicController.updateState(PlayStateEnum.Pause)
+                fadeController.fadeOut {
+                    musicController.reportedPauseEvent()
+                    super.pause()
+                }
             }
 
             override fun seekToNext() {
                 Log.i("music", "下一首音乐")
                 musicController.seekToNext()
+            }
+
+            override fun seekToPrevious() {
+                Log.i("music", "上一首音乐")
+                musicController.seekToPrevious()
             }
 
         }

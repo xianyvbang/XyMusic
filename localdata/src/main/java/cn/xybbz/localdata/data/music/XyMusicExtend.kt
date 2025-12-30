@@ -18,7 +18,8 @@ data class XyMusicExtend(
             artists = music.artists,
             ifFavoriteStatus = music.ifFavoriteStatus,
             size = music.size,
-            filePath = filePath
+            filePath = filePath,
+            runTimeTicks = music.runTimeTicks
         )
     }
 }

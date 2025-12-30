@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.ui.xy
 
 
@@ -28,6 +46,7 @@ import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
@@ -857,5 +876,53 @@ fun XyItemSlider(
             onValueChangeFinished = onValueChangeFinished,
             interactionSource = interactionSource
         )
+    }
+}
+
+@Composable
+fun XyItemHorizontalSlider(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    iconVector: ImageVector? = null,
+    iconPaddingValues: PaddingValues = PaddingValues(0.dp),
+    iconColor: Color? = null,
+    text: String,
+    sub: String? = null
+) {
+    XyRowHeightSmall(
+        modifier = Modifier
+            .clip(RoundedCornerShape(XyTheme.dimens.corner))
+    ) {
+        Row(
+            modifier = Modifier,
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            iconVector?.let {
+                Icon(
+                    imageVector = iconVector,
+                    modifier = Modifier.padding(iconPaddingValues),
+                    contentDescription = text,
+                    tint = iconColor ?: LocalContentColor.current,
+                )
+            }
+
+            XyItemText(text = text)
+        }
+        Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
+        XySmallSlider(
+            modifier = Modifier.weight(7f),
+            progress = value,
+            onProgressChanged = onValueChange,
+            cacheProgressBarColor = Color.Transparent,
+        )
+        sub?.let {
+            Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
+            XyItemText(
+                text = sub,
+                modifier = Modifier.weight(2f),
+                color = Color(0xFFCBCBCB)
+            )
+        }
     }
 }

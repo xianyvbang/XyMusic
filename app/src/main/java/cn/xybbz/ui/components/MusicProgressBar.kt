@@ -1,9 +1,6 @@
 package cn.xybbz.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,14 +17,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.common.utils.LrcUtils.formatTime
+import cn.xybbz.ui.xy.XySmallSlider
 
 @Composable
 fun MusicProgressBar(
@@ -72,71 +67,15 @@ fun MusicProgressBar(
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-
-        // 进度条
-        Canvas(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(barHeight.dp)
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onTap = { offset ->
-                            val newProgress = (offset.x / size.width).coerceIn(0f, 1f)
-                            updatedProgress = newProgress
-                            onProgressChanged(newProgress)
-                        }
-                    )
-                }
-                .pointerInput(Unit) {
-                    detectDragGestures(
-                        onDragStart = { isDragging = true },
-                        onDrag = { change, _ ->
-                            val position = change.position.x.coerceIn(0f, size.width.toFloat())
-                            updatedProgress = position / size.width
-                            onProgressChanged(updatedProgress)
-                        },
-                        onDragEnd = { isDragging = false },
-                        onDragCancel = { isDragging = false }
-                    )
-                }
-        ) {
-            val barWidth = size.width
-            val progressWidth = barWidth * animatedProgress
-            val cacheProgressWidth = barWidth * cacheProgress
-
-            // 背景条
-            drawLine(
-                color = backgroundBarColor,
-                start = Offset(0f, size.height / 2),
-                end = Offset(barWidth, size.height / 2),
-                strokeWidth = barHeight.dp.toPx(),
-                cap = StrokeCap.Round
-            )
-
-            // 缓存前景条
-            drawLine(
-                color = cacheProgressBarColor,
-                start = Offset(0f, size.height / 2),
-                end = Offset(cacheProgressWidth, size.height / 2),
-                strokeWidth = barHeight.dp.toPx(),
-                cap = StrokeCap.Round
-            )
-
-            // 前景条
-            drawLine(
-                color = progressBarColor,
-                start = Offset(0f, size.height / 2),
-                end = Offset(progressWidth, size.height / 2),
-                strokeWidth = barHeight.dp.toPx(),
-                cap = StrokeCap.Round
-            )
-
-            // 滑块
-            drawCircle(
-                color = progressBarColor,
-                radius = thumbRadius.dp.toPx(),
-                center = Offset(progressWidth, size.height / 2)
-            )
-        }
+        XySmallSlider(
+            progress = progress,
+            cacheProgress = cacheProgress,
+            onProgressChanged = onProgressChanged,
+            progressBarColor = progressBarColor,
+            cacheProgressBarColor = cacheProgressBarColor,
+            backgroundBarColor = backgroundBarColor,
+            barHeight = barHeight,
+            thumbRadius = thumbRadius
+        )
     }
 }

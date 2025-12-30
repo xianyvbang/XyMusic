@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.common.music
 
 import android.content.ComponentName
@@ -59,10 +77,11 @@ class MusicController(
     private val application: Context,
     private val cacheController: CacheController,
     private val favoriteRepository: FavoriteRepository,
-    private var fadeController: AudioFadeController
+    private val fadeController: AudioFadeController
 ) {
 
     val scope = CoroutineScopeUtils.getIo("MusicController")
+
     // 原始歌曲列表
     var originMusicList by mutableStateOf(emptyList<XyPlayMusic>())
         private set
@@ -135,26 +154,23 @@ class MusicController(
     //https://developer.android.google.cn/guide/topics/media/exoplayer/listening-to-player-events?hl=zh-cn
     private val playerListener = @UnstableApi object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
-            super.onIsPlayingChanged(isPlaying)
+//            super.onIsPlayingChanged(isPlaying)
             // 播放状态变化回调
             Log.i("=====", "当前播放状态$isPlaying")
-            if (isPlaying) {
-                fadeController.fadeIn()
-                state = PlayStateEnum.Playing
-                duration = mediaController?.duration ?: 0
+            /*if (isPlaying) {
+                updateDuration(mediaController?.duration ?: 0)
                 musicInfo?.let {
                     scope.launch {
                         _events.emit(PlayerEvent.Play(it.itemId, it.playSessionId))
                     }
                 }
             } else if (state != PlayStateEnum.Loading) {
-                state = PlayStateEnum.Pause
                 musicInfo?.let {
                     scope.launch {
                         _events.emit(PlayerEvent.Pause(it.itemId, it.playSessionId, it.musicUrl))
                     }
                 }
-            }
+            }*/
         }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
@@ -167,21 +183,21 @@ class MusicController(
 
                 Player.STATE_BUFFERING -> {
                     // 正在缓冲数据
-                    state = PlayStateEnum.Loading
+                    updateState(PlayStateEnum.Loading)
                     Log.i("=====", "STATE_BUFFERING")
                 }
 
                 Player.STATE_READY -> {
-                    duration = mediaController?.duration!!
+                    updateDuration(mediaController?.duration ?: 0)
                     // 可以开始播放 恢复播放
-//                    state = PlayStateEnum.Pause
-
+                    if (state != PlayStateEnum.Pause)
+                        updateState(PlayStateEnum.Playing)
                     Log.i("=====", "STATE_READY")
                 }
 
                 Player.STATE_ENDED -> {
                     // 播放结束
-                    state = PlayStateEnum.Pause
+                    updateState(PlayStateEnum.Pause)
                     Log.i("=====", "STATE_ENDED")
                 }
             }
@@ -190,25 +206,29 @@ class MusicController(
 
         override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
             super.onMediaMetadataChanged(mediaMetadata)
-            Log.i("=====", "获得当前播放信息${mediaMetadata}")
-            Log.i(
-                "=====",
-                "当前索引${mediaController?.currentMediaItemIndex} --- ${mediaMetadata.title}"
-            )
 
-            if (musicInfo?.pic.isNullOrBlank()) {
-                picByte = mediaMetadata.artworkData
-            } else {
-                picByte = null
-            }
-            scope.launch {
-                musicInfo?.let {
-                    _events.emit(PlayerEvent.UpdateMusicPicData(it.itemId, picByte))
+            val itemId = mediaMetadata.extras?.getString("id")
+            Log.i("上报", "获得当前播放信息${mediaMetadata}")
+
+            if (itemId != musicInfo?.itemId) {
+                Log.i(
+                    "上报",
+                    "当前索引${mediaController?.currentMediaItemIndex} --- ${mediaMetadata.title}"
+                )
+
+                picByte = if (musicInfo?.pic.isNullOrBlank()) {
+                    mediaMetadata.artworkData
+                } else {
+                    null
+                }
+                scope.launch {
+                    musicInfo?.let {
+                        _events.emit(PlayerEvent.UpdateMusicPicData(it.itemId, picByte))
+                    }
                 }
             }
             //获取当前音乐的index
             setCurrentPositionData(mediaController?.currentPosition ?: 0)
-            duration = mediaController?.duration ?: 0
         }
 
         override fun onPlayerError(error: PlaybackException) {
@@ -222,6 +242,8 @@ class MusicController(
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             mediaItem?.localConfiguration?.let { localConfiguration ->
                 if (localConfiguration.tag == null) {
+
+                    Log.i("上报", "诶切换类型 ${reason}")
                     //手动切换
                     if (reason == MEDIA_ITEM_TRANSITION_REASON_SEEK || reason == MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
                         musicInfo?.let {
@@ -245,7 +267,7 @@ class MusicController(
                         }
                     }
                     musicInfo = originMusicList[curOriginIndex]
-
+                    updateDuration(musicInfo?.runTimeTicks ?: 0)
 
                     //如果状态是播放的话
                     if (state != PlayStateEnum.Pause)
@@ -286,7 +308,13 @@ class MusicController(
             if (reason == DISCONTINUITY_REASON_SEEK) {
                 musicInfo?.let {
                     scope.launch {
-                        _events.emit(PlayerEvent.PositionSeekTo(newPosition.positionMs, it.itemId, it.playSessionId))
+                        _events.emit(
+                            PlayerEvent.PositionSeekTo(
+                                newPosition.positionMs,
+                                it.itemId,
+                                it.playSessionId
+                            )
+                        )
                     }
                 }
             }
@@ -338,6 +366,7 @@ class MusicController(
         Log.i("=====", "恢复播放 ${mediaController?.mediaItemCount}")
         mediaController?.let {
             if (it.mediaItemCount > 0) {
+                updateState(PlayStateEnum.Playing)
                 // 恢复播放
                 Log.i("=====", "恢复播放")
                 mediaController?.play()
@@ -358,12 +387,9 @@ class MusicController(
     }
 
     fun pause() {
-        fadeController.fadeOut()
-        state = PlayStateEnum.Pause
-        Handler(mediaController?.applicationLooper!!).postDelayed({
-            Log.i("=====", "点击暂停")
-            mediaController?.pause()
-        }, 1200)
+        updateState(PlayStateEnum.Pause)
+        mediaController?.pause()
+        Log.i("=====", "点击暂停")
     }
 
     fun seekTo(millSeconds: Long) {
@@ -375,14 +401,14 @@ class MusicController(
     }
 
     fun seekToIndex(index: Int) {
-        fadeController.fadeOut()
-        Handler(mediaController?.applicationLooper!!).postDelayed({
-            Log.i("=====", "调用seekToIndex")
-            setCurrentPositionData(Constants.ZERO.toLong())
+        Log.i("=====", "调用seekToIndex")
+        setCurrentPositionData(Constants.ZERO.toLong())
+        seekToIndexDataChange(index)
+        fadeController.fadeOut {
             mediaController?.seekToDefaultPosition(index)
             resume()
-            // 新歌淡入会在 onIsPlayingChanged(true) 触发
-        }, 500)
+            fadeController.fadeIn()
+        }
 
     }
 
@@ -397,6 +423,43 @@ class MusicController(
             mediaController?.seekToDefaultPosition(indexOfFirst)
             mediaController?.play()
         }
+    }
+
+
+    /**
+     * 获取当前播放模式下的上一首歌曲
+     */
+    fun seekToPrevious() {
+        Log.i("=====", "调用seekToPrevious ${mediaController?.hasPreviousMediaItem()}")
+        if (playType == PlayerTypeEnum.SINGLE_LOOP && mediaController?.hasPreviousMediaItem() != true) {
+            seekToIndex((mediaController?.mediaItemCount ?: 1) - 1)
+        } else {
+            fadeController.fadeOut {
+                previousDataChange()
+                mediaController?.seekToPreviousMediaItem()
+                Log.i("=====", "调用seekToPrevious")
+                resume()
+                fadeController.fadeIn()
+            }
+        }
+    }
+
+    /**
+     * 获取当前播放模式下的下一首歌曲
+     */
+    fun seekToNext() {
+        if (playType == PlayerTypeEnum.SINGLE_LOOP && mediaController?.hasNextMediaItem() != true) {
+            seekToIndex(0)
+        } else {
+            fadeController.fadeOut {
+                nextDataChange()
+                mediaController?.seekToNextMediaItem()
+                Log.i("=====", "调用seekToNext")
+                resume()
+                fadeController.fadeIn()
+            }
+        }
+
     }
 
     fun clear() {
@@ -604,10 +667,10 @@ class MusicController(
             }
             if (ifInitPlayerList) {
                 this@MusicController.pause()
-                state = PlayStateEnum.Pause
+                updateState(PlayStateEnum.Pause)
             }
             scope.launch {
-                _events.emit(PlayerEvent.AddMusicList(artistId,ifInitPlayerList))
+                _events.emit(PlayerEvent.AddMusicList(artistId, ifInitPlayerList))
             }
         }
     }
@@ -674,31 +737,6 @@ class MusicController(
         }
     }
 
-
-    /**
-     * 获取当前播放模式下的上一首歌曲
-     */
-    fun seekToPrevious() {
-        mediaController?.seekToPreviousMediaItem()
-        Log.i("=====", "调用seekToPrevious")
-        resume()
-    }
-
-    /**
-     * 获取当前播放模式下的下一首歌曲
-     */
-    fun seekToNext() {
-
-        fadeController.fadeOut()
-        Handler(mediaController?.applicationLooper!!).postDelayed({
-            mediaController?.seekToNextMediaItem()
-            Log.i("=====", "调用seekToNext")
-            resume()
-        }, 500)
-
-
-    }
-
     /**
      * 设置倍速
      */
@@ -717,9 +755,9 @@ class MusicController(
         musicCurrentPositionMap.clear()
         curOriginIndex = Constants.MINUS_ONE_INT
         musicInfo = null
-        duration = Constants.ZERO.toLong()
+        updateDuration(Constants.ZERO.toLong())
         setCurrentPositionData(Constants.ZERO.toLong())
-        state = PlayStateEnum.None
+        updateState(PlayStateEnum.None)
         headTime = Constants.ZERO.toLong()
         endTime = Constants.ZERO.toLong()
         pageNum = Constants.ZERO
@@ -809,6 +847,54 @@ class MusicController(
     fun invokingOnFavorite(itemId: String) {
         scope.launch {
             _events.emit(PlayerEvent.Favorite(itemId))
+        }
+    }
+
+    fun updateVolume(volume: Float) {
+        mediaController?.volume = volume
+    }
+
+    fun getVolume(): Float {
+        return mediaController?.volume ?: 0f
+    }
+
+    fun updateState(state: PlayStateEnum) {
+        this.state = state
+    }
+
+    fun nextDataChange() {
+        updateMusicInfo()
+    }
+
+    fun previousDataChange() {
+        updateMusicInfo()
+    }
+
+    fun seekToIndexDataChange(index: Int) {
+        updateMusicInfo()
+    }
+
+    fun updateMusicInfo() {
+
+    }
+
+    fun updateDuration(duration: Long) {
+        this.duration = duration
+    }
+
+    fun reportedPlayEvent() {
+        musicInfo?.let {
+            scope.launch {
+                _events.emit(PlayerEvent.Play(it.itemId, it.playSessionId))
+            }
+        }
+    }
+
+    fun reportedPauseEvent() {
+        musicInfo?.let {
+            scope.launch {
+                _events.emit(PlayerEvent.Pause(it.itemId, it.playSessionId, it.musicUrl))
+            }
         }
     }
 }

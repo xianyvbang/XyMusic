@@ -576,7 +576,8 @@ interface XyMusicDao {
 
     @Query(
         """
-         select itemId,mi.pic,mi.name,mi.album,mi.musicUrl,mi.container,mi.artists,fm.ifFavorite as ifFavoriteStatus,mi.size,xd.filePath,:playSessionId as playSessionId,null as picByte
+         select itemId,mi.pic,mi.name,mi.album,mi.musicUrl,mi.container,mi.artists,fm.ifFavorite as ifFavoriteStatus,
+                mi.size,xd.filePath,:playSessionId as playSessionId,null as picByte,mi.runTimeTicks
         from HomeMusic hm
         inner join xy_music mi on hm.musicId = mi.itemId
         left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
@@ -647,7 +648,8 @@ interface XyMusicDao {
      */
     @Query(
         """
-        select itemId,mi.pic,mi.name,mi.album,mi.musicUrl,mi.container,mi.artists,fm.ifFavorite as ifFavoriteStatus,mi.size,xd.filePath,:playSessionId as playSessionId,pqm.picByte as picByte
+        select itemId,mi.pic,mi.name,mi.album,mi.musicUrl,mi.container,mi.artists,fm.ifFavorite as ifFavoriteStatus,mi.size,xd.filePath,
+                :playSessionId as playSessionId,pqm.picByte as picByte,mi.runTimeTicks
         from playqueuemusic pqm
         inner join xy_music mi on pqm.musicId = mi.itemId
         left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
@@ -764,12 +766,13 @@ interface XyMusicDao {
 
     @Query(
         """
-        select itemId,xm.pic,xm.name,xm.album,xm.musicUrl,xm.container,xm.artists,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,:playSessionId as playSessionId,null as picByte 
-        from xy_music xm 
-        left join favoritemusic fm on xm.itemId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
-        left join xy_download xd on xd.uid = xm.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
-        where xm.itemId = :itemId
-        and xm.connectionId = (select connectionId from xy_settings)
+        select itemId,mi.pic,mi.name,mi.album,mi.musicUrl,mi.container,mi.artists,fm.ifFavorite as ifFavoriteStatus,mi.size,xd.filePath,
+                :playSessionId as playSessionId,null as picByte,mi.runTimeTicks
+        from xy_music mi 
+        left join favoritemusic fm on mi.itemId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
+        left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
+        where mi.itemId = :itemId
+        and mi.connectionId = (select connectionId from xy_settings)
         limit 1
     """
     )
@@ -785,7 +788,8 @@ interface XyMusicDao {
 
     @Query(
         """
-        select itemId,xm.pic,xm.name,xm.album,xm.musicUrl,xm.container,xm.artists,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,:playSessionId as playSessionId,null as picByte 
+        select itemId,xm.pic,xm.name,xm.album,xm.musicUrl,xm.container,xm.artists,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
+                :playSessionId as playSessionId,null as picByte ,xm.runTimeTicks
         from xy_music xm 
         left join favoritemusic fm on xm.itemId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
         left join xy_download xd on xd.uid = xm.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
@@ -1026,7 +1030,8 @@ interface XyMusicDao {
 
     @Query(
         """
-        select itemId,xm.pic,xm.name,xm.album,xm.musicUrl,xm.container,xm.artists,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,:playSessionId as playSessionId,null as picByte 
+        select itemId,xm.pic,xm.name,xm.album,xm.musicUrl,xm.container,xm.artists,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
+                :playSessionId as playSessionId,null as picByte ,xm.runTimeTicks
         from albummusic am
         inner join xy_music xm on am.musicId = xm.itemId
         left join xy_download xd on xd.uid = xm.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
@@ -1067,7 +1072,8 @@ interface XyMusicDao {
 
     @Query(
         """
-         select itemId,xm.pic,xm.name,xm.album,xm.musicUrl,xm.container,xm.artists,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,:playSessionId as playSessionId,null as picByte 
+         select itemId,xm.pic,xm.name,xm.album,xm.musicUrl,xm.container,xm.artists,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
+                :playSessionId as playSessionId,null as picByte ,xm.runTimeTicks
         from artistmusic am
         inner join xy_music xm on am.musicId = xm.itemId
         left join xy_download xd on xd.uid = xm.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
@@ -1105,7 +1111,8 @@ interface XyMusicDao {
 
     @Query(
         """
-        select itemId,xm.pic,xm.name,xm.album,xm.musicUrl,xm.container,xm.artists,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,:playSessionId as playSessionId,null as picByte 
+        select itemId,xm.pic,xm.name,xm.album,xm.musicUrl,xm.container,xm.artists,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
+                :playSessionId as playSessionId,null as picByte ,xm.runTimeTicks
         from favoritemusic fm
         inner join xy_music xm on fm.musicId = xm.itemId
         left join xy_download xd on xd.uid = xm.itemId and xd.status = 'COMPLETED'  and xd.connectionId = (select connectionId from xy_settings)

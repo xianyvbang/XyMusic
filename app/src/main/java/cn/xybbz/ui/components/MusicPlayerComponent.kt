@@ -3,6 +3,7 @@ package cn.xybbz.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -235,7 +236,7 @@ fun MusicPlayerScreen(
                         onClick = {
                         },
                     ) {
-
+                        // todo 加个隐藏按钮操作,打开开发者页面
                     }
                 }
             )
@@ -469,7 +470,7 @@ private fun PlayerCurrentPosition(
 
             MusicProgressBar(
                 currentTime = musicController.currentPosition,
-                musicController.duration,
+                totalTime = musicController.duration,
                 progress = progress,
                 cacheProgress = onCacheProgress(),
                 onProgressChanged = { newProgress ->
@@ -504,7 +505,7 @@ fun PlayerStateComponent(
             modifier = Modifier
                 .size(size)
                 .clip(CircleShape)
-                .debounceClickable {
+                .clickable {
                     if (musicController.state != PlayStateEnum.Pause) {
                         musicController.pause()
                     } else {

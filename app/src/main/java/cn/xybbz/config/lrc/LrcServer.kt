@@ -94,4 +94,12 @@ class LrcServer @Inject constructor(
         Log.i("createLrcList", "随机数111 ${lrcDataType} 歌词列表：${_lcrEntryListFlow.value}")
     }
 
+    fun clear() {
+        _lcrEntryListFlow.update {
+            emptyList()
+        }
+        lrcText = null
+        indexData = -1
+    }
+
 }

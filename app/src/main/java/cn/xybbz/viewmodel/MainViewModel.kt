@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.viewmodel
 
 import android.icu.math.BigDecimal
@@ -30,6 +48,7 @@ import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.favorite.FavoriteRepository
+import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.update.VersionCheckScheduler
@@ -67,7 +86,8 @@ class MainViewModel @Inject constructor(
     private val favoriteRepository: FavoriteRepository,
     val selectControl: SelectControl,
     private val mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
-    private val versionCheckScheduler: VersionCheckScheduler
+    private val versionCheckScheduler: VersionCheckScheduler,
+    private val lrcServer: LrcServer
 ) : ViewModel() {
 
     /**
@@ -192,6 +212,9 @@ class MainViewModel @Inject constructor(
                 )
                 alarmConfig.scheduleNextReport()
             }
+
+
+            Log.i("上报", "上报333333")
         }
 
     }
@@ -213,6 +236,8 @@ class MainViewModel @Inject constructor(
                     positionTicks = musicController.currentPosition
                 )
             }
+
+            Log.i("上报", "上报44444")
         }
 
         cacheController.pauseCache(musicUrl)
@@ -252,6 +277,7 @@ class MainViewModel @Inject constructor(
 
     fun onOnChangeMusic(musicId: String) {
         viewModelScope.launch {
+            lrcServer.clear()
             //数据变化的时候进行数据变化
             putIterations(0)
             db.withTransaction {

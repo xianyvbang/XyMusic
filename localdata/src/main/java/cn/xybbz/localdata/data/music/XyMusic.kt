@@ -159,7 +159,8 @@ data class XyMusic(
             container = container,
             artists = artists,
             size = size,
-            filePath = null
+            filePath = null,
+            runTimeTicks = runTimeTicks
         )
     }
 }

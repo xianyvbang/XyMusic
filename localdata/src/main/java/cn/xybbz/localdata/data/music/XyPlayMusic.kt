@@ -52,7 +52,11 @@ data class XyPlayMusic(
     /**
      * 文件地址
      */
-    val filePath: String?
+    val filePath: String?,
+    /**
+     * 时长 秒
+     */
+    val runTimeTicks: Long
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -69,7 +73,8 @@ data class XyPlayMusic(
                 artists == other.artists &&
                 ifFavoriteStatus == other.ifFavoriteStatus &&
                 size == other.size &&
-                filePath == other.filePath
+                filePath == other.filePath &&
+                runTimeTicks == other.runTimeTicks
     }
 
     override fun hashCode(): Int {
@@ -85,6 +90,7 @@ data class XyPlayMusic(
         result = 31 * result + ifFavoriteStatus.hashCode()
         result = 31 * result + (size?.hashCode() ?: 0)
         result = 31 * result + (filePath?.hashCode() ?: 0)
+        result = 31 * result + runTimeTicks.hashCode()
         return result
     }
 
