@@ -190,7 +190,8 @@ class MusicController(
                 Player.STATE_READY -> {
                     updateDuration(mediaController?.duration ?: 0)
                     // 可以开始播放 恢复播放
-                    updateState(PlayStateEnum.Playing)
+                    if (state != PlayStateEnum.Pause)
+                        updateState(PlayStateEnum.Playing)
                     Log.i("=====", "STATE_READY")
                 }
 
@@ -209,7 +210,7 @@ class MusicController(
             val itemId = mediaMetadata.extras?.getString("id")
             Log.i("上报", "获得当前播放信息${mediaMetadata}")
 
-            if (itemId != musicInfo?.itemId){
+            if (itemId != musicInfo?.itemId) {
                 Log.i(
                     "上报",
                     "当前索引${mediaController?.currentMediaItemIndex} --- ${mediaMetadata.title}"
