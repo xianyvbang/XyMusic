@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.common.music
 
 import android.content.Intent
@@ -154,6 +172,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
 
                 Log.i("music", "播放状态2222 ${state}")
                 musicController.updateState(PlayStateEnum.Playing)
+                musicController.reportedPlayEvent()
                 super.play()
                 Log.i("music", "播放状态2222 ${state}")
                 fadeController.fadeIn()
@@ -167,6 +186,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                 ifRegister = false
                 musicController.updateState(PlayStateEnum.Pause)
                 fadeController.fadeOut {
+                    musicController.reportedPauseEvent()
                     super.pause()
                 }
             }

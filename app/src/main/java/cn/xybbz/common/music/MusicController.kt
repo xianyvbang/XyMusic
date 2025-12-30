@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.common.music
 
 import android.content.ComponentName
@@ -139,7 +157,7 @@ class MusicController(
 //            super.onIsPlayingChanged(isPlaying)
             // 播放状态变化回调
             Log.i("=====", "当前播放状态$isPlaying")
-            if (isPlaying) {
+            /*if (isPlaying) {
                 updateDuration(mediaController?.duration ?: 0)
                 musicInfo?.let {
                     scope.launch {
@@ -152,7 +170,7 @@ class MusicController(
                         _events.emit(PlayerEvent.Pause(it.itemId, it.playSessionId, it.musicUrl))
                     }
                 }
-            }
+            }*/
         }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
@@ -187,20 +205,25 @@ class MusicController(
 
         override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
             super.onMediaMetadataChanged(mediaMetadata)
-            Log.i("=====", "获得当前播放信息${mediaMetadata}")
-            Log.i(
-                "=====",
-                "当前索引${mediaController?.currentMediaItemIndex} --- ${mediaMetadata.title}"
-            )
 
-            if (musicInfo?.pic.isNullOrBlank()) {
-                picByte = mediaMetadata.artworkData
-            } else {
-                picByte = null
-            }
-            scope.launch {
-                musicInfo?.let {
-                    _events.emit(PlayerEvent.UpdateMusicPicData(it.itemId, picByte))
+            val itemId = mediaMetadata.extras?.getString("id")
+            Log.i("上报", "获得当前播放信息${mediaMetadata}")
+
+            if (itemId != musicInfo?.itemId){
+                Log.i(
+                    "上报",
+                    "当前索引${mediaController?.currentMediaItemIndex} --- ${mediaMetadata.title}"
+                )
+
+                picByte = if (musicInfo?.pic.isNullOrBlank()) {
+                    mediaMetadata.artworkData
+                } else {
+                    null
+                }
+                scope.launch {
+                    musicInfo?.let {
+                        _events.emit(PlayerEvent.UpdateMusicPicData(it.itemId, picByte))
+                    }
                 }
             }
             //获取当前音乐的index
@@ -219,7 +242,7 @@ class MusicController(
             mediaItem?.localConfiguration?.let { localConfiguration ->
                 if (localConfiguration.tag == null) {
 
-                    Log.i("======", "诶切换类型 ${reason}")
+                    Log.i("上报", "诶切换类型 ${reason}")
                     //手动切换
                     if (reason == MEDIA_ITEM_TRANSITION_REASON_SEEK || reason == MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
                         musicInfo?.let {
@@ -856,5 +879,21 @@ class MusicController(
 
     fun updateDuration(duration: Long) {
         this.duration = duration
+    }
+
+    fun reportedPlayEvent() {
+        musicInfo?.let {
+            scope.launch {
+                _events.emit(PlayerEvent.Play(it.itemId, it.playSessionId))
+            }
+        }
+    }
+
+    fun reportedPauseEvent() {
+        musicInfo?.let {
+            scope.launch {
+                _events.emit(PlayerEvent.Pause(it.itemId, it.playSessionId, it.musicUrl))
+            }
+        }
     }
 }
