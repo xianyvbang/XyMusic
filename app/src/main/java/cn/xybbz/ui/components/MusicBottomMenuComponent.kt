@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.ui.components
 
 
@@ -24,6 +42,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Album
 import androidx.compose.material.icons.outlined.AvTimer
@@ -98,6 +117,7 @@ import cn.xybbz.ui.xy.XyItemTextPadding
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
@@ -200,6 +220,13 @@ fun MusicBottomMenuComponent(
          */
         var ifShowBottom by remember {
             mutableStateOf(true)
+        }
+
+        /**
+         * 是否打开播放设置-淡入淡出
+         */
+        var ifShowFadeInOut by remember {
+            mutableStateOf(false)
         }
 
         /**
@@ -370,14 +397,29 @@ fun MusicBottomMenuComponent(
                     )
                 ) {
 
+
+
                     XyItemHorizontalSlider(
                         value = musicBottomMenuViewModel.volumeValue,
                         onValueChange = {
                             musicBottomMenuViewModel.updateVolume(it)
                         },
-                        iconVector = Icons.AutoMirrored.Outlined.PlaylistAdd,
-                        text = "调节音量",
+                        iconVector = Icons.AutoMirrored.Outlined.VolumeUp,
+                        text = stringResource(R.string.volume_value_setting),
                         sub = (musicBottomMenuViewModel.volumeValue * 100).toInt().toString(),
+                    )
+
+                    IconBottomMenuHor(
+                        imageVector = Icons.AutoMirrored.Outlined.VolumeUp,
+                        text = "播放过度设置-淡入淡出: 1s",
+                        onClick = {
+                            coroutineScope.launch {
+                                sheetState.hide()
+                                ifShowMusicInfo = true
+                            }.invokeOnCompletion {
+                                ifShowBottom = false
+                            }
+                        },
                     )
 
                     IconBottomMenuHor(
@@ -1179,6 +1221,76 @@ fun ArtistItemListBottomSheet(
                 )
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FadeInOutBottomSheet(
+    modifier: Modifier = Modifier,
+    onIfShowFadeInOut: () -> Boolean,
+    onSetShowFadeInOut: (Boolean) -> Unit,) {
+
+    val bottomSheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
+
+    ModalBottomSheetExtendComponent(
+        bottomSheetState = bottomSheetState,
+        modifier = Modifier.statusBarsPadding(),
+        onIfDisplay = onIfShowFadeInOut,
+        onClose = {
+            onSetShowFadeInOut(it)
+        },
+        titleText = "播放过度设置-淡入淡出",
+        titleTailContent = {
+            OutlinedButton(
+                modifier = Modifier.size(height = 25.dp, width = 50.dp),
+                contentPadding = PaddingValues(horizontal = 2.dp),
+                onClick = {
+
+                },
+            ) {
+                Text(
+                    text = stringResource(R.string.reset),
+                    fontSize = 10.sp,
+                )
+            }
+        }
+    ) {
+        XyColumnNotHorizontalPadding(backgroundColor = Color.Transparent) {
+            XyItemSlider(
+                value = startTime,
+                onValueChange = {
+                    startTime = it.toLong().toFloat()
+                },
+                valueRange = 0f..15f,
+                text = "${stringResource(R.string.skip_head_prefix)} ${startTime.toLong()}s"
+            )
+            XyRow(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                XyItemText(text = "0s")
+                XyItemText(text = "15s")
+            }
+        }
+
+        XyButtonHorizontalPadding(text = stringResource(R.string.confirm), onClick = {
+            if (onAlbumId().isNotBlank()) {
+                skipTime.endTime = endTime.toLong()
+                skipTime.headTime = startTime.toLong()
+                skipTime.albumId = onAlbumId()
+                coroutineScope
+                    .launch {
+                        sheetSkip.hide()
+                        onSaveOrUpdateSkipTimeData(skipTime)
+                    }
+                    .invokeOnCompletion {
+                        onSetIfShowHeadAndTail(false)
+                    }
+            }
+
+        })
     }
 }
 
