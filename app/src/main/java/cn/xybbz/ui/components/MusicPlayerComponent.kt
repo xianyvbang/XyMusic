@@ -1,6 +1,25 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.ui.components
 
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
@@ -243,7 +262,7 @@ fun MusicPlayerScreen(
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
                     .background(Color.Transparent),
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -286,14 +305,14 @@ fun MusicPlayerScreen(
 
 
                 XyColumn(
-                    verticalArrangement = Arrangement.Top,
+                    verticalArrangement = Arrangement.Bottom,
                     modifier = Modifier
-                        .weight(3f),
+                        /*.weight(2.8f)*/,
                     paddingValues = PaddingValues(0.dp),
                     clipSize = 0.dp,
                     backgroundColor = Color.Transparent
                 ) {
-                    Spacer(modifier = Modifier.height(XyTheme.dimens.corner))
+//                    Spacer(modifier = Modifier.height(XyTheme.dimens.corner))
                     XyRow {
                         Column(
                             modifier = Modifier
@@ -355,60 +374,67 @@ fun MusicPlayerScreen(
                             )
                         }
                     }
-
-                    XyRow(modifier = Modifier.height(30.dp)) {
-                        LrcViewOneComponent(lrcText = musicPlayerViewModel.lrcServer.lrcText)
-                    }
-
-                    PlayerCurrentPosition(
-                        musicController = musicPlayerViewModel.musicController,
-                        onCacheProgress = {
-                            cacheScheduleData
-                        })
-                    XyRow(modifier = Modifier.weight(1f)) {
-                        PlayerTypeComponent(musicController = musicPlayerViewModel.musicController)
-                        Icon(
-                            imageVector = Icons.Rounded.SkipPrevious,
-                            contentDescription = stringResource(R.string.previous_track),
-                            modifier = Modifier
-                                .size(30.dp, 35.dp)
-                                .debounceClickable {
-                                    coroutineScope.launch {
-                                        onSeekBack()
-                                    }
-                                },
-                            tint = Color.White
-                        )
-
-                        PlayerStateComponent(musicController = musicPlayerViewModel.musicController)
-
-                        Icon(
-                            imageVector = Icons.Rounded.SkipNext,
-                            contentDescription = stringResource(R.string.next_track),
-                            modifier = Modifier
-                                .size(30.dp, 35.dp)
-                                .debounceClickable {
-                                    coroutineScope.launch {
-                                        onSeekToNext()
-                                    }
-                                },
-                            tint = Color.White,
-                        )
-
-                        IconButton(
-                            onClick = {
-                                if (musicPlayerViewModel.musicController.originMusicList.isNotEmpty()) {
-                                    onSetState(true)
-                                }
-                            },
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Sharp.QueueMusic,
-                                contentDescription = stringResource(R.string.music_list)
-                            )
+                    AnimatedVisibility(
+                        visible = !musicPlayerViewModel.lrcServer.lrcText.isNullOrBlank() && horPagerState.currentPage == 0
+                    ) {
+                        XyRow(modifier = Modifier.height(30.dp)) {
+                            LrcViewOneComponent(lrcText = musicPlayerViewModel.lrcServer.lrcText)
                         }
                     }
-                    Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
+
+                    Column(modifier = Modifier
+                        .fillMaxWidth()) {
+                        PlayerCurrentPosition(
+                            musicController = musicPlayerViewModel.musicController,
+                            onCacheProgress = {
+                                cacheScheduleData
+                            })
+                        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
+                        XyRow(modifier = Modifier/*.weight(1f)*/) {
+                            PlayerTypeComponent(musicController = musicPlayerViewModel.musicController)
+                            Icon(
+                                imageVector = Icons.Rounded.SkipPrevious,
+                                contentDescription = stringResource(R.string.previous_track),
+                                modifier = Modifier
+                                    .size(30.dp, 35.dp)
+                                    .debounceClickable {
+                                        coroutineScope.launch {
+                                            onSeekBack()
+                                        }
+                                    },
+                                tint = Color.White
+                            )
+
+                            PlayerStateComponent(musicController = musicPlayerViewModel.musicController)
+
+                            Icon(
+                                imageVector = Icons.Rounded.SkipNext,
+                                contentDescription = stringResource(R.string.next_track),
+                                modifier = Modifier
+                                    .size(30.dp, 35.dp)
+                                    .debounceClickable {
+                                        coroutineScope.launch {
+                                            onSeekToNext()
+                                        }
+                                    },
+                                tint = Color.White,
+                            )
+
+                            IconButton(
+                                onClick = {
+                                    if (musicPlayerViewModel.musicController.originMusicList.isNotEmpty()) {
+                                        onSetState(true)
+                                    }
+                                },
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Sharp.QueueMusic,
+                                    contentDescription = stringResource(R.string.music_list)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding * 4))
+                    }
                 }
 
             }

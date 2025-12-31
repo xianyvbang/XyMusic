@@ -26,6 +26,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.ForwardingPlayer
+import androidx.media3.common.Player
 import androidx.media3.common.util.Assertions
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSourceBitmapLoader
@@ -143,6 +144,19 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
         //这里的可以获得元数据
         exoPlayer?.addAnalyticsListener(XyLogger(lrcServer = lrcServer))
 
+        exoPlayer?.addListener(object : Player.Listener {
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+
+                Log.i("exoPlayer", "当前播放状态$isPlaying")
+                musicController.updateState(if (isPlaying) PlayStateEnum.Playing else PlayStateEnum.Pause)
+                if (isPlaying) {
+                    musicController.reportedPlayEvent()
+                } else if (musicController.state != PlayStateEnum.Loading) {
+                    musicController.reportedPauseEvent()
+                }
+
+            }
+        })
 
         val sessionCommand = SessionCommand(SAVE_TO_FAVORITES, Bundle.EMPTY)
         val removeFavorites = SessionCommand(REMOVE_FROM_FAVORITES, Bundle.EMPTY)
@@ -171,8 +185,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                 val state = musicController.state
 
                 Log.i("music", "播放状态2222 ${state}")
-                musicController.updateState(PlayStateEnum.Playing)
-                musicController.reportedPlayEvent()
+//                musicController.updateState(PlayStateEnum.Playing)
                 super.play()
                 Log.i("music", "播放状态2222 ${state}")
                 fadeController.fadeIn()
@@ -184,9 +197,8 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                 if (ifRegister)
                     unregisterReceiver(myNoisyAudioStreamReceiver)
                 ifRegister = false
-                musicController.updateState(PlayStateEnum.Pause)
+//                musicController.updateState(PlayStateEnum.Pause)
                 fadeController.fadeOut {
-                    musicController.reportedPauseEvent()
                     super.pause()
                 }
             }

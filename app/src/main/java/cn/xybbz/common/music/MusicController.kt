@@ -153,25 +153,6 @@ class MusicController(
 
     //https://developer.android.google.cn/guide/topics/media/exoplayer/listening-to-player-events?hl=zh-cn
     private val playerListener = @UnstableApi object : Player.Listener {
-        override fun onIsPlayingChanged(isPlaying: Boolean) {
-//            super.onIsPlayingChanged(isPlaying)
-            // 播放状态变化回调
-            Log.i("=====", "当前播放状态$isPlaying")
-            /*if (isPlaying) {
-                updateDuration(mediaController?.duration ?: 0)
-                musicInfo?.let {
-                    scope.launch {
-                        _events.emit(PlayerEvent.Play(it.itemId, it.playSessionId))
-                    }
-                }
-            } else if (state != PlayStateEnum.Loading) {
-                musicInfo?.let {
-                    scope.launch {
-                        _events.emit(PlayerEvent.Pause(it.itemId, it.playSessionId, it.musicUrl))
-                    }
-                }
-            }*/
-        }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
             super.onPlaybackStateChanged(playbackState)
