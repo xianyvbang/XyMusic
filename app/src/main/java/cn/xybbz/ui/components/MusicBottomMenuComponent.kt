@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.ui.components
 
 
@@ -24,6 +42,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Album
 import androidx.compose.material.icons.outlined.AvTimer
@@ -70,6 +89,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.common.utils.DateUtil.millisecondsToTime
 import cn.xybbz.common.utils.DateUtil.toDateStr
+import cn.xybbz.common.utils.DateUtil.toSecondMsString
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
@@ -200,6 +220,13 @@ fun MusicBottomMenuComponent(
          */
         var ifShowBottom by remember {
             mutableStateOf(true)
+        }
+
+        /**
+         * 是否打开播放设置-淡入淡出
+         */
+        var ifShowFadeInOut by remember {
+            mutableStateOf(false)
         }
 
         /**
@@ -370,14 +397,30 @@ fun MusicBottomMenuComponent(
                     )
                 ) {
 
+
                     XyItemHorizontalSlider(
                         value = musicBottomMenuViewModel.volumeValue,
                         onValueChange = {
                             musicBottomMenuViewModel.updateVolume(it)
                         },
-                        iconVector = Icons.AutoMirrored.Outlined.PlaylistAdd,
-                        text = "调节音量",
+                        iconVector = Icons.AutoMirrored.Outlined.VolumeUp,
+                        text = stringResource(R.string.volume_value_setting),
                         sub = (musicBottomMenuViewModel.volumeValue * 100).toInt().toString(),
+                    )
+
+                    IconBottomMenuHor(
+                        imageVector = Icons.AutoMirrored.Outlined.VolumeUp,
+                        text = "${stringResource(R.string.play_settings)}: ${
+                            musicBottomMenuViewModel.getFadeDurationMs().toSecondMsString()
+                        }",
+                        onClick = {
+                            coroutineScope.launch {
+                                sheetState.hide()
+                                ifShowFadeInOut = true
+                            }.invokeOnCompletion {
+                                ifShowBottom = false
+                            }
+                        },
                     )
 
                     IconBottomMenuHor(
@@ -593,6 +636,11 @@ fun MusicBottomMenuComponent(
             })
 
 
+        FadeInOutBottomSheet(
+            onIfShowFadeInOut = { ifShowFadeInOut },
+            onSetShowFadeInOut = { ifShowFadeInOut = it },
+            onFadeDurationMs = { musicBottomMenuViewModel.getFadeDurationMs() },
+            onSetFadeDurationMs = { musicBottomMenuViewModel.setFadeDurationMs(it) })
     }
 
 }
@@ -1179,6 +1227,81 @@ fun ArtistItemListBottomSheet(
                 )
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FadeInOutBottomSheet(
+    modifier: Modifier = Modifier,
+    onIfShowFadeInOut: () -> Boolean,
+    onSetShowFadeInOut: (Boolean) -> Unit,
+    onFadeDurationMs: () -> Long,
+    onSetFadeDurationMs: (Long) -> Unit
+) {
+
+    var fadeDurationMs by remember {
+        mutableStateOf(onFadeDurationMs())
+    }
+
+    val bottomSheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
+
+    val coroutineScope = rememberCoroutineScope()
+
+    ModalBottomSheetExtendComponent(
+        bottomSheetState = bottomSheetState,
+        modifier = modifier.statusBarsPadding(),
+        onIfDisplay = onIfShowFadeInOut,
+        onClose = {
+            onSetShowFadeInOut(it)
+        },
+        titleText = stringResource(R.string.play_settings),
+        titleTailContent = {
+            OutlinedButton(
+                modifier = Modifier.size(height = 25.dp, width = 50.dp),
+                contentPadding = PaddingValues(horizontal = 2.dp),
+                onClick = {
+                    fadeDurationMs = 300L
+                    onSetFadeDurationMs(fadeDurationMs)
+                },
+            ) {
+                Text(
+                    text = stringResource(R.string.reset),
+                    fontSize = 10.sp,
+                )
+            }
+        }
+    ) {
+        XyColumnNotHorizontalPadding(backgroundColor = Color.Transparent) {
+            XyItemSlider(
+                value = fadeDurationMs.toFloat(),
+                onValueChange = {
+                    fadeDurationMs = it.toLong()
+                },
+                valueRange = 0f..15000f,
+                text = "${stringResource(R.string.play_settings_time)}: ${fadeDurationMs.toSecondMsString()}"
+            )
+            XyRow(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                XyItemText(text = "0s")
+                XyItemText(text = "15s")
+            }
+        }
+
+        XyButtonHorizontalPadding(text = stringResource(R.string.confirm), onClick = {
+            coroutineScope
+                .launch {
+                    bottomSheetState.hide()
+                    onSetFadeDurationMs(fadeDurationMs)
+                }
+                .invokeOnCompletion {
+                    onSetShowFadeInOut(false)
+                }
+
+        })
     }
 }
 

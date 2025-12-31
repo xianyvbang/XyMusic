@@ -1,3 +1,21 @@
+<!--
+  ~   XyMusic
+  ~   Copyright (C) 2023 xianyvbang
+  ~
+  ~   Licensed under the Apache License, Version 2.0 (the "License");
+  ~   you may not use this file except in compliance with the License.
+  ~   You may obtain a copy of the License at
+  ~
+  ~        http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~   Unless required by applicable law or agreed to in writing, software
+  ~   distributed under the License is distributed on an "AS IS" BASIS,
+  ~   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~   See the License for the specific language governing permissions and
+  ~   limitations under the License.
+  ~
+  -->
+
 <resources>
     <string name="app_name">咸鱼听歌</string>
     <string name="home">首页</string>
@@ -145,6 +163,7 @@
     <string name="new_playlist">新建歌单</string>
     <string name="no_playlists">暂无歌单</string>
     <string name="no_data">暂无数据</string>
+    <string name="view_more">查看更多</string>
 
     <!--界面设置-->
     <string name="interface_settings">界面设置</string>
@@ -262,6 +281,9 @@
     <string name="song_info">歌曲信息</string>
     <string name="delete_permanently">永久删除</string>
     <string name="delete_local_permanently">删除本地文件</string>
+    <string name="volume_value_setting">调节音量</string>
+    <string name="play_settings">播放过度设置-淡入淡出</string>
+    <string name="play_settings_time">播放过度设置-淡入淡出时长</string>
     <string name="delete_warning">注意!!会同步删除服务端中文件</string>
     <string name="exact_alarm_permission_granted">已开启精确闹钟权限</string>
     <string name="exact_alarm_permission_not_granted">未开启精确闹钟权限</string>

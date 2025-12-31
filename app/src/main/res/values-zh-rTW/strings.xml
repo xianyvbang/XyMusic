@@ -1,3 +1,21 @@
+<!--
+  ~   XyMusic
+  ~   Copyright (C) 2023 xianyvbang
+  ~
+  ~   Licensed under the Apache License, Version 2.0 (the "License");
+  ~   you may not use this file except in compliance with the License.
+  ~   You may obtain a copy of the License at
+  ~
+  ~        http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~   Unless required by applicable law or agreed to in writing, software
+  ~   distributed under the License is distributed on an "AS IS" BASIS,
+  ~   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~   See the License for the specific language governing permissions and
+  ~   limitations under the License.
+  ~
+  -->
+
 <resources>
     <string name="app_name">鹹魚聽歌</string>
     <string name="home">首頁</string>
@@ -153,6 +171,7 @@
     <string name="no_data">暫無數據</string>
 
     <!--界面设置-->
+    <string name="view_more">看更多</string>
     <string name="interface_settings">介面設置</string>
     <string name="interface_screen">介面</string>
     <string name="reset">重置</string>
@@ -265,6 +284,7 @@
     <string name="song_info">歌曲訊息</string>
     <string name="delete_permanently">永久刪除</string>
     <string name="delete_local_permanently">刪除本機文件</string>
+    <string name="play_settings_time">播放過度設定-淡入淡出時長</string>
     <string name="delete_warning">注意！！ 會同步刪除服務端中檔</string>
     <string name="exact_alarm_permission_granted">已開啟精確鬧鐘許可權</string>
     <string name="exact_alarm_permission_not_granted">未開啟精確鬧鐘許可權</string>
@@ -403,5 +423,7 @@
     <string name="test_connection">測試連接</string>
     <string name="open_proxy">開啟代理</string>
     <string name="save">儲存</string>
+    <string name="volume_value_setting">調整音量</string>
+    <string name="play_settings">播放過度設定-淡入淡出</string>
 
 </resources>

@@ -283,4 +283,14 @@ class MusicBottomMenuViewModel @Inject constructor(
         refreshVolume()
     }
 
+    fun setFadeDurationMs(fadeDurationMs: Long) {
+        viewModelScope.launch {
+            settingsManager.setFadeDurationMs(fadeDurationMs)
+        }
+    }
+
+    fun getFadeDurationMs(): Long {
+        return settingsManager.get().fadeDurationMs
+    }
+
 }
