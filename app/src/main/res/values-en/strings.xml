@@ -1,3 +1,21 @@
+<!--
+  ~   XyMusic
+  ~   Copyright (C) 2023 xianyvbang
+  ~
+  ~   Licensed under the Apache License, Version 2.0 (the "License");
+  ~   you may not use this file except in compliance with the License.
+  ~   You may obtain a copy of the License at
+  ~
+  ~        http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~   Unless required by applicable law or agreed to in writing, software
+  ~   distributed under the License is distributed on an "AS IS" BASIS,
+  ~   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~   See the License for the specific language governing permissions and
+  ~   limitations under the License.
+  ~
+  -->
+
 <resources>
     <string name="app_name">Salted Fish Music</string>
     <string name="home">Home</string>
@@ -153,6 +171,7 @@ Automatic calculation rules for the upper limit of cache:
     <string name="no_data">No data available</string>
 
     <!--界面设置-->
+    <string name="view_more">View more</string>
     <string name="interface_settings">Interface settings</string>
     <string name="interface_screen">Interface</string>
     <string name="reset">Reset</string>
@@ -265,6 +284,7 @@ Automatic calculation rules for the upper limit of cache:
     <string name="song_info">Song Information</string>
     <string name="delete_permanently">Permanent deletion</string>
     <string name="delete_local_permanently">Delete local files</string>
+    <string name="play_settings_time">Playback transition settings - fade-in and fade-out duration</string>
     <string name="delete_warning">Note!! Files on the server will be deleted simultaneously.</string>
     <string name="exact_alarm_permission_granted">Precise alarm clock permission has been enabled</string>
     <string name="exact_alarm_permission_not_granted">Precise alarm clock permission not enabled</string>
@@ -403,5 +423,7 @@ Automatic calculation rules for the upper limit of cache:
     <string name="test_connection">Test connection</string>
     <string name="open_proxy">Enable Proxy</string>
     <string name="save">Save</string>
+    <string name="volume_value_setting">Adjust volume</string>
+    <string name="play_settings">Playback transition settings - fade in and fade out</string>
 
 </resources>

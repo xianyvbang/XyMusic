@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.config.setting
 
 import android.content.Context
@@ -10,6 +28,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cn.xybbz.common.enums.AllDataEnum
+import cn.xybbz.common.music.AudioFadeController
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.setting.XySettings
@@ -21,7 +40,8 @@ import java.util.Locale
 
 class SettingsManager(
     private val db: DatabaseClient,
-    private val applicationContext: Context
+    private val applicationContext: Context,
+    private val audioFadeController: AudioFadeController
 ) {
 
     private val coroutineScope = CoroutineScopeUtils.getIo("settings")
@@ -67,6 +87,7 @@ class SettingsManager(
             }
             this@SettingsManager.cacheUpperLimit = this@SettingsManager.get().cacheUpperLimit
             Log.i("api", "动态设置数据--读取配置")
+            audioFadeController.updateFadeDurationMs(this@SettingsManager.get().fadeDurationMs)
         }
         val packageManager = applicationContext.packageManager
         val packageName = applicationContext.packageName
@@ -309,6 +330,25 @@ class SettingsManager(
         } else {
             val settingId =
                 db.settingsDao.save(XySettings(maxConcurrentDownloads = maxConcurrentDownloads))
+            settings = get().copy(id = settingId)
+        }
+    }
+
+    /**
+     * 更新渐入渐出持续时间
+     */
+    suspend fun setFadeDurationMs(fadeDurationMs: Long) {
+        audioFadeController.updateFadeDurationMs(fadeDurationMs)
+        settings = get().copy(fadeDurationMs = fadeDurationMs)
+        if (get().id != AllDataEnum.All.code) {
+            db.settingsDao.updateFadeDurationMs(
+                fadeDurationMs = fadeDurationMs,
+                get().id
+            )
+
+        } else {
+            val settingId =
+                db.settingsDao.save(XySettings(fadeDurationMs = fadeDurationMs))
             settings = get().copy(id = settingId)
         }
     }

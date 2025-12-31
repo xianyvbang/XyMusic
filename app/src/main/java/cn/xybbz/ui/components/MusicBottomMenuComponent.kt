@@ -89,6 +89,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.common.utils.DateUtil.millisecondsToTime
 import cn.xybbz.common.utils.DateUtil.toDateStr
+import cn.xybbz.common.utils.DateUtil.toSecondMsString
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
@@ -117,7 +118,6 @@ import cn.xybbz.ui.xy.XyItemTextPadding
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
@@ -398,7 +398,6 @@ fun MusicBottomMenuComponent(
                 ) {
 
 
-
                     XyItemHorizontalSlider(
                         value = musicBottomMenuViewModel.volumeValue,
                         onValueChange = {
@@ -411,11 +410,13 @@ fun MusicBottomMenuComponent(
 
                     IconBottomMenuHor(
                         imageVector = Icons.AutoMirrored.Outlined.VolumeUp,
-                        text = "播放过度设置-淡入淡出: 1s",
+                        text = "${stringResource(R.string.play_settings)}: ${
+                            musicBottomMenuViewModel.getFadeDurationMs().toSecondMsString()
+                        }",
                         onClick = {
                             coroutineScope.launch {
                                 sheetState.hide()
-                                ifShowMusicInfo = true
+                                ifShowFadeInOut = true
                             }.invokeOnCompletion {
                                 ifShowBottom = false
                             }
@@ -635,6 +636,11 @@ fun MusicBottomMenuComponent(
             })
 
 
+        FadeInOutBottomSheet(
+            onIfShowFadeInOut = { ifShowFadeInOut },
+            onSetShowFadeInOut = { ifShowFadeInOut = it },
+            onFadeDurationMs = { musicBottomMenuViewModel.getFadeDurationMs() },
+            onSetFadeDurationMs = { musicBottomMenuViewModel.setFadeDurationMs(it) })
     }
 
 }
@@ -1229,26 +1235,36 @@ fun ArtistItemListBottomSheet(
 private fun FadeInOutBottomSheet(
     modifier: Modifier = Modifier,
     onIfShowFadeInOut: () -> Boolean,
-    onSetShowFadeInOut: (Boolean) -> Unit,) {
+    onSetShowFadeInOut: (Boolean) -> Unit,
+    onFadeDurationMs: () -> Long,
+    onSetFadeDurationMs: (Long) -> Unit
+) {
+
+    var fadeDurationMs by remember {
+        mutableStateOf(onFadeDurationMs())
+    }
 
     val bottomSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
 
+    val coroutineScope = rememberCoroutineScope()
+
     ModalBottomSheetExtendComponent(
         bottomSheetState = bottomSheetState,
-        modifier = Modifier.statusBarsPadding(),
+        modifier = modifier.statusBarsPadding(),
         onIfDisplay = onIfShowFadeInOut,
         onClose = {
             onSetShowFadeInOut(it)
         },
-        titleText = "播放过度设置-淡入淡出",
+        titleText = stringResource(R.string.play_settings),
         titleTailContent = {
             OutlinedButton(
                 modifier = Modifier.size(height = 25.dp, width = 50.dp),
                 contentPadding = PaddingValues(horizontal = 2.dp),
                 onClick = {
-
+                    fadeDurationMs = 300L
+                    onSetFadeDurationMs(fadeDurationMs)
                 },
             ) {
                 Text(
@@ -1260,12 +1276,12 @@ private fun FadeInOutBottomSheet(
     ) {
         XyColumnNotHorizontalPadding(backgroundColor = Color.Transparent) {
             XyItemSlider(
-                value = startTime,
+                value = fadeDurationMs.toFloat(),
                 onValueChange = {
-                    startTime = it.toLong().toFloat()
+                    fadeDurationMs = it.toLong()
                 },
-                valueRange = 0f..15f,
-                text = "${stringResource(R.string.skip_head_prefix)} ${startTime.toLong()}s"
+                valueRange = 0f..15000f,
+                text = "${stringResource(R.string.play_settings_time)}: ${fadeDurationMs.toSecondMsString()}"
             )
             XyRow(
                 modifier = Modifier.fillMaxWidth()
@@ -1276,19 +1292,14 @@ private fun FadeInOutBottomSheet(
         }
 
         XyButtonHorizontalPadding(text = stringResource(R.string.confirm), onClick = {
-            if (onAlbumId().isNotBlank()) {
-                skipTime.endTime = endTime.toLong()
-                skipTime.headTime = startTime.toLong()
-                skipTime.albumId = onAlbumId()
-                coroutineScope
-                    .launch {
-                        sheetSkip.hide()
-                        onSaveOrUpdateSkipTimeData(skipTime)
-                    }
-                    .invokeOnCompletion {
-                        onSetIfShowHeadAndTail(false)
-                    }
-            }
+            coroutineScope
+                .launch {
+                    bottomSheetState.hide()
+                    onSetFadeDurationMs(fadeDurationMs)
+                }
+                .invokeOnCompletion {
+                    onSetShowFadeInOut(false)
+                }
 
         })
     }
