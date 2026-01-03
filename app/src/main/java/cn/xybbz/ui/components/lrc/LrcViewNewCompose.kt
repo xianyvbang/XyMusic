@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -43,6 +44,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -180,13 +182,16 @@ fun LrcViewNewCompose(
             }
 
         }
+        Box(modifier = Modifier
+            .fillMaxHeight()
+            .width(lyricWidth.dp)) {
 
-        AnimatedContent(
-            targetState = lcrEntryList.isEmpty(),
-            label = "Animated Content"
-        ) { isEmpty ->
-            if (!isEmpty)
-                Box(modifier = Modifier.width(lyricWidth.dp)) {
+            AnimatedContent(
+                targetState = lcrEntryList.isEmpty(),
+                label = "Animated Content"
+            ) { isEmpty ->
+
+                if (!isEmpty) {
                     LazyColumn(
                         state = listState,
                         modifier = Modifier
@@ -264,22 +269,33 @@ fun LrcViewNewCompose(
                             )
                         }
                     }
-                    SuggestionChip(
-                        modifier = Modifier.align(Alignment.BottomStart),
-                        onClick = {},
-                        label = {
-                            Text(text = "LRC")
-                        })
-                }
-            else {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = stringResource(R.string.no_lyrics))
+
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.no_lyrics),
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
                 }
             }
+            SuggestionChip(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = XyTheme.dimens.outerHorizontalPadding),
+                colors = SuggestionChipDefaults.suggestionChipColors(containerColor = Color.Gray),
+                onClick = {
+                    //生成调整事件
+                },
+                label = {
+                    Text(text = "LRC")
+                })
         }
+
+
 
     }
 
