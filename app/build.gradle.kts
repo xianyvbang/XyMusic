@@ -198,6 +198,8 @@ dependencies {
     //拼音相关
     implementation(libs.tinypinyin)
 
+    implementation(libs.kotlinx.coroutines.guava)
+
     //UI的module
     implementation(project(path = ":ui"))
     //api的module

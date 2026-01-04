@@ -90,6 +90,7 @@ google-hilt-navigation = { module = "androidx.hilt:hilt-navigation-compose", ver
 google-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltWork" }
 tinypinyin = { module = "com.github.promeg:tinypinyin", version.ref = "tinypinyin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
+kotlinx-coroutines-guava = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-guava", version.ref = "kotlinxCoroutinesCore" }
 
 
 [plugins]

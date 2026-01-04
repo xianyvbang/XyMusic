@@ -61,6 +61,7 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.ListeningExecutorService
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.guava.await
 import java.io.IOException
 import javax.inject.Inject
 
@@ -374,7 +375,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
         }
     }
 
-    fun getMediaData(mediaItem: MediaItem){
+    suspend fun getMediaData(mediaItem: MediaItem){
         try {
             MetadataRetriever.Builder(this.applicationContext, mediaItem).build().use { metadataRetriever ->
                 val trackGroups = metadataRetriever.retrieveTrackGroups().await()
