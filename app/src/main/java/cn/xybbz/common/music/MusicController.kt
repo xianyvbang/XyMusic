@@ -21,8 +21,6 @@ package cn.xybbz.common.music
 import android.content.ComponentName
 import android.content.Context
 import android.os.Bundle
-import android.os.Handler
-import android.os.Message
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
@@ -146,6 +144,9 @@ class MusicController(
         extraBufferCapacity = 16
     )
     val events = _events.asSharedFlow()
+
+    lateinit var progressTicker: PlaybackProgressTicker
+        private set
 
     private lateinit var controllerFuture: ListenableFuture<MediaController>
     private val mediaController: MediaController?
@@ -745,24 +746,17 @@ class MusicController(
         pageSize = Constants.ZERO
     }
 
-    private fun setOnCurrentPosition(): Handler {
-        val handler = object : Handler(mediaController?.applicationLooper!!) {
-            override fun handleMessage(msg: Message) {
-                super.handleMessage(msg)
-                if (mediaController?.isPlaying == true) {
-                    setCurrentPositionData(mediaController?.currentPosition!!)
-                    if (endTime >= MUSIC_POSITION_UPDATE_INTERVAL) {
-                        if (duration - currentPosition <= endTime) {
-                            seekTo(endTime)
-                        }
-                    }
+    private fun setOnCurrentPosition() {
+        this.mediaController?.let { onControllerReady(it) }
+    }
 
-                }
-                sendEmptyMessageDelayed(0, MUSIC_POSITION_UPDATE_INTERVAL) // 每秒更新一次进度
-            }
+    fun onControllerReady(controller: MediaController) {
+        progressTicker = PlaybackProgressTicker(
+            controller = controller,
+            intervalMs = MUSIC_POSITION_UPDATE_INTERVAL
+        ) { position ->
+            setCurrentPositionData(position)
         }
-        handler.sendEmptyMessage(0)
-        return handler
     }
 
     /**

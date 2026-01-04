@@ -41,6 +41,7 @@ class DatasourceConfig {
         Migration_10_11,
         Migration_11_12,
         Migration_12_13,
+        Migration_13_14,
     )
 
     fun createDatabaseClient(context: Context): DatabaseClient {
@@ -265,6 +266,21 @@ class DatasourceConfig {
                 """
             ALTER TABLE xy_settings
             ADD COLUMN fadeDurationMs INTEGER NOT NULL DEFAULT 300
+            """.trimIndent()
+            )
+        }
+    }
+
+    private object Migration_13_14 : Migration(13, 14) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+            CREATE TABLE IF NOT EXISTS xy_lrc_config (
+                id INTEGER PRIMARY KEY NOT NULL,
+                itemId TEXT NOT NULL,
+                lrcOffsetMs INTEGER NOT NULL,
+                connectionId INTEGER NOT NULL
+            )
             """.trimIndent()
             )
         }

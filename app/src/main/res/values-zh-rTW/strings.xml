@@ -425,5 +425,8 @@
     <string name="save">儲存</string>
     <string name="volume_value_setting">調整音量</string>
     <string name="play_settings">播放過度設定-淡入淡出</string>
+    <string name="forward_offset">向前偏移</string>
+    <string name="backward_offset">向後偏移</string>
+    <string name="offset">偏移</string>
 
 </resources>

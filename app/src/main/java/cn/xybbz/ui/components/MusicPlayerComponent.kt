@@ -298,7 +298,13 @@ fun MusicPlayerScreen(
                     } else {
                         LrcViewNewCompose(
                             listState = listState,
-                            lcrEntryList = lcrEntryList
+                            lcrEntryList = lcrEntryList,
+                            lrcConfig = musicPlayerViewModel.lrcServer.lrcConfig,
+                            onSetLrcOffset = { offsetMs ->
+                                coroutineScope.launch {
+                                    musicPlayerViewModel.lrcServer. updateLrcConfig(offsetMs)
+                                }
+                            }
                         )
                     }
                 }

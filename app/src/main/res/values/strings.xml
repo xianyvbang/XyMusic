@@ -421,5 +421,8 @@
     <string name="test_connection">测试连接</string>
     <string name="open_proxy">开启代理</string>
     <string name="save">保存</string>
+    <string name="forward_offset">向前偏移</string>
+    <string name="backward_offset">向后偏移</string>
+    <string name="offset">偏移</string>
 
 </resources>

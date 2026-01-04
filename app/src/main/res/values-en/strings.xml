@@ -425,5 +425,8 @@ Automatic calculation rules for the upper limit of cache:
     <string name="save">Save</string>
     <string name="volume_value_setting">Adjust volume</string>
     <string name="play_settings">Playback transition settings - fade in and fade out</string>
+    <string name="forward_offset">Forward offset</string>
+    <string name="backward_offset">Backward offset</string>
+    <string name="offset">Offset</string>
 
 </resources>

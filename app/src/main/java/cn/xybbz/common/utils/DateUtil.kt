@@ -19,6 +19,7 @@
 package cn.xybbz.common.utils
 
 import android.annotation.SuppressLint
+import android.icu.math.BigDecimal
 import android.icu.util.Calendar
 import android.text.format.DateFormat
 import java.time.Instant
@@ -120,6 +121,12 @@ object DateUtil {
             seconds > 0 -> "${seconds}s"
             else -> "${ms}ms"
         }
+    }
+
+    fun Long.toSecondMs():Float {
+        val div = BigDecimal(this).divide(BigDecimal.valueOf(1000), 2,
+            BigDecimal.ROUND_HALF_UP)
+        return div.toFloat()
     }
 
 }

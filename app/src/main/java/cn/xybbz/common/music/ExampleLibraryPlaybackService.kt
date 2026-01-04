@@ -150,11 +150,20 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                 Log.i("exoPlayer", "当前播放状态$isPlaying")
                 musicController.updateState(if (isPlaying) PlayStateEnum.Playing else PlayStateEnum.Pause)
                 if (isPlaying) {
+                    musicController.progressTicker.start()
                     musicController.reportedPlayEvent()
                 } else if (musicController.state != PlayStateEnum.Loading) {
+                    musicController.progressTicker.stop()
                     musicController.reportedPauseEvent()
+                }else {
+                    musicController.progressTicker.stop()
                 }
+            }
 
+            override fun onPlaybackStateChanged(state: Int) {
+                if (state == Player.STATE_ENDED || state == Player.STATE_IDLE) {
+                    musicController.progressTicker.stop()
+                }
             }
         })
 
