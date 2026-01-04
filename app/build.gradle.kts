@@ -163,6 +163,8 @@ dependencies {
     // For exposing and controlling media sessions
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.media3.exoplayer.hls)
+    implementation(libs.androidx.media3.inspector)
+
 
     //moshi 数据解析 类似json
 //    implementation(libs.squareup.converter.moshi)

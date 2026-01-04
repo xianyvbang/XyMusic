@@ -26,6 +26,8 @@ import android.os.Bundle
 import android.util.Log
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.ForwardingPlayer
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.util.Assertions
 import androidx.media3.common.util.UnstableApi
@@ -38,6 +40,7 @@ import androidx.media3.exoplayer.audio.AudioOutput
 import androidx.media3.exoplayer.audio.AudioOutputProvider
 import androidx.media3.exoplayer.audio.AudioTrackAudioOutputProvider
 import androidx.media3.exoplayer.audio.ForwardingAudioOutputProvider
+import androidx.media3.inspector.MetadataRetriever
 import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
@@ -58,6 +61,7 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.ListeningExecutorService
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.IOException
 import javax.inject.Inject
 
 
@@ -141,10 +145,11 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
             })
             .build()
 
+
         //这里的可以获得元数据
         exoPlayer?.addAnalyticsListener(XyLogger(lrcServer = lrcServer))
-
         exoPlayer?.addListener(object : Player.Listener {
+
             override fun onIsPlayingChanged(isPlaying: Boolean) {
 
                 Log.i("exoPlayer", "当前播放状态$isPlaying")
@@ -164,6 +169,10 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                 if (state == Player.STATE_ENDED || state == Player.STATE_IDLE) {
                     musicController.progressTicker.stop()
                 }
+            }
+
+            override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+
             }
         })
 
@@ -362,6 +371,19 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
         val player = mediaSession?.player
         if (player?.playWhenReady == false || player?.mediaItemCount == 0) {
             stopSelf()
+        }
+    }
+
+    fun getMediaData(mediaItem: MediaItem){
+        try {
+            MetadataRetriever.Builder(this.applicationContext, mediaItem).build().use { metadataRetriever ->
+                val trackGroups = metadataRetriever.retrieveTrackGroups().await()
+                val timeline = metadataRetriever.retrieveTimeline().await()
+                val durationUs = metadataRetriever.retrieveDurationUs().await()
+//                handleMetadata(trackGroups, timeline, durationUs)
+            }
+        } catch (e: IOException) {
+//            handleFailure(e)
         }
     }
 
