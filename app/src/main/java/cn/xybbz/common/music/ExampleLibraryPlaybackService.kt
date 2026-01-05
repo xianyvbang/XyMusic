@@ -26,7 +26,6 @@ import android.os.Bundle
 import android.util.Log
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.ForwardingPlayer
-import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.Player.PlayWhenReadyChangeReason
 import androidx.media3.common.util.Assertions
@@ -167,16 +166,6 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
 
             override fun onPlayWhenReadyChanged(playWhenReady: Boolean,@PlayWhenReadyChangeReason reason: Int) {
                 musicController.updateState(if (playWhenReady) PlayStateEnum.Playing else PlayStateEnum.Pause)
-            }
-
-            override fun onPlaybackStateChanged(state: Int) {
-                /*if (state == Player.STATE_ENDED || state == Player.STATE_IDLE) {
-                    musicController.progressTicker.stop()
-                }*/
-            }
-
-            override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata){
-
             }
         })
 
