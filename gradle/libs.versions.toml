@@ -42,6 +42,7 @@ androidx-media3-datasource-okhttp = { module = "androidx.media3:media3-datasourc
 androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3ExoplayerVersion" }
 androidx-media3-exoplayer-hls = { module = "androidx.media3:media3-exoplayer-hls", version.ref = "media3ExoplayerVersion" }
 androidx-media3-session = { module = "androidx.media3:media3-session", version.ref = "media3ExoplayerVersion" }
+androidx-media3-inspector = { group = "androidx.media3", name = "media3-inspector", version.ref = "media3ExoplayerVersion" }
 androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "pagingRuntimeKtxVersion" }
 androidx-paging-runtime-ktx = { module = "androidx.paging:paging-runtime-ktx", version.ref = "pagingRuntimeKtxVersion" }
 androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "constraintlayoutVersion" }
@@ -89,6 +90,7 @@ google-hilt-navigation = { module = "androidx.hilt:hilt-navigation-compose", ver
 google-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltWork" }
 tinypinyin = { module = "com.github.promeg:tinypinyin", version.ref = "tinypinyin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
+kotlinx-coroutines-guava = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-guava", version.ref = "kotlinxCoroutinesCore" }
 
 
 [plugins]

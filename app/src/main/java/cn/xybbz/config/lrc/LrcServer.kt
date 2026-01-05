@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.config.lrc
 
 import android.util.Log
@@ -6,10 +24,15 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.enums.AllDataEnum
 import cn.xybbz.common.enums.LrcDataType
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.CoroutineScopeUtils
+import cn.xybbz.common.utils.LrcUtils.getIndex
+import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.entity.data.LrcEntryData
+import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.data.lrc.XyLrcConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -20,7 +43,9 @@ import javax.inject.Singleton
 @Singleton
 class LrcServer @Inject constructor(
     private val musicController: MusicController,
-    private val ataSourceManager: DataSourceManager
+    private val ataSourceManager: DataSourceManager,
+    private val db: DatabaseClient,
+    private val connectionConfigServer: ConnectionConfigServer
 ) {
 
     /**
@@ -34,21 +59,26 @@ class LrcServer @Inject constructor(
     var lrcText by mutableStateOf<String?>(null)
         private set
 
-    var itemId by mutableStateOf<String?>(null)
+    var itemId by mutableStateOf<String>("")
         private set
 
     val lrcCoroutineScope = CoroutineScopeUtils.getIo("LrcServer")
+
+    var lrcConfig: XyLrcConfig? by mutableStateOf(null)
+        private set
 
     init {
         lrcCoroutineScope.launch {
             musicController.progressStateFlow.collect { progress ->
                 _lcrEntryListFlow.value.let { lcrEntryList ->
                     //播放器的播放进度，单位毫秒
-                    val index =
-                        lcrEntryList.indexOfFirst { item -> item.startTime <= progress && progress < item.endTime }
-                    if (index >= 0) {
-                        this@LrcServer.indexData = index
-                        this@LrcServer.lrcText = lcrEntryList[index].displayText
+                    if (lcrEntryList.isNotEmpty()){
+                        val index = lcrEntryList.getIndex(progress, getLrcConfig(itemId).lrcOffsetMs)
+//                        lcrEntryList.indexOfFirst { item -> item.startTime <= progress && progress < item.endTime }
+                        if (index >= 0) {
+                            this@LrcServer.indexData = index
+                            this@LrcServer.lrcText = lcrEntryList[index].displayText
+                        }
                     }
                 }
             }
@@ -60,7 +90,7 @@ class LrcServer @Inject constructor(
      */
     fun getMusicLyricList() {
         lrcCoroutineScope.launch {
-            if (_lcrEntryListFlow.value.isNotEmpty())
+            if (_lcrEntryListFlow.value.isEmpty())
                 musicController.musicInfo?.itemId?.let { itemId ->
                     val musicLyricList = ataSourceManager.getMusicLyricList(itemId)
                     if (!musicLyricList.isNullOrEmpty())
@@ -79,6 +109,13 @@ class LrcServer @Inject constructor(
         lrcText = null
         indexData = -1
         if (!lrcList.isNullOrEmpty()) {
+            lrcCoroutineScope.launch {
+                musicController.musicInfo?.itemId?.let { itemId ->
+                    initLrcConfig(itemId)
+                    this@LrcServer.itemId = itemId
+                }
+            }
+
             val list = lrcList.sortedBy { it.startTime }
             for (i in list.indices) {
                 if (i == list.size - 1) {
@@ -100,6 +137,40 @@ class LrcServer @Inject constructor(
         }
         lrcText = null
         indexData = -1
+    }
+
+    suspend fun initLrcConfig(itemId: String) {
+        this.lrcConfig = db.lrcConfigDao.getLrcConfig(itemId) ?: XyLrcConfig(
+            itemId = itemId,
+            lrcOffsetMs = 0L,
+            connectionId = connectionConfigServer.getConnectionId()
+        )
+    }
+
+    fun getLrcConfig(itemId: String): XyLrcConfig {
+        return this.lrcConfig ?: XyLrcConfig(
+            itemId = itemId,
+            lrcOffsetMs = 0L,
+            connectionId = connectionConfigServer.getConnectionId()
+        )
+    }
+
+    suspend fun updateLrcConfig(offsetMs: Long) {
+        val config = getLrcConfig(itemId)
+        lrcConfig = config.copy(lrcOffsetMs = offsetMs)
+        if (config.id != AllDataEnum.All.code) {
+            val xyLrcConfig =
+                XyLrcConfig(
+                    itemId = itemId,
+                    lrcOffsetMs = offsetMs,
+                    connectionId = connectionConfigServer.getConnectionId()
+                )
+
+            val id = db.lrcConfigDao.insert(xyLrcConfig)
+            this.lrcConfig = xyLrcConfig.copy(id = id)
+        } else {
+            db.lrcConfigDao.update(config)
+        }
     }
 
 }

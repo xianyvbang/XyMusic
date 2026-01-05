@@ -1,6 +1,26 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.ui.components.lrc
 
+import android.util.Log
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -13,10 +33,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,9 +44,21 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Remove
+import androidx.compose.material.icons.rounded.RestartAlt
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -36,6 +68,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -44,17 +77,25 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
+import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.common.utils.LrcUtils.formatTime
+import cn.xybbz.common.utils.LrcUtils.getIndex
+import cn.xybbz.entity.data.LrcConfigData
 import cn.xybbz.entity.data.LrcEntryData
+import cn.xybbz.localdata.data.lrc.XyLrcConfig
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumn
+import cn.xybbz.ui.xy.XyItemText
 import cn.xybbz.viewmodel.LrcViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -63,15 +104,32 @@ import kotlinx.coroutines.launch
 //歌词横向的padding
 private val lyricHorizontalPadding = 30.dp
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun LrcViewNewCompose(
     modifier: Modifier = Modifier,
     lcrEntryList: List<LrcEntryData>,
+    lrcConfig: XyLrcConfig?,
+    onSetLrcOffset: (Long) -> Unit,
     lrcViewModel: LrcViewModel = hiltViewModel(),
     listState: LazyListState = rememberLazyListState(),
 ) {
 
     val coroutineScope = rememberCoroutineScope()
+
+    var tmpOffsetMs by remember {
+        mutableStateOf(lrcConfig?.lrcOffsetMs ?: 0L)
+    }
+    var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
+
+
+    DisposableEffect(Unit) {
+        Log.i("=====", "歌词偏移 ${lrcConfig?.lrcOffsetMs}")
+        onDispose {
+            fabMenuExpanded = false
+        }
+    }
+
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val density = LocalDensity.current
 
@@ -83,7 +141,7 @@ fun LrcViewNewCompose(
                 (maxWidth - lyricHorizontalPadding * 2).roundToPx()
             }
         }
-        val verticalContentPadding = maxHeight / 2
+        val verticalContentPadding = maxHeight / 2 - XyTheme.dimens.outerVerticalPadding
         //获取歌词列表
 
         // 记录拖到哪一行
@@ -122,8 +180,7 @@ fun LrcViewNewCompose(
                 currentTimeMillis = it
                 lcrEntryList.let { lcrEntryList ->
                     //播放器的播放进度，单位毫秒
-                    val index =
-                        lcrEntryList.indexOfFirst { item -> item.startTime <= it && it < item.endTime }
+                    val index = lcrEntryList.getIndex(it, tmpOffsetMs)
                     if (index >= 0) {
                         this.value = index
                     }
@@ -162,97 +219,132 @@ fun LrcViewNewCompose(
             }
 
         }
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(lyricWidth.dp)
+        ) {
 
-        AnimatedContent(targetState = lcrEntryList.isEmpty(),label = "Animated Content"){isEmpty->
-            if (!isEmpty)
-            Box(modifier = Modifier.width(lyricWidth.dp)) {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .detectDragState { dragging ->
-                            isDragState.value = dragging
-                        },
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    contentPadding = PaddingValues(
-                        vertical = verticalContentPadding
-                    ),
-                ) {
-                    itemsIndexed(lcrEntryList) { index, line ->
+            AnimatedContent(
+                targetState = lcrEntryList.isEmpty(),
+                label = "Animated Content"
+            ) { isEmpty ->
 
-                        if (line.wordTimings.size > 1) {
-                            KaraokeLyricLineNew(
-                                line = line,
-                                highlight = index == playIndex,
-                                currentTimeMillis = currentTimeMillis,
-                                onClick = {
-                                    lrcViewModel.seekTo(line.startTime)
-                                    coroutineScope.launch {
-                                        listState.animateScrollToItem(index)
+                if (!isEmpty) {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .detectDragState { dragging ->
+                                isDragState.value = dragging
+                            },
+                        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        contentPadding = PaddingValues(
+                            vertical = verticalContentPadding
+                        ),
+                    ) {
+                        itemsIndexed(lcrEntryList) { index, line ->
+
+                            if (line.wordTimings.size > 1) {
+                                KaraokeLyricLineNew(
+                                    line = line,
+                                    highlight = index == playIndex,
+                                    currentTimeMillis = currentTimeMillis,
+                                    onClick = {
+                                        lrcViewModel.seekTo(line.startTime)
+                                        coroutineScope.launch {
+                                            listState.animateScrollToItem(index)
+                                        }
                                     }
-                                }
+                                )
+                            } else {
+                                KaraokeLyricLineNew(
+                                    line = line,
+                                    highlight = index == playIndex,
+                                    onClick = {
+                                        lrcViewModel.seekTo(line.startTime)
+                                        coroutineScope.launch {
+                                            listState.animateScrollToItem(index)
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+
+                    if (isDragState.value && dragLineIndex in lcrEntryList.indices) {
+                        val dragLine = lcrEntryList[dragLineIndex]
+
+                        // 绘制辅助线和时间
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.Center)
+                                .padding(vertical = 8.dp)
+
+                        ) {
+                            HorizontalDivider(
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp)
+                                    .fillMaxWidth(),
+                                thickness = 1.dp,
+                                color = Color.Gray
                             )
-                        } else {
-                            KaraokeLyricLineNew(
-                                line = line,
-                                highlight = index == playIndex,
-                                onClick = {
-                                    lrcViewModel.seekTo(line.startTime)
-                                    coroutineScope.launch {
-                                        listState.animateScrollToItem(index)
-                                    }
-                                }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = formatTime(dragLine.startTime),
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                modifier = Modifier
+                                    .align(Alignment.CenterHorizontally)
+                                    .background(Color.Black.copy(alpha = 0.5f))
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    .clip(RoundedCornerShape(4.dp))
                             )
                         }
-
-
                     }
 
-                }
-
-
-                if (isDragState.value && dragLineIndex in lcrEntryList.indices) {
-                    val dragLine = lcrEntryList[dragLineIndex]
-
-                    // 绘制辅助线和时间
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.Center)
-                            .padding(vertical = 8.dp)
-
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        HorizontalDivider(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .fillMaxWidth(),
-                            thickness = 1.dp,
-                            color = Color.Gray
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = formatTime(dragLine.startTime),
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            modifier = Modifier
-                                .align(Alignment.CenterHorizontally)
-                                .background(Color.Black.copy(alpha = 0.5f))
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                                .clip(RoundedCornerShape(4.dp))
+                            text = stringResource(R.string.no_lyrics),
+                            modifier = Modifier.align(Alignment.Center)
                         )
                     }
                 }
             }
-            else {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = stringResource(R.string.no_lyrics))
-                }
-            }
+
+            LrcConfigComponent(
+                modifier = Modifier.align(Alignment.CenterEnd),
+                onTmpOffsetMillis = { tmpOffsetMs },
+                onFabMenuExpanded = { fabMenuExpanded },
+                onSetFabMenuExpanded = { fabMenuExpanded = it },
+                onSetLrcOffset = {
+                    onSetLrcOffset(it)
+                },
+                onSetTmpLrcOffset = { offset ->
+                    tmpOffsetMs = offset
+                })
+
+            SuggestionChip(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = XyTheme.dimens.outerHorizontalPadding),
+                colors = SuggestionChipDefaults.suggestionChipColors(containerColor = Color.Gray),
+                onClick = {
+                    //生成调整事件
+                    fabMenuExpanded = !fabMenuExpanded
+                },
+                label = {
+                    Text(text = "LRC")
+                })
         }
+
 
     }
 
@@ -278,7 +370,7 @@ fun KaraokeLyricLineNew(
     XyColumn(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(XyTheme.dimens.itemHeight)
+//            .heightIn(XyTheme.dimens.itemHeight)
             .debounceClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
@@ -330,7 +422,7 @@ fun KaraokeLyricLineNew(
     XyColumn(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(XyTheme.dimens.itemHeight)
+//            .heightIn(XyTheme.dimens.itemHeight)
             .debounceClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
@@ -373,6 +465,70 @@ fun KaraokeLyricLineNew(
                     .fillMaxWidth(animatedProgress)
                     .background(Color.Cyan.copy(alpha = 0.8f))
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
+@Composable
+private fun LrcConfigComponent(
+    modifier: Modifier = Modifier,
+    onTmpOffsetMillis: () -> Long,
+    onFabMenuExpanded: () -> Boolean,
+    onSetFabMenuExpanded: (Boolean) -> Unit,
+    onSetLrcOffset: (Long) -> Unit,
+    onSetTmpLrcOffset: (Long) -> Unit
+) {
+
+    var offsetMillis by remember {
+        mutableStateOf(onTmpOffsetMillis())
+    }
+
+    val items =
+        listOf(
+            LrcConfigData(Icons.Rounded.Add, stringResource(R.string.forward_offset), {
+                offsetMillis += 500
+                onSetTmpLrcOffset(offsetMillis)
+            }),
+            LrcConfigData(Icons.Rounded.Remove, stringResource(R.string.backward_offset), {
+                offsetMillis -= 500
+                onSetTmpLrcOffset(offsetMillis)
+            }),
+            LrcConfigData(Icons.Rounded.RestartAlt, stringResource(R.string.reset), {
+                offsetMillis = 0
+                onSetTmpLrcOffset(offsetMillis)
+            }),
+            LrcConfigData(Icons.Rounded.Check, stringResource(R.string.confirm), {
+                onSetLrcOffset(offsetMillis)
+                onSetFabMenuExpanded(false)
+            })
+        )
+
+
+    AnimatedVisibility(
+        visible = onFabMenuExpanded(),
+        label = "lrcConfigScreen",
+        modifier = modifier.padding(end = XyTheme.dimens.outerHorizontalPadding)
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            XyItemText(text = "${stringResource(R.string.offset)}: ${offsetMillis.toSecondMs()}s")
+            items.forEachIndexed { index, item ->
+                AssistChip(
+                    modifier = Modifier.semantics {
+                        isTraversalGroup = true
+                        // Add a custom a11y action to allow closing the menu when focusing
+                        // the last menu item, since the close button comes before the first
+                        // menu item in the traversal order.
+                        contentDescription = item.title
+                    },
+                    onClick = {
+                        item.onClick()
+                    }, label = {
+                        XyItemText(text = item.title)
+                    }, leadingIcon = {
+                        Icon(item.icon, contentDescription = null)
+                    })
+            }
         }
     }
 }

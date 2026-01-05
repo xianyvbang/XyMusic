@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.common.utils
 
 import android.text.TextUtils
@@ -14,10 +32,6 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
 import java.util.regex.Pattern
-import kotlin.collections.isNotEmpty
-import kotlin.collections.isNullOrEmpty
-import kotlin.collections.sort
-import kotlin.collections.sortedBy
 
 
 object LrcUtils {
@@ -175,7 +189,7 @@ object LrcUtils {
     /**
      * 获取网络文本，需要在工作线程中执行
      */
-   private fun getContentFromNetwork(url: String?, charset: String? = null): NetworkLrcDto {
+    private fun getContentFromNetwork(url: String?, charset: String? = null): NetworkLrcDto {
         //歌词数据
         var lrcText = ""
         //是否返回数据
@@ -198,13 +212,19 @@ object LrcUtils {
                 bos.close()
                 lrcText = bos.toString(charset ?: "utf-8")
             }
-            if (lrcText.isNotBlank()){
+            if (lrcText.isNotBlank()) {
                 ifOk = true
             }
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        return NetworkLrcDto(ifOk,lrcText)
+        return NetworkLrcDto(ifOk, lrcText)
+    }
+
+    fun List<LrcEntryData>.getIndex(progress: Long, offsetMs: Long): Int {
+        val index =
+            this.indexOfFirst { item -> (item.startTime + offsetMs) <= progress && progress < (item.endTime + offsetMs) }
+        return index
     }
 
 }
