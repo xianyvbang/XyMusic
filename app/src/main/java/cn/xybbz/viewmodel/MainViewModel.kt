@@ -168,10 +168,6 @@ class MainViewModel @Inject constructor(
                     is PlayerEvent.RemovePlaybackProgress -> {
                         removePlaybackProgress(it.musicId)
                     }
-
-                    is PlayerEvent.UpdateMusicPicData -> {
-                        onUpdateMusicPicData(it.musicId, it.data)
-                    }
                 }
             }
         }
@@ -213,8 +209,6 @@ class MainViewModel @Inject constructor(
                 alarmConfig.scheduleNextReport()
             }
 
-
-            Log.i("上报", "上报333333")
         }
 
     }
@@ -236,12 +230,9 @@ class MainViewModel @Inject constructor(
                     positionTicks = musicController.currentPosition
                 )
             }
-
-            Log.i("上报", "上报44444")
         }
 
         cacheController.pauseCache(musicUrl)
-        Log.i("=====", "调用暂停方法")
         setPlayerProgress(musicController.currentPosition)
     }
 
@@ -316,35 +307,6 @@ class MainViewModel @Inject constructor(
                 setPlayerType(playerTypeEnum)
             } else {
                 savePlayerType(playerTypeEnum)
-            }
-        }
-    }
-
-    fun onUpdateMusicPicData(musicId: String, picByte: ByteArray?) {
-        viewModelScope.launch {
-            if (musicController.musicInfo?.pic.isNullOrBlank() && musicId.isNotBlank()) {
-                Log.i("image", "更新图片数据 --- ${musicId}")
-                //判断传过来的itemId和有picByte不为空的playQueueMusic的musicId一致,并且playQueueMusic的图片字节不为空,则不清空数据
-                val picByteNotNullPlayQueueMusic = db.musicDao.selectPlayQueueByPicByteNotNull()
-                if (picByteNotNullPlayQueueMusic != null && picByteNotNullPlayQueueMusic.musicId != musicId) {
-                    db.musicDao.removePlayQueueMusicPicByte()
-                    Log.i("image", "清空图片数据")
-                }
-                //更新存储封面
-                val playQueueMusic = db.musicDao.selectPlayQueueByItemId(musicId)
-                Log.i(
-                    "image",
-                    "更新图片数据1${playQueueMusic} ----- 图片数据${picByte?.isNotEmpty()}"
-                )
-                if (playQueueMusic != null && playQueueMusic.picByte == null && picByte?.isNotEmpty() == true) {
-                    Log.i("image", "更新图片数据2${musicId} --- ")
-                    db.musicDao.updatePlayQueueMusicPicByte(
-                        musicId,
-                        picByte
-                    )
-                }
-            } else {
-                db.musicDao.removePlayQueueMusicPicByte()
             }
         }
     }

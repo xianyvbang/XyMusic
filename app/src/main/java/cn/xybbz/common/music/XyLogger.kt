@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.common.music
 
 import android.annotation.SuppressLint
@@ -33,12 +51,7 @@ import androidx.media3.exoplayer.drm.DrmSession
 import androidx.media3.exoplayer.source.LoadEventInfo
 import androidx.media3.exoplayer.source.MediaLoadData
 import androidx.media3.extractor.metadata.id3.BinaryFrame
-import androidx.media3.extractor.metadata.id3.CommentFrame
-import androidx.media3.extractor.metadata.id3.TextInformationFrame
-import androidx.media3.extractor.metadata.vorbis.VorbisComment
-import cn.xybbz.common.enums.LrcDataType
-import cn.xybbz.common.utils.LrcUtils
-import cn.xybbz.config.lrc.LrcServer
+import cn.xybbz.config.media.MediaServer
 import java.io.IOException
 import java.nio.charset.Charset
 import java.text.NumberFormat
@@ -50,7 +63,7 @@ import kotlin.math.min
 /** Logs events from [Player] and other core components using [Log].  */
 class XyLogger @JvmOverloads constructor(
     private val tag: String = DEFAULT_TAG,
-    private val lrcServer: LrcServer
+    private val mediaServer: MediaServer
 ) :
     AnalyticsListener {
     private val window: Timeline.Window
@@ -556,34 +569,7 @@ class XyLogger @JvmOverloads constructor(
 
     @OptIn(UnstableApi::class)
     private fun printMetadata(metadata: Metadata, prefix: String) {
-        for (i in 0..<metadata.length()) {
-            val entry = metadata.get(i)
-            logd(prefix + entry)
-            when (entry) {
-                is TextInformationFrame -> {
-                }
-
-                is CommentFrame -> {
-                }
-
-                is BinaryFrame -> {
-                    val readMp3Lyrics = readMp3Lyrics(entry)
-                    Log.d("Lyrics", "USLT Lyrics found: $readMp3Lyrics")
-                    if (!readMp3Lyrics.isNullOrBlank()) {
-                        lrcServer.createLrcList(LrcUtils.parseLrc(readMp3Lyrics), LrcDataType.FILE)
-                    }
-                }
-
-                is VorbisComment -> {
-                    // flac
-                    if (entry.key.equals("LYRICS", true)) {
-                        Log.d("Lyrics", "FLAC Lyrics found: ${entry.value}")
-                        lrcServer.createLrcList(LrcUtils.parseLrc(entry.value), LrcDataType.FILE)
-                    }
-                }
-            }
-        }
-        lrcServer.getMusicLyricList()
+        mediaServer.printMetadata(metadata, prefix)
     }
 
     fun readMp3Lyrics(entry: BinaryFrame): String? {

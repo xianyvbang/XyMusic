@@ -26,9 +26,9 @@ import android.os.Bundle
 import android.util.Log
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.ForwardingPlayer
-import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
+import androidx.media3.common.Player.PlayWhenReadyChangeReason
 import androidx.media3.common.util.Assertions
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSourceBitmapLoader
@@ -40,7 +40,6 @@ import androidx.media3.exoplayer.audio.AudioOutput
 import androidx.media3.exoplayer.audio.AudioOutputProvider
 import androidx.media3.exoplayer.audio.AudioTrackAudioOutputProvider
 import androidx.media3.exoplayer.audio.ForwardingAudioOutputProvider
-import androidx.media3.inspector.MetadataRetriever
 import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
@@ -54,6 +53,7 @@ import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
 import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.config.lrc.LrcServer
+import cn.xybbz.config.media.MediaServer
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import com.google.common.collect.ImmutableList
@@ -61,8 +61,6 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.ListeningExecutorService
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.guava.await
-import java.io.IOException
 import javax.inject.Inject
 
 
@@ -106,6 +104,9 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
     @Inject
     lateinit var fadeController: AudioFadeController
 
+    @Inject
+    lateinit var mediaServer: MediaServer
+
 
     override fun onCreate() {
         super.onCreate()
@@ -148,31 +149,33 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
 
 
         //这里的可以获得元数据
-        exoPlayer?.addAnalyticsListener(XyLogger(lrcServer = lrcServer))
+        exoPlayer?.addAnalyticsListener(XyLogger(mediaServer = mediaServer))
         exoPlayer?.addListener(object : Player.Listener {
 
             override fun onIsPlayingChanged(isPlaying: Boolean) {
-
-                Log.i("exoPlayer", "当前播放状态$isPlaying")
-                musicController.updateState(if (isPlaying) PlayStateEnum.Playing else PlayStateEnum.Pause)
+                Log.i("music", "当前播放状态$isPlaying")
                 if (isPlaying) {
                     musicController.progressTicker.start()
                     musicController.reportedPlayEvent()
                 } else if (musicController.state != PlayStateEnum.Loading) {
                     musicController.progressTicker.stop()
                     musicController.reportedPauseEvent()
-                }else {
+                } else {
                     musicController.progressTicker.stop()
                 }
+            }
+
+            override fun onPlayWhenReadyChanged(playWhenReady: Boolean,@PlayWhenReadyChangeReason reason: Int) {
+                musicController.updateState(if (playWhenReady) PlayStateEnum.Playing else PlayStateEnum.Pause)
             }
 
             override fun onPlaybackStateChanged(state: Int) {
-                if (state == Player.STATE_ENDED || state == Player.STATE_IDLE) {
+                /*if (state == Player.STATE_ENDED || state == Player.STATE_IDLE) {
                     musicController.progressTicker.stop()
-                }
+                }*/
             }
 
-            override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+            override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata){
 
             }
         })
@@ -201,22 +204,16 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                 Log.i("music", "音乐播放")
                 registerReceiver(myNoisyAudioStreamReceiver, intentFilter)
                 ifRegister = true
-                val state = musicController.state
-
-                Log.i("music", "播放状态2222 ${state}")
-//                musicController.updateState(PlayStateEnum.Playing)
                 super.play()
-                Log.i("music", "播放状态2222 ${state}")
                 fadeController.fadeIn()
             }
 
             override fun pause() {
-//                fadeController.release()
                 Log.i("music", "音乐暂停")
                 if (ifRegister)
                     unregisterReceiver(myNoisyAudioStreamReceiver)
                 ifRegister = false
-//                musicController.updateState(PlayStateEnum.Pause)
+                musicController.updateState(PlayStateEnum.Pause)
                 fadeController.fadeOut {
                     super.pause()
                 }
@@ -273,14 +270,14 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                     val argsValue = args.getString(Constants.MUSIC_PLAY_CUSTOM_COMMAND_TYPE_KEY)
                     //根据args附件参数,进行判断是否是默认行为和主动调用行为
                     Log.i(
-                        "=====",
+                        "music",
                         "点击按钮数据${customCommand.customAction}----附加参数${args}"
                     )
                     customCommand.customExtras
                     if (customCommand.customAction == SAVE_TO_FAVORITES) {
                         // Do custom logic here
 //                            saveToFavorites(session.player.currentMediaItem)
-                        Log.i("=====", "取消收藏音乐")
+                        Log.i("music", "取消收藏音乐")
                         //更新音乐收藏
                         if (!argsValue.equals(Constants.MUSIC_PLAY_CUSTOM_COMMAND_TYPE)) {
                             musicController.musicInfo?.let {
@@ -352,7 +349,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
 
     override fun onDestroy() {
         // 释放相关实例
-        Log.i("=====", "数据释放")
+        Log.i("music", "数据释放")
         exoPlayer?.stop()
         exoPlayer?.release()
         exoPlayer = null
@@ -374,18 +371,4 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
             stopSelf()
         }
     }
-
-    suspend fun getMediaData(mediaItem: MediaItem){
-        try {
-            MetadataRetriever.Builder(this.applicationContext, mediaItem).build().use { metadataRetriever ->
-                val trackGroups = metadataRetriever.retrieveTrackGroups().await()
-                val timeline = metadataRetriever.retrieveTimeline().await()
-                val durationUs = metadataRetriever.retrieveDurationUs().await()
-//                handleMetadata(trackGroups, timeline, durationUs)
-            }
-        } catch (e: IOException) {
-//            handleFailure(e)
-        }
-    }
-
 }

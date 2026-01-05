@@ -42,6 +42,7 @@ class DatasourceConfig {
         Migration_11_12,
         Migration_12_13,
         Migration_13_14,
+        Migration_14_15,
     )
 
     fun createDatabaseClient(context: Context): DatabaseClient {
@@ -282,6 +283,60 @@ class DatasourceConfig {
                 connectionId INTEGER NOT NULL
             )
             """.trimIndent()
+            )
+        }
+    }
+
+    private object Migration_14_15 : Migration(14, 15) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // 1创建新表（不包含 picByte，但包含 PK / FK）
+            db.execSQL(
+                """
+            CREATE TABLE IF NOT EXISTS playqueuemusic_new (
+                musicId TEXT NOT NULL,
+                connectionId INTEGER NOT NULL,
+                `index` INTEGER NOT NULL,
+                cachedAt INTEGER NOT NULL,
+                PRIMARY KEY(musicId, connectionId),
+                FOREIGN KEY(connectionId)
+                    REFERENCES xy_connection_config(id)
+                    ON DELETE CASCADE
+            )
+            """.trimIndent()
+            )
+
+            // 拷贝旧数据（忽略 picByte）
+            db.execSQL(
+                """
+            INSERT INTO playqueuemusic_new (
+                musicId,
+                connectionId,
+                `index`,
+                cachedAt
+            )
+            SELECT
+                musicId,
+                connectionId,
+                `index`,
+                cachedAt
+            FROM playqueuemusic
+            """.trimIndent()
+            )
+
+            // 删除旧表
+            db.execSQL("DROP TABLE playqueuemusic")
+
+            // 重命名新表
+            db.execSQL(
+                "ALTER TABLE playqueuemusic_new RENAME TO playqueuemusic"
+            )
+
+            // 重新创建索引
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS index_playqueuemusic_musicId ON playqueuemusic(musicId)"
+            )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS index_playqueuemusic_connectionId ON playqueuemusic(connectionId)"
             )
         }
     }
