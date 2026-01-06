@@ -657,6 +657,7 @@ class MusicController(
                 prepare()
                 play()
             } else {
+                stop()
                 prepare()
             }
             scope.launch {

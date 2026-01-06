@@ -48,6 +48,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Surface
@@ -67,6 +68,8 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.SpanStyle
@@ -924,5 +927,47 @@ fun XyItemHorizontalSlider(
                 color = Color(0xFFCBCBCB)
             )
         }
+    }
+}
+
+
+@Composable
+fun XyItemRadioButton(
+    modifier: Modifier = Modifier,
+    text: String,
+    sub: String? = null,
+    selected: Boolean,
+    enabled: Boolean = true,
+    onClick: () -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = modifier
+            .fillMaxWidth()
+            .debounceClickable(enabled = enabled) {
+                onClick()
+            }
+            .padding(
+                start = XyTheme.dimens.outerHorizontalPadding,
+                end = XyTheme.dimens.outerHorizontalPadding / 2
+            )
+    ) {
+        XyItemText(
+            text = text,
+            sub = sub,
+            modifier = Modifier.weight(1f)
+        )
+        RadioButton(
+            selected = selected,
+            onClick = {
+                onClick()
+            },
+            enabled = enabled,
+            modifier = Modifier
+                .semantics {
+                    contentDescription = text
+                }
+        )
     }
 }

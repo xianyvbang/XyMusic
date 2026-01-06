@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.client.navidrome
 
 import android.util.Log
@@ -14,6 +32,7 @@ import cn.xybbz.api.client.navidrome.service.NavidromeUserApi
 import cn.xybbz.api.client.navidrome.service.NavidromeUserLibraryApi
 import cn.xybbz.api.client.subsonic.SubsonicApiClient
 import cn.xybbz.api.constants.ApiConstants
+import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.subsonic.ResponseFormatType
 
 class NavidromeApiClient : DefaultParentApiClient() {
@@ -222,7 +241,8 @@ class NavidromeApiClient : DefaultParentApiClient() {
         clientLoginInfoReq: ClientLoginInfoReq
     ) {
         if (!subsonicToken.isNullOrBlank() && !subsonicSalt.isNullOrBlank()
-            && !accessToken.isNullOrBlank() && !userId.isNullOrBlank())
+            && !accessToken.isNullOrBlank() && !userId.isNullOrBlank()
+        )
             createSubsonicApiClient(
                 username = clientLoginInfoReq.username,
                 passwordMd5 = subsonicToken,
@@ -261,8 +281,8 @@ class NavidromeApiClient : DefaultParentApiClient() {
     /**
      * 获得音频url
      */
-    fun createAudioUrl(musicId: String): String {
-        return "${baseUrl}/rest/stream?id=${musicId}&maxBitRate=0"
+    fun createAudioUrl(musicId: String, format: AudioCodecEnum? = AudioCodecEnum.ROW, maxBitRate: Int? = null): String {
+        return "${baseUrl}/rest/stream?id=${musicId}&maxBitRate=${maxBitRate}&format=${format}"
     }
 
 

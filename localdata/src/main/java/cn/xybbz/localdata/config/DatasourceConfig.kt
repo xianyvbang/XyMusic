@@ -43,6 +43,7 @@ class DatasourceConfig {
         Migration_12_13,
         Migration_13_14,
         Migration_14_15,
+        Migration_15_16,
     )
 
     fun createDatabaseClient(context: Context): DatabaseClient {
@@ -337,6 +338,42 @@ class DatasourceConfig {
             )
             db.execSQL(
                 "CREATE INDEX IF NOT EXISTS index_playqueuemusic_connectionId ON playqueuemusic(connectionId)"
+            )
+        }
+    }
+
+    private object Migration_15_16 : Migration(15, 16) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // 是否转码
+            db.execSQL(
+                """
+            ALTER TABLE xy_settings
+            ADD COLUMN ifTranscoding INTEGER NOT NULL DEFAULT 0
+            """.trimIndent()
+            )
+
+            // 转码格式
+            db.execSQL(
+                """
+            ALTER TABLE xy_settings
+            ADD COLUMN transcodeFormat TEXT NOT NULL DEFAULT ''
+            """.trimIndent()
+            )
+
+            // 移动网络音质
+            db.execSQL(
+                """
+            ALTER TABLE xy_settings
+            ADD COLUMN mobileNetworkAudioBitRate INTEGER NOT NULL DEFAULT 0
+            """.trimIndent()
+            )
+
+            // wifi 网络音质
+            db.execSQL(
+                """
+            ALTER TABLE xy_settings
+            ADD COLUMN wifiNetworkAudioBitRate INTEGER NOT NULL DEFAULT 0
+            """.trimIndent()
             )
         }
     }
