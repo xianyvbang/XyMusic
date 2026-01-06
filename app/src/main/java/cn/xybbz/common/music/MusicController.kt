@@ -56,7 +56,10 @@ import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.favorite.FavoriteRepository
+import cn.xybbz.config.setting.OnCacheMaxBytesChangeListener
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.data.music.XyPlayMusic
+import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import com.google.common.util.concurrent.ListenableFuture
@@ -75,7 +78,8 @@ class MusicController(
     private val application: Context,
     private val cacheController: CacheController,
     private val favoriteRepository: FavoriteRepository,
-    private val fadeController: AudioFadeController
+    private val fadeController: AudioFadeController,
+    private val settingsManager: SettingsManager
 ) {
 
     val scope = CoroutineScopeUtils.getIo("MusicController")
@@ -151,6 +155,23 @@ class MusicController(
     private lateinit var controllerFuture: ListenableFuture<MediaController>
     private val mediaController: MediaController?
         get() = if (controllerFuture.isDone) controllerFuture.get() else null
+
+    init {
+
+        settingsManager.setOnCacheUpperLimitListener(object : OnCacheMaxBytesChangeListener {
+            override fun onDestinationChanged(
+                cacheUpperLimit: CacheUpperLimitEnum,
+                oldCacheUpperLimit: CacheUpperLimitEnum
+            ) {
+                if (oldCacheUpperLimit == CacheUpperLimitEnum.No && cacheUpperLimit != CacheUpperLimitEnum.No && state == PlayStateEnum.Playing) {
+                    musicInfo?.let {
+                        cacheController.cacheMedia(it)
+                    }
+                }
+            }
+
+        })
+    }
 
     //https://developer.android.google.cn/guide/topics/media/exoplayer/listening-to-player-events?hl=zh-cn
     private val playerListener = @UnstableApi object : Player.Listener {
@@ -635,7 +656,7 @@ class MusicController(
             if (!ifInitPlayerList) {
                 prepare()
                 play()
-            }else {
+            } else {
                 prepare()
             }
             scope.launch {
@@ -820,7 +841,7 @@ class MusicController(
     }
 
     fun updateState(state: PlayStateEnum) {
-        Log.i("music","是否播放中--- ${mediaController?.isPlaying} --- ${state}")
+        Log.i("music", "是否播放中--- ${mediaController?.isPlaying} --- ${state}")
         this.state = state
     }
 

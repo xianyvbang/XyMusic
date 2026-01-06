@@ -52,8 +52,7 @@ class SettingsManager(
         private set
 
     //监听
-    var onCacheUpperLimitChange: ((CacheUpperLimitEnum) -> Unit)? = null
-        private set
+    val onCacheMaxBytesChangeListeners = mutableListOf<OnCacheMaxBytesChangeListener>()
 
     //缓存设置
     var cacheUpperLimit by mutableStateOf(CacheUpperLimitEnum.Auto)
@@ -102,6 +101,7 @@ class SettingsManager(
      * 设置缓存上限
      */
     suspend fun setCacheUpperLimit(cacheUpperLimit: CacheUpperLimitEnum) {
+        val oldCacheUpperLimit = this.cacheUpperLimit
         this.cacheUpperLimit = cacheUpperLimit
         settings = get().copy(cacheUpperLimit = cacheUpperLimit)
         if (get().id != AllDataEnum.All.code) {
@@ -111,7 +111,12 @@ class SettingsManager(
                 db.settingsDao.save(XySettings(cacheUpperLimit = cacheUpperLimit))
             settings = get().copy(id = settingId)
         }
-        onCacheUpperLimitChange?.invoke(cacheUpperLimit)
+        for (listener in onCacheMaxBytesChangeListeners.toList()) {
+            listener.onDestinationChanged(
+                cacheUpperLimit,
+                oldCacheUpperLimit
+            )
+        }
     }
 
 
@@ -258,8 +263,8 @@ class SettingsManager(
     /**
      * 设置缓存大小监听方法
      */
-    fun setOnCacheUpperLimitListener(onChange: (CacheUpperLimitEnum) -> Unit) {
-        this.onCacheUpperLimitChange = onChange
+    fun setOnCacheUpperLimitListener(onCacheMaxBytesChangeListener: OnCacheMaxBytesChangeListener) {
+        this.onCacheMaxBytesChangeListeners.add(onCacheMaxBytesChangeListener)
     }
 
     /**
