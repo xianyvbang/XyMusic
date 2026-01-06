@@ -252,7 +252,7 @@ class SettingsManager(
      */
     fun setDefaultLanguage(context: Context) {
         val systemLanguage = MultiLanguages.getSystemLanguage(context)
-        this.languageType = LanguageType.Companion.getThis(systemLanguage.toLanguageTag())
+        this.languageType = LanguageType.getThis(systemLanguage.toLanguageTag())
     }
 
     /**
