@@ -34,13 +34,6 @@
 | 收藏功能 |    ✅     |  ✅   |    ✅     |     ✅     |  ✅   |
 | 下载功能 |    ✅     |  ✅   |    ✅     |     ✅     |  ✅ |
 
-## 当前问题和进行中的功能
-
-|          信息          | 备注  |
-|:--------------------:|:---:|
-| 音乐跳转位置的时候缓存也跳转位置进行缓存 |
-|      清理代码,增加注释       | 进行中 |
-
 ## UI展示
 
 ### 主要功能页面
@@ -71,6 +64,7 @@
 - 分页列表加载使用[Paging3](https://developer.android.com/topic/libraries/architecture/paging/v3-overview)
 - 跳转页面使用[Navigation](https://developer.android.com/guide/navigation)
 - 图片显示使用[Coil](https://github.com/coil-kt/coil)
+- 汉字转拼音[TinyPinyin](https://github.com/promeG/TinyPinyin)
   
 
 ## 感谢开源项目
@@ -94,6 +88,8 @@
 [ColorPicker：Kotlin Multiplatform color picker library for getting colors from any images by tapping on the desired color.](https://github.com/skydoves/colorpicker-compose)
 
 [MultiLanguages：Android 多语种适配框架，兼容高版本，适配第三方库语种](https://github.com/getActivity/MultiLanguages)
+
+[TinyPinyin：适用于Java和Android的快速、低内存占用的汉字转拼音库](https://github.com/promeG/TinyPinyin)
 
 ## 使用的免费图片
 
