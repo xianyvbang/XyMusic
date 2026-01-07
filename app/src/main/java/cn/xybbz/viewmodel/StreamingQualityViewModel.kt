@@ -35,15 +35,27 @@ class StreamingQualityViewModel @Inject constructor(
     private val settingsManager: SettingsManager
 ) : ViewModel() {
 
+    /**
+     * 是否转码
+     */
     var ifTranscoding by mutableStateOf(false)
         private set
 
+    /**
+     * 转码格式
+     */
     var transcodeFormat by mutableStateOf(AudioCodecEnum.ROW)
         private set
 
+    /**
+     * 移动网络转码比特率
+     */
     var mobileNetworkAudioBitRate by mutableStateOf(TranscodeAudioBitRateType.MEDIUM)
         private set
 
+    /**
+     * wifi网络转码比特率
+     */
     var wifiNetworkAudioBitRate by mutableStateOf(TranscodeAudioBitRateType.LOSSLESS)
         private set
 
@@ -59,5 +71,25 @@ class StreamingQualityViewModel @Inject constructor(
             TranscodeAudioBitRateType.getTranscodeAudioBitRate(settings.mobileNetworkAudioBitRate)
         wifiNetworkAudioBitRate =
             TranscodeAudioBitRateType.getTranscodeAudioBitRate(settings.wifiNetworkAudioBitRate)
+    }
+
+    suspend fun updateIfTranscoding(ifTranscoding: Boolean){
+        this.ifTranscoding = ifTranscoding
+        settingsManager.setIfTranscoding(ifTranscoding)
+    }
+
+    suspend fun updateMobileNetworkAudioBitRate(mobileNetworkAudioBitRate: TranscodeAudioBitRateType){
+        this.mobileNetworkAudioBitRate = mobileNetworkAudioBitRate
+        settingsManager.setMobileNetworkAudioBitRate(mobileNetworkAudioBitRate.audioBitRate)
+    }
+
+    suspend fun updateWifiNetworkAudioBitRate(wifiNetworkAudioBitRate: TranscodeAudioBitRateType){
+        this.wifiNetworkAudioBitRate = wifiNetworkAudioBitRate
+        settingsManager.setWifiNetworkAudioBitRate(wifiNetworkAudioBitRate.audioBitRate)
+    }
+
+    suspend fun updateTranscodeFormat(transcodeFormat: AudioCodecEnum){
+        this.transcodeFormat = transcodeFormat
+        settingsManager.setTranscodeFormat(transcodeFormat.audioCodec)
     }
 }

@@ -34,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.api.enums.AudioCodecEnum
+import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.MusicSettingSwitchItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
@@ -87,6 +88,21 @@ fun StreamingQualityScreen(
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
             contentPadding = PaddingValues()
         ) {
+
+            item {
+                SettingRoundedSurfaceColumn {
+                    MusicSettingSwitchItemComponent(
+                        title = "任何网络都不转码",
+                        ifChecked = streamingQualityViewModel.ifTranscoding
+                    ) { bol ->
+                        coroutineScope.launch {
+                            streamingQualityViewModel.updateIfTranscoding(bol)
+                        }
+                    }
+                }
+
+            }
+
             item {
                 XyRow(
                     paddingValues = PaddingValues(
@@ -97,7 +113,7 @@ fun StreamingQualityScreen(
                     horizontalArrangement = Arrangement.Start
                 ) {
                     XyItemTitle(
-                        text = "移动网络播放下转码"
+                        text = "移动网络播放音质"
                     )
                 }
 
@@ -105,13 +121,13 @@ fun StreamingQualityScreen(
 
             item {
                 SettingRoundedSurfaceColumn {
-                    AudioCodecEnum.entries.forEach {
+                    TranscodeAudioBitRateType.entries.forEach {
                         XyItemRadioButton(
                             text = it.name,
-                            selected = streamingQualityViewModel.transcodeFormat == it,
+                            selected = streamingQualityViewModel.mobileNetworkAudioBitRate == it,
                             onClick = {
                                 coroutineScope.launch {
-
+                                    streamingQualityViewModel.updateMobileNetworkAudioBitRate(it)
                                 }
                             })
                     }
@@ -119,18 +135,37 @@ fun StreamingQualityScreen(
             }
 
             item {
-                SettingRoundedSurfaceColumn{
-                    MusicSettingSwitchItemComponent(
-                        title = stringResource(R.string.enabled_sync_play_progress),
-                        ifChecked = streamingQualityViewModel.ifTranscoding
-                    ) { bol ->
-                        coroutineScope.launch {
-
-                        }
-                    }
+                XyRow(
+                    paddingValues = PaddingValues(
+                        start = XyTheme.dimens.outerHorizontalPadding,
+                        end = XyTheme.dimens.outerHorizontalPadding,
+                        top = XyTheme.dimens.outerVerticalPadding
+                    ),
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    XyItemTitle(
+                        text = "Wi-Fi网络播放音质"
+                    )
                 }
 
             }
+
+            item {
+                SettingRoundedSurfaceColumn {
+                    TranscodeAudioBitRateType.entries.forEach {
+                        XyItemRadioButton(
+                            text = it.name,
+                            selected = streamingQualityViewModel.wifiNetworkAudioBitRate == it,
+                            onClick = {
+                                coroutineScope.launch {
+                                    streamingQualityViewModel.updateWifiNetworkAudioBitRate(it)
+                                }
+                            })
+                    }
+                }
+            }
+
+
 
             item {
                 XyRow(
@@ -156,7 +191,7 @@ fun StreamingQualityScreen(
                             selected = streamingQualityViewModel.transcodeFormat == it,
                             onClick = {
                                 coroutineScope.launch {
-
+                                    streamingQualityViewModel.updateTranscodeFormat(it)
                                 }
                             })
                     }

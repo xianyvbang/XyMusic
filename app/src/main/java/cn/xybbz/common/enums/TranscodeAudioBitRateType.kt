@@ -18,12 +18,12 @@
 
 package cn.xybbz.common.enums
 
-enum class TranscodeAudioBitRateType(val audioBitRate: Int) {
-    LOSSLESS(0),
-    LOW(128),
-    MEDIUM(192),
-    HIGH(256),
-    HIGHEST(320);
+enum class TranscodeAudioBitRateType(val audioBitRateStr: String, val audioBitRate: Int) {
+    LOSSLESS("不转码", 0),
+    LOW("128K", 128000),
+    MEDIUM("192K", 192000),
+    HIGH("256K", 256000),
+    HIGHEST("320K", 320000);
 
     companion object {
         fun getTranscodeAudioBitRate(audioBitRate: Int): TranscodeAudioBitRateType {

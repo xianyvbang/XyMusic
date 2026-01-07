@@ -359,6 +359,70 @@ class SettingsManager(
     }
 
     /**
+     * 更新移动网络转码比特率
+     */
+    suspend fun setMobileNetworkAudioBitRate(mobileNetworkAudioBitRate: Int) {
+        settings = get().copy(mobileNetworkAudioBitRate = mobileNetworkAudioBitRate)
+        if (get().id != AllDataEnum.All.code) {
+            db.settingsDao.update(
+                get()
+            )
+        } else {
+            val settingId =
+                db.settingsDao.save(XySettings(mobileNetworkAudioBitRate = mobileNetworkAudioBitRate))
+            settings = get().copy(id = settingId)
+        }
+    }
+
+    /**
+     * 更新wifi网络转码比特率
+     */
+    suspend fun setWifiNetworkAudioBitRate(wifiNetworkAudioBitRate: Int) {
+        settings = get().copy(wifiNetworkAudioBitRate = wifiNetworkAudioBitRate)
+        if (get().id != AllDataEnum.All.code) {
+            db.settingsDao.update(
+                get()
+            )
+        } else {
+            val settingId =
+                db.settingsDao.save(XySettings(wifiNetworkAudioBitRate = wifiNetworkAudioBitRate))
+            settings = get().copy(id = settingId)
+        }
+    }
+
+    /**
+     * 更新任意网络是否转码
+     */
+    suspend fun setIfTranscoding(ifTranscoding: Boolean) {
+        settings = get().copy(ifTranscoding = ifTranscoding)
+        if (get().id != AllDataEnum.All.code) {
+            db.settingsDao.update(
+                get()
+            )
+        } else {
+            val settingId =
+                db.settingsDao.save(XySettings(ifTranscoding = ifTranscoding))
+            settings = get().copy(id = settingId)
+        }
+    }
+
+    /**
+     * 更新编码格式
+     */
+    suspend fun setTranscodeFormat(transcodeFormat: String) {
+        settings = get().copy(transcodeFormat = transcodeFormat)
+        if (get().id != AllDataEnum.All.code) {
+            db.settingsDao.update(
+                get()
+            )
+        } else {
+            val settingId =
+                db.settingsDao.save(XySettings(transcodeFormat = transcodeFormat))
+            settings = get().copy(id = settingId)
+        }
+    }
+
+    /**
      * 更新缓存数据目录地址
      */
     fun updateCacheFilePath(path: String) {

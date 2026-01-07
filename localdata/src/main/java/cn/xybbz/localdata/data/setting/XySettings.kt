@@ -85,7 +85,7 @@ data class XySettings(
      */
     val fadeDurationMs: Long = 300L,
     /**
-     * 是否转码
+     * 任意网络是否转码
      */
     val ifTranscoding: Boolean = false,
     /**
@@ -93,11 +93,11 @@ data class XySettings(
      */
     val transcodeFormat: String = "",
     /**
-     * 移动网络音质
+     * 移动网络转码比特率
      */
     val mobileNetworkAudioBitRate: Int = 0,
     /**
-     * wifi网络音质
+     * wifi网络转码比特率
      */
     val wifiNetworkAudioBitRate: Int = 0
 )
