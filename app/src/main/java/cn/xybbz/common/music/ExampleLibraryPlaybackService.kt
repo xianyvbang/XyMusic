@@ -269,7 +269,6 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                         "music",
                         "点击按钮数据${customCommand.customAction}----附加参数${args}"
                     )
-                    customCommand.customExtras
                     if (customCommand.customAction == SAVE_TO_FAVORITES) {
                         // Do custom logic here
 //                            saveToFavorites(session.player.currentMediaItem)

@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.client.subsonic
 
 import android.content.Context
@@ -16,6 +34,7 @@ import cn.xybbz.api.client.subsonic.data.ScrobbleRequest
 import cn.xybbz.api.client.subsonic.data.SongID3
 import cn.xybbz.api.client.subsonic.data.SubsonicArtistsResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
+import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.CollectionType
 import cn.xybbz.api.enums.subsonic.AlbumType
 import cn.xybbz.api.enums.subsonic.Status
@@ -759,7 +778,12 @@ class SubsonicDatasourceServer @Inject constructor(
     /**
      * 获得播放连接
      */
-    override suspend fun getMusicPlayUrl(musicId: String): String {
+    override fun getMusicPlayUrl(
+        musicId: String,
+        static: Boolean,
+        audioCodec: AudioCodecEnum?,
+        audioBitRate: Int?
+    ): String {
         return subsonicApiClient.createAudioUrl(musicId)
     }
 
@@ -1036,7 +1060,6 @@ class SubsonicDatasourceServer @Inject constructor(
                 )
             },
             name = music.title,
-            musicUrl = subsonicApiClient.createAudioUrl(music.id),
             downloadUrl = createDownloadUrl(music.id),
             album = music.albumId,
             albumName = music.album,

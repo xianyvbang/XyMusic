@@ -485,12 +485,12 @@ fun MusicBottomMenuComponent(
                         imageVector = Icons.Outlined.Share,
                         text = stringResource(R.string.share_song),
                         onClick = {
-                            if (URLUtil.isNetworkUrl(music.musicUrl)) {
+                            if (URLUtil.isNetworkUrl(music.downloadUrl)) {
                                 val sendIntent: Intent = Intent().apply {
                                     action = Intent.ACTION_SEND
                                     putExtra(
                                         Intent.EXTRA_TEXT,
-                                        music.musicUrl
+                                        music.downloadUrl
                                     )
 //                                putExtra(Intent.EXTRA_TEXT, "<a href = 'https://www.baidu.com'>百度</a>")
                                     type = "text/plain"
@@ -504,7 +504,7 @@ fun MusicBottomMenuComponent(
                                     action = Intent.ACTION_SEND
                                     putExtra(
                                         Intent.EXTRA_STREAM,
-                                        music.musicUrl
+                                        music.downloadUrl
                                     )
                                     type = "video/*"
                                 }
@@ -1160,10 +1160,6 @@ fun MusicInfoBottomComponent(
                     XyItemTextPadding(
                         text = stringResource(R.string.format),
                         sub = musicInfo.container ?: ""
-                    )
-                    XyItemTextPadding(
-                        text = stringResource(R.string.play_path),
-                        sub = musicInfo.musicUrl
                     )
                     XyItemTextPadding(
                         text = stringResource(R.string.actual_path),

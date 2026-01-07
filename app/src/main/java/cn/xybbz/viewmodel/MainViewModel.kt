@@ -232,7 +232,7 @@ class MainViewModel @Inject constructor(
             }
         }
 
-        cacheController.pauseCache(musicUrl)
+        cacheController.pauseCache(musicId)
         setPlayerProgress(musicController.currentPosition)
     }
 
