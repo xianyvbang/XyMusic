@@ -283,7 +283,9 @@ class MusicController(
             super.onPlayerError(error)
             // 获取播放错误信息
             Log.e("music", "播放报错$error", error)
-            seekToNext()
+            if (state != PlayStateEnum.Pause) {
+                seekToNext()
+            }
         }
 
         //检测播放何时转换为其他媒体项
