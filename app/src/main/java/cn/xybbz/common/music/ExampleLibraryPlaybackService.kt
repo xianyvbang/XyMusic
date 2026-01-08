@@ -172,7 +172,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                     "music",
                     "播放状态改变$playWhenReady --- ${reason} -- ${exoPlayer?.isPlaying}"
                 )
-                musicController.updateState(if (exoPlayer?.isPlaying == true && playWhenReady) PlayStateEnum.Playing else PlayStateEnum.Pause)
+                musicController.updateState(if (playWhenReady) PlayStateEnum.Playing else PlayStateEnum.Pause)
             }
         })
 

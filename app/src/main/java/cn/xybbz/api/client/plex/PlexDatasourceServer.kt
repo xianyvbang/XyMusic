@@ -1091,7 +1091,7 @@ class PlexDatasourceServer @Inject constructor(
     /**
      * 获得最多播放
      */
-    override suspend fun getMostPlayerMusicList() {
+    override suspend fun getMostPlayerMusicList(artistId: String?) {
         val response = getServerMusicList(
             plexListType = PlexListType.all,
             startIndex = 0,

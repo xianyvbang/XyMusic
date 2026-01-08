@@ -606,7 +606,7 @@ class SubsonicDatasourceServer @Inject constructor(
     /**
      * 获得最多播放
      */
-    override suspend fun getMostPlayerMusicList() {
+    override suspend fun getMostPlayerMusicList(artistId: String?) {
         val albumList = subsonicApiClient.itemApi().getAlbumList2(
             type = AlbumType.FREQUENT,
             size = Constants.MIN_PAGE,

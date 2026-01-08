@@ -274,7 +274,7 @@ interface IDataSourceServer {
     /**
      * 获得最多播放
      */
-    suspend fun getMostPlayerMusicList()
+    suspend fun getMostPlayerMusicList(artistId: String?)
 
     /**
      * 获得最新专辑
@@ -411,6 +411,11 @@ interface IDataSourceServer {
         audioBitRate: Int? = null,
         playSessionId: String
     ): String
+
+    /**
+     * 获得相似歌曲列表
+     */
+    fun getSimilarMusicList(musicId: String): Flow<List<XyMusic>?>
 
     /**
      * 释放

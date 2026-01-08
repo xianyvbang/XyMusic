@@ -815,7 +815,7 @@ class DataSourceManager(
     /**
      * 获得最多播放
      */
-    override suspend fun getMostPlayerMusicList() {
+    override suspend fun getMostPlayerMusicList(artistId: String?) {
         try {
             dataSourceServer.getMostPlayerMusicList()
         } catch (e: Exception) {

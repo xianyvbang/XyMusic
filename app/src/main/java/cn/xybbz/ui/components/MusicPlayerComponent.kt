@@ -44,6 +44,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -126,13 +127,21 @@ fun MusicPlayerComponent(
         skipPartiallyExpanded = true
     )
 
+    val horPagerState =
+        rememberPagerState {
+            3
+        }
     val listState = rememberLazyListState()
+    val similarPopularListState = rememberLazyListState()
 
     val bottomSheetScrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 // 这里你可以根据需要自定义滚动逻辑
-                listState.dispatchRawDelta(-available.y)
+                if (horPagerState.currentPage == 1)
+                    listState.dispatchRawDelta(-available.y)
+                else if (horPagerState.currentPage == 2)
+                    similarPopularListState.dispatchRawDelta(-available.y)
                 return Offset(0f, available.y)  // 表示不消费滚动事件
             }
         }
@@ -162,7 +171,9 @@ fun MusicPlayerComponent(
             onSeekToNext = toNext,
             onSeekBack = backNext,
             onSetState = onSetState,
-            listState = listState
+            lrcListState = listState,
+            similarPopularListState = similarPopularListState,
+            horPagerState = horPagerState
         )
     }
 }
@@ -181,13 +192,11 @@ fun MusicPlayerScreen(
     onSeekToNext: () -> Unit,
     onSeekBack: () -> Unit,
     onSetState: (Boolean) -> Unit,
-    listState: LazyListState = rememberLazyListState()
+    lrcListState: LazyListState = rememberLazyListState(),
+    similarPopularListState: LazyListState = rememberLazyListState(),
+    horPagerState: PagerState
 ) {
 
-    val horPagerState =
-        rememberPagerState {
-            2
-        }
     val lcrEntryList by musicPlayerViewModel.lrcServer.lcrEntryListFlow.collectAsState(emptyList())
 
     val cacheScheduleData by musicPlayerViewModel.cacheController._cacheSchedule.collectAsState()
@@ -295,17 +304,19 @@ fun MusicPlayerScreen(
                             )
                         }
 
-                    } else {
+                    } else if (page == 1) {
                         LrcViewNewCompose(
-                            listState = listState,
+                            listState = lrcListState,
                             lcrEntryList = lcrEntryList,
                             lrcConfig = musicPlayerViewModel.lrcServer.lrcConfig,
                             onSetLrcOffset = { offsetMs ->
                                 coroutineScope.launch {
-                                    musicPlayerViewModel.lrcServer. updateLrcConfig(offsetMs)
+                                    musicPlayerViewModel.lrcServer.updateLrcConfig(offsetMs)
                                 }
                             }
                         )
+                    } else {
+                        MusicPlayerSimilarPopularComponent(listState = similarPopularListState)
                     }
                 }
 
@@ -313,7 +324,7 @@ fun MusicPlayerScreen(
                 XyColumn(
                     verticalArrangement = Arrangement.Bottom,
                     modifier = Modifier
-                        /*.weight(2.8f)*/,
+                    /*.weight(2.8f)*/,
                     paddingValues = PaddingValues(0.dp),
                     clipSize = 0.dp,
                     backgroundColor = Color.Transparent
@@ -388,8 +399,10 @@ fun MusicPlayerScreen(
                         }
                     }
 
-                    Column(modifier = Modifier
-                        .fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
                         PlayerCurrentPosition(
                             musicController = musicPlayerViewModel.musicController,
                             onCacheProgress = {

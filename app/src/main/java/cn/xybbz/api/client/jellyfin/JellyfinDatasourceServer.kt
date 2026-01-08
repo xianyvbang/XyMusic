@@ -749,7 +749,7 @@ class JellyfinDatasourceServer @Inject constructor(
     /**
      * 获得最多播放
      */
-    override suspend fun getMostPlayerMusicList() {
+    override suspend fun getMostPlayerMusicList(artistId: String?) {
         val musicList = getServerMusicList(
             startIndex = 0,
             pageSize = Constants.MIN_PAGE,
