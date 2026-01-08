@@ -357,7 +357,7 @@ class SubsonicDatasourceServer @Inject constructor(
         val username = subsonicApiClient.username
         return if (username.isNotBlank()) {
             val playlists = subsonicApiClient.playlistsApi().getPlaylists(username)
-            db.withTransaction{
+            db.withTransaction {
                 db.albumDao.removePlaylist()
                 playlists.subsonicResponse.playlists?.playlist?.let { playlist ->
                     saveBatchAlbum(convertToPlaylists(playlist), MusicDataTypeEnum.PLAYLIST, true)
@@ -782,9 +782,14 @@ class SubsonicDatasourceServer @Inject constructor(
         musicId: String,
         static: Boolean,
         audioCodec: AudioCodecEnum?,
-        audioBitRate: Int?
+        audioBitRate: Int?,
+        playSessionId: String
     ): String {
-        return subsonicApiClient.createAudioUrl(musicId)
+        var audioCodec = audioCodec ?: AudioCodecEnum.ROW
+        if (static) {
+            audioCodec = AudioCodecEnum.ROW
+        }
+        return subsonicApiClient.createAudioUrl(musicId, audioCodec, audioBitRate)
     }
 
     /**

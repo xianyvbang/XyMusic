@@ -109,7 +109,6 @@ class DataSourceManager(
     val dataSourceServerFlow = MutableStateFlow<IDataSourceParentServer?>(null)
 
 
-
     //加载状态
     var loading by mutableStateOf(false)
         private set
@@ -153,7 +152,7 @@ class DataSourceManager(
         login(ifLogin)
     }
 
-    fun login(ifLogin: Boolean = false){
+    fun login(ifLogin: Boolean = false) {
         datasourceCoroutineScope.launch {
             val connectionConfig = db.connectionConfigDao.selectConnectionConfig()
             if (connectionConfig != null) {
@@ -188,7 +187,7 @@ class DataSourceManager(
                 loginStatus = loginState
 //                ifLoginError = false
                 val loginSateInfo = getLoginSateInfo(loginState)
-                Log.i("error","${loginSateInfo}")
+                Log.i("error", "${loginSateInfo}")
                 errorHint = loginSateInfo.errorHint ?: R.string.empty_info
                 errorMessage = loginSateInfo.errorMessage ?: ""
                 ifLoginError = loginSateInfo.isError
@@ -1054,10 +1053,17 @@ class DataSourceManager(
         musicId: String,
         static: Boolean,
         audioCodec: AudioCodecEnum?,
-        audioBitRate: Int?
+        audioBitRate: Int?,
+        playSessionId: String
     ): String {
         return try {
-            dataSourceServer.getMusicPlayUrl(musicId,static,audioCodec,audioBitRate)
+            dataSourceServer.getMusicPlayUrl(
+                musicId,
+                static,
+                audioCodec,
+                audioBitRate,
+                playSessionId
+            )
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获取播放连接失败", e)
             ""

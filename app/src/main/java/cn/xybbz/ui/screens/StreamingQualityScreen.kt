@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -123,7 +124,8 @@ fun StreamingQualityScreen(
                 SettingRoundedSurfaceColumn {
                     TranscodeAudioBitRateType.entries.forEach {
                         XyItemRadioButton(
-                            text = it.name,
+                            text = it.audioBitRateStr,
+                            style = MaterialTheme.typography.titleSmall,
                             selected = streamingQualityViewModel.mobileNetworkAudioBitRate == it,
                             onClick = {
                                 coroutineScope.launch {
@@ -154,7 +156,8 @@ fun StreamingQualityScreen(
                 SettingRoundedSurfaceColumn {
                     TranscodeAudioBitRateType.entries.forEach {
                         XyItemRadioButton(
-                            text = it.name,
+                            text = it.audioBitRateStr,
+                            style = MaterialTheme.typography.titleSmall,
                             selected = streamingQualityViewModel.wifiNetworkAudioBitRate == it,
                             onClick = {
                                 coroutineScope.launch {
@@ -186,14 +189,16 @@ fun StreamingQualityScreen(
             item {
                 SettingRoundedSurfaceColumn {
                     AudioCodecEnum.entries.forEach {
-                        XyItemRadioButton(
-                            text = it.name,
-                            selected = streamingQualityViewModel.transcodeFormat == it,
-                            onClick = {
-                                coroutineScope.launch {
-                                    streamingQualityViewModel.updateTranscodeFormat(it)
-                                }
-                            })
+                        if (it.ifShow)
+                            XyItemRadioButton(
+                                text = it.name,
+                                style = MaterialTheme.typography.titleSmall,
+                                selected = streamingQualityViewModel.transcodeFormat == it,
+                                onClick = {
+                                    coroutineScope.launch {
+                                        streamingQualityViewModel.updateTranscodeFormat(it)
+                                    }
+                                })
                     }
                 }
             }

@@ -35,6 +35,8 @@ import cn.xybbz.localdata.data.setting.XySettings
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.localdata.enums.LanguageType
 import com.hjq.language.MultiLanguages
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -52,7 +54,7 @@ class SettingsManager(
         private set
 
     //监听
-    val onCacheMaxBytesChangeListeners = mutableListOf<OnCacheMaxBytesChangeListener>()
+    val onSettingsChangeListeners = mutableListOf<OnSettingsChangeListener>()
 
     //缓存设置
     var cacheUpperLimit by mutableStateOf(CacheUpperLimitEnum.Auto)
@@ -64,6 +66,10 @@ class SettingsManager(
 
     lateinit var packageInfo: PackageInfo
         private set
+
+    //是否设置转码音质
+    private val _transcodingFlow = MutableSharedFlow<Boolean>(0,extraBufferCapacity = 1)
+    val transcodingFlow = _transcodingFlow.asSharedFlow()
 
     /**
      * 音乐缓存上限
@@ -111,8 +117,8 @@ class SettingsManager(
                 db.settingsDao.save(XySettings(cacheUpperLimit = cacheUpperLimit))
             settings = get().copy(id = settingId)
         }
-        for (listener in onCacheMaxBytesChangeListeners.toList()) {
-            listener.onDestinationChanged(
+        for (listener in onSettingsChangeListeners.toList()) {
+            listener.onCacheMaxBytesChanged(
                 cacheUpperLimit,
                 oldCacheUpperLimit
             )
@@ -263,8 +269,8 @@ class SettingsManager(
     /**
      * 设置缓存大小监听方法
      */
-    fun setOnCacheUpperLimitListener(onCacheMaxBytesChangeListener: OnCacheMaxBytesChangeListener) {
-        this.onCacheMaxBytesChangeListeners.add(onCacheMaxBytesChangeListener)
+    fun setOnListener(onSettingsChangeListener: OnSettingsChangeListener) {
+        this.onSettingsChangeListeners.add(onSettingsChangeListener)
     }
 
     /**
@@ -372,6 +378,8 @@ class SettingsManager(
                 db.settingsDao.save(XySettings(mobileNetworkAudioBitRate = mobileNetworkAudioBitRate))
             settings = get().copy(id = settingId)
         }
+        if (!get().ifTranscoding)
+            sengTranscodingEvent()
     }
 
     /**
@@ -388,6 +396,8 @@ class SettingsManager(
                 db.settingsDao.save(XySettings(wifiNetworkAudioBitRate = wifiNetworkAudioBitRate))
             settings = get().copy(id = settingId)
         }
+        if (!get().ifTranscoding)
+            sengTranscodingEvent()
     }
 
     /**
@@ -404,6 +414,8 @@ class SettingsManager(
                 db.settingsDao.save(XySettings(ifTranscoding = ifTranscoding))
             settings = get().copy(id = settingId)
         }
+
+        sengTranscodingEvent()
     }
 
     /**
@@ -420,6 +432,9 @@ class SettingsManager(
                 db.settingsDao.save(XySettings(transcodeFormat = transcodeFormat))
             settings = get().copy(id = settingId)
         }
+
+        if (!get().ifTranscoding)
+            sengTranscodingEvent()
     }
 
     /**
@@ -427,6 +442,10 @@ class SettingsManager(
      */
     fun updateCacheFilePath(path: String) {
         this.cacheFilePath = path
+    }
+
+    fun sengTranscodingEvent() {
+        _transcodingFlow.tryEmit(true)
     }
 
 }

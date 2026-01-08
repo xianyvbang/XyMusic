@@ -34,7 +34,7 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
 import cn.xybbz.api.client.CacheApiClient
 import cn.xybbz.common.utils.CoroutineScopeUtils
-import cn.xybbz.config.setting.OnCacheMaxBytesChangeListener
+import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.music.CacheTask
 import cn.xybbz.localdata.data.music.XyPlayMusic
@@ -106,8 +106,8 @@ class CacheController(
         )*/
         cacheDataSource = cacheDataSourceFactory.createDataSource()
 
-        settingsManager.setOnCacheUpperLimitListener(object :OnCacheMaxBytesChangeListener {
-            override fun onDestinationChanged(
+        settingsManager.setOnListener(object :OnSettingsChangeListener {
+            override fun onCacheMaxBytesChanged(
                 cacheUpperLimit: CacheUpperLimitEnum,
                 oldCacheUpperLimit: CacheUpperLimitEnum
             ) {

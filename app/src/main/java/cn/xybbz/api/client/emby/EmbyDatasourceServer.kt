@@ -913,9 +913,16 @@ class EmbyDatasourceServer @Inject constructor(
         musicId: String,
         static: Boolean,
         audioCodec: AudioCodecEnum?,
-        audioBitRate: Int?
+        audioBitRate: Int?,
+        playSessionId: String
     ): String {
-        return embyApiClient.createAudioUrl(musicId)
+        return embyApiClient.createAudioUrl(
+            musicId,
+            audioCodec,
+            static,
+            audioBitRate,
+            playSessionId
+        )
     }
 
     /**

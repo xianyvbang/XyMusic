@@ -21,7 +21,6 @@ package cn.xybbz.common.music
 import android.content.ComponentName
 import android.content.Context
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
@@ -60,7 +59,7 @@ import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.network.NetWorkMonitor
-import cn.xybbz.config.setting.OnCacheMaxBytesChangeListener
+import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
@@ -163,8 +162,8 @@ class MusicController(
         get() = if (controllerFuture.isDone) controllerFuture.get() else null
 
     init {
-        settingsManager.setOnCacheUpperLimitListener(object : OnCacheMaxBytesChangeListener {
-            override fun onDestinationChanged(
+        settingsManager.setOnListener(object : OnSettingsChangeListener {
+            override fun onCacheMaxBytesChanged(
                 cacheUpperLimit: CacheUpperLimitEnum,
                 oldCacheUpperLimit: CacheUpperLimitEnum
             ) {
@@ -178,43 +177,58 @@ class MusicController(
     }
 
 
-    private fun replacePlaylistItemUrl() {
-        originMusicList = originMusicList.map {
-            it.setMusicUrl(getMusicUrl(it.itemId, it.plexPlayKey, it.playSessionId))
-            it
-        }
-        musicInfo?.let {
-            it.setMusicUrl(getMusicUrl(it.itemId, it.plexPlayKey, it.playSessionId))
-            cacheController.cancelAllCache()
-            startCache(it)
-        }
-
-        mediaController?.let {
-
-            Handler(it.applicationLooper).post {
-//                val newItems = ArrayList<MediaItem>(it.mediaItemCount)
-
-                for (i in 0 until it.mediaItemCount) {
-                    val oldItem = it.getMediaItemAt(i)
-                    val playMusic = originMusicList[i]
-                    val newUrl =
-                        getMusicUrl(playMusic.itemId, playMusic.plexPlayKey, playMusic.playSessionId)
-
-                    if (i != it.currentMediaItemIndex){
-                        val newItem =  oldItem.buildUpon()
-                            .setUri(newUrl)
-                            .build()
-                        it.removeMediaItem(i)
-                        it.addMediaItem(i, newItem)
-                    }
-
-                }
-                /*val currentIndex = it.currentMediaItemIndex
-                val currentPosition = currentPosition
-                it.setMediaItems(newItems, currentIndex, currentPosition)*/
+    fun replacePlaylistItemUrl() {
+        if (originMusicList.isNotEmpty()) {
+            originMusicList = originMusicList.map {
+                it.setMusicUrl(getMusicUrl(it.itemId, it.plexPlayKey, it.playSessionId))
+                it
             }
+            musicInfo?.let {
+                it.setMusicUrl(getMusicUrl(it.itemId, it.plexPlayKey, it.playSessionId))
+                cacheController.cancelAllCache()
+                startCache(it)
+            }
+
+            if (state == PlayStateEnum.Pause) {
+                mediaController?.replaceMediaItems(
+                    0, originMusicList.size,
+                    originMusicList.map {
+                        musicSetMediaItem(it)
+                    }
+                )
+            } else {
+                val (left, right) = splitListExcludeIndex(originMusicList, curOriginIndex)
+                if (left.isNotEmpty()) {
+                    val leftItem = left.map { item ->
+                        musicSetMediaItem(item)
+                    }
+                    mediaController?.replaceMediaItems(0, curOriginIndex, leftItem)
+                }
+
+                if (right.isNotEmpty()) {
+                    val rightItem = right.map { item ->
+                        musicSetMediaItem(item)
+                    }
+                    mediaController?.replaceMediaItems(
+                        curOriginIndex + 1,
+                        originMusicList.size,
+                        rightItem
+                    )
+                }
+            }
+
         }
     }
+
+    fun <T> splitListExcludeIndex(list: List<T>, index: Int): Pair<List<T>, List<T>> {
+        require(index in list.indices) { "index 越界" }
+
+        val first = list.subList(0, index)
+        val second = list.subList(index + 1, list.size)
+
+        return first to second
+    }
+
 
     //https://developer.android.google.cn/guide/topics/media/exoplayer/listening-to-player-events?hl=zh-cn
     private val playerListener = @UnstableApi object : Player.Listener {
@@ -393,10 +407,7 @@ class MusicController(
 
                     netWorkMonitor.start(
                         onNetworkChange = {
-                            Log.i("music","网络切换")
-                            if (it) {
-                                replacePlaylistItemUrl()
-                            }
+                            settingsManager.sengTranscodingEvent()
                         })
                 }
             }
@@ -762,11 +773,12 @@ class MusicController(
             if (settingsManager.get().ifTranscoding) true else if (audioBitRate == 0) true else false
 
         return dataSourceManager.getMusicPlayUrl(
-            plexPlayKey ?: musicId,
+            if (static) musicId else plexPlayKey ?: musicId,
             static,
             AudioCodecEnum.getAudioCodec(settingsManager.get().transcodeFormat),
-            audioBitRate
-        ) + "&playSessionId=${playSessionId}"
+            audioBitRate,
+            playSessionId
+        )
     }
 
     /**

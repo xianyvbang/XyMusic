@@ -358,13 +358,15 @@ class JellyfinApiClient : DefaultParentApiClient() {
         itemId: String,
         audioCodec: AudioCodecEnum? = null,
         static: Boolean = true,
-        audioBitRate:Int? = null
+        audioBitRate:Int? = null,
+        playSessionId: String
     ): String {
         return getAudioStreamUrl(
             itemId = itemId,
             audioCodec = audioCodec,
             static = static,
-            audioBitRate = audioBitRate
+            audioBitRate = audioBitRate,
+            playSessionId
         )
     }
 
@@ -420,16 +422,18 @@ class JellyfinApiClient : DefaultParentApiClient() {
         itemId: String,
         audioCodec: AudioCodecEnum? = null,
         static: Boolean = true,
-        audioBitRate:Int? = null
+        audioBitRate:Int? = null,
+        playSessionId: String
     ): String {
         return if (audioBitRate == null){
             "${baseUrl}/Audio/${itemId}/stream?" +
                     "deviceId=${deviceId}&static=${static}" +
-                    "&audioCodec=${audioCodec}"
+                    "&audioCodec=${audioCodec}&playSessionId=${playSessionId}"
         }else {
             "${baseUrl}/Audio/${itemId}/stream?" +
                     "deviceId=${deviceId}&static=${static}" +
-                    "&audioCodec=${audioCodec}&audioBitRate=${audioBitRate}"
+                    "&audioCodec=${audioCodec}&audioBitRate=${audioBitRate}" +
+                    "&playSessionId=${playSessionId}"
         }
     }
 

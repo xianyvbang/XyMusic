@@ -119,6 +119,8 @@ class MainViewModel @Inject constructor(
         initGetVersionInfo()
         //初始化媒体库和收藏信息
         initMediaLibraryAndFavoriteSync()
+        //设置转码监听
+        initTranscodeListener()
     }
 
     /**
@@ -653,6 +655,15 @@ class MainViewModel @Inject constructor(
      */
     fun initGetVersionInfo() {
         versionCheckScheduler.enqueueIfNeeded()
+    }
+
+    fun initTranscodeListener(){
+        viewModelScope.launch {
+            settingsManager.transcodingFlow.collect {
+                Log.i("music","数据转码监听${it}")
+                musicController.replacePlaylistItemUrl()
+            }
+        }
     }
 
 }

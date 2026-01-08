@@ -449,3 +449,94 @@ internal object Migration_16_17 : Migration(16, 17) {
         )
     }
 }
+
+
+internal object Migration_17_18 : Migration(17, 18) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        //创建新表（带正确 DEFAULT）
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS xy_settings_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                cacheUpperLimit TEXT NOT NULL,
+                ifDesktopLyrics INTEGER NOT NULL,
+                doubleSpeed REAL NOT NULL,
+                connectionId INTEGER,
+                ifEnableAlbumHistory INTEGER NOT NULL,
+                ifHandleAudioFocus INTEGER NOT NULL,
+                languageType TEXT,
+                latestVersionTime INTEGER NOT NULL,
+                latestVersion TEXT NOT NULL,
+                lasestApkUrl TEXT NOT NULL,
+                maxConcurrentDownloads INTEGER NOT NULL,
+                ifEnableSyncPlayProgress INTEGER NOT NULL,
+                fadeDurationMs INTEGER NOT NULL,
+                ifTranscoding INTEGER NOT NULL,
+                transcodeFormat TEXT NOT NULL DEFAULT 'mp3',
+                mobileNetworkAudioBitRate INTEGER NOT NULL DEFAULT 192000,
+                wifiNetworkAudioBitRate INTEGER NOT NULL
+            )
+            """.trimIndent()
+        )
+
+        //拷贝旧数据（对旧数据兜底）
+        db.execSQL(
+            """
+            INSERT INTO xy_settings_new (
+                id,
+                cacheUpperLimit,
+                ifDesktopLyrics,
+                doubleSpeed,
+                connectionId,
+                ifEnableAlbumHistory,
+                ifHandleAudioFocus,
+                languageType,
+                latestVersionTime,
+                latestVersion,
+                lasestApkUrl,
+                maxConcurrentDownloads,
+                ifEnableSyncPlayProgress,
+                fadeDurationMs,
+                ifTranscoding,
+                transcodeFormat,
+                mobileNetworkAudioBitRate,
+                wifiNetworkAudioBitRate
+            )
+            SELECT
+                id,
+                cacheUpperLimit,
+                ifDesktopLyrics,
+                doubleSpeed,
+                connectionId,
+                ifEnableAlbumHistory,
+                ifHandleAudioFocus,
+                languageType,
+                latestVersionTime,
+                latestVersion,
+                lasestApkUrl,
+                maxConcurrentDownloads,
+                ifEnableSyncPlayProgress,
+                fadeDurationMs,
+                ifTranscoding,
+                CASE
+                    WHEN transcodeFormat IS NULL OR transcodeFormat = ''
+                    THEN 'mp3'
+                    ELSE transcodeFormat
+                END,
+                CASE
+                    WHEN mobileNetworkAudioBitRate IS NULL OR mobileNetworkAudioBitRate = 0
+                    THEN 192000
+                    ELSE mobileNetworkAudioBitRate
+                END,
+                wifiNetworkAudioBitRate
+            FROM xy_settings
+            """.trimIndent()
+        )
+
+        //删除旧表
+        db.execSQL("DROP TABLE xy_settings")
+
+        //重命名
+        db.execSQL("ALTER TABLE xy_settings_new RENAME TO xy_settings")
+    }
+}

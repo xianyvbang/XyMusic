@@ -47,6 +47,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SuggestionChip
@@ -462,6 +463,7 @@ fun XyItemTextLarge(
 fun XyItemText(
     modifier: Modifier = Modifier,
     text: String,
+    style: TextStyle = LocalTextStyle.current,
     sub: String?
 ) {
     Column(
@@ -474,6 +476,7 @@ fun XyItemText(
         Text(
             text = text,
             maxLines = 1,
+            style = style,
             color = MaterialTheme.colorScheme.onSurface,
             overflow = TextOverflow.Ellipsis,
         )
@@ -935,6 +938,7 @@ fun XyItemHorizontalSlider(
 fun XyItemRadioButton(
     modifier: Modifier = Modifier,
     text: String,
+    style: TextStyle = LocalTextStyle.current/* MaterialTheme.typography.titleSmall*/,
     sub: String? = null,
     selected: Boolean,
     enabled: Boolean = true,
@@ -955,6 +959,7 @@ fun XyItemRadioButton(
     ) {
         XyItemText(
             text = text,
+            style = style,
             sub = sub,
             modifier = Modifier.weight(1f)
         )

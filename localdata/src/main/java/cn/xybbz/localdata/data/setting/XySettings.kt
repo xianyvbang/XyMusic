@@ -91,11 +91,11 @@ data class XySettings(
     /**
      * 转码格式
      */
-    val transcodeFormat: String = "",
+    val transcodeFormat: String = "mp3",
     /**
      * 移动网络转码比特率
      */
-    val mobileNetworkAudioBitRate: Int = 0,
+    val mobileNetworkAudioBitRate: Int = 192000,
     /**
      * wifi网络转码比特率
      */

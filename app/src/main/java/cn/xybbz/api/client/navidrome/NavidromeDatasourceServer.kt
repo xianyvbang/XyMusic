@@ -841,9 +841,14 @@ class NavidromeDatasourceServer @Inject constructor(
         musicId: String,
         static: Boolean,
         audioCodec: AudioCodecEnum?,
-        audioBitRate: Int?
+        audioBitRate: Int?,
+        playSessionId: String
     ): String {
-        return navidromeApiClient.createAudioUrl(musicId)
+        var audioCodec = audioCodec ?: AudioCodecEnum.ROW
+        if (static) {
+            audioCodec = AudioCodecEnum.ROW
+        }
+        return navidromeApiClient.createAudioUrl(musicId, audioCodec, audioBitRate)
     }
 
     /**

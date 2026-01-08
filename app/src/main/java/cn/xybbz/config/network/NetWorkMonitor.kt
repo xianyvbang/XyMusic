@@ -52,7 +52,7 @@ class NetWorkMonitor(application: Context) {
         val isUnmetered = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
         isWifiOrUnmetered = isWifi || isUnmetered
 
-        val isTransportCellular = caps.hasCapability(NetworkCapabilities.TRANSPORT_CELLULAR)
+        val isTransportCellular = caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
         this.isTransportCellular = isTransportCellular
 
         _isUnmeteredWifi.value = isWifi && isUnmetered

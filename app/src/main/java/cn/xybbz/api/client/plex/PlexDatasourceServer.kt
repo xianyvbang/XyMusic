@@ -848,10 +848,10 @@ class PlexDatasourceServer @Inject constructor(
      */
     override suspend fun getPlaylists(): List<XyAlbum>? {
         val response = getPlaylistsServer(0, 10000)
-        return db.withTransaction{
+        return db.withTransaction {
             db.albumDao.removePlaylist()
-             response.items?.let {
-                 saveBatchAlbum(it, MusicDataTypeEnum.PLAYLIST, true)
+            response.items?.let {
+                saveBatchAlbum(it, MusicDataTypeEnum.PLAYLIST, true)
             }
         }
 
@@ -1316,9 +1316,12 @@ class PlexDatasourceServer @Inject constructor(
         musicId: String,
         static: Boolean,
         audioCodec: AudioCodecEnum?,
-        audioBitRate: Int?
+        audioBitRate: Int?,
+        playSessionId: String
     ): String {
-        return plexApiClient.createAudioUrl(musicId)
+        return if (static) plexApiClient.createAudioUrl(musicId)
+        else
+            plexApiClient.createUniversalAudioUrl(musicId, audioBitRate ?: 0, playSessionId)
     }
 
     /**

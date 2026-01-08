@@ -20,8 +20,8 @@ package cn.xybbz.config.setting
 
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 
-interface OnCacheMaxBytesChangeListener {
-    fun onDestinationChanged(
+interface OnSettingsChangeListener {
+    fun onCacheMaxBytesChanged(
         cacheUpperLimit: CacheUpperLimitEnum,
         oldCacheUpperLimit: CacheUpperLimitEnum
     )

@@ -18,13 +18,11 @@
 
 package cn.xybbz.api.enums
 
-enum class AudioCodecEnum(val audioCodec:String) {
+enum class AudioCodecEnum(val audioCodec: String, val ifShow: Boolean = true) {
 
     AAC("aac"),
     MP3("mp3"),
-    FLAC("flac"),
-    ROW("row"),
-    ;
+    ROW("row", false);
 
     override fun toString(): String {
         return audioCodec
@@ -35,7 +33,6 @@ enum class AudioCodecEnum(val audioCodec:String) {
             return when (audioCodec) {
                 "aac" -> AAC
                 "mp3" -> MP3
-                "flac" -> FLAC
                 else -> ROW
             }
         }
