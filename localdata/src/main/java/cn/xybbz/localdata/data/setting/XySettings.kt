@@ -71,11 +71,11 @@ data class XySettings(
     /**
      * 最新版本下载地址
      */
-    val lasestApkUrl:String = "",
+    val lasestApkUrl: String = "",
     /**
      * 最大同时下载数量
      */
-    val maxConcurrentDownloads:Int = 3,
+    val maxConcurrentDownloads: Int = 3,
     /**
      * 是否同步播放进度
      */
@@ -83,5 +83,21 @@ data class XySettings(
     /**
      * 渐入渐出持续时间
      */
-    val fadeDurationMs:Long = 300L
+    val fadeDurationMs: Long = 300L,
+    /**
+     * 任意网络是否转码
+     */
+    val ifTranscoding: Boolean = false,
+    /**
+     * 转码格式
+     */
+    val transcodeFormat: String = "mp3",
+    /**
+     * 移动网络转码比特率
+     */
+    val mobileNetworkAudioBitRate: Int = 192000,
+    /**
+     * wifi网络转码比特率
+     */
+    val wifiNetworkAudioBitRate: Int = 0
 )

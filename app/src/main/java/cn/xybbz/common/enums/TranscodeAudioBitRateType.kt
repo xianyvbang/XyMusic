@@ -16,13 +16,25 @@
  *
  */
 
-package cn.xybbz.config.setting
+package cn.xybbz.common.enums
 
-import cn.xybbz.localdata.enums.CacheUpperLimitEnum
+enum class TranscodeAudioBitRateType(val audioBitRateStr: String, val audioBitRate: Int) {
+    LOSSLESS("不转码", 0),
+    HIGHEST("320K", 320000),
+    HIGH("256K", 256000),
+    MEDIUM("192K", 192000),
+    LOW("128K", 128000);
 
-interface OnCacheMaxBytesChangeListener {
-    fun onDestinationChanged(
-        cacheUpperLimit: CacheUpperLimitEnum,
-        oldCacheUpperLimit: CacheUpperLimitEnum
-    )
+    companion object {
+        fun getTranscodeAudioBitRate(audioBitRate: Int): TranscodeAudioBitRateType {
+            return when (audioBitRate) {
+                0 -> LOSSLESS
+                128000 -> LOW
+                192000 -> MEDIUM
+                256000 -> HIGH
+                320000 -> HIGHEST
+                else -> LOW
+            }
+        }
+    }
 }

@@ -164,8 +164,15 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                 }
             }
 
-            override fun onPlayWhenReadyChanged(playWhenReady: Boolean,@PlayWhenReadyChangeReason reason: Int) {
-                musicController.updateState(if (playWhenReady) PlayStateEnum.Playing else PlayStateEnum.Pause)
+            override fun onPlayWhenReadyChanged(
+                playWhenReady: Boolean,
+                @PlayWhenReadyChangeReason reason: Int
+            ) {
+                Log.i(
+                    "music",
+                    "播放状态改变$playWhenReady --- ${reason} -- ${exoPlayer?.isPlaying}"
+                )
+                musicController.updateState(if (exoPlayer?.isPlaying == true && playWhenReady) PlayStateEnum.Playing else PlayStateEnum.Pause)
             }
         })
 
@@ -262,7 +269,6 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                         "music",
                         "点击按钮数据${customCommand.customAction}----附加参数${args}"
                     )
-                    customCommand.customExtras
                     if (customCommand.customAction == SAVE_TO_FAVORITES) {
                         // Do custom logic here
 //                            saveToFavorites(session.player.currentMediaItem)

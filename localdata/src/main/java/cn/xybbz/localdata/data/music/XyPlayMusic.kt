@@ -18,6 +18,7 @@
 
 package cn.xybbz.localdata.data.music
 
+import androidx.room.Ignore
 import java.util.UUID
 
 /**
@@ -38,10 +39,7 @@ data class XyPlayMusic(
      * 专辑id
      */
     val album: String,
-    /**
-     * 音乐地址
-     */
-    val musicUrl: String,
+
     /**
      * 播放会话id,
      */
@@ -70,5 +68,23 @@ data class XyPlayMusic(
     /**
      * 时长 秒
      */
-    val runTimeTicks: Long
-)
+    val runTimeTicks: Long,
+    /**
+     * plex播放key
+     */
+    val plexPlayKey: String?
+) {
+    /**
+     * 音乐地址
+     */
+    @Ignore
+    private var musicUrl: String = ""
+
+    fun getMusicUrl(): String {
+        return musicUrl
+    }
+
+    fun setMusicUrl(musicUrl: String) {
+        this.musicUrl = musicUrl
+    }
+}

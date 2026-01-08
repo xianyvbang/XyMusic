@@ -21,10 +21,12 @@ package cn.xybbz.config.module
 import android.content.Context
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.AudioFadeController
 import cn.xybbz.common.music.CacheController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.favorite.FavoriteRepository
+import cn.xybbz.config.network.NetWorkMonitor
 import cn.xybbz.config.setting.SettingsManager
 import dagger.Module
 import dagger.Provides
@@ -42,13 +44,23 @@ class MusicControllerModule {
     @Provides
     fun musicController(
         @ApplicationContext application: Context,
-        cheController: CacheController,
+        cacheController: CacheController,
         favoriteRepository: FavoriteRepository,
         audioFadeController: AudioFadeController,
-        settingsManager: SettingsManager
+        settingsManager: SettingsManager,
+        dataSourceManager: DataSourceManager,
+        netWorkMonitor: NetWorkMonitor
     ): MusicController {
         val controller =
-            MusicController(application, cheController, favoriteRepository, audioFadeController,settingsManager)
+            MusicController(
+                application,
+                cacheController,
+                favoriteRepository,
+                audioFadeController,
+                settingsManager,
+                dataSourceManager,
+                netWorkMonitor
+            )
         return controller
     }
 }

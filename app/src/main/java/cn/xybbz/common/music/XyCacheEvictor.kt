@@ -25,7 +25,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheEvictor
 import androidx.media3.datasource.cache.CacheSpan
-import cn.xybbz.config.setting.OnCacheMaxBytesChangeListener
+import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import java.util.TreeSet
@@ -43,8 +43,8 @@ class XyCacheEvictor(private val settingsManager: SettingsManager) : CacheEvicto
         this.leastRecentlyUsed =
             TreeSet<CacheSpan>(XyCacheEvictor::compare)
         onChangeMaxSize(settingsManager.get().cacheUpperLimit)
-        settingsManager.setOnCacheUpperLimitListener(object : OnCacheMaxBytesChangeListener{
-            override fun onDestinationChanged(
+        settingsManager.setOnListener(object : OnSettingsChangeListener{
+            override fun onCacheMaxBytesChanged(
                 cacheUpperLimit: CacheUpperLimitEnum,
                 oldCacheUpperLimit: CacheUpperLimitEnum
             ) {

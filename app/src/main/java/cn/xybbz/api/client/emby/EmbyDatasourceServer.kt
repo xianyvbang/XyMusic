@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.client.emby
 
 import android.content.Context
@@ -12,6 +30,7 @@ import cn.xybbz.api.client.jellyfin.data.ItemRequest
 import cn.xybbz.api.client.jellyfin.data.ItemResponse
 import cn.xybbz.api.client.jellyfin.data.PlaybackStartInfo
 import cn.xybbz.api.client.jellyfin.data.ViewRequest
+import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.BaseItemKind
 import cn.xybbz.api.enums.jellyfin.CollectionType
 import cn.xybbz.api.enums.jellyfin.ImageType
@@ -890,8 +909,20 @@ class EmbyDatasourceServer @Inject constructor(
     /**
      * 获得播放连接
      */
-    override suspend fun getMusicPlayUrl(musicId: String): String {
-        return embyApiClient.createAudioUrl(musicId)
+    override fun getMusicPlayUrl(
+        musicId: String,
+        static: Boolean,
+        audioCodec: AudioCodecEnum?,
+        audioBitRate: Int?,
+        playSessionId: String
+    ): String {
+        return embyApiClient.createAudioUrl(
+            musicId,
+            audioCodec,
+            static,
+            audioBitRate,
+            playSessionId
+        )
     }
 
     /**
@@ -1328,13 +1359,10 @@ class EmbyDatasourceServer @Inject constructor(
         val mediaStreamLyric =
             mediaSourceInfo?.mediaStreams?.find { it.type == MediaStreamType.LYRIC }
 
-        val audioUrl = getMusicPlayUrl(item.id)
-
         return XyMusic(
             itemId = item.id,
             pic = itemImageUrl,
             name = item.name ?: application.getString(Constants.UNKNOWN_MUSIC),
-            musicUrl = audioUrl,
             downloadUrl = createDownloadUrl(item.id),
             album = item.albumId ?: "",
             albumName = item.album,

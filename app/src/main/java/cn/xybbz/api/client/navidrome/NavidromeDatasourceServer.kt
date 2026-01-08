@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.client.navidrome
 
 import android.content.Context
@@ -15,6 +33,7 @@ import cn.xybbz.api.client.navidrome.data.SongItem
 import cn.xybbz.api.client.navidrome.data.getWithTotalCount
 import cn.xybbz.api.client.subsonic.data.ScrobbleRequest
 import cn.xybbz.api.constants.ApiConstants
+import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.navidrome.OrderType
 import cn.xybbz.api.enums.navidrome.SortType
 import cn.xybbz.common.constants.Constants
@@ -430,7 +449,7 @@ class NavidromeDatasourceServer @Inject constructor(
      */
     override suspend fun getPlaylists(): List<XyAlbum>? {
         val allResponse = getPlaylistsServer(0, 0)
-        db.withTransaction{
+        db.withTransaction {
             db.albumDao.removePlaylist()
             if (!allResponse.items.isNullOrEmpty()) {
                 allResponse.items?.let {
@@ -538,7 +557,7 @@ class NavidromeDatasourceServer @Inject constructor(
         navidromeApiClient.playlistsApi().addPlaylistMusics(
             playlistId = playlistId, PlaylistAddMusicsUpdateRequest(musicIds)
         )
-        return super.saveMusicPlaylist(playlistId,musicIds)
+        return super.saveMusicPlaylist(playlistId, musicIds)
     }
 
     /**
@@ -818,8 +837,18 @@ class NavidromeDatasourceServer @Inject constructor(
     /**
      * 获得播放连接
      */
-    override suspend fun getMusicPlayUrl(musicId: String): String {
-        return navidromeApiClient.createAudioUrl(musicId)
+    override fun getMusicPlayUrl(
+        musicId: String,
+        static: Boolean,
+        audioCodec: AudioCodecEnum?,
+        audioBitRate: Int?,
+        playSessionId: String
+    ): String {
+        var audioCodec = audioCodec ?: AudioCodecEnum.ROW
+        if (static) {
+            audioCodec = AudioCodecEnum.ROW
+        }
+        return navidromeApiClient.createAudioUrl(musicId, audioCodec, audioBitRate)
     }
 
     /**
@@ -1250,16 +1279,11 @@ class NavidromeDatasourceServer @Inject constructor(
      */
     fun convertToMusic(music: SongItem, isPlaylistMusic: Boolean): XyMusic {
         return XyMusic(
-            itemId = music.id,
+            itemId = if (isPlaylistMusic) music.mediaFileId ?: "" else music.id,
             pic = navidromeApiClient.getImageUrl(
                 ApiConstants.NAVIDROME_IMAGE_PREFIX_MUSIC + music.id
             ),
             name = music.title,
-            musicUrl = if (isPlaylistMusic) music.mediaFileId?.let {
-                navidromeApiClient.createAudioUrl(
-                    it
-                )
-            } ?: "" else navidromeApiClient.createAudioUrl(music.id),
             downloadUrl = if (isPlaylistMusic) music.mediaFileId?.let {
                 navidromeApiClient.createDownloadUrl(
                     it

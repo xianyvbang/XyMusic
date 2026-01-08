@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.client.plex
 
 import android.content.Context
@@ -12,6 +30,7 @@ import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.plex.data.Directory
 import cn.xybbz.api.client.plex.data.Metadatum
 import cn.xybbz.api.client.plex.data.PlaylistMetadatum
+import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.plex.ImageType
 import cn.xybbz.api.enums.plex.MetadatumType
 import cn.xybbz.api.enums.plex.PlayState
@@ -829,10 +848,10 @@ class PlexDatasourceServer @Inject constructor(
      */
     override suspend fun getPlaylists(): List<XyAlbum>? {
         val response = getPlaylistsServer(0, 10000)
-        return db.withTransaction{
+        return db.withTransaction {
             db.albumDao.removePlaylist()
-             response.items?.let {
-                 saveBatchAlbum(it, MusicDataTypeEnum.PLAYLIST, true)
+            response.items?.let {
+                saveBatchAlbum(it, MusicDataTypeEnum.PLAYLIST, true)
             }
         }
 
@@ -1293,8 +1312,16 @@ class PlexDatasourceServer @Inject constructor(
     /**
      * 获得播放连接
      */
-    override suspend fun getMusicPlayUrl(musicId: String): String {
-        return plexApiClient.createAudioUrl(musicId)
+    override fun getMusicPlayUrl(
+        musicId: String,
+        static: Boolean,
+        audioCodec: AudioCodecEnum?,
+        audioBitRate: Int?,
+        playSessionId: String
+    ): String {
+        return if (static) plexApiClient.createAudioUrl(musicId)
+        else
+            plexApiClient.createUniversalAudioUrl(musicId, audioBitRate ?: 0, playSessionId)
     }
 
     /**
@@ -1804,14 +1831,10 @@ class PlexDatasourceServer @Inject constructor(
         val mediaStreamLyric =
             part?.stream?.find { it.streamType == 4L }
 
-
-        val audioUrl = getMusicPlayUrl(part?.key.toString())
-
         return XyMusic(
             itemId = item.ratingKey,
             pic = itemImageUrl,
             name = item.title,
-            musicUrl = audioUrl,
             downloadUrl = createDownloadUrl(part?.key ?: ""),
             album = item.parentRatingKey.toString(),
             albumName = item.parentTitle,
@@ -1836,6 +1859,7 @@ class PlexDatasourceServer @Inject constructor(
             container = part?.container,
             codec = media?.audioCodec,
             playlistItemId = item.playlistItemID,
+            plexPlayKey = part?.key,
             lastPlayedDate = item.lastViewedAt ?: 0L
         )
     }

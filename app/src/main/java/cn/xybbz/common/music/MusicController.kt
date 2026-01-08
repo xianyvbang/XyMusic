@@ -47,6 +47,8 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionToken
+import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.Constants.MUSIC_PLAY_CUSTOM_COMMAND_TYPE
 import cn.xybbz.common.constants.Constants.MUSIC_PLAY_CUSTOM_COMMAND_TYPE_KEY
@@ -56,7 +58,8 @@ import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.favorite.FavoriteRepository
-import cn.xybbz.config.setting.OnCacheMaxBytesChangeListener
+import cn.xybbz.config.network.NetWorkMonitor
+import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
@@ -79,7 +82,9 @@ class MusicController(
     private val cacheController: CacheController,
     private val favoriteRepository: FavoriteRepository,
     private val fadeController: AudioFadeController,
-    private val settingsManager: SettingsManager
+    private val settingsManager: SettingsManager,
+    private val dataSourceManager: DataSourceManager,
+    private val netWorkMonitor: NetWorkMonitor
 ) {
 
     val scope = CoroutineScopeUtils.getIo("MusicController")
@@ -157,9 +162,8 @@ class MusicController(
         get() = if (controllerFuture.isDone) controllerFuture.get() else null
 
     init {
-
-        settingsManager.setOnCacheUpperLimitListener(object : OnCacheMaxBytesChangeListener {
-            override fun onDestinationChanged(
+        settingsManager.setOnListener(object : OnSettingsChangeListener {
+            override fun onCacheMaxBytesChanged(
                 cacheUpperLimit: CacheUpperLimitEnum,
                 oldCacheUpperLimit: CacheUpperLimitEnum
             ) {
@@ -169,9 +173,62 @@ class MusicController(
                     }
                 }
             }
-
         })
     }
+
+
+    fun replacePlaylistItemUrl() {
+        if (originMusicList.isNotEmpty()) {
+            originMusicList = originMusicList.map {
+                it.setMusicUrl(getMusicUrl(it.itemId, it.plexPlayKey, it.playSessionId))
+                it
+            }
+            musicInfo?.let {
+                it.setMusicUrl(getMusicUrl(it.itemId, it.plexPlayKey, it.playSessionId))
+                cacheController.cancelAllCache()
+                startCache(it)
+            }
+
+            if (state == PlayStateEnum.Pause) {
+                mediaController?.replaceMediaItems(
+                    0, originMusicList.size,
+                    originMusicList.map {
+                        musicSetMediaItem(it)
+                    }
+                )
+            } else {
+                val (left, right) = splitListExcludeIndex(originMusicList, curOriginIndex)
+                if (left.isNotEmpty()) {
+                    val leftItem = left.map { item ->
+                        musicSetMediaItem(item)
+                    }
+                    mediaController?.replaceMediaItems(0, curOriginIndex, leftItem)
+                }
+
+                if (right.isNotEmpty()) {
+                    val rightItem = right.map { item ->
+                        musicSetMediaItem(item)
+                    }
+                    mediaController?.replaceMediaItems(
+                        curOriginIndex + 1,
+                        originMusicList.size,
+                        rightItem
+                    )
+                }
+            }
+
+        }
+    }
+
+    fun <T> splitListExcludeIndex(list: List<T>, index: Int): Pair<List<T>, List<T>> {
+        require(index in list.indices) { "index 越界" }
+
+        val first = list.subList(0, index)
+        val second = list.subList(index + 1, list.size)
+
+        return first to second
+    }
+
 
     //https://developer.android.google.cn/guide/topics/media/exoplayer/listening-to-player-events?hl=zh-cn
     private val playerListener = @UnstableApi object : Player.Listener {
@@ -226,7 +283,9 @@ class MusicController(
             super.onPlayerError(error)
             // 获取播放错误信息
             Log.e("music", "播放报错$error", error)
-            seekToNext()
+            if (state != PlayStateEnum.Pause) {
+                seekToNext()
+            }
         }
 
         //检测播放何时转换为其他媒体项
@@ -347,6 +406,11 @@ class MusicController(
 //                    repeatMode = Player.REPEAT_MODE_ONE
                     // 设置当缓冲完毕后直接播放视频
                     playWhenReady = true
+
+                    netWorkMonitor.start(
+                        onNetworkChange = {
+                            settingsManager.sengTranscodingEvent()
+                        })
                 }
             }
             onRestorePlaylists?.invoke()
@@ -396,7 +460,6 @@ class MusicController(
     fun seekToIndex(index: Int) {
         Log.i("music", "调用seekToIndex")
         setCurrentPositionData(Constants.ZERO.toLong())
-        seekToIndexDataChange(index)
         fadeController.fadeOut {
             mediaController?.seekToDefaultPosition(index)
             resume()
@@ -431,7 +494,6 @@ class MusicController(
             seekToIndex((mediaController?.mediaItemCount ?: 1) - 1)
         } else {
             fadeController.fadeOut {
-                previousDataChange()
                 mediaController?.seekToPreviousMediaItem()
                 Log.i("music", "调用seekToPrevious")
                 resume()
@@ -448,7 +510,6 @@ class MusicController(
             seekToIndex(0)
         } else {
             fadeController.fadeOut {
-                nextDataChange()
                 mediaController?.seekToNextMediaItem()
                 Log.i("music", "调用seekToNext")
                 resume()
@@ -657,6 +718,7 @@ class MusicController(
                 prepare()
                 play()
             } else {
+                stop()
                 prepare()
             }
             scope.launch {
@@ -677,9 +739,10 @@ class MusicController(
 
         val pic = playMusic.pic
 
-        var musicUrl = playMusic.musicUrl
         if (playMusic.filePath.isNullOrBlank()) {
-            musicUrl += "&playSessionId=${playMusic.playSessionId}"
+            val musicUrl =
+                getMusicUrl(playMusic.itemId, playMusic.plexPlayKey, playMusic.playSessionId)
+            playMusic.setMusicUrl(musicUrl)
             mediaItemBuilder.setUri(musicUrl)
             val mediaMetadata = MediaMetadata.Builder()
                 .setTitle(playMusic.name)
@@ -701,6 +764,23 @@ class MusicController(
             )
             .setTag(playMusic)
             .build()
+    }
+
+    private fun getMusicUrl(musicId: String, plexPlayKey: String?, playSessionId: String): String {
+        val audioBitRate = if (netWorkMonitor.isTransportCellular)
+            settingsManager.get().mobileNetworkAudioBitRate else if (netWorkMonitor.isWifiOrUnmetered)
+            settingsManager.get().wifiNetworkAudioBitRate else 0
+
+        val static: Boolean =
+            if (settingsManager.get().ifTranscoding) true else if (audioBitRate == 0) true else false
+
+        return dataSourceManager.getMusicPlayUrl(
+            if (static) musicId else plexPlayKey ?: musicId,
+            static,
+            AudioCodecEnum.getAudioCodec(settingsManager.get().transcodeFormat),
+            audioBitRate,
+            playSessionId
+        )
     }
 
     /**
@@ -832,33 +912,9 @@ class MusicController(
         }
     }
 
-    fun updateVolume(volume: Float) {
-        mediaController?.volume = volume
-    }
-
-    fun getVolume(): Float {
-        return mediaController?.volume ?: 0f
-    }
-
     fun updateState(state: PlayStateEnum) {
         Log.i("music", "是否播放中--- ${mediaController?.isPlaying} --- ${state}")
         this.state = state
-    }
-
-    fun nextDataChange() {
-        updateMusicInfo()
-    }
-
-    fun previousDataChange() {
-        updateMusicInfo()
-    }
-
-    fun seekToIndexDataChange(index: Int) {
-        updateMusicInfo()
-    }
-
-    fun updateMusicInfo() {
-
     }
 
     fun updateDuration(duration: Long) {
@@ -876,7 +932,7 @@ class MusicController(
     fun reportedPauseEvent() {
         musicInfo?.let {
             scope.launch {
-                _events.emit(PlayerEvent.Pause(it.itemId, it.playSessionId, it.musicUrl))
+                _events.emit(PlayerEvent.Pause(it.itemId, it.playSessionId, it.getMusicUrl()))
             }
         }
     }

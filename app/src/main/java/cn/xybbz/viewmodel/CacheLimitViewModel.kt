@@ -28,9 +28,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cn.xybbz.common.enums.PlayStateEnum
-import cn.xybbz.common.music.CacheController
-import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
@@ -46,12 +43,9 @@ import javax.inject.Inject
 @HiltViewModel
 class CacheLimitViewModel @Inject constructor(
     private val settingsManager: SettingsManager,
-    private val _backgroundConfig: BackgroundConfig,
-    private val musicController: MusicController,
-    private val cacheController: CacheController
+    val backgroundConfig: BackgroundConfig
 ) : ViewModel() {
 
-    val backgroundConfig = _backgroundConfig
     /**
      * 缓存上限
      */

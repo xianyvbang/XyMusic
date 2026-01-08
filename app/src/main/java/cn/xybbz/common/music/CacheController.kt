@@ -34,7 +34,7 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
 import cn.xybbz.api.client.CacheApiClient
 import cn.xybbz.common.utils.CoroutineScopeUtils
-import cn.xybbz.config.setting.OnCacheMaxBytesChangeListener
+import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.music.CacheTask
 import cn.xybbz.localdata.data.music.XyPlayMusic
@@ -106,8 +106,8 @@ class CacheController(
         )*/
         cacheDataSource = cacheDataSourceFactory.createDataSource()
 
-        settingsManager.setOnCacheUpperLimitListener(object :OnCacheMaxBytesChangeListener {
-            override fun onDestinationChanged(
+        settingsManager.setOnListener(object :OnSettingsChangeListener {
+            override fun onCacheMaxBytesChanged(
                 cacheUpperLimit: CacheUpperLimitEnum,
                 oldCacheUpperLimit: CacheUpperLimitEnum
             ) {
@@ -121,30 +121,32 @@ class CacheController(
 
     fun cacheMedia(music: XyPlayMusic) {
         if (settingsManager.get().cacheUpperLimit != CacheUpperLimitEnum.No){
-            val url = music.musicUrl
+            val url = music.getMusicUrl()
+            val itemId = music.itemId
             cacheCoroutineScope.launch(Dispatchers.IO) {
                 val dataSpec = DataSpec.Builder()
+                    .setKey(itemId)
                     .setUri(url)
                     .setLength(music.size ?: 20000)
                     .build()
 
-                val existingTask = cacheTask[url]
+                val existingTask = cacheTask[itemId]
 
                 try {
                     if (existingTask != null) {
                         if (existingTask.isPaused) {
-                            Log.i("=====", "继续缓存: $url")
+                            Log.i("=====", "继续缓存: $url --- $itemId")
                             // 重新创建 CacheWriter（因为 cancel() 后不能恢复）
                             val newWriter = createCacheWriter(dataSpec)
-                            cacheTask[url] = CacheTask(newWriter, isPaused = false)
+                            cacheTask[itemId] = CacheTask(newWriter, isPaused = false)
                             newWriter.cache()
                         } else {
-                            Log.i("=====", "任务已在进行中: $url")
+                            Log.i("=====", "任务已在进行中: $url --- $itemId")
                         }
                     } else {
                         Log.i("=====", "新建缓存: $url")
                         val writer = createCacheWriter(dataSpec)
-                        cacheTask[url] = CacheTask(writer, isPaused = false)
+                        cacheTask[itemId] = CacheTask(writer, isPaused = false)
                         writer.cache()
                     }
                 } catch (e: Exception) {
@@ -177,12 +179,12 @@ class CacheController(
     /**
      * 暂停当前缓存
      */
-    fun pauseCache(url: String) {
-        val task = cacheTask[url]
+    fun pauseCache(itemId: String) {
+        val task = cacheTask[itemId]
         if (task != null && !task.isPaused) {
             task.cacheWriter.cancel() // 停止当前写入
             task.isPaused = true
-            Log.i("=====", "已暂停缓存: $url")
+            Log.i("=====", "已暂停缓存: $itemId")
         }
     }
 

@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.client
 
 import android.content.Context
@@ -14,6 +32,7 @@ import cn.xybbz.R
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.version.VersionApiClient
+import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.events.ReLoginEvent
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.state.ClientLoginInfoState
@@ -90,7 +109,6 @@ class DataSourceManager(
     val dataSourceServerFlow = MutableStateFlow<IDataSourceParentServer?>(null)
 
 
-
     //加载状态
     var loading by mutableStateOf(false)
         private set
@@ -134,7 +152,7 @@ class DataSourceManager(
         login(ifLogin)
     }
 
-    fun login(ifLogin: Boolean = false){
+    fun login(ifLogin: Boolean = false) {
         datasourceCoroutineScope.launch {
             val connectionConfig = db.connectionConfigDao.selectConnectionConfig()
             if (connectionConfig != null) {
@@ -169,7 +187,7 @@ class DataSourceManager(
                 loginStatus = loginState
 //                ifLoginError = false
                 val loginSateInfo = getLoginSateInfo(loginState)
-                Log.i("error","${loginSateInfo}")
+                Log.i("error", "${loginSateInfo}")
                 errorHint = loginSateInfo.errorHint ?: R.string.empty_info
                 errorMessage = loginSateInfo.errorMessage ?: ""
                 ifLoginError = loginSateInfo.isError
@@ -1031,9 +1049,21 @@ class DataSourceManager(
     /**
      * 获得播放连接
      */
-    override suspend fun getMusicPlayUrl(musicId: String): String {
+    override fun getMusicPlayUrl(
+        musicId: String,
+        static: Boolean,
+        audioCodec: AudioCodecEnum?,
+        audioBitRate: Int?,
+        playSessionId: String
+    ): String {
         return try {
-            dataSourceServer.getMusicPlayUrl(musicId)
+            dataSourceServer.getMusicPlayUrl(
+                musicId,
+                static,
+                audioCodec,
+                audioBitRate,
+                playSessionId
+            )
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获取播放连接失败", e)
             ""

@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.client.emby
 
 import android.util.Log
@@ -17,6 +35,7 @@ import cn.xybbz.api.client.emby.service.EmbyUserViewsApi
 import cn.xybbz.api.client.jellyfin.buildParameter
 import cn.xybbz.api.client.jellyfin.data.toLogin
 import cn.xybbz.api.constants.ApiConstants
+import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.ImageType
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.UnauthorizedException
@@ -366,15 +385,17 @@ class EmbyApiClient : DefaultParentApiClient() {
      */
     fun createAudioUrl(
         itemId: String,
-        container: String? = "hls",
-        audioCodec: String? = null,
+        audioCodec: AudioCodecEnum? = null,
         static: Boolean = true,
+        audioBitRate: Int? = null,
+        playSessionId: String
     ): String {
         return getAudioStreamUrl(
             itemId = itemId,
-            container = container,
             audioCodec = audioCodec,
-            static = static
+            static = static,
+            audioBitRate = audioBitRate,
+            playSessionId
         )
     }
 
@@ -437,13 +458,21 @@ class EmbyApiClient : DefaultParentApiClient() {
      */
     private fun getAudioStreamUrl(
         itemId: String,
-        container: String? = "hls",
-        audioCodec: String? = null,
+        audioCodec: AudioCodecEnum? = null,
         static: Boolean = true,
+        audioBitRate: Int? = null,
+        playSessionId: String
     ): String {
-        return "${baseUrl}/emby/Audio/${itemId}/stream?container=${container}" +
-                "&deviceId=${deviceId}&userId=${userId}&static=${static}" +
-                "&audioCodec=${audioCodec}"
+        return if (audioBitRate == null){
+            "${baseUrl}/emby/Audio/${itemId}/stream?" +
+                    "deviceId=${deviceId}&userId=${userId}&static=${static}" +
+                    "&audioCodec=${audioCodec}&playSessionId=${playSessionId}"
+        }else {
+            "${baseUrl}/emby/Audio/${itemId}/stream?" +
+                    "deviceId=${deviceId}&userId=${userId}&static=${static}" +
+                    "&audioCodec=${audioCodec}&audioBitRate=${audioBitRate}" +
+                    "&playSessionId=${playSessionId}"
+        }
     }
 
     /**
