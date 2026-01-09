@@ -62,6 +62,7 @@ import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
@@ -815,7 +816,7 @@ class DataSourceManager(
     /**
      * 获得最多播放
      */
-    override suspend fun getMostPlayerMusicList(artistId: String?) {
+    override suspend fun getMostPlayerMusicList() {
         try {
             dataSourceServer.getMostPlayerMusicList()
         } catch (e: Exception) {
@@ -1068,6 +1069,33 @@ class DataSourceManager(
             Log.e(Constants.LOG_ERROR_PREFIX, "获取播放连接失败", e)
             ""
         }
+    }
+
+    /**
+     * 获得相似歌曲列表
+     */
+    override suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend> {
+        return try {
+            dataSourceServer.getSimilarMusicList(musicId) ?: emptyList()
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得相似歌曲列表失败", e)
+            emptyList()
+        }
+    }
+
+    /**
+     * 获得歌手热门歌曲列表
+     */
+    override suspend fun getArtistPopularMusicList(
+        artistId: String?,
+        artistName: String?
+    ): List<XyMusicExtend> {
+        return try {
+            dataSourceServer.getArtistPopularMusicList(artistId, artistName)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得歌手热门歌曲列表失败", e)
+            null
+        } ?: emptyList()
     }
 
     /**

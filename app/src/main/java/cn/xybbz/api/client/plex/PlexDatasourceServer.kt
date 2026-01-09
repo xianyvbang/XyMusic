@@ -57,6 +57,7 @@ import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -1091,7 +1092,7 @@ class PlexDatasourceServer @Inject constructor(
     /**
      * 获得最多播放
      */
-    override suspend fun getMostPlayerMusicList(artistId: String?) {
+    override suspend fun getMostPlayerMusicList() {
         val response = getServerMusicList(
             plexListType = PlexListType.all,
             startIndex = 0,
@@ -1170,7 +1171,7 @@ class PlexDatasourceServer @Inject constructor(
                 pageSize = pageSize,
                 startIndex = pageNum * pageSize
             )
-            selectMusicList = transitionMusicExtend(homeMusicList.items)
+            selectMusicList = transitionPlayMusic(homeMusicList.items)
 
         }
         return selectMusicList
@@ -1193,7 +1194,7 @@ class PlexDatasourceServer @Inject constructor(
                 startIndex = pageNum * pageSize,
                 albumId = albumId
             )
-            selectMusicList = transitionMusicExtend(homeMusicList.items)
+            selectMusicList = transitionPlayMusic(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -1218,7 +1219,7 @@ class PlexDatasourceServer @Inject constructor(
                 startIndex = pageNum * pageSize,
                 artistId = artistId
             )
-            selectMusicList = transitionMusicExtend(homeMusicList.items)
+            selectMusicList = transitionPlayMusic(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -1252,7 +1253,7 @@ class PlexDatasourceServer @Inject constructor(
                 startIndex = pageNum * pageSize,
                 ifFavorite = true
             )
-            selectMusicList = transitionMusicExtend(homeMusicList.items)
+            selectMusicList = transitionPlayMusic(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -1322,6 +1323,32 @@ class PlexDatasourceServer @Inject constructor(
         return if (static) plexApiClient.createAudioUrl(musicId)
         else
             plexApiClient.createUniversalAudioUrl(musicId, audioBitRate ?: 0, playSessionId)
+    }
+
+    /**
+     * 获得相似歌曲列表
+     */
+    override suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend>? {
+        return null
+    }
+
+    /**
+     * 获得歌手热门歌曲列表
+     */
+    override suspend fun getArtistPopularMusicList(
+        artistId: String?,
+        artistName: String?
+    ): List<XyMusicExtend>? {
+        val response = getServerMusicList(
+            plexListType = PlexListType.all,
+            startIndex = 0,
+            pageSize = Constants.MIN_PAGE,
+            sortBy = PlexSortType.VIEWCOUNT,
+            sortOrder = PlexSortOrder.DESCENDING,
+            params = mapOf(Pair("viewCount>>=0", "")),
+            artistId = artistId
+        )
+        return transitionMusicExtend(response.items)
     }
 
     /**

@@ -23,6 +23,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.CacheController
@@ -30,7 +31,9 @@ import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyMusicExtend
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -46,5 +49,28 @@ class MusicPlayerViewModel @Inject constructor(
 
     val dataList = listOf(R.string.song_tab, R.string.lyrics_tab, R.string.recommend)
 
-    var similarMusicList by mutableStateOf(emptyList<XyMusic>())
+    /**
+     * 相似歌曲
+     */
+    var similarMusicList by mutableStateOf(emptyList<XyMusicExtend>())
+
+    /**
+     * 热门歌曲
+     */
+    var popularMusicList by mutableStateOf(emptyList<XyMusicExtend>())
+
+    init {
+        getSimilarOrPopularMusicList()
+    }
+
+    private fun getSimilarOrPopularMusicList() {
+
+        viewModelScope.launch {
+            musicController.musicInfo?.let {
+                similarMusicList = dataSourceManager.getSimilarMusicList(it.itemId)
+                popularMusicList =
+                    dataSourceManager.getArtistPopularMusicList(it.artistIds ?: "", it.artists ?: "")
+            }
+        }
+    }
 }

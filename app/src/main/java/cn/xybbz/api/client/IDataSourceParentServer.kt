@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.client
 
 import android.content.Context
@@ -35,6 +53,7 @@ import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -466,7 +485,7 @@ abstract class IDataSourceParentServer(
         pageSize: Int,
         pageNum: Int
     ): List<XyPlayMusic>? {
-        return transitionMusicExtend(
+        return transitionPlayMusic(
             getRandomMusicList(pageSize, pageNum)
         )
     }
@@ -1002,7 +1021,7 @@ abstract class IDataSourceParentServer(
         return db.musicDao.selectMusicExtendList(pageSize, pageNum * pageSize)
     }
 
-    suspend fun transitionMusicExtend(musicList: List<XyMusic>?): List<XyPlayMusic>? {
+    suspend fun transitionPlayMusic(musicList: List<XyMusic>?): List<XyPlayMusic>? {
         val downloads = musicList?.map { it.itemId }?.let {
             db.downloadDao.getMusicByMusicIds(it)
         }
@@ -1011,6 +1030,20 @@ abstract class IDataSourceParentServer(
         return musicList?.map { music ->
             music.toPlayMusic()
                 .copy(filePath = if (downloadMap?.containsKey(music.itemId) == true) downloadMap[music.itemId]?.filePath else null)
+        }
+    }
+
+    suspend fun transitionMusicExtend(musicList: List<XyMusic>?): List<XyMusicExtend>? {
+        val downloads = musicList?.map { it.itemId }?.let {
+            db.downloadDao.getMusicByMusicIds(it)
+        }
+        val downloadMap = downloads?.associateBy { it.uid }
+
+        return musicList?.map { music ->
+            XyMusicExtend(
+                music = music,
+                filePath = if (downloadMap?.containsKey(music.itemId) == true) downloadMap[music.itemId]?.filePath else null
+            )
         }
     }
 

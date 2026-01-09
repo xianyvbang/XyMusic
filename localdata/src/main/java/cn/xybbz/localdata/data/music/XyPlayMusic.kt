@@ -52,6 +52,10 @@ data class XyPlayMusic(
      * 音乐艺术家名称
      */
     val artists: String?,
+    /**
+     * 艺术家id
+     */
+    val artistIds: String?,
 
     /**
      * 是否已经收藏

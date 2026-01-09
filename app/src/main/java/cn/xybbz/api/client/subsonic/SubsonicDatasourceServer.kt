@@ -49,6 +49,7 @@ import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.Sort
+import cn.xybbz.entity.data.toXyMusic
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -56,6 +57,7 @@ import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -400,7 +402,7 @@ class SubsonicDatasourceServer @Inject constructor(
                     ).subsonicResponse.searchResult3?.song
                 if (items.isNullOrEmpty()) null else {
                     val music = items[0]
-                    convertToMusic(music, music.starred != null)
+                    convertToMusic(music)
                 }
             } catch (e: Exception) {
                 Log.e(Constants.LOG_ERROR_PREFIX, "获取歌曲: ${it.title} 信息失败", e)
@@ -606,7 +608,7 @@ class SubsonicDatasourceServer @Inject constructor(
     /**
      * 获得最多播放
      */
-    override suspend fun getMostPlayerMusicList(artistId: String?) {
+    override suspend fun getMostPlayerMusicList() {
         val albumList = subsonicApiClient.itemApi().getAlbumList2(
             type = AlbumType.FREQUENT,
             size = Constants.MIN_PAGE,
@@ -790,6 +792,53 @@ class SubsonicDatasourceServer @Inject constructor(
             audioCodec = AudioCodecEnum.ROW
         }
         return subsonicApiClient.createAudioUrl(musicId, audioCodec, audioBitRate)
+    }
+
+    /**
+     * 获得相似歌曲列表
+     */
+    override suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend>? {
+        val response =
+            subsonicApiClient.itemApi().getSimilarSongs(
+                songId = musicId
+            ).subsonicResponse.similarSongs
+        val items = response?.song?.map { music ->
+            music.toXyMusic(
+                pic = if (music.coverArt.isNullOrBlank()) null else music.coverArt?.let {
+                    subsonicApiClient.getImageUrl(
+                        it
+                    )
+                },
+                downloadUrl = createDownloadUrl(music.id),
+                connectionId = connectionConfigServer.getConnectionId()
+            )
+        }
+        return transitionMusicExtend(items)
+    }
+
+    /**
+     * 获得歌手热门歌曲列表
+     */
+    override suspend fun getArtistPopularMusicList(
+        artistId: String?,
+        artistName: String?
+    ): List<XyMusicExtend>? {
+        val response =
+            subsonicApiClient.itemApi().getTopSongs(
+                artistName = artistName ?: ""
+            ).subsonicResponse.topSongs
+        val items = response?.song?.map { music ->
+            music.toXyMusic(
+                pic = if (music.coverArt.isNullOrBlank()) null else music.coverArt?.let {
+                    subsonicApiClient.getImageUrl(
+                        it
+                    )
+                },
+                downloadUrl = createDownloadUrl(music.id),
+                connectionId = connectionConfigServer.getConnectionId()
+            )
+        }
+        return transitionMusicExtend(items)
     }
 
     /**
@@ -1047,8 +1096,7 @@ class SubsonicDatasourceServer @Inject constructor(
     fun convertToMusicList(item: List<SongID3>): List<XyMusic> {
         return item.map { music ->
             convertToMusic(
-                music,
-                music.starred != null
+                music
             )
         }
     }
@@ -1056,39 +1104,15 @@ class SubsonicDatasourceServer @Inject constructor(
     /**
      * 将SongID3转换成XyMusic
      */
-    fun convertToMusic(music: SongID3, ifFavorite: Boolean): XyMusic {
-        return XyMusic(
-            itemId = music.id,
+    fun convertToMusic(music: SongID3): XyMusic {
+        return music.toXyMusic(
             pic = if (music.coverArt.isNullOrBlank()) null else music.coverArt?.let {
                 subsonicApiClient.getImageUrl(
                     it
                 )
             },
-            name = music.title,
             downloadUrl = createDownloadUrl(music.id),
-            album = music.albumId,
-            albumName = music.album,
-            genreIds = music.genre,
-            connectionId = connectionConfigServer.getConnectionId(),
-            artists = music.artist,
-            artistIds = music.artistId,
-            albumArtist = music.artist,
-            albumArtistIds = music.artistId,
-            year = music.year,
-            playedCount = 0,
-            ifFavoriteStatus = ifFavorite,
-            path = music.path,
-            bitRate = music.bitRate,
-            sampleRate = 0,
-            bitDepth = 0,
-            size = music.size,
-            runTimeTicks = music.duration,
-            container = music.suffix,
-            codec = music.suffix,
-            ifLyric = true,
-            lyric = "",
-            playlistItemId = music.id,
-            lastPlayedDate = 0L
+            connectionId = connectionConfigServer.getConnectionId()
         )
     }
 

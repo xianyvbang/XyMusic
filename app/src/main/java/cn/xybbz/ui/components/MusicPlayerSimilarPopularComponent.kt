@@ -20,15 +20,28 @@ package cn.xybbz.ui.components
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyItemMedium
 
 @Composable
-fun MusicPlayerSimilarPopularComponent(listState: LazyListState) {
+fun MusicPlayerSimilarPopularComponent(
+    listState: LazyListState,
+    itemId: String?,
+    onFavoriteSet: () -> Set<String>,
+    onDownloadMusicIds: () -> List<String>,
+    onSimilarMusicList: () -> List<XyMusicExtend>,
+    onPopularMusicList: () -> List<XyMusicExtend>
+) {
+
     LazyColumnNotComponent(
         state = listState,
         bottomItem = null,
@@ -43,15 +56,28 @@ fun MusicPlayerSimilarPopularComponent(listState: LazyListState) {
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
-        items(10) {
+        items(onPopularMusicList(), key = { it.music.itemId }) { musicExt ->
             MusicItemComponent(
-                name = "1",
-                itemId = "111",
-                onIfFavorite = { false },
-                ifDownload = false,
-                ifPlay = false,
-                onMusicPlay = {},
-                trailingOnClick = {},
+                itemId = musicExt.music.itemId,
+                name = musicExt.music.name,
+                album = musicExt.music.album,
+                artists = musicExt.music.artists,
+                pic = musicExt.music.pic,
+                codec = musicExt.music.codec,
+                bitRate = musicExt.music.bitRate,
+                onIfFavorite = {
+                    musicExt.music.itemId in onFavoriteSet()
+                },
+                ifDownload = musicExt.music.itemId in onDownloadMusicIds(),
+                ifPlay = itemId == musicExt.music.itemId,
+                onMusicPlay = {
+
+                },
+                backgroundColor = Color.Transparent,
+                trailingIcon = Icons.AutoMirrored.Rounded.PlaylistAdd,
+                trailingOnClick = {
+
+                }
             )
         }
         item {
@@ -62,15 +88,28 @@ fun MusicPlayerSimilarPopularComponent(listState: LazyListState) {
             )
         }
 
-        items(10) {
+        items(onSimilarMusicList(), key = { it.music.itemId }) { musicExt ->
             MusicItemComponent(
-                name = "1",
-                itemId = "111",
-                onIfFavorite = { false },
-                ifDownload = false,
-                ifPlay = false,
-                onMusicPlay = {},
-                trailingOnClick = {},
+                itemId = musicExt.music.itemId,
+                name = musicExt.music.name,
+                album = musicExt.music.album,
+                artists = musicExt.music.artists,
+                pic = musicExt.music.pic,
+                codec = musicExt.music.codec,
+                bitRate = musicExt.music.bitRate,
+                onIfFavorite = {
+                    musicExt.music.itemId in onFavoriteSet()
+                },
+                ifDownload = musicExt.music.itemId in onDownloadMusicIds(),
+                ifPlay = itemId == musicExt.music.itemId,
+                onMusicPlay = {
+
+                },
+                backgroundColor = Color.Transparent,
+                trailingIcon = Icons.AutoMirrored.Rounded.PlaylistAdd,
+                trailingOnClick = {
+
+                }
             )
         }
     }

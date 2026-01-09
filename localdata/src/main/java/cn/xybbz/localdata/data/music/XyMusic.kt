@@ -178,7 +178,8 @@ data class XyMusic(
             size = size,
             filePath = null,
             runTimeTicks = runTimeTicks,
-            plexPlayKey = plexPlayKey
+            plexPlayKey = plexPlayKey,
+            artistIds = artistIds
         )
     }
 }

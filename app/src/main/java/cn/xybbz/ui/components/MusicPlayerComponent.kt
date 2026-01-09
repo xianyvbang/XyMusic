@@ -316,7 +316,14 @@ fun MusicPlayerScreen(
                             }
                         )
                     } else {
-                        MusicPlayerSimilarPopularComponent(listState = similarPopularListState)
+                        MusicPlayerSimilarPopularComponent(
+                            listState = similarPopularListState,
+                            itemId = musicDetail.itemId,
+                            onFavoriteSet = {emptySet()},
+                            onDownloadMusicIds = {emptyList()},
+                            onSimilarMusicList = {musicPlayerViewModel.similarMusicList},
+                            onPopularMusicList = {musicPlayerViewModel.popularMusicList}
+                            )
                     }
                 }
 

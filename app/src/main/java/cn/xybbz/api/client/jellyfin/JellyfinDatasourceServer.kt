@@ -61,6 +61,7 @@ import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -419,7 +420,7 @@ class JellyfinDatasourceServer @Inject constructor(
                 pageSize,
                 pageNum * pageSize
             )
-            selectMusicList = transitionMusicExtend(homeMusicList.items)
+            selectMusicList = transitionPlayMusic(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -440,7 +441,7 @@ class JellyfinDatasourceServer @Inject constructor(
                 pageNum * pageSize,
                 parentId = albumId
             )
-            selectMusicList = transitionMusicExtend(homeMusicList.items)
+            selectMusicList = transitionPlayMusic(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -466,7 +467,7 @@ class JellyfinDatasourceServer @Inject constructor(
                 pageNum * pageSize,
                 artistIds = listOf(artistId)
             )
-            selectMusicList = transitionMusicExtend(homeMusicList.items)
+            selectMusicList = transitionPlayMusic(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -501,7 +502,7 @@ class JellyfinDatasourceServer @Inject constructor(
                 pageNum * pageSize,
                 isFavorite = true
             )
-            selectMusicList = transitionMusicExtend(homeMusicList.items)
+            selectMusicList = transitionPlayMusic(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -749,7 +750,7 @@ class JellyfinDatasourceServer @Inject constructor(
     /**
      * 获得最多播放
      */
-    override suspend fun getMostPlayerMusicList(artistId: String?) {
+    override suspend fun getMostPlayerMusicList() {
         val musicList = getServerMusicList(
             startIndex = 0,
             pageSize = Constants.MIN_PAGE,
@@ -868,6 +869,43 @@ class JellyfinDatasourceServer @Inject constructor(
             audioBitRate,
             playSessionId
         )
+    }
+
+    /**
+     * 获得相似歌曲列表
+     */
+    override suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend>? {
+        val response = jellyfinApiClient.itemApi().getSimilarItems(
+            itemId = musicId,
+            userId = connectionConfigServer.getUserId(),
+            limit = 10,
+            fields = listOf(
+                ItemFields.PRIMARY_IMAGE_ASPECT_RATIO,
+                ItemFields.SORT_NAME,
+                ItemFields.MEDIA_SOURCES,
+                ItemFields.DATE_CREATED,
+                ItemFields.GENRES
+            )
+        )
+
+        return transitionMusicExtend(convertToMusicList(response.items))
+    }
+
+    /**
+     * 获得歌手热门歌曲列表
+     */
+    override suspend fun getArtistPopularMusicList(
+        artistId: String?,
+        artistName: String?
+    ): List<XyMusicExtend>? {
+        val items = getServerMusicList(
+            startIndex = 0,
+            pageSize = Constants.MIN_PAGE,
+            filters = listOf(ItemFilter.IS_PLAYED),
+            sortBy = listOf(ItemSortBy.PLAY_COUNT),
+            sortOrder = listOf(SortOrder.DESCENDING)
+        ).items
+        return transitionMusicExtend(items)
     }
 
     /**
@@ -1142,7 +1180,7 @@ class JellyfinDatasourceServer @Inject constructor(
             ).toMap()
         )
         val items = response.items.map {
-            transitionMusic(it)
+            convertToMusic(it)
         }
 
         return XyResponse<XyMusic>(
@@ -1316,8 +1354,16 @@ class JellyfinDatasourceServer @Inject constructor(
         )
     }
 
+    fun convertToMusicList(item: List<ItemResponse>): List<XyMusic> {
+        return item.map { music ->
+            convertToMusic(
+                music
+            )
+        }
+    }
+
     //MusicResponseVo转换XyItem
-    suspend fun transitionMusic(item: ItemResponse): XyMusic {
+    fun convertToMusic(item: ItemResponse): XyMusic {
 
         val itemImageUrl = item.albumPrimaryImageTag?.let {
             item.albumId?.let { albumId ->
