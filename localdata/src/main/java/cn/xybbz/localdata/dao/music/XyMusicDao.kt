@@ -256,7 +256,8 @@ interface XyMusicDao {
         artistId: String? = null,
         playlistId: String? = null,
         albumId: String? = null,
-        itemIds: List<String>? = null
+        itemIds: List<String>? = null,
+        ifRemoveMusic: Boolean = true
     ) {
         when (dataType) {
             MusicDataTypeEnum.HOME -> {
@@ -313,7 +314,8 @@ interface XyMusicDao {
                 }
             }
         }
-        removeByNotQuote()
+        if (ifRemoveMusic)
+            removeByNotQuote()
     }
 
     @Query(
@@ -682,10 +684,12 @@ interface XyMusicDao {
     ): List<XyPlayMusic>
 
 
-    @Query("""
+    @Query(
+        """
         select * from playqueuemusic where musicId = :itemId and connectionId = (select connectionId from xy_settings) limit 1
-    """)
-    suspend fun selectPlayQueueByItemId(itemId:String): PlayQueueMusic?
+    """
+    )
+    suspend fun selectPlayQueueByItemId(itemId: String): PlayQueueMusic?
 
     /**
      * 获得歌单中音乐的数据

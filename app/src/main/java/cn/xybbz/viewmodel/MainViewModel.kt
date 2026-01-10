@@ -351,7 +351,10 @@ class MainViewModel @Inject constructor(
                 if (xyMusicList.isNotEmpty()) {
 
                     //先删除数据
-                    db.musicDao.removeByType(dataType = MusicDataTypeEnum.PLAY_QUEUE)
+                    db.musicDao.removeByType(
+                        dataType = MusicDataTypeEnum.PLAY_QUEUE,
+                        ifRemoveMusic = false
+                    )
                     //存储音乐数据
                     db.musicDao.savePlayQueueMusic(xyMusicList)
 
