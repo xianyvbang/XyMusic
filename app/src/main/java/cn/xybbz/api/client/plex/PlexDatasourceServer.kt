@@ -49,6 +49,7 @@ import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.PlexOrder
 import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.entity.data.SearchData
+import cn.xybbz.entity.data.joinToString
 import cn.xybbz.entity.data.toPlexOrder
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -1234,7 +1235,7 @@ class PlexDatasourceServer @Inject constructor(
         return getServerMusicList(
             startIndex = 0,
             pageSize = pageSize,
-            artistId = artistIds.joinToString(Constants.ARTIST_DELIMITER) { it }
+            artistId = artistIds.joinToString()
         ).items
     }
 
@@ -1342,7 +1343,7 @@ class PlexDatasourceServer @Inject constructor(
         val response = getServerMusicList(
             plexListType = PlexListType.all,
             startIndex = 0,
-            pageSize = Constants.MIN_PAGE,
+            pageSize = Constants.ARTIST_HOT_MUSIC_LIST_PAGE,
             sortBy = PlexSortType.VIEWCOUNT,
             sortOrder = PlexSortOrder.DESCENDING,
             params = mapOf(Pair("viewCount>>=0", "")),
@@ -1552,7 +1553,7 @@ class PlexDatasourceServer @Inject constructor(
                 trackCollection = if (ifFavorite == true) plexApiClient.musicFavoriteCollectionIndex else null,
                 albumDecade = albumDecade,
                 artistTitle = artistTitle,
-                genreIds = genreIds?.joinToString(Constants.ARTIST_DELIMITER) { it },
+                genreIds = genreIds?.joinToString(),
                 params = params ?: mapOf(Pair("1", "1"))
             )
         return XyResponse(
@@ -1589,7 +1590,7 @@ class PlexDatasourceServer @Inject constructor(
             sort = "$sortBy:$sortOrder",
             title = search,
             artistId = artistId,
-            genreIds = genreIds?.joinToString(Constants.ARTIST_DELIMITER) { it },
+            genreIds = genreIds?.joinToString(),
             albumCollection = if (ifFavorite == true) plexApiClient.albumFavoriteCollectionIndex else null,
             albumDecade = albumDecade,
             params = params ?: mapOf(Pair("1", "1"))
@@ -1791,7 +1792,7 @@ class PlexDatasourceServer @Inject constructor(
             premiereDate = album.originallyAvailableAt?.atStartOfDay(ZoneOffset.ofHours(8))
                 ?.toInstant()
                 ?.toEpochMilli(),
-            genreIds = album.genre?.joinToString(Constants.ARTIST_DELIMITER) { it.tag },
+            genreIds = album.genre?.joinToString() { it.tag },
             ifFavorite = album.collection?.any { it.tag == application.getString(Constants.PLEX_ALBUM_COLLECTION_TITLE) } == true,
             ifPlaylist = false,
             createTime = album.addedAt,
@@ -1865,12 +1866,14 @@ class PlexDatasourceServer @Inject constructor(
             downloadUrl = createDownloadUrl(part?.key ?: ""),
             album = item.parentRatingKey.toString(),
             albumName = item.parentTitle,
-            genreIds = item.genre?.joinToString(Constants.ARTIST_DELIMITER) { it.tag },
+            genreIds = item.genre?.map { it.tag },
             connectionId = connectionConfigServer.getConnectionId(),
-            artists = item.grandparentTitle,
-            artistIds = item.grandparentRatingKey,
-            albumArtist = item.grandparentTitle ?: application.getString(Constants.UNKNOWN_ARTIST),
-            albumArtistIds = item.grandparentRatingKey,
+            artists = item.originalTitle?.split(Constants.ARTIST_DELIMITER_SEMICOLON),
+            artistIds = item.grandparentRatingKey?.let { listOf(it) },
+            albumArtist = listOf(
+                item.grandparentTitle ?: application.getString(Constants.UNKNOWN_ARTIST)
+            ),
+            albumArtistIds = item.grandparentRatingKey?.let { listOf(it) },
             createTime = item.addedAt,
             year = item.parentYear,
             playedCount = 0,

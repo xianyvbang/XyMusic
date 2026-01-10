@@ -20,8 +20,6 @@ package cn.xybbz.localdata.config
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
-import cn.xybbz.localdata.converter.XyMusicTypeConverter
 import cn.xybbz.localdata.dao.album.AlbumDao
 import cn.xybbz.localdata.dao.connection.ConnectionConfigDao
 import cn.xybbz.localdata.dao.count.XyDataCountDao
@@ -95,7 +93,6 @@ import cn.xybbz.localdata.data.setting.XySettings
         XyLrcConfig::class],
     exportSchema = true
 )
-@TypeConverters(XyMusicTypeConverter::class)
 abstract class DatabaseClient : RoomDatabase() {
 
     val musicDao: XyMusicDao by lazy { createMusicDao() }

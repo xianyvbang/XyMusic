@@ -23,8 +23,9 @@ import androidx.room.ForeignKey
 import androidx.room.ForeignKey.Companion.CASCADE
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import androidx.room.TypeConverters
+import cn.xybbz.localdata.converter.StringListTypeConverter
 import cn.xybbz.localdata.data.connection.ConnectionConfig
-import com.squareup.moshi.JsonClass
 
 @Entity(
     tableName = "xy_music",
@@ -36,7 +37,7 @@ import com.squareup.moshi.JsonClass
     )],
     indices = [Index("connectionId")]
 )
-@JsonClass(generateAdapter = true)
+@TypeConverters(StringListTypeConverter::class)
 data class XyMusic(
     /**
      * 数据音乐
@@ -66,32 +67,28 @@ data class XyMusic(
     /**
      * 流派id
      */
-    val genreIds: String? = null,
+    val genreIds: List<String>? = null,
     /**
      * 连接地址
      */
     val connectionId: Long,
     /**
-     * 数据类型
-     */
-//    val dataType: MusicPlayTypeEnum,
-    /**
      * 音乐艺术家名称
      */
-    val artists: String? = "",
+    val artists: List<String>? = emptyList(),
 
     /**
-     * 音乐艺术家id->使用"/"分割
+     * 音乐艺术家id
      */
-    val artistIds: String? = null,
+    val artistIds: List<String>? = null,
     /**
      * 专辑艺术家
      */
-    val albumArtist: String? = "",
+    val albumArtist: List<String>? = null,
     /**
-     * 专辑音乐艺术家id->使用"/"分割
+     * 专辑音乐艺术家id
      */
-    val albumArtistIds: String? = "",
+    val albumArtistIds: List<String>? = null,
     /**
      * 年份
      */

@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cn.xybbz.R
+import cn.xybbz.entity.data.joinToString
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.xy.ItemTrailingContent
@@ -73,7 +74,7 @@ fun MusicItemComponent(
         itemId = music.itemId,
         name = music.name,
         album = music.album,
-        artists = music.artists,
+        artists = music.artists?.joinToString(),
         pic = music.pic,
         codec = music.codec,
         bitRate = music.bitRate,
@@ -112,7 +113,7 @@ fun MusicItemComponent(
     ifPlay: Boolean,
     onMusicPlay: (OnMusicPlayParameter) -> Unit,
     trailingIcon: ImageVector = Icons.Rounded.MoreVert,
-    trailingContentDescription:String = "${name}${stringResource(R.string.other_operations_button_suffix)}",
+    trailingContentDescription: String = "${name}${stringResource(R.string.other_operations_button_suffix)}",
     ifShowTrailingContent: Boolean = true,
     ifSelect: Boolean = false,
     trailingOnSelectClick: ((Boolean) -> Unit)? = null,
@@ -198,7 +199,7 @@ fun MusicItemNotClickComponent(
         itemId = music.itemId,
         name = music.name,
         album = music.album,
-        artists = music.artists,
+        artists = music.artists?.joinToString(),
         pic = music.pic,
         codec = music.codec,
         bitRate = music.bitRate,
@@ -245,7 +246,7 @@ fun MusicItemIndexComponent(
         itemId = music.itemId,
         name = music.name,
         album = music.album,
-        artists = music.artists,
+        artists = music.artists?.joinToString(),
         pic = music.pic,
         codec = music.codec,
         bitRate = music.bitRate,

@@ -1,7 +1,24 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.viewmodel
 
 import androidx.lifecycle.ViewModel
-import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.data.era.XyEraItem
@@ -35,7 +52,7 @@ abstract class PageListViewModel : ViewModel() {
         eraItem: XyEraItem,
         refreshPage: suspend () -> Unit
     ) {
-        val yearList = eraItem.years.split(Constants.ARTIST_DELIMITER).map { it.toInt() }
+        val yearList = eraItem.years
         val sort = this._sortType.value
         if (sort.yearList == yearList) {
             sort.yearList = null

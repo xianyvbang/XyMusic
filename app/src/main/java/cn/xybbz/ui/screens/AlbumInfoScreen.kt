@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.ui.screens
 
 
@@ -91,6 +109,7 @@ import cn.xybbz.common.music.MusicController
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.entity.data.Sort
+import cn.xybbz.entity.data.joinToString
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.extension.isSticking
@@ -456,7 +475,7 @@ fun AlbumInfoScreen(
                                         if (albumInfoViewModel.albumPlayerHistoryProgressMap.containsKey(
                                                 music.itemId
                                             )
-                                        ) "已播: ${albumInfoViewModel.albumPlayerHistoryProgressMap[music.itemId]}%" else music.artists
+                                        ) "已播: ${albumInfoViewModel.albumPlayerHistoryProgressMap[music.itemId]}%" else music.artists?.joinToString()
                                             ?: "",
                                     onMusicPlay = { parameter ->
                                         coroutineScope.launch {
@@ -740,7 +759,7 @@ private fun MusicAlbumInfoComponent(
 private fun StickyHeaderOperation(
     onMusicListPage: () -> LazyPagingItems<XyMusic>,
     albumInfoViewModel: AlbumInfoViewModel,
-    ifOpenSelect:Boolean,
+    ifOpenSelect: Boolean,
     sortContent: @Composable () -> Unit
 ) {
     MusicListOperation(
@@ -777,7 +796,7 @@ private fun StickyHeaderOperation(
 private fun StickyHeaderOperationParent(
     albumInfoViewModel: AlbumInfoViewModel,
     musicListPage: LazyPagingItems<XyMusic>,
-    ifOpenSelect:Boolean,
+    ifOpenSelect: Boolean,
     sortBy: Sort,
 ) {
 

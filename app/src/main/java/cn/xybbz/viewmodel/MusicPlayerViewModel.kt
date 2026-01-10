@@ -18,9 +18,9 @@
 
 package cn.xybbz.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -30,7 +30,8 @@ import cn.xybbz.common.music.CacheController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.lrc.LrcServer
-import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.entity.data.toPlayerMusic
+import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -42,35 +43,21 @@ class MusicPlayerViewModel @Inject constructor(
     val dataSourceManager: DataSourceManager,
     val favoriteRepository: FavoriteRepository,
     val cacheController: CacheController,
-    val lrcServer: LrcServer
+    val lrcServer: LrcServer,
+    private val db: DatabaseClient
 ) : ViewModel() {
 
     var fontSize by mutableFloatStateOf(1.0f)
 
     val dataList = listOf(R.string.song_tab, R.string.lyrics_tab, R.string.recommend)
 
-    /**
-     * 相似歌曲
-     */
-    var similarMusicList by mutableStateOf(emptyList<XyMusicExtend>())
 
-    /**
-     * 热门歌曲
-     */
-    var popularMusicList by mutableStateOf(emptyList<XyMusicExtend>())
-
-    init {
-        getSimilarOrPopularMusicList()
-    }
-
-    private fun getSimilarOrPopularMusicList() {
-
+    fun addNextPlayer(musicExtend: XyMusicExtend) {
         viewModelScope.launch {
-            musicController.musicInfo?.let {
-                similarMusicList = dataSourceManager.getSimilarMusicList(it.itemId)
-                popularMusicList =
-                    dataSourceManager.getArtistPopularMusicList(it.artistIds ?: "", it.artists ?: "")
-            }
+            Log.i("=====", "添加到列表")
+            db.musicDao.save(musicExtend.music)
         }
+        musicController.addNextPlayer(musicExtend.toPlayerMusic())
     }
+
 }

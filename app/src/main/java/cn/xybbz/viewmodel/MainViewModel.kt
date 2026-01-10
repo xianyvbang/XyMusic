@@ -38,7 +38,6 @@ import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
-import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.CacheController
 import cn.xybbz.common.music.MusicController
@@ -59,6 +58,7 @@ import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.era.XyEraItem
 import cn.xybbz.localdata.data.music.PlayHistoryMusic
 import cn.xybbz.localdata.data.music.PlayQueueMusic
+import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.player.XyPlayer
 import cn.xybbz.localdata.data.progress.Progress
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -107,6 +107,17 @@ class MainViewModel @Inject constructor(
     private var mediaLibraryAndFavoriteSynJob: Job? = null
 
 
+    /**
+     * 相似歌曲
+     */
+    var similarMusicList by mutableStateOf(emptyList<XyMusicExtend>())
+
+    /**
+     * 热门歌曲
+     */
+    var popularMusicList by mutableStateOf(emptyList<XyMusicExtend>())
+
+
     init {
         Log.i("=====", "MainViewModel初始化")
         //加载是否开启专辑播放历史功能数据
@@ -140,7 +151,7 @@ class MainViewModel @Inject constructor(
                     }
 
                     is PlayerEvent.ChangeMusic -> {
-                        onOnChangeMusic(it.musicId)
+                        onOnChangeMusic(it.musicId, it.artistId, it.artistName)
                     }
 
                     is PlayerEvent.Favorite -> {
@@ -268,7 +279,19 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun onOnChangeMusic(musicId: String) {
+    fun onOnChangeMusic(musicId: String, artistId: String?, artistName: String?) {
+        viewModelScope.launch {
+            similarMusicList = dataSourceManager.getSimilarMusicList(musicId)
+        }
+        viewModelScope.launch {
+            musicController.musicInfo?.let {
+                popularMusicList =
+                    dataSourceManager.getArtistPopularMusicList(
+                        artistId ?: "",
+                        artistName ?: ""
+                    )
+            }
+        }
         viewModelScope.launch {
             lrcServer.clear()
             //数据变化的时候进行数据变化
@@ -541,17 +564,17 @@ class MainViewModel @Inject constructor(
                 //生成数据
                 val num = (era - eraStart) / 10
                 for (index in 0..num) {
-                    val years = mutableListOf<String>()
+                    val years = mutableListOf<Int>()
                     val thisEra = eraStart + index * 10
 
                     for (i in 0 until 10) {
-                        years.add((thisEra + i).toString())
+                        years.add((thisEra + i))
                     }
                     eraList.add(
                         XyEraItem(
                             title = "$thisEra",
                             era = thisEra,
-                            years = years.joinToString(Constants.ARTIST_DELIMITER)
+                            years = years
                         )
                     )
 
@@ -561,31 +584,29 @@ class MainViewModel @Inject constructor(
             } else {
                 val earItem = db.eraItemDao.selectOneByEra(era)
                 if (earItem != null) {
-                    val years = earItem.years.split(',')
+                    val years = earItem.years
                     val yearsNew = mutableListOf<String>()
-                    if (!years.contains(year.toString())) {
+                    if (!years.contains(year)) {
                         for (i in 0 until 10) {
                             yearsNew.add((era + i).toString())
                         }
                         db.eraItemDao.updateById(
                             earItem.copy(
-                                years = years.joinToString(
-                                    Constants.ARTIST_DELIMITER
-                                )
+                                years = years
                             )
                         )
                     }
 
                 } else {
-                    val years = mutableListOf<String>()
+                    val years = mutableListOf<Int>()
                     for (i in 0 until 10) {
-                        years.add((era + i).toString())
+                        years.add((era + i))
                     }
                     db.eraItemDao.saveBatch(
                         XyEraItem(
                             title = "${era}年代",
                             era = era,
-                            years = years.joinToString(Constants.ARTIST_DELIMITER),
+                            years = years
                         )
                     )
 
@@ -657,10 +678,10 @@ class MainViewModel @Inject constructor(
         versionCheckScheduler.enqueueIfNeeded()
     }
 
-    fun initTranscodeListener(){
+    fun initTranscodeListener() {
         viewModelScope.launch {
             settingsManager.transcodingFlow.collect {
-                Log.i("music","数据转码监听${it}")
+                Log.i("music", "数据转码监听${it}")
                 musicController.replacePlaylistItemUrl()
             }
         }

@@ -21,7 +21,6 @@ package cn.xybbz.api.client.jellyfin.service
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.jellyfin.data.ItemResponse
 import cn.xybbz.api.client.jellyfin.data.Response
-import cn.xybbz.api.enums.jellyfin.ItemFields
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -49,7 +48,7 @@ interface ItemApi : BaseApi {
         @Path("itemId") itemId: String,
         @Query("userId") userId: String,
         @Query("Limit") limit: Int,
-        @Query("Fields") fields: List<ItemFields>? = null
+        @Query("Fields") fields: String? = null
     ): Response<ItemResponse>
 
 }

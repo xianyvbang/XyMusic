@@ -46,6 +46,7 @@ import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.NavidromeOrder
 import cn.xybbz.entity.data.SearchData
+import cn.xybbz.entity.data.joinToString
 import cn.xybbz.entity.data.toNavidromeOrder
 import cn.xybbz.entity.data.toNavidromeOrder2
 import cn.xybbz.entity.data.toXyMusic
@@ -859,7 +860,8 @@ class NavidromeDatasourceServer @Inject constructor(
     override suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend>? {
         val response =
             navidromeApiClient.itemApi().getSimilarSongs(
-                songId = musicId
+                songId = musicId,
+                count = Constants.SIMILAR_MUSIC_LIST_PAGE
             ).subsonicResponse.similarSongs
         val items = response?.song?.map { music ->
             music.toXyMusic(
@@ -884,7 +886,8 @@ class NavidromeDatasourceServer @Inject constructor(
     ): List<XyMusicExtend>? {
         val response =
             navidromeApiClient.itemApi().getTopSongs(
-                artistName = artistName?:""
+                artistName = artistName ?: "",
+                count = Constants.ARTIST_HOT_MUSIC_LIST_PAGE
             ).subsonicResponse.topSongs
         val items = response?.song?.map { music ->
             music.toXyMusic(
@@ -1306,7 +1309,7 @@ class NavidromeDatasourceServer @Inject constructor(
             premiereDate = album.date?.replace("-", "")?.toLong() ?: 0,
             year = album.maxYear,
             ifFavorite = album.starred ?: false,
-            genreIds = album.genres?.joinToString(Constants.ARTIST_DELIMITER) { it.id }
+            genreIds = album.genres?.joinToString { it.id }
         )
     }
 
@@ -1340,12 +1343,12 @@ class NavidromeDatasourceServer @Inject constructor(
             } ?: "" else navidromeApiClient.createDownloadUrl(music.id),
             album = music.albumId,
             albumName = music.album,
-            genreIds = music.genres?.joinToString(Constants.ARTIST_DELIMITER) { it.id },
+            genreIds = music.genres?.map { it.id },
             connectionId = connectionConfigServer.getConnectionId(),
-            artists = music.artist,
-            artistIds = music.artistId,
-            albumArtist = music.artist,
-            albumArtistIds = music.artistId,
+            artists = listOf(music.artist),
+            artistIds = listOf(music.artistId),
+            albumArtist = listOf(music.artist),
+            albumArtistIds = listOf(music.artistId),
             year = music.year,
             playedCount = 0,
             ifFavoriteStatus = music.starred == true,

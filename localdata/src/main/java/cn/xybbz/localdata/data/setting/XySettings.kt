@@ -20,7 +20,7 @@ package cn.xybbz.localdata.data.setting
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import cn.xybbz.localdata.common.Constants
+import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.localdata.enums.LanguageType
 
@@ -35,7 +35,7 @@ data class XySettings(
     /**
      * 桌面歌词
      */
-    val ifDesktopLyrics: Int = Constants.NO,
+    val ifDesktopLyrics: Int = LocalConstants.NO,
     /**
      * 倍速播放速度
      *  0.5f -> "0.5倍"

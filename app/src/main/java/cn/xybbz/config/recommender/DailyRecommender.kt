@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.config.recommender
 
 import android.util.Log
@@ -50,10 +68,10 @@ class DailyRecommender(
         // 4) 从候选集评分并排序（混合得分）
         val scored = candidates.map { song ->
             val prefScore =
-                (song.artistIds?.split(Constants.ARTIST_DELIMITER)?.sumOf { artistId ->
+                (song.artistIds?.sumOf { artistId ->
                     val artistPref = artistPrefs[artistId]
                     (artistPref ?: 0.0) * 0.7
-                } ?: 0.0) * 0.7 + (song.genreIds?.split(Constants.ARTIST_DELIMITER)
+                } ?: 0.0) * 0.7 + (song.genreIds
                     ?.sumOf { genreId ->
                         genrePrefs[genreId] ?: 0.0
                     } ?: 0.0) * 0.3
@@ -131,12 +149,12 @@ class DailyRecommender(
             val add = base * (0.6 * recencyWeight + 0.4) + likedBoost
 
             if (!s.artistIds.isNullOrEmpty())
-                s.artistIds?.split(Constants.ARTIST_DELIMITER)?.forEach {
+                s.artistIds?.forEach {
                     artistScore[it] = (artistScore[it] ?: 0.0) + add
                 }
 
             if (!s.genreIds.isNullOrEmpty()) {
-                s.genreIds?.split(Constants.ARTIST_DELIMITER)?.forEach {
+                s.genreIds?.forEach {
                     genreScore[it] = (genreScore[it] ?: 0.0) + add * 0.8
                 }
             }
@@ -207,10 +225,10 @@ class DailyRecommender(
         var score = 0.0
         pool.forEach { other ->
             if (other.itemId == song.itemId) return@forEach
-            if (!other.artistIds.isNullOrBlank() && other.artistIds?.split(Constants.ARTIST_DELIMITER)
+            if (!other.artistIds.isNullOrEmpty() && other.artistIds
                     ?.any { song.artistIds?.contains(it) == true } == true
             ) score += 0.6
-            else if (!song.genreIds.isNullOrBlank() && song.genreIds?.split(Constants.ARTIST_DELIMITER)
+            else if (!song.genreIds.isNullOrEmpty() && song.genreIds
                     ?.any {
                         other.genreIds?.contains(
                             it

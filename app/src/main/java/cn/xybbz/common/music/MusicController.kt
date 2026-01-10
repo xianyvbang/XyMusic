@@ -61,6 +61,7 @@ import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.network.NetWorkMonitor
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.entity.data.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
@@ -327,7 +328,13 @@ class MusicController(
                             it.itemId in favoriteRepository.favoriteSet.value
                         )
                         scope.launch {
-                            _events.emit(PlayerEvent.ChangeMusic(it.itemId))
+                            _events.emit(
+                                PlayerEvent.ChangeMusic(
+                                    it.itemId,
+                                    it.artistIds?.get(0),
+                                    it.artists?.get(0)
+                                )
+                            )
                         }
                         //判断音乐播放进度是否为0,如果为0则不处理,不为0则需要跳转到相应的进度
                         if (musicCurrentPositionMap.containsKey(it.itemId)) {
@@ -594,35 +601,12 @@ class MusicController(
         artistId: String = "",
         isPlayer: Boolean? = null
     ) {
-        val indexOfLast = originMusicList.indexOfLast { it.itemId == music.itemId }
-        if (indexOfLast != -1) {
-            if (isPlayer == true) {
-                seekToIndex(indexOfLast)
-            }
-        } else {
-            val nowIndex = curOriginIndex + 1
-            val tmpList = mutableListOf<XyPlayMusic>()
-            tmpList.addAll(originMusicList)
-            val isListEmpty = tmpList.isEmpty()
-            tmpList.add(nowIndex, music)
-            originMusicList = tmpList
 
-            mediaController?.run {
-                addMediaItem(
-                    if (isListEmpty) 0 else this.nextMediaItemIndex,
-                    musicSetMediaItem(music)
-                )
-            }
-            mediaController?.let { media ->
-                if (isPlayer != null && isPlayer) {
-                    seekToIndex(media.nextMediaItemIndex)
-                }
-            }
+        addNextPlayer(music)
+        if (isPlayer == true) {
+            seekToNext()
+        }
 
-        }
-        scope.launch {
-            _events.emit(PlayerEvent.AddMusicList(artistId))
-        }
     }
 
 
@@ -648,12 +632,21 @@ class MusicController(
             val indexOfFirst =
                 originMusicList.indexOfFirst { it.itemId == music.itemId }
             if (indexOfFirst != -1) {
-                val tmpList = mutableListOf<XyPlayMusic>()
-                tmpList.addAll(originMusicList)
-                tmpList.removeAt(indexOfFirst)
-                originMusicList = tmpList
-            }
-            if (indexOfFirst != curOriginIndex + 1) {
+                if (indexOfFirst != curOriginIndex + 1) {
+                    val tmpList = mutableListOf<XyPlayMusic>()
+                    tmpList.addAll(originMusicList)
+                    tmpList.add(curOriginIndex + 1, music)
+                    tmpList.removeAt(indexOfFirst)
+                    originMusicList = tmpList
+                    mediaController?.let { controller ->
+                        controller.addMediaItem(
+                            controller.nextMediaItemIndex,
+                            mediaItem
+                        )
+                        controller.removeMediaItem(indexOfFirst)
+                    }
+                }
+            }else {
                 val tmpList = mutableListOf<XyPlayMusic>()
                 tmpList.addAll(originMusicList)
                 tmpList.add(curOriginIndex + 1, music)
@@ -665,6 +658,11 @@ class MusicController(
                     )
                 }
             }
+
+        }
+
+        scope.launch {
+            _events.emit(PlayerEvent.AddMusicList(music.artistIds?.get(0)))
         }
     }
 
@@ -747,7 +745,7 @@ class MusicController(
             val mediaMetadata = MediaMetadata.Builder()
                 .setTitle(playMusic.name)
                 .setArtworkUri(pic?.toUri())
-                .setArtist(playMusic.artists) // 可以设置其他元数据信息，例如专辑、时长等
+                .setArtist(playMusic.artists?.joinToString()) // 可以设置其他元数据信息，例如专辑、时长等
                 .setExtras(bundle)
                 .build()
             mediaItemBuilder.setMediaMetadata(mediaMetadata)

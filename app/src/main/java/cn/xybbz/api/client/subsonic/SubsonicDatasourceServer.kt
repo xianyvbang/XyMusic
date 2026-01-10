@@ -299,7 +299,7 @@ class SubsonicDatasourceServer @Inject constructor(
     override suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>? {
         val music = db.musicDao.selectById(itemId)
         return if (music?.ifLyric == true) {
-            val lyrics = subsonicApiClient.lyricsApi().getLyrics(music.artists, music.name)
+            val lyrics = subsonicApiClient.lyricsApi().getLyrics(music.artists?.get(0), music.name)
             lyrics.subsonicResponse.lyrics?.value?.let {
                 LrcUtils.parseLrc(it)
             }
@@ -800,7 +800,8 @@ class SubsonicDatasourceServer @Inject constructor(
     override suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend>? {
         val response =
             subsonicApiClient.itemApi().getSimilarSongs(
-                songId = musicId
+                songId = musicId,
+                count = Constants.SIMILAR_MUSIC_LIST_PAGE
             ).subsonicResponse.similarSongs
         val items = response?.song?.map { music ->
             music.toXyMusic(
@@ -825,7 +826,8 @@ class SubsonicDatasourceServer @Inject constructor(
     ): List<XyMusicExtend>? {
         val response =
             subsonicApiClient.itemApi().getTopSongs(
-                artistName = artistName ?: ""
+                artistName = artistName ?: "",
+                count = Constants.ARTIST_HOT_MUSIC_LIST_PAGE
             ).subsonicResponse.topSongs
         val items = response?.song?.map { music ->
             music.toXyMusic(

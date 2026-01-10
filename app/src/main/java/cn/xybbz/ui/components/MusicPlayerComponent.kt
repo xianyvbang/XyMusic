@@ -96,6 +96,7 @@ import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.config.favorite.FavoriteRepository
+import cn.xybbz.entity.data.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import cn.xybbz.ui.components.lrc.LrcViewNewCompose
@@ -318,12 +319,11 @@ fun MusicPlayerScreen(
                     } else {
                         MusicPlayerSimilarPopularComponent(
                             listState = similarPopularListState,
-                            itemId = musicDetail.itemId,
-                            onFavoriteSet = {emptySet()},
-                            onDownloadMusicIds = {emptyList()},
-                            onSimilarMusicList = {musicPlayerViewModel.similarMusicList},
-                            onPopularMusicList = {musicPlayerViewModel.popularMusicList}
-                            )
+                            onFavoriteSet = { emptySet() },
+                            onDownloadMusicIds = { emptyList() },
+                            playMusicList = musicPlayerViewModel.musicController.originMusicList,
+                            onAddPlayMusic = { musicPlayerViewModel.addNextPlayer(it) }
+                        )
                     }
                 }
 
@@ -355,7 +355,8 @@ fun MusicPlayerScreen(
                             )
 
                             Text(
-                                text = (if (musicDetail.artists.isNullOrBlank()) stringResource(R.string.unknown_artist) else musicDetail.artists).toString(),
+                                text = if (musicDetail.artists.isNullOrEmpty()) stringResource(R.string.unknown_artist) else musicDetail.artists?.joinToString()
+                                    ?: "",
                                 color = Color(0xff7B7B8B),
                                 fontSize = 17.sp,
                                 fontWeight = FontWeight.W400,
