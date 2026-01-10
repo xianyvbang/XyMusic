@@ -428,5 +428,6 @@
     <string name="forward_offset">向前偏移</string>
     <string name="backward_offset">向後偏移</string>
     <string name="offset">偏移</string>
+    <string name="lrc_config">歌詞設定</string>
 
 </resources>
