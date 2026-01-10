@@ -1,36 +1,63 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.CacheController
 import cn.xybbz.common.music.MusicController
-import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.lrc.LrcServer
+import cn.xybbz.entity.data.toPlayerMusic
+import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.data.music.XyMusicExtend
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class MusicPlayerViewModel @Inject constructor(
-    private val _musicController: MusicController,
-    private val _dataSourceManager: DataSourceManager,
-    private val _settingsManager: SettingsManager,
-    private val _favoriteRepository: FavoriteRepository,
-    private val _cacheController: CacheController,
-    val lrcServer: LrcServer
+    val musicController: MusicController,
+    val dataSourceManager: DataSourceManager,
+    val favoriteRepository: FavoriteRepository,
+    val cacheController: CacheController,
+    val lrcServer: LrcServer,
+    private val db: DatabaseClient
 ) : ViewModel() {
-
-    val musicController = _musicController
-    val dataSourceManager = _dataSourceManager
-    val settingsConfig = _settingsManager
-    val favoriteRepository = _favoriteRepository
-    val cacheController = _cacheController
 
     var fontSize by mutableFloatStateOf(1.0f)
 
-    val dataList = listOf(R.string.song_tab, R.string.lyrics_tab)
+    val dataList = listOf(R.string.song_tab, R.string.lyrics_tab, R.string.recommend)
+
+
+    fun addNextPlayer(musicExtend: XyMusicExtend) {
+        viewModelScope.launch {
+            Log.i("=====", "添加到列表")
+            db.musicDao.save(musicExtend.music)
+        }
+        musicController.addNextPlayer(musicExtend.toPlayerMusic())
+    }
+
 }

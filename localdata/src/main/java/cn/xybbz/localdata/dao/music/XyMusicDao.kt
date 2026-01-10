@@ -256,7 +256,8 @@ interface XyMusicDao {
         artistId: String? = null,
         playlistId: String? = null,
         albumId: String? = null,
-        itemIds: List<String>? = null
+        itemIds: List<String>? = null,
+        ifRemoveMusic: Boolean = true
     ) {
         when (dataType) {
             MusicDataTypeEnum.HOME -> {
@@ -313,7 +314,8 @@ interface XyMusicDao {
                 }
             }
         }
-        removeByNotQuote()
+        if (ifRemoveMusic)
+            removeByNotQuote()
     }
 
     @Query(
@@ -594,7 +596,7 @@ interface XyMusicDao {
 
     @Query(
         """
-         select itemId,mi.pic,mi.name,mi.album,mi.container,mi.artists,fm.ifFavorite as ifFavoriteStatus,
+         select itemId,mi.pic,mi.name,mi.album,mi.container,mi.artists,mi.artistIds,fm.ifFavorite as ifFavoriteStatus,
                 mi.size,xd.filePath,:playSessionId as playSessionId,mi.runTimeTicks,mi.plexPlayKey as plexPlayKey
         from HomeMusic hm
         inner join xy_music mi on hm.musicId = mi.itemId
@@ -666,7 +668,7 @@ interface XyMusicDao {
      */
     @Query(
         """
-        select itemId,mi.pic,mi.name,mi.album,mi.container,mi.artists,fm.ifFavorite as ifFavoriteStatus,mi.size,xd.filePath,
+        select itemId,mi.pic,mi.name,mi.album,mi.container,mi.artists,mi.artistIds,fm.ifFavorite as ifFavoriteStatus,mi.size,xd.filePath,
                 :playSessionId as playSessionId,mi.runTimeTicks,mi.plexPlayKey as plexPlayKey
         from playqueuemusic pqm
         inner join xy_music mi on pqm.musicId = mi.itemId
@@ -682,10 +684,12 @@ interface XyMusicDao {
     ): List<XyPlayMusic>
 
 
-    @Query("""
+    @Query(
+        """
         select * from playqueuemusic where musicId = :itemId and connectionId = (select connectionId from xy_settings) limit 1
-    """)
-    suspend fun selectPlayQueueByItemId(itemId:String): PlayQueueMusic?
+    """
+    )
+    suspend fun selectPlayQueueByItemId(itemId: String): PlayQueueMusic?
 
     /**
      * 获得歌单中音乐的数据
@@ -778,7 +782,7 @@ interface XyMusicDao {
 
     @Query(
         """
-        select itemId,mi.pic,mi.name,mi.album,mi.container,mi.artists,fm.ifFavorite as ifFavoriteStatus,mi.size,xd.filePath,
+        select itemId,mi.pic,mi.name,mi.album,mi.container,mi.artists,mi.artistIds,fm.ifFavorite as ifFavoriteStatus,mi.size,xd.filePath,
                 :playSessionId as playSessionId,mi.runTimeTicks,mi.plexPlayKey as plexPlayKey
         from xy_music mi 
         left join favoritemusic fm on mi.itemId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
@@ -800,7 +804,7 @@ interface XyMusicDao {
 
     @Query(
         """
-        select itemId,xm.pic,xm.name,xm.album,xm.container,xm.artists,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
+        select itemId,xm.pic,xm.name,xm.album,xm.container,xm.artists,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
                 :playSessionId as playSessionId,xm.runTimeTicks,xm.plexPlayKey as plexPlayKey
         from xy_music xm 
         left join favoritemusic fm on xm.itemId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
@@ -1042,7 +1046,7 @@ interface XyMusicDao {
 
     @Query(
         """
-        select itemId,xm.pic,xm.name,xm.album,xm.container,xm.artists,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
+        select itemId,xm.pic,xm.name,xm.album,xm.container,xm.artists,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
                 :playSessionId as playSessionId,xm.runTimeTicks,xm.plexPlayKey as plexPlayKey
         from albummusic am
         inner join xy_music xm on am.musicId = xm.itemId
@@ -1084,7 +1088,7 @@ interface XyMusicDao {
 
     @Query(
         """
-         select itemId,xm.pic,xm.name,xm.album,xm.container,xm.artists,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
+         select itemId,xm.pic,xm.name,xm.album,xm.container,xm.artists,xm.artistIds,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
                 :playSessionId as playSessionId,xm.runTimeTicks,xm.plexPlayKey as plexPlayKey
         from artistmusic am
         inner join xy_music xm on am.musicId = xm.itemId

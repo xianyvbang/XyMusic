@@ -222,11 +222,11 @@ class MusicBottomMenuViewModel @Inject constructor(
     /**
      * 获得艺术家信息
      */
-    fun getArtistInfos(artists: String) {
+    fun getArtistInfos(artists: List<String>) {
         viewModelScope.launch {
             try {
                 xyArtists =
-                    dataSourceManager.selectArtistInfoByIds(artists.split(Constants.ARTIST_DELIMITER))
+                    dataSourceManager.selectArtistInfoByIds(artists)
                         ?: emptyList()
             } catch (e: Exception) {
                 Log.e(Constants.LOG_ERROR_PREFIX, "获得艺术家信息失败", e)

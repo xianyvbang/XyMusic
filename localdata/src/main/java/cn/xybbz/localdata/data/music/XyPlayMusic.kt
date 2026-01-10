@@ -19,11 +19,14 @@
 package cn.xybbz.localdata.data.music
 
 import androidx.room.Ignore
+import androidx.room.TypeConverters
+import cn.xybbz.localdata.converter.StringListTypeConverter
 import java.util.UUID
 
 /**
- * 音乐嵌套类
+ * 音乐播放类
  */
+@TypeConverters(StringListTypeConverter::class)
 data class XyPlayMusic(
     val itemId: String,
     /**
@@ -51,7 +54,11 @@ data class XyPlayMusic(
     /**
      * 音乐艺术家名称
      */
-    val artists: String?,
+    val artists: List<String>?,
+    /**
+     * 艺术家id
+     */
+    val artistIds: List<String>?,
 
     /**
      * 是否已经收藏

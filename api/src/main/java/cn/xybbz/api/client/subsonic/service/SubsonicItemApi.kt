@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.client.subsonic.service
 
 import cn.xybbz.api.base.BaseApi
@@ -6,9 +24,11 @@ import cn.xybbz.api.client.subsonic.data.SubsonicAlbumResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicRandomResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicSearchResponse
+import cn.xybbz.api.client.subsonic.data.SubsonicSimilarSongsResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicSongResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicSongsByGenreResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicStarred2Response
+import cn.xybbz.api.client.subsonic.data.SubsonicTopSongsResponse
 import cn.xybbz.api.enums.subsonic.AlbumType
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -68,4 +88,16 @@ interface SubsonicItemApi : BaseApi {
         @Query("offset") offset: Int = 0,
         @Query("musicFolderId") musicFolderId: String? = null
     ):SubsonicResponse<SubsonicSongsByGenreResponse>
+
+    @GET("/rest/getTopSongs")
+    suspend fun getTopSongs(
+        @Query("artist") artistName: String,
+        @Query("count") count: Int = 20
+    ): SubsonicResponse<SubsonicTopSongsResponse>
+
+    @GET("/rest/getSimilarSongs")
+    suspend fun getSimilarSongs(
+        @Query("id") songId: String,
+        @Query("count") count: Int = 20
+    ): SubsonicResponse<SubsonicSimilarSongsResponse>
 }

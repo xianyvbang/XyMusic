@@ -16,33 +16,28 @@
  *
  */
 
-package cn.xybbz.localdata.data.era
+package cn.xybbz.api.client.subsonic.data
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import androidx.room.TypeConverters
-import cn.xybbz.localdata.converter.IntListTypeConverter
+import cn.xybbz.api.enums.subsonic.Status
+import com.squareup.moshi.Json
 
-/**
- * 年代数据
- */
-@Entity(
-    tableName = "xy_era_item"
-)
-@TypeConverters(IntListTypeConverter::class)
-data class XyEraItem(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+data class SubsonicTopSongsResponse(
+    override val type: String? = null,
     /**
-     * 标题
+     * 版本号
      */
-    val title: String,
+    override val version: String,
     /**
-     * 年代
+     * 状态
      */
-    val era: Int,
+    override val status: Status,
     /**
-     * 年份,使用逗号分割 例: 2021,2022,2023
+     * 热门歌曲
      */
-    val years: List<Int>
-)
+    @param:Json(name = "topSongs")
+    val topSongs: TopSongs? = null,
+    /**
+     * 报错信息
+     */
+    override val error: SubsonicError? = null
+): SubsonicParentResponse(type, version, status, error)

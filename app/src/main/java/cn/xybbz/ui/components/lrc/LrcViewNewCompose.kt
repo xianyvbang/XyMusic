@@ -341,13 +341,10 @@ fun LrcViewNewCompose(
                     fabMenuExpanded = !fabMenuExpanded
                 },
                 label = {
-                    Text(text = "LRC")
+                    Text(text = stringResource(R.string.lrc_config))
                 })
         }
-
-
     }
-
 }
 
 @Composable

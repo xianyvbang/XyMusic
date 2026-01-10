@@ -19,25 +19,17 @@
 package cn.xybbz.localdata.converter
 
 import androidx.room.TypeConverter
-import cn.xybbz.localdata.data.music.XyMusic
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import cn.xybbz.localdata.common.LocalConstants
 
-class XyMusicTypeConverter {
-
-    private val moshi = Moshi.Builder()
-        .add(KotlinJsonAdapterFactory())
-        .build()
-
-    private val adapter = moshi.adapter(XyMusic::class.java)
+class StringListTypeConverter {
 
     @TypeConverter
-    fun fromMusic(music: XyMusic?): String? {
-        return music?.let { adapter.toJson(it) }
+    fun listToString(list: List<String>?): String? {
+        return list?.joinToString(LocalConstants.ARTIST_DELIMITER)
     }
 
     @TypeConverter
-    fun toMusic(json: String?): XyMusic? {
-        return json?.let { adapter.fromJson(it) }
+    fun stringToList(value: String?): List<String>? {
+        return value?.split(LocalConstants.ARTIST_DELIMITER)
     }
 }

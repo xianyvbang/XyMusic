@@ -32,7 +32,7 @@ sealed class PlayerEvent {
     //手动切换音频之前
     object BeforeChangeMusic : PlayerEvent()
     //音频切换
-    data class ChangeMusic(val musicId: String) : PlayerEvent()
+    data class ChangeMusic(val musicId: String, val artistId: String?, val artistName: String?) : PlayerEvent()
     //收藏/取消收藏
     data class Favorite(val musicId: String) : PlayerEvent()
     //加载下一页数据,参数是页码

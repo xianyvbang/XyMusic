@@ -428,5 +428,6 @@ Automatic calculation rules for the upper limit of cache:
     <string name="forward_offset">Forward offset</string>
     <string name="backward_offset">Backward offset</string>
     <string name="offset">Offset</string>
+    <string name="lrc_config">Lyrics settings</string>
 
 </resources>

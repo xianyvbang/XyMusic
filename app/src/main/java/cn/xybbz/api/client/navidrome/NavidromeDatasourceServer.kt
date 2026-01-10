@@ -46,13 +46,16 @@ import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.NavidromeOrder
 import cn.xybbz.entity.data.SearchData
+import cn.xybbz.entity.data.joinToString
 import cn.xybbz.entity.data.toNavidromeOrder
 import cn.xybbz.entity.data.toNavidromeOrder2
+import cn.xybbz.entity.data.toXyMusic
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -699,7 +702,7 @@ class NavidromeDatasourceServer @Inject constructor(
                 pageSize,
                 pageNum * pageSize
             )
-            selectMusicList = transitionMusicExtend(homeMusicList.items)
+            selectMusicList = transitionPlayMusic(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -721,7 +724,7 @@ class NavidromeDatasourceServer @Inject constructor(
                 pageSize = pageSize,
                 albumId = albumId
             )
-            selectMusicList = transitionMusicExtend(homeMusicList.items)
+            selectMusicList = transitionPlayMusic(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -746,7 +749,7 @@ class NavidromeDatasourceServer @Inject constructor(
                 pageSize = pageSize,
                 artistIds = listOf(artistId)
             )
-            selectMusicList = transitionMusicExtend(homeMusicList.items)
+            selectMusicList = transitionPlayMusic(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -780,7 +783,7 @@ class NavidromeDatasourceServer @Inject constructor(
                 pageSize = pageSize,
                 isFavorite = true
             )
-            selectMusicList = transitionMusicExtend(homeMusicList.items)
+            selectMusicList = transitionPlayMusic(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -849,6 +852,55 @@ class NavidromeDatasourceServer @Inject constructor(
             audioCodec = AudioCodecEnum.ROW
         }
         return navidromeApiClient.createAudioUrl(musicId, audioCodec, audioBitRate)
+    }
+
+    /**
+     * 获得相似歌曲列表
+     */
+    override suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend>? {
+        val response =
+            navidromeApiClient.itemApi().getSimilarSongs(
+                songId = musicId,
+                count = Constants.SIMILAR_MUSIC_LIST_PAGE
+            ).subsonicResponse.similarSongs
+        val items = response?.song?.map { music ->
+            music.toXyMusic(
+                pic = if (music.coverArt.isNullOrBlank()) null else music.coverArt?.let {
+                    navidromeApiClient.getImageUrl(
+                        it
+                    )
+                },
+                downloadUrl = createDownloadUrl(music.id),
+                connectionId = connectionConfigServer.getConnectionId()
+            )
+        }
+        return transitionMusicExtend(items)
+    }
+
+    /**
+     * 获得歌手热门歌曲列表
+     */
+    override suspend fun getArtistPopularMusicList(
+        artistId: String?,
+        artistName: String?
+    ): List<XyMusicExtend>? {
+        val response =
+            navidromeApiClient.itemApi().getTopSongs(
+                artistName = artistName ?: "",
+                count = Constants.ARTIST_HOT_MUSIC_LIST_PAGE
+            ).subsonicResponse.topSongs
+        val items = response?.song?.map { music ->
+            music.toXyMusic(
+                pic = if (music.coverArt.isNullOrBlank()) null else music.coverArt?.let {
+                    navidromeApiClient.getImageUrl(
+                        it
+                    )
+                },
+                downloadUrl = createDownloadUrl(music.id),
+                connectionId = connectionConfigServer.getConnectionId()
+            )
+        }
+        return transitionMusicExtend(items)
     }
 
     /**
@@ -1257,7 +1309,7 @@ class NavidromeDatasourceServer @Inject constructor(
             premiereDate = album.date?.replace("-", "")?.toLong() ?: 0,
             year = album.maxYear,
             ifFavorite = album.starred ?: false,
-            genreIds = album.genres?.joinToString(Constants.ARTIST_DELIMITER) { it.id }
+            genreIds = album.genres?.joinToString { it.id }
         )
     }
 
@@ -1291,12 +1343,12 @@ class NavidromeDatasourceServer @Inject constructor(
             } ?: "" else navidromeApiClient.createDownloadUrl(music.id),
             album = music.albumId,
             albumName = music.album,
-            genreIds = music.genres?.joinToString(Constants.ARTIST_DELIMITER) { it.id },
+            genreIds = music.genres?.map { it.id },
             connectionId = connectionConfigServer.getConnectionId(),
-            artists = music.artist,
-            artistIds = music.artistId,
-            albumArtist = music.artist,
-            albumArtistIds = music.artistId,
+            artists = listOf(music.artist),
+            artistIds = listOf(music.artistId),
+            albumArtist = listOf(music.artist),
+            albumArtistIds = listOf(music.artistId),
             year = music.year,
             playedCount = 0,
             ifFavoriteStatus = music.starred == true,

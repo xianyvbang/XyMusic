@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.common.constants
 
 import androidx.annotation.StringRes
@@ -109,7 +127,7 @@ object Constants {
     /**
      * 艺术家名称和id分隔符
      */
-    const val ARTIST_DELIMITER = ","
+    const val ARTIST_DELIMITER_SEMICOLON = ";"
 
     /**
      * 斜杠分隔符 '/'
@@ -140,6 +158,16 @@ object Constants {
      * 艺术家分页失效时间
      */
     const val ARTIST_PAGE_TIME_FAILURE = 60L
+
+    /**
+     * 相似歌曲分页大小
+     */
+    const val SIMILAR_MUSIC_LIST_PAGE = 6
+
+    /**
+     * 艺术家热门歌曲分页大小
+     */
+    const val ARTIST_HOT_MUSIC_LIST_PAGE = 4
 
     /**
      * log日志前缀

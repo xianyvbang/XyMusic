@@ -37,7 +37,8 @@ data class XyMusicExtend(
             size = music.size,
             filePath = filePath,
             runTimeTicks = music.runTimeTicks,
-            plexPlayKey = music.plexPlayKey
+            plexPlayKey = music.plexPlayKey,
+            artistIds = music.artistIds
         )
     }
 }

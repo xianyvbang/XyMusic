@@ -94,6 +94,7 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.entity.data.MusicItemMenuData
+import cn.xybbz.entity.data.joinToString
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.setting.SkipTime
@@ -446,14 +447,14 @@ fun MusicBottomMenuComponent(
                         onClick = {
                             //获得歌手信息
                             music.artistIds?.let { artistIds ->
-                                if (artistIds.isNotBlank()) {
+                                if (artistIds.isNotEmpty()) {
                                     coroutineScope.launch {
                                         sheetState.hide()
                                         if (artistIds.contains(",")) {
                                             ifShowArtistList = true
                                             musicBottomMenuViewModel.getArtistInfos(artistIds)
                                         } else {
-                                            navigator.navigate(ArtistInfo(artistIds))
+                                            navigator.navigate(ArtistInfo(artistIds.get(0)))
                                         }
                                     }.invokeOnCompletion {
                                         ifShowBottom = false
@@ -1112,7 +1113,7 @@ fun MusicInfoBottomComponent(
                     XyItemTextPadding(text = stringResource(R.string.title), sub = musicInfo.name)
                     XyItemTextPadding(
                         text = stringResource(R.string.artist),
-                        sub = musicInfo.artists ?: ""
+                        sub = musicInfo.artists?.joinToString() ?: ""
                     )
                     XyItemTextPadding(
                         text = stringResource(R.string.album),
@@ -1120,7 +1121,7 @@ fun MusicInfoBottomComponent(
                     )
                     XyItemTextPadding(
                         text = stringResource(R.string.album_artist),
-                        sub = musicInfo.albumArtist ?: ""
+                        sub = musicInfo.albumArtist?.joinToString() ?: ""
                     )
 
 

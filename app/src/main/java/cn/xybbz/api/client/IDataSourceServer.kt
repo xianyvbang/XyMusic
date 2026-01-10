@@ -37,6 +37,7 @@ import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.flow.Flow
@@ -411,6 +412,16 @@ interface IDataSourceServer {
         audioBitRate: Int? = null,
         playSessionId: String
     ): String
+
+    /**
+     * 获得相似歌曲列表
+     */
+    suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend>?
+
+    /**
+     * 获得歌手热门歌曲列表
+     */
+    suspend fun getArtistPopularMusicList(artistId: String?, artistName: String? = null): List<XyMusicExtend>?
 
     /**
      * 释放

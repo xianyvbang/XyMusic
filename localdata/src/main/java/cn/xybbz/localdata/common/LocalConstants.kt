@@ -16,33 +16,22 @@
  *
  */
 
-package cn.xybbz.localdata.data.era
+package cn.xybbz.localdata.common
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import androidx.room.TypeConverters
-import cn.xybbz.localdata.converter.IntListTypeConverter
+object LocalConstants {
 
-/**
- * 年代数据
- */
-@Entity(
-    tableName = "xy_era_item"
-)
-@TypeConverters(IntListTypeConverter::class)
-data class XyEraItem(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
     /**
-     * 标题
+     * 否
      */
-    val title: String,
+    const val NO = 0
+
     /**
-     * 年代
+     * 默认id占位符
      */
-    val era: Int,
+    const val ID_PLACEHOLDERS = "-1"
+
     /**
-     * 年份,使用逗号分割 例: 2021,2022,2023
+     * 艺术家名称和id分隔符
      */
-    val years: List<Int>
-)
+    const val ARTIST_DELIMITER = ","
+}

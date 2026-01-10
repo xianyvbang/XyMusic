@@ -51,13 +51,16 @@ import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchAndOrder
 import cn.xybbz.entity.data.SearchData
+import cn.xybbz.entity.data.joinToString
 import cn.xybbz.entity.data.toSearchAndOrder
+import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -417,7 +420,7 @@ class EmbyDatasourceServer @Inject constructor(
      */
     override suspend fun removeByIds(musicIds: List<String>): Boolean {
         embyApiClient.libraryApi()
-            .deleteItems(ids = musicIds.joinToString(Constants.ARTIST_DELIMITER) { it })
+            .deleteItems(ids = musicIds.joinToString())
         return true
     }
 
@@ -582,7 +585,8 @@ class EmbyDatasourceServer @Inject constructor(
     ): Boolean {
         embyApiClient.playlistsApi().addItemToPlaylist(
             playlistId = playlistId,
-            ids = musicIds.joinToString(Constants.ARTIST_DELIMITER) { it })
+            ids = musicIds.joinToString()
+        )
         return super.saveMusicPlaylist(playlistId, musicIds)
     }
 
@@ -597,7 +601,8 @@ class EmbyDatasourceServer @Inject constructor(
     ): Boolean {
         embyApiClient.playlistsApi().deletePlaylist(
             playlistId = playlistId,
-            entryIds = musicIds.joinToString(Constants.ARTIST_DELIMITER) { it })
+            entryIds = musicIds.joinToString()
+        )
         db.musicDao.removeByPlaylistMusicByMusicId(
             playlistId = playlistId,
             musicIds = musicIds
@@ -765,7 +770,7 @@ class EmbyDatasourceServer @Inject constructor(
                 pageSize,
                 pageNum * pageSize
             )
-            selectMusicList = transitionMusicExtend(homeMusicList.items)
+            selectMusicList = transitionPlayMusic(homeMusicList.items)
 
         }
         return selectMusicList
@@ -788,7 +793,7 @@ class EmbyDatasourceServer @Inject constructor(
                 pageNum * pageSize,
                 parentId = albumId
             )
-            selectMusicList = transitionMusicExtend(homeMusicList.items)
+            selectMusicList = transitionPlayMusic(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -813,7 +818,7 @@ class EmbyDatasourceServer @Inject constructor(
                 pageNum * pageSize,
                 artistIds = listOf(artistId)
             )
-            selectMusicList = transitionMusicExtend(homeMusicList.items)
+            selectMusicList = transitionPlayMusic(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -847,7 +852,7 @@ class EmbyDatasourceServer @Inject constructor(
                 pageNum * pageSize,
                 isFavorite = true
             )
-            selectMusicList = transitionMusicExtend(homeMusicList.items)
+            selectMusicList = transitionPlayMusic(homeMusicList.items)
         }
         return selectMusicList
     }
@@ -923,6 +928,43 @@ class EmbyDatasourceServer @Inject constructor(
             audioBitRate,
             playSessionId
         )
+    }
+
+    /**
+     * 获得相似歌曲列表
+     */
+    override suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend>? {
+        val response = embyApiClient.itemApi().getSimilarItems(
+            itemId = musicId,
+            userId = connectionConfigServer.getUserId(),
+            limit = Constants.SIMILAR_MUSIC_LIST_PAGE,
+            fields = listOf(
+                ItemFields.PRIMARY_IMAGE_ASPECT_RATIO,
+                ItemFields.SORT_NAME,
+                ItemFields.MEDIA_SOURCES,
+                ItemFields.DATE_CREATED,
+                ItemFields.GENRES
+            ).joinToString(LocalConstants.ARTIST_DELIMITER)
+        )
+        return transitionMusicExtend(convertToMusicList(response.items))
+    }
+
+    /**
+     * 获得歌手热门歌曲列表
+     */
+    override suspend fun getArtistPopularMusicList(
+        artistId: String?,
+        artistName: String?
+    ): List<XyMusicExtend>? {
+        val items = getServerMusicList(
+            startIndex = 0,
+            pageSize = Constants.ARTIST_HOT_MUSIC_LIST_PAGE,
+            filters = listOf(ItemFilter.IS_PLAYED),
+            sortBy = listOf(ItemSortBy.PLAY_COUNT),
+            sortOrder = listOf(SortOrder.DESCENDING),
+            artistIds = artistId?.let { listOf(artistId) }
+        ).items
+        return transitionMusicExtend(items)
     }
 
     /**
@@ -1327,7 +1369,7 @@ class EmbyDatasourceServer @Inject constructor(
     /**
      * 将ItemResponse换成XyMusic
      */
-    suspend fun convertToMusicList(item: List<ItemResponse>): List<XyMusic> {
+    fun convertToMusicList(item: List<ItemResponse>): List<XyMusic> {
         return item.map { music ->
             convertToMusic(
                 music
@@ -1336,7 +1378,7 @@ class EmbyDatasourceServer @Inject constructor(
     }
 
     //ItemResponse转换XyMusic
-    suspend fun convertToMusic(item: ItemResponse): XyMusic {
+    fun convertToMusic(item: ItemResponse): XyMusic {
 
         val itemImageUrl = item.albumPrimaryImageTag?.let {
             item.albumId?.let { albumId ->
@@ -1367,14 +1409,14 @@ class EmbyDatasourceServer @Inject constructor(
             album = item.albumId ?: "",
             albumName = item.album,
             connectionId = connectionConfigServer.getConnectionId(),
-            artists = item.artistItems?.joinToString(Constants.ARTIST_DELIMITER) { artist -> artist.name.toString() },
-            artistIds = item.artistItems?.joinToString(Constants.ARTIST_DELIMITER) { artist -> artist.id },
-            albumArtist = item.albumArtists?.joinToString(Constants.ARTIST_DELIMITER) { artist -> artist.name.toString() }
-                ?: application.getString(Constants.UNKNOWN_ARTIST),
-            albumArtistIds = item.albumArtists?.joinToString(Constants.ARTIST_DELIMITER) { artist -> artist.id },
+            artists = item.artistItems?.mapNotNull { artist -> artist.name },
+            artistIds = item.artistItems?.map { artist -> artist.id },
+            albumArtist = item.albumArtists?.map { artist -> artist.name.toString() }
+                ?: listOf(application.getString(Constants.UNKNOWN_ARTIST)),
+            albumArtistIds = item.albumArtists?.map { artist -> artist.id },
             createTime = item.dateCreated?.atZone(ZoneId.systemDefault())?.toEpochSecond() ?: 0L,
             year = item.productionYear,
-            genreIds = item.genreItems?.joinToString(Constants.ARTIST_DELIMITER) { it.id },
+            genreIds = item.genreItems?.map { it.id },
             playedCount = item.userData?.playCount ?: 0,
             ifFavoriteStatus = item.userData?.isFavorite == true,
             ifLyric = mediaStreamLyric != null,
@@ -1426,13 +1468,13 @@ class EmbyDatasourceServer @Inject constructor(
                     Constants.UNKNOWN_ALBUM
                 ),
             connectionId = connectionConfigServer.getConnectionId(),
-            artistIds = album.albumArtists?.joinToString(Constants.ARTIST_DELIMITER) { it.id },
-            artists = album.albumArtists?.joinToString(Constants.ARTIST_DELIMITER) { it.name.toString() }
+            artistIds = album.albumArtists?.joinToString() { it.id },
+            artists = album.albumArtists?.mapNotNull { it.name }?.joinToString()
                 ?: application.getString(Constants.UNKNOWN_ARTIST),
             year = album.productionYear,
             premiereDate = album.premiereDate?.atZone(ZoneOffset.ofHours(8))?.toInstant()
                 ?.toEpochMilli(),
-            genreIds = album.genreItems?.joinToString(Constants.ARTIST_DELIMITER) { it.id },
+            genreIds = album.genreItems?.joinToString() { it.id },
             ifFavorite = album.userData?.isFavorite == true,
             ifPlaylist = ifPlaylist,
             createTime = album.dateCreated?.atZone(ZoneId.systemDefault())?.toEpochSecond() ?: 0L,

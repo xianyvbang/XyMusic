@@ -20,12 +20,15 @@ package cn.xybbz.localdata.data.download
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.TypeConverters
+import cn.xybbz.localdata.converter.XyMusicTypeConverter
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.localdata.enums.DownloadTypes
 
 @Entity(tableName = "xy_download")
+@TypeConverters(XyMusicTypeConverter::class)
 data class XyDownload(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
@@ -67,7 +70,8 @@ data class XyDownload(
                 size = music.size,
                 filePath = filePath,
                 runTimeTicks = music.runTimeTicks,
-                plexPlayKey = music.plexPlayKey
+                plexPlayKey = music.plexPlayKey,
+                artistIds = music.artistIds
             )
         }
     }

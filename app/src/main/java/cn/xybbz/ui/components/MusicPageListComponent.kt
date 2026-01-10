@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.ui.components
 
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -22,6 +40,7 @@ import cn.xybbz.common.music.MusicController
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.favorite.FavoriteRepository
+import cn.xybbz.entity.data.joinToString
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.ext.brashColor
@@ -40,7 +59,7 @@ fun MusicPageListComponent(
     downloadRepository: DownloadRepository,
     musicController: MusicController,
     getMusicInfo: suspend (String) -> XyMusic?,
-    onMusicPlay: (OnMusicPlayParameter,Int) -> Unit,
+    onMusicPlay: (OnMusicPlayParameter, Int) -> Unit,
 ) {
 
     val coroutineScope = rememberCoroutineScope()
@@ -83,7 +102,7 @@ fun MusicPageListComponent(
                             itemId = music.itemId,
                             name = music.name,
                             album = music.album,
-                            artists = music.artists,
+                            artists = music.artists?.joinToString(),
                             pic = music.pic,
                             codec = music.codec,
                             bitRate = music.bitRate,
@@ -94,7 +113,7 @@ fun MusicPageListComponent(
                             ifPlay = musicController.musicInfo?.itemId == music.itemId,
                             backgroundColor = Color.Transparent,
                             onMusicPlay = {
-                                onMusicPlay(it,index)
+                                onMusicPlay(it, index)
                             },
                             trailingOnClick = {
                                 coroutineScope.launch {
