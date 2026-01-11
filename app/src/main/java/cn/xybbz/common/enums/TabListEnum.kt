@@ -9,4 +9,6 @@ import cn.xybbz.R
 enum class TabListEnum(val code: Int, @param:StringRes val message: Int) {
     Music(1, R.string.music),
     Album(3, R.string.album),
+
+    RESEMBLANCE_ARTIST(4,R.string.resemblance_artist)
 }

@@ -44,6 +44,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -73,6 +74,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
@@ -474,7 +476,9 @@ fun ArtistInfoScreen(
                             ) {
                                 TabListEnum.entries.forEachIndexed { index, it ->
                                     Tab(
-                                        modifier = Modifier.height(tabHeightDp),
+                                        modifier = Modifier
+                                            .height(tabHeightDp)
+                                            .clip(RoundedCornerShape(XyTheme.dimens.corner)),
                                         selected = horPagerState.currentPage == index,
                                         onClick = {
                                             coroutineScope
@@ -602,6 +606,8 @@ fun ArtistInfoScreen(
                                             }
                                         }
                                     }
+                                    TabListEnum.RESEMBLANCE_ARTIST ->{}
+
                                 }
                             }
                         }
@@ -621,7 +627,7 @@ private fun ArtistMusicListOperation(
     artistId: String,
     musicPlayContext: MusicPlayContext,
     selectControl: SelectControl,
-    ifOpenSelect:Boolean,
+    ifOpenSelect: Boolean,
     onSelectAll: () -> Unit,
     sortContent: @Composable () -> Unit
 ) {

@@ -254,6 +254,7 @@
     <string name="song_tab">歌曲</string>
     <string name="lyrics_tab">歌詞</string>
 
+    <string name="recommend">推薦</string>
     <string name="no_lyrics">暫無歌詞</string>
 
     <string name="add_to_playlist">加入歌單</string>
@@ -429,5 +430,6 @@
     <string name="backward_offset">向後偏移</string>
     <string name="offset">偏移</string>
     <string name="lrc_config">歌詞設定</string>
+    <string name="resemblance_artist">相似歌手</string>
 
 </resources>
