@@ -18,6 +18,7 @@
 
 package cn.xybbz.localdata.config
 
+import android.util.Log
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
@@ -235,6 +236,7 @@ internal object Migration_13_14 : Migration(13, 14) {
 
 internal object Migration_14_15 : Migration(14, 15) {
     override fun migrate(db: SupportSQLiteDatabase) {
+        Log.d("sql","升级版本到15")
         // 1创建新表（不包含 picByte，但包含 PK / FK）
         db.execSQL(
             """
@@ -289,6 +291,7 @@ internal object Migration_14_15 : Migration(14, 15) {
 
 internal object Migration_15_16 : Migration(15, 16) {
     override fun migrate(db: SupportSQLiteDatabase) {
+        Log.d("sql","升级版本到16")
         // 是否转码
         db.execSQL(
             """
@@ -325,6 +328,7 @@ internal object Migration_15_16 : Migration(15, 16) {
 
 internal object Migration_16_17 : Migration(16, 17) {
     override fun migrate(db: SupportSQLiteDatabase) {
+        Log.d("sql","升级版本到17")
         //创建新表（已删除 musicUrl，已增加 plexPlayKey）
         db.execSQL(
             """
@@ -360,7 +364,7 @@ internal object Migration_16_17 : Migration(16, 17) {
                 createTime INTEGER NOT NULL,
                 PRIMARY KEY(itemId),
                 FOREIGN KEY(connectionId)
-                    REFERENCES ConnectionConfig(id)
+                    REFERENCES xy_connection_config(id)
                     ON DELETE CASCADE
             )
             """.trimIndent()
@@ -453,6 +457,7 @@ internal object Migration_16_17 : Migration(16, 17) {
 
 internal object Migration_17_18 : Migration(17, 18) {
     override fun migrate(db: SupportSQLiteDatabase) {
+        Log.d("sql","升级版本到18")
         //创建新表（带正确 DEFAULT）
         db.execSQL(
             """
@@ -538,5 +543,11 @@ internal object Migration_17_18 : Migration(17, 18) {
 
         //重命名
         db.execSQL("ALTER TABLE xy_settings_new RENAME TO xy_settings")
+
+        db.execSQL("""
+            CREATE INDEX IF NOT EXISTS
+            index_xy_recent_recommend_history_connectionId
+            ON xy_recent_recommend_history(connectionId)
+        """)
     }
 }
