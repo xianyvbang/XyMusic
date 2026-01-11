@@ -19,6 +19,9 @@
 package cn.xybbz.ui.components
 
 import android.util.Log
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -30,14 +33,20 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import cn.xybbz.R
+import cn.xybbz.common.constants.UiConstants.MusicCardImageSize
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.entity.data.joinToString
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
+import cn.xybbz.ui.xy.XyItemBig
 import cn.xybbz.ui.xy.XyItemMedium
 
 @Composable
@@ -50,11 +59,7 @@ fun MusicPlayerSimilarPopularComponent(
 ) {
     val mainViewModel = LocalMainViewModel.current
 
-    LaunchedEffect(playMusicList) {
-        Log.i("=====","列表变化")
-    }
     val playIdSet by remember(playMusicList) {
-        Log.i("=====","列表变化2")
         derivedStateOf {
             playMusicList.map { it.itemId }.toSet()
         }
@@ -74,6 +79,20 @@ fun MusicPlayerSimilarPopularComponent(
                 text = "热门歌曲",
                 color = MaterialTheme.colorScheme.onSurface
             )
+        }
+        if (mainViewModel.popularMusicList.isEmpty())
+        item {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(MusicCardImageSize + 50.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                XyItemBig(
+                    text = stringResource(R.string.no_data),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
         }
         items(mainViewModel.popularMusicList) { musicExt ->
 
@@ -113,6 +132,21 @@ fun MusicPlayerSimilarPopularComponent(
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
+
+        if (mainViewModel.similarMusicList.isEmpty())
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(MusicCardImageSize + 50.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    XyItemBig(
+                        text = stringResource(R.string.no_data),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
 
         items(mainViewModel.similarMusicList) { musicExt ->
 
