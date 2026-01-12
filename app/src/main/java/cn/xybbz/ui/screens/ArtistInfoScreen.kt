@@ -139,12 +139,14 @@ fun ArtistInfoScreen(
 
     val horPagerState =
         rememberPagerState(initialPage = 0) {
-            2
+            3
         }
     val musicPage =
         artistInfoViewModel.musicList.collectAsLazyPagingItems()
     val albumPageList =
         artistInfoViewModel.albumList.collectAsLazyPagingItems()
+    val resemblanceArtistList =
+        artistInfoViewModel.resemblanceArtistList.collectAsLazyPagingItems()
     val favoriteSet by artistInfoViewModel.favoriteRepository.favoriteSet.collectAsState()
     val downloadMusicIds by artistInfoViewModel.downloadRepository.musicIdsFlow.collectAsState()
     val ifOpenSelect by artistInfoViewModel.selectControl.uiState.collectAsState()
@@ -606,7 +608,79 @@ fun ArtistInfoScreen(
                                             }
                                         }
                                     }
-                                    TabListEnum.RESEMBLANCE_ARTIST ->{}
+                                    TabListEnum.RESEMBLANCE_ARTIST ->{
+
+                                        LazyListComponent(
+                                            state = lazyListState,
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .height(maxHeight),
+                                            collectAsLazyPagingItems = musicPage
+                                        ) { list ->
+                                            item {
+                                                ArtistMusicListOperation(
+                                                    artistId = artistId(),
+                                                    musicPlayContext = artistInfoViewModel.musicPlayContext,
+                                                    selectControl = artistInfoViewModel.selectControl,
+                                                    onSelectAll = {
+                                                        artistInfoViewModel.selectControl.toggleSelectionAll(
+                                                            musicPage.itemSnapshotList.items.map { it.itemId })
+                                                    },
+                                                    ifOpenSelect = ifOpenSelect,
+                                                    sortContent = {}
+                                                )
+                                            }
+                                            items(
+                                                list.itemCount,
+                                                key = list.itemKey { item -> item.itemId },
+                                                contentType = list.itemContentType { MusicTypeEnum.MUSIC }
+                                            ) { index ->
+                                                list[index]?.let { music ->
+                                                    MusicItemComponent(
+                                                        itemId = music.itemId,
+                                                        name = music.name,
+                                                        album = music.album,
+                                                        artists = music.artists?.joinToString(),
+                                                        pic = music.pic,
+                                                        codec = music.codec,
+                                                        bitRate = music.bitRate,
+                                                        onIfFavorite = {
+                                                            music.itemId in favoriteSet
+                                                        },
+                                                        ifDownload = music.itemId in downloadMusicIds,
+                                                        ifPlay = artistInfoViewModel.musicController.musicInfo?.itemId == music.itemId,
+                                                        backgroundColor = Color.Transparent,
+                                                        trailingOnClick = {
+                                                            music.show()
+                                                        },
+                                                        onMusicPlay = {
+                                                            coroutineScope.launch {
+                                                                artistInfoViewModel.musicPlayContext.artist(
+                                                                    onMusicPlayParameter = it.copy(
+                                                                        artistId = artistId()
+                                                                    ),
+                                                                    index = index,
+                                                                    artistId = artistId()
+                                                                )
+                                                            }
+                                                        },
+                                                        ifSelect = ifOpenSelect,
+                                                        ifSelectCheckBox = { artistInfoViewModel.selectControl.selectMusicIdList.any { it == music.itemId } },
+                                                        trailingOnSelectClick = { select ->
+                                                            artistInfoViewModel.selectControl.toggleSelection(
+                                                                music.itemId,
+                                                                onIsSelectAll = {
+                                                                    artistInfoViewModel.selectControl.selectMusicIdList.containsAll(
+                                                                        list.itemSnapshotList.items.map { it.itemId }
+                                                                    )
+                                                                }
+                                                            )
+                                                        }
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
 
                                 }
                             }

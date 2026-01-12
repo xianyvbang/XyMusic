@@ -1099,6 +1099,13 @@ class DataSourceManager(
     }
 
     /**
+     * 获得相似歌手列表
+     */
+    override fun getResemblanceArtist(artistId: String): Flow<PagingData<XyArtist>> {
+        return dataSourceServer.getResemblanceArtist(artistId)
+    }
+
+    /**
      * 设置收藏音乐信息
      */
     @Transaction

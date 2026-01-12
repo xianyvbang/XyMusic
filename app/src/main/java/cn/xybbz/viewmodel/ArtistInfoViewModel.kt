@@ -20,7 +20,9 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 
 /**
@@ -64,12 +66,31 @@ class ArtistInfoViewModel @AssistedInject constructor(
         private set
 
     //艺术家的音乐列表
-    val musicList = dataSourceManager.selectMusicListByArtistId(artistId).distinctUntilChanged()
-        .cachedIn(viewModelScope)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val musicList =
+        connectionConfigServer.loginSuccessEvent
+            .flatMapLatest {
+                dataSourceManager.selectMusicListByArtistId(artistId).distinctUntilChanged()
+            }
+            .cachedIn(viewModelScope)
+
 
     //艺术家的专辑列表
-    val albumList = dataSourceManager.selectAlbumListByArtistId(artistId).distinctUntilChanged()
-        .cachedIn(viewModelScope)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val albumList =
+        connectionConfigServer.loginSuccessEvent
+            .flatMapLatest {
+                dataSourceManager.selectAlbumListByArtistId(artistId).distinctUntilChanged()
+            }
+            .cachedIn(viewModelScope)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val resemblanceArtistList =
+        connectionConfigServer.loginSuccessEvent
+            .flatMapLatest {
+                dataSourceManager.getResemblanceArtist(artistId).distinctUntilChanged()
+            }
+            .cachedIn(viewModelScope)
 
     init {
         getArtistInfoData()

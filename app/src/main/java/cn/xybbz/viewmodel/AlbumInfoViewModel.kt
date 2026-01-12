@@ -90,20 +90,6 @@ class AlbumInfoViewModel @AssistedInject constructor(
     var ifSavePlaybackHistory by mutableStateOf(false)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    /*val xyMusicList: Flow<PagingData<XyMusic>> = connectionConfigServer.loginStateFlow
-        .flatMapLatest { loggedIn ->
-            if (loggedIn) {
-                dataSourceManager.selectMusicListByParentId(
-                    itemId = itemId,
-                    dataType = dataType,
-                    sort = sortBy
-                ).distinctUntilChanged()
-                    .cachedIn(viewModelScope)
-            } else {
-                emptyFlow()
-            }
-        }.cachedIn(viewModelScope)*/
-
     val xyMusicList: Flow<PagingData<XyMusic>> = connectionConfigServer.loginSuccessEvent
         .flatMapLatest {
             dataSourceManager.selectMusicListByParentId(

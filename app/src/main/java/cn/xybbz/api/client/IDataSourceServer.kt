@@ -421,7 +421,15 @@ interface IDataSourceServer {
     /**
      * 获得歌手热门歌曲列表
      */
-    suspend fun getArtistPopularMusicList(artistId: String?, artistName: String? = null): List<XyMusicExtend>?
+    suspend fun getArtistPopularMusicList(
+        artistId: String?,
+        artistName: String? = null
+    ): List<XyMusicExtend>?
+
+    /**
+     * 获得相似歌手列表
+     */
+    fun getResemblanceArtist(artistId: String): Flow<PagingData<XyArtist>>
 
     /**
      * 释放
