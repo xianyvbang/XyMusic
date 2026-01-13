@@ -18,45 +18,42 @@
 
 package cn.xybbz.page.parent
 
+import androidx.paging.PagingSource
+import androidx.paging.PagingState
 import cn.xybbz.api.client.IDataSourceParentServer
-import cn.xybbz.api.client.data.XyResponse
-import cn.xybbz.common.constants.RemoteIdConstants
-import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtist
 
 class ResemblanceArtistRemoteMediator(
     private val artistId: String,
-    private val datasourceServer: IDataSourceParentServer,
-    private val db: DatabaseClient,
-    private val connectionId: Long
-):DefaultRemoteMediator<XyArtist,XyArtist>(
-    db,
-    RemoteIdConstants.ARTIST + RemoteIdConstants.ARTIST + artistId + connectionId,
-    connectionId
-) {
-    /**
-     * 获得远程服务对象列表
-     * @param [loadKey] 页码 从0开始
-     * @param [pageSize] 页面大小
-     */
-    override suspend fun getRemoteServerObjectList(
-        loadKey: Int,
-        pageSize: Int
-    ): XyResponse<XyArtist> {
-        TODO("Not yet implemented")
+    private val datasourceServer: IDataSourceParentServer
+) : PagingSource<Int, XyArtist>() {
+    override fun getRefreshKey(state: PagingState<Int, XyArtist>): Int? {
+        return state.anchorPosition?.let { anchorPosition ->
+            val anchorPage = state.closestPageToPosition(anchorPosition)
+            anchorPage?.prevKey?.plus(1) ?: anchorPage?.nextKey?.minus(1)
+        }
     }
 
-    /**
-     * 删除本地数据库对象列表
-     */
-    override suspend fun removeLocalObjectList() {
-        TODO("Not yet implemented")
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, XyArtist> {
+        try {
+            // Start refresh at page 1 if undefined.
+            val loadKey = params.key ?: 0
+            val pageSize = params.loadSize
+            val response = datasourceServer.getSimilarArtistsRemotely(
+                artistId,
+                startIndex = loadKey * pageSize,
+                pageSize
+            )
+            return LoadResult.Page(
+                data = response.items ?: listOf(),
+                prevKey = null, // Only paging forward.
+                nextKey = if (response.items.isNullOrEmpty()
+                    || (loadKey * pageSize) >= response.totalRecordCount
+                ) null else loadKey + 1
+            )
+        } catch (e: Exception) {
+            return LoadResult.Error(e)
+        }
     }
 
-    /**
-     * 存储对象列表到本地数据库
-     */
-    override suspend fun saveBatchLocalObjectList(items: List<XyArtist>) {
-        TODO("Not yet implemented")
-    }
 }

@@ -244,15 +244,15 @@ abstract class IDataSourceParentServer(
                     setCoilImageOkHttpClient()
                     connectionConfigServer.updateLoginStates(true)
 //                    initFavoriteData()
-                   /* try {
-                        getDataInfoCount(connectionId)
-                    } catch (e: Exception) {
-                        Log.i(
-                            Constants.LOG_ERROR_PREFIX,
-                            "获取音乐/专辑/艺术家/收藏/流派数量异常",
-                            e
-                        )
-                    }*/
+                    /* try {
+                         getDataInfoCount(connectionId)
+                     } catch (e: Exception) {
+                         Log.i(
+                             Constants.LOG_ERROR_PREFIX,
+                             "获取音乐/专辑/艺术家/收藏/流派数量异常",
+                             e
+                         )
+                     }*/
                 }
             }
 
@@ -932,15 +932,11 @@ abstract class IDataSourceParentServer(
      */
     @OptIn(ExperimentalPagingApi::class)
     override fun getResemblanceArtist(artistId: String): Flow<PagingData<XyArtist>> {
-        return defaultPager(
-            remoteMediator = ResemblanceArtistRemoteMediator(
+        return defaultPager {
+            ResemblanceArtistRemoteMediator(
                 artistId = artistId,
-                datasourceServer = this,
-                db = db,
-                connectionId = connectionConfigServer.getConnectionId()
+                datasourceServer = this
             )
-        ) {
-            db.albumDao.selectArtist(artistId)
         }.flow
     }
 
@@ -962,6 +958,15 @@ abstract class IDataSourceParentServer(
         artistId: String? = null,
         genreId: String? = null,
     ): XyResponse<XyAlbum>
+
+    /**
+     * 远程获得相似艺术家
+     */
+    abstract suspend fun getSimilarArtistsRemotely(
+        artistId: String,
+        startIndex: Int,
+        pageSize: Int
+    ): XyResponse<XyArtist>
 
     /**
      * 获得专辑列表的RemoteMediator

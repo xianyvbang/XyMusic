@@ -1032,6 +1032,29 @@ class EmbyDatasourceServer @Inject constructor(
     }
 
     /**
+     * 远程获得相似艺术家
+     */
+    override suspend fun getSimilarArtistsRemotely(
+        artistId: String,
+        startIndex: Int,
+        pageSize: Int
+    ): XyResponse<XyArtist> {
+        val response = embyApiClient.artistsApi().getSimilarArtists(
+            artistId = artistId,
+            ItemRequest(
+                limit = Constants.UI_LIST_PAGE,
+                userId = connectionConfigServer.getUserId()
+            ).toMap()
+        )
+        val artistList = convertToArtistList(response.items)
+        return XyResponse(
+            items = artistList,
+            totalRecordCount = response.totalRecordCount,
+            startIndex = startIndex
+        )
+    }
+
+    /**
      * 获取远程服务器收藏音乐列表
      * @param [startIndex] 启动索引
      * @param [pageSize] 页面大小

@@ -46,7 +46,7 @@ interface EmbyItemApi : BaseApi {
     /**
      * 获得相似歌曲
      */
-    @GET("/Items/{itemId}/Similar")
+    @GET("/emby/Items/{itemId}/Similar")
     suspend fun getSimilarItems(
         @Path("itemId") itemId: String,
         @Query("userId") userId: String,

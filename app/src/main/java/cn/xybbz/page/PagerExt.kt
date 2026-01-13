@@ -15,7 +15,7 @@ fun <Key : Any, Value : Any> defaultPager(
     pageSize: Int = Constants.UI_LIST_PAGE,
     initialLoadSize: Int = Constants.UI_INIT_LIST_PAGE,
     prefetchDistance: Int = Constants.UI_PREFETCH_DISTANCE,
-    remoteMediator: RemoteMediator<Key, Value>?,
+    remoteMediator: RemoteMediator<Key, Value>? = null,
     pagingSourceFactory: () -> PagingSource<Key, Value>
 ): Pager<Key, Value> {
     return Pager(

@@ -71,23 +71,6 @@ interface NavidromeItemApi : BaseApi {
         @Query("year") year: Int? = null
     ): Response<List<SongItem>>
 
-    @GET("/rest/search3")
-    suspend fun search3(
-        @Query("query") query: String,
-        @Query("artistCount") artistCount: Int = 20,
-        @Query("artistOffset") artistOffset: Int = 0,
-        @Query("albumCount") albumCount: Int = 20,
-        @Query("albumOffset") albumOffset: Int = 0,
-        @Query("songCount") songCount: Int = 20,
-        @Query("songOffset") songOffset: Int = 0,
-        @Query("musicFolderId") musicFolderId: String? = null
-    ): SubsonicResponse<SubsonicSearchResponse>
-
-    @GET("/rest/getStarred2")
-    suspend fun getStarred2(
-        @Query("musicFolderId") musicFolderId: String?
-    ): SubsonicResponse<SubsonicStarred2Response>
-
     @GET("/rest/getTopSongs")
     suspend fun getTopSongs(
         @Query("artist") artistName: String,

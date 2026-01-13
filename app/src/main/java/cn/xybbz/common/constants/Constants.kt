@@ -120,11 +120,6 @@ object Constants {
     const val REMOVE_FROM_FAVORITES = "remove_favorite"
 
     /**
-     * 本地服务端口号
-     */
-    const val LOCALHOST_PORT = 5000
-
-    /**
      * 艺术家名称和id分隔符
      */
     const val ARTIST_DELIMITER_SEMICOLON = ";"
