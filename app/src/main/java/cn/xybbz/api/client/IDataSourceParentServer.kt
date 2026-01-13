@@ -68,6 +68,7 @@ import cn.xybbz.page.parent.FavoriteMusicRemoteMediator
 import cn.xybbz.page.parent.GenreAlbumListRemoteMediator
 import cn.xybbz.page.parent.GenresRemoteMediator
 import cn.xybbz.page.parent.MusicRemoteMediator
+import cn.xybbz.page.parent.ResemblanceArtistRemoteMediator
 import coil.Coil
 import coil.ImageLoader
 import com.github.promeg.pinyinhelper.Pinyin
@@ -925,6 +926,23 @@ abstract class IDataSourceParentServer(
         parentId: String,
         dataType: MusicDataTypeEnum
     ): XyResponse<XyMusic>
+
+    /**
+     * 获得相似歌手列表
+     */
+    @OptIn(ExperimentalPagingApi::class)
+    override fun getResemblanceArtist(artistId: String): Flow<PagingData<XyArtist>> {
+        return defaultPager(
+            remoteMediator = ResemblanceArtistRemoteMediator(
+                artistId = artistId,
+                datasourceServer = this,
+                db = db,
+                connectionId = connectionConfigServer.getConnectionId()
+            )
+        ) {
+            db.albumDao.selectArtist(artistId)
+        }.flow
+    }
 
     /**
      * 获取远程服务器专辑列表
