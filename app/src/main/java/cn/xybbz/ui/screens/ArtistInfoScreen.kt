@@ -103,8 +103,10 @@ import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
+import cn.xybbz.router.ArtistInfo
 import cn.xybbz.ui.components.LazyListComponent
 import cn.xybbz.ui.components.MusicAlbumCardComponent
+import cn.xybbz.ui.components.MusicArtistCardComponent
 import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.VerticalGridListComponent
@@ -610,73 +612,23 @@ fun ArtistInfoScreen(
                                     }
                                     TabListEnum.RESEMBLANCE_ARTIST ->{
 
-                                        LazyListComponent(
-                                            state = lazyListState,
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .height(maxHeight),
-                                            collectAsLazyPagingItems = musicPage
-                                        ) { list ->
-                                            item {
-                                                ArtistMusicListOperation(
-                                                    artistId = artistId(),
-                                                    musicPlayContext = artistInfoViewModel.musicPlayContext,
-                                                    selectControl = artistInfoViewModel.selectControl,
-                                                    onSelectAll = {
-                                                        artistInfoViewModel.selectControl.toggleSelectionAll(
-                                                            musicPage.itemSnapshotList.items.map { it.itemId })
-                                                    },
-                                                    ifOpenSelect = ifOpenSelect,
-                                                    sortContent = {}
-                                                )
-                                            }
+                                        VerticalGridListComponent(
+                                            modifier = Modifier.height(maxHeight),
+                                            collectAsLazyPagingItems = resemblanceArtistList,
+                                        ){
                                             items(
-                                                list.itemCount,
-                                                key = list.itemKey { item -> item.itemId },
-                                                contentType = list.itemContentType { MusicTypeEnum.MUSIC }
+                                                resemblanceArtistList.itemCount,
+                                                key = resemblanceArtistList.itemKey { item -> item.artistId },
+                                                contentType = resemblanceArtistList.itemContentType { MusicTypeEnum.ARTIST }
                                             ) { index ->
-                                                list[index]?.let { music ->
-                                                    MusicItemComponent(
-                                                        itemId = music.itemId,
-                                                        name = music.name,
-                                                        album = music.album,
-                                                        artists = music.artists?.joinToString(),
-                                                        pic = music.pic,
-                                                        codec = music.codec,
-                                                        bitRate = music.bitRate,
-                                                        onIfFavorite = {
-                                                            music.itemId in favoriteSet
-                                                        },
-                                                        ifDownload = music.itemId in downloadMusicIds,
-                                                        ifPlay = artistInfoViewModel.musicController.musicInfo?.itemId == music.itemId,
-                                                        backgroundColor = Color.Transparent,
-                                                        trailingOnClick = {
-                                                            music.show()
-                                                        },
-                                                        onMusicPlay = {
-                                                            coroutineScope.launch {
-                                                                artistInfoViewModel.musicPlayContext.artist(
-                                                                    onMusicPlayParameter = it.copy(
-                                                                        artistId = artistId()
-                                                                    ),
-                                                                    index = index,
-                                                                    artistId = artistId()
-                                                                )
-                                                            }
-                                                        },
-                                                        ifSelect = ifOpenSelect,
-                                                        ifSelectCheckBox = { artistInfoViewModel.selectControl.selectMusicIdList.any { it == music.itemId } },
-                                                        trailingOnSelectClick = { select ->
-                                                            artistInfoViewModel.selectControl.toggleSelection(
-                                                                music.itemId,
-                                                                onIsSelectAll = {
-                                                                    artistInfoViewModel.selectControl.selectMusicIdList.containsAll(
-                                                                        list.itemSnapshotList.items.map { it.itemId }
-                                                                    )
-                                                                }
-                                                            )
-                                                        }
-                                                    )
+                                                resemblanceArtistList[index]?.let { artist ->
+                                                    MusicArtistCardComponent(
+                                                        modifier = Modifier,
+                                                        onItem = { artist },
+                                                        enabled = true
+                                                    ) {
+                                                        navigator.navigate(ArtistInfo(it))
+                                                    }
                                                 }
                                             }
                                         }
