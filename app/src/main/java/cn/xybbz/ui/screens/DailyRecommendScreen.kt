@@ -41,7 +41,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalNavigator
-import cn.xybbz.entity.data.joinToString
+import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent

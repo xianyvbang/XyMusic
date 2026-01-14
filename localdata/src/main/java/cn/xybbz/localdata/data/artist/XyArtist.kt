@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.localdata.data.artist
 
 import androidx.room.Entity
@@ -33,7 +51,7 @@ data class XyArtist(
     @PrimaryKey
     val artistId: String = "",
     val pic: String? = "",
-    val backdrop:String?,
+    val backdrop:String? = null,
     val describe: String? = "",
     val name: String? = null,
     val sortName: String? = "",
@@ -43,7 +61,7 @@ data class XyArtist(
     val connectionId: Long,
     val musicCount: Int? = 0,
     val albumCount: Int? = 0,
-    val selectChat: String,
+    val selectChat: String = "",
     /**
      * 加载数据所在索引
      */
@@ -51,7 +69,7 @@ data class XyArtist(
     /**
      * 是否已经收藏
      */
-    @Ignore val ifFavorite: Boolean,
+    @Ignore val ifFavorite: Boolean = false,
 ) {
     constructor(
         artistId: String = "",

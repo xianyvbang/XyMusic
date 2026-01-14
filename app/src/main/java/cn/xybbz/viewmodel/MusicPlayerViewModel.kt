@@ -30,7 +30,7 @@ import cn.xybbz.common.music.CacheController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.lrc.LrcServer
-import cn.xybbz.entity.data.toPlayerMusic
+import cn.xybbz.entity.data.ext.toPlayerMusic
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import dagger.hilt.android.lifecycle.HiltViewModel

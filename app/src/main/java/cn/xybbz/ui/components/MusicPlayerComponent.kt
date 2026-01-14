@@ -96,7 +96,7 @@ import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.config.favorite.FavoriteRepository
-import cn.xybbz.entity.data.joinToString
+import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import cn.xybbz.ui.components.lrc.LrcViewNewCompose

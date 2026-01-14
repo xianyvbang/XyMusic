@@ -94,7 +94,7 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.entity.data.MusicItemMenuData
-import cn.xybbz.entity.data.joinToString
+import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.setting.SkipTime

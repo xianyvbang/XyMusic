@@ -54,7 +54,7 @@ import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchAndOrder
 import cn.xybbz.entity.data.SearchData
-import cn.xybbz.entity.data.joinToString
+import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.toSearchAndOrder
 import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.config.DatabaseClient
@@ -1009,6 +1009,29 @@ class JellyfinDatasourceServer @Inject constructor(
             genreIds = genreId?.let { listOf(genreId) }
         )
         return response
+    }
+
+    /**
+     * 远程获得相似艺术家
+     */
+    override suspend fun getSimilarArtistsRemotely(
+        artistId: String,
+        startIndex: Int,
+        pageSize: Int
+    ): XyResponse<XyArtist> {
+        val response = jellyfinApiClient.artistsApi().getSimilarArtists(
+            artistId = artistId,
+            ItemRequest(
+                limit = Constants.UI_LIST_PAGE,
+                userId = connectionConfigServer.getUserId()
+            ).toMap()
+        )
+        val artistList = convertToArtistList(response.items)
+        return XyResponse(
+            items = artistList,
+            totalRecordCount = response.totalRecordCount,
+            startIndex = startIndex
+        )
     }
 
     /**

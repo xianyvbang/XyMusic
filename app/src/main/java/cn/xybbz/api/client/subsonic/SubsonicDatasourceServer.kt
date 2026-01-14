@@ -49,7 +49,8 @@ import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.Sort
-import cn.xybbz.entity.data.toXyMusic
+import cn.xybbz.entity.data.ext.toArtists
+import cn.xybbz.entity.data.ext.toXyMusic
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -903,6 +904,19 @@ class SubsonicDatasourceServer @Inject constructor(
             genreId = genreId
         )
         return response
+    }
+
+    /**
+     * 远程获得相似艺术家
+     */
+    override suspend fun getSimilarArtistsRemotely(
+        artistId: String,
+        startIndex: Int,
+        pageSize: Int
+    ): XyResponse<XyArtist> {
+        val response =
+            subsonicApiClient.artistsApi().getArtistInfo(id = artistId, count = pageSize)
+        return response.subsonicResponse.toArtists(connectionConfigServer.getConnectionId())
     }
 
     /**

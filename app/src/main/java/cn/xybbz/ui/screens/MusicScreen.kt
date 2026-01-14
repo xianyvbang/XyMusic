@@ -45,7 +45,7 @@ import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.select.SelectControl
-import cn.xybbz.entity.data.joinToString
+import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.ui.components.MusicItemComponent

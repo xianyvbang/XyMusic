@@ -51,7 +51,7 @@ import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchAndOrder
 import cn.xybbz.entity.data.SearchData
-import cn.xybbz.entity.data.joinToString
+import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.toSearchAndOrder
 import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.config.DatabaseClient

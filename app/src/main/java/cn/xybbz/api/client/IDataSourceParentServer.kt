@@ -932,7 +932,9 @@ abstract class IDataSourceParentServer(
      */
     @OptIn(ExperimentalPagingApi::class)
     override fun getResemblanceArtist(artistId: String): Flow<PagingData<XyArtist>> {
-        return defaultPager {
+        return defaultPager(
+            pageSize = Constants.MIN_PAGE
+        ) {
             ResemblanceArtistRemoteMediator(
                 artistId = artistId,
                 datasourceServer = this

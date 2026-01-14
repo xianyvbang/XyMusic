@@ -61,7 +61,7 @@ import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.network.NetWorkMonitor
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.entity.data.joinToString
+import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum

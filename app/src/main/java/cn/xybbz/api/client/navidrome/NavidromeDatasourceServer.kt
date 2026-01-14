@@ -46,10 +46,11 @@ import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.NavidromeOrder
 import cn.xybbz.entity.data.SearchData
-import cn.xybbz.entity.data.joinToString
+import cn.xybbz.entity.data.ext.joinToString
+import cn.xybbz.entity.data.ext.toArtists
+import cn.xybbz.entity.data.ext.toXyMusic
 import cn.xybbz.entity.data.toNavidromeOrder
 import cn.xybbz.entity.data.toNavidromeOrder2
-import cn.xybbz.entity.data.toXyMusic
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -973,6 +974,19 @@ class NavidromeDatasourceServer @Inject constructor(
             genreId = genreId
         )
         return response
+    }
+
+    /**
+     * 远程获得相似艺术家
+     */
+    override suspend fun getSimilarArtistsRemotely(
+        artistId: String,
+        startIndex: Int,
+        pageSize: Int
+    ): XyResponse<XyArtist> {
+        val response =
+            navidromeApiClient.artistsApi().getArtistInfo(id = artistId, count = pageSize)
+        return response.subsonicResponse.toArtists(connectionConfigServer.getConnectionId())
     }
 
     /**

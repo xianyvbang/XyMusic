@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.ui.screens
 
 import android.content.Intent
@@ -6,13 +24,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -21,7 +37,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -34,10 +49,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
-import cn.xybbz.common.constants.UiConstants.MusicCardImageSize
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
@@ -45,7 +58,7 @@ import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyItemBig
+import cn.xybbz.ui.xy.XyNoData
 import cn.xybbz.viewmodel.SetBackgroundImageViewModel
 
 /**
@@ -130,17 +143,7 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
                 verticalArrangement = Arrangement.Center
             ) {
                 if (!ifSelectImage)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(MusicCardImageSize + 50.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        XyItemBig(
-                            text = stringResource(R.string.no_data),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
+                    XyNoData()
                 Spacer(
                     modifier = Modifier.height(
                         XyTheme.dimens.snackBarPlayerHeight + WindowInsets.navigationBars.asPaddingValues()

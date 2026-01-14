@@ -93,7 +93,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.common.constants.UiConstants.MusicCardImageSize
+import cn.xybbz.common.UiConstants.MusicCardImageSize
 import cn.xybbz.common.enums.img
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.entity.data.music.OnMusicPlayParameter

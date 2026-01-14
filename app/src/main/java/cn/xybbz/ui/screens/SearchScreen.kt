@@ -69,7 +69,7 @@ import cn.xybbz.common.music.MusicController
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.favorite.FavoriteRepository
-import cn.xybbz.entity.data.joinToString
+import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic

@@ -41,15 +41,13 @@ class ResemblanceArtistRemoteMediator(
             val pageSize = params.loadSize
             val response = datasourceServer.getSimilarArtistsRemotely(
                 artistId,
-                startIndex = loadKey * pageSize,
+                startIndex = 0,
                 pageSize
             )
             return LoadResult.Page(
                 data = response.items ?: listOf(),
                 prevKey = null, // Only paging forward.
-                nextKey = if (response.items.isNullOrEmpty()
-                    || (loadKey * pageSize) >= response.totalRecordCount
-                ) null else loadKey + 1
+                nextKey = null
             )
         } catch (e: Exception) {
             return LoadResult.Error(e)

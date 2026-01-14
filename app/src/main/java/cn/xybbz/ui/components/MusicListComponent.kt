@@ -59,7 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.R
 import cn.xybbz.compositionLocal.LocalMainViewModel
-import cn.xybbz.entity.data.joinToString
+import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.music.ifNextPageNumList
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.ui.ext.debounceClickable

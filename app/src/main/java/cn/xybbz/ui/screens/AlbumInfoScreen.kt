@@ -109,7 +109,7 @@ import cn.xybbz.common.music.MusicController
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.entity.data.Sort
-import cn.xybbz.entity.data.joinToString
+import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.extension.isSticking

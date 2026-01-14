@@ -21,7 +21,7 @@ package cn.xybbz.common.utils
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.entity.data.joinToString
+import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 
 /**

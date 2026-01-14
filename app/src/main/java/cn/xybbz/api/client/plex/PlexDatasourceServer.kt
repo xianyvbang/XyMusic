@@ -49,7 +49,7 @@ import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.PlexOrder
 import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.entity.data.SearchData
-import cn.xybbz.entity.data.joinToString
+import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.toPlexOrder
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -1424,6 +1424,17 @@ class PlexDatasourceServer @Inject constructor(
             genreIds = genreId?.let { listOf(genreId) }
         )
         return response
+    }
+
+    /**
+     * 远程获得相似艺术家
+     */
+    override suspend fun getSimilarArtistsRemotely(
+        artistId: String,
+        startIndex: Int,
+        pageSize: Int
+    ): XyResponse<XyArtist> {
+        return XyResponse()
     }
 
     /**

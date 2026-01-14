@@ -16,7 +16,7 @@
  *
  */
 
-package cn.xybbz.entity.data
+package cn.xybbz.entity.data.ext
 
 import cn.xybbz.api.client.subsonic.data.SongID3
 import cn.xybbz.common.constants.Constants

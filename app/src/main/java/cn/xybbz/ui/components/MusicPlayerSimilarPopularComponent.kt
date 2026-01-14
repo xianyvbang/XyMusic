@@ -18,7 +18,6 @@
 
 package cn.xybbz.ui.components
 
-import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,7 +28,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -39,15 +37,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cn.xybbz.R
-import cn.xybbz.common.constants.UiConstants.MusicCardImageSize
+import cn.xybbz.common.UiConstants.MusicCardImageSize
 import cn.xybbz.compositionLocal.LocalMainViewModel
-import cn.xybbz.entity.data.joinToString
+import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyItemBig
 import cn.xybbz.ui.xy.XyItemMedium
+import cn.xybbz.ui.xy.XyNoData
 
 @Composable
 fun MusicPlayerSimilarPopularComponent(
@@ -82,17 +81,7 @@ fun MusicPlayerSimilarPopularComponent(
         }
         if (mainViewModel.popularMusicList.isEmpty())
         item {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(MusicCardImageSize + 50.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                XyItemBig(
-                    text = stringResource(R.string.no_data),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
+            XyNoData()
         }
         items(mainViewModel.popularMusicList) { musicExt ->
 

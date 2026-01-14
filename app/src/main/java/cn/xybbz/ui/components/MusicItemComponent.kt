@@ -34,7 +34,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cn.xybbz.R
-import cn.xybbz.entity.data.joinToString
+import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.xy.ItemTrailingContent
