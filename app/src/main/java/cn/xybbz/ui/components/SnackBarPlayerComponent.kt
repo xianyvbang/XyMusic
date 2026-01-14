@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.ui.components
 
 
@@ -549,7 +567,7 @@ fun AsyncImageCover(
     XyImage(
         modifier = Modifier
             .size(XyTheme.dimens.snackBarPlayerHeight),
-        model = musicController.musicInfo?.pic ?: musicController.picByte,
+        model = if(musicController.musicInfo?.pic.isNullOrBlank())musicController.picByte else musicController.musicInfo?.pic,
         contentScale = ContentScale.Crop,
         contentDescription = stringResource(R.string.music_cover),
         placeholder = painterResource(R.drawable.music_xy_placeholder_foreground),

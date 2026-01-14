@@ -750,8 +750,13 @@ class MusicController(
                 .build()
             mediaItemBuilder.setMediaMetadata(mediaMetadata)
         } else {
+            val mediaMetadata = MediaMetadata.Builder()
+                .setTitle(playMusic.name)
+                .setArtist(playMusic.artists?.joinToString()) // 可以设置其他元数据信息，例如专辑、时长等
+                .setExtras(bundle)
+                .build()
             mediaItemBuilder.setUri(playMusic.filePath?.toUri())
-                .setMediaMetadata(MediaMetadata.EMPTY)
+                .setMediaMetadata(mediaMetadata)
         }
         val normalizeMimeType =
             MimeTypes.normalizeMimeType(MimeTypes.BASE_TYPE_AUDIO + "/${playMusic.container}")
