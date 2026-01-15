@@ -532,6 +532,9 @@ abstract class IDataSourceParentServer(
     @OptIn(ExperimentalPagingApi::class)
     override fun selectFavoriteMusicFlowList(): Flow<PagingData<XyMusic>> {
         return defaultPager(
+            pageSize = Constants.UI_LIST_PAGE,
+            initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+            prefetchDistance = 5,
             remoteMediator = FavoriteMusicRemoteMediator(
                 datasourceServer = this,
                 db = db,
