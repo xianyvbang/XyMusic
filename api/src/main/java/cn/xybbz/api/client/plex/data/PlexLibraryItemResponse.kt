@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.client.plex.data
 
 import cn.xybbz.api.enums.plex.HasThumbnail
@@ -30,15 +48,15 @@ data class PlexLibraryItemResponse(
  * `1`.
  */
 data class Meta(
-    @Json(name = "FieldType")
+    @param:Json(name = "FieldType")
     val fieldType: List<FieldType>? = null,
 
-    @Json(name = "Type")
+    @param:Json(name = "Type")
     val type: List<Type>? = null
 )
 
 data class FieldType(
-    @Json(name = "Operator")
+    @param:Json(name = "Operator")
     val operator: List<Operator>,
 
     val type: String
@@ -52,10 +70,10 @@ data class Operator(
 data class Type(
     val active: Boolean,
 
-    @Json(name = "Field")
+    @param:Json(name = "Field")
     val field: List<Field>? = null,
 
-    @Json(name = "Filter")
+    @param:Json(name = "Filter")
     val filter: List<Filter>? = null,
 
     val key: String,
@@ -196,7 +214,7 @@ data class Marker(
     /**
      * Attributes associated with the marker.
      */
-    @Json(name = "Attributes")
+    @param:Json(name = "Attributes")
     val attributes: Attributes? = null
 )
 
@@ -303,10 +321,10 @@ data class Media(
      * This is relevant for media files that may require larger offsets than what 32-bit
      * integers can provide.
      */
-    @Json(name = "has64bitOffsets")
+    @param:Json(name = "has64bitOffsets")
     val has64BitOffsets: Boolean? = null,
 
-    @Json(name = "Part")
+    @param:Json(name = "Part")
     val part: List<Part>? = null
 )
 
@@ -366,7 +384,7 @@ data class Part(
      */
     val audioProfile: String? = null,
 
-    @Json(name = "has64bitOffsets")
+    @param:Json(name = "has64bitOffsets")
     val has64BitOffsets: Boolean? = null,
 
     /**
@@ -441,49 +459,49 @@ data class Stream(
     /**
      * Dolby Vision BL compatibility ID.
      */
-    @Json(name = "DOVIBLCompatID")
+    @param:Json(name = "DOVIBLCompatID")
     val doviblCompatID: Long? = null,
 
     /**
      * Indicates if Dolby Vision BL is present.
      */
-    @Json(name = "DOVIBLPresent")
+    @param:Json(name = "DOVIBLPresent")
     val doviblPresent: Boolean? = null,
 
     /**
      * Indicates if Dolby Vision EL is present.
      */
-    @Json(name = "DOVIELPresent")
+    @param:Json(name = "DOVIELPresent")
     val dovielPresent: Boolean? = null,
 
     /**
      * Dolby Vision level.
      */
-    @Json(name = "DOVILevel")
+    @param:Json(name = "DOVILevel")
     val doviLevel: Long? = null,
 
     /**
      * Indicates if Dolby Vision is present.
      */
-    @Json(name = "DOVIPresent")
+    @param:Json(name = "DOVIPresent")
     val doviPresent: Boolean? = null,
 
     /**
      * Dolby Vision profile.
      */
-    @Json(name = "DOVIProfile")
+    @param:Json(name = "DOVIProfile")
     val doviProfile: Long? = null,
 
     /**
      * Indicates if Dolby Vision RPU is present.
      */
-    @Json(name = "DOVIRPUPresent")
+    @param:Json(name = "DOVIRPUPresent")
     val dovirpuPresent: Boolean? = null,
 
     /**
      * Dolby Vision version.
      */
-    @Json(name = "DOVIVersion")
+    @param:Json(name = "DOVIVersion")
     val doviVersion: String? = null,
 
     /**
@@ -719,17 +737,6 @@ enum class ShowOrdering(val value: String) {
     DVD("dvd"),
     None("None"),
     TmdbAiring("tmdbAiring");
-
-    companion object {
-        public fun fromValue(value: String): ShowOrdering = when (value) {
-            "absolute" -> Absolute
-            "aired" -> Aired
-            "dvd" -> DVD
-            "None" -> None
-            "tmdbAiring" -> TmdbAiring
-            else -> throw IllegalArgumentException()
-        }
-    }
 }
 
 data class Similar(

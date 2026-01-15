@@ -206,7 +206,7 @@ fun MusicPlayerScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         AsyncImage(
-            model = musicDetail.pic ?: picByte,
+            model = if (musicDetail.pic.isNullOrBlank()) picByte else musicDetail.pic,
             contentDescription = stringResource(R.string.album_cover),
             modifier = Modifier
                 .align(Alignment.Center)

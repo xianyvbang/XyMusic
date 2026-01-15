@@ -181,11 +181,11 @@ class MusicController(
     fun replacePlaylistItemUrl() {
         if (originMusicList.isNotEmpty()) {
             originMusicList = originMusicList.map {
-                it.setMusicUrl(getMusicUrl(it.itemId, it.plexPlayKey, it.playSessionId))
+                it.setMusicUrl(getMusicUrl(it.itemId, it.plexPlayKey, settingsManager.get().playSessionId))
                 it
             }
             musicInfo?.let {
-                it.setMusicUrl(getMusicUrl(it.itemId, it.plexPlayKey, it.playSessionId))
+                it.setMusicUrl(getMusicUrl(it.itemId, it.plexPlayKey, settingsManager.get().playSessionId))
                 cacheController.cancelAllCache()
                 startCache(it)
             }
@@ -294,7 +294,7 @@ class MusicController(
             mediaItem?.localConfiguration?.let { localConfiguration ->
                 if (localConfiguration.tag == null) {
 
-                    Log.i("music", "诶切换类型 ${reason}")
+                    Log.i("music", "诶切换类型 $reason")
                     //手动切换
                     if (reason == MEDIA_ITEM_TRANSITION_REASON_SEEK || reason == MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
                         musicInfo?.let {
@@ -369,7 +369,7 @@ class MusicController(
                             PlayerEvent.PositionSeekTo(
                                 newPosition.positionMs,
                                 it.itemId,
-                                it.playSessionId
+                                settingsManager.get().playSessionId
                             )
                         )
                     }
@@ -598,7 +598,6 @@ class MusicController(
      */
     fun addMusic(
         music: XyPlayMusic,
-        artistId: String = "",
         isPlayer: Boolean? = null
     ) {
 
@@ -739,7 +738,7 @@ class MusicController(
 
         if (playMusic.filePath.isNullOrBlank()) {
             val musicUrl =
-                getMusicUrl(playMusic.itemId, playMusic.plexPlayKey, playMusic.playSessionId)
+                getMusicUrl(playMusic.itemId, playMusic.plexPlayKey, settingsManager.get().playSessionId)
             playMusic.setMusicUrl(musicUrl)
             mediaItemBuilder.setUri(musicUrl)
             val mediaMetadata = MediaMetadata.Builder()
@@ -750,8 +749,13 @@ class MusicController(
                 .build()
             mediaItemBuilder.setMediaMetadata(mediaMetadata)
         } else {
+            val mediaMetadata = MediaMetadata.Builder()
+                .setTitle(playMusic.name)
+                .setArtist(playMusic.artists?.joinToString()) // 可以设置其他元数据信息，例如专辑、时长等
+                .setExtras(bundle)
+                .build()
             mediaItemBuilder.setUri(playMusic.filePath?.toUri())
-                .setMediaMetadata(MediaMetadata.EMPTY)
+                .setMediaMetadata(mediaMetadata)
         }
         val normalizeMimeType =
             MimeTypes.normalizeMimeType(MimeTypes.BASE_TYPE_AUDIO + "/${playMusic.container}")
@@ -777,7 +781,7 @@ class MusicController(
             static,
             AudioCodecEnum.getAudioCodec(settingsManager.get().transcodeFormat),
             audioBitRate,
-            playSessionId
+            settingsManager.get().playSessionId
         )
     }
 
@@ -887,13 +891,6 @@ class MusicController(
     }
 
     /**
-     * 获得下一个的index
-     */
-    fun getNextIndexData(): Int? {
-        return mediaController?.nextMediaItemIndex
-    }
-
-    /**
      * 设置当前播放进度
      */
     fun setCurrentPositionData(currentPosition: Long) {
@@ -911,7 +908,7 @@ class MusicController(
     }
 
     fun updateState(state: PlayStateEnum) {
-        Log.i("music", "是否播放中--- ${mediaController?.isPlaying} --- ${state}")
+        Log.i("music", "是否播放中--- ${mediaController?.isPlaying} --- $state")
         this.state = state
     }
 
@@ -922,7 +919,7 @@ class MusicController(
     fun reportedPlayEvent() {
         musicInfo?.let {
             scope.launch {
-                _events.emit(PlayerEvent.Play(it.itemId, it.playSessionId))
+                _events.emit(PlayerEvent.Play(it.itemId, settingsManager.get().playSessionId))
             }
         }
     }
@@ -930,7 +927,7 @@ class MusicController(
     fun reportedPauseEvent() {
         musicInfo?.let {
             scope.launch {
-                _events.emit(PlayerEvent.Pause(it.itemId, it.playSessionId, it.getMusicUrl()))
+                _events.emit(PlayerEvent.Pause(it.itemId, settingsManager.get().playSessionId))
             }
         }
     }

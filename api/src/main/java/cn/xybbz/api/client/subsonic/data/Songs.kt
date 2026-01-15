@@ -18,6 +18,6 @@
 
 package cn.xybbz.api.client.subsonic.data
 
-data class SimilarSongs(
+data class Songs(
     val song: List<SongID3>
 )

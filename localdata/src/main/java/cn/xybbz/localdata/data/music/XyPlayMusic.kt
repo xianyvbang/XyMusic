@@ -21,7 +21,6 @@ package cn.xybbz.localdata.data.music
 import androidx.room.Ignore
 import androidx.room.TypeConverters
 import cn.xybbz.localdata.converter.StringListTypeConverter
-import java.util.UUID
 
 /**
  * 音乐播放类
@@ -42,11 +41,6 @@ data class XyPlayMusic(
      * 专辑id
      */
     val album: String,
-
-    /**
-     * 播放会话id,
-     */
-    val playSessionId: String = UUID.randomUUID().toString(),
     /**
      * 格式
      */

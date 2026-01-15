@@ -1,5 +1,24 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.page.parent
 
+import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.XyResponse
@@ -9,6 +28,7 @@ import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import kotlinx.coroutines.flow.StateFlow
 
 
 @OptIn(ExperimentalPagingApi::class)
@@ -16,7 +36,7 @@ class MusicRemoteMediator(
     private val db: DatabaseClient,
     private val datasourceServer: IDataSourceParentServer,
     private val connectionId: Long,
-    private val sort: Sort
+    private val sort: StateFlow<Sort>
 ) : DefaultRemoteMediator<HomeMusic,XyMusic>(
     db,
     RemoteIdConstants.MUSIC + connectionId,
@@ -32,7 +52,7 @@ class MusicRemoteMediator(
         loadKey: Int,
         pageSize: Int
     ): XyResponse<XyMusic> {
-        val sort = sort
+        val sort = sort.value
         return datasourceServer.getRemoteServerMusicList(
             startIndex = loadKey * pageSize,
             pageSize = pageSize,

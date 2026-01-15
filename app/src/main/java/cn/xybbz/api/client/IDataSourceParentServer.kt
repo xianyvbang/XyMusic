@@ -441,7 +441,7 @@ abstract class IDataSourceParentServer(
     override fun selectMusicListByParentId(
         itemId: String,
         dataType: MusicDataTypeEnum,
-        sort: StateFlow<Sort>
+        sortFlow: StateFlow<Sort>
     ): Flow<PagingData<XyMusic>> {
         return defaultPager(
             remoteMediator = AlbumOrPlaylistMusicListRemoteMediator(
@@ -450,7 +450,7 @@ abstract class IDataSourceParentServer(
                 db = db,
                 dataType = dataType,
                 connectionId = connectionConfigServer.getConnectionId(),
-                sort = sort
+                sortFlow = sortFlow
             )
         ) {
             if (dataType == MusicDataTypeEnum.ALBUM)
@@ -496,7 +496,7 @@ abstract class IDataSourceParentServer(
      */
     @OptIn(ExperimentalPagingApi::class)
     override fun selectAlbumFlowList(
-        sort: Sort
+        sortFlow: StateFlow<Sort>
     ): Flow<PagingData<XyAlbum>> {
         return defaultPager(
             pageSize = Constants.UI_LIST_PAGE,
@@ -505,7 +505,7 @@ abstract class IDataSourceParentServer(
                 db = db,
                 datasourceServer = this,
                 connectionId = connectionConfigServer.getConnectionId(),
-                sort = sort
+                sortFlow = sortFlow
             )
         ) {
             db.albumDao.selectHomeAlbumListPage()
@@ -532,6 +532,9 @@ abstract class IDataSourceParentServer(
     @OptIn(ExperimentalPagingApi::class)
     override fun selectFavoriteMusicFlowList(): Flow<PagingData<XyMusic>> {
         return defaultPager(
+            pageSize = Constants.UI_LIST_PAGE,
+            initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+            prefetchDistance = 5,
             remoteMediator = FavoriteMusicRemoteMediator(
                 datasourceServer = this,
                 db = db,
@@ -584,14 +587,14 @@ abstract class IDataSourceParentServer(
      */
     @OptIn(ExperimentalPagingApi::class)
     override fun selectMusicFlowList(
-        sort: Sort
+        sortFlow: StateFlow<Sort>
     ): Flow<PagingData<HomeMusic>> {
         return defaultPager(
             remoteMediator = MusicRemoteMediator(
                 db = db,
                 datasourceServer = this,
                 connectionId = connectionConfigServer.getConnectionId(),
-                sort = sort
+                sort = sortFlow
             )
         ) {
             db.musicDao.selectHomeMusicListPage()

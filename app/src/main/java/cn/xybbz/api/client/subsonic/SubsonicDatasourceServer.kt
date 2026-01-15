@@ -64,6 +64,7 @@ import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.page.defaultLocalPager
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
 import javax.inject.Inject
 
@@ -136,9 +137,10 @@ class SubsonicDatasourceServer @Inject constructor(
      * 获得音乐列表数据 Subsonic没办法一次性获得所有音乐
      */
     override fun selectMusicFlowList(
-        sort: Sort
+        sortFlow: StateFlow<Sort>
     ): Flow<PagingData<HomeMusic>> {
         return defaultLocalPager {
+            val sort = sortFlow.value
             val yearList = sort.yearList
             db.musicDao.selectHomeMusicListPageByYear(
                 ifFavorite = sort.isFavorite,
@@ -786,7 +788,7 @@ class SubsonicDatasourceServer @Inject constructor(
         static: Boolean,
         audioCodec: AudioCodecEnum?,
         audioBitRate: Int?,
-        playSessionId: String
+        session: String?
     ): String {
         var audioCodec = audioCodec ?: AudioCodecEnum.ROW
         if (static) {
@@ -799,22 +801,19 @@ class SubsonicDatasourceServer @Inject constructor(
      * 获得相似歌曲列表
      */
     override suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend>? {
-        val response =
+        val items =
             subsonicApiClient.itemApi().getSimilarSongs(
                 songId = musicId,
                 count = Constants.SIMILAR_MUSIC_LIST_PAGE
-            ).subsonicResponse.similarSongs
-        val items = response?.song?.map { music ->
-            music.toXyMusic(
-                pic = if (music.coverArt.isNullOrBlank()) null else music.coverArt?.let {
+            ).subsonicResponse.songs?.toXyMusic(
+                connectionConfigServer.getConnectionId(),
+                { createDownloadUrl(it) },
+                {
                     subsonicApiClient.getImageUrl(
                         it
                     )
-                },
-                downloadUrl = createDownloadUrl(music.id),
-                connectionId = connectionConfigServer.getConnectionId()
+                }
             )
-        }
         return transitionMusicExtend(items)
     }
 
@@ -825,22 +824,15 @@ class SubsonicDatasourceServer @Inject constructor(
         artistId: String?,
         artistName: String?
     ): List<XyMusicExtend>? {
-        val response =
+        val items =
             subsonicApiClient.itemApi().getTopSongs(
                 artistName = artistName ?: "",
                 count = Constants.ARTIST_HOT_MUSIC_LIST_PAGE
-            ).subsonicResponse.topSongs
-        val items = response?.song?.map { music ->
-            music.toXyMusic(
-                pic = if (music.coverArt.isNullOrBlank()) null else music.coverArt?.let {
-                    subsonicApiClient.getImageUrl(
-                        it
-                    )
-                },
-                downloadUrl = createDownloadUrl(music.id),
-                connectionId = connectionConfigServer.getConnectionId()
+            ).subsonicResponse.topSongs.toXyMusic(
+                connectionConfigServer.getConnectionId(),
+                createDownloadUrl = { createDownloadUrl(it) },
+                getImageUrl = { subsonicApiClient.getImageUrl(it) }
             )
-        }
         return transitionMusicExtend(items)
     }
 

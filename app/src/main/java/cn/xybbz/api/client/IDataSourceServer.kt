@@ -80,14 +80,14 @@ interface IDataSourceServer {
      * 获得专辑列表数据
      */
     fun selectAlbumFlowList(
-        sort: Sort
+        sortFlow: StateFlow<Sort>
     ): Flow<PagingData<XyAlbum>>
 
     /**
      * 获得音乐列表数据
      */
     fun selectMusicFlowList(
-        sort: Sort
+        sortFlow: StateFlow<Sort>
     ): Flow<PagingData<HomeMusic>>
 
     /**
@@ -112,7 +112,7 @@ interface IDataSourceServer {
     fun selectMusicListByParentId(
         itemId: String,
         dataType: MusicDataTypeEnum,
-        sort: StateFlow<Sort>
+        sortFlow: StateFlow<Sort>
     ): Flow<PagingData<XyMusic>>
 
     /**
@@ -410,7 +410,7 @@ interface IDataSourceServer {
         static: Boolean = true,
         audioCodec: AudioCodecEnum? = null,
         audioBitRate: Int? = null,
-        playSessionId: String
+        session: String? = null
     ): String
 
     /**

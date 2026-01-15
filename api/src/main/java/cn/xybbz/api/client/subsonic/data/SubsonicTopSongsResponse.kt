@@ -35,7 +35,7 @@ data class SubsonicTopSongsResponse(
      * 热门歌曲
      */
     @param:Json(name = "topSongs")
-    val topSongs: TopSongs? = null,
+    val topSongs: Songs? = null,
     /**
      * 报错信息
      */

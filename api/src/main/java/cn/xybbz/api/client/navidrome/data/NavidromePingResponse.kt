@@ -1,6 +1,25 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.client.navidrome.data
 
 import cn.xybbz.api.client.subsonic.data.SubsonicError
+import cn.xybbz.api.client.subsonic.data.SubsonicParentResponse
 import cn.xybbz.api.enums.subsonic.Status
 import com.squareup.moshi.JsonClass
 
@@ -19,22 +38,22 @@ open class NavidromePingResponse(
     /**
      * The server actual name. [Ex: Navidrome or gonic]
      */
-    open val type: String? = null,
+    override val type: String? = null,
 
     /**
      * The server supported Subsonic API version.
      */
-    open val version: String,
+    override val version: String,
 
     /**
      * The command result. `ok`
      *
      * The command result. `failed`
      */
-    open val status: Status,
+    override val status: Status,
 
     /**
      * 异常对象
      */
-    open val error: SubsonicError?
-)
+    override val error: SubsonicError?
+): SubsonicParentResponse(type, version, status, error)

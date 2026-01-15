@@ -18,19 +18,37 @@
 
 package cn.xybbz.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import cn.xybbz.common.enums.SortTypeEnum
+import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.data.era.XyEraItem
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 
-abstract class PageListViewModel : ViewModel() {
+abstract class PageListViewModel<T: Any>(connectionConfigServer: ConnectionConfigServer) : ViewModel() {
 
     protected val _sortType = MutableStateFlow(Sort())
 
-    val sortBy: StateFlow<Sort> = _sortType
+    val sortBy: StateFlow<Sort> = _sortType.asStateFlow()
+
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val listPage: Flow<PagingData<T>> =
+        connectionConfigServer.loginSuccessEvent
+            .flatMapLatest {
+                getFlowPageData(sortBy)
+            }
+            .cachedIn(viewModelScope) // 只调用一次
 
 
     /**
@@ -92,4 +110,14 @@ abstract class PageListViewModel : ViewModel() {
         }
         refreshPage()
     }
+
+    suspend fun clearFilterOrSort(refreshPage: suspend () -> Unit){
+        val sort = Sort()
+        updateSort(sort, refreshPage = refreshPage)
+    }
+
+    /**
+     * 获得数据结构
+     */
+    abstract fun getFlowPageData(sortFlow: StateFlow<Sort>): Flow<PagingData<T>>
 }

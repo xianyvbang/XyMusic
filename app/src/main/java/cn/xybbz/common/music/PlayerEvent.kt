@@ -24,7 +24,7 @@ sealed class PlayerEvent {
     //设置删除播放历史进度
     data class RemovePlaybackProgress(val musicId: String) : PlayerEvent()
     //暂停
-    data class Pause(val musicId: String, val playSessionId: String, val musicUrl: String) : PlayerEvent()
+    data class Pause(val musicId: String, val playSessionId: String) : PlayerEvent()
     //播放
     data class Play(val musicId: String, val playSessionId: String) : PlayerEvent()
     //进度跳转

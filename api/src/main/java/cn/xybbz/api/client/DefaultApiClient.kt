@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.client
 
 import cn.xybbz.api.TokenServer
@@ -12,12 +30,9 @@ import cn.xybbz.api.okhttp.DefaultAuthenticator
 import cn.xybbz.api.okhttp.LoggingInterceptor
 import cn.xybbz.api.okhttp.NetWorkInterceptor
 import cn.xybbz.api.okhttp.plex.PlexQueryInterceptor
-import cn.xybbz.api.okhttp.proxy.DynamicProxySelector
 import cn.xybbz.api.okhttp.proxy.ProxyManager
-import cn.xybbz.api.okhttp.subsonic.SubsonicNetworkStatusInterceptor
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import okhttp3.Credentials
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -118,10 +133,6 @@ abstract class DefaultApiClient : ApiConfig {
             .followRedirects(true)
             .followSslRedirects(true)
             .retryOnConnectionFailure(true)
-
-        if (if (ifTmp) ifSubsonic else TokenServer.ifSubsonic) {
-            okHttpClientBuilder.addNetworkInterceptor(SubsonicNetworkStatusInterceptor())
-        }
         apiOkHttpClient = okHttpClientBuilder
             // 可以添加其他配置，比如连接超时、读写超时等
             .build()
