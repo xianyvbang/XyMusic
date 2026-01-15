@@ -1319,11 +1319,11 @@ class PlexDatasourceServer @Inject constructor(
         static: Boolean,
         audioCodec: AudioCodecEnum?,
         audioBitRate: Int?,
-        playSessionId: String
+        session: String?
     ): String {
         return if (static) plexApiClient.createAudioUrl(musicId)
         else
-            plexApiClient.createUniversalAudioUrl(musicId, audioBitRate ?: 0, playSessionId)
+            plexApiClient.createUniversalAudioUrl(musicId, audioBitRate ?: 0, session ?: "")
     }
 
     /**

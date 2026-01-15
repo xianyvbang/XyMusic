@@ -551,3 +551,14 @@ internal object Migration_17_18 : Migration(17, 18) {
         """)
     }
 }
+
+internal val Migration_18_19 = object : Migration(18, 19) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+
+        db.execSQL("""
+            ALTER TABLE xy_settings
+            ADD COLUMN playSessionId TEXT NOT NULL
+            DEFAULT ''
+        """)
+    }
+}

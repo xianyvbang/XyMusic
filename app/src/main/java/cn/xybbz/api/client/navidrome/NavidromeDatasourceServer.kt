@@ -846,7 +846,7 @@ class NavidromeDatasourceServer @Inject constructor(
         static: Boolean,
         audioCodec: AudioCodecEnum?,
         audioBitRate: Int?,
-        playSessionId: String
+        session: String?
     ): String {
         var audioCodec = audioCodec ?: AudioCodecEnum.ROW
         if (static) {

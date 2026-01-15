@@ -163,7 +163,7 @@ class MainViewModel @Inject constructor(
                     }
 
                     is PlayerEvent.Pause -> {
-                        onPause(it.musicId, it.playSessionId, it.musicUrl)
+                        onPause(it.musicId, it.playSessionId)
                     }
 
                     is PlayerEvent.Play -> {
@@ -226,7 +226,7 @@ class MainViewModel @Inject constructor(
 
     }
 
-    fun onPause(musicId: String, playSessionId: String, musicUrl: String) {
+    fun onPause(musicId: String, playSessionId: String) {
         if (settingsManager.get().ifEnableSyncPlayProgress) {
             viewModelScope.launch {
                 dataSourceManager.reportPlaying(

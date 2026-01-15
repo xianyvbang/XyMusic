@@ -387,15 +387,13 @@ class EmbyApiClient : DefaultParentApiClient() {
         itemId: String,
         audioCodec: AudioCodecEnum? = null,
         static: Boolean = true,
-        audioBitRate: Int? = null,
-        playSessionId: String
+        audioBitRate: Int? = null
     ): String {
         return getAudioStreamUrl(
             itemId = itemId,
             audioCodec = audioCodec,
             static = static,
-            audioBitRate = audioBitRate,
-            playSessionId
+            audioBitRate = audioBitRate
         )
     }
 
@@ -460,18 +458,16 @@ class EmbyApiClient : DefaultParentApiClient() {
         itemId: String,
         audioCodec: AudioCodecEnum? = null,
         static: Boolean = true,
-        audioBitRate: Int? = null,
-        playSessionId: String
+        audioBitRate: Int? = null
     ): String {
         return if (audioBitRate == null){
             "${baseUrl}/emby/Audio/${itemId}/stream?" +
                     "deviceId=${deviceId}&userId=${userId}&static=${static}" +
-                    "&audioCodec=${audioCodec}&playSessionId=${playSessionId}"
+                    "&audioCodec=${audioCodec}"
         }else {
             "${baseUrl}/emby/Audio/${itemId}/stream?" +
                     "deviceId=${deviceId}&userId=${userId}&static=${static}" +
-                    "&audioCodec=${audioCodec}&audioBitRate=${audioBitRate}" +
-                    "&playSessionId=${playSessionId}"
+                    "&audioCodec=${audioCodec}&audioBitRate=${audioBitRate}"
         }
     }
 

@@ -862,14 +862,13 @@ class JellyfinDatasourceServer @Inject constructor(
         static: Boolean,
         audioCodec: AudioCodecEnum?,
         audioBitRate: Int?,
-        playSessionId: String
+        session: String?
     ): String {
         return jellyfinApiClient.createAudioUrl(
             musicId,
             audioCodec,
             static,
-            audioBitRate,
-            playSessionId
+            audioBitRate
         )
     }
 

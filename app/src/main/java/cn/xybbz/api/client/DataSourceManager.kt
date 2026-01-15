@@ -1055,7 +1055,7 @@ class DataSourceManager(
         static: Boolean,
         audioCodec: AudioCodecEnum?,
         audioBitRate: Int?,
-        playSessionId: String
+        session: String?
     ): String {
         return try {
             dataSourceServer.getMusicPlayUrl(
@@ -1063,7 +1063,7 @@ class DataSourceManager(
                 static,
                 audioCodec,
                 audioBitRate,
-                playSessionId
+                session
             )
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获取播放连接失败", e)

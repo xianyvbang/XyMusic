@@ -410,7 +410,7 @@ interface IDataSourceServer {
         static: Boolean = true,
         audioCodec: AudioCodecEnum? = null,
         audioBitRate: Int? = null,
-        playSessionId: String
+        session: String? = null
     ): String
 
     /**

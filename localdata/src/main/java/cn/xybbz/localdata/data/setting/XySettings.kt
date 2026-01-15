@@ -23,6 +23,7 @@ import androidx.room.PrimaryKey
 import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.localdata.enums.LanguageType
+import java.util.UUID
 
 @Entity(tableName = "xy_settings")
 data class XySettings(
@@ -99,5 +100,10 @@ data class XySettings(
     /**
      * wifi网络转码比特率
      */
-    val wifiNetworkAudioBitRate: Int = 0
+    val wifiNetworkAudioBitRate: Int = 0,
+
+    /**
+     * 播放会话ID
+     */
+    val playSessionId: String = UUID.randomUUID().toString()
 )

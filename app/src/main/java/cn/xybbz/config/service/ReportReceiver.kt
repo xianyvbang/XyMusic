@@ -21,12 +21,12 @@ package cn.xybbz.config.service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.alarm.AlarmConfig
+import cn.xybbz.config.setting.SettingsManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -44,6 +44,9 @@ class ReportReceiver : BroadcastReceiver() {
     @Inject
     lateinit var datasourceManager: DataSourceManager
 
+    @Inject
+    lateinit var settingsManager: SettingsManager
+
 
     override fun onReceive(context: Context, intent: Intent?) {
         // 条件判断：是否还需要继续上报
@@ -57,12 +60,11 @@ class ReportReceiver : BroadcastReceiver() {
     }
 
     private fun doUploadWork() {
-        Log.i("上报", "上报2222")
         CoroutineScopeUtils.getIo("ReportReceiver").launch {
             datasourceManager.reportProgress(
                 musicController.musicInfo?.itemId ?: "",
-                musicController.musicInfo?.playSessionId ?: "",
-                0
+                settingsManager.get().playSessionId,
+                musicController.progressStateFlow.value
             )
         }
     }

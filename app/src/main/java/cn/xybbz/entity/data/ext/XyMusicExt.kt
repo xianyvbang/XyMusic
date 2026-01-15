@@ -65,7 +65,6 @@ fun XyMusicExtend.toPlayerMusic(): XyPlayMusic {
         pic = music.pic,
         name = music.name,
         album = music.album,
-        playSessionId = UUID.randomUUID().toString(),
         container = music.container,
         artists = music.artists,
         artistIds = music.artistIds,
