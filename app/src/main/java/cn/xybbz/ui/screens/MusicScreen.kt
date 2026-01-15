@@ -68,7 +68,7 @@ fun MusicScreen(
 
     val coroutineScope = rememberCoroutineScope()
     val mainViewModel = LocalMainViewModel.current
-    val homeMusicPager = musicViewModel.musicListPage.collectAsLazyPagingItems()
+    val homeMusicPager = musicViewModel.listPage.collectAsLazyPagingItems()
     val favoriteSet by musicViewModel.favoriteRepository.favoriteSet.collectAsState()
     val downloadMusicIds by musicViewModel.downloadRepository.musicIdsFlow.collectAsState()
     val sortBy by musicViewModel.sortBy.collectAsState()
@@ -133,6 +133,9 @@ fun MusicScreen(
                         musicViewModel.setFilterYear(
                             years.mapNotNull { it },
                             { homeMusicPager.refresh() })
+                    },
+                    onClearFilterOrShort = {
+                        musicViewModel.clearFilterOrSort{homeMusicPager.refresh()}
                     }
                 )
             }

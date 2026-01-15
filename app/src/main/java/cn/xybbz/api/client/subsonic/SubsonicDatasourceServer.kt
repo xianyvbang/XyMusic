@@ -64,6 +64,7 @@ import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.page.defaultLocalPager
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
 import javax.inject.Inject
 
@@ -136,9 +137,10 @@ class SubsonicDatasourceServer @Inject constructor(
      * 获得音乐列表数据 Subsonic没办法一次性获得所有音乐
      */
     override fun selectMusicFlowList(
-        sort: Sort
+        sortFlow: StateFlow<Sort>
     ): Flow<PagingData<HomeMusic>> {
         return defaultLocalPager {
+            val sort = sortFlow.value
             val yearList = sort.yearList
             db.musicDao.selectHomeMusicListPageByYear(
                 ifFavorite = sort.isFavorite,

@@ -180,7 +180,7 @@ fun AlbumInfoScreen(
     val ifOpenSelect by albumInfoViewModel.selectControl.uiState.collectAsState()
 
     val musicListPage =
-        albumInfoViewModel.xyMusicList.collectAsLazyPagingItems()
+        albumInfoViewModel.listPage.collectAsLazyPagingItems()
     val sortBy by albumInfoViewModel.sortBy.collectAsState()
 
     var ifShowMenu by remember {
@@ -189,6 +189,11 @@ fun AlbumInfoScreen(
     var playlistName by remember {
         mutableStateOf(albumInfoViewModel.xyAlbumInfoData?.name ?: "")
     }
+
+
+    val removePlaylistAlertTitle = stringResource(R.string.delete_playlist)
+    val editPlaylistAlertTitle = stringResource(R.string.modify_playlist_name)
+    val importPlaylistAlertTitle = stringResource(R.string.import_playlist)
 
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
@@ -293,16 +298,16 @@ fun AlbumInfoScreen(
                                 modifier = Modifier.width(200.dp),
                                 itemDataList = listOf(
                                     MenuItemDefaultData(
-                                        title = context.getString(R.string.import_playlist),
+                                        title = importPlaylistAlertTitle,
                                         trailingIcon = {
                                             Icon(
                                                 imageVector = Icons.AutoMirrored.Rounded.Login,
-                                                contentDescription = stringResource(R.string.import_playlist)
+                                                contentDescription = importPlaylistAlertTitle
                                             )
                                         },
                                         onClick = importPlaylistsCompose(onCreatePlaylist = {
                                             AlertDialogObject(
-                                                title = context.getString(R.string.import_playlist),
+                                                title = importPlaylistAlertTitle,
                                                 content = {
                                                     XyItemTextHorizontal(
                                                         text = stringResource(R.string.import_playlist_hint)
@@ -346,7 +351,7 @@ fun AlbumInfoScreen(
                                         onClick = {
                                             ifShowMenu = false
                                             AlertDialogObject(
-                                                title = context.getString(R.string.modify_playlist_name),
+                                                title = editPlaylistAlertTitle,
                                                 content = {
                                                     XyEdit(
                                                         text = albumInfoViewModel.xyAlbumInfoData?.name
@@ -369,18 +374,18 @@ fun AlbumInfoScreen(
                                             ).show()
                                         }),
                                     MenuItemDefaultData(
-                                        title = stringResource(R.string.delete_playlist),
+                                        title = removePlaylistAlertTitle,
                                         trailingIcon = {
                                             Icon(
                                                 imageVector = Icons.Rounded.Delete,
-                                                contentDescription = stringResource(R.string.delete_playlist),
+                                                contentDescription = removePlaylistAlertTitle,
                                                 tint = Color.Red
                                             )
                                         },
                                         onClick = {
                                             ifShowMenu = false
                                             AlertDialogObject(
-                                                title = context.getString(R.string.delete_playlist),
+                                                title = removePlaylistAlertTitle,
                                                 content = {
                                                     XyItemTextHorizontal(
                                                         text = stringResource(
@@ -543,17 +548,21 @@ private fun MusicListOperation(
         }
     }
 
+    val pauseText = stringResource(R.string.pause_playback)
+    val resumeText = stringResource(R.string.resume_playback)
+    val startText = stringResource(R.string.start_playback)
+
     val textInfo by remember {
         derivedStateOf {
             if (onMusicAlbum()?.itemId == onPlayAlbumId()) {
                 if (onPlayState() == PlayStateEnum.Playing)
-                    context.getString(R.string.pause_playback)
+                    pauseText
                 else
-                    context.getString(R.string.resume_playback)
+                    resumeText
             } else if (onAlbumPlayerHistoryProgress() != null)
-                "${context.getString(R.string.resume_playback)}:${onAlbumPlayerHistoryProgress()?.musicName}"
+                "$resumeText:${onAlbumPlayerHistoryProgress()?.musicName}"
             else
-                context.getString(R.string.start_playback)
+                startText
         }
     }
 
@@ -808,10 +817,10 @@ private fun StickyHeaderOperationParent(
         sortContent = {
             SelectSortBottomSheetComponent(
                 onIfYearFilter = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifYearFilter },
-                onIfSelectOneYear = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifMusicSelectOneYear },
+                onIfSelectOneYear = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifAlbumInfoSelectOneYear },
                 onIfStartEndYear = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifStartEndYear },
-                onIfSort = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifMusicSort },
-                onIfFavoriteFilter = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifMusicFavoriteFilter },
+                onIfSort = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifAlbumInfoSort },
+                onIfFavoriteFilter = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifAlbumInfoFavoriteFilter },
                 onSortTypeClick = {
                     albumInfoViewModel.setSortedData(it, { musicListPage.refresh() })
                 },
@@ -848,6 +857,9 @@ private fun StickyHeaderOperationParent(
                     albumInfoViewModel.setFilterYear(
                         years.mapNotNull { it },
                         { musicListPage.refresh() })
+                },
+                onClearFilterOrShort = {
+                    albumInfoViewModel.clearFilterOrSort{musicListPage.refresh()}
                 }
             )
         }

@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.ui.components
 
 import androidx.compose.foundation.layout.Box
@@ -7,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.MenuOpen
 import androidx.compose.material.icons.automirrored.rounded.Sort
 import androidx.compose.material.icons.rounded.CalendarToday
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -104,6 +123,7 @@ fun SelectSortBottomSheetComponent(
     onSetSelectYear: suspend (Int?) -> Unit,
     onSelectRangeYear: () -> List<Int>?,
     onSetSelectRangeYear: suspend (List<Int?>) -> Unit,
+    onClearFilterOrShort: suspend () -> Unit,
 ) {
 
     val coroutineScope = rememberCoroutineScope()
@@ -165,7 +185,7 @@ fun SelectSortBottomSheetComponent(
             onIfShowMenu = { ifShowSortOrFilterMenu },
             onSetIfShowMenu = { ifShowSortOrFilterMenu = it },
             modifier = Modifier
-                .width(200.dp),
+                .width(250.dp),
             itemDataList = listOf(
                 MenuItemDefaultData(
                     title = if (onIfFavorite()) stringResource(R.string.cancel_favorite_filter) else stringResource(
@@ -187,21 +207,6 @@ fun SelectSortBottomSheetComponent(
                             setFavorite(!onIfFavorite())
                         }
                     }, ifItemShow = { onIfFavoriteFilter() == true }),
-                //年代筛选
-                MenuItemDefaultData(
-                    title = stringResource(R.string.era_filter),
-                    trailingIcon = {
-                        Icon(
-                            imageVector = Icons.Rounded.CalendarToday,
-                            contentDescription = stringResource(R.string.era_filter),
-                        )
-
-                    },
-                    onClick = composeClick {
-                        ifShowSortOrFilterMenu = false
-                        ifOpenAgeFilterBottom = true
-                    },
-                    ifItemShow = { onIfYearFilter() == true && onIfSelectOneYear.invoke() == false }),
                 //单年筛选
                 MenuItemDefaultData(
                     title = stringResource(R.string.year_filter),
@@ -246,7 +251,23 @@ fun SelectSortBottomSheetComponent(
                         ifShowSortOrFilterMenu = false
                         ifOpenSortBottom = true
                     },
-                    ifItemShow = { onIfSort() == true })
+                    ifItemShow = { onIfSort() == true }),
+                MenuItemDefaultData(
+                    title = "清除筛选",
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Rounded.Close,
+                            contentDescription = "清除筛选",
+                        )
+
+                    },
+                    onClick = composeClick {
+                        ifShowSortOrFilterMenu = false
+                        coroutineScope.launch {
+                            onClearFilterOrShort()
+                        }
+                    },
+                    ifItemShow = { onIfYearFilter() == true && onIfSelectOneYear.invoke() == false })
 
             )
         )

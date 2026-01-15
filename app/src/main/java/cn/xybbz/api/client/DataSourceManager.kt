@@ -365,18 +365,18 @@ class DataSourceManager(
      * 获得专辑数据
      */
     override fun selectAlbumFlowList(
-        sort: Sort
+        sortFlow: StateFlow<Sort>
     ): Flow<PagingData<XyAlbum>> {
-        return dataSourceServer.selectAlbumFlowList(sort)
+        return dataSourceServer.selectAlbumFlowList(sortFlow)
     }
 
     /**
      * 获得音乐数据
      */
     override fun selectMusicFlowList(
-        sort: Sort
+        sortFlow: StateFlow<Sort>
     ): Flow<PagingData<HomeMusic>> {
-        return dataSourceServer.selectMusicFlowList(sort)
+        return dataSourceServer.selectMusicFlowList(sortFlow)
     }
 
     /**
@@ -400,12 +400,12 @@ class DataSourceManager(
     override fun selectMusicListByParentId(
         itemId: String,
         dataType: MusicDataTypeEnum,
-        sort: StateFlow<Sort>
+        sortFlow: StateFlow<Sort>
     ): Flow<PagingData<XyMusic>> {
         return dataSourceServer.selectMusicListByParentId(
             itemId = itemId,
             dataType = dataType,
-            sort = sort
+            sortFlow = sortFlow
         )
     }
 
