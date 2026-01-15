@@ -859,22 +859,19 @@ class NavidromeDatasourceServer @Inject constructor(
      * 获得相似歌曲列表
      */
     override suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend>? {
-        val response =
+        val items =
             navidromeApiClient.itemApi().getSimilarSongs(
                 songId = musicId,
                 count = Constants.SIMILAR_MUSIC_LIST_PAGE
-            ).subsonicResponse.similarSongs
-        val items = response?.song?.map { music ->
-            music.toXyMusic(
-                pic = if (music.coverArt.isNullOrBlank()) null else music.coverArt?.let {
+            ).subsonicResponse.songs.toXyMusic(
+                connectionConfigServer.getConnectionId(),
+                createDownloadUrl = { createDownloadUrl(it) },
+                getImageUrl = {
                     navidromeApiClient.getImageUrl(
                         it
                     )
-                },
-                downloadUrl = createDownloadUrl(music.id),
-                connectionId = connectionConfigServer.getConnectionId()
+                }
             )
-        }
         return transitionMusicExtend(items)
     }
 
@@ -885,22 +882,15 @@ class NavidromeDatasourceServer @Inject constructor(
         artistId: String?,
         artistName: String?
     ): List<XyMusicExtend>? {
-        val response =
+        val items =
             navidromeApiClient.itemApi().getTopSongs(
                 artistName = artistName ?: "",
                 count = Constants.ARTIST_HOT_MUSIC_LIST_PAGE
-            ).subsonicResponse.topSongs
-        val items = response?.song?.map { music ->
-            music.toXyMusic(
-                pic = if (music.coverArt.isNullOrBlank()) null else music.coverArt?.let {
-                    navidromeApiClient.getImageUrl(
-                        it
-                    )
-                },
-                downloadUrl = createDownloadUrl(music.id),
-                connectionId = connectionConfigServer.getConnectionId()
+            ).subsonicResponse.topSongs.toXyMusic(
+                connectionConfigServer.getConnectionId(),
+                createDownloadUrl = { createDownloadUrl(it) },
+                getImageUrl = { navidromeApiClient.getImageUrl(it) }
             )
-        }
         return transitionMusicExtend(items)
     }
 

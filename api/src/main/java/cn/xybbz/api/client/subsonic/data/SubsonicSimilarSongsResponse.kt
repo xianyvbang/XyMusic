@@ -35,7 +35,7 @@ data class SubsonicSimilarSongsResponse(
      * 相似歌曲
      */
     @param:Json(name = "similarSongs")
-    val similarSongs: SimilarSongs? = null,
+    val songs: Songs? = null,
     /**
      * 报错信息
      */

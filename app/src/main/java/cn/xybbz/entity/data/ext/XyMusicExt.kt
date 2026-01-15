@@ -19,6 +19,7 @@
 package cn.xybbz.entity.data.ext
 
 import cn.xybbz.api.client.subsonic.data.SongID3
+import cn.xybbz.api.client.subsonic.data.Songs
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.data.music.XyMusic
@@ -58,7 +59,7 @@ fun SongID3.toXyMusic(pic: String?, downloadUrl: String, connectionId: Long): Xy
     )
 }
 
-fun XyMusicExtend.toPlayerMusic(): XyPlayMusic{
+fun XyMusicExtend.toPlayerMusic(): XyPlayMusic {
     return XyPlayMusic(
         itemId = this.music.itemId,
         pic = music.pic,
@@ -80,6 +81,24 @@ fun List<String>.joinToString(): String {
     return this.joinToString(LocalConstants.ARTIST_DELIMITER)
 }
 
-fun <T>  List<T>.joinToString(transform: ((T) -> CharSequence)): String {
-    return this.joinToString(LocalConstants.ARTIST_DELIMITER,transform = transform)
+fun <T> List<T>.joinToString(transform: ((T) -> CharSequence)): String {
+    return this.joinToString(LocalConstants.ARTIST_DELIMITER, transform = transform)
+}
+
+fun Songs?.toXyMusic(
+    connectionId: Long,
+    createDownloadUrl: (String) -> String,
+    getImageUrl: (String) -> String
+): List<XyMusic>? {
+    return this?.song?.map { music ->
+        music.toXyMusic(
+            pic = if (music.coverArt.isNullOrBlank()) null else music.coverArt?.let {
+                getImageUrl(
+                    it
+                )
+            },
+            downloadUrl = createDownloadUrl(music.id),
+            connectionId = connectionId
+        )
+    }
 }
