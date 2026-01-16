@@ -1832,7 +1832,8 @@ class PlexDatasourceServer @Inject constructor(
             connectionId = connectionConfigServer.getConnectionId(),
             ifFavorite = false,
             ifPlaylist = true,
-            musicCount = playlist.leafCount ?: 0
+            musicCount = playlist.leafCount ?: 0,
+            createTime = playlist.addedAt?:0L
         )
     }
 

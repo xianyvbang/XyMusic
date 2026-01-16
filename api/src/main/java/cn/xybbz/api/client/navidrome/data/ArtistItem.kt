@@ -19,7 +19,6 @@
 package cn.xybbz.api.client.navidrome.data
 
 import com.squareup.moshi.JsonClass
-import java.time.LocalDateTime
 
 @JsonClass(generateAdapter = true)
 data class ArtistItem(
@@ -36,7 +35,7 @@ data class ArtistItem(
     /**
      * 收藏时间
      */
-    val starredAt: LocalDateTime? = null,
+    val starredAt: String? = null,
     /**
      * 所属歌曲文件大小,单位字节
      */
@@ -56,7 +55,7 @@ data class ArtistItem(
     /**
      * 播放时间
      */
-    val playDate: LocalDateTime? = null,
+    val playDate: String? = null,
     /**
      * 小图片链接地址
      */
@@ -72,7 +71,7 @@ data class ArtistItem(
     /**
      * 外部信息更新时间
      */
-    val externalInfoUpdatedAt: LocalDateTime? = null,
+    val externalInfoUpdatedAt: String? = null,
     /**
      * 是否数据缺失
      */
@@ -80,11 +79,11 @@ data class ArtistItem(
     /**
      * 创建时间
      */
-    val createdAt: LocalDateTime,
+    val createdAt: String,
     /**
      * 更新时间
      */
-    val updatedAt: LocalDateTime,
+    val updatedAt: String,
     /**
      * 按艺术家姓名排序
      */

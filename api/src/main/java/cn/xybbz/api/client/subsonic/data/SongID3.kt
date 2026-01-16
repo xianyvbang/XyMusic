@@ -18,6 +18,9 @@
 
 package cn.xybbz.api.client.subsonic.data
 
+import com.squareup.moshi.JsonClass
+
+@JsonClass(generateAdapter = true)
 data class SongID3(
     /**
      * 歌曲编码
@@ -60,7 +63,7 @@ data class SongID3(
      */
     val duration: Long,
     /**
-     * 创建书剑
+     * 创建时间
      */
     val created: String,
     /**

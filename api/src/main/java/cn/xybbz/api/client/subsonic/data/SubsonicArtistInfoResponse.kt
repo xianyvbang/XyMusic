@@ -19,10 +19,12 @@
 package cn.xybbz.api.client.subsonic.data
 
 import cn.xybbz.api.enums.subsonic.Status
+import com.squareup.moshi.JsonClass
 
 /**
  * 艺术家信息和相似艺术家获取
  */
+@JsonClass(generateAdapter = true)
 data class SubsonicArtistInfoResponse(
     override val type: String? = null,
     /**

@@ -21,11 +21,11 @@ package cn.xybbz.entity.data.ext
 import cn.xybbz.api.client.subsonic.data.SongID3
 import cn.xybbz.api.client.subsonic.data.Songs
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
-import java.util.UUID
 
 fun SongID3.toXyMusic(pic: String?, downloadUrl: String, connectionId: Long): XyMusic {
     return XyMusic(
@@ -55,7 +55,8 @@ fun SongID3.toXyMusic(pic: String?, downloadUrl: String, connectionId: Long): Xy
         ifLyric = true,
         lyric = "",
         playlistItemId = this.id,
-        lastPlayedDate = 0L
+        lastPlayedDate = 0L,
+        createTime = this.created.toSecondMs()
     )
 }
 

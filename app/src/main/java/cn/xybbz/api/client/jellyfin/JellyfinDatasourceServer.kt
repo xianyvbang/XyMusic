@@ -49,6 +49,7 @@ import cn.xybbz.common.constants.Constants.LYRICS_AMPLIFICATION
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
+import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.entity.data.LrcEntryData
@@ -71,8 +72,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
-import java.time.ZoneId
-import java.time.ZoneOffset
 import javax.inject.Inject
 
 /**
@@ -695,7 +694,8 @@ class JellyfinDatasourceServer @Inject constructor(
     ): Boolean {
         jellyfinApiClient.playlistsApi().addItemToPlaylist(
             playlistId = playlistId,
-            ids = musicIds.joinToString())
+            ids = musicIds.joinToString()
+        )
         return super.saveMusicPlaylist(playlistId, musicIds)
     }
 
@@ -710,7 +710,8 @@ class JellyfinDatasourceServer @Inject constructor(
     ): Boolean {
         jellyfinApiClient.playlistsApi().deletePlaylist(
             playlistId = playlistId,
-            entryIds = musicIds.joinToString())
+            entryIds = musicIds.joinToString()
+        )
         db.musicDao.removeByPlaylistMusicByMusicId(
             playlistId = playlistId,
             musicIds = musicIds
@@ -1368,12 +1369,11 @@ class JellyfinDatasourceServer @Inject constructor(
             artists = item.albumArtists?.mapNotNull { it.name }?.joinToString()
                 ?: application.getString(Constants.UNKNOWN_ARTIST),
             year = item.productionYear,
-            premiereDate = item.premiereDate?.atZone(ZoneOffset.ofHours(8))?.toInstant()
-                ?.toEpochMilli(),
+            premiereDate = item.premiereDate?.toSecondMs(),
             genreIds = item.genreItems?.joinToString() { it.id },
             ifFavorite = item.userData?.isFavorite == true,
             ifPlaylist = ifPlaylist,
-            createTime = item.dateCreated?.atZone(ZoneId.systemDefault())?.toEpochSecond() ?: 0L,
+            createTime = item.dateCreated?.toSecondMs() ?: 0L,
             musicCount = if (ifPlaylist) (item.childCount?.toLong()
                 ?: 0L) else (item.songCount?.toLong() ?: 0L)
         )
@@ -1424,7 +1424,7 @@ class JellyfinDatasourceServer @Inject constructor(
             albumArtist = item.albumArtists?.map { artist -> artist.name.toString() }
                 ?: listOf(application.getString(Constants.UNKNOWN_ARTIST)),
             albumArtistIds = item.albumArtists?.map { artist -> artist.id },
-            createTime = item.dateCreated?.atZone(ZoneId.systemDefault())?.toEpochSecond() ?: 0L,
+            createTime = item.dateCreated?.toSecondMs() ?: 0L,
             year = item.productionYear,
             genreIds = item.genreItems?.map { it.id },
             playedCount = item.userData?.playCount ?: 0,
@@ -1441,8 +1441,7 @@ class JellyfinDatasourceServer @Inject constructor(
             codec = mediaStream?.codec,
             lyric = "",
             playlistItemId = item.id,
-            lastPlayedDate = item.userData?.lastPlayedDate?.atZone(ZoneId.systemDefault())
-                ?.toEpochSecond() ?: 0L
+            lastPlayedDate = item.userData?.lastPlayedDate?.toSecondMs() ?: 0L
         )
     }
 
@@ -1536,7 +1535,7 @@ class JellyfinDatasourceServer @Inject constructor(
             pic = itemImageUrl ?: "",
             name = item.name ?: application.getString(Constants.UNKNOWN_ALBUM),
             connectionId = connectionConfigServer.getConnectionId(),
-            createTime = item.dateCreated?.atZone(ZoneId.systemDefault())?.toEpochSecond() ?: 0L,
+            createTime = item.dateCreated?.toSecondMs() ?: 0L,
         )
     }
 }

@@ -22,6 +22,7 @@ import android.content.Context
 import android.icu.text.Transliterator
 import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.media3.common.util.UnstableApi
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.PagingData
@@ -1107,12 +1108,7 @@ abstract class IDataSourceParentServer(
      */
     fun toLatinCompat(text: String): String? {
         if (text.isBlank()) return null
-
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            Transliterator.getInstance("Han-Latin").transliterate(text)
-        } else {
-            Pinyin.toPinyin(text[0]) // 或其他兼容库
-        }
+        return Pinyin.toPinyin(text[0])
 
     }
 

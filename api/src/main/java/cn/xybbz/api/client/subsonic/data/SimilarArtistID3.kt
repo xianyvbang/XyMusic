@@ -18,9 +18,12 @@
 
 package cn.xybbz.api.client.subsonic.data
 
+import com.squareup.moshi.JsonClass
+
 /**
  * 相似艺术家
  */
+@JsonClass(generateAdapter = true)
 data class SimilarArtistID3(
     /**
      * 艺术家id

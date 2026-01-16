@@ -38,7 +38,7 @@ object Constants {
     /**
      * 加载所有数据
      */
-    const val PAGE_SIZE_ALL = 1000000
+    const val PAGE_SIZE_ALL = 100000
 
     /**
      * UI页面分页大小

@@ -129,4 +129,20 @@ object DateUtil {
         return div.toFloat()
     }
 
+    /**
+     * 将字符串转换成时间戳
+     */
+    fun String.toSecondMs(): Long {
+        val instant = Instant.parse(this)      // 解析 UTC 时间
+        // 转成本地时区的 ZonedDateTime
+        val zdt = instant.atZone(ZoneId.systemDefault())
+
+        // 计算本地时区的毫秒时间戳
+        val localMillis = zdt.toLocalDateTime()
+            .atZone(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+       return localMillis
+    }
+
 }
