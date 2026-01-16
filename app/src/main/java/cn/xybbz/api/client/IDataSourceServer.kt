@@ -265,7 +265,7 @@ interface IDataSourceServer {
     /**
      * 获得最近播放音乐或专辑
      */
-    suspend fun playRecordMusicOrAlbumList(pageSize: Int = Constants.ALBUM_MUSIC_LIST_PAGE)
+    suspend fun playRecordMusicOrAlbumList(pageSize: Int = Constants.MIN_PAGE)
 
     /**
      * 获得最近播放音乐列表
