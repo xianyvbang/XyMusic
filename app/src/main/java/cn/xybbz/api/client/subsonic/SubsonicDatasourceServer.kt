@@ -1207,12 +1207,18 @@ class SubsonicDatasourceServer @Inject constructor(
      * @param [itemId] 专辑/音乐id
      */
     override suspend fun markFavoriteItem(itemId: String, dataType: MusicTypeEnum): Boolean {
-        val favorite = subsonicApiClient.userLibraryApi()
-            .markFavoriteItem(
-                id = if (dataType == MusicTypeEnum.MUSIC) listOf(itemId) else null,
-                albumId = if (dataType == MusicTypeEnum.ALBUM) listOf(itemId) else null,
-                artistId = if (dataType == MusicTypeEnum.ARTIST) listOf(itemId) else null
-            ).isFavorite
+        val favorite = try {
+            subsonicApiClient.userLibraryApi()
+                .markFavoriteItem(
+                    id = if (dataType == MusicTypeEnum.MUSIC) listOf(itemId) else null,
+                    albumId = if (dataType == MusicTypeEnum.ALBUM) listOf(itemId) else null,
+                    artistId = if (dataType == MusicTypeEnum.ARTIST) listOf(itemId) else null
+                )
+            true
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "收藏失败", e)
+            false
+        }
         return favorite
     }
 
@@ -1221,11 +1227,17 @@ class SubsonicDatasourceServer @Inject constructor(
      * @param [itemId] 专辑/音乐id
      */
     override suspend fun unmarkFavoriteItem(itemId: String, dataType: MusicTypeEnum): Boolean {
-        val favorite = subsonicApiClient.userLibraryApi().unmarkFavoriteItem(
-            id = if (dataType == MusicTypeEnum.MUSIC) listOf(itemId) else null,
-            albumId = if (dataType == MusicTypeEnum.ALBUM) listOf(itemId) else null,
-            artistId = if (dataType == MusicTypeEnum.ARTIST) listOf(itemId) else null
-        ).isFavorite
+        val favorite = try {
+            subsonicApiClient.userLibraryApi().unmarkFavoriteItem(
+                id = if (dataType == MusicTypeEnum.MUSIC) listOf(itemId) else null,
+                albumId = if (dataType == MusicTypeEnum.ALBUM) listOf(itemId) else null,
+                artistId = if (dataType == MusicTypeEnum.ARTIST) listOf(itemId) else null
+            )
+            true
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "取消收藏失败", e)
+            false
+        }
         return favorite
     }
 
