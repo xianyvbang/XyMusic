@@ -93,6 +93,7 @@ import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.ResourcesUtils.drawableToBitmap
 import cn.xybbz.compositionLocal.LocalMainViewModel
+import cn.xybbz.extension.playProgress
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyImage
@@ -492,6 +493,9 @@ fun RowScope.HorizontalPagerSnackBar(
 
 @Composable
 private fun CircularProgressIndicatorComp(musicController: MusicController) {
+
+    val progress by playProgress(musicController.duration, musicController.progressStateFlow)
+
     Box(
         modifier = Modifier
             .padding(end = 5.dp)
@@ -527,8 +531,7 @@ private fun CircularProgressIndicatorComp(musicController: MusicController) {
                 color = Color.White,
                 trackColor = Color.Transparent,
                 progress = {
-                    if (musicController.currentPosition == 0L || musicController.duration == 0L) 0f
-                    else musicController.currentPosition.toFloat() / musicController.duration
+                    progress
                 },
                 strokeWidth = 2.dp,
                 gapSize = 0.dp

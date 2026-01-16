@@ -68,7 +68,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -89,6 +88,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.MusicTypeEnum
@@ -200,7 +200,7 @@ fun MusicPlayerScreen(
 
     val lcrEntryList by musicPlayerViewModel.lrcServer.lcrEntryListFlow.collectAsState(emptyList())
 
-    val cacheScheduleData by musicPlayerViewModel.cacheController._cacheSchedule.collectAsState()
+    val cacheScheduleData by musicPlayerViewModel.cacheController.cacheSchedule.collectAsStateWithLifecycle()
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -506,11 +506,7 @@ private fun PlayerCurrentPosition(
     onCacheProgress: () -> Float
 ) {
 
-    val progress by remember {
-        derivedStateOf {
-            musicController.currentPosition.toFloat() / musicController.duration.toFloat()
-        }
-    }
+    val currentPosition by musicController.progressStateFlow.collectAsStateWithLifecycle()
 
     XyColumn(
         backgroundColor = Color.Transparent,
@@ -522,9 +518,9 @@ private fun PlayerCurrentPosition(
         ) {
 
             MusicProgressBar(
-                currentTime = musicController.currentPosition,
+                currentTime = currentPosition,
+                progressStateFlow = musicController.progressStateFlow,
                 totalTime = musicController.duration,
-                progress = progress,
                 cacheProgress = onCacheProgress(),
                 onProgressChanged = { newProgress ->
                     musicController.seekTo(
