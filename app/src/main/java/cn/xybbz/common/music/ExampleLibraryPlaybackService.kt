@@ -39,6 +39,7 @@ import androidx.media3.exoplayer.audio.AudioOutput
 import androidx.media3.exoplayer.audio.AudioOutputProvider
 import androidx.media3.exoplayer.audio.AudioTrackAudioOutputProvider
 import androidx.media3.exoplayer.audio.ForwardingAudioOutputProvider
+import androidx.media3.session.CacheBitmapLoader
 import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
@@ -329,14 +330,14 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
             .setCustomLayout(ImmutableList.of(favoriteButton))
 
         mediaSessionBuilder.setBitmapLoader(
-            DataSourceBitmapLoader(
+            CacheBitmapLoader(DataSourceBitmapLoader(
                 Assertions.checkStateNotNull<ListeningExecutorService>(
                     DataSourceBitmapLoader.DEFAULT_EXECUTOR_SERVICE.get()
                 ), DefaultDataSource.Factory(
                     this,
                     OkHttpDataSource.Factory(imageApiClient.okhttpClientFunction())
                 )
-            )
+            ))
         )
 
         mediaSession = mediaSessionBuilder.build()
