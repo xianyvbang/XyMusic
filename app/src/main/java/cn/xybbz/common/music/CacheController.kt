@@ -64,8 +64,8 @@ class CacheController(
 
     private val childPath = "cache"
 
-    private val cacheSchedule = MutableStateFlow(0f)
-    val _cacheSchedule = cacheSchedule.asStateFlow()
+    private val _cacheSchedule = MutableStateFlow(0f)
+    val cacheSchedule = _cacheSchedule.asStateFlow()
 
     init {
         //2025年1月20日 11:12:19 修改缓存数据目录到cache中,使其可以被系统的清除缓存功能删除
@@ -99,7 +99,7 @@ class CacheController(
             .setCache(cache)
             .setUpstreamDataSourceFactory(
                 upstreamDataSourceFactory
-            ).setCacheWriteDataSinkFactory(null)
+            )/*.setCacheWriteDataSinkFactory(null)*/
         // 设置上游数据源，缓存未命中时通过此获取数据
         /*.setUpstreamDataSourceFactory(
             DefaultHttpDataSource.Factory().setAllowCrossProtocolRedirects(true)
@@ -120,9 +120,9 @@ class CacheController(
     }
 
     fun cacheMedia(music: XyPlayMusic) {
-        if (settingsManager.get().cacheUpperLimit != CacheUpperLimitEnum.No){
+        val itemId = music.itemId
+        if (settingsManager.get().cacheUpperLimit != CacheUpperLimitEnum.No && !cacheTask.containsKey(itemId)){
             val url = music.getMusicUrl()
-            val itemId = music.itemId
             cacheCoroutineScope.launch(Dispatchers.IO) {
                 val dataSpec = DataSpec.Builder()
                     .setKey(itemId)
@@ -154,6 +154,8 @@ class CacheController(
                 }
 
             }
+        }else if (cacheTask.containsKey(itemId) && cacheTask[itemId]?.isPaused == true){
+            cacheTask[itemId]?.cacheWriter?.cache()
         }
 
     }
@@ -170,9 +172,7 @@ class CacheController(
             dataSpec,
             null
         ) { requestLength, bytesCached, newBytesCached ->
-            val progress = bytesCached * 1f / requestLength
-            cacheSchedule.value = progress
-//            Log.i("=====", "进度: $progress url=${music.musicUrl}")
+            _cacheSchedule.value = bytesCached * 1f / requestLength
         }
     }
 

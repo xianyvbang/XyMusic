@@ -120,10 +120,6 @@ class MusicController(
     var duration by mutableLongStateOf(0L)
         private set
 
-    //当前播放进度
-    var currentPosition by mutableLongStateOf(0L)
-        private set
-
     //当前状态
     var state by mutableStateOf(PlayStateEnum.None)
         private set
@@ -458,8 +454,7 @@ class MusicController(
         setCurrentPositionData(millSeconds)
         mediaController?.run {
             seekTo(millSeconds)
-            prepare()
-            play()
+            resume()
         }
 
     }
@@ -731,14 +726,15 @@ class MusicController(
 
         //设置单个资源
         val bundle = Bundle()
-        bundle.putString("id", playMusic.itemId)
+        val itemId = playMusic.itemId
+        bundle.putString("id", itemId)
         val mediaItemBuilder = MediaItem.Builder()
-
+        mediaItemBuilder.setCustomCacheKey(itemId)
         val pic = playMusic.pic
 
         if (playMusic.filePath.isNullOrBlank()) {
             val musicUrl =
-                getMusicUrl(playMusic.itemId, playMusic.plexPlayKey, settingsManager.get().playSessionId)
+                getMusicUrl(itemId, playMusic.plexPlayKey, settingsManager.get().playSessionId)
             playMusic.setMusicUrl(musicUrl)
             mediaItemBuilder.setUri(musicUrl)
             val mediaMetadata = MediaMetadata.Builder()
@@ -759,7 +755,7 @@ class MusicController(
         }
         val normalizeMimeType =
             MimeTypes.normalizeMimeType(MimeTypes.BASE_TYPE_AUDIO + "/${playMusic.container}")
-        return mediaItemBuilder.setMediaId(playMusic.itemId)
+        return mediaItemBuilder.setMediaId(itemId)
             //todo 这里的判断临时先用这个判断,后面改成
             .setMimeType(
                 if (FileTypes.inferFileTypeFromMimeType(normalizeMimeType) != -1) normalizeMimeType else MimeTypes.APPLICATION_M3U8
@@ -894,7 +890,6 @@ class MusicController(
      * 设置当前播放进度
      */
     fun setCurrentPositionData(currentPosition: Long) {
-        this.currentPosition = currentPosition
         _progressStateFlow.value = currentPosition
     }
 

@@ -210,14 +210,14 @@ class MainViewModel @Inject constructor(
                 dataSourceManager.reportPlaying(
                     musicId,
                     playSessionId = playSessionId,
-                    positionTicks = musicController.currentPosition
+                    positionTicks = musicController.progressStateFlow.value
                 )
             }
             viewModelScope.launch {
                 dataSourceManager.reportProgress(
                     musicId,
                     playSessionId = playSessionId,
-                    positionTicks = musicController.currentPosition
+                    positionTicks = musicController.progressStateFlow.value
                 )
                 alarmConfig.scheduleNextReport()
             }
@@ -233,20 +233,20 @@ class MainViewModel @Inject constructor(
                     musicId,
                     playSessionId = playSessionId,
                     true,
-                    musicController.currentPosition
+                    musicController.progressStateFlow.value
                 )
             }
             viewModelScope.launch {
                 dataSourceManager.reportProgress(
                     musicId,
                     playSessionId = playSessionId,
-                    positionTicks = musicController.currentPosition
+                    positionTicks = musicController.progressStateFlow.value
                 )
             }
         }
 
         cacheController.pauseCache(musicId)
-        setPlayerProgress(musicController.currentPosition)
+        setPlayerProgress(musicController.progressStateFlow.value)
     }
 
     fun onPositionSeekTo(millSeconds: Long, itemId: String, playSessionId: String) {
@@ -265,7 +265,7 @@ class MainViewModel @Inject constructor(
      * 设置手动音频切换方法
      */
     fun onBeforeChangeMusic() {
-        setPlayerProgress(musicController.currentPosition)
+        setPlayerProgress(musicController.progressStateFlow.value)
     }
 
     fun onFavoriteMusic(musicId: String) {
