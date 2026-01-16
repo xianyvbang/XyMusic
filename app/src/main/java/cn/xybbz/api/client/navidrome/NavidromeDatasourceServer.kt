@@ -1324,7 +1324,7 @@ class NavidromeDatasourceServer @Inject constructor(
             artistIds = album.albumArtistId,
             ifPlaylist = ifPlaylist,
             musicCount = album.songCount,
-            premiereDate = album.date?.toSecondMs() ?: 0L,
+            premiereDate = album.maxYear.toLong(),
             year = album.maxYear,
             ifFavorite = album.starred ?: false,
             genreIds = album.genres?.joinToString { it.id },

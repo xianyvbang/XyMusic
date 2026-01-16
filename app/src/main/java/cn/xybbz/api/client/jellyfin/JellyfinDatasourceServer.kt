@@ -1369,7 +1369,7 @@ class JellyfinDatasourceServer @Inject constructor(
             artists = item.albumArtists?.mapNotNull { it.name }?.joinToString()
                 ?: application.getString(Constants.UNKNOWN_ARTIST),
             year = item.productionYear,
-            premiereDate = item.premiereDate?.toSecondMs(),
+            premiereDate = item.productionYear?.toLong(),
             genreIds = item.genreItems?.joinToString() { it.id },
             ifFavorite = item.userData?.isFavorite == true,
             ifPlaylist = ifPlaylist,

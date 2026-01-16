@@ -1492,7 +1492,7 @@ class EmbyDatasourceServer @Inject constructor(
             artists = album.albumArtists?.mapNotNull { it.name }?.joinToString()
                 ?: application.getString(Constants.UNKNOWN_ARTIST),
             year = album.productionYear,
-            premiereDate = album.premiereDate?.toSecondMs(),
+            premiereDate = album.productionYear?.toLong(),
             genreIds = album.genreItems?.joinToString() { it.id },
             ifFavorite = album.userData?.isFavorite == true,
             ifPlaylist = ifPlaylist,
