@@ -106,12 +106,12 @@ class CacheController(
         )*/
         cacheDataSource = cacheDataSourceFactory.createDataSource()
 
-        settingsManager.setOnListener(object :OnSettingsChangeListener {
+        settingsManager.setOnListener(object : OnSettingsChangeListener {
             override fun onCacheMaxBytesChanged(
                 cacheUpperLimit: CacheUpperLimitEnum,
                 oldCacheUpperLimit: CacheUpperLimitEnum
             ) {
-                if (cacheUpperLimit == CacheUpperLimitEnum.No){
+                if (cacheUpperLimit == CacheUpperLimitEnum.No) {
                     clearCache()
                 }
             }
@@ -121,46 +121,47 @@ class CacheController(
 
     fun cacheMedia(music: XyPlayMusic) {
         val itemId = music.itemId
-        if (settingsManager.get().cacheUpperLimit != CacheUpperLimitEnum.No && !cacheTask.containsKey(itemId)){
+        if (settingsManager.get().cacheUpperLimit != CacheUpperLimitEnum.No) {
             val url = music.getMusicUrl()
             cacheCoroutineScope.launch(Dispatchers.IO) {
-                val dataSpec = DataSpec.Builder()
-                    .setKey(itemId)
-                    .setUri(url)
-                    .setLength(music.size ?: 20000)
-                    .build()
+                val cachedLength = cache.getCachedLength(itemId, 0, music.size ?: 20000)
+                if (cachedLength >= (music.size ?: 20000)) {
+                    _cacheSchedule.value = 1.0f
+                } else {
+                    val dataSpec = DataSpec.Builder()
+                        .setKey(itemId)
+                        .setUri(url)
+                        .setLength(music.size ?: 20000)
+                        .build()
+                    val existingTask = cacheTask[itemId]
 
-                val existingTask = cacheTask[itemId]
-
-                try {
-                    if (existingTask != null) {
-                        if (existingTask.isPaused) {
-                            Log.i("=====", "继续缓存: $url --- $itemId")
-                            // 重新创建 CacheWriter（因为 cancel() 后不能恢复）
-                            val newWriter = createCacheWriter(dataSpec)
-                            cacheTask[itemId] = CacheTask(newWriter, isPaused = false)
-                            newWriter.cache()
+                    try {
+                        if (existingTask != null) {
+                            if (existingTask.isPaused) {
+                                pauseCache(itemId, true)
+                                Log.i("=====", "继续缓存: $url --- $itemId")
+                                // 重新创建 CacheWriter（因为 cancel() 后不能恢复）
+                                val newWriter = createCacheWriter(dataSpec,itemId)
+                                cacheTask[itemId] = CacheTask(newWriter, isPaused = false)
+                                newWriter.cache()
+                            } else {
+                                Log.i("=====", "任务已在进行中: $url --- $itemId")
+                            }
                         } else {
-                            Log.i("=====", "任务已在进行中: $url --- $itemId")
+                            Log.i("=====", "新建缓存: $url")
+                            val writer = createCacheWriter(dataSpec,itemId)
+                            cacheTask[itemId] = CacheTask(writer, isPaused = false)
+                            writer.cache()
                         }
-                    } else {
-                        Log.i("=====", "新建缓存: $url")
-                        val writer = createCacheWriter(dataSpec)
-                        cacheTask[itemId] = CacheTask(writer, isPaused = false)
-                        writer.cache()
+                    } catch (e: Exception) {
+                        Log.e("=====", "缓存数据报错: ${e.message} --- ${music.name}", e)
                     }
-                } catch (e: Exception) {
-                    Log.e("=====", "缓存数据报错: ${e.message} --- ${music.name}", e)
                 }
-
             }
-        }else if (cacheTask.containsKey(itemId) && cacheTask[itemId]?.isPaused == true){
-            cacheTask[itemId]?.cacheWriter?.cache()
         }
-
     }
 
-    private fun createCacheWriter(dataSpec: DataSpec): CacheWriter {
+    private fun createCacheWriter(dataSpec: DataSpec, itemId: String): CacheWriter {
         val cacheDataSource = CacheDataSource.Factory()
             .setCache(cache)
             .setUpstreamDataSourceFactory(
@@ -172,18 +173,23 @@ class CacheController(
             dataSpec,
             null
         ) { requestLength, bytesCached, newBytesCached ->
-            _cacheSchedule.value = bytesCached * 1f / requestLength
+            val cacheProgress = bytesCached.toFloat() / requestLength
+            _cacheSchedule.value = cacheProgress
+            if (cacheProgress >= 1f)
+                pauseCache(itemId, true)
         }
     }
 
     /**
      * 暂停当前缓存
      */
-    fun pauseCache(itemId: String) {
+    fun pauseCache(itemId: String, ifRemove: Boolean = false) {
         val task = cacheTask[itemId]
         if (task != null && !task.isPaused) {
             task.cacheWriter.cancel() // 停止当前写入
             task.isPaused = true
+            if (ifRemove)
+                cacheTask.remove(itemId)
             Log.i("=====", "已暂停缓存: $itemId")
         }
     }
@@ -227,8 +233,8 @@ class CacheController(
             u.isPaused = true
         }
         cacheTask.clear()
-        cacheDataSource.cache.keys.forEach {
-            cacheDataSource.cache.removeResource(it)
+        cache.keys.forEach {
+            cache.removeResource(it)
         }
     }
 
