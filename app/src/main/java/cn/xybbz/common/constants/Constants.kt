@@ -58,7 +58,7 @@ object Constants {
     /**
      * 专辑音乐的分页大小
      */
-    const val ALBUM_MUSIC_LIST_PAGE = 1000
+    const val ALBUM_MUSIC_LIST_PAGE = 500
 
     /**
      * 歌词位置放大
