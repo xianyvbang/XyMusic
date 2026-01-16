@@ -22,7 +22,7 @@ enum class AudioCodecEnum(val audioCodec: String, val ifShow: Boolean = true) {
 
     AAC("aac"),
     MP3("mp3"),
-    ROW("row", false);
+    ROW("raw", false);
 
     override fun toString(): String {
         return audioCodec
