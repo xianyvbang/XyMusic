@@ -35,13 +35,12 @@ import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.lrc.XyLrcConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class LrcServer @Inject constructor(
+
+class LrcServer(
     private val musicController: MusicController,
     private val ataSourceManager: DataSourceManager,
     private val db: DatabaseClient,
@@ -69,16 +68,19 @@ class LrcServer @Inject constructor(
 
     init {
         lrcCoroutineScope.launch {
-            musicController.progressStateFlow.collect { progress ->
-                _lcrEntryListFlow.value.let { lcrEntryList ->
-                    //播放器的播放进度，单位毫秒
-                    if (lcrEntryList.isNotEmpty()){
-                        val index = lcrEntryList.getIndex(progress, getLrcConfig(itemId).lrcOffsetMs)
-//                        lcrEntryList.indexOfFirst { item -> item.startTime <= progress && progress < item.endTime }
-                        if (index >= 0) {
-                            this@LrcServer.indexData = index
-                            this@LrcServer.lrcText = lcrEntryList[index].displayText
-                        }
+
+            combine(
+                musicController.progressStateFlow,
+                lcrEntryListFlow
+            ) { progress, lrcList ->
+                progress to lrcList
+            }.collect { (progress, lrcList) ->
+
+                if (lrcList.isNotEmpty()) {
+                    val index = lrcList.getIndex(progress, getLrcConfig(itemId).lrcOffsetMs)
+                    if (index != indexData) {
+                        indexData = index
+                        lrcText = lrcList[index].displayText
                     }
                 }
             }
@@ -90,12 +92,13 @@ class LrcServer @Inject constructor(
      */
     fun getMusicLyricList() {
         lrcCoroutineScope.launch {
-            if (_lcrEntryListFlow.value.isEmpty())
+            if (_lcrEntryListFlow.value.isEmpty()) {
                 musicController.musicInfo?.itemId?.let { itemId ->
                     val musicLyricList = ataSourceManager.getMusicLyricList(itemId)
                     if (!musicLyricList.isNullOrEmpty())
                         createLrcList(musicLyricList, LrcDataType.NETWORK)
                 }
+            }
         }
     }
 
@@ -103,11 +106,7 @@ class LrcServer @Inject constructor(
      * 根据歌词列表创建歌词列表
      */
     fun createLrcList(lrcList: List<LrcEntryData>?, lrcDataType: LrcDataType) {
-        _lcrEntryListFlow.update {
-            emptyList()
-        }
-        lrcText = null
-        indexData = -1
+//        clear()
         if (!lrcList.isNullOrEmpty()) {
             lrcCoroutineScope.launch {
                 musicController.musicInfo?.itemId?.let { itemId ->
@@ -127,6 +126,7 @@ class LrcServer @Inject constructor(
             _lcrEntryListFlow.update {
                 list
             }
+
         }
         Log.i("createLrcList", "随机数111 ${lrcDataType} 歌词列表：${_lcrEntryListFlow.value}")
     }

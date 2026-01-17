@@ -60,6 +60,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -108,23 +109,22 @@ private val lyricHorizontalPadding = 30.dp
 @Composable
 fun LrcViewNewCompose(
     modifier: Modifier = Modifier,
-    lcrEntryList: List<LrcEntryData>,
-    lrcConfig: XyLrcConfig?,
     onSetLrcOffset: (Long) -> Unit,
-    lrcViewModel: LrcViewModel = hiltViewModel(),
+    lrcViewModel: LrcViewModel = hiltViewModel<LrcViewModel>(),
     listState: LazyListState = rememberLazyListState(),
 ) {
 
+    val lcrEntryList by lrcViewModel.lrcServer.lcrEntryListFlow.collectAsState(emptyList())
     val coroutineScope = rememberCoroutineScope()
 
     var tmpOffsetMs by remember {
-        mutableStateOf(lrcConfig?.lrcOffsetMs ?: 0L)
+        mutableStateOf(lrcViewModel.lrcServer.lrcConfig?.lrcOffsetMs ?: 0L)
     }
     var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
 
     DisposableEffect(Unit) {
-        Log.i("=====", "歌词偏移 ${lrcConfig?.lrcOffsetMs}")
+        Log.i("=====", "歌词偏移 ${lrcViewModel.lrcServer.lrcConfig?.lrcOffsetMs}")
         onDispose {
             fabMenuExpanded = false
         }

@@ -293,7 +293,6 @@ class MainViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            lrcServer.clear()
             //数据变化的时候进行数据变化
             putIterations(0)
             db.withTransaction {

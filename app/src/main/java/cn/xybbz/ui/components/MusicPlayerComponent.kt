@@ -198,7 +198,7 @@ fun MusicPlayerScreen(
     horPagerState: PagerState
 ) {
 
-    val lcrEntryList by musicPlayerViewModel.lrcServer.lcrEntryListFlow.collectAsState(emptyList())
+
 
     val cacheScheduleData by musicPlayerViewModel.cacheController.cacheSchedule.collectAsStateWithLifecycle()
 
@@ -308,8 +308,6 @@ fun MusicPlayerScreen(
                     } else if (page == 1) {
                         LrcViewNewCompose(
                             listState = lrcListState,
-                            lcrEntryList = lcrEntryList,
-                            lrcConfig = musicPlayerViewModel.lrcServer.lrcConfig,
                             onSetLrcOffset = { offsetMs ->
                                 coroutineScope.launch {
                                     musicPlayerViewModel.lrcServer.updateLrcConfig(offsetMs)

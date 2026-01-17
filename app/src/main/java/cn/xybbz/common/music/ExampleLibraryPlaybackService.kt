@@ -26,6 +26,8 @@ import android.os.Bundle
 import android.util.Log
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.ForwardingPlayer
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.Player.PlayWhenReadyChangeReason
 import androidx.media3.common.util.Assertions
@@ -175,6 +177,13 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                 )
                 musicController.updateState(if (playWhenReady) PlayStateEnum.Playing else PlayStateEnum.Pause)
             }
+
+            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                if (!mediaItem?.mediaMetadata?.title.isNullOrBlank()){
+                    lrcServer.clear()
+                }
+            }
+
         })
 
         val sessionCommand = SessionCommand(SAVE_TO_FAVORITES, Bundle.EMPTY)
