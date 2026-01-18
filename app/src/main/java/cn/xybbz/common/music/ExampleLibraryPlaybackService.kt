@@ -27,7 +27,6 @@ import android.util.Log
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.ForwardingPlayer
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.Player.PlayWhenReadyChangeReason
 import androidx.media3.common.util.Assertions
@@ -157,13 +156,9 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 Log.i("music", "当前播放状态$isPlaying")
                 if (isPlaying) {
-                    musicController.progressTicker.start()
                     musicController.reportedPlayEvent()
-                } else if (musicController.state != PlayStateEnum.Loading) {
-                    musicController.progressTicker.stop()
+                }else {
                     musicController.reportedPauseEvent()
-                } else {
-                    musicController.progressTicker.stop()
                 }
             }
 
@@ -175,11 +170,19 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                     "music",
                     "播放状态改变$playWhenReady --- ${reason} -- ${exoPlayer?.isPlaying}"
                 )
+                if (playWhenReady) {
+                    musicController.progressTicker.start()
+                }else {
+                    musicController.progressTicker.stop()
+                    musicController.musicInfo?.let {
+                        cacheController.pauseCache(it.itemId)
+                    }
+                }
                 musicController.updateState(if (playWhenReady) PlayStateEnum.Playing else PlayStateEnum.Pause)
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                if (!mediaItem?.mediaMetadata?.title.isNullOrBlank()){
+                if (!mediaItem?.mediaMetadata?.title.isNullOrBlank()) {
                     lrcServer.clear()
                 }
             }
@@ -339,14 +342,16 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
             .setCustomLayout(ImmutableList.of(favoriteButton))
 
         mediaSessionBuilder.setBitmapLoader(
-            CacheBitmapLoader(DataSourceBitmapLoader(
-                Assertions.checkStateNotNull<ListeningExecutorService>(
-                    DataSourceBitmapLoader.DEFAULT_EXECUTOR_SERVICE.get()
-                ), DefaultDataSource.Factory(
-                    this,
-                    OkHttpDataSource.Factory(imageApiClient.okhttpClientFunction())
+            CacheBitmapLoader(
+                DataSourceBitmapLoader(
+                    Assertions.checkStateNotNull<ListeningExecutorService>(
+                        DataSourceBitmapLoader.DEFAULT_EXECUTOR_SERVICE.get()
+                    ), DefaultDataSource.Factory(
+                        this,
+                        OkHttpDataSource.Factory(imageApiClient.okhttpClientFunction())
+                    )
                 )
-            ))
+            )
         )
 
         mediaSession = mediaSessionBuilder.build()
