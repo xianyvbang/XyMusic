@@ -539,8 +539,11 @@ class MusicController(
             fadeController.fadeOut {
                 mediaController?.seekToNextMediaItem()
                 Log.i("music", "调用seekToNext")
+                mediaController?.run {
+                   prepare()
+                }
                 thisPlay()
-                fadeController.fadeIn()
+//                fadeController.fadeIn()
             }
         }
 
