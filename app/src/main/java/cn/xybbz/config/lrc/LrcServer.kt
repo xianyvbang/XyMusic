@@ -78,7 +78,7 @@ class LrcServer(
 
                 if (lrcList.isNotEmpty()) {
                     val index = lrcList.getIndex(progress, getLrcConfig(itemId).lrcOffsetMs)
-                    if (index != indexData) {
+                    if (index != indexData && index != -1) {
                         indexData = index
                         lrcText = lrcList[index].displayText
                     }

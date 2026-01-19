@@ -157,7 +157,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                 Log.i("music", "当前播放状态$isPlaying")
                 if (isPlaying) {
                     musicController.reportedPlayEvent()
-                }else {
+                } else {
                     musicController.reportedPauseEvent()
                 }
             }
@@ -168,17 +168,26 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
             ) {
                 Log.i(
                     "music",
-                    "播放状态改变$playWhenReady --- ${reason} -- ${exoPlayer?.isPlaying}"
+                    "播放状态改变$playWhenReady --- ${reason} -- ${exoPlayer?.isPlaying} -- ${musicController.state}"
                 )
                 if (playWhenReady) {
                     musicController.progressTicker.start()
-                }else {
+                } else {
                     musicController.progressTicker.stop()
                     musicController.musicInfo?.let {
-                        cacheController.pauseCache(it.itemId)
+                        cacheController.pauseCache()
                     }
                 }
-                musicController.updateState(if (playWhenReady) PlayStateEnum.Playing else PlayStateEnum.Pause)
+                //todo 将loading状态变成播放中状态的就是这个
+                if (musicController.musicInfo != null) {
+
+                    val playState =
+                        if (!playWhenReady) PlayStateEnum.Pause
+                        else if (musicController.state == PlayStateEnum.Loading) PlayStateEnum.Loading
+                        else PlayStateEnum.Playing
+                    musicController.updateState(playState)
+
+                }
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
@@ -246,30 +255,6 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
             forwardingPlayer,
             object : MediaLibrarySession.Callback {
 
-//                    override fun onAddMediaItems(
-//                        mediaSession: MediaSession,
-//                        controller: MediaSession.ControllerInfo,
-//                        mediaItems: MutableList<MediaItem>
-//                    ): ListenableFuture<MutableList<MediaItem>> {
-//                        Log.i("=====","重新填充数据")
-//                        // NOTE: You can use the id from the mediaItems to look up missing
-//                        // information (e.g. get URI from a database) and return a Future with
-//                        // a list of playable MediaItems.
-//
-//                        // If your use case is really simple and the security/privacy reasons
-//                        // mentioned earlier don't apply to you, you can add the URI to the
-//                        // MediaItem request metadata in your activity/fragment and use it
-//                        // to rebuild the playable MediaItem.
-//                        val updatedMediaItems = mediaItems.map { mediaItem ->
-//                            mediaItem.buildUpon()
-//                                .build()
-//                        }
-//                        val mutableListOf = mutableListOf<MediaItem>()
-//                        mutableListOf.addAll(updatedMediaItems)
-//                        return Futures.immediateFuture<MutableList<MediaItem>>(mutableListOf);
-//                    }
-
-
                 override fun onCustomCommand(
                     session: MediaSession,
                     controller: MediaSession.ControllerInfo,
@@ -278,13 +263,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                 ): ListenableFuture<SessionResult> {
                     val argsValue = args.getString(Constants.MUSIC_PLAY_CUSTOM_COMMAND_TYPE_KEY)
                     //根据args附件参数,进行判断是否是默认行为和主动调用行为
-                    Log.i(
-                        "music",
-                        "点击按钮数据${customCommand.customAction}----附加参数${args}"
-                    )
                     if (customCommand.customAction == SAVE_TO_FAVORITES) {
-                        // Do custom logic here
-//                            saveToFavorites(session.player.currentMediaItem)
                         Log.i("music", "取消收藏音乐")
                         //更新音乐收藏
                         if (!argsValue.equals(Constants.MUSIC_PLAY_CUSTOM_COMMAND_TYPE)) {
@@ -293,8 +272,6 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                                     it.itemId
                                 )
                             }
-
-
                         }
                         session.setCustomLayout(ImmutableList.of(removeFromFavoritesButton))
 
@@ -327,8 +304,6 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                     session: MediaSession,
                     controller: MediaSession.ControllerInfo
                 ): MediaSession.ConnectionResult {
-
-//                            return super.onConnect(session, controller)
                     return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
                         .setAvailableSessionCommands(
                             MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS.buildUpon()

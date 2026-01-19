@@ -87,7 +87,12 @@ class AudioFadeController(
         val token = ++pauseToken
         if (fadeDurationMs != 0L)
             try {
-                volumeShaper?.close()
+                try {
+                    volumeShaper?.close()
+                }catch (e: Exception){
+                    e.printStackTrace()
+                }
+
                 volumeShaper = track.createVolumeShaper(
                     VolumeShaper.Configuration.Builder()
                         .setDuration(fadeDurationMs)
@@ -98,11 +103,6 @@ class AudioFadeController(
                         .build()
                 )
                 volumeShaper?.apply(VolumeShaper.Operation.PLAY)
-                /*Handler(Looper.getMainLooper()).postDelayed({
-                    if (token == pauseToken) {
-                        onEnd()
-                    }
-                }, fadeDurationMs)*/
                 fadeJob?.cancel()
                 fadeJob = scope.launch(Dispatchers.Main) {
                     delay(fadeDurationMs)

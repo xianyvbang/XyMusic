@@ -166,7 +166,7 @@ class MusicController(
             ) {
                 if (oldCacheUpperLimit == CacheUpperLimitEnum.No && cacheUpperLimit != CacheUpperLimitEnum.No && state == PlayStateEnum.Playing) {
                     musicInfo?.let {
-                        cacheController.cacheMedia(it)
+                        startCache(it)
                     }
                 }
             }
@@ -177,11 +177,23 @@ class MusicController(
     fun replacePlaylistItemUrl() {
         if (originMusicList.isNotEmpty()) {
             originMusicList = originMusicList.map {
-                it.setMusicUrl(getMusicUrl(it.itemId, it.plexPlayKey, settingsManager.get().playSessionId))
+                it.setMusicUrl(
+                    getMusicUrl(
+                        it.itemId,
+                        it.plexPlayKey,
+                        settingsManager.get().playSessionId
+                    )
+                )
                 it
             }
             musicInfo?.let {
-                it.setMusicUrl(getMusicUrl(it.itemId, it.plexPlayKey, settingsManager.get().playSessionId))
+                it.setMusicUrl(
+                    getMusicUrl(
+                        it.itemId,
+                        it.plexPlayKey,
+                        settingsManager.get().playSessionId
+                    )
+                )
                 cacheController.cancelAllCache()
                 startCache(it)
             }
@@ -245,10 +257,13 @@ class MusicController(
                 }
 
                 Player.STATE_READY -> {
-                    updateDuration(mediaController?.duration ?: 0)
                     // 可以开始播放 恢复播放
-                    if (state != PlayStateEnum.Pause)
+                    if (state == PlayStateEnum.Loading) {
                         updateState(PlayStateEnum.Playing)
+                        /*musicInfo?.let {
+                            cacheController.cacheMedia(it)
+                        }*/
+                    }
                     Log.i("music", "STATE_READY")
                 }
 
@@ -423,6 +438,7 @@ class MusicController(
     fun resume() {
         mediaController?.let {
             if (it.mediaItemCount > 0) {
+                updateState(PlayStateEnum.Loading)
                 // 恢复播放
                 Log.i("music", "恢复播放")
                 mediaController?.run {
@@ -430,10 +446,18 @@ class MusicController(
                     play()
                 }
                 musicInfo?.let { music ->
+                    Log.i("music", "回复播放开始缓存")
                     startCache(music)
                 }
 
             }
+        }
+    }
+
+    fun thisPlay() {
+        mediaController?.run {
+//            prepare()
+            play()
         }
     }
 
@@ -450,11 +474,13 @@ class MusicController(
     }
 
     fun seekTo(millSeconds: Long) {
-        Log.i("music", "调用seekTo")
+        Log.i("music", "调用seekTo $millSeconds")
         setCurrentPositionData(millSeconds)
         mediaController?.run {
             seekTo(millSeconds)
-            resume()
+            if (state == PlayStateEnum.Pause)
+//                thisPlay()
+                play()
         }
 
     }
@@ -464,7 +490,7 @@ class MusicController(
         setCurrentPositionData(Constants.ZERO.toLong())
         fadeController.fadeOut {
             mediaController?.seekToDefaultPosition(index)
-            resume()
+            thisPlay()
             fadeController.fadeIn()
         }
 
@@ -480,8 +506,7 @@ class MusicController(
         if (indexOfFirst != -1) {
             mediaController?.run {
                 seekToDefaultPosition(indexOfFirst)
-                prepare()
-                play()
+                thisPlay()
             }
         }
     }
@@ -498,7 +523,7 @@ class MusicController(
             fadeController.fadeOut {
                 mediaController?.seekToPreviousMediaItem()
                 Log.i("music", "调用seekToPrevious")
-                resume()
+                thisPlay()
                 fadeController.fadeIn()
             }
         }
@@ -514,7 +539,7 @@ class MusicController(
             fadeController.fadeOut {
                 mediaController?.seekToNextMediaItem()
                 Log.i("music", "调用seekToNext")
-                resume()
+                thisPlay()
                 fadeController.fadeIn()
             }
         }
@@ -640,7 +665,7 @@ class MusicController(
                         controller.removeMediaItem(indexOfFirst)
                     }
                 }
-            }else {
+            } else {
                 val tmpList = mutableListOf<XyPlayMusic>()
                 tmpList.addAll(originMusicList)
                 tmpList.add(curOriginIndex + 1, music)
@@ -707,8 +732,7 @@ class MusicController(
             else
                 setMediaItems(mediaItemList)
             if (!ifInitPlayerList) {
-                prepare()
-                play()
+                thisPlay()
             } else {
                 stop()
                 prepare()

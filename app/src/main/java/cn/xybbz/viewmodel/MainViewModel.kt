@@ -223,11 +223,6 @@ class MainViewModel @Inject constructor(
             }
 
         }
-
-        musicController.musicInfo?.let {
-            cacheController.cacheMedia(it)
-        }
-
     }
 
     fun onPause(musicId: String, playSessionId: String) {
