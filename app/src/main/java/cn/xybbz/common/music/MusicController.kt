@@ -456,7 +456,7 @@ class MusicController(
 
     fun thisPlay() {
         mediaController?.run {
-//            prepare()
+            prepare()
             play()
         }
     }
@@ -479,8 +479,8 @@ class MusicController(
         mediaController?.run {
             seekTo(millSeconds)
             if (state == PlayStateEnum.Pause)
-//                thisPlay()
-                play()
+                thisPlay()
+//                play()
         }
 
     }
@@ -539,11 +539,8 @@ class MusicController(
             fadeController.fadeOut {
                 mediaController?.seekToNextMediaItem()
                 Log.i("music", "调用seekToNext")
-                mediaController?.run {
-                   prepare()
-                }
                 thisPlay()
-//                fadeController.fadeIn()
+                fadeController.fadeIn()
             }
         }
 

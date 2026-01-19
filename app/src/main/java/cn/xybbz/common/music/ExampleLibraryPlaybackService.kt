@@ -24,9 +24,13 @@ import android.media.AudioManager
 import android.media.AudioTrack
 import android.os.Bundle
 import android.util.Log
+import androidx.core.net.toUri
 import androidx.media3.common.AudioAttributes
+import androidx.media3.common.FileTypes
 import androidx.media3.common.ForwardingPlayer
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
+import androidx.media3.common.MimeTypes
 import androidx.media3.common.Player
 import androidx.media3.common.Player.PlayWhenReadyChangeReason
 import androidx.media3.common.util.Assertions
@@ -56,6 +60,7 @@ import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.media.MediaServer
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.config.DatabaseClient
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures

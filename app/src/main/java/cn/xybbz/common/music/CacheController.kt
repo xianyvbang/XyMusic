@@ -24,6 +24,7 @@ import android.os.Environment
 import android.util.Log
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.CacheWriter
@@ -174,12 +175,12 @@ class CacheController(
     }
 
     private fun createCacheWriter(dataSpec: DataSpec, itemId: String): CacheWriter {
-        val cacheDataSource = CacheDataSource.Factory()
+    /*    val cacheDataSource = CacheDataSource.Factory()
             .setCache(cache)
             .setUpstreamDataSourceFactory(
                 upstreamDataSourceFactory
             )
-            .createDataSource()
+            .createDataSource()*/
         return CacheWriter(
             cacheDataSource, // 这里用你初始化好的 CacheDataSource
             dataSpec,

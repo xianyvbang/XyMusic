@@ -18,6 +18,7 @@
 
 package cn.xybbz.ui.xy
 
+import android.util.Log
 import androidx.annotation.FloatRange
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
@@ -69,6 +70,7 @@ fun XySmallSlider(
                     onTap = { offset ->
                         val newProgress = (offset.x / size.width).coerceIn(0f, 1f)
                         updatedProgress = newProgress
+                        Log.i("music","切换位置1")
                         onProgressChanged(newProgress)
                     }
                 )
@@ -79,6 +81,8 @@ fun XySmallSlider(
                     onDrag = { change, _ ->
                         val position = change.position.x.coerceIn(0f, size.width.toFloat())
                         updatedProgress = position / size.width
+                        Log.i("music","切换位置2")
+
                         onProgressChanged(updatedProgress)
                     },
                     onDragEnd = { isDragging = false },
