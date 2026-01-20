@@ -535,9 +535,6 @@ class MusicController(
         if (playType == PlayerTypeEnum.SINGLE_LOOP && mediaController?.hasNextMediaItem() != true) {
             seekToIndex(0)
         } else {
-            mediaController?.nextMediaItemIndex?.let { index ->
-                startCache(originMusicList[index])
-            }
             fadeController.fadeOut {
                 mediaController?.seekToNextMediaItem()
 

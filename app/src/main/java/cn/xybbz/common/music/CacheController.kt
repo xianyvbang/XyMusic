@@ -25,6 +25,7 @@ import android.util.Log
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.cache.Cache
+import androidx.media3.datasource.cache.CacheDataSink
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.CacheWriter
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
@@ -105,8 +106,14 @@ class CacheController(
             .setCache(cache)
             .setUpstreamDataSourceFactory(
                 upstreamDataSourceFactory
-            ).setCacheWriteDataSinkFactory(null)
+            )/*.setCacheWriteDataSinkFactory(null)*/
+            .setCacheWriteDataSinkFactory(
+                CacheDataSink.Factory()
+                    .setCache(cache)
+                    .setFragmentSize(2 * 1024 * 1024) // 2MB 分片写入
+            )
             .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+
         cacheDataSource = cacheDataSourceFactory.createDataSource()
 
         settingsManager.setOnListener(object : OnSettingsChangeListener {
@@ -136,10 +143,6 @@ class CacheController(
                 pauseCache()
             }
             val cachedBytes = cache.getCachedBytes(itemId, 0, music.size ?: 20000)
-            if (cachedBytes >= (music.size ?: 20000)) {
-                _cacheSchedule.value = 1.0f
-                return@launch
-            }
             startNewCacheLocked(itemId, url, music,cachedBytes)
         }
     }
@@ -174,17 +177,6 @@ class CacheController(
     }
 
     private fun createCacheWriter(dataSpec: DataSpec, itemId: String): CacheWriter {
-        val upstreamDataSourceFactory = DefaultDataSource.Factory(
-            context,
-            OkHttpDataSource.Factory(cacheApiClient.okhttpClientFunction())
-                .setDefaultRequestProperties(mapOf("3333" to "4444"))
-        )
-        val cacheDataSource = CacheDataSource.Factory()
-            .setCache(cache)
-            .setUpstreamDataSourceFactory(
-                upstreamDataSourceFactory
-            )
-            .createDataSource()
         return CacheWriter(
             cacheDataSource, // 这里用你初始化好的 CacheDataSource
             dataSpec,
@@ -192,6 +184,7 @@ class CacheController(
         ) { requestLength, bytesCached, newBytesCached ->
             val cacheProgress = bytesCached.toFloat() / requestLength
             _cacheSchedule.value = cacheProgress
+            Log.i("music", "缓存进度: ${cacheProgress} -- $requestLength --- $bytesCached -- $newBytesCached")
             if (cacheProgress >= 1f)
                 pauseCache()
         }
