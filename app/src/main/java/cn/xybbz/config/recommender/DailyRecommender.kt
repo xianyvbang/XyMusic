@@ -118,7 +118,7 @@ class DailyRecommender(
         //大于5分钟的音乐都过滤
         val result =
             (exploit + explorationPool).distinctBy { it.itemId }
-                .filter { it.runTimeTicks / 60.0 > 6 }
+                .filter { it.runTimeTicks / 1000 / 60.0 > 6 }
                 .take(n)
         val scoringEndTime5 = System.currentTimeMillis()
         Log.i(

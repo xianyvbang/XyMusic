@@ -24,10 +24,10 @@ import android.os.Environment
 import android.util.Log
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.DefaultDataSource
-import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.CacheWriter
+import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
@@ -54,7 +54,7 @@ class CacheController(
 ) {
 
     private val cache: Cache
-    private var cacheDataSourceFactory: CacheDataSource.Factory
+     var cacheDataSourceFactory: CacheDataSource.Factory
     private var cacheDataSource: CacheDataSource
     private var upstreamDataSourceFactory: DefaultDataSource.Factory
 
@@ -91,23 +91,22 @@ class CacheController(
         cache = SimpleCache(
             cacheDir,
             //读取配置
-            XyCacheEvictor(settingsManager), ExampleDatabaseProvider(context)
+            LeastRecentlyUsedCacheEvictor(100 * 1024 * 1024)
+            /*XyCacheEvictor(settingsManager)*/, ExampleDatabaseProvider(context)
         )
 
         // 根据缓存目录创建缓存数据源
         upstreamDataSourceFactory = DefaultDataSource.Factory(
             context,
             OkHttpDataSource.Factory(cacheApiClient.okhttpClientFunction())
+                .setDefaultRequestProperties(mapOf("11111" to "22222"))
         )
         cacheDataSourceFactory = CacheDataSource.Factory()
             .setCache(cache)
             .setUpstreamDataSourceFactory(
                 upstreamDataSourceFactory
-            )/*.setCacheWriteDataSinkFactory(null)*/
-        // 设置上游数据源，缓存未命中时通过此获取数据
-        /*.setUpstreamDataSourceFactory(
-            DefaultHttpDataSource.Factory().setAllowCrossProtocolRedirects(true)
-        )*/
+            ).setCacheWriteDataSinkFactory(null)
+            .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
         cacheDataSource = cacheDataSourceFactory.createDataSource()
 
         settingsManager.setOnListener(object : OnSettingsChangeListener {
@@ -175,12 +174,17 @@ class CacheController(
     }
 
     private fun createCacheWriter(dataSpec: DataSpec, itemId: String): CacheWriter {
-    /*    val cacheDataSource = CacheDataSource.Factory()
+        val upstreamDataSourceFactory = DefaultDataSource.Factory(
+            context,
+            OkHttpDataSource.Factory(cacheApiClient.okhttpClientFunction())
+                .setDefaultRequestProperties(mapOf("3333" to "4444"))
+        )
+        val cacheDataSource = CacheDataSource.Factory()
             .setCache(cache)
             .setUpstreamDataSourceFactory(
                 upstreamDataSourceFactory
             )
-            .createDataSource()*/
+            .createDataSource()
         return CacheWriter(
             cacheDataSource, // 这里用你初始化好的 CacheDataSource
             dataSpec,
@@ -219,7 +223,7 @@ class CacheController(
         cancelCurrentCacheLocked()
     }
 
-    fun getMediaSourceFactory(): MediaSource.Factory? {
+    fun getMediaSourceFactory(): MediaSource.Factory {
         // 创建逐步加载数据的数据源
 
 //        val mediaSourceFactory = ProgressiveMediaSource.Factory(cacheDataSourceFactory)

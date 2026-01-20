@@ -62,6 +62,7 @@ import cn.xybbz.config.network.NetWorkMonitor
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.ext.joinToString
+import cn.xybbz.entity.data.music.TranscodingAndMusicUrlData
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
@@ -180,9 +181,8 @@ class MusicController(
                 it.setMusicUrl(
                     getMusicUrl(
                         it.itemId,
-                        it.plexPlayKey,
-                        settingsManager.get().playSessionId
-                    )
+                        it.plexPlayKey
+                    ).musicUrl
                 )
                 it
             }
@@ -190,9 +190,8 @@ class MusicController(
                 it.setMusicUrl(
                     getMusicUrl(
                         it.itemId,
-                        it.plexPlayKey,
-                        settingsManager.get().playSessionId
-                    )
+                        it.plexPlayKey
+                    ).musicUrl
                 )
                 cacheController.cancelAllCache()
                 startCache(it)
@@ -536,8 +535,12 @@ class MusicController(
         if (playType == PlayerTypeEnum.SINGLE_LOOP && mediaController?.hasNextMediaItem() != true) {
             seekToIndex(0)
         } else {
+            mediaController?.nextMediaItemIndex?.let { index ->
+                startCache(originMusicList[index])
+            }
             fadeController.fadeOut {
                 mediaController?.seekToNextMediaItem()
+
                 Log.i("music", "调用seekToNext")
                 thisPlay()
                 fadeController.fadeIn()
@@ -642,10 +645,7 @@ class MusicController(
             tmpList.add(music)
             originMusicList = tmpList
             mediaController?.addMediaItem(mediaItem)
-            mediaController?.run {
-                prepare()
-                play()
-            }
+            thisPlay()
         } else {
             //判断是否存在
             val indexOfFirst =
@@ -757,13 +757,22 @@ class MusicController(
         val pic = playMusic.pic
 
         if (playMusic.filePath.isNullOrBlank()) {
-            val musicUrl =
-                getMusicUrl(itemId, playMusic.plexPlayKey, settingsManager.get().playSessionId)
-            playMusic.setMusicUrl(musicUrl)
-            mediaItemBuilder.setUri(musicUrl)
+            val transcodingAndMusicUrlInfo =
+                getMusicUrl(itemId, playMusic.plexPlayKey)
+            playMusic.setMusicUrl(transcodingAndMusicUrlInfo.musicUrl)
+            mediaItemBuilder.setUri(transcodingAndMusicUrlInfo.musicUrl)
+
+            val normalizeMimeType =
+                MimeTypes.normalizeMimeType(MimeTypes.BASE_TYPE_AUDIO + "/${playMusic.container}")
+            //todo 这里的判断临时先用这个判断,后面改成
+            mediaItemBuilder.setMimeType(
+                if (FileTypes.inferFileTypeFromMimeType(normalizeMimeType) != -1
+                    && transcodingAndMusicUrlInfo.static) normalizeMimeType else MimeTypes.APPLICATION_M3U8
+            )
             val mediaMetadata = MediaMetadata.Builder()
                 .setTitle(playMusic.name)
                 .setArtworkUri(pic?.toUri())
+                .setDurationMs(playMusic.runTimeTicks)
                 .setArtist(playMusic.artists?.joinToString()) // 可以设置其他元数据信息，例如专辑、时长等
                 .setExtras(bundle)
                 .build()
@@ -777,18 +786,11 @@ class MusicController(
             mediaItemBuilder.setUri(playMusic.filePath?.toUri())
                 .setMediaMetadata(mediaMetadata)
         }
-        val normalizeMimeType =
-            MimeTypes.normalizeMimeType(MimeTypes.BASE_TYPE_AUDIO + "/${playMusic.container}")
         return mediaItemBuilder.setMediaId(itemId)
-            //todo 这里的判断临时先用这个判断,后面改成
-            .setMimeType(
-                if (FileTypes.inferFileTypeFromMimeType(normalizeMimeType) != -1) normalizeMimeType else MimeTypes.APPLICATION_M3U8
-            )
-            .setTag(playMusic)
             .build()
     }
 
-    private fun getMusicUrl(musicId: String, plexPlayKey: String?, playSessionId: String): String {
+    private fun getMusicUrl(musicId: String, plexPlayKey: String?): TranscodingAndMusicUrlData {
         val audioBitRate = if (netWorkMonitor.isTransportCellular)
             settingsManager.get().mobileNetworkAudioBitRate else if (netWorkMonitor.isWifiOrUnmetered)
             settingsManager.get().wifiNetworkAudioBitRate else 0
@@ -796,13 +798,15 @@ class MusicController(
         val static: Boolean =
             if (settingsManager.get().ifTranscoding) true else if (audioBitRate == 0) true else false
 
-        return dataSourceManager.getMusicPlayUrl(
+        val musicUrl = dataSourceManager.getMusicPlayUrl(
             if (static) musicId else plexPlayKey ?: musicId,
             static,
             AudioCodecEnum.getAudioCodec(settingsManager.get().transcodeFormat),
             audioBitRate,
             settingsManager.get().playSessionId
         )
+
+        return TranscodingAndMusicUrlData(audioBitRate, static, musicUrl)
     }
 
     /**
