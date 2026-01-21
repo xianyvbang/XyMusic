@@ -165,7 +165,7 @@ class MusicController(
             ) {
                 if (oldCacheUpperLimit == CacheUpperLimitEnum.No && cacheUpperLimit != CacheUpperLimitEnum.No && state == PlayStateEnum.Playing) {
                     musicInfo?.let {
-                        startCache(it,settingsManager.getStatic())
+                        startCache(it, settingsManager.getStatic())
                     }
                 }
             }
@@ -192,7 +192,7 @@ class MusicController(
                     ).musicUrl
                 )
                 downloadCacheController.cancelAllCache()
-                startCache(it,settingsManager.getStatic())
+                startCache(it, settingsManager.getStatic())
             }
 
             if (state == PlayStateEnum.Pause) {
@@ -249,7 +249,8 @@ class MusicController(
 
                 Player.STATE_BUFFERING -> {
                     // 正在缓冲数据
-                    updateState(PlayStateEnum.Loading)
+                    if (state == PlayStateEnum.Playing)
+                        updateState(PlayStateEnum.Loading)
                     Log.i("music", "STATE_BUFFERING")
                 }
 
@@ -334,7 +335,7 @@ class MusicController(
                     //todo 替换mediaitem的位置
                     //如果状态是播放的话
                     if (state != PlayStateEnum.Pause)
-                        startCache(originMusicList[curOriginIndex],settingsManager.getStatic())
+                        startCache(originMusicList[curOriginIndex], settingsManager.getStatic())
                     musicInfo?.let {
                         updateButtonCommend(
                             it.itemId in favoriteRepository.favoriteSet.value
@@ -443,7 +444,7 @@ class MusicController(
                 }
                 musicInfo?.let { music ->
                     Log.i("music", "回复播放开始缓存")
-                    startCache(music,settingsManager.getStatic())
+                    startCache(music, settingsManager.getStatic())
                 }
 
             }
@@ -767,9 +768,9 @@ class MusicController(
 
             val mediaItem =
                 downloadCacheController.downloadManager.downloadIndex.getDownload(itemId)?.request?.toMediaItem()
-           if (mediaItem != null){
-               mediaItemBuilder = mediaItem.buildUpon()
-           }
+            if (mediaItem != null) {
+                mediaItemBuilder = mediaItem.buildUpon()
+            }
 
             val mediaMetadata = MediaMetadata.Builder()
                 .setTitle(playMusic.name)
@@ -793,7 +794,7 @@ class MusicController(
     }
 
     private fun getMusicUrl(musicId: String, plexPlayKey: String?): TranscodingAndMusicUrlData {
-        val audioBitRate =  settingsManager.getAudioBitRate()
+        val audioBitRate = settingsManager.getAudioBitRate()
 
         val static: Boolean =
             settingsManager.getStatic()
