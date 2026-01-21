@@ -26,7 +26,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.common.music.CacheController
+import cn.xybbz.common.music.DownloadCacheController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.lrc.LrcServer
@@ -42,7 +42,7 @@ class MusicPlayerViewModel @Inject constructor(
     val musicController: MusicController,
     val dataSourceManager: DataSourceManager,
     val favoriteRepository: FavoriteRepository,
-    val cacheController: CacheController,
+    val downloadCacheController: DownloadCacheController,
     val lrcServer: LrcServer,
     private val db: DatabaseClient
 ) : ViewModel() {

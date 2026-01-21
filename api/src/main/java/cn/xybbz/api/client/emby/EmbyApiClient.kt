@@ -460,7 +460,7 @@ class EmbyApiClient : DefaultParentApiClient() {
         static: Boolean = true,
         audioBitRate: Int? = null
     ): String {
-        return if (audioBitRate == null){
+        return if (static){
             "${baseUrl}/emby/Audio/${itemId}/stream?" +
                     "deviceId=${deviceId}&userId=${userId}&static=${static}"
         }else {

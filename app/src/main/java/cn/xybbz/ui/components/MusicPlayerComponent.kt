@@ -200,7 +200,7 @@ fun MusicPlayerScreen(
 
 
 
-    val cacheScheduleData by musicPlayerViewModel.cacheController.cacheSchedule.collectAsStateWithLifecycle()
+    val cacheScheduleData by musicPlayerViewModel.downloadCacheController.cacheSchedule.collectAsStateWithLifecycle()
 
     val coroutineScope = rememberCoroutineScope()
 

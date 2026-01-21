@@ -30,6 +30,8 @@ import androidx.compose.runtime.setValue
 import cn.xybbz.common.enums.AllDataEnum
 import cn.xybbz.common.music.AudioFadeController
 import cn.xybbz.common.utils.CoroutineScopeUtils
+import cn.xybbz.config.network.NetWorkMonitor
+import cn.xybbz.config.network.OnNetworkChangeListener
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.setting.XySettings
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
@@ -43,7 +45,8 @@ import java.util.Locale
 class SettingsManager(
     private val db: DatabaseClient,
     private val applicationContext: Context,
-    private val audioFadeController: AudioFadeController
+    private val audioFadeController: AudioFadeController,
+    private val netWorkMonitor: NetWorkMonitor
 ) {
 
     private val coroutineScope = CoroutineScopeUtils.getIo("settings")
@@ -64,11 +67,14 @@ class SettingsManager(
     var cacheFilePath by mutableStateOf("")
         private set
 
+    //是否为非计费网络
+    var isUnmeteredWifi: Boolean = false
+
     lateinit var packageInfo: PackageInfo
         private set
 
     //是否设置转码音质
-    private val _transcodingFlow = MutableSharedFlow<Boolean>(0,extraBufferCapacity = 1)
+    private val _transcodingFlow = MutableSharedFlow<Boolean>(0, extraBufferCapacity = 1)
     val transcodingFlow = _transcodingFlow.asSharedFlow()
 
     /**
@@ -101,6 +107,13 @@ class SettingsManager(
         } else {
             packageManager.getPackageInfo(packageName, 0)
         }
+        netWorkMonitor.addListener(object : OnNetworkChangeListener {
+            override fun onNetworkChange(isUnmeteredWifi: Boolean) {
+                this@SettingsManager.isUnmeteredWifi = isUnmeteredWifi
+                sengTranscodingEvent()
+            }
+        })
+        netWorkMonitor.start()
     }
 
     /**
@@ -446,6 +459,23 @@ class SettingsManager(
 
     fun sengTranscodingEvent() {
         _transcodingFlow.tryEmit(true)
+    }
+
+    /**
+     * 根据网络类型获得需要转码的比特率
+     */
+    fun getAudioBitRate(): Int {
+        return if (!isUnmeteredWifi)
+            get().mobileNetworkAudioBitRate
+        else get().wifiNetworkAudioBitRate
+    }
+
+    /**
+     * 获得是否静态资源不转码 true:不转码,false 转码
+     */
+    fun getStatic(): Boolean {
+        val audioBitRate = getAudioBitRate()
+        return if (get().ifTranscoding) true else if (audioBitRate == 0) true else false
     }
 
 }

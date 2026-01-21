@@ -58,7 +58,6 @@ import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.favorite.FavoriteRepository
-import cn.xybbz.config.network.NetWorkMonitor
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.ext.joinToString
@@ -81,12 +80,11 @@ import kotlinx.coroutines.launch
 @OptIn(UnstableApi::class)
 class MusicController(
     private val application: Context,
-    private val cacheController: CacheController,
+    private val downloadCacheController: DownloadCacheController,
     private val favoriteRepository: FavoriteRepository,
     private val fadeController: AudioFadeController,
     private val settingsManager: SettingsManager,
-    private val dataSourceManager: DataSourceManager,
-    private val netWorkMonitor: NetWorkMonitor
+    private val dataSourceManager: DataSourceManager
 ) {
 
     val scope = CoroutineScopeUtils.getIo("MusicController")
@@ -152,7 +150,7 @@ class MusicController(
     )
     val events = _events.asSharedFlow()
 
-    lateinit var progressTicker: PlaybackProgressTicker
+    lateinit var progressTicker: PlayProgressTicker
         private set
 
     private lateinit var controllerFuture: ListenableFuture<MediaController>
@@ -167,7 +165,7 @@ class MusicController(
             ) {
                 if (oldCacheUpperLimit == CacheUpperLimitEnum.No && cacheUpperLimit != CacheUpperLimitEnum.No && state == PlayStateEnum.Playing) {
                     musicInfo?.let {
-                        startCache(it)
+                        startCache(it,settingsManager.getStatic())
                     }
                 }
             }
@@ -193,8 +191,8 @@ class MusicController(
                         it.plexPlayKey
                     ).musicUrl
                 )
-                cacheController.cancelAllCache()
-                startCache(it)
+                downloadCacheController.cancelAllCache()
+                startCache(it,settingsManager.getStatic())
             }
 
             if (state == PlayStateEnum.Pause) {
@@ -302,8 +300,8 @@ class MusicController(
         //检测播放何时转换为其他媒体项
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             mediaItem?.localConfiguration?.let { localConfiguration ->
-                if (localConfiguration.tag == null) {
 
+                if (localConfiguration.tag == null) {
                     Log.i("music", "诶切换类型 $reason")
                     //手动切换
                     if (reason == MEDIA_ITEM_TRANSITION_REASON_SEEK || reason == MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
@@ -321,6 +319,9 @@ class MusicController(
                             }
                         }
                     }
+
+                    Log.i("music", "上一个index ${mediaController?.previousMediaItemIndex}")
+
                     curOriginIndex = mediaController?.currentMediaItemIndex ?: 0
                     if (originMusicList.isNotEmpty() && curOriginIndex >= originMusicList.size - 1) {
                         scope.launch {
@@ -330,9 +331,10 @@ class MusicController(
                     musicInfo = originMusicList[curOriginIndex]
                     updateDuration(musicInfo?.runTimeTicks ?: 0)
 
+                    //todo 替换mediaitem的位置
                     //如果状态是播放的话
                     if (state != PlayStateEnum.Pause)
-                        startCache(originMusicList[curOriginIndex])
+                        startCache(originMusicList[curOriginIndex],settingsManager.getStatic())
                     musicInfo?.let {
                         updateButtonCommend(
                             it.itemId in favoriteRepository.favoriteSet.value
@@ -423,11 +425,6 @@ class MusicController(
 //                    repeatMode = Player.REPEAT_MODE_ONE
                     // 设置当缓冲完毕后直接播放视频
                     playWhenReady = true
-
-                    netWorkMonitor.start(
-                        onNetworkChange = {
-                            settingsManager.sengTranscodingEvent()
-                        })
                 }
             }
             onRestorePlaylists?.invoke()
@@ -446,7 +443,7 @@ class MusicController(
                 }
                 musicInfo?.let { music ->
                     Log.i("music", "回复播放开始缓存")
-                    startCache(music)
+                    startCache(music,settingsManager.getStatic())
                 }
 
             }
@@ -463,9 +460,9 @@ class MusicController(
     /**
      * 开始缓存
      */
-    fun startCache(music: XyPlayMusic) {
+    fun startCache(music: XyPlayMusic, ifStatic: Boolean) {
         if (music.filePath.isNullOrBlank())
-            cacheController.cacheMedia(music)
+            downloadCacheController.cacheMedia(music, ifStatic)
     }
 
     fun pause() {
@@ -516,6 +513,9 @@ class MusicController(
      */
     fun seekToPrevious() {
         Log.i("music", "调用seekToPrevious ${mediaController?.hasPreviousMediaItem()}")
+
+        //这里进行缓存数据替换
+
         if (playType == PlayerTypeEnum.SINGLE_LOOP && mediaController?.hasPreviousMediaItem() != true) {
             seekToIndex((mediaController?.mediaItemCount ?: 1) - 1)
         } else {
@@ -537,7 +537,6 @@ class MusicController(
         } else {
             fadeController.fadeOut {
                 mediaController?.seekToNextMediaItem()
-
                 Log.i("music", "调用seekToNext")
                 thisPlay()
                 fadeController.fadeIn()
@@ -707,7 +706,7 @@ class MusicController(
         }
         originIndex?.let { curOriginIndex = originIndex }
 
-        cacheController.cancelAllCache()
+        downloadCacheController.cancelAllCache()
         val tmpList = mutableListOf<XyPlayMusic>()
         tmpList.addAll(musicDataList)
         originMusicList = tmpList
@@ -715,7 +714,7 @@ class MusicController(
         this.pageSize = pageSize
 
         if (musicDataList.isNotEmpty()) {
-            cacheController.cancelAllCache()
+            downloadCacheController.cancelAllCache()
         }
         //设置播放类型
         generateRealMusicList()
@@ -746,10 +745,8 @@ class MusicController(
     private fun musicSetMediaItem(playMusic: XyPlayMusic): MediaItem {
 
         //设置单个资源
-        val bundle = Bundle()
         val itemId = playMusic.itemId
-        bundle.putString("id", itemId)
-        val mediaItemBuilder = MediaItem.Builder()
+        var mediaItemBuilder = MediaItem.Builder()
         mediaItemBuilder.setCustomCacheKey(itemId)
         val pic = playMusic.pic
 
@@ -764,21 +761,29 @@ class MusicController(
             //todo 这里的判断临时先用这个判断,后面改成
             mediaItemBuilder.setMimeType(
                 if (FileTypes.inferFileTypeFromMimeType(normalizeMimeType) != -1
-                    && transcodingAndMusicUrlInfo.static) normalizeMimeType else MimeTypes.APPLICATION_M3U8
+                    && transcodingAndMusicUrlInfo.static
+                ) normalizeMimeType else MimeTypes.APPLICATION_M3U8
             )
+
+            val mediaItem =
+                downloadCacheController.downloadManager.downloadIndex.getDownload(itemId)?.request?.toMediaItem()
+           if (mediaItem != null){
+               mediaItemBuilder = mediaItem.buildUpon()
+           }
+
             val mediaMetadata = MediaMetadata.Builder()
                 .setTitle(playMusic.name)
                 .setArtworkUri(pic?.toUri())
                 .setDurationMs(playMusic.runTimeTicks)
                 .setArtist(playMusic.artists?.joinToString()) // 可以设置其他元数据信息，例如专辑、时长等
-                .setExtras(bundle)
+//                .setExtras(bundle)
                 .build()
             mediaItemBuilder.setMediaMetadata(mediaMetadata)
         } else {
             val mediaMetadata = MediaMetadata.Builder()
                 .setTitle(playMusic.name)
                 .setArtist(playMusic.artists?.joinToString()) // 可以设置其他元数据信息，例如专辑、时长等
-                .setExtras(bundle)
+//                .setExtras(bundle)
                 .build()
             mediaItemBuilder.setUri(playMusic.filePath?.toUri())
                 .setMediaMetadata(mediaMetadata)
@@ -788,12 +793,10 @@ class MusicController(
     }
 
     private fun getMusicUrl(musicId: String, plexPlayKey: String?): TranscodingAndMusicUrlData {
-        val audioBitRate = if (netWorkMonitor.isTransportCellular)
-            settingsManager.get().mobileNetworkAudioBitRate else if (netWorkMonitor.isWifiOrUnmetered)
-            settingsManager.get().wifiNetworkAudioBitRate else 0
+        val audioBitRate =  settingsManager.getAudioBitRate()
 
         val static: Boolean =
-            if (settingsManager.get().ifTranscoding) true else if (audioBitRate == 0) true else false
+            settingsManager.getStatic()
 
         val musicUrl = dataSourceManager.getMusicPlayUrl(
             if (static) musicId else plexPlayKey ?: musicId,
@@ -841,7 +844,7 @@ class MusicController(
      */
     fun clearPlayerList() {
         pause()
-        cacheController.cancelAllCache()
+        downloadCacheController.cancelAllCache()
         mediaController?.clearMediaItems()
         originMusicList = emptyList()
         musicCurrentPositionMap.clear()
@@ -861,7 +864,7 @@ class MusicController(
     }
 
     fun onControllerReady(controller: MediaController) {
-        progressTicker = PlaybackProgressTicker(
+        progressTicker = PlayProgressTicker(
             controller = controller,
             intervalMs = MUSIC_POSITION_UPDATE_INTERVAL
         ) { position ->

@@ -206,4 +206,8 @@ object Constants {
      * 默认代理地址
      */
     const val DEFAULT_PROXY_ADDRESS = "127.0.0.1:7890"
+
+
+
+    const val DOWNLOAD_NOTIFICATION_CHANNEL_ID: String = "download_channel"
 }

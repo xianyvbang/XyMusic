@@ -422,7 +422,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
         static: Boolean = true,
         audioBitRate: Int? = null
     ): String {
-        return if (audioBitRate == null){
+        return if (static){
             "${baseUrl}/Audio/${itemId}/stream?" +
                     "deviceId=${deviceId}&static=${static}"
         }else {

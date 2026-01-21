@@ -39,7 +39,6 @@ import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.common.enums.MusicTypeEnum
-import cn.xybbz.common.music.CacheController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.music.PlayerEvent
 import cn.xybbz.common.utils.DateUtil
@@ -47,7 +46,6 @@ import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.favorite.FavoriteRepository
-import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.update.VersionCheckScheduler
@@ -81,13 +79,11 @@ class MainViewModel @Inject constructor(
     val settingsManager: SettingsManager,
     val backgroundConfig: BackgroundConfig,
     private val musicPlayContext: MusicPlayContext,
-    private val cacheController: CacheController,
     private val alarmConfig: AlarmConfig,
     private val favoriteRepository: FavoriteRepository,
     val selectControl: SelectControl,
     private val mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     private val versionCheckScheduler: VersionCheckScheduler,
-    private val lrcServer: LrcServer
 ) : ViewModel() {
 
     /**

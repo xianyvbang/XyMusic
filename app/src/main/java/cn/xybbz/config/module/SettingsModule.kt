@@ -20,6 +20,7 @@ package cn.xybbz.config.module
 
 import android.content.Context
 import cn.xybbz.common.music.AudioFadeController
+import cn.xybbz.config.network.NetWorkMonitor
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import dagger.Module
@@ -39,9 +40,11 @@ class SettingsModule {
     fun settingsManager(
         db: DatabaseClient,
         @ApplicationContext applicationContext: Context,
-        audioFadeController: AudioFadeController
+        audioFadeController: AudioFadeController,
+        netWorkMonitor: NetWorkMonitor
     ): SettingsManager {
-        val settingsManager = SettingsManager(db, applicationContext,audioFadeController)
+        val settingsManager =
+            SettingsManager(db, applicationContext, audioFadeController, netWorkMonitor)
         settingsManager.setSettingsData()
         return settingsManager;
     }

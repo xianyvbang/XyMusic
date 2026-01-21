@@ -82,7 +82,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
 
 
     @Inject
-    lateinit var cacheController: CacheController
+    lateinit var downloadCacheController: DownloadCacheController
 
     @Inject
     lateinit var musicController: MusicController
@@ -121,7 +121,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
         // 设置逐步加载数据的缓存数据源
         val defaultProvider =
             AudioTrackAudioOutputProvider.Builder(this).build()
-        cacheController.getMediaSourceFactory()?.let {
+        downloadCacheController.getMediaSourceFactory().let {
             exoPlayerBuilder.setMediaSourceFactory(it)
             Log.i("catch", "设置缓存工厂")
         }
@@ -172,7 +172,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                 } else {
                     musicController.progressTicker.stop()
                     musicController.musicInfo?.let {
-                        cacheController.pauseCache()
+                        downloadCacheController.pauseCache()
                     }
                 }
                 //todo 将loading状态变成播放中状态的就是这个
@@ -337,7 +337,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
         exoPlayer = null
         mediaSession?.release()
         mediaSession = null
-        cacheController.release()
+        downloadCacheController.release()
         musicController.clear()
         clearListener()
         super.onDestroy()

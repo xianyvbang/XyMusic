@@ -30,7 +30,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class PlaybackProgressTicker(
+class PlayProgressTicker(
     private val controller: MediaController,
     private val intervalMs: Long = 1000L,
     private val onProgress: (Long) -> Unit
@@ -48,6 +48,7 @@ class PlaybackProgressTicker(
         job = scope.launch {
             withContext(Dispatchers.IO){
                 while (coroutineContext.isActive) {
+                    controllerHandler.removeCallbacksAndMessages(null)
                     controllerHandler.post {
                         if (
                             controller.isPlaying &&
