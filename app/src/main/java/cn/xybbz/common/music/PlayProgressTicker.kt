@@ -70,5 +70,6 @@ class PlayProgressTicker(
 
     fun release() {
         stop()
+        controllerHandler.removeCallbacksAndMessages(null)
     }
 }

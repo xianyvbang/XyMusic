@@ -43,7 +43,7 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
 import cn.xybbz.api.client.CacheApiClient
-import cn.xybbz.common.utils.CoroutineScopeUtils
+import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.data.music.XyPlayMusic
@@ -62,7 +62,7 @@ class DownloadCacheController(
     private val context: Context,
     private val settingsManager: SettingsManager,
     private val cacheApiClient: CacheApiClient
-) {
+) : IoScoped(){
 
     val cache: Cache
     var cacheDataSourceFactory: CacheDataSource.Factory
@@ -77,8 +77,6 @@ class DownloadCacheController(
     /** 只允许一个任务 */
     private var download: Download? = null
     private var currentTaskId: String? = null
-
-    private val cacheCoroutineScope = CoroutineScopeUtils.getIo(this.javaClass.name)
 
     private val childPath = "cache"
 
@@ -182,7 +180,7 @@ class DownloadCacheController(
 
         val itemId = music.itemId
         val url = music.getMusicUrl()
-        cacheCoroutineScope.launch(Dispatchers.IO) {
+        scope.launch(Dispatchers.IO) {
             Log.i("music", "开始缓存1")
             /** 切换缓存 → 取消旧任务 */
             if (currentTaskId != null && currentTaskId != itemId) {
@@ -342,20 +340,21 @@ class DownloadCacheController(
      * 清空缓存
      */
     fun clearCache() {
-        cacheCoroutineScope.launch {
-            DownloadService.sendRemoveAllDownloads(
-                context,
-                ExoPlayerDownloadService::class.java,
-                /* foreground= */ false
-            )
-        }
+        DownloadService.sendRemoveAllDownloads(
+            context,
+            ExoPlayerDownloadService::class.java,
+            /* foreground= */ false
+        )
 
     }
 
-    fun release() {
-        cacheCoroutineScope.launch {
-            pauseCache()
-            cache.release()
-        }
+    override fun close() {
+        release()
+        super.close()
+    }
+
+   private fun release() {
+        pauseCache()
+        cache.release()
     }
 }

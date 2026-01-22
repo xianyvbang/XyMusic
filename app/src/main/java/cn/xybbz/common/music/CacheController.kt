@@ -35,12 +35,14 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
 import cn.xybbz.api.client.CacheApiClient
-import cn.xybbz.common.utils.CoroutineScopeUtils
+import cn.xybbz.config.scope.XyCloseableCoroutineScope
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -52,7 +54,7 @@ class CacheController(
     private val context: Context,
     private val settingsManager: SettingsManager,
     private val cacheApiClient: CacheApiClient
-) {
+){
 
     private val cache: Cache
      var cacheDataSourceFactory: CacheDataSource.Factory
@@ -65,7 +67,7 @@ class CacheController(
     private var currentTask: CacheWriter? = null
     private var currentTaskId: String? = null
 
-    private val cacheCoroutineScope = CoroutineScopeUtils.getIo(this.javaClass.name)
+    private val cacheCoroutineScope = XyCloseableCoroutineScope(SupervisorJob() + Dispatchers.IO + CoroutineName((this.javaClass.name)))
 
     private val childPath = "cache"
 

@@ -19,10 +19,7 @@
 package cn.xybbz.api.client
 
 import android.content.Context
-import android.icu.text.Transliterator
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.media3.common.util.UnstableApi
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.PagingData
@@ -861,7 +858,7 @@ abstract class IDataSourceParentServer(
     /**
      * 释放
      */
-    override suspend fun release() {
+    fun release() {
         TokenServer.clearAllData()
     }
 

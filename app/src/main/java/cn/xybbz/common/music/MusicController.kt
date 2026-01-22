@@ -56,8 +56,8 @@ import cn.xybbz.common.constants.Constants.MUSIC_POSITION_UPDATE_INTERVAL
 import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
 import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
 import cn.xybbz.common.enums.PlayStateEnum
-import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.favorite.FavoriteRepository
+import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.ext.joinToString
@@ -85,9 +85,7 @@ class MusicController(
     private val fadeController: AudioFadeController,
     private val settingsManager: SettingsManager,
     private val dataSourceManager: DataSourceManager
-) {
-
-    val scope = CoroutineScopeUtils.getIo("MusicController")
+) : IoScoped(){
 
     // 原始歌曲列表
     var originMusicList by mutableStateOf(emptyList<XyPlayMusic>())
@@ -546,9 +544,7 @@ class MusicController(
 
     }
 
-    fun clear() {
-        mediaController?.release()
-    }
+
 
     fun removeItem(index: Int) {
         //判断要删除的索引和当前索引是否一致
@@ -954,5 +950,18 @@ class MusicController(
                 _events.emit(PlayerEvent.Pause(it.itemId, settingsManager.get().playSessionId))
             }
         }
+    }
+
+    private fun release() {
+        clearPlayerList()
+        fadeController.close()
+        mediaController?.release()
+        mediaController?.removeListener(playerListener)
+        progressTicker.stop()
+    }
+
+    override fun close() {
+        release()
+        super.close()
     }
 }

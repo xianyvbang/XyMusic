@@ -26,9 +26,6 @@ import android.os.Bundle
 import android.util.Log
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.ForwardingPlayer
-import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
-import androidx.media3.common.Player.PlayWhenReadyChangeReason
 import androidx.media3.common.util.Assertions
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSourceBitmapLoader
@@ -79,6 +76,13 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
     private var ifRegister: Boolean = false
 
     lateinit var audioTrack: AudioTrack
+
+    private val exoPlayerListener = ExoPlayerListener(
+        musicController,
+        downloadCacheController,
+        lrcServer,
+        exoPlayer
+    )
 
 
     @Inject
@@ -147,53 +151,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
 
         //这里的可以获得元数据
         exoPlayer?.addAnalyticsListener(XyLogger(mediaServer = mediaServer))
-        exoPlayer?.addListener(object : Player.Listener {
-
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                Log.i("music", "当前播放状态$isPlaying -- ${exoPlayer?.currentMediaItem?.mediaMetadata?.title}")
-                if (isPlaying) {
-                    musicController.updateState(PlayStateEnum.Playing)
-                    musicController.reportedPlayEvent()
-                } else {
-                    musicController.reportedPauseEvent()
-                }
-            }
-
-            override fun onPlayWhenReadyChanged(
-                playWhenReady: Boolean,
-                @PlayWhenReadyChangeReason reason: Int
-            ) {
-                Log.i(
-                    "music",
-                    "播放状态改变$playWhenReady --- ${reason} -- ${exoPlayer?.isPlaying} -- ${musicController.state}"
-                )
-                if (playWhenReady) {
-                    musicController.progressTicker.start()
-                } else {
-                    musicController.progressTicker.stop()
-                    musicController.musicInfo?.let {
-                        downloadCacheController.pauseCache()
-                    }
-                }
-                //todo 将loading状态变成播放中状态的就是这个
-                if (musicController.musicInfo != null) {
-
-                    val playState =
-                        if (!playWhenReady) PlayStateEnum.Pause
-                        else if (musicController.state == PlayStateEnum.Loading) PlayStateEnum.Loading
-                        else PlayStateEnum.Playing
-                    musicController.updateState(playState)
-
-                }
-            }
-
-            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                if (!mediaItem?.mediaMetadata?.title.isNullOrBlank()) {
-                    lrcServer.clear()
-                }
-            }
-
-        })
+        exoPlayer?.addListener(exoPlayerListener)
 
         val sessionCommand = SessionCommand(SAVE_TO_FAVORITES, Bundle.EMPTY)
         val removeFavorites = SessionCommand(REMOVE_FROM_FAVORITES, Bundle.EMPTY)
@@ -332,14 +290,16 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
     override fun onDestroy() {
         // 释放相关实例
         Log.i("music", "数据释放")
+        exoPlayer?.removeListener(exoPlayerListener)
         exoPlayer?.stop()
         exoPlayer?.release()
         exoPlayer = null
         mediaSession?.release()
         mediaSession = null
-        downloadCacheController.release()
-        musicController.clear()
+        downloadCacheController.close()
+        musicController.close()
         clearListener()
+        unregisterReceiver(myNoisyAudioStreamReceiver)
         super.onDestroy()
     }
 

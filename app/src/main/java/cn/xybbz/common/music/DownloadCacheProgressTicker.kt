@@ -20,8 +20,10 @@ package cn.xybbz.common.music
 
 import android.os.Handler
 import android.util.Log
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.offline.Download
 
+@UnstableApi
 class DownloadCacheProgressTicker(
     private val downloadCacheController: DownloadCacheController,
     private val intervalMs: Long = 1000L,

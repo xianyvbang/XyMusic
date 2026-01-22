@@ -40,13 +40,12 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.music.MusicController
-import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.connection.ConnectionConfigServer
-import cn.xybbz.config.favorite.FavoriteRepository
+import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.entity.data.LoginStateData
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.ResourceData
@@ -91,15 +90,12 @@ class DataSourceManager(
     private val dataSources: Map<DataSourceType, @JvmSuppressWildcards Provider<IDataSourceParentServer>>,
     val connectionConfigServer: ConnectionConfigServer,
     private val alarmConfig: AlarmConfig,
-    private val favoriteRepository: FavoriteRepository,
     private val versionApiClient: VersionApiClient
-) : IDataSourceServer {
+) : IDataSourceServer, IoScoped() {
 
 
     var dataSourceType by mutableStateOf<DataSourceType?>(null)
         private set
-
-    private val datasourceCoroutineScope = CoroutineScopeUtils.getIo(this.javaClass.name)
 
     /**
      * 用户数据源数据信息服务类
@@ -132,7 +128,7 @@ class DataSourceManager(
 
     @kotlin.OptIn(ExperimentalCoroutinesApi::class)
     fun startEventBus() {
-        datasourceCoroutineScope.launch {
+        scope.launch {
             dataSourceServerFlow
                 .filterNotNull()
                 .flatMapLatest { server ->
@@ -141,7 +137,7 @@ class DataSourceManager(
                 .onEach { event ->
                     if (event is ReLoginEvent.Unauthorized) serverLogin(true)
                 }
-                .launchIn(datasourceCoroutineScope)
+                .launchIn(scope)
         }
     }
 
@@ -154,7 +150,7 @@ class DataSourceManager(
     }
 
     fun login(ifLogin: Boolean = false) {
-        datasourceCoroutineScope.launch {
+        scope.launch {
             val connectionConfig = db.connectionConfigDao.selectConnectionConfig()
             if (connectionConfig != null) {
                 setDataSourceTypeFun(connectionConfig.type)
@@ -182,7 +178,7 @@ class DataSourceManager(
      * 登陆服务端
      */
     fun serverLogin(ifLogin: Boolean) {
-        datasourceCoroutineScope.launch {
+        scope.launch {
             ifLoginError = false
             autoLogin(ifLogin)?.onEach { loginState ->
                 loginStatus = loginState
@@ -193,7 +189,7 @@ class DataSourceManager(
                 errorMessage = loginSateInfo.errorMessage ?: ""
                 ifLoginError = loginSateInfo.isError
                 loading = loginSateInfo.loading
-            }?.launchIn(datasourceCoroutineScope)
+            }?.launchIn(scope)
         }
     }
 
@@ -320,7 +316,7 @@ class DataSourceManager(
      * 切换连接服务
      */
     suspend fun changeDataSource(connectionConfig: ConnectionConfig) {
-        release()
+        clear()
         connectionConfigServer.setConnectionConfigData(connectionConfig)
         changeDataSource()
     }
@@ -598,12 +594,18 @@ class DataSourceManager(
     /**
      * 释放
      */
-    override suspend fun release() {
+    private fun clear() {
         dataSourceServer.release()
         setDataSourceTypeFun(null)
         //取消定时任务
         alarmConfig.cancelAllAlarm()
         connectionConfigServer.setConnectionConfigData(null)
+
+    }
+
+    override fun close() {
+        super.close()
+        clear()
     }
 
     /**

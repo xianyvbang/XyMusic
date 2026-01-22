@@ -20,17 +20,13 @@ package cn.xybbz.common.music
 
 import android.media.AudioTrack
 import android.media.VolumeShaper
-import cn.xybbz.common.utils.CoroutineScopeUtils
+import cn.xybbz.config.scope.IoScoped
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class AudioFadeController(
-
-) {
-
-    val scope = CoroutineScopeUtils.getIo("AudioFadeController")
+class AudioFadeController() : IoScoped() {
 
     private var currentTrack: AudioTrack? = null
     private var volumeShaper: VolumeShaper? = null
@@ -73,6 +69,7 @@ class AudioFadeController(
         }
 
     }
+
     private var fadeJob: Job? = null
 
     fun fadeOut(onEnd: () -> Unit) {
@@ -89,7 +86,7 @@ class AudioFadeController(
             try {
                 try {
                     volumeShaper?.close()
-                }catch (e: Exception){
+                } catch (e: Exception) {
                     e.printStackTrace()
                 }
 
@@ -116,11 +113,17 @@ class AudioFadeController(
             }
     }
 
-    fun release() {
+    private fun release() {
+        currentTrack?.release()
         volumeShaper?.close()
         volumeShaper = null
         currentTrack = null
         released = true
+    }
+
+    override fun close() {
+        super.close()
+        release()
     }
 }
 

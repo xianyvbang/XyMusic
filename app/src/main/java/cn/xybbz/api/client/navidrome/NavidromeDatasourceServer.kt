@@ -909,7 +909,7 @@ class NavidromeDatasourceServer @Inject constructor(
     /**
      * 释放
      */
-    override suspend fun release() {
+    override fun release() {
         super.release()
         navidromeApiClient.release()
     }

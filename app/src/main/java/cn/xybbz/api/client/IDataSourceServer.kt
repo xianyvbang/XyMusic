@@ -431,10 +431,4 @@ interface IDataSourceServer {
      */
     fun getResemblanceArtist(artistId: String): Flow<PagingData<XyArtist>>
 
-    /**
-     * 释放
-     */
-    suspend fun release()
-
-
 }
