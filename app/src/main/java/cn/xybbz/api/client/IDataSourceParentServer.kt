@@ -858,7 +858,7 @@ abstract class IDataSourceParentServer(
     /**
      * 释放
      */
-    fun release() {
+    open fun release() {
         TokenServer.clearAllData()
     }
 

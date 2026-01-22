@@ -957,7 +957,7 @@ class MusicController(
         fadeController.close()
         mediaController?.release()
         mediaController?.removeListener(playerListener)
-        progressTicker.stop()
+        progressTicker.close()
     }
 
     override fun close() {

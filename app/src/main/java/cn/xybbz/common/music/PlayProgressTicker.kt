@@ -22,6 +22,7 @@ import android.os.Handler
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import cn.xybbz.common.utils.CoroutineScopeUtils
+import cn.xybbz.config.scope.IoScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -34,9 +35,8 @@ class PlayProgressTicker(
     private val controller: MediaController,
     private val intervalMs: Long = 1000L,
     private val onProgress: (Long) -> Unit
-) {
+) : IoScoped(){
 
-    private val scope: CoroutineScope = CoroutineScopeUtils.getIo("PlaybackProgressTicker")
     private var job: Job? = null
 
     private val controllerHandler =
@@ -71,5 +71,10 @@ class PlayProgressTicker(
     fun release() {
         stop()
         controllerHandler.removeCallbacksAndMessages(null)
+    }
+
+    override fun close() {
+        release()
+        super.close()
     }
 }

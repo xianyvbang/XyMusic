@@ -1,6 +1,5 @@
 package cn.xybbz.config
 
-import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,8 +17,7 @@ import cn.xybbz.ui.theme.xyBackgroundBrash
 import kotlinx.coroutines.launch
 
 class BackgroundConfig(
-    private val db: DatabaseClient,
-    private val applicationContext: Context
+    private val db: DatabaseClient
 ) {
 
     private var backgroundConfig: XyBackgroundConfig? = null
