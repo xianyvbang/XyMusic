@@ -7,7 +7,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,8 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 class PlaylistBottomViewModel @Inject constructor(
     private val db: DatabaseClient,
-    val dataSourceManager: DataSourceManager,
-    private val connectionConfigServer: ConnectionConfigServer,
+    val dataSourceManager: DataSourceManager
 
     ) : ViewModel() {
 
@@ -46,7 +44,7 @@ class PlaylistBottomViewModel @Inject constructor(
 
     private fun observeLoginSuccessForPlaylist() {
         viewModelScope.launch {
-            connectionConfigServer.loginSuccessEvent.collect {
+            dataSourceManager.getLoginStateFlow().collect {
                 startPlaylistObserver()
             }
         }

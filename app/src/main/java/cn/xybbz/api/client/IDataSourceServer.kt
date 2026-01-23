@@ -43,6 +43,7 @@ import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
 import java.lang.AutoCloseable
@@ -53,7 +54,7 @@ import java.lang.AutoCloseable
  * @date 2024/06/12
  * @constructor 创建[IDataSourceServer]
  */
-interface IDataSourceServer: AutoCloseable{
+interface IDataSourceServer : AutoCloseable {
 
 
     fun ifTmpObject(): Boolean
@@ -69,7 +70,10 @@ interface IDataSourceServer: AutoCloseable{
      * 自动登录
      * @return [Flow<ClientLoginInfoState>?]
      */
-    suspend fun autoLogin(loginType: LoginType = LoginType.TOKEN): Flow<ClientLoginInfoState>?
+    suspend fun autoLogin(
+        loginType: LoginType = LoginType.TOKEN,
+        connectionConfig: ConnectionConfig? = null
+    ): Flow<ClientLoginInfoState>?
 
 
     /**
@@ -454,5 +458,20 @@ interface IDataSourceServer: AutoCloseable{
      * 获得连接地址
      */
     fun getConnectionAddress(): String
+
+    /**
+     * 更新连接设置
+     */
+    suspend fun updateConnectionConfig(connectionConfig: ConnectionConfig)
+
+    /**
+     * 获得登录成功flow
+     */
+    fun getLoginStateFlow(): SharedFlow<Boolean>
+
+    /**
+     * 更新媒体库id
+     */
+    suspend fun updateLibraryId(libraryId: String?, connectionId: Long)
 
 }

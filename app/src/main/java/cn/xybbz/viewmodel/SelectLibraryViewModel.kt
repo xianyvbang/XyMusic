@@ -24,10 +24,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.DefaultObjectUtils
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.library.XyLibrary
 import dagger.assisted.Assisted
@@ -41,7 +41,7 @@ class SelectLibraryViewModel @AssistedInject constructor(
     @Assisted private val connectionId: Long,
     @Assisted private val thisLibraryId: String?,
     private val db: DatabaseClient,
-    private val connectionConfigServer: ConnectionConfigServer,
+    private val dataSourceManager: DataSourceManager,
     private val _backgroundConfig: BackgroundConfig
 ) : ViewModel() {
 
@@ -92,11 +92,7 @@ class SelectLibraryViewModel @AssistedInject constructor(
             if (data == Constants.MINUS_ONE_INT.toString()) {
                 tmpData = null
             }
-            db.connectionConfigDao.updateLibraryId(
-                libraryId = tmpData,
-                connectionId = connectionId
-            )
-            connectionConfigServer.updateLibraryId(
+            dataSourceManager.updateLibraryId(
                 libraryId = tmpData,
                 connectionId = connectionId)
         }

@@ -32,7 +32,6 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.localdata.config.DatabaseClient
@@ -50,7 +49,6 @@ class SearchViewModel @OptIn(UnstableApi::class)
 @Inject constructor(
     private val db: DatabaseClient,
     private val dataSourceManager: DataSourceManager,
-    private val connectionConfigServer: ConnectionConfigServer,
     val musicController: MusicController,
     val favoriteRepository: FavoriteRepository,
     val downloadRepository: DownloadRepository,
@@ -125,7 +123,7 @@ class SearchViewModel @OptIn(UnstableApi::class)
                     saveSearchHistory(
                         SearchHistory(
                             searchQuery = searchQuery,
-                            connectionId = connectionConfigServer.getConnectionId()
+                            connectionId = dataSourceManager.getConnectionId()
                         )
                     )
                 } catch (e: Exception) {

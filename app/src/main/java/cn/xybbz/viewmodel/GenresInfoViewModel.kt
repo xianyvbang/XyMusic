@@ -9,7 +9,6 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.genre.XyGenre
 import dagger.assisted.Assisted
@@ -24,12 +23,9 @@ import kotlinx.coroutines.launch
 @HiltViewModel(assistedFactory = GenresInfoViewModel.Factory::class)
 class GenresInfoViewModel @AssistedInject constructor(
     @Assisted private val genreId: String,
-    private val _dataSourceManager: DataSourceManager,
-    private val connectionConfigServer: ConnectionConfigServer,
-    private val _backgroundConfig: BackgroundConfig
+    private val dataSourceManager: DataSourceManager,
+    val backgroundConfig: BackgroundConfig
 ) : ViewModel() {
-
-    val backgroundConfig = _backgroundConfig
 
     @AssistedFactory
     interface Factory {
@@ -48,16 +44,16 @@ class GenresInfoViewModel @AssistedInject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val albumList: Flow<PagingData<XyAlbum>> =
-        connectionConfigServer.loginSuccessEvent
+        dataSourceManager.getLoginStateFlow()
             .flatMapLatest {
-                _dataSourceManager.selectAlbumListByGenreId(genreId)
+                dataSourceManager.selectAlbumListByGenreId(genreId)
             }
             .cachedIn(viewModelScope)
 
 
     private fun getGenreInfo() {
         viewModelScope.launch {
-            genreInfo = _dataSourceManager.getGenreById(genreId)
+            genreInfo = dataSourceManager.getGenreById(genreId)
         }
     }
 }

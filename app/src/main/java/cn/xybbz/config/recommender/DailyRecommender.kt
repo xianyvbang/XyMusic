@@ -21,7 +21,6 @@ package cn.xybbz.config.recommender
 import android.util.Log
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
 import java.util.concurrent.TimeUnit
 import kotlin.math.log10
@@ -43,7 +42,6 @@ data class RecommenderConfig(
  */
 class DailyRecommender(
     private val repo: DataSourceManager,
-    private val db: DatabaseClient,
     private val recentHistory: RecentHistoryCache,
     private val config: RecommenderConfig = RecommenderConfig()
 ) {
@@ -131,7 +129,7 @@ class DailyRecommender(
         // 更新 recentHistory（异步安全）
         recentHistory.addAll(
             result,
-            repo.connectionConfigServer.getConnectionId()
+            repo.getConnectionId()
         )
     }
 

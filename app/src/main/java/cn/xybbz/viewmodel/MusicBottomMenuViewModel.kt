@@ -34,7 +34,6 @@ import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.alarm.AlarmConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.download.core.DownloadRequest
@@ -60,7 +59,6 @@ class MusicBottomMenuViewModel @Inject constructor(
     val musicController: MusicController,
     val dataSourceManager: DataSourceManager,
     val alarmConfig: AlarmConfig,
-    val connectionConfigServer: ConnectionConfigServer,
     val favoriteRepository: FavoriteRepository,
     val downloadRepository: DownloadRepository,
     val downloadManager: DownLoadManager,
@@ -141,7 +139,7 @@ class MusicBottomMenuViewModel @Inject constructor(
      * 保存专辑跳过片头片尾
      */
     suspend fun saveOrUpdateSkipTimeData(skipTime: SkipTime) {
-        skipTime.connectionId = connectionConfigServer.getConnectionId()
+        skipTime.connectionId = dataSourceManager.getConnectionId()
         if (skipTime.id != 0L) {
             db.skipTimeDao.updateByID(skipTime)
         } else {
@@ -249,7 +247,7 @@ class MusicBottomMenuViewModel @Inject constructor(
                     type = downloadTypes,
                     cover = musicData.pic,
                     duration = musicData.runTimeTicks,
-                    connectionId = connectionConfigServer.getConnectionId(),
+                    connectionId = dataSourceManager.getConnectionId(),
                     music = musicData
                 )
             )

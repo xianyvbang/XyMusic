@@ -28,7 +28,7 @@ class DownloadImpl(
 
     private fun observeLoginSuccessForDispatcher() {
         scope.launch {
-            downloadDispatcher.connectionConfigServer.loginSuccessEvent.collect {
+            downloadDispatcher.getLoginCompletedFlow().collect {
                 startTaskUpdateObserver()
             }
         }
@@ -188,11 +188,20 @@ class DownloadImpl(
         if (ids.isNotEmpty()) downloadDispatcher.cancel(ids.toList())
     }
 
+    override fun cancelAll() {
+       downloadDispatcher.cancelAll()
+    }
+
     override fun delete(vararg ids: Long, deleteFile: Boolean) {
         if (ids.isNotEmpty()) downloadDispatcher.delete(ids.toList(), deleteFile)
     }
 
     override fun updateConfig(config: DownloaderConfig) {
         downloadDispatcher.updateConfig(config)
+    }
+
+    override fun close() {
+        cancelAll()
+        downloadDispatcher.close()
     }
 }

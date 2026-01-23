@@ -25,7 +25,6 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.HomeDataRepository
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.proxy.ProxyConfigServer
 import cn.xybbz.config.setting.SettingsManager
@@ -43,9 +42,6 @@ class XyApplication : Application(), Configuration.Provider {
 
     @Inject
     lateinit var dataSourceManager: DataSourceManager
-
-    @Inject
-    lateinit var connectionConfigServer: ConnectionConfigServer
 
     @Inject
     lateinit var proxyConfigServer: ProxyConfigServer
@@ -67,7 +63,7 @@ class XyApplication : Application(), Configuration.Provider {
         super.onCreate()
         MultiLanguages.init(this)
         DialogX.init(this)
-        DialogX.DEBUGMODE = true;
+        DialogX.DEBUGMODE = true
         DialogX.onlyOnePopTip = false
         //是否默认可以关闭
         DialogX.cancelableTipDialog = false
@@ -79,6 +75,10 @@ class XyApplication : Application(), Configuration.Provider {
         }
 
         scope.launch {
+            dataSourceManager.initDataSource()
+        }
+
+        scope.launch {
             backgroundConfig.load()
         }
         scope.launch {
@@ -86,10 +86,11 @@ class XyApplication : Application(), Configuration.Provider {
         }
 
         downloadManager.initData()
-        connectionConfigServer.initData()
+
         scope.launch {
-            dataSourceManager.initDataSource()
+            homeDataRepository.initData()
         }
+
     }
 
     override val workManagerConfiguration: Configuration

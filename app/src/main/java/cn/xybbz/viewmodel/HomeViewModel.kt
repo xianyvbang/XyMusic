@@ -12,11 +12,11 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.common.enums.HomeRefreshReason
+import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.DataSourceChangeUtils
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.HomeDataRepository
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.recommender.DailyRecommender
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
@@ -25,16 +25,11 @@ import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.remote.RemoteCurrent
 import cn.xybbz.localdata.enums.DownloadStatus
-import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -43,7 +38,6 @@ class HomeViewModel @OptIn(UnstableApi::class)
 @Inject constructor(
     private val db: DatabaseClient,
     val dataSourceManager: DataSourceManager,
-    val connectionConfigServer: ConnectionConfigServer,
     val musicPlayContext: MusicPlayContext,
     private val musicController: MusicController,
     val backgroundConfig: BackgroundConfig,
@@ -64,7 +58,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
     /**
      * 下载中的任务的数量
      */
-    var downloadCount by mutableStateOf<Int>(0)
+    var downloadCount by mutableStateOf(0)
         private set
 
 
@@ -82,6 +76,17 @@ class HomeViewModel @OptIn(UnstableApi::class)
         observeLoginSuccess()
         observeLoginSuccessRoomData()
         getConnectionListData()
+
+        initLoginChangeMonitor()
+    }
+
+    /**
+     * 监听登录状态加载数据
+     */
+    private fun initLoginChangeMonitor(){
+        viewModelScope.launch {
+            homeDataRepository.initLoginChangeMonitor()
+        }
     }
 
     private fun observeLoginSuccessRoomData() {
@@ -177,7 +182,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
      */
     private fun observeLoginSuccess() {
         viewModelScope.launch {
-            connectionConfigServer.loginSuccessEvent.collect {
+            dataSourceManager.getLoginStateFlow().collect {
                 tryRefreshHome(
                     isRefresh = true,
                     reason = HomeRefreshReason.Login
@@ -225,7 +230,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
         db.remoteCurrentDao.insertOrReplace(
             RemoteCurrent(
                 id = RemoteIdConstants.HOME_REFRESH,
-                connectionId = connectionConfigServer.getConnectionId(),
+                connectionId = dataSourceManager.getConnectionId(),
                 createTime = System.currentTimeMillis()
             )
         )
@@ -239,8 +244,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
         viewModelScope.launch {
             if (dataSourceManager.ifLoginError) {
                 if (isRefresh) {
-                    connectionConfigServer.updateLoginStates(false)
-                    dataSourceManager.login(true)
+                    autoLogin()
                 }
             } else {
                 val mostPlayerMusicAsync = async {
@@ -300,7 +304,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
      * 获得数据数量
      */
     private suspend fun getServerDataCount() {
-        dataSourceManager.getDataInfoCount(connectionConfigServer.getConnectionId())
+        dataSourceManager.getDataInfoCount(dataSourceManager.getConnectionId())
     }
 
     private suspend fun generateRecommendedMusicList() {
@@ -328,6 +332,12 @@ class HomeViewModel @OptIn(UnstableApi::class)
                 musicList.map { it.toPlayMusic() },
                 playerTypeEnum
             )
+        }
+    }
+
+    fun autoLogin(){
+        viewModelScope.launch {
+            dataSourceManager.serverLogin(LoginType.API, null)
         }
     }
 }

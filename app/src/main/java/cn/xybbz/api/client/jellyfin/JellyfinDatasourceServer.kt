@@ -51,7 +51,7 @@ import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
 import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.common.utils.PlaylistParser
-import cn.xybbz.config.connection.ConnectionConfigServer
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchAndOrder
 import cn.xybbz.entity.data.SearchData
@@ -82,11 +82,11 @@ import javax.inject.Inject
 class JellyfinDatasourceServer @Inject constructor(
     private val db: DatabaseClient,
     private val application: Context,
-    private val connectionConfigServer: ConnectionConfigServer,
+    private val settingsManager: SettingsManager,
     private val jellyfinApiClient: JellyfinApiClient
 ) : IDataSourceParentServer(
     db,
-    connectionConfigServer,
+    settingsManager,
     application,
     jellyfinApiClient
 ) {
@@ -543,7 +543,7 @@ class JellyfinDatasourceServer @Inject constructor(
                     id = it.id,
                     collectionType = it.collectionType.toString(),
                     name = it.name.toString(),
-                    connectionId = connectionConfigServer.getConnectionId()
+                    connectionId = getConnectionId()
                 )
             }
         if (libraries.isNotEmpty()) {
@@ -597,7 +597,7 @@ class JellyfinDatasourceServer @Inject constructor(
             CreatePlaylistRequest(
                 name = name, mediaType = MediaType.AUDIO, ids = emptyList(), users = listOf(
                     PlaylistUserPermissions(
-                        userId = connectionConfigServer.getUserId(), canEdit = true
+                        userId = getUserId(), canEdit = true
                     )
                 ), isPublic = false
             )
@@ -733,7 +733,7 @@ class JellyfinDatasourceServer @Inject constructor(
     override suspend fun selectArtistsByIds(artistIds: List<String>): List<XyArtist> {
         val items = jellyfinApiClient.itemApi().getItems(
             ItemRequest(
-                ids = artistIds, parentId = connectionConfigServer.libraryId
+                ids = artistIds, parentId = libraryId
             ).toMap()
         ).items
         return convertToArtistList(items)
@@ -780,7 +780,7 @@ class JellyfinDatasourceServer @Inject constructor(
                     ImageType.PRIMARY, ImageType.BACKDROP, ImageType.BANNER, ImageType.THUMB
                 ),
                 limit = Constants.MIN_PAGE,
-                parentId = connectionConfigServer.libraryId
+                parentId = libraryId
             ).toMap()
         )
         if (albumList.isNotEmpty())
@@ -879,7 +879,7 @@ class JellyfinDatasourceServer @Inject constructor(
     override suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend>? {
         val response = jellyfinApiClient.itemApi().getSimilarItems(
             itemId = musicId,
-            userId = connectionConfigServer.getUserId(),
+            userId = getUserId(),
             limit = Constants.SIMILAR_MUSIC_LIST_PAGE,
             fields = listOf(
                 ItemFields.PRIMARY_IMAGE_ASPECT_RATIO,
@@ -1023,7 +1023,7 @@ class JellyfinDatasourceServer @Inject constructor(
             artistId = artistId,
             ItemRequest(
                 limit = Constants.UI_LIST_PAGE,
-                userId = connectionConfigServer.getUserId()
+                userId = getUserId()
             ).toMap()
         )
         val artistList = convertToArtistList(response.items)
@@ -1139,7 +1139,7 @@ class JellyfinDatasourceServer @Inject constructor(
                 ids = albumIds,
                 years = years,
                 genreIds = genreIds,
-                parentId = connectionConfigServer.libraryId
+                parentId = libraryId
             ).toMap()
         )
 
@@ -1201,7 +1201,7 @@ class JellyfinDatasourceServer @Inject constructor(
                 genreIds = genreIds,
                 years = years,
                 albumIds = albumId?.let { listOf(albumId) },
-                parentId = if (parentId.isNullOrBlank()) connectionConfigServer.libraryId else parentId,
+                parentId = if (parentId.isNullOrBlank()) libraryId else parentId,
                 path = path
             ).toMap()
         )
@@ -1240,7 +1240,7 @@ class JellyfinDatasourceServer @Inject constructor(
                 ),
                 searchTerm = search,
                 isFavorite = isFavorite,
-                parentId = connectionConfigServer.libraryId
+                parentId = libraryId
             ).toMap()
         )
         val artistList = convertToArtistList(response.items)
@@ -1284,7 +1284,7 @@ class JellyfinDatasourceServer @Inject constructor(
                 ),
                 searchTerm = search,
                 imageTypeLimit = 1,
-                parentId = connectionConfigServer.libraryId
+                parentId = libraryId
             ).toMap()
         )
         return XyResponse<XyGenre>(
@@ -1314,7 +1314,7 @@ class JellyfinDatasourceServer @Inject constructor(
                         ),
                         startIndex = 0,
                         limit = pageSize,
-                        userId = connectionConfigServer.getUserId()
+                        userId = getUserId()
                     ).toMap()
                 )
             val xyResponse = XyResponse(
@@ -1364,7 +1364,7 @@ class JellyfinDatasourceServer @Inject constructor(
                 ?: if (ifPlaylist) application.getString(Constants.UNKNOWN_PLAYLIST) else application.getString(
                     Constants.UNKNOWN_ALBUM
                 ),
-            connectionId = connectionConfigServer.getConnectionId(),
+            connectionId = getConnectionId(),
             artistIds = item.albumArtists?.joinToString() { it.id },
             artists = item.albumArtists?.mapNotNull { it.name }?.joinToString()
                 ?: application.getString(Constants.UNKNOWN_ARTIST),
@@ -1418,7 +1418,7 @@ class JellyfinDatasourceServer @Inject constructor(
             downloadUrl = createDownloadUrl(item.id),
             album = item.albumId.toString(),
             albumName = item.album,
-            connectionId = connectionConfigServer.getConnectionId(),
+            connectionId = getConnectionId(),
             artists = item.artistItems?.mapNotNull { artist -> artist.name },
             artistIds = item.artistItems?.map { artist -> artist.id },
             albumArtist = item.albumArtists?.map { artist -> artist.name.toString() }
@@ -1493,7 +1493,7 @@ class JellyfinDatasourceServer @Inject constructor(
                 name = item.name ?: application.getString(R.string.unknown_artist),
                 pic = artistImageUrl,
                 backdrop = backdropImageUrl,
-                connectionId = connectionConfigServer.getConnectionId(),
+                connectionId = getConnectionId(),
                 sortName = sortName,
                 describe = item.overview,
                 musicCount = item.songCount,
@@ -1534,7 +1534,7 @@ class JellyfinDatasourceServer @Inject constructor(
             itemId = item.id,
             pic = itemImageUrl ?: "",
             name = item.name ?: application.getString(Constants.UNKNOWN_ALBUM),
-            connectionId = connectionConfigServer.getConnectionId(),
+            connectionId = getConnectionId(),
             createTime = item.dateCreated?.toSecondMs() ?: 0L,
         )
     }

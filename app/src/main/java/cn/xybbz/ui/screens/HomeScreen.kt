@@ -264,7 +264,7 @@ fun HomeScreen(
                             *homeViewModel.connectionList.map { connection ->
                                 MenuItemDefaultData(
                                     title = connection.name, leadingIcon = {
-                                        if (homeViewModel.connectionConfigServer.getConnectionId() == connection.id)
+                                        if (homeViewModel.dataSourceManager.getConnectionId() == connection.id)
                                             Icon(
                                                 Icons.Rounded.Check,
                                                 contentDescription = connection.name + stringResource(
@@ -355,7 +355,7 @@ fun HomeScreen(
                         }
 
                     IconButton(onClick = {
-                        homeViewModel.dataSourceManager.login(true)
+                        homeViewModel.autoLogin()
                     }) {
                         Icon(
                             imageVector = Icons.Rounded.Refresh,

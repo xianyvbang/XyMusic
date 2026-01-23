@@ -6,7 +6,6 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.localdata.data.genre.XyGenre
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -17,15 +16,13 @@ import javax.inject.Inject
 @HiltViewModel
 class GenresViewModel @Inject constructor(
     private val dataSourceManager: DataSourceManager,
-    private val connectionConfigServer: ConnectionConfigServer,
-    private val _backgroundConfig: BackgroundConfig
+    val backgroundConfig: BackgroundConfig
 ) : ViewModel() {
 
-    val backgroundConfig = _backgroundConfig
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val genresPage: Flow<PagingData<XyGenre>> =
-        connectionConfigServer.loginSuccessEvent
+        dataSourceManager.getLoginStateFlow()
             .flatMapLatest {
                 dataSourceManager.selectGenresPage()
             }

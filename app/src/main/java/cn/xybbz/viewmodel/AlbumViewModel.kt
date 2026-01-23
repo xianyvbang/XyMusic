@@ -21,7 +21,6 @@ package cn.xybbz.viewmodel
 import androidx.paging.PagingData
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.data.album.XyAlbum
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,9 +33,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AlbumViewModel @Inject constructor(
     val dataSourceManager: DataSourceManager,
-    val connectionConfigServer: ConnectionConfigServer,
     val backgroundConfig: BackgroundConfig
-) : PageListViewModel<XyAlbum>(connectionConfigServer) {
+) : PageListViewModel<XyAlbum>(dataSourceManager) {
 
 
     /**

@@ -5,9 +5,9 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.CoroutineScopeUtils
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.download.notification.NotificationController
 import cn.xybbz.config.download.work.DownloadWork
 import cn.xybbz.localdata.config.DatabaseClient
@@ -15,6 +15,7 @@ import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.enums.DownloadStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -29,7 +30,7 @@ class DownloadDispatcherImpl(
     private val db: DatabaseClient,
     private val workManager: WorkManager,
     var config: DownloaderConfig,
-    val connectionConfigServer: ConnectionConfigServer,
+    private val dataSourceManager: DataSourceManager,
     private val notificationController: NotificationController,
 //    private val netWorkMonitor: NetWorkMonitor
 ) : IDownloadDispatcher {
@@ -63,7 +64,7 @@ class DownloadDispatcherImpl(
         }
 
         val allTasks =
-            db.downloadDao.getAllTasksSuspend(connectionConfigServer.getConnectionId())
+            db.downloadDao.getAllTasksSuspend(dataSourceManager.getConnectionId())
         allTasks.forEach { task ->
             when (task.status) {
                 DownloadStatus.QUEUED -> readyTasks.add(task)
@@ -164,6 +165,10 @@ class DownloadDispatcherImpl(
             }
             promoteAndExecute()
         }
+    }
+
+    fun cancelAll() {
+        cancel(runningTasks.values.map { it.id })
     }
 
     fun delete(ids: List<Long>, deleteFile: Boolean) {
@@ -354,6 +359,13 @@ class DownloadDispatcherImpl(
 
     }
 
+    /**
+     * 获得登录结果的flow
+     */
+    fun getLoginCompletedFlow():SharedFlow<Boolean>{
+        return dataSourceManager.getLoginStateFlow()
+    }
+
     private fun cleanupTaskFiles(task: XyDownload) {
         try {
             // 清理临时文件
@@ -370,5 +382,12 @@ class DownloadDispatcherImpl(
         } catch (e: Exception) {
             Log.d(Constants.LOG_ERROR_PREFIX, "$e")
         }
+    }
+
+    override fun close() {
+        readyTasks.clear()
+        runningTasks.clear()
+        pausedTasks.clear()
+        failedTasks.clear()
     }
 }

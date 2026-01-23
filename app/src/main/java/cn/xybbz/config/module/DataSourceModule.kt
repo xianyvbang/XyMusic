@@ -32,9 +32,8 @@ import cn.xybbz.api.client.plex.PlexDatasourceServer
 import cn.xybbz.api.client.subsonic.SubsonicApiClient
 import cn.xybbz.api.client.subsonic.SubsonicDatasourceServer
 import cn.xybbz.api.client.version.VersionApiClient
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.alarm.AlarmConfig
-import cn.xybbz.config.favorite.FavoriteRepository
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.enums.DataSourceType
 import dagger.Module
@@ -52,14 +51,14 @@ class DataSourceModule {
     @Provides
     fun jellyfinApiServer(
         db: DatabaseClient,
-        connectionConfigServer: ConnectionConfigServer,
+        settingsManager: SettingsManager,
         jellyfinApiClient: JellyfinApiClient,
         @ApplicationContext application: Context
     ): JellyfinDatasourceServer {
         return JellyfinDatasourceServer(
             db,
             application,
-            connectionConfigServer,
+            settingsManager,
             jellyfinApiClient
         )
     }
@@ -67,14 +66,14 @@ class DataSourceModule {
     @Provides
     fun subsonicDataSourceServer(
         db: DatabaseClient,
-        connectionConfigServer: ConnectionConfigServer,
+        settingsManager: SettingsManager,
         subsonicApiClient: SubsonicApiClient,
         @ApplicationContext application: Context
     ): SubsonicDatasourceServer {
         return SubsonicDatasourceServer(
             db,
             application,
-            connectionConfigServer,
+            settingsManager,
             subsonicApiClient
         )
     }
@@ -82,14 +81,14 @@ class DataSourceModule {
     @Provides
     fun navidromeDatasourceServer(
         db: DatabaseClient,
-        connectionConfigServer: ConnectionConfigServer,
+        settingsManager: SettingsManager,
         navidromeApiClient: NavidromeApiClient,
         @ApplicationContext application: Context
     ): NavidromeDatasourceServer {
         return NavidromeDatasourceServer(
             db,
             application,
-            connectionConfigServer,
+            settingsManager,
             navidromeApiClient
         )
     }
@@ -97,14 +96,14 @@ class DataSourceModule {
     @Provides
     fun embyDatasourceServer(
         db: DatabaseClient,
-        connectionConfigServer: ConnectionConfigServer,
+        settingsManager: SettingsManager,
         embyApiClient: EmbyApiClient,
         @ApplicationContext application: Context
     ): EmbyDatasourceServer {
         return EmbyDatasourceServer(
             db,
             application,
-            connectionConfigServer,
+            settingsManager,
             embyApiClient
         )
     }
@@ -113,14 +112,14 @@ class DataSourceModule {
     @Provides
     fun plexDatasourceServer(
         db: DatabaseClient,
-        connectionConfigServer: ConnectionConfigServer,
+        settingsManager: SettingsManager,
         plexApiClient: PlexApiClient,
         @ApplicationContext application: Context
     ): PlexDatasourceServer {
         return PlexDatasourceServer(
             db,
             application,
-            connectionConfigServer,
+            settingsManager,
             plexApiClient
         )
     }
@@ -132,16 +131,13 @@ class DataSourceModule {
         @ApplicationContext application: Context,
         db: DatabaseClient,
         dataSources: Map<DataSourceType, @JvmSuppressWildcards Provider<IDataSourceParentServer>>,
-        connectionConfigServer: ConnectionConfigServer,
         alarmConfig: AlarmConfig,
-        favoriteRepository: FavoriteRepository,
         versionApiClient: VersionApiClient
     ): DataSourceManager {
         val dataSourceManager = DataSourceManager(
             application = application,
             db,
             dataSources,
-            connectionConfigServer,
             alarmConfig,
             versionApiClient
         )

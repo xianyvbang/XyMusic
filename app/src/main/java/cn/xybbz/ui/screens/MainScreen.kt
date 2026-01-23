@@ -69,7 +69,7 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
                 navigator: Navigator,
                 destination: NavKey
             ) {
-                mainViewModel.connectionConfigServer.updateIfShowSnackBar(destination !is Connection)
+                mainViewModel.updateIfShowSnackBar(destination !is Connection)
             }
         })
         navigator.addOnDestinationChangedListener(object : OnDestinationChangedListener {
@@ -141,7 +141,7 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
             },
         ) {
 
-            RootNavTransition(!mainViewModel.connectionConfigServer.ifConnectionConfig) { bool ->
+            RootNavTransition(!mainViewModel.settingsManager.ifConnectionConfig) { bool ->
                 if (bool) {
                     ConnectionScreen(connectionUiType = null)
                 } else {
@@ -165,7 +165,7 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
 @Composable
 private fun SnackBarHostUi(modifier: Modifier = Modifier) {
     val mainViewModel = LocalMainViewModel.current
-    if (mainViewModel.connectionConfigServer.ifShowSnackBar)
+    if (mainViewModel.settingsManager.ifShowSnackBar)
         Column(modifier = Modifier.then(modifier)) {
             SnackBarPlayerComponent(
                 onClick = {

@@ -45,7 +45,7 @@ class SettingsManager(
     private val applicationContext: Context,
     private val audioFadeController: AudioFadeController,
     private val netWorkMonitor: NetWorkMonitor
-) {
+){
 
     private var settings: XySettings? = null
 
@@ -69,6 +69,15 @@ class SettingsManager(
     lateinit var packageInfo: PackageInfo
         private set
 
+    //是否有连接配置
+    var ifConnectionConfig by mutableStateOf(false)
+        private set
+
+    //是否显示SnackBar
+    var ifShowSnackBar by mutableStateOf(false)
+        private set
+
+
     //是否设置转码音质
     private val _transcodingFlow = MutableSharedFlow<Boolean>(0, extraBufferCapacity = 1)
     val transcodingFlow = _transcodingFlow.asSharedFlow()
@@ -86,6 +95,8 @@ class SettingsManager(
     suspend fun setSettingsData() {
         Log.i("=====", "开始存储设置")
         this.settings = db.settingsDao.selectOneData() ?: XySettings()
+
+        updateIfConnectionConfig(this.get().connectionId != null)
         if (this.get().languageType != null) {
             this.languageType = this.get().languageType
         } else {
@@ -470,6 +481,21 @@ class SettingsManager(
     fun getStatic(): Boolean {
         val audioBitRate = getAudioBitRate()
         return if (get().ifTranscoding) true else if (audioBitRate == 0) true else false
+    }
+
+    /**
+     * 更新是否存在连接设置
+     */
+    fun updateIfConnectionConfig(ifConnectionConfig: Boolean) {
+        this.ifConnectionConfig = ifConnectionConfig
+        updateIfShowSnackBar(ifConnectionConfig)
+    }
+
+    /**
+     * 更新是否显示底部ShowSnackBar
+     */
+    fun updateIfShowSnackBar(ifShowSnackBar: Boolean) {
+        this.ifShowSnackBar = ifShowSnackBar
     }
 
 }

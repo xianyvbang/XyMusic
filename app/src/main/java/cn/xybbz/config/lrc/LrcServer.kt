@@ -29,7 +29,6 @@ import cn.xybbz.common.enums.LrcDataType
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.common.utils.LrcUtils.getIndex
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.lrc.XyLrcConfig
@@ -42,9 +41,8 @@ import kotlinx.coroutines.launch
 
 class LrcServer(
     private val musicController: MusicController,
-    private val ataSourceManager: DataSourceManager,
-    private val db: DatabaseClient,
-    private val connectionConfigServer: ConnectionConfigServer
+    private val dataSourceManager: DataSourceManager,
+    private val db: DatabaseClient
 ) {
 
     /**
@@ -58,7 +56,7 @@ class LrcServer(
     var lrcText by mutableStateOf<String?>(null)
         private set
 
-    var itemId by mutableStateOf<String>("")
+    var itemId by mutableStateOf("")
         private set
 
     val lrcCoroutineScope = CoroutineScopeUtils.getIo("LrcServer")
@@ -94,7 +92,7 @@ class LrcServer(
         lrcCoroutineScope.launch {
             if (_lcrEntryListFlow.value.isEmpty()) {
                 musicController.musicInfo?.itemId?.let { itemId ->
-                    val musicLyricList = ataSourceManager.getMusicLyricList(itemId)
+                    val musicLyricList = dataSourceManager.getMusicLyricList(itemId)
                     if (!musicLyricList.isNullOrEmpty())
                         createLrcList(musicLyricList, LrcDataType.NETWORK)
                 }
@@ -128,7 +126,7 @@ class LrcServer(
             }
 
         }
-        Log.i("createLrcList", "随机数111 ${lrcDataType} 歌词列表：${_lcrEntryListFlow.value}")
+        Log.i("createLrcList", "随机数111 $lrcDataType 歌词列表：${_lcrEntryListFlow.value}")
     }
 
     fun clear() {
@@ -143,7 +141,7 @@ class LrcServer(
         this.lrcConfig = db.lrcConfigDao.getLrcConfig(itemId) ?: XyLrcConfig(
             itemId = itemId,
             lrcOffsetMs = 0L,
-            connectionId = connectionConfigServer.getConnectionId()
+            connectionId = dataSourceManager.getConnectionId()
         )
     }
 
@@ -151,7 +149,7 @@ class LrcServer(
         return this.lrcConfig ?: XyLrcConfig(
             itemId = itemId,
             lrcOffsetMs = 0L,
-            connectionId = connectionConfigServer.getConnectionId()
+            connectionId = dataSourceManager.getConnectionId()
         )
     }
 
@@ -163,7 +161,7 @@ class LrcServer(
                 XyLrcConfig(
                     itemId = itemId,
                     lrcOffsetMs = offsetMs,
-                    connectionId = connectionConfigServer.getConnectionId()
+                    connectionId = dataSourceManager.getConnectionId()
                 )
 
             val id = db.lrcConfigDao.insert(xyLrcConfig)

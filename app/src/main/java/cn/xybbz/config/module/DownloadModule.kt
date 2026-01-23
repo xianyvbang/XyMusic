@@ -3,8 +3,8 @@ package cn.xybbz.config.module
 import android.content.Context
 import android.os.Environment
 import androidx.work.WorkManager
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.download.core.DownloadDispatcherImpl
 import cn.xybbz.config.download.core.DownloaderConfig
@@ -29,7 +29,7 @@ class DownloadModule {
     fun downloadDispatcher(
         db: DatabaseClient,
         @ApplicationContext applicationContext: Context,
-        connectionConfigServer: ConnectionConfigServer,
+        dataSourceManager: DataSourceManager,
         notificationController: NotificationController,
         settingsManager: SettingsManager,
         workManager: WorkManager
@@ -41,7 +41,7 @@ class DownloadModule {
             DownloaderConfig.Builder(applicationContext)
                 .setFinalDirectory("${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath}/${Constants.APP_NAME}")
                 .setMaxConcurrentDownloads(settings.maxConcurrentDownloads).build(),
-            connectionConfigServer,
+            dataSourceManager,
             notificationController
         )
         return downloadDispatcherImpl

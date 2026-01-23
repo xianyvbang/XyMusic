@@ -9,7 +9,6 @@ import androidx.paging.cachedIn
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.select.SelectControl
@@ -33,7 +32,6 @@ class ArtistInfoViewModel @AssistedInject constructor(
     @Assisted private val artistId: String,
     val dataSourceManager: DataSourceManager,
     val musicPlayContext: MusicPlayContext,
-    val connectionConfigServer: ConnectionConfigServer,
     val musicController: MusicController,
     val favoriteRepository: FavoriteRepository,
     val downloadRepository: DownloadRepository,
@@ -68,7 +66,7 @@ class ArtistInfoViewModel @AssistedInject constructor(
     //艺术家的音乐列表
     @OptIn(ExperimentalCoroutinesApi::class)
     val musicList =
-        connectionConfigServer.loginSuccessEvent
+        dataSourceManager.getLoginStateFlow()
             .flatMapLatest {
                 dataSourceManager.selectMusicListByArtistId(artistId).distinctUntilChanged()
             }
@@ -78,7 +76,7 @@ class ArtistInfoViewModel @AssistedInject constructor(
     //艺术家的专辑列表
     @OptIn(ExperimentalCoroutinesApi::class)
     val albumList =
-        connectionConfigServer.loginSuccessEvent
+        dataSourceManager.getLoginStateFlow()
             .flatMapLatest {
                 dataSourceManager.selectAlbumListByArtistId(artistId).distinctUntilChanged()
             }
@@ -86,7 +84,7 @@ class ArtistInfoViewModel @AssistedInject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val resemblanceArtistList =
-        connectionConfigServer.loginSuccessEvent
+        dataSourceManager.getLoginStateFlow()
             .flatMapLatest {
                 dataSourceManager.getResemblanceArtist(artistId).distinctUntilChanged()
             }

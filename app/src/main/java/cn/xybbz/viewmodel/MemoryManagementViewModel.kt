@@ -36,7 +36,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.DownloadCacheController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
+import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -52,11 +52,10 @@ class MemoryManagementViewModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val dataSourceManager: DataSourceManager,
     private val musicController: MusicController,
-    private val _backgroundConfig: BackgroundConfig,
-    private val connectionConfigServer: ConnectionConfigServer
+    val backgroundConfig: BackgroundConfig,
+    private val downLoadManager: DownLoadManager
 ) : ViewModel() {
 
-    val backgroundConfig = _backgroundConfig
 
     var cacheSize by mutableStateOf("0B")
         private set
@@ -248,6 +247,8 @@ class MemoryManagementViewModel @Inject constructor(
      */
     fun clearDatabaseData() {
         viewModelScope.launch {
+            downLoadManager.close()
+
             db.withTransaction {
                 db.clearAllTables()
             }
@@ -255,9 +256,8 @@ class MemoryManagementViewModel @Inject constructor(
 
             //取消缓存
             musicController.clearPlayerList()
-            dataSourceManager.release()
+            dataSourceManager.close()
             settingsManager.setSettingsData()
-            connectionConfigServer.close()
         }
     }
 

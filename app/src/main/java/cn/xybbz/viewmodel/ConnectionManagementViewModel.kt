@@ -11,7 +11,6 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.DataSourceChangeUtils
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,19 +20,15 @@ import javax.inject.Inject
 @HiltViewModel
 @OptIn(UnstableApi::class)
 class ConnectionManagementViewModel @Inject constructor(
-    private val _connectionConfigServer: ConnectionConfigServer,
-    private val _dataSourceManager: DataSourceManager,
+    val dataSourceManager: DataSourceManager,
     private val db: DatabaseClient,
     private val musicController: MusicController,
-    private val _backgroundConfig: BackgroundConfig
+    val backgroundConfig: BackgroundConfig
 ) : ViewModel() {
 
     //获得所有链接信息
     var connectionList by mutableStateOf<List<ConnectionConfig>>(emptyList())
 
-    val connectionConfigServer = _connectionConfigServer
-    val dataSourceManager = _dataSourceManager
-    val backgroundConfig = _backgroundConfig
 
     init {
         getConnectionListData()

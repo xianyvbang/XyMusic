@@ -6,9 +6,9 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.RemoteIdConstants
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.localdata.config.DatabaseClient
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.minutes
@@ -16,7 +16,7 @@ import kotlin.time.Duration.Companion.minutes
 class MediaLibraryAndFavoriteSyncScheduler @Inject constructor(
     private val workManager: WorkManager,
     private val db: DatabaseClient,
-    private val connectionConfigServer: ConnectionConfigServer
+    private val dataSourceManager: DataSourceManager
 ) {
 
     val tag = "media_sync"
@@ -28,7 +28,7 @@ class MediaLibraryAndFavoriteSyncScheduler @Inject constructor(
             .build()
 
         val request = OneTimeWorkRequestBuilder<MediaLibraryAndFavoriteSyncWorker>()
-            .setInputData(workDataOf(Constants.CONNECTION_ID to connectionConfigServer.getConnectionId()))
+            .setInputData(workDataOf(Constants.CONNECTION_ID to dataSourceManager.getConnectionId()))
             .setConstraints(constraints)
             .addTag(tag)
             .build()

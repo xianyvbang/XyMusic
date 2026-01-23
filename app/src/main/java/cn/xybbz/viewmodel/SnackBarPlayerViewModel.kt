@@ -28,7 +28,6 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.DownloadCacheController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.MessageUtils
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.download.core.DownloadRequest
 import cn.xybbz.config.select.SelectControl
@@ -46,8 +45,7 @@ class SnackBarPlayerViewModel @Inject constructor(
     private val downloadCacheController: DownloadCacheController,
     val dataSourceManager: DataSourceManager,
     val selectControl: SelectControl,
-    private val downloadManager: DownLoadManager,
-    val connectionConfigServer: ConnectionConfigServer
+    private val downloadManager: DownLoadManager
 ) : ViewModel() {
 
 
@@ -79,7 +77,7 @@ class SnackBarPlayerViewModel @Inject constructor(
                     type = downloadTypes,
                     cover = musicData.pic,
                     duration = musicData.runTimeTicks,
-                    connectionId = connectionConfigServer.getConnectionId(),
+                    connectionId = dataSourceManager.getConnectionId(),
                     music = musicData
                 )
             }

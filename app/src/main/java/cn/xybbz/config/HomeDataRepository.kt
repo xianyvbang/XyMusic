@@ -1,7 +1,6 @@
 package cn.xybbz.config
 
-import cn.xybbz.common.utils.CoroutineScopeUtils
-import cn.xybbz.config.connection.ConnectionConfigServer
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.count.XyDataCount
@@ -16,9 +15,8 @@ import kotlinx.coroutines.launch
 
 class HomeDataRepository(
     private val db: DatabaseClient,
-    private val connectionConfigServer: ConnectionConfigServer
+    private val dataSourceManager: DataSourceManager
 ) {
-    private val scope = CoroutineScopeUtils.getIo("HomeDataRepository")
 
     private val _mostPlayedMusic = MutableStateFlow<List<XyMusicExtend>>(emptyList())
     private val _newestAlbums = MutableStateFlow<List<XyAlbum>>(emptyList())
@@ -41,24 +39,27 @@ class HomeDataRepository(
 
     private var collectJobs = mutableListOf<Job>()
 
+   suspend fun initData(){
+        loadOnce()
+    }
 
-    init {
+    /**
+     * 执行登录状态数据监听
+     */
+    suspend fun initLoginChangeMonitor(){
+        dataSourceManager.getLoginStateFlow().collect { user ->
+            //切用户：取消旧监听
+            collectJobs.forEach { it.cancel() }
+            collectJobs.clear()
 
-        scope.launch {
-            connectionConfigServer.loginSuccessEvent.collect { user ->
-                //切用户：取消旧监听
-                collectJobs.forEach { it.cancel() }
-                collectJobs.clear()
+            //清空旧缓存（防串数据）
+            clearAll()
 
-                //清空旧缓存（防串数据）
-                clearAll()
+            //首次加载（不阻塞 UI）
+            loadOnce()
 
-                //首次加载（不阻塞 UI）
-                loadOnce()
-
-                //监听数据库变化
-                observeFlows()
-            }
+            //监听数据库变化
+            observeFlows()
         }
     }
 
@@ -98,57 +99,57 @@ class HomeDataRepository(
         }
     }
 
-    private fun observeFlows() {
-        collectJobs += scope.launch {
+    private suspend fun observeFlows() =coroutineScope{
+        collectJobs += launch {
             db.musicDao
                 .selectLimitMusicListFlow(MusicDataTypeEnum.MAXIMUM_PLAY, 20)
                 .distinctUntilChanged()
                 .collect { _mostPlayedMusic.value = it }
         }
 
-        collectJobs += scope.launch {
+        collectJobs += launch {
             db.albumDao
                 .selectNewestListFlow(20)
                 .distinctUntilChanged()
                 .collect { _newestAlbums.value = it }
         }
 
-        collectJobs += scope.launch {
+        collectJobs += launch {
             db.musicDao
                 .selectLimitMusicListFlow(MusicDataTypeEnum.PLAY_HISTORY, 20)
                 .distinctUntilChanged()
                 .collect { _recentMusic.value = it }
         }
 
-        collectJobs += scope.launch {
+        collectJobs += launch {
             db.albumDao
                 .selectPlayHistoryAlbumListFlow(20)
                 .distinctUntilChanged()
                 .collect { _recentAlbums.value = it }
         }
 
-        collectJobs += scope.launch {
+        collectJobs += launch {
             db.albumDao
                 .selectMaximumPlayAlbumListFlow(20)
                 .distinctUntilChanged()
                 .collect { _mostPlayedAlbums.value = it }
         }
 
-        collectJobs += scope.launch {
+        collectJobs += launch {
             db.musicDao
                 .selectRecommendedMusicExtendListFlow(20)
                 .distinctUntilChanged()
                 .collect { _recommendedMusic.value = it }
         }
 
-        collectJobs += scope.launch {
+        collectJobs += launch {
             db.albumDao
                 .selectPlaylistFlow()
                 .distinctUntilChanged()
                 .collect { _playlists.value = it }
         }
 
-        collectJobs += scope.launch {
+        collectJobs += launch {
             db.dataCountDao
                 .selectOneFlow()
                 .distinctUntilChanged()

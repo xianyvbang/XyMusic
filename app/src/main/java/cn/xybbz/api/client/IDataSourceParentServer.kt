@@ -77,6 +77,7 @@ import com.github.promeg.pinyinhelper.Pinyin
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
@@ -103,7 +104,7 @@ abstract class IDataSourceParentServer(
     /**
      * 登录状态
      */
-    private val _loginSuccessEvent = MutableSharedFlow<Unit>(
+    private val _loginSuccessEvent = MutableSharedFlow<Boolean>(
         replay = 1,
         extraBufferCapacity = 1
     )
@@ -223,7 +224,7 @@ abstract class IDataSourceParentServer(
             emitAll(loginAfter(connectionConfig))
         }.flowOn(Dispatchers.IO).catch {
             it.printStackTrace()
-            sendLoginSuccess()
+            sendLoginCompleted(false)
             when (it) {
                 is SocketTimeoutException -> {
                     emit(ClientLoginInfoState.ServiceTimeOutState)
@@ -247,7 +248,9 @@ abstract class IDataSourceParentServer(
     /**
      * 登录后的数据
      */
-    private fun loginAfter(connectionConfig: ConnectionConfig): Flow<ClientLoginInfoState> {
+    private fun loginAfter(
+        connectionConfig: ConnectionConfig
+    ): Flow<ClientLoginInfoState> {
         return flow {
             db.withTransaction {
                 val connectionId = if (connectionConfig.id != 0L) {
@@ -258,11 +261,12 @@ abstract class IDataSourceParentServer(
                 }
 
                 if (!ifTmpObject()) {
-                    this@IDataSourceParentServer.connectionConfig = connectionConfig.copy(id = connectionId)
+                    this@IDataSourceParentServer.connectionConfig =
+                        connectionConfig.copy(id = connectionId)
 //                    selectMediaLibrary()
                     setCoilImageOkHttpClient()
 
-                    connection(connectionConfig.copy(id = connectionId))
+                    connection(connectionConfig.copy(id = connectionId), connectionConfig.id != 0L)
                     MessageUtils.sendDismiss()
                 }
             }
@@ -304,13 +308,20 @@ abstract class IDataSourceParentServer(
     /**
      * 自动登录
      */
-    override suspend fun autoLogin(loginType: LoginType): Flow<ClientLoginInfoState> {
+    override suspend fun autoLogin(
+        loginType: LoginType,
+        connectionConfig: ConnectionConfig?
+    ): Flow<ClientLoginInfoState> {
 
 
         //获得启用的连接信息
-        val connectionConfig = db.connectionConfigDao.selectConnectionConfig() ?: return flowOf(
-            ClientLoginInfoState.SelectServer
-        )
+        val connectionConfig =
+            connectionConfig ?: this.connectionConfig
+            ?: db.connectionConfigDao.selectConnectionConfig() ?: return flowOf(
+                ClientLoginInfoState.SelectServer
+            )
+
+        this.connectionConfig = connectionConfig
 
         val address = connectionConfig.address
 
@@ -376,7 +387,7 @@ abstract class IDataSourceParentServer(
 
         }.flowOn(Dispatchers.IO).catch {
             Log.e(Constants.LOG_ERROR_PREFIX, "自动登录异常 ${it.message}", it)
-            sendLoginSuccess()
+            sendLoginCompleted(false)
             when (it) {
                 is SocketTimeoutException -> {
                     emit(ClientLoginInfoState.ServiceTimeOutState)
@@ -869,7 +880,6 @@ abstract class IDataSourceParentServer(
     }
 
 
-
     /**
      * 创建歌单
      */
@@ -1144,11 +1154,43 @@ abstract class IDataSourceParentServer(
         return connectionConfig?.address ?: ""
     }
 
-    suspend fun connection(connectionConfig: ConnectionConfig) {
-        this.connectionConfig = connectionConfig
+    /**
+     * 获得登录成功flow
+     */
+    override fun getLoginStateFlow(): SharedFlow<Boolean> {
+        return loginSuccessEvent
+    }
+
+    /**
+     * 更新媒体库设置
+     */
+    override suspend fun updateLibraryId(libraryId: String?, connectionId: Long) {
+        if (connectionId == getConnectionId()) {
+            setUpLibraryId(libraryId)
+        } else {
+            db.connectionConfigDao.updateLibraryId(
+                libraryId = libraryId,
+                connectionId = connectionId
+            )
+        }
+    }
+
+    /**
+     * 更新连接设置
+     */
+    override suspend fun updateConnectionConfig(connectionConfig: ConnectionConfig) {
+        db.connectionConfigDao.update(connectionConfig)
+    }
+
+    /**
+     * 写入连接信息
+     */
+    suspend fun connection(connectionConfig: ConnectionConfig, ifAutoLogin: Boolean) {
+        if (!ifAutoLogin)
+            this.connectionConfig = connectionConfig
         settingsManager.saveConnectionId(connectionId = connectionConfig.id)
         setUpLibraryId(connectionConfig.libraryId)
-        sendLoginSuccess()
+        sendLoginCompleted(true)
     }
 
     fun unConnection() {
@@ -1159,12 +1201,19 @@ abstract class IDataSourceParentServer(
     /**
      * 设置媒体库id
      */
-    private fun setUpLibraryId(libraryId: String?) {
+    protected open suspend fun setUpLibraryId(libraryId: String?) {
         this.libraryId = libraryId
+        db.connectionConfigDao.updateLibraryId(
+            libraryId = libraryId,
+            connectionId = getConnectionId()
+        )
     }
 
-    private suspend fun sendLoginSuccess() {
-        _loginSuccessEvent.emit(Unit)
+    /**
+     * 发送登录动作完成通知(不管失败或成功)
+     */
+    private suspend fun sendLoginCompleted(ifSuccess: Boolean) {
+        _loginSuccessEvent.emit(ifSuccess)
     }
 
 

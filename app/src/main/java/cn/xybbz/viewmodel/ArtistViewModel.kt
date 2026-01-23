@@ -10,7 +10,6 @@ import androidx.paging.cachedIn
 import androidx.paging.filter
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.entity.data.ArtistFilter
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtistExt
@@ -31,7 +30,6 @@ import javax.inject.Inject
 @HiltViewModel
 class ArtistViewModel @Inject constructor(
     private val dataSourceManager: DataSourceManager,
-    connectionConfigServer: ConnectionConfigServer,
     private val db: DatabaseClient,
     val backgroundConfig: BackgroundConfig
 ) : ViewModel() {
@@ -60,7 +58,7 @@ class ArtistViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     // 先定义 artistListPage
     val artistListPage: Flow<PagingData<XyArtistExt>> =
-        connectionConfigServer.loginSuccessEvent
+        dataSourceManager.getLoginStateFlow()
             .flatMapLatest {
                 dataSourceManager.selectArtistFlowList()
             }
@@ -74,7 +72,6 @@ class ArtistViewModel @Inject constructor(
             }
         }
             .cachedIn(viewModelScope) // 外层只缓存一次
-
 
 
     fun setFavoriteFilterData(isFavorite: Boolean?) {
@@ -98,7 +95,7 @@ class ArtistViewModel @Inject constructor(
     fun getSelectCharList() {
         viewModelScope.launch {
             db.artistDao.getSelectCharList().collect {
-                selectArtistChars = it.map { it[0].uppercaseChar() }.distinct()
+                selectArtistChars = it.map { char -> char[0].uppercaseChar() }.distinct()
             }
         }
     }

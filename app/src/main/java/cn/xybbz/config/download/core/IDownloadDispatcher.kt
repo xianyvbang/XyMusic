@@ -1,8 +1,9 @@
 package cn.xybbz.config.download.core
 
 import cn.xybbz.localdata.enums.DownloadStatus
+import java.lang.AutoCloseable
 
-interface IDownloadDispatcher {
+interface IDownloadDispatcher: AutoCloseable {
 
     fun onProgress(
         downloadId: Long,

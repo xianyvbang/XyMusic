@@ -43,9 +43,6 @@ class SettingsModule {
         audioFadeController: AudioFadeController,
         netWorkMonitor: NetWorkMonitor
     ): SettingsManager {
-        val settingsManager =
-            SettingsManager(db, applicationContext, audioFadeController, netWorkMonitor)
-        settingsManager.setSettingsData()
-        return settingsManager;
+        return SettingsManager(db, applicationContext, audioFadeController, netWorkMonitor);
     }
 }

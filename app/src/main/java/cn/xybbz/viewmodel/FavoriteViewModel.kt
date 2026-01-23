@@ -6,7 +6,6 @@ import androidx.paging.cachedIn
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.entity.data.music.MusicPlayContext
@@ -20,7 +19,6 @@ import javax.inject.Inject
 class FavoriteViewModel @Inject constructor(
     private val dataSourceManager: DataSourceManager,
     val musicPlayContext: MusicPlayContext,
-    val connectionConfigServer: ConnectionConfigServer,
     val musicController: MusicController,
     val favoriteRepository: FavoriteRepository,
     val downloadRepository: DownloadRepository,
@@ -29,7 +27,7 @@ class FavoriteViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val favoriteMusicList =
-        connectionConfigServer.loginSuccessEvent
+        dataSourceManager.getLoginStateFlow()
             .flatMapLatest {
                 dataSourceManager.selectFavoriteMusicFlowList()
             }

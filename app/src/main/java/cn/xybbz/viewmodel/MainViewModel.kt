@@ -46,7 +46,6 @@ import cn.xybbz.common.music.PlayerEvent
 import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.alarm.AlarmConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.setting.SettingsManager
@@ -82,7 +81,6 @@ class MainViewModel @Inject constructor(
     val db: DatabaseClient,
     private val musicController: MusicController,
     val dataSourceManager: DataSourceManager,
-    val connectionConfigServer: ConnectionConfigServer,
     val settingsManager: SettingsManager,
     val backgroundConfig: BackgroundConfig,
     private val musicPlayContext: MusicPlayContext,
@@ -195,7 +193,7 @@ class MainViewModel @Inject constructor(
         musicController.initController {
             // 查询是否存在播放列表,如果存在将内容写入
             viewModelScope.launch {
-                connectionConfigServer.loginSuccessEvent.collect {
+                dataSourceManager.getLoginStateFlow().collect {
                     startPlayerListObserver()
                 }
             }
@@ -312,7 +310,7 @@ class MainViewModel @Inject constructor(
                             PlayHistoryMusic(
                                 musicId = musicId,
                                 index = index - 1,
-                                connectionId = connectionConfigServer.getConnectionId()
+                                connectionId = dataSourceManager.getConnectionId()
                             )
                         )
                     )
@@ -347,7 +345,7 @@ class MainViewModel @Inject constructor(
                     PlayQueueMusic(
                         musicId = it.itemId,
                         index = index,
-                        connectionId = connectionConfigServer.getConnectionId()
+                        connectionId = dataSourceManager.getConnectionId()
                     )
                 }
                 if (xyMusicList.isNotEmpty()) {
@@ -364,7 +362,7 @@ class MainViewModel @Inject constructor(
                     val player =
                         db.playerDao.selectPlayerByDataSource()
                     val xyPlayer = XyPlayer(
-                        connectionId = connectionConfigServer.getConnectionId(),
+                        connectionId = dataSourceManager.getConnectionId(),
                         dataType = musicController.playDataType,
                         musicId = musicController.musicInfo?.itemId ?: "",
                         headTime = musicController.headTime,
@@ -411,7 +409,7 @@ class MainViewModel @Inject constructor(
 
     private fun observeLoginSuccessForAndProgress() {
         viewModelScope.launch {
-            connectionConfigServer.loginSuccessEvent.collect {
+            dataSourceManager.getLoginStateFlow().collect {
                 startEnableProgressObserver()
             }
         }
@@ -493,7 +491,7 @@ class MainViewModel @Inject constructor(
      */
     fun initMediaLibraryAndFavoriteSync() {
         viewModelScope.launch {
-            connectionConfigServer.loginSuccessEvent.collect {
+            dataSourceManager.getLoginStateFlow().collect {
                 startMediaLibraryAndFavoriteSync()
             }
         }
@@ -637,7 +635,7 @@ class MainViewModel @Inject constructor(
         db.playerDao.save(
             XyPlayer(
                 playerType = playerTypeEnum,
-                connectionId = connectionConfigServer.getConnectionId(),
+                connectionId = dataSourceManager.getConnectionId(),
                 dataType = musicController.playDataType,
                 pageSize = 0
             )
@@ -663,7 +661,7 @@ class MainViewModel @Inject constructor(
                 progressPercentage = progressPercentage,
                 index = index,
                 musicName = musicName,
-                connectionId = connectionConfigServer.getConnectionId()
+                connectionId = dataSourceManager.getConnectionId()
             )
         )
     }
@@ -705,10 +703,17 @@ class MainViewModel @Inject constructor(
                     server.defaultParentApiClient.eventBus.events
                 }
                 .onEach { event ->
-                    if (event is ReLoginEvent.Unauthorized) dataSourceManager.serverLogin(loginType = LoginType.API)
+                    if (event is ReLoginEvent.Unauthorized) dataSourceManager.serverLogin(
+                        loginType = LoginType.API,
+                        null
+                    )
                 }
                 .launchIn(viewModelScope)
         }
+    }
+
+    fun updateIfShowSnackBar(ifShowSnackBar: Boolean) {
+        settingsManager.updateIfShowSnackBar(ifShowSnackBar)
     }
 
 }

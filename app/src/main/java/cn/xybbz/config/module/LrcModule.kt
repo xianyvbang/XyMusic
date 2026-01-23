@@ -2,7 +2,6 @@ package cn.xybbz.config.module
 
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.MusicController
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.localdata.config.DatabaseClient
 import dagger.Module
@@ -19,11 +18,10 @@ class LrcModule {
     @Provides
     fun lrcServer(
         musicController: MusicController,
-        ataSourceManager: DataSourceManager,
+        dataSourceManager: DataSourceManager,
         db: DatabaseClient,
-        connectionConfigServer: ConnectionConfigServer
     ): LrcServer {
-        val lrcServer = LrcServer(musicController, ataSourceManager, db, connectionConfigServer)
+        val lrcServer = LrcServer(musicController, dataSourceManager, db,)
         return lrcServer
     }
 }

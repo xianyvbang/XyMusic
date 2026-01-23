@@ -67,6 +67,7 @@ import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
 import java.lang.AutoCloseable
@@ -90,13 +91,7 @@ class DataSourceManager(
     var dataSourceType by mutableStateOf<DataSourceType?>(null)
         private set
 
-    //是否有连接配置
-    var ifConnectionConfig by mutableStateOf(false)
-        private set
 
-    //是否显示SnackBar
-    var ifShowSnackBar by mutableStateOf(false)
-        private set
 
     /**
      * 用户数据源数据信息服务类
@@ -130,11 +125,7 @@ class DataSourceManager(
      * 初始化对象信息
      */
     suspend fun initDataSource() {
-        login(LoginType.TOKEN)
-    }
-
-    suspend fun login(loginType: LoginType = LoginType.TOKEN) {
-        serverLogin(loginType)
+        serverLogin(LoginType.TOKEN,null)
     }
 
     /**
@@ -155,9 +146,9 @@ class DataSourceManager(
     /**
      * 登陆服务端
      */
-    suspend fun serverLogin(loginType: LoginType) {
+    suspend fun serverLogin(loginType: LoginType = LoginType.TOKEN,connectionConfig: ConnectionConfig?) {
         ifLoginError = false
-        autoLogin(loginType).collect { loginState ->
+        autoLogin(loginType,connectionConfig).collect { loginState ->
             loginStatus = loginState
     //                ifLoginError = false
             val loginSateInfo = getLoginSateInfo(loginState)
@@ -281,9 +272,7 @@ class DataSourceManager(
     suspend fun changeDataSource(connectionConfig: ConnectionConfig) {
         clear()
         switchDataSource(connectionConfig.type)
-        //todo 这里改成setting更新就行了
-        dataSourceServer.connection(connectionConfig)
-        login()
+        serverLogin(connectionConfig = connectionConfig)
     }
 
     override fun ifTmpObject(): Boolean {
@@ -302,10 +291,10 @@ class DataSourceManager(
         return dataSourceServer.addClientAndLogin(clientLoginInfoReq)
     }
 
-    override suspend fun autoLogin(loginType: LoginType): Flow<ClientLoginInfoState> {
+    override suspend fun autoLogin(loginType: LoginType, connectionConfig: ConnectionConfig?): Flow<ClientLoginInfoState> {
         loading = true
         Log.i("=====", "开始登录.............")
-        return dataSourceServer.autoLogin(loginType)
+        return dataSourceServer.autoLogin(loginType, connectionConfig)
     }
 
     /**
@@ -1086,6 +1075,27 @@ class DataSourceManager(
     }
 
     /**
+     * 更新连接设置
+     */
+    override suspend fun updateConnectionConfig(connectionConfig: ConnectionConfig) {
+        dataSourceServer.updateConnectionConfig(connectionConfig)
+    }
+
+    /**
+     * 获得登录成功flow
+     */
+    override fun getLoginStateFlow(): SharedFlow<Boolean> {
+        return dataSourceServer.getLoginStateFlow()
+    }
+
+    /**
+     * 更新媒体库id
+     */
+    override suspend fun updateLibraryId(libraryId: String?, connectionId: Long) {
+        return dataSourceServer.updateLibraryId(libraryId, connectionId)
+    }
+
+    /**
      * 设置收藏音乐信息
      */
     @Transaction
@@ -1185,33 +1195,21 @@ class DataSourceManager(
         dataSourceServer.defaultParentApiClient.eventBus.notify(ReLoginEvent.Unauthorized)
     }
 
-    /**
-     * 更新是否存在连接设置
-     */
-    private fun updateIfConnectionConfig(ifConnectionConfig: Boolean) {
-        this.ifConnectionConfig = ifConnectionConfig
-        updateIfShowSnackBar(ifConnectionConfig)
-    }
 
-    /**
-     * 更新是否显示底部ShowSnackBar
-     */
-    fun updateIfShowSnackBar(ifShowSnackBar: Boolean) {
-        this.ifShowSnackBar = ifShowSnackBar
-    }
 
     /**
      * 释放
      */
     private fun clear() {
+
+    }
+
+    override fun close() {
+        versionApiClient.release()
         dataSourceServer.close()
         dataSourceServerFlow.value = null
         dataSourceType = null
         //取消定时任务
         alarmConfig.cancelAllAlarm()
-    }
-
-    override fun close() {
-        clear()
     }
 }
