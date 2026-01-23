@@ -1043,12 +1043,10 @@ class PlexDatasourceServer @Inject constructor(
                 val librariesList = db.libraryDao.selectListByDataSourceType()
                 if (librariesList.isNotEmpty()) {
                     val library = librariesList[0]
-                    db.connectionConfigDao.updateLibraryId(
+                    connectionConfigServer.updateLibraryId(
                         libraryId = library.id,
                         connectionId = connectionConfigServer.getConnectionId()
                     )
-                    if (connectionConfigServer.libraryId.isNullOrBlank())
-                        connectionConfigServer.updateLibraryId(library.id)
                 }
             }
         }
@@ -1355,8 +1353,8 @@ class PlexDatasourceServer @Inject constructor(
     /**
      * 释放
      */
-    override fun release() {
-        super.release()
+    override fun close() {
+        super.close()
         plexApiClient.release()
     }
 

@@ -137,22 +137,26 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
      * 更新用户密码,并且判断是否需要重新登录
      */
     fun savePasswordAndLogin() {
-        viewModelScope.launch {
-            //更新密码
-            val encryptAES = PasswordUtils.encryptAES(password ?: "")
-            db.connectionConfigDao.updatePassword(
-                currentPassword = encryptAES.aesData,
-                iv = encryptAES.aesIv,
-                key = encryptAES.aesKey,
-                connectionId = connectionId
-            )
-            if (connectionConfigServer.getConnectionId() == connectionId) {
-                viewModelScope.launch {
-                    dataSourceManager.login(true)
-                }
-            }
+        this.connectionConfig?.let { config ->
+            viewModelScope.launch {
+                //更新密码
+                val encryptAES = PasswordUtils.encryptAES(password ?: "")
 
-            password = ""
+                connectionConfigServer.updateConnectionConfig(
+                    config.copy(
+                        currentPassword = encryptAES.aesData,
+                        iv = encryptAES.aesIv,
+                        key = encryptAES.aesKey
+                    )
+                )
+                if (connectionConfigServer.getConnectionId() == connectionId) {
+                    viewModelScope.launch {
+                        dataSourceManager.restartLogin()
+                    }
+                }
+
+                password = ""
+            }
         }
 
 
@@ -220,8 +224,8 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
             )
             //判断是否需要重新登录
             if (connectionConfigServer.getConnectionId() == connectionId) {
-                Log.i("connection","数据加载3")
-                dataSourceManager.login(true)
+                Log.i("connection", "数据加载3")
+                dataSourceManager.restartLogin()
             }
 
         }

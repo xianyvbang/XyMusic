@@ -18,7 +18,9 @@
 
 package cn.xybbz.common.utils
 
+import android.util.Log
 import cn.xybbz.config.scope.XyCloseableCoroutineScope
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -29,16 +31,38 @@ import kotlinx.coroutines.SupervisorJob
 object CoroutineScopeUtils {
 
     /**
-     * 获得Main携程
+     * 获得Main协程
      */
     fun getMain(name: String = "xy"): XyCloseableCoroutineScope {
-        return XyCloseableCoroutineScope(SupervisorJob() + Dispatchers.Main + CoroutineName(name))
+        return XyCloseableCoroutineScope(
+            CoroutineExceptionHandler(
+                handler = { context, throwable ->
+                    Log.e("CoroutineExceptionHandler", throwable.message, throwable)
+                }
+            ) + SupervisorJob() + Dispatchers.Main + CoroutineName(name))
     }
 
     /**
-     * 获得IO携程
+     * 获得IO协程
      */
     fun getIo(name: String = "xy"): XyCloseableCoroutineScope {
-        return XyCloseableCoroutineScope(SupervisorJob() + Dispatchers.IO + CoroutineName(name))
+        return XyCloseableCoroutineScope(
+            CoroutineExceptionHandler(
+            handler = { context, throwable ->
+                Log.e("CoroutineExceptionHandler", throwable.message, throwable)
+            }
+        ) + SupervisorJob() + Dispatchers.IO + CoroutineName(name))
+    }
+
+    /**
+     * 获得Default协程
+     */
+    fun getDefault(name: String = "xy"): XyCloseableCoroutineScope {
+        return XyCloseableCoroutineScope(
+            CoroutineExceptionHandler(
+            handler = { context, throwable ->
+                Log.e("CoroutineExceptionHandler", throwable.message, throwable)
+            }
+        ) + SupervisorJob() + Dispatchers.Default + CoroutineName(name))
     }
 }

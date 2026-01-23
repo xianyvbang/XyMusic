@@ -840,8 +840,8 @@ class SubsonicDatasourceServer @Inject constructor(
     /**
      * 释放
      */
-    override fun release() {
-        super.release()
+    override fun close() {
+        super.close()
         subsonicApiClient.release()
     }
 

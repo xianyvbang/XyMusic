@@ -24,6 +24,7 @@ import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.PlaylistParser
@@ -34,6 +35,7 @@ import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.artist.XyArtistExt
+import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
@@ -43,6 +45,7 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
+import java.lang.AutoCloseable
 
 /**
  * 本地用户接口类
@@ -50,7 +53,7 @@ import okhttp3.OkHttpClient
  * @date 2024/06/12
  * @constructor 创建[IDataSourceServer]
  */
-interface IDataSourceServer {
+interface IDataSourceServer: AutoCloseable{
 
 
     fun ifTmpObject(): Boolean
@@ -66,7 +69,7 @@ interface IDataSourceServer {
      * 自动登录
      * @return [Flow<ClientLoginInfoState>?]
      */
-    suspend fun autoLogin(ifLogin: Boolean = false): Flow<ClientLoginInfoState>?
+    suspend fun autoLogin(loginType: LoginType = LoginType.TOKEN): Flow<ClientLoginInfoState>?
 
 
     /**
@@ -430,5 +433,26 @@ interface IDataSourceServer {
      * 获得相似歌手列表
      */
     fun getResemblanceArtist(artistId: String): Flow<PagingData<XyArtist>>
+
+
+    /**
+     * 获得连接设置
+     */
+    fun getConnectionConfig(): ConnectionConfig?
+
+    /**
+     * 获得用户id
+     */
+    fun getUserId(): String
+
+    /**
+     * 获得连接id
+     */
+    fun getConnectionId(): Long
+
+    /**
+     * 获得连接地址
+     */
+    fun getConnectionAddress(): String
 
 }

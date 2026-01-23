@@ -15,3 +15,23 @@
  *   limitations under the License.
  *
  */
+
+package cn.xybbz.config.service
+
+import androidx.lifecycle.LifecycleService
+import androidx.lifecycle.lifecycleScope
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Job
+
+@AndroidEntryPoint
+class XyLifecycleService: LifecycleService() {
+
+    override fun onCreate() {
+        super.onCreate()
+        lifecycleScope.coroutineContext[Job]
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+    }
+}

@@ -15,3 +15,20 @@
  *   limitations under the License.
  *
  */
+
+package cn.xybbz.common.enums
+
+/**
+ * 登陆类型
+ */
+enum class LoginType() {
+    /**
+     * 使用api登陆
+     */
+    API,
+
+    /**
+     * 使用现有token
+     */
+    TOKEN
+}

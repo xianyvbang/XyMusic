@@ -29,7 +29,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cn.xybbz.common.enums.AllDataEnum
 import cn.xybbz.common.music.AudioFadeController
-import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.network.NetWorkMonitor
 import cn.xybbz.config.network.OnNetworkChangeListener
 import cn.xybbz.localdata.config.DatabaseClient
@@ -39,7 +38,6 @@ import cn.xybbz.localdata.enums.LanguageType
 import com.hjq.language.MultiLanguages
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.launch
 import java.util.Locale
 
 class SettingsManager(
@@ -48,8 +46,6 @@ class SettingsManager(
     private val audioFadeController: AudioFadeController,
     private val netWorkMonitor: NetWorkMonitor
 ) {
-
-    private val coroutineScope = CoroutineScopeUtils.getIo("settings")
 
     private var settings: XySettings? = null
 
@@ -87,19 +83,17 @@ class SettingsManager(
         return settings ?: XySettings()
     }
 
-    fun setSettingsData() {
-        coroutineScope.launch {
-            Log.i("=====", "开始存储设置")
-            this@SettingsManager.settings = db.settingsDao.selectOneData() ?: XySettings()
-            if (this@SettingsManager.get().languageType != null) {
-                this@SettingsManager.languageType = this@SettingsManager.get().languageType
-            } else {
-                setDefaultLanguage(applicationContext)
-            }
-            this@SettingsManager.cacheUpperLimit = this@SettingsManager.get().cacheUpperLimit
-            Log.i("api", "动态设置数据--读取配置")
-            audioFadeController.updateFadeDurationMs(this@SettingsManager.get().fadeDurationMs)
+    suspend fun setSettingsData() {
+        Log.i("=====", "开始存储设置")
+        this.settings = db.settingsDao.selectOneData() ?: XySettings()
+        if (this.get().languageType != null) {
+            this.languageType = this.get().languageType
+        } else {
+            setDefaultLanguage(applicationContext)
         }
+        this.cacheUpperLimit = this.get().cacheUpperLimit
+        Log.i("api", "动态设置数据--读取配置")
+        audioFadeController.updateFadeDurationMs(this.get().fadeDurationMs)
         val packageManager = applicationContext.packageManager
         val packageName = applicationContext.packageName
         packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

@@ -22,6 +22,7 @@ import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.HomeDataRepository
 import cn.xybbz.config.connection.ConnectionConfigServer
@@ -31,6 +32,7 @@ import cn.xybbz.config.setting.SettingsManager
 import com.hjq.language.MultiLanguages
 import com.kongzue.dialogx.DialogX
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -70,12 +72,24 @@ class XyApplication : Application(), Configuration.Provider {
         //是否默认可以关闭
         DialogX.cancelableTipDialog = false
         DialogX.globalTheme = DialogX.THEME.DARK
-        settingsManager.setSettingsData()
-        backgroundConfig.load()
-        proxyConfigServer.initConfig()
+
+        val scope = CoroutineScopeUtils.getDefault("XyApplication")
+        scope.launch {
+            settingsManager.setSettingsData()
+        }
+
+        scope.launch {
+            backgroundConfig.load()
+        }
+        scope.launch {
+            proxyConfigServer.initConfig()
+        }
+
         downloadManager.initData()
         connectionConfigServer.initData()
-        dataSourceManager.initDataSource()
+        scope.launch {
+            dataSourceManager.initDataSource()
+        }
     }
 
     override val workManagerConfiguration: Configuration

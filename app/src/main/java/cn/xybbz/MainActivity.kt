@@ -29,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.network.NetWorkMonitor
@@ -51,6 +52,7 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+        lifecycleScope
         //启动页面
         installSplashScreen()
         super.onCreate(savedInstanceState)

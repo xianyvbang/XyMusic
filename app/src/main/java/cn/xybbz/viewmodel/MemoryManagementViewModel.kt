@@ -257,7 +257,7 @@ class MemoryManagementViewModel @Inject constructor(
             musicController.clearPlayerList()
             dataSourceManager.release()
             settingsManager.setSettingsData()
-            connectionConfigServer.clear()
+            connectionConfigServer.close()
         }
     }
 

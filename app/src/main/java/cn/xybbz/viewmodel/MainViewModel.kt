@@ -38,6 +38,8 @@ import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
+import cn.xybbz.api.events.ReLoginEvent
+import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.music.PlayerEvent
@@ -62,8 +64,13 @@ import cn.xybbz.localdata.data.progress.Progress
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.time.Year
 import javax.inject.Inject
@@ -116,6 +123,7 @@ class MainViewModel @Inject constructor(
 
     init {
         Log.i("=====", "MainViewModel初始化")
+        startLoginEventBus()
         //加载是否开启专辑播放历史功能数据
         observeLoginSuccessForAndProgress()
         //初始化年代数据
@@ -681,6 +689,25 @@ class MainViewModel @Inject constructor(
                 Log.i("music", "数据转码监听${it}")
                 musicController.replacePlaylistItemUrl()
             }
+        }
+    }
+
+    /**
+     * 启动登陆监听重试登陆
+     */
+
+    @kotlin.OptIn(ExperimentalCoroutinesApi::class)
+    fun startLoginEventBus() {
+        viewModelScope.launch {
+            dataSourceManager.dataSourceServerFlow
+                .filterNotNull()
+                .flatMapLatest { server ->
+                    server.defaultParentApiClient.eventBus.events
+                }
+                .onEach { event ->
+                    if (event is ReLoginEvent.Unauthorized) dataSourceManager.serverLogin(loginType = LoginType.API)
+                }
+                .launchIn(viewModelScope)
         }
     }
 
