@@ -63,8 +63,8 @@ fun FavoriteScreen(
         favoriteViewModel.favoriteMusicList.collectAsLazyPagingItems()
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
-    val favoriteList by favoriteViewModel.favoriteRepository.favoriteSet.collectAsState()
-    val downloadMusicIdList by favoriteViewModel.downloadRepository.musicIdsFlow.collectAsState()
+    val favoriteList by favoriteViewModel.favoriteSet.collectAsState(emptyList())
+    val downloadMusicIdList by favoriteViewModel.downloadMusicIdsFlow.collectAsState(emptyList())
 
 
     XyColumnScreen(

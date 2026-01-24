@@ -50,7 +50,6 @@ import cn.xybbz.common.constants.Constants.MUSIC_POSITION_UPDATE_INTERVAL
 import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
 import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
 import cn.xybbz.common.enums.PlayStateEnum
-import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
@@ -77,8 +76,7 @@ class MusicController(
     private val downloadCacheController: DownloadCacheController,
     private val fadeController: AudioFadeController,
     private val settingsManager: SettingsManager,
-    private val dataSourceManager: DataSourceManager,
-    private val lrcServer: LrcServer,
+    private val dataSourceManager: DataSourceManager
 ) : IoScoped() {
 
     // 原始歌曲列表
@@ -713,7 +711,6 @@ class MusicController(
      */
     fun clearPlayerList() {
         pause()
-        lrcServer.clear()
         progressTicker.stop()
         downloadCacheController.cancelAllCache()
         mediaController?.clearMediaItems()
@@ -842,7 +839,6 @@ class MusicController(
         endTime = Constants.ZERO.toLong()
         pageNum = Constants.ZERO
         pageSize = Constants.ZERO
-        lrcServer.close()
         fadeController.close()
         mediaController?.release()
         mediaController?.removeListener(playerListener)

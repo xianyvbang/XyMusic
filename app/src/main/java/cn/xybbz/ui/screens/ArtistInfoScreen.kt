@@ -149,8 +149,8 @@ fun ArtistInfoScreen(
         artistInfoViewModel.albumList.collectAsLazyPagingItems()
     val resemblanceArtistList =
         artistInfoViewModel.resemblanceArtistList.collectAsLazyPagingItems()
-    val favoriteSet by artistInfoViewModel.favoriteRepository.favoriteSet.collectAsState()
-    val downloadMusicIds by artistInfoViewModel.downloadRepository.musicIdsFlow.collectAsState()
+    val favoriteSet by artistInfoViewModel.favoriteSet.collectAsState(emptyList())
+    val downloadMusicIds by artistInfoViewModel.downloadMusicIdsFlow.collectAsState(emptyList())
     val ifOpenSelect by artistInfoViewModel.selectControl.uiState.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
@@ -565,7 +565,7 @@ fun ArtistInfoScreen(
                                                         },
                                                         ifSelect = ifOpenSelect,
                                                         ifSelectCheckBox = { artistInfoViewModel.selectControl.selectMusicIdList.any { it == music.itemId } },
-                                                        trailingOnSelectClick = { select ->
+                                                        trailingOnSelectClick = { _ ->
                                                             artistInfoViewModel.selectControl.toggleSelection(
                                                                 music.itemId,
                                                                 onIsSelectAll = {

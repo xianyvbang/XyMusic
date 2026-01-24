@@ -22,7 +22,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.DatabaseClient
@@ -38,7 +37,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LocalViewModel @Inject constructor(
-    db: DatabaseClient,
+    val db: DatabaseClient,
     val musicController: MusicController,
     val musicPlayContext: MusicPlayContext,
     val backgroundConfig: BackgroundConfig
@@ -63,7 +62,7 @@ class LocalViewModel @Inject constructor(
             musicPlayContext.musicList(onMusicPlayParameter, downloadList.mapNotNull {
                 val playMusic = it.toPlayMusic()
                 playMusic?.copy(
-                    ifFavoriteStatus = playMusic.itemId in favoriteRepository.favoriteSet.value,
+                    ifFavoriteStatus = db.musicDao.selectIfFavoriteByMusic(playMusic.itemId),
                     filePath = it.filePath
                 )
             }, playerTypeEnum)

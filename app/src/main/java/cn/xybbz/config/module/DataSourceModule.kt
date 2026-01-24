@@ -32,7 +32,9 @@ import cn.xybbz.api.client.plex.PlexDatasourceServer
 import cn.xybbz.api.client.subsonic.SubsonicApiClient
 import cn.xybbz.api.client.subsonic.SubsonicDatasourceServer
 import cn.xybbz.api.client.version.VersionApiClient
+import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.config.alarm.AlarmConfig
+import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.enums.DataSourceType
@@ -53,13 +55,17 @@ class DataSourceModule {
         db: DatabaseClient,
         settingsManager: SettingsManager,
         jellyfinApiClient: JellyfinApiClient,
-        @ApplicationContext application: Context
+        @ApplicationContext application: Context,
+        mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
+        downloadManager: DownLoadManager
     ): JellyfinDatasourceServer {
         return JellyfinDatasourceServer(
             db,
             application,
             settingsManager,
-            jellyfinApiClient
+            jellyfinApiClient,
+            mediaLibraryAndFavoriteSyncScheduler,
+            downloadManager
         )
     }
 
@@ -68,13 +74,17 @@ class DataSourceModule {
         db: DatabaseClient,
         settingsManager: SettingsManager,
         subsonicApiClient: SubsonicApiClient,
-        @ApplicationContext application: Context
+        @ApplicationContext application: Context,
+        mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
+        downloadManager: DownLoadManager
     ): SubsonicDatasourceServer {
         return SubsonicDatasourceServer(
             db,
             application,
             settingsManager,
-            subsonicApiClient
+            subsonicApiClient,
+            mediaLibraryAndFavoriteSyncScheduler,
+            downloadManager
         )
     }
 
@@ -83,13 +93,17 @@ class DataSourceModule {
         db: DatabaseClient,
         settingsManager: SettingsManager,
         navidromeApiClient: NavidromeApiClient,
-        @ApplicationContext application: Context
+        @ApplicationContext application: Context,
+        mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
+        downloadManager: DownLoadManager
     ): NavidromeDatasourceServer {
         return NavidromeDatasourceServer(
             db,
             application,
             settingsManager,
-            navidromeApiClient
+            navidromeApiClient,
+            mediaLibraryAndFavoriteSyncScheduler,
+            downloadManager
         )
     }
 
@@ -98,13 +112,17 @@ class DataSourceModule {
         db: DatabaseClient,
         settingsManager: SettingsManager,
         embyApiClient: EmbyApiClient,
-        @ApplicationContext application: Context
+        @ApplicationContext application: Context,
+        mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
+        downloadManager: DownLoadManager
     ): EmbyDatasourceServer {
         return EmbyDatasourceServer(
             db,
             application,
             settingsManager,
-            embyApiClient
+            embyApiClient,
+            mediaLibraryAndFavoriteSyncScheduler,
+            downloadManager
         )
     }
 
@@ -114,13 +132,17 @@ class DataSourceModule {
         db: DatabaseClient,
         settingsManager: SettingsManager,
         plexApiClient: PlexApiClient,
-        @ApplicationContext application: Context
+        @ApplicationContext application: Context,
+        mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
+        downloadManager: DownLoadManager
     ): PlexDatasourceServer {
         return PlexDatasourceServer(
             db,
             application,
             settingsManager,
-            plexApiClient
+            plexApiClient,
+            mediaLibraryAndFavoriteSyncScheduler,
+            downloadManager
         )
     }
 

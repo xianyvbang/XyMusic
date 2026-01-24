@@ -466,10 +466,10 @@ interface XyMusicDao {
 
     @Query(
         """
-        select musicId from favoritemusic fm where ifFavorite = 1 and connectionId = (select connectionId from xy_settings) 
+        select DISTINCT musicId from favoritemusic fm where ifFavorite = 1 and connectionId = (select connectionId from xy_settings) 
     """
     )
-    fun selectFavoriteListFlow(): Flow<Set<String>>
+    fun selectFavoriteListFlow(): Flow<List<String>>
 
     /**
      * 按艺术家id获得音乐分页列表

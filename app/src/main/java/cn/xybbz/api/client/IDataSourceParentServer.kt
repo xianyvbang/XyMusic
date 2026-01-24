@@ -39,6 +39,7 @@ import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.exception.UnauthorizedException
 import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.enums.LoginStateType
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.MessageUtils
@@ -108,7 +109,7 @@ abstract class IDataSourceParentServer(
     /**
      * 登录状态
      */
-    private val _loginSuccessEvent = MutableSharedFlow<Boolean>(
+    private val _loginSuccessEvent = MutableSharedFlow<LoginStateType>(
         replay = 1,
         extraBufferCapacity = 1
     )
@@ -232,7 +233,7 @@ abstract class IDataSourceParentServer(
             emitAll(loginAfter(connectionConfig))
         }.flowOn(Dispatchers.IO).catch {
             it.printStackTrace()
-            sendLoginCompleted(false)
+            sendLoginCompleted(LoginStateType.FAILURE)
             when (it) {
                 is SocketTimeoutException -> {
                     emit(ClientLoginInfoState.ServiceTimeOutState)
@@ -400,7 +401,7 @@ abstract class IDataSourceParentServer(
         }.flowOn(Dispatchers.IO).catch {
             Log.e(Constants.LOG_ERROR_PREFIX, "自动登录异常 ${it.message}", it)
             if (loginType == LoginType.TOKEN)
-                sendLoginCompleted(false)
+                sendLoginCompleted(LoginStateType.FAILURE)
             when (it) {
                 is SocketTimeoutException -> {
                     emit(ClientLoginInfoState.ServiceTimeOutState)
@@ -1170,7 +1171,7 @@ abstract class IDataSourceParentServer(
     /**
      * 获得登录成功flow
      */
-    fun getLoginStateFlow(): SharedFlow<Boolean> {
+    fun getLoginStateFlow(): SharedFlow<LoginStateType> {
         return loginSuccessEvent
     }
 
@@ -1203,7 +1204,7 @@ abstract class IDataSourceParentServer(
             this.connectionConfig = connectionConfig
         settingsManager.saveConnectionId(connectionId = connectionConfig.id, connectionConfig.type)
         setUpLibraryId(connectionConfig.libraryId)
-        sendLoginCompleted(true)
+        sendLoginCompleted(LoginStateType.SUCCESS)
     }
 
     fun unConnection() {
@@ -1225,8 +1226,8 @@ abstract class IDataSourceParentServer(
     /**
      * 发送登录动作完成通知(不管失败或成功)
      */
-    private suspend fun sendLoginCompleted(ifSuccess: Boolean) {
-        _loginSuccessEvent.emit(ifSuccess)
+    private suspend fun sendLoginCompleted(loginState: LoginStateType) {
+        _loginSuccessEvent.emit(loginState)
     }
 
 

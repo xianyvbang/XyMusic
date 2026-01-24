@@ -71,8 +71,8 @@ class XyApplication : Application(), Configuration.Provider {
 
         val scope = CoroutineScopeUtils.getDefault("XyApplication")
         scope.launch {
-            settingsManager.setSettingsData()
-            dataSourceManager.initDataSource(settingsManager.get().dataSourceType)
+            val settings = settingsManager.setSettingsData()
+            dataSourceManager.initDataSource(settings.dataSourceType)
         }
 
         scope.launch {

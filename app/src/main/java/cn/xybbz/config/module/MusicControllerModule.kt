@@ -26,6 +26,7 @@ import cn.xybbz.common.music.AudioFadeController
 import cn.xybbz.common.music.DownloadCacheController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.lrc.LrcServer
+import cn.xybbz.config.module.LrcModule_LrcServerFactory.lrcServer
 import cn.xybbz.config.setting.SettingsManager
 import dagger.Module
 import dagger.Provides
@@ -46,8 +47,7 @@ class MusicControllerModule {
         downloadCacheController: DownloadCacheController,
         audioFadeController: AudioFadeController,
         settingsManager: SettingsManager,
-        dataSourceManager: DataSourceManager,
-        lrcServer: LrcServer
+        dataSourceManager: DataSourceManager
     ): MusicController {
         val controller =
             MusicController(
@@ -55,8 +55,7 @@ class MusicControllerModule {
                 downloadCacheController,
                 audioFadeController,
                 settingsManager,
-                dataSourceManager,
-                lrcServer
+                dataSourceManager
             )
         return controller
     }

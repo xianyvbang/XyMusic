@@ -26,7 +26,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -57,7 +56,7 @@ fun LocalScreen(localViewModel: LocalViewModel = hiltViewModel<LocalViewModel>()
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
     val downloadMusicList by localViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
-    val favoriteSet by localViewModel.favoriteRepository.favoriteSet.collectAsState()
+    val favoriteSet by localViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
 
     XyColumnScreen(
         modifier = Modifier.brashColor(

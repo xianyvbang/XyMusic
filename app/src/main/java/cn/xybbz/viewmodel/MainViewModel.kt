@@ -45,7 +45,6 @@ import cn.xybbz.common.music.PlayerEvent
 import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.alarm.AlarmConfig
-import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.update.VersionCheckScheduler
@@ -270,7 +269,7 @@ class MainViewModel @Inject constructor(
                 type = MusicTypeEnum.MUSIC,
                 itemId = musicId,
                 musicController = musicController,
-                ifFavorite = musicId in favoriteRepository.favoriteSet.value
+                ifFavorite =  db.musicDao.selectIfFavoriteByMusic(musicId)
             )
         }
     }

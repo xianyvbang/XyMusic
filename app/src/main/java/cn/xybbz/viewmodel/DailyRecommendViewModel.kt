@@ -28,7 +28,6 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.recommender.DailyRecommender
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
@@ -54,6 +53,7 @@ class DailyRecommendViewModel @Inject constructor(
     val downloadMusicIdsFlow =
         db.downloadDao.getAllMusicTaskUidsFlow()
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
+
     /**
      * 推荐音乐
      */
@@ -118,7 +118,7 @@ class DailyRecommendViewModel @Inject constructor(
                 onMusicPlayParameter,
                 recommendedMusicList.map {
                     it.toPlayMusic()
-                        .copy(ifFavoriteStatus = it.music.itemId in favoriteRepository.favoriteSet.value)
+                        .copy(ifFavoriteStatus = db.musicDao.selectIfFavoriteByMusic(it.music.itemId))
                 }
             )
         }

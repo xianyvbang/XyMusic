@@ -37,8 +37,10 @@ import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.LanguageType
 import com.hjq.language.MultiLanguages
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.withContext
 import java.util.Locale
 
 class SettingsManager(
@@ -93,19 +95,19 @@ class SettingsManager(
         return settings ?: XySettings()
     }
 
-    suspend fun setSettingsData() {
+    suspend fun setSettingsData(): XySettings = withContext(Dispatchers.IO) {
         Log.i("=====", "开始存储设置")
-        this.settings = db.settingsDao.selectOneData() ?: XySettings()
+        this@SettingsManager.settings = db.settingsDao.selectOneData() ?: XySettings()
 
-        updateIfConnectionConfig(this.get().connectionId != null)
-        if (this.get().languageType != null) {
-            this.languageType = this.get().languageType
+        updateIfConnectionConfig(this@SettingsManager.get().connectionId != null)
+        if (this@SettingsManager.get().languageType != null) {
+            this@SettingsManager.languageType = this@SettingsManager.get().languageType
         } else {
             setDefaultLanguage(applicationContext)
         }
-        this.cacheUpperLimit = this.get().cacheUpperLimit
+        this@SettingsManager.cacheUpperLimit = this@SettingsManager.get().cacheUpperLimit
         Log.i("api", "动态设置数据--读取配置")
-        audioFadeController.updateFadeDurationMs(this.get().fadeDurationMs)
+        audioFadeController.updateFadeDurationMs(this@SettingsManager.get().fadeDurationMs)
         val packageManager = applicationContext.packageManager
         val packageName = applicationContext.packageName
         packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -120,6 +122,7 @@ class SettingsManager(
             }
         })
         netWorkMonitor.start()
+        get()
     }
 
     /**

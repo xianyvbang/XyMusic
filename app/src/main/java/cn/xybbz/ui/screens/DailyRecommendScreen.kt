@@ -61,8 +61,8 @@ fun DailyRecommendScreen(
 
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
-    val favoriteList by dailyRecommendViewModel.favoriteRepository.favoriteSet.collectAsState()
-    val downloadMusicIds by dailyRecommendViewModel.downloadRepository.musicIdsFlow.collectAsState()
+    val favoriteList by dailyRecommendViewModel.favoriteSet.collectAsState(emptyList())
+    val downloadMusicIds by dailyRecommendViewModel.downloadMusicIdsFlow.collectAsState(emptyList())
     val state = rememberPullToRefreshState()
 
     var isRefreshing by remember {

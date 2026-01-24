@@ -18,6 +18,7 @@
 
 package cn.xybbz.api.dispatchs
 
+import android.util.Log
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
@@ -38,7 +39,12 @@ class MediaLibraryAndFavoriteSyncScheduler @Inject constructor(
     val tag = "media_sync"
 
     suspend fun enqueueIfNeeded(connectionId: Long) {
-        if (!shouldSync()) return
+        val shouldSync = shouldSync()
+        Log.i(
+            Constants.LOG_ERROR_PREFIX,
+            "开始启动获取音乐/专辑/艺术家/收藏/流派数量 $shouldSync"
+        )
+        if (!shouldSync) return
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()

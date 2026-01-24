@@ -43,6 +43,10 @@ class MediaLibraryAndFavoriteSyncWorker @AssistedInject constructor(
     val remoteId = RemoteIdConstants.MEDIA_LIBRARY_AND_FAVORITE
     override suspend fun doWork(): Result {
         return try {
+            Log.i(
+                Constants.LOG_ERROR_PREFIX,
+                "获取音乐/专辑/艺术家/收藏/流派数量"
+            )
             db.withTransaction {
                 dataSourceManager.selectMediaLibrary()
                 dataSourceManager.initFavoriteData()
@@ -50,7 +54,7 @@ class MediaLibraryAndFavoriteSyncWorker @AssistedInject constructor(
                 try {
                     dataSourceManager.getDataInfoCount(connectionId)
                 } catch (e: Exception) {
-                    Log.i(
+                    Log.e(
                         Constants.LOG_ERROR_PREFIX,
                         "获取音乐/专辑/艺术家/收藏/流派数量异常",
                         e

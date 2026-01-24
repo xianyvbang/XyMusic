@@ -37,6 +37,7 @@ import cn.xybbz.api.events.ReLoginEvent
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.enums.LoginStateType
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
@@ -66,14 +67,11 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asSharedFlow
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
 import javax.inject.Provider
@@ -96,6 +94,10 @@ class DataSourceManager(
         private set
 
 
+    init {
+        createScope()
+    }
+
     /**
      * 用户数据源数据信息服务类
      */
@@ -103,17 +105,11 @@ class DataSourceManager(
 
     val dataSourceServerFlow = MutableStateFlow<IDataSourceParentServer?>(null)
 
-    @kotlin.OptIn(ExperimentalCoroutinesApi::class)
-    val loginState: StateFlow<Boolean> =
-        dataSourceServerFlow
-            .flatMapLatest { server ->
-                server?.getLoginStateFlow() ?: flowOf(false)
-            }
-            .stateIn(
-                scope = scope,
-                started = SharingStarted.Eagerly,
-                initialValue = false
-            )
+    private val _loginState = MutableSharedFlow<LoginStateType>(
+        replay = 1,
+        extraBufferCapacity = 1
+    )
+    val loginState = _loginState.asSharedFlow()
 
 
     //加载状态
@@ -174,7 +170,7 @@ class DataSourceManager(
         autoLogin(loginType, connectionConfig).collect { loginState ->
             loginStatus = loginState
             //                ifLoginError = false
-            val loginSateInfo = getLoginSateInfo(loginState)
+            val loginSateInfo = getLoginSateInfo(loginState, false)
             Log.i("error", "${loginSateInfo}")
             errorHint = loginSateInfo.errorHint ?: R.string.empty_info
             errorMessage = loginSateInfo.errorMessage ?: ""
@@ -186,7 +182,7 @@ class DataSourceManager(
     /**
      * 根据登录状态返回不同登录信息
      */
-    fun getLoginSateInfo(loginState: ClientLoginInfoState): LoginStateData {
+    fun getLoginSateInfo(loginState: ClientLoginInfoState, ifTmp: Boolean): LoginStateData {
         return when (loginState) {
             is ClientLoginInfoState.Connected -> {
                 Log.i("=====", "连接中")
@@ -195,6 +191,7 @@ class DataSourceManager(
 
             is ClientLoginInfoState.ConnectError -> {
                 MessageUtils.sendPopTipDismiss()
+                loginStateErrorEmit(ifTmp)
                 Log.i(Constants.LOG_ERROR_PREFIX, "服务端连接错误")
                 LoginStateData(
                     loading = false,
@@ -205,6 +202,7 @@ class DataSourceManager(
 
             ClientLoginInfoState.ServiceTimeOutState -> {
                 MessageUtils.sendPopTipDismiss()
+                loginStateErrorEmit(ifTmp)
                 Log.i(Constants.LOG_ERROR_PREFIX, "服务端连接超时")
                 LoginStateData(
                     loading = false,
@@ -214,6 +212,7 @@ class DataSourceManager(
             }
 
             is ClientLoginInfoState.ErrorState -> {
+                loginStateErrorEmit(ifTmp)
                 MessageUtils.sendPopTipDismiss()
                 Log.i(Constants.LOG_ERROR_PREFIX, loginState.error.message.toString())
                 LoginStateData(
@@ -225,6 +224,7 @@ class DataSourceManager(
             }
 
             ClientLoginInfoState.SelectServer -> {
+                loginStateErrorEmit(ifTmp)
                 MessageUtils.sendPopTipDismiss()
                 Log.i(Constants.LOG_ERROR_PREFIX, "未选择连接")
                 LoginStateData(
@@ -236,6 +236,7 @@ class DataSourceManager(
 
             ClientLoginInfoState.UnauthorizedErrorState -> {
                 MessageUtils.sendPopTipDismiss()
+                loginStateErrorEmit(ifTmp)
                 Log.i(Constants.LOG_ERROR_PREFIX, "登录失败,账号或密码错误")
                 LoginStateData(
                     loading = false,
@@ -246,6 +247,7 @@ class DataSourceManager(
 
             ClientLoginInfoState.UserLoginSuccess -> {
                 Log.i("=====", "登陆成功")
+                loginStateSuccessEmit(ifTmp)
                 LoginStateData(
                     loading = false,
                     isError = false,
@@ -253,6 +255,17 @@ class DataSourceManager(
                 )
             }
         }
+    }
+
+    private fun loginStateErrorEmit(ifTmp: Boolean) {
+        if (ifTmp) {
+            _loginState.tryEmit(LoginStateType.FAILURE)
+        }
+    }
+
+    private fun loginStateSuccessEmit(ifTmp: Boolean) {
+        if (ifTmp)
+            _loginState.tryEmit(LoginStateType.SUCCESS)
     }
 
     /**
@@ -1214,7 +1227,7 @@ class DataSourceManager(
 
     fun dataSourceScope() = scope
 
-    fun release(){
+    fun release() {
         dataSourceServer.close()
         dataSourceServerFlow.value = null
         dataSourceType = null

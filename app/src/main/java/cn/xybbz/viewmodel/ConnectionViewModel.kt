@@ -97,12 +97,14 @@ class ConnectionViewModel @Inject constructor(
         }
         loading = true
         clearLoginStatus()
+        var ifTemp = true
         if (dataSourceManager.dataSourceType == null) {
+            ifTemp = false
             dataSourceManager.switchDataSource(tmpDatasource)
             tmpDataSourceParentServer = dataSourceManager
         } else if (tmpDataSourceParentServer == null) {
             tmpDataSourceParentServer =
-                dataSourceManager.getDataSourceServerByType(tmpDatasource, true)
+                dataSourceManager.getDataSourceServerByType(tmpDatasource, ifTemp)
         }
 
         val packageManager = application.packageManager
@@ -124,7 +126,7 @@ class ConnectionViewModel @Inject constructor(
         tmpDataSourceParentServer?.addClientAndLogin(clientLoginInfoReq)?.onEach {
             Log.i("=====", "数据获取${it}")
 
-            val loginSateInfo = dataSourceManager.getLoginSateInfo(it)
+            val loginSateInfo = dataSourceManager.getLoginSateInfo(it, ifTemp)
             loading = loginSateInfo.loading
             errorHint = loginSateInfo.errorHint ?: R.string.empty_info
             errorMessage = loginSateInfo.errorMessage ?: ""
