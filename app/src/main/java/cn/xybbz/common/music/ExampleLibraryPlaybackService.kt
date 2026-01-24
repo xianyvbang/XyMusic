@@ -50,6 +50,7 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
 import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
 import cn.xybbz.common.enums.PlayStateEnum
+import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.media.MediaServer
 import cn.xybbz.config.setting.SettingsManager
@@ -77,6 +78,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
 
     lateinit var audioTrack: AudioTrack
 
+    val scope = CoroutineScopeUtils.getIo("ExamplePlaybackService")
 
 
     @Inject
@@ -106,10 +108,14 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
     @Inject
     lateinit var mediaServer: MediaServer
 
-    private var exoPlayerListener:ExoPlayerListener? = null
+    private var exoPlayerListener: ExoPlayerListener? = null
 
     override fun onCreate() {
         super.onCreate()
+        downloadCacheController.createScope(scope.coroutineContext)
+        musicController.createScope(scope.coroutineContext)
+        fadeController.createScope(scope.coroutineContext)
+        lrcServer.init(scope.coroutineContext)
 //重试次数和重试时间 https://stackoverflow.com/questions/78042428/how-can-i-increase-exoplayers-buffering-time
 
         //可以自定义解码
@@ -291,6 +297,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
     override fun onDestroy() {
         // 释放相关实例
         Log.i("music", "数据释放")
+        lrcServer.close()
         exoPlayerListener?.let { exoPlayer?.removeListener(it) }
         exoPlayer?.stop()
         exoPlayer?.release()
@@ -301,6 +308,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
         musicController.close()
         clearListener()
         unregisterReceiver(myNoisyAudioStreamReceiver)
+        scope.close()
         super.onDestroy()
     }
 

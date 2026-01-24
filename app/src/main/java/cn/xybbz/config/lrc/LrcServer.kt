@@ -27,8 +27,8 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.AllDataEnum
 import cn.xybbz.common.enums.LrcDataType
 import cn.xybbz.common.music.MusicController
-import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.common.utils.LrcUtils.getIndex
+import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.lrc.XyLrcConfig
@@ -37,13 +37,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
 
 
 class LrcServer(
     private val musicController: MusicController,
     private val dataSourceManager: DataSourceManager,
     private val db: DatabaseClient
-) {
+) : IoScoped(){
 
     /**
      * 歌词信息
@@ -59,14 +60,12 @@ class LrcServer(
     var itemId by mutableStateOf("")
         private set
 
-    val lrcCoroutineScope = CoroutineScopeUtils.getIo("LrcServer")
-
     var lrcConfig: XyLrcConfig? by mutableStateOf(null)
         private set
 
-    init {
-        lrcCoroutineScope.launch {
-
+    fun init(coroutineContext: CoroutineContext){
+        createScope(coroutineContext)
+        scope.launch {
             combine(
                 musicController.progressStateFlow,
                 lcrEntryListFlow
@@ -89,7 +88,7 @@ class LrcServer(
      * 获得音乐歌词信息
      */
     fun getMusicLyricList() {
-        lrcCoroutineScope.launch {
+        scope.launch {
             if (_lcrEntryListFlow.value.isEmpty()) {
                 musicController.musicInfo?.itemId?.let { itemId ->
                     val musicLyricList = dataSourceManager.getMusicLyricList(itemId)
@@ -106,7 +105,7 @@ class LrcServer(
     fun createLrcList(lrcList: List<LrcEntryData>?, lrcDataType: LrcDataType) {
 //        clear()
         if (!lrcList.isNullOrEmpty()) {
-            lrcCoroutineScope.launch {
+            scope.launch {
                 musicController.musicInfo?.itemId?.let { itemId ->
                     initLrcConfig(itemId)
                     this@LrcServer.itemId = itemId
@@ -171,4 +170,8 @@ class LrcServer(
         }
     }
 
+    override fun close() {
+        super.close()
+        clear()
+    }
 }

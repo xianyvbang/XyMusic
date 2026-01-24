@@ -36,13 +36,7 @@ import androidx.media3.common.FileTypes
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.MimeTypes
-import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
-import androidx.media3.common.Player.DISCONTINUITY_REASON_SEEK
-import androidx.media3.common.Player.MEDIA_ITEM_TRANSITION_REASON_AUTO
-import androidx.media3.common.Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED
-import androidx.media3.common.Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT
-import androidx.media3.common.Player.MEDIA_ITEM_TRANSITION_REASON_SEEK
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionCommand
@@ -56,7 +50,7 @@ import cn.xybbz.common.constants.Constants.MUSIC_POSITION_UPDATE_INTERVAL
 import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
 import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
 import cn.xybbz.common.enums.PlayStateEnum
-import cn.xybbz.config.favorite.FavoriteRepository
+import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
@@ -81,10 +75,10 @@ import kotlinx.coroutines.launch
 class MusicController(
     private val application: Context,
     private val downloadCacheController: DownloadCacheController,
-    private val favoriteRepository: FavoriteRepository,
     private val fadeController: AudioFadeController,
     private val settingsManager: SettingsManager,
-    private val dataSourceManager: DataSourceManager
+    private val dataSourceManager: DataSourceManager,
+    private val lrcServer: LrcServer,
 ) : IoScoped() {
 
     // 原始歌曲列表
@@ -233,168 +227,47 @@ class MusicController(
         return first to second
     }
 
+    private val playerListener = XyPlayerListener(
+        onGetState = { state },
+        onUpdateState = { updateState(it) },
+        onsetPicByte = { picByte = it },
+        onGetMusicInfo = { musicInfo },
+        onSetMusicInfo = { musicInfo = originMusicList[curOriginIndex] },
+        onSeekToNext = { seekToNext() },
+        onEventEmit = {
+            scope.launch {
+                _events.emit(it)
+            }
+        },
+        onSetCurOriginIndex = { curOriginIndex = mediaController?.currentMediaItemIndex ?: 0 },
+        onOriginMusicListIsNotEmptyAndIndexEnd = {
+            originMusicList.isNotEmpty() && curOriginIndex >= originMusicList.size - 1
+        },
+        onPageNumber = { pageNum },
+        onUpdateDuration = {
+            updateDuration(musicInfo?.runTimeTicks ?: 0)
+        },
+        onMusicStartCache = {
+            startCache(originMusicList[curOriginIndex], settingsManager.getStatic())
+        },
+        onUpdatePlayerHistory = {
+            if (musicCurrentPositionMap.containsKey(it.itemId)) {
+                musicCurrentPositionMap[it.itemId]?.let { position ->
+                    if (position > 0 && position > mediaController?.currentPosition!!) {
+                        seekTo(position)
+                    } else if (headTime > 0 && headTime > mediaController?.currentPosition!!) {
+                        seekTo(headTime)
+                    }
+                }
+
+            } else {
+                Log.i("music", "音乐 ${it.name}没有播放进度")
+            }
+        },
+        onPlaySessionId = { settingsManager.get().playSessionId }
+    )
 
     //https://developer.android.google.cn/guide/topics/media/exoplayer/listening-to-player-events?hl=zh-cn
-    private val playerListener = @UnstableApi object : Player.Listener {
-
-        override fun onPlaybackStateChanged(playbackState: Int) {
-            super.onPlaybackStateChanged(playbackState)
-            when (playbackState) {
-                Player.STATE_IDLE -> {
-                    //播放器停止时的状态
-                    Log.i("music", "STATE_IDLE")
-                }
-
-                Player.STATE_BUFFERING -> {
-                    // 正在缓冲数据
-                    if (state == PlayStateEnum.Playing)
-                        updateState(PlayStateEnum.Loading)
-                    Log.i("music", "STATE_BUFFERING")
-                }
-
-                Player.STATE_READY -> {
-                    // 可以开始播放 恢复播放
-                    if (state == PlayStateEnum.Loading) {
-                        updateState(PlayStateEnum.Playing)
-                        /*musicInfo?.let {
-                            cacheController.cacheMedia(it)
-                        }*/
-                    }
-                    Log.i("music", "STATE_READY")
-                }
-
-                Player.STATE_ENDED -> {
-                    // 播放结束
-                    updateState(PlayStateEnum.None)
-                    Log.i("music", "STATE_ENDED")
-                }
-            }
-        }
-
-
-        override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
-            Log.i(
-                "music",
-                "当前索引${mediaController?.currentMediaItemIndex} --- ${mediaMetadata.title}"
-            )
-
-            picByte = if (musicInfo?.pic.isNullOrBlank()) {
-                mediaMetadata.artworkData
-            } else {
-                null
-            }
-            //获取当前音乐的index
-            setCurrentPositionData(mediaController?.currentPosition ?: 0)
-        }
-
-        override fun onPlayerError(error: PlaybackException) {
-            super.onPlayerError(error)
-            // 获取播放错误信息
-            Log.e("music", "播放报错$error", error)
-            if (state != PlayStateEnum.Pause) {
-                seekToNext()
-            }
-        }
-
-        //检测播放何时转换为其他媒体项
-        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-            mediaItem?.localConfiguration?.let { localConfiguration ->
-
-                if (localConfiguration.tag == null) {
-                    Log.i("music", "诶切换类型 $reason")
-                    //手动切换
-                    if (reason == MEDIA_ITEM_TRANSITION_REASON_SEEK || reason == MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
-                        musicInfo?.let {
-                            scope.launch {
-                                _events.emit(PlayerEvent.BeforeChangeMusic)
-                            }
-                        }
-                    }
-                    //自动播放
-                    if (reason == MEDIA_ITEM_TRANSITION_REASON_REPEAT || reason == MEDIA_ITEM_TRANSITION_REASON_AUTO) {
-                        musicInfo?.let {
-                            scope.launch {
-                                _events.emit(PlayerEvent.RemovePlaybackProgress(it.itemId))
-                            }
-                        }
-                    }
-
-                    Log.i("music", "上一个index ${mediaController?.previousMediaItemIndex}")
-
-                    curOriginIndex = mediaController?.currentMediaItemIndex ?: 0
-                    if (originMusicList.isNotEmpty() && curOriginIndex >= originMusicList.size - 1) {
-                        scope.launch {
-                            _events.emit(PlayerEvent.NextList(pageNum))
-                        }
-                    }
-                    musicInfo = originMusicList[curOriginIndex]
-                    updateDuration(musicInfo?.runTimeTicks ?: 0)
-
-                    //todo 替换mediaitem的位置
-                    //如果状态是播放的话
-                    if (state != PlayStateEnum.Pause)
-                        startCache(originMusicList[curOriginIndex], settingsManager.getStatic())
-                    musicInfo?.let {
-                        updateButtonCommend(
-                            it.itemId in favoriteRepository.favoriteSet.value
-                        )
-                        scope.launch {
-                            _events.emit(
-                                PlayerEvent.ChangeMusic(
-                                    it.itemId,
-                                    it.artistIds?.get(0),
-                                    it.artists?.get(0)
-                                )
-                            )
-                        }
-                        //判断音乐播放进度是否为0,如果为0则不处理,不为0则需要跳转到相应的进度
-                        if (musicCurrentPositionMap.containsKey(it.itemId)) {
-                            musicCurrentPositionMap[it.itemId]?.let { position ->
-                                if (position > 0 && position > mediaController?.currentPosition!!) {
-                                    seekTo(position)
-                                } else if (headTime > 0 && headTime > mediaController?.currentPosition!!) {
-                                    seekTo(headTime)
-                                }
-                            }
-
-                        } else {
-                            Log.i("music", "音乐 ${it.name}没有播放进度")
-                        }
-                    }
-
-                }
-
-
-            }
-        }
-
-        override fun onPositionDiscontinuity(
-            oldPosition: Player.PositionInfo,
-            newPosition: Player.PositionInfo,
-            reason: Int,
-        ) {
-            if (reason == DISCONTINUITY_REASON_SEEK) {
-                musicInfo?.let {
-                    scope.launch {
-                        _events.emit(
-                            PlayerEvent.PositionSeekTo(
-                                newPosition.positionMs,
-                                it.itemId,
-                                settingsManager.get().playSessionId
-                            )
-                        )
-                    }
-                }
-            }
-            super.onPositionDiscontinuity(oldPosition, newPosition, reason)
-        }
-
-        override fun onPlayerErrorChanged(error: PlaybackException?) {
-            Log.i("music", "播放报错")
-            super.onPlayerErrorChanged(error)
-        }
-
-    }
 
     /**
      * 初始化播放
@@ -840,6 +713,8 @@ class MusicController(
      */
     fun clearPlayerList() {
         pause()
+        lrcServer.clear()
+        progressTicker.stop()
         downloadCacheController.cancelAllCache()
         mediaController?.clearMediaItems()
         originMusicList = emptyList()
@@ -853,6 +728,7 @@ class MusicController(
         endTime = Constants.ZERO.toLong()
         pageNum = Constants.ZERO
         pageSize = Constants.ZERO
+        fadeController.release()
     }
 
     private fun setOnCurrentPosition() {
@@ -862,7 +738,8 @@ class MusicController(
     fun onControllerReady(controller: MediaController) {
         progressTicker = PlayProgressTicker(
             controller = controller,
-            intervalMs = MUSIC_POSITION_UPDATE_INTERVAL
+            intervalMs = MUSIC_POSITION_UPDATE_INTERVAL,
+            scope.coroutineContext
         ) { position ->
             setCurrentPositionData(position)
         }
@@ -951,16 +828,25 @@ class MusicController(
         }
     }
 
-    private fun release() {
-        clearPlayerList()
+    override fun close() {
+        pause()
+        mediaController?.clearMediaItems()
+        originMusicList = emptyList()
+        musicCurrentPositionMap.clear()
+        curOriginIndex = Constants.MINUS_ONE_INT
+        musicInfo = null
+        updateDuration(Constants.ZERO.toLong())
+        setCurrentPositionData(Constants.ZERO.toLong())
+        updateState(PlayStateEnum.None)
+        headTime = Constants.ZERO.toLong()
+        endTime = Constants.ZERO.toLong()
+        pageNum = Constants.ZERO
+        pageSize = Constants.ZERO
+        lrcServer.close()
         fadeController.close()
         mediaController?.release()
         mediaController?.removeListener(playerListener)
         progressTicker.close()
-    }
-
-    override fun close() {
-        release()
         super.close()
     }
 }

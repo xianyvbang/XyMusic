@@ -25,7 +25,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.AudioFadeController
 import cn.xybbz.common.music.DownloadCacheController
 import cn.xybbz.common.music.MusicController
-import cn.xybbz.config.favorite.FavoriteRepository
+import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.setting.SettingsManager
 import dagger.Module
 import dagger.Provides
@@ -44,19 +44,19 @@ class MusicControllerModule {
     fun musicController(
         @ApplicationContext application: Context,
         downloadCacheController: DownloadCacheController,
-        favoriteRepository: FavoriteRepository,
         audioFadeController: AudioFadeController,
         settingsManager: SettingsManager,
-        dataSourceManager: DataSourceManager
+        dataSourceManager: DataSourceManager,
+        lrcServer: LrcServer
     ): MusicController {
         val controller =
             MusicController(
                 application,
                 downloadCacheController,
-                favoriteRepository,
                 audioFadeController,
                 settingsManager,
-                dataSourceManager
+                dataSourceManager,
+                lrcServer
             )
         return controller
     }

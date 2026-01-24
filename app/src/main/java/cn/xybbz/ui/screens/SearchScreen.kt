@@ -67,7 +67,6 @@ import androidx.media3.common.util.UnstableApi
 import cn.xybbz.R
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.compositionLocal.LocalNavigator
-import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -275,8 +274,6 @@ fun SearchResultScreen(
     artistList: List<XyArtist>,
     onAddMusic: (XyMusic) -> Unit,
     onLoadingState: () -> Boolean,
-    favoriteRepository: FavoriteRepository,
-    downloadRepository: DownloadRepository,
     musicController: MusicController
 ) {
     val navigator = LocalNavigator.current

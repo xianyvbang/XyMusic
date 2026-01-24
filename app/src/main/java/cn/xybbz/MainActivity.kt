@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.network.NetWorkMonitor
 import cn.xybbz.ui.screens.MainScreen
@@ -49,6 +50,8 @@ class MainActivity : ComponentActivity() {
     lateinit var backgroundConfig: BackgroundConfig
     @Inject
     lateinit var netWorkMonitor: NetWorkMonitor
+    @Inject
+    lateinit var dataSourceManager: DataSourceManager
 
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,6 +94,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         netWorkMonitor.stop()
+        dataSourceManager.close()
         super.onDestroy()
     }
 }

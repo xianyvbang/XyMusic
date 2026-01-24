@@ -247,16 +247,13 @@ class MemoryManagementViewModel @Inject constructor(
      */
     fun clearDatabaseData() {
         viewModelScope.launch {
-            downLoadManager.close()
-
+            musicController.clearPlayerList()
+            dataSourceManager.release()
             db.withTransaction {
+                //清空缓存
                 db.clearAllTables()
             }
             databaseSize = "0B"
-
-            //取消缓存
-            musicController.clearPlayerList()
-            dataSourceManager.close()
             settingsManager.setSettingsData()
         }
     }

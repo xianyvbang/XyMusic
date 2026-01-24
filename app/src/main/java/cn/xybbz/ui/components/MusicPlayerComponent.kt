@@ -578,8 +578,7 @@ fun PlayerStateComponent(
 private fun FavoriteMusicIconComponent(
     musicDetail: XyPlayMusic,
     dataSourceManager: DataSourceManager,
-    musicController: MusicController,
-    favoriteRepository: FavoriteRepository
+    musicController: MusicController
 ) {
     val coroutineScope = rememberCoroutineScope()
     val favoriteSet by favoriteRepository.favoriteSet.collectAsState()

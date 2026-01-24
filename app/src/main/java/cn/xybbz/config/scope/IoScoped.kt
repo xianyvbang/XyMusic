@@ -19,10 +19,20 @@
 package cn.xybbz.config.scope
 
 import cn.xybbz.common.utils.CoroutineScopeUtils
+import cn.xybbz.common.utils.childScope
+import kotlin.coroutines.CoroutineContext
 
 abstract class IoScoped() : AutoCloseable {
 
-    protected val scope = CoroutineScopeUtils.getIo(this::class.java.name)
+    protected lateinit var scope: XyCloseableCoroutineScope
+
+    fun createScope(coroutineContext: CoroutineContext? = null) {
+        scope =
+            coroutineContext?.childScope()
+                ?: CoroutineScopeUtils.getIo(
+                    this::javaClass.name
+                )
+    }
 
     override fun close() {
         scope.close()

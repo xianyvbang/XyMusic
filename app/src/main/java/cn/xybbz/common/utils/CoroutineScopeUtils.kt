@@ -26,6 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 /**
  * 获得CoroutineScope
@@ -50,16 +51,17 @@ object CoroutineScopeUtils {
     fun getIo(name: String = "xy"): XyCloseableCoroutineScope {
         return XyCloseableCoroutineScope(
             CoroutineExceptionHandler(
-            handler = { context, throwable ->
-                Log.e("CoroutineExceptionHandler", throwable.message, throwable)
-            }
-        ) + SupervisorJob() + Dispatchers.IO + CoroutineName(name))
+                handler = { context, throwable ->
+                    Log.e("CoroutineExceptionHandler", throwable.message, throwable)
+                }
+            ) + SupervisorJob() + Dispatchers.IO + CoroutineName(name))
     }
 
     fun getIo(coroutineContext: CoroutineContext): XyCloseableCoroutineScope {
         val job = coroutineContext[Job]
         return XyCloseableCoroutineScope(
-            coroutineContext + SupervisorJob(job))
+            coroutineContext + SupervisorJob(job)
+        )
     }
 
     /**
@@ -68,9 +70,14 @@ object CoroutineScopeUtils {
     fun getDefault(name: String = "xy"): XyCloseableCoroutineScope {
         return XyCloseableCoroutineScope(
             CoroutineExceptionHandler(
-            handler = { context, throwable ->
-                Log.e("CoroutineExceptionHandler", throwable.message, throwable)
-            }
-        ) + SupervisorJob() + Dispatchers.Default + CoroutineName(name))
+                handler = { context, throwable ->
+                    Log.e("CoroutineExceptionHandler", throwable.message, throwable)
+                }
+            ) + SupervisorJob() + Dispatchers.Default + CoroutineName(name))
     }
+}
+
+fun CoroutineContext.childScope(coroutineContext: CoroutineContext = EmptyCoroutineContext): XyCloseableCoroutineScope {
+    val job = this[Job]
+    return XyCloseableCoroutineScope(this + SupervisorJob(job) + coroutineContext)
 }

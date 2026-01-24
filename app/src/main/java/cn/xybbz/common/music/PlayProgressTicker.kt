@@ -21,19 +21,19 @@ package cn.xybbz.common.music
 import android.os.Handler
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
-import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.scope.IoScoped
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 
 class PlayProgressTicker(
     private val controller: MediaController,
     private val intervalMs: Long = 1000L,
+    coroutineContext: CoroutineContext,
     private val onProgress: (Long) -> Unit
 ) : IoScoped(){
 
@@ -42,6 +42,10 @@ class PlayProgressTicker(
     private val controllerHandler =
         Handler(controller.applicationLooper)
 
+    init {
+        createScope(coroutineContext)
+    }
+
     fun start() {
         if (job != null) return
 
@@ -49,14 +53,14 @@ class PlayProgressTicker(
             withContext(Dispatchers.IO){
                 while (coroutineContext.isActive) {
                     controllerHandler.removeCallbacksAndMessages(null)
-                    controllerHandler.post {
+                    controllerHandler.post( {
                         if (
                             controller.isPlaying &&
                             controller.playbackState == Player.STATE_READY
                         ) {
                             onProgress(controller.currentPosition)
                         }
-                    }
+                    })
                     delay(intervalMs)
                 }
             }
@@ -64,17 +68,13 @@ class PlayProgressTicker(
     }
 
     fun stop() {
+        controllerHandler.removeCallbacksAndMessages(null)
         job?.cancel()
         job = null
     }
 
-    fun release() {
-        stop()
-        controllerHandler.removeCallbacksAndMessages(null)
-    }
-
     override fun close() {
-        release()
+        stop()
         super.close()
     }
 }

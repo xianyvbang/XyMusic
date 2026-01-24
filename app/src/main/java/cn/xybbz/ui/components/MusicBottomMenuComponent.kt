@@ -188,7 +188,7 @@ fun MusicBottomMenuComponent(
             ifCanScheduleExactAlarms = musicBottomMenuViewModel.alarmConfig.canScheduleExactAlarm()
         }
         val favoriteMusicMap by musicBottomMenuViewModel.favoriteRepository.favoriteSet.collectAsState()
-        val downloadMusicIds by musicBottomMenuViewModel.downloadRepository.musicIdsFlow.collectAsState()
+        val downloadMusicIds by musicBottomMenuViewModel.downloadMusicIdsFlow.collectAsState(emptyList())
         //收藏信息
         val favoriteState by remember {
             derivedStateOf {

@@ -22,8 +22,6 @@ import androidx.paging.PagingData
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.download.DownloadRepository
-import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.Sort
@@ -46,11 +44,13 @@ class MusicViewModel @Inject constructor(
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicController,
     val selectControl: SelectControl,
-    val favoriteRepository: FavoriteRepository,
-    val downloadRepository: DownloadRepository,
     val backgroundConfig: BackgroundConfig
 ) : PageListViewModel<HomeMusic>(dataSourceManager) {
 
+
+    val downloadMusicIdsFlow =
+        db.downloadDao.getAllMusicTaskUidsFlow()
+    val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     suspend fun getMusicInfoById(musicId: String): XyMusic? = db.musicDao.selectById(musicId)
 

@@ -28,7 +28,6 @@ import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.DownloadCacheController
 import cn.xybbz.common.music.MusicController
-import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.entity.data.ext.toPlayerMusic
 import cn.xybbz.localdata.config.DatabaseClient
@@ -41,7 +40,6 @@ import javax.inject.Inject
 class MusicPlayerViewModel @Inject constructor(
     val musicController: MusicController,
     val dataSourceManager: DataSourceManager,
-    val favoriteRepository: FavoriteRepository,
     val downloadCacheController: DownloadCacheController,
     val lrcServer: LrcServer,
     private val db: DatabaseClient
@@ -51,6 +49,7 @@ class MusicPlayerViewModel @Inject constructor(
 
     val dataList = listOf(R.string.song_tab, R.string.lyrics_tab, R.string.recommend)
 
+    val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     fun addNextPlayer(musicExtend: XyMusicExtend) {
         viewModelScope.launch {

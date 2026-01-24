@@ -24,9 +24,8 @@ import androidx.paging.cachedIn
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.download.DownloadRepository
-import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.entity.data.music.MusicPlayContext
+import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -36,12 +35,15 @@ import javax.inject.Inject
 @HiltViewModel
 class FavoriteViewModel @Inject constructor(
     private val dataSourceManager: DataSourceManager,
+    private val db: DatabaseClient,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicController,
-    val favoriteRepository: FavoriteRepository,
-    val downloadRepository: DownloadRepository,
     val backgroundConfig: BackgroundConfig
 ) : ViewModel() {
+
+    val downloadMusicIdsFlow =
+        db.downloadDao.getAllMusicTaskUidsFlow()
+    val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val favoriteMusicList =

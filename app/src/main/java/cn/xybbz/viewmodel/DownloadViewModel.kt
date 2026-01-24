@@ -44,7 +44,6 @@ import javax.inject.Inject
 @SuppressLint("UnsafeOptInUsageError")
 @HiltViewModel
 class DownloadViewModel @Inject constructor(
-    val favoriteRepository: FavoriteRepository,
     val db: DatabaseClient,
     private val downLoadManager: DownLoadManager,
     private val datasourceServer: DataSourceManager,

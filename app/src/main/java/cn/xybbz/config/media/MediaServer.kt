@@ -27,7 +27,6 @@ import androidx.media3.extractor.metadata.id3.CommentFrame
 import androidx.media3.extractor.metadata.id3.TextInformationFrame
 import androidx.media3.extractor.metadata.vorbis.VorbisComment
 import cn.xybbz.common.enums.LrcDataType
-import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.config.lrc.LrcServer
 import java.nio.charset.Charset
@@ -35,8 +34,9 @@ import java.nio.charset.Charset
 class MediaServer(
     private val lrcServer: LrcServer
 ) {
-    private val DEFAULT_TAG = "MediaServer"
-    val scope = CoroutineScopeUtils.getIo("MediaServer")
+    companion object{
+        private const val DEFAULT_TAG = "MediaServer"
+    }
 
     @OptIn(UnstableApi::class)
     fun printMetadata(metadata: Metadata, prefix: String) {

@@ -23,15 +23,12 @@ import cn.xybbz.api.client.data.ProxyConfig
 import cn.xybbz.api.okhttp.proxy.ProxyManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.AllDataEnum
-import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.proxy.XyProxyConfig
 import java.net.URI
 
 class ProxyConfigServer(private val db: DatabaseClient) {
 
-
-    val scope = CoroutineScopeUtils.getIo("ProxyConfig")
     lateinit var proxyConfig: XyProxyConfig
 
     suspend fun initConfig() {

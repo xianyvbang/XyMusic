@@ -293,7 +293,7 @@ class DataSourceManager(
      * 切换连接服务
      */
     suspend fun changeDataSource(connectionConfig: ConnectionConfig) {
-        close()
+        release()
         switchDataSource(connectionConfig.type)
         serverLogin(connectionConfig = connectionConfig)
     }
@@ -1212,13 +1212,19 @@ class DataSourceManager(
         dataSourceServer.getApiClient().eventBus.notify(ReLoginEvent.Unauthorized)
     }
 
-    override fun close() {
-        super.close()
-        versionApiClient.release()
+    fun dataSourceScope() = scope
+
+    fun release(){
         dataSourceServer.close()
         dataSourceServerFlow.value = null
         dataSourceType = null
         //取消定时任务
         alarmConfig.cancelAllAlarm()
+    }
+
+    override fun close() {
+        super.close()
+        versionApiClient.release()
+        release()
     }
 }

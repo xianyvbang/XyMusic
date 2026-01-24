@@ -37,7 +37,7 @@ import kotlinx.coroutines.launch
 
 class BackgroundConfig(
     private val db: DatabaseClient
-): IoScoped(){
+){
 
     private var backgroundConfig: XyBackgroundConfig? = null
     fun get(): XyBackgroundConfig {

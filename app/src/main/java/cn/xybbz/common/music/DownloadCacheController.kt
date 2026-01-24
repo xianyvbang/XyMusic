@@ -61,7 +61,7 @@ import java.util.concurrent.Executors
 class DownloadCacheController(
     private val context: Context,
     private val settingsManager: SettingsManager,
-    private val cacheApiClient: CacheApiClient
+    cacheApiClient: CacheApiClient
 ) : IoScoped(){
 
     val cache: Cache

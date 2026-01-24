@@ -84,7 +84,6 @@ class MainViewModel @Inject constructor(
     val backgroundConfig: BackgroundConfig,
     private val musicPlayContext: MusicPlayContext,
     private val alarmConfig: AlarmConfig,
-    private val favoriteRepository: FavoriteRepository,
     val selectControl: SelectControl,
     private val versionCheckScheduler: VersionCheckScheduler,
 ) : ViewModel() {
@@ -103,8 +102,8 @@ class MainViewModel @Inject constructor(
 
     private var enableProgressJob: Job? = null
     private var playerListJob: Job? = null
-    private var mediaLibraryAndFavoriteSynJob: Job? = null
 
+    val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     /**
      * 相似歌曲
@@ -277,6 +276,11 @@ class MainViewModel @Inject constructor(
     }
 
     fun onOnChangeMusic(musicId: String, artistId: String?, artistName: String?) {
+
+        viewModelScope.launch {
+            musicController.updateButtonCommend(db.musicDao.selectIfFavoriteByMusic(musicId))
+        }
+
         viewModelScope.launch {
             similarMusicList = dataSourceManager.getSimilarMusicList(musicId)
         }

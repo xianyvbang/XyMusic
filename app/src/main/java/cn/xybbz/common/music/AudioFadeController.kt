@@ -113,7 +113,7 @@ class AudioFadeController() : IoScoped() {
             }
     }
 
-    private fun release() {
+    fun release() {
         currentTrack?.release()
         volumeShaper?.close()
         volumeShaper = null

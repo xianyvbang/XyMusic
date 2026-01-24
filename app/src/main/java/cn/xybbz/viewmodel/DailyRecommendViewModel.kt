@@ -28,7 +28,6 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.recommender.DailyRecommender
 import cn.xybbz.entity.data.music.MusicPlayContext
@@ -48,13 +47,13 @@ class DailyRecommendViewModel @Inject constructor(
     private val dataSourceManager: DataSourceManager,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicController,
-    val favoriteRepository: FavoriteRepository,
-    val downloadRepository: DownloadRepository,
     val backgroundConfig: BackgroundConfig,
     private val dailyRecommender: DailyRecommender,
 ) : ViewModel() {
 
-
+    val downloadMusicIdsFlow =
+        db.downloadDao.getAllMusicTaskUidsFlow()
+    val favoriteSet = db.musicDao.selectFavoriteListFlow()
     /**
      * 推荐音乐
      */

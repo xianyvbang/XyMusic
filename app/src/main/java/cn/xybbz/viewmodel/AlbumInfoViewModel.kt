@@ -31,8 +31,6 @@ import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.PlaylistFileUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.download.DownloadRepository
-import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.entity.data.music.MusicPlayContext
@@ -60,8 +58,6 @@ class AlbumInfoViewModel @AssistedInject constructor(
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicController,
     val selectControl: SelectControl,
-    val favoriteRepository: FavoriteRepository,
-    val downloadRepository: DownloadRepository,
     val backgroundConfig: BackgroundConfig
 ) : PageListViewModel<XyMusic>(dataSourceManager) {
 
@@ -74,6 +70,10 @@ class AlbumInfoViewModel @AssistedInject constructor(
         fun create(itemId: String, dataType: MusicDataTypeEnum): AlbumInfoViewModel
     }
 
+
+    val downloadMusicIdsFlow =
+        db.downloadDao.getAllMusicTaskUidsFlow()
+    val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     /**
      * 播放进度

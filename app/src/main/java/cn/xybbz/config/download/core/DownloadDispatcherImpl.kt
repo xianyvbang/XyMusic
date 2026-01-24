@@ -40,6 +40,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
+import kotlin.coroutines.CoroutineContext
 
 
 class DownloadDispatcherImpl(
@@ -68,7 +69,8 @@ class DownloadDispatcherImpl(
      * 初始化加载数据库中的信息
      * todo 这里需要修改,改为初始化所有数据都是暂停状态
      */
-    suspend fun rehydrate(connectionId:Long) = withContext(Dispatchers.IO) {
+    suspend fun rehydrate(connectionId:Long,coroutineContext: CoroutineContext) = withContext(Dispatchers.IO) {
+        createScope(coroutineContext)
         // Only rehydrate once
         if (readyTasks.isNotEmpty() || runningTasks.isNotEmpty() || pausedTasks.isNotEmpty() || failedTasks.isNotEmpty()) {
             readyTasks.clear()

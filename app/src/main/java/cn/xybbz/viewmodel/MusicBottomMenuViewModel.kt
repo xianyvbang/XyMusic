@@ -35,9 +35,7 @@ import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.download.DownLoadManager
-import cn.xybbz.config.download.DownloadRepository
 import cn.xybbz.config.download.core.DownloadRequest
-import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.volume.VolumeServer
 import cn.xybbz.localdata.config.DatabaseClient
@@ -59,12 +57,13 @@ class MusicBottomMenuViewModel @Inject constructor(
     val musicController: MusicController,
     val dataSourceManager: DataSourceManager,
     val alarmConfig: AlarmConfig,
-    val favoriteRepository: FavoriteRepository,
-    val downloadRepository: DownloadRepository,
     val downloadManager: DownLoadManager,
     val volumeServer: VolumeServer,
 ) : ViewModel() {
 
+    val downloadMusicIdsFlow =
+        db.downloadDao.getAllMusicTaskUidsFlow()
+    val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     var volumeValue by mutableStateOf(0f)
         private set

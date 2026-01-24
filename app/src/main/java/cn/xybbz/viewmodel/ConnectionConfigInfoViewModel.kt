@@ -172,7 +172,7 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
                     connectionId
                 )
                 musicController.clearPlayerList()
-                dataSourceManager.close()
+                dataSourceManager.release()
                 settingsManager.setSettingsData()
             } else {
                 MessageUtils.sendPopTip(
