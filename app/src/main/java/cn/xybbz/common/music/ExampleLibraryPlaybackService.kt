@@ -77,12 +77,6 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
 
     lateinit var audioTrack: AudioTrack
 
-    private val exoPlayerListener = ExoPlayerListener(
-        musicController,
-        downloadCacheController,
-        lrcServer,
-        exoPlayer
-    )
 
 
     @Inject
@@ -112,6 +106,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
     @Inject
     lateinit var mediaServer: MediaServer
 
+    private var exoPlayerListener:ExoPlayerListener? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -147,7 +142,13 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                 }
             })
             .build()
-
+        val exoPlayerListener = ExoPlayerListener(
+            musicController,
+            downloadCacheController,
+            lrcServer,
+            exoPlayer
+        )
+        this.exoPlayerListener = exoPlayerListener
 
         //这里的可以获得元数据
         exoPlayer?.addAnalyticsListener(XyLogger(mediaServer = mediaServer))
@@ -290,7 +291,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
     override fun onDestroy() {
         // 释放相关实例
         Log.i("music", "数据释放")
-        exoPlayer?.removeListener(exoPlayerListener)
+        exoPlayerListener?.let { exoPlayer?.removeListener(it) }
         exoPlayer?.stop()
         exoPlayer?.release()
         exoPlayer = null

@@ -34,6 +34,7 @@ import cn.xybbz.config.network.OnNetworkChangeListener
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.setting.XySettings
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
+import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.LanguageType
 import com.hjq.language.MultiLanguages
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -45,7 +46,7 @@ class SettingsManager(
     private val applicationContext: Context,
     private val audioFadeController: AudioFadeController,
     private val netWorkMonitor: NetWorkMonitor
-){
+) {
 
     private var settings: XySettings? = null
 
@@ -179,14 +180,19 @@ class SettingsManager(
     /**
      * 存储数据源类型
      */
-    suspend fun saveConnectionId(connectionId: Long?) {
+    suspend fun saveConnectionId(connectionId: Long?, dataSourceType: DataSourceType?) {
         if (connectionId != null) {
-            settings = get().copy(connectionId = connectionId)
+            settings = get().copy(connectionId = connectionId, dataSourceType = dataSourceType)
             if (get().id != AllDataEnum.All.code) {
-                db.settingsDao.updateConnectionId(connectionId, get().id)
+                db.settingsDao.updateConnectionId(connectionId, dataSourceType, get().id)
             } else {
                 val settingId =
-                    db.settingsDao.save(XySettings(connectionId = connectionId))
+                    db.settingsDao.save(
+                        XySettings(
+                            connectionId = connectionId,
+                            dataSourceType = dataSourceType
+                        )
+                    )
                 settings = get().copy(id = settingId)
             }
         }

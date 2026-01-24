@@ -43,7 +43,6 @@ import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
 import java.lang.AutoCloseable
@@ -56,10 +55,6 @@ import java.lang.AutoCloseable
  */
 interface IDataSourceServer : AutoCloseable {
 
-
-    fun ifTmpObject(): Boolean
-
-    fun updateIfTmpObject(ifTmp: Boolean)
 
     /**
      * 用户登录逻辑
@@ -252,6 +247,10 @@ interface IDataSourceServer : AutoCloseable {
      */
     suspend fun selectArtistInfoByIds(artistIds: List<String>): List<XyArtist>?
 
+    /**
+     * 初始化收藏数据
+     */
+    suspend fun initFavoriteData()
     /**
      * 根据id获得艺术家信息
      * @param [artistId] 艺术家id
@@ -463,11 +462,6 @@ interface IDataSourceServer : AutoCloseable {
      * 更新连接设置
      */
     suspend fun updateConnectionConfig(connectionConfig: ConnectionConfig)
-
-    /**
-     * 获得登录成功flow
-     */
-    fun getLoginStateFlow(): SharedFlow<Boolean>
 
     /**
      * 更新媒体库id

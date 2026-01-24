@@ -33,6 +33,7 @@ import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.data.music.XyMusic
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.sample
@@ -51,6 +52,7 @@ class DownloadViewModel @Inject constructor(
 ) : ViewModel() {
 
 
+    @OptIn(FlowPreview::class)
     val musicDownloadInfo: StateFlow<List<XyDownload>> = db.downloadDao.getAllMusicTasksFlow()
         .sample(200)
         .stateIn(

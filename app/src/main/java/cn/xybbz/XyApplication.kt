@@ -72,10 +72,7 @@ class XyApplication : Application(), Configuration.Provider {
         val scope = CoroutineScopeUtils.getDefault("XyApplication")
         scope.launch {
             settingsManager.setSettingsData()
-        }
-
-        scope.launch {
-            dataSourceManager.initDataSource()
+            dataSourceManager.initDataSource(settingsManager.get().dataSourceType)
         }
 
         scope.launch {
@@ -84,8 +81,6 @@ class XyApplication : Application(), Configuration.Provider {
         scope.launch {
             proxyConfigServer.initConfig()
         }
-
-        downloadManager.initData()
 
         scope.launch {
             homeDataRepository.initData()

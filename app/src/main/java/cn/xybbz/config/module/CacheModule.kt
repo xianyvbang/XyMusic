@@ -35,17 +35,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 class CacheModule {
 
-   /* @OptIn(UnstableApi::class)
-    @Singleton
-    @Provides
-    fun cacheController(
-        @ApplicationContext context: Context,
-        settingsManager: SettingsManager,
-        cacheApiClient: CacheApiClient
-    ): CacheController {
-        return CacheController(context, settingsManager,cacheApiClient)
-    }*/
-
     @OptIn(UnstableApi::class)
     @Singleton
     @Provides

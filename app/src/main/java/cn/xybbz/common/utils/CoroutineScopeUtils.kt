@@ -23,7 +23,9 @@ import cn.xybbz.config.scope.XyCloseableCoroutineScope
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlin.coroutines.CoroutineContext
 
 /**
  * 获得CoroutineScope
@@ -52,6 +54,12 @@ object CoroutineScopeUtils {
                 Log.e("CoroutineExceptionHandler", throwable.message, throwable)
             }
         ) + SupervisorJob() + Dispatchers.IO + CoroutineName(name))
+    }
+
+    fun getIo(coroutineContext: CoroutineContext): XyCloseableCoroutineScope {
+        val job = coroutineContext[Job]
+        return XyCloseableCoroutineScope(
+            coroutineContext + SupervisorJob(job))
     }
 
     /**

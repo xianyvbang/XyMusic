@@ -37,7 +37,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.events.ReLoginEvent
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.MusicTypeEnum
@@ -87,7 +86,6 @@ class MainViewModel @Inject constructor(
     private val alarmConfig: AlarmConfig,
     private val favoriteRepository: FavoriteRepository,
     val selectControl: SelectControl,
-    private val mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     private val versionCheckScheduler: VersionCheckScheduler,
 ) : ViewModel() {
 
@@ -130,8 +128,6 @@ class MainViewModel @Inject constructor(
         musicControllerInit()
         //初始化版本信息获取
         initGetVersionInfo()
-        //初始化媒体库和收藏信息
-        initMediaLibraryAndFavoriteSync()
         //设置转码监听
         initTranscodeListener()
     }
@@ -193,7 +189,7 @@ class MainViewModel @Inject constructor(
         musicController.initController {
             // 查询是否存在播放列表,如果存在将内容写入
             viewModelScope.launch {
-                dataSourceManager.getLoginStateFlow().collect {
+                dataSourceManager.loginState.collect {
                     startPlayerListObserver()
                 }
             }
@@ -409,7 +405,7 @@ class MainViewModel @Inject constructor(
 
     private fun observeLoginSuccessForAndProgress() {
         viewModelScope.launch {
-            dataSourceManager.getLoginStateFlow().collect {
+            dataSourceManager.loginState.collect {
                 startEnableProgressObserver()
             }
         }
@@ -483,25 +479,6 @@ class MainViewModel @Inject constructor(
                     )
                 }
             }
-        }
-    }
-
-    /**
-     * 加载收藏和媒体库
-     */
-    fun initMediaLibraryAndFavoriteSync() {
-        viewModelScope.launch {
-            dataSourceManager.getLoginStateFlow().collect {
-                startMediaLibraryAndFavoriteSync()
-            }
-        }
-    }
-
-    fun startMediaLibraryAndFavoriteSync() {
-        mediaLibraryAndFavoriteSynJob?.cancel()
-        mediaLibraryAndFavoriteSyncScheduler.cancel()
-        mediaLibraryAndFavoriteSynJob = viewModelScope.launch {
-            mediaLibraryAndFavoriteSyncScheduler.enqueueIfNeeded()
         }
     }
 
@@ -700,7 +677,7 @@ class MainViewModel @Inject constructor(
             dataSourceManager.dataSourceServerFlow
                 .filterNotNull()
                 .flatMapLatest { server ->
-                    server.defaultParentApiClient.eventBus.events
+                    server.getApiClient().eventBus.events
                 }
                 .onEach { event ->
                     if (event is ReLoginEvent.Unauthorized) dataSourceManager.serverLogin(

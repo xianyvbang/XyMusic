@@ -45,6 +45,7 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.alarm.AlarmConfig
+import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.entity.data.LoginStateData
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.ResourceData
@@ -65,12 +66,15 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.stateIn
 import okhttp3.OkHttpClient
-import java.lang.AutoCloseable
 import java.net.SocketTimeoutException
 import javax.inject.Provider
 
@@ -85,21 +89,31 @@ class DataSourceManager(
     private val dataSources: Map<DataSourceType, @JvmSuppressWildcards Provider<IDataSourceParentServer>>,
     private val alarmConfig: AlarmConfig,
     private val versionApiClient: VersionApiClient
-) : IDataSourceServer, AutoCloseable {
+) : IDataSourceServer, IoScoped() {
 
 
     var dataSourceType by mutableStateOf<DataSourceType?>(null)
         private set
 
 
-
     /**
      * 用户数据源数据信息服务类
      */
-    lateinit var dataSourceServer: IDataSourceParentServer
-        private set
+    private lateinit var dataSourceServer: IDataSourceParentServer
 
     val dataSourceServerFlow = MutableStateFlow<IDataSourceParentServer?>(null)
+
+    @kotlin.OptIn(ExperimentalCoroutinesApi::class)
+    val loginState: StateFlow<Boolean> =
+        dataSourceServerFlow
+            .flatMapLatest { server ->
+                server?.getLoginStateFlow() ?: flowOf(false)
+            }
+            .stateIn(
+                scope = scope,
+                started = SharingStarted.Eagerly,
+                initialValue = false
+            )
 
 
     //加载状态
@@ -124,8 +138,14 @@ class DataSourceManager(
     /**
      * 初始化对象信息
      */
-    suspend fun initDataSource() {
-        serverLogin(LoginType.TOKEN,null)
+    suspend fun initDataSource(dataSourceType: DataSourceType?) {
+        Log.i("=====", "开始自动登录")
+        if (dataSourceType != null) {
+            Log.i("=====", "开始自动登录中")
+            switchDataSource(dataSourceType)
+            serverLogin(LoginType.TOKEN, null)
+        }
+
     }
 
     /**
@@ -138,7 +158,7 @@ class DataSourceManager(
             }
 
             else -> {
-                dataSourceServer.defaultParentApiClient
+                dataSourceServer.getApiClient()
             }
         }
     }
@@ -146,11 +166,14 @@ class DataSourceManager(
     /**
      * 登陆服务端
      */
-    suspend fun serverLogin(loginType: LoginType = LoginType.TOKEN,connectionConfig: ConnectionConfig?) {
+    suspend fun serverLogin(
+        loginType: LoginType = LoginType.TOKEN,
+        connectionConfig: ConnectionConfig?
+    ) {
         ifLoginError = false
-        autoLogin(loginType,connectionConfig).collect { loginState ->
+        autoLogin(loginType, connectionConfig).collect { loginState ->
             loginStatus = loginState
-    //                ifLoginError = false
+            //                ifLoginError = false
             val loginSateInfo = getLoginSateInfo(loginState)
             Log.i("error", "${loginSateInfo}")
             errorHint = loginSateInfo.errorHint ?: R.string.empty_info
@@ -270,17 +293,9 @@ class DataSourceManager(
      * 切换连接服务
      */
     suspend fun changeDataSource(connectionConfig: ConnectionConfig) {
-        clear()
+        close()
         switchDataSource(connectionConfig.type)
         serverLogin(connectionConfig = connectionConfig)
-    }
-
-    override fun ifTmpObject(): Boolean {
-        return false
-    }
-
-    override fun updateIfTmpObject(ifTmp: Boolean) {
-
     }
 
 
@@ -291,7 +306,10 @@ class DataSourceManager(
         return dataSourceServer.addClientAndLogin(clientLoginInfoReq)
     }
 
-    override suspend fun autoLogin(loginType: LoginType, connectionConfig: ConnectionConfig?): Flow<ClientLoginInfoState> {
+    override suspend fun autoLogin(
+        loginType: LoginType,
+        connectionConfig: ConnectionConfig?
+    ): Flow<ClientLoginInfoState> {
         loading = true
         Log.i("=====", "开始登录.............")
         return dataSourceServer.autoLogin(loginType, connectionConfig)
@@ -546,7 +564,6 @@ class DataSourceManager(
     }
 
 
-
     /**
      * 获取歌单列表
      * @return [List<XyPlaylist>?]
@@ -726,6 +743,13 @@ class DataSourceManager(
      */
     override suspend fun selectArtistInfoByIds(artistIds: List<String>): List<XyArtist>? {
         return dataSourceServer.selectArtistInfoByIds(artistIds)
+    }
+
+    /**
+     * 初始化收藏数据
+     */
+    override suspend fun initFavoriteData() {
+        return dataSourceServer.initFavoriteData()
     }
 
     /**
@@ -1082,13 +1106,6 @@ class DataSourceManager(
     }
 
     /**
-     * 获得登录成功flow
-     */
-    override fun getLoginStateFlow(): SharedFlow<Boolean> {
-        return dataSourceServer.getLoginStateFlow()
-    }
-
-    /**
      * 更新媒体库id
      */
     override suspend fun updateLibraryId(libraryId: String?, connectionId: Long) {
@@ -1192,19 +1209,11 @@ class DataSourceManager(
      * 触发重新登陆
      */
     fun restartLogin() {
-        dataSourceServer.defaultParentApiClient.eventBus.notify(ReLoginEvent.Unauthorized)
-    }
-
-
-
-    /**
-     * 释放
-     */
-    private fun clear() {
-
+        dataSourceServer.getApiClient().eventBus.notify(ReLoginEvent.Unauthorized)
     }
 
     override fun close() {
+        super.close()
         versionApiClient.release()
         dataSourceServer.close()
         dataSourceServerFlow.value = null

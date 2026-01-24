@@ -562,3 +562,13 @@ internal val Migration_18_19 = object : Migration(18, 19) {
         """)
     }
 }
+
+internal val Migration_19_20 = object : Migration(19, 20) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+
+        db.execSQL("""
+            ALTER TABLE xy_settings
+            ADD COLUMN dataSourceType TEXT
+        """)
+    }
+}

@@ -85,7 +85,7 @@ class MusicController(
     private val fadeController: AudioFadeController,
     private val settingsManager: SettingsManager,
     private val dataSourceManager: DataSourceManager
-) : IoScoped(){
+) : IoScoped() {
 
     // 原始歌曲列表
     var originMusicList by mutableStateOf(emptyList<XyPlayMusic>())
@@ -543,7 +543,6 @@ class MusicController(
         }
 
     }
-
 
 
     fun removeItem(index: Int) {

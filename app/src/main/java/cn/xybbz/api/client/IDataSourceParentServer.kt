@@ -33,6 +33,7 @@ import cn.xybbz.R
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
+import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.exception.UnauthorizedException
@@ -42,6 +43,7 @@ import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.PasswordUtils
+import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.EncryptAesData
 import cn.xybbz.entity.data.Sort
@@ -93,7 +95,9 @@ abstract class IDataSourceParentServer(
     private val db: DatabaseClient,
     private val settingsManager: SettingsManager,
     private val application: Context,
-    val defaultParentApiClient: DefaultParentApiClient
+    private val defaultParentApiClient: DefaultParentApiClient,
+    private val mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
+    private val downloadManager: DownLoadManager
 ) : IDataSourceServer {
 
     private var connectionConfig: ConnectionConfig? = null
@@ -108,17 +112,21 @@ abstract class IDataSourceParentServer(
         replay = 1,
         extraBufferCapacity = 1
     )
-    val loginSuccessEvent = _loginSuccessEvent.asSharedFlow()
+    private val loginSuccessEvent = _loginSuccessEvent.asSharedFlow()
 
 
     private var ifTmpObject = false
 
-    override fun ifTmpObject(): Boolean {
+    fun ifTmpObject(): Boolean {
         return ifTmpObject
     }
 
-    override fun updateIfTmpObject(ifTmp: Boolean) {
+    fun updateIfTmpObject(ifTmp: Boolean) {
         ifTmpObject = ifTmp
+    }
+
+    fun getApiClient():DefaultParentApiClient{
+        return defaultParentApiClient
     }
 
     /**
@@ -267,6 +275,10 @@ abstract class IDataSourceParentServer(
                     setCoilImageOkHttpClient()
 
                     connection(connectionConfig.copy(id = connectionId), connectionConfig.id != 0L)
+
+                    mediaLibraryAndFavoriteSyncScheduler.cancel()
+                    mediaLibraryAndFavoriteSyncScheduler.enqueueIfNeeded(connectionId)
+                    downloadManager.initData(connectionId)
                     MessageUtils.sendDismiss()
                 }
             }
@@ -387,7 +399,8 @@ abstract class IDataSourceParentServer(
 
         }.flowOn(Dispatchers.IO).catch {
             Log.e(Constants.LOG_ERROR_PREFIX, "自动登录异常 ${it.message}", it)
-            sendLoginCompleted(false)
+            if (loginType == LoginType.TOKEN)
+                sendLoginCompleted(false)
             when (it) {
                 is SocketTimeoutException -> {
                     emit(ClientLoginInfoState.ServiceTimeOutState)
@@ -834,7 +847,7 @@ abstract class IDataSourceParentServer(
     /**
      * 获得所有收藏数据
      */
-    open suspend fun initFavoriteData() {
+    override suspend fun initFavoriteData() {
 
     }
 
@@ -1157,7 +1170,7 @@ abstract class IDataSourceParentServer(
     /**
      * 获得登录成功flow
      */
-    override fun getLoginStateFlow(): SharedFlow<Boolean> {
+    fun getLoginStateFlow(): SharedFlow<Boolean> {
         return loginSuccessEvent
     }
 
@@ -1188,7 +1201,7 @@ abstract class IDataSourceParentServer(
     suspend fun connection(connectionConfig: ConnectionConfig, ifAutoLogin: Boolean) {
         if (!ifAutoLogin)
             this.connectionConfig = connectionConfig
-        settingsManager.saveConnectionId(connectionId = connectionConfig.id)
+        settingsManager.saveConnectionId(connectionId = connectionConfig.id, connectionConfig.type)
         setUpLibraryId(connectionConfig.libraryId)
         sendLoginCompleted(true)
     }
@@ -1218,6 +1231,9 @@ abstract class IDataSourceParentServer(
 
 
     override fun close() {
+        downloadManager.close()
+        defaultParentApiClient.release()
+        mediaLibraryAndFavoriteSyncScheduler.cancel()
         TokenServer.clearAllData()
         unConnection()
         libraryId = null

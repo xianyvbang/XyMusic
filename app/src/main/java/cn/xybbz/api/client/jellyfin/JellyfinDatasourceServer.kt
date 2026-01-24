@@ -32,6 +32,7 @@ import cn.xybbz.api.client.jellyfin.data.ItemResponse
 import cn.xybbz.api.client.jellyfin.data.PlaybackStartInfo
 import cn.xybbz.api.client.jellyfin.data.PlaylistUserPermissions
 import cn.xybbz.api.client.jellyfin.data.ViewRequest
+import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.BaseItemKind
 import cn.xybbz.api.enums.jellyfin.CollectionType
@@ -51,6 +52,7 @@ import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
 import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.common.utils.PlaylistParser
+import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchAndOrder
@@ -82,13 +84,17 @@ import javax.inject.Inject
 class JellyfinDatasourceServer @Inject constructor(
     private val db: DatabaseClient,
     private val application: Context,
-    private val settingsManager: SettingsManager,
-    private val jellyfinApiClient: JellyfinApiClient
+    settingsManager: SettingsManager,
+    private val jellyfinApiClient: JellyfinApiClient,
+    mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
+    downloadManager: DownLoadManager
 ) : IDataSourceParentServer(
     db,
     settingsManager,
     application,
-    jellyfinApiClient
+    jellyfinApiClient,
+    mediaLibraryAndFavoriteSyncScheduler,
+    downloadManager
 ) {
 
     /**
@@ -936,14 +942,6 @@ class JellyfinDatasourceServer @Inject constructor(
             pageSize = pageSize,
             genreIds = genreIds
         ).items
-    }
-
-    /**
-     * 释放
-     */
-    override fun close() {
-        super.close()
-        jellyfinApiClient.release()
     }
 
     /**

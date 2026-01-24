@@ -30,6 +30,7 @@ import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.plex.data.Directory
 import cn.xybbz.api.client.plex.data.Metadatum
 import cn.xybbz.api.client.plex.data.PlaylistMetadatum
+import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.plex.ImageType
 import cn.xybbz.api.enums.plex.MetadatumType
@@ -44,6 +45,7 @@ import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PlaylistParser
+import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.PlexOrder
@@ -73,13 +75,17 @@ import javax.inject.Inject
 class PlexDatasourceServer @Inject constructor(
     private val db: DatabaseClient,
     private val application: Context,
-    private val settingsManager: SettingsManager,
-    private val plexApiClient: PlexApiClient
+    settingsManager: SettingsManager,
+    private val plexApiClient: PlexApiClient,
+    mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
+    downloadManager: DownLoadManager
 ) : IDataSourceParentServer(
     db,
     settingsManager,
     application,
-    plexApiClient
+    plexApiClient,
+    mediaLibraryAndFavoriteSyncScheduler,
+    downloadManager
 ) {
 
     /**
@@ -100,7 +106,7 @@ class PlexDatasourceServer @Inject constructor(
     override suspend fun initFavoriteData() {
         //查询收藏合集是否存在,如果不存在则查询
         val libraryIdTmp = libraryId
-        if (libraryIdTmp != null){
+        if (libraryIdTmp != null) {
             if (plexApiClient.musicFavoriteCollectionId == null) {
                 //查询合集
                 val musicCollection = plexApiClient.userLibraryApi()
@@ -905,7 +911,6 @@ class PlexDatasourceServer @Inject constructor(
                     null,
                     playlistId
                 )
-                val pic = if (removeDuplicatesMusicList.isNotEmpty()) musicList[0].pic else null
                 saveMusicPlaylist(
                     playlistId = playlistId,
                     musicIds = removeDuplicatesMusicList.map { music -> music.itemId }
@@ -949,7 +954,6 @@ class PlexDatasourceServer @Inject constructor(
      * 保存自建歌单中的音乐
      * @param [playlistId] 歌单id
      * @param [musicIds] 音乐id集合
-     * @param [pic] 自建歌单图片
      */
     override suspend fun saveMusicPlaylist(
         playlistId: String,
@@ -1058,8 +1062,8 @@ class PlexDatasourceServer @Inject constructor(
     /**
      * plex初始化设置更新媒体库
      */
-    private suspend fun plexUpdateLibrary(libraryId: String){
-        if (super.libraryId != null){
+    private suspend fun plexUpdateLibrary(libraryId: String) {
+        if (super.libraryId != null) {
             return
         }
         setUpLibraryId(libraryId)
@@ -1813,7 +1817,7 @@ class PlexDatasourceServer @Inject constructor(
             premiereDate = album.originallyAvailableAt?.atStartOfDay(ZoneOffset.ofHours(8))
                 ?.toInstant()
                 ?.toEpochMilli(),
-            genreIds = album.genre?.joinToString() { it.tag },
+            genreIds = album.genre?.joinToString { it.tag },
             ifFavorite = album.collection?.any { it.tag == application.getString(Constants.PLEX_ALBUM_COLLECTION_TITLE) } == true,
             ifPlaylist = false,
             createTime = album.addedAt,
@@ -1843,7 +1847,7 @@ class PlexDatasourceServer @Inject constructor(
             ifFavorite = false,
             ifPlaylist = true,
             musicCount = playlist.leafCount ?: 0,
-            createTime = playlist.addedAt?:0L
+            createTime = playlist.addedAt ?: 0L
         )
     }
 
@@ -1851,7 +1855,7 @@ class PlexDatasourceServer @Inject constructor(
     /**
      * 将ItemResponse换成XyMusic
      */
-    suspend fun convertToMusicList(item: List<Metadatum>): List<XyMusic> {
+    fun convertToMusicList(item: List<Metadatum>): List<XyMusic> {
         return item.map { music ->
             convertToMusic(
                 music
@@ -1860,7 +1864,7 @@ class PlexDatasourceServer @Inject constructor(
     }
 
     //ItemResponse转换XyMusic
-    suspend fun convertToMusic(item: Metadatum): XyMusic {
+    fun convertToMusic(item: Metadatum): XyMusic {
         val itemImageUrl = item.image?.let { images ->
             val image = images.findLast { it.type == ImageType.CoverPoster }
             image?.let {
