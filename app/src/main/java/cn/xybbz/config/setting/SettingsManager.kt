@@ -82,7 +82,7 @@ class SettingsManager(
 
 
     //是否设置转码音质
-    private val _transcodingFlow = MutableSharedFlow<Boolean>(0, extraBufferCapacity = 1)
+    private val _transcodingFlow = MutableSharedFlow<TranscodingState>(0, extraBufferCapacity = 1)
     val transcodingFlow = _transcodingFlow.asSharedFlow()
 
     /**
@@ -118,7 +118,7 @@ class SettingsManager(
         netWorkMonitor.addListener(object : OnNetworkChangeListener {
             override fun onNetworkChange(isUnmeteredWifi: Boolean) {
                 this@SettingsManager.isUnmeteredWifi = isUnmeteredWifi
-                sengTranscodingEvent()
+                sengTranscodingEvent(TranscodingState.NetWorkChange)
             }
         })
         netWorkMonitor.start()
@@ -471,8 +471,8 @@ class SettingsManager(
         this.cacheFilePath = path
     }
 
-    fun sengTranscodingEvent() {
-        _transcodingFlow.tryEmit(true)
+    fun sengTranscodingEvent(transcodingState:TranscodingState = TranscodingState.Transcoding) {
+        _transcodingFlow.tryEmit(transcodingState)
     }
 
     /**

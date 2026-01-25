@@ -665,6 +665,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             settingsManager.transcodingFlow.collect {
                 Log.i("music", "数据转码监听${it}")
+                //todo 这里要判断wifi和移动网络的设置是否一致,一致不更新
                 musicController.replacePlaylistItemUrl()
             }
         }
