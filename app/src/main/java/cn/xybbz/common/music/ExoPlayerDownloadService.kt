@@ -27,6 +27,7 @@ import androidx.media3.exoplayer.offline.DownloadNotificationHelper
 import androidx.media3.exoplayer.offline.DownloadService
 import androidx.media3.exoplayer.scheduler.PlatformScheduler
 import androidx.media3.exoplayer.scheduler.Scheduler
+import androidx.media3.exoplayer.workmanager.WorkManagerScheduler
 import cn.xybbz.R
 import cn.xybbz.common.constants.Constants.DOWNLOAD_NOTIFICATION_CHANNEL_ID
 import dagger.hilt.android.AndroidEntryPoint
@@ -68,9 +69,8 @@ class ExoPlayerDownloadService : DownloadService(
         return downloadManager
     }
 
-    // todo 需要改成WorkManagerScheduler
-    override fun getScheduler(): Scheduler? {
-        return PlatformScheduler(this, JOB_ID)
+    override fun getScheduler(): Scheduler {
+        return WorkManagerScheduler(this, WORKER_NAME)
     }
 
     override fun getForegroundNotification(
@@ -90,7 +90,7 @@ class ExoPlayerDownloadService : DownloadService(
 
     companion object {
         private
-        const val JOB_ID: Int = 1
+        const val WORKER_NAME: String = "media3_worker"
 
         private
         const val FOREGROUND_NOTIFICATION_ID: Int = 1

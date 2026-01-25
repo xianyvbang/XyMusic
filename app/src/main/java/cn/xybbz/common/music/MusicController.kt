@@ -237,7 +237,10 @@ class MusicController(
                 _events.emit(it)
             }
         },
-        onSetCurOriginIndex = { curOriginIndex = mediaController?.currentMediaItemIndex ?: 0 },
+        onSetCurOriginIndex = {
+            setCurrentPositionData(0)
+            curOriginIndex = mediaController?.currentMediaItemIndex ?: 0
+        },
         onOriginMusicListIsNotEmptyAndIndexEnd = {
             originMusicList.isNotEmpty() && curOriginIndex >= originMusicList.size - 1
         },
