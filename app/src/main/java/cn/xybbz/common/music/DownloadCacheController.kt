@@ -62,7 +62,7 @@ class DownloadCacheController(
     private val context: Context,
     private val settingsManager: SettingsManager,
     cacheApiClient: CacheApiClient
-) : IoScoped(){
+) : IoScoped() {
 
     val cache: Cache
     var cacheDataSourceFactory: CacheDataSource.Factory
@@ -129,7 +129,7 @@ class DownloadCacheController(
             .setCache(cache)
             .setUpstreamDataSourceFactory(
                 upstreamDataSourceFactory
-            )/*.setCacheWriteDataSinkFactory(null)*/
+            ).setCacheWriteDataSinkFactory(null)
             .setCacheWriteDataSinkFactory(
                 CacheDataSink.Factory()
                     .setCache(cache)
@@ -185,8 +185,6 @@ class DownloadCacheController(
             /** 切换缓存 → 取消旧任务 */
             if (currentTaskId != null && currentTaskId != itemId) {
                 cancelCurrentCache()
-            } else if (currentTaskId == itemId) {
-                return@launch
             }
             startNewCacheLocked(itemId, url, ifStatic)
         }
@@ -201,6 +199,10 @@ class DownloadCacheController(
         val oldDownload = downloadManager.downloadIndex.getDownload(itemId)
         if (oldDownload != null) {
             download = oldDownload
+            _cacheSchedule.value = oldDownload.percentDownloaded / 100.0f
+            if (oldDownload.percentDownloaded == 100f){
+                return
+            }
             resumeCache()
             return
         }
@@ -353,7 +355,7 @@ class DownloadCacheController(
         super.close()
     }
 
-   private fun release() {
+    private fun release() {
         pauseCache()
         cache.release()
     }
