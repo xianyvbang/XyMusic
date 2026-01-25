@@ -69,7 +69,7 @@ class NetWorkMonitor(application: Context) {
             networkCapabilities: NetworkCapabilities
         ) {
             Log.i("music","网络切换2")
-            check(networkCapabilities)
+//            check(networkCapabilities)
         }
 
         override fun onLost(network: Network) {
