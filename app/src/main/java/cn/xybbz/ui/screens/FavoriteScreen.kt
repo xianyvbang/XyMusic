@@ -26,13 +26,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
@@ -63,8 +63,8 @@ fun FavoriteScreen(
         favoriteViewModel.favoriteMusicList.collectAsLazyPagingItems()
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
-    val favoriteList by favoriteViewModel.favoriteSet.collectAsState(emptyList())
-    val downloadMusicIdList by favoriteViewModel.downloadMusicIdsFlow.collectAsState(emptyList())
+    val favoriteList by favoriteViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
+    val downloadMusicIdList by favoriteViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(emptyList())
 
 
     XyColumnScreen(

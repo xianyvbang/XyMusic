@@ -71,7 +71,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -95,6 +94,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
@@ -173,13 +173,15 @@ fun AlbumInfoScreen(
     val navigator = LocalNavigator.current
     val isSticking by remember(lazyListState) { lazyListState.isSticking(1) }
 
-    val favoriteSet by albumInfoViewModel.favoriteSet.collectAsState(emptyList())
-    val downloadMusicIds by albumInfoViewModel.downloadMusicIdsFlow.collectAsState(emptyList())
-    val ifOpenSelect by albumInfoViewModel.selectControl.uiState.collectAsState()
+    val favoriteSet by albumInfoViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
+    val downloadMusicIds by albumInfoViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
+        emptyList()
+    )
+    val ifOpenSelect by albumInfoViewModel.selectControl.uiState.collectAsStateWithLifecycle()
 
     val musicListPage =
         albumInfoViewModel.listPage.collectAsLazyPagingItems()
-    val sortBy by albumInfoViewModel.sortBy.collectAsState()
+    val sortBy by albumInfoViewModel.sortBy.collectAsStateWithLifecycle()
 
     var ifShowMenu by remember {
         mutableStateOf(false)
@@ -856,7 +858,7 @@ private fun StickyHeaderOperationParent(
                     ) { musicListPage.refresh() }
                 },
                 onClearFilterOrShort = {
-                    albumInfoViewModel.clearFilterOrSort{musicListPage.refresh()}
+                    albumInfoViewModel.clearFilterOrSort { musicListPage.refresh() }
                 }
             )
         }

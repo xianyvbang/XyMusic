@@ -12,7 +12,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -20,6 +19,7 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation3.runtime.NavKey
 import cn.xybbz.compositionLocal.LocalMainViewModel
@@ -53,7 +53,7 @@ import kotlinx.coroutines.launch
 fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
 
     val coroutineScope = rememberCoroutineScope()
-    val ifOpenSelect by mainViewModel.selectControl.uiState.collectAsState()
+    val ifOpenSelect by mainViewModel.selectControl.uiState.collectAsStateWithLifecycle()
 
     val navigationState = rememberNavigationState(
         startRoute = Home,

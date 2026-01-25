@@ -63,10 +63,10 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -86,6 +86,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.R
 import cn.xybbz.common.utils.DateUtil.millisecondsToTime
 import cn.xybbz.common.utils.DateUtil.toDateStr
@@ -183,8 +184,8 @@ fun MusicBottomMenuComponent(
         onIfShowArtistList = { ifShowArtistList },
         onSetShowArtistList = { ifShowArtistList = it },
     )
-    val favoriteMusicMap by musicBottomMenuViewModel.favoriteSet.collectAsState(emptyList())
-    val downloadMusicIds by musicBottomMenuViewModel.downloadMusicIdsFlow.collectAsState(emptyList())
+    val favoriteMusicMap by musicBottomMenuViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
+    val downloadMusicIds by musicBottomMenuViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(emptyList())
 
     bottomMenuMusicInfo.forEach { music ->
 
@@ -459,7 +460,7 @@ fun MusicBottomMenuComponent(
                                             ifShowArtistList = true
                                             musicBottomMenuViewModel.getArtistInfos(artistIds)
                                         } else {
-                                            navigator.navigate(ArtistInfo(artistIds.get(0)))
+                                            navigator.navigate(ArtistInfo(artistIds[0]))
                                         }
                                     }.invokeOnCompletion {
                                         ifShowBottom = false
@@ -758,7 +759,7 @@ fun TimerComponent(
                                     var replace = input.replace(pattern, "")
                                     if (replace.length >= 4) {
                                         MessageUtils.sendPopTipError(R.string.max_24_hours)
-                                        replace = replace.substring(0, 4)
+                                        replace = replace.take(4)
                                     } else {
                                         isError = false
                                     }
@@ -1246,7 +1247,7 @@ private fun FadeInOutBottomSheet(
 ) {
 
     var fadeDurationMs by remember {
-        mutableStateOf(onFadeDurationMs())
+        mutableLongStateOf(onFadeDurationMs())
     }
 
     val bottomSheetState = rememberModalBottomSheetState(

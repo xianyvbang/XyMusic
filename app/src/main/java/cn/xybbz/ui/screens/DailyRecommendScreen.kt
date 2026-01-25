@@ -28,7 +28,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalNavigator
@@ -61,8 +61,8 @@ fun DailyRecommendScreen(
 
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
-    val favoriteList by dailyRecommendViewModel.favoriteSet.collectAsState(emptyList())
-    val downloadMusicIds by dailyRecommendViewModel.downloadMusicIdsFlow.collectAsState(emptyList())
+    val favoriteList by dailyRecommendViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
+    val downloadMusicIds by dailyRecommendViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(emptyList())
     val state = rememberPullToRefreshState()
 
     var isRefreshing by remember {

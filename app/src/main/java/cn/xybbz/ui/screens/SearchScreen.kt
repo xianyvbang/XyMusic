@@ -47,7 +47,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -100,7 +99,9 @@ fun SearchScreen(
     val navigator = LocalNavigator.current
 
     val favoriteList by searchViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
-    val downloadMusicIds by searchViewModel.downloadMusicIdsFlow.collectAsState(emptyList())
+    val downloadMusicIds by searchViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
+        emptyList()
+    )
 
     var textFieldValue by remember {
         mutableStateOf(TextFieldValue(text = "", selection = TextRange("".length)))

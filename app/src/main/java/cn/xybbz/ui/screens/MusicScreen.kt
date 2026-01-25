@@ -30,7 +30,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -74,8 +73,8 @@ fun MusicScreen(
     val downloadMusicIds by musicViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
         emptyList()
     )
-    val sortBy by musicViewModel.sortBy.collectAsState()
-    val ifOpenSelect by musicViewModel.selectControl.uiState.collectAsState()
+    val sortBy by musicViewModel.sortBy.collectAsStateWithLifecycle()
+    val ifOpenSelect by musicViewModel.selectControl.uiState.collectAsStateWithLifecycle()
 
     XyColumnScreen(
         modifier = Modifier

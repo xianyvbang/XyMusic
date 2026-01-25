@@ -60,7 +60,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -85,6 +84,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.core.graphics.scale
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.palette.graphics.Palette
 import cn.xybbz.R
 import cn.xybbz.common.constants.Constants
@@ -113,7 +113,7 @@ fun SnackBarPlayerComponent(
         mutableStateOf(false)
     }
     val coroutineScope = rememberCoroutineScope()
-   val ifOpenSelect by snackBarPlayerViewModel.selectControl.uiState.collectAsState()
+   val ifOpenSelect by snackBarPlayerViewModel.selectControl.uiState.collectAsStateWithLifecycle()
 
     var colorPurple by remember {
         mutableStateOf(Color.Transparent)

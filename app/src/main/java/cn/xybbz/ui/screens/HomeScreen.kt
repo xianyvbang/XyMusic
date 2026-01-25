@@ -71,7 +71,6 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -91,6 +90,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.R
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.UiConstants.MusicCardImageSize
@@ -146,14 +146,14 @@ fun HomeScreen(
     SideEffect {
         Log.d("=====", "HomeScreen重组一次")
     }
-    val mostPlayerMusicList by homeViewModel.homeDataRepository.mostPlayedMusic.collectAsState()
-    val newAlbumList by homeViewModel.homeDataRepository.newestAlbums.collectAsState()
-    val musicRecentlyList by homeViewModel.homeDataRepository.recentMusic.collectAsState()
-    val albumRecentlyList by homeViewModel.homeDataRepository.recentAlbums.collectAsState()
-    val mostPlayerAlbumList by homeViewModel.homeDataRepository.mostPlayedAlbums.collectAsState()
-    val recommendedMusicList by homeViewModel.homeDataRepository.recommendedMusic.collectAsState()
-    val playlists by homeViewModel.homeDataRepository.playlists.collectAsState()
-    val dataCount by homeViewModel.homeDataRepository.dataCount.collectAsState()
+    val mostPlayerMusicList by homeViewModel.homeDataRepository.mostPlayedMusic.collectAsStateWithLifecycle()
+    val newAlbumList by homeViewModel.homeDataRepository.newestAlbums.collectAsStateWithLifecycle()
+    val musicRecentlyList by homeViewModel.homeDataRepository.recentMusic.collectAsStateWithLifecycle()
+    val albumRecentlyList by homeViewModel.homeDataRepository.recentAlbums.collectAsStateWithLifecycle()
+    val mostPlayerAlbumList by homeViewModel.homeDataRepository.mostPlayedAlbums.collectAsStateWithLifecycle()
+    val recommendedMusicList by homeViewModel.homeDataRepository.recommendedMusic.collectAsStateWithLifecycle()
+    val playlists by homeViewModel.homeDataRepository.playlists.collectAsStateWithLifecycle()
+    val dataCount by homeViewModel.homeDataRepository.dataCount.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val navigator = LocalNavigator.current
     val sheetState = rememberModalBottomSheetState(
