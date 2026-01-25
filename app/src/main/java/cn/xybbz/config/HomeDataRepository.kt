@@ -65,7 +65,7 @@ class HomeDataRepository(
      * 执行登录状态数据监听
      */
     suspend fun initLoginChangeMonitor(){
-        dataSourceManager.loginState.collect { user ->
+        dataSourceManager.getLoginStateFlow().collect { user ->
             //切用户：取消旧监听
             collectJobs.forEach { it.cancel() }
             collectJobs.clear()

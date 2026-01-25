@@ -272,14 +272,11 @@ abstract class IDataSourceParentServer(
                 if (!ifTmpObject()) {
                     this@IDataSourceParentServer.connectionConfig =
                         connectionConfig.copy(id = connectionId)
-//                    selectMediaLibrary()
                     setCoilImageOkHttpClient()
-
+                    downloadManager.initData(connectionId)
                     connection(connectionConfig.copy(id = connectionId), connectionConfig.id != 0L)
-
                     mediaLibraryAndFavoriteSyncScheduler.cancel()
                     mediaLibraryAndFavoriteSyncScheduler.enqueueIfNeeded(connectionId)
-                    downloadManager.initData(connectionId)
                     MessageUtils.sendDismiss()
                 }
             }

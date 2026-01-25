@@ -68,10 +68,11 @@ import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
 import javax.inject.Provider
@@ -105,11 +106,10 @@ class DataSourceManager(
 
     val dataSourceServerFlow = MutableStateFlow<IDataSourceParentServer?>(null)
 
-    private val _loginState = MutableSharedFlow<LoginStateType>(
-        replay = 1,
-        extraBufferCapacity = 1
+    private val _loginState = MutableStateFlow<LoginStateType?>(
+        null
     )
-    val loginState = _loginState.asSharedFlow()
+    private val loginState = _loginState.asStateFlow()
 
 
     //加载状态
@@ -258,14 +258,18 @@ class DataSourceManager(
     }
 
     private fun loginStateErrorEmit(ifTmp: Boolean) {
-        if (ifTmp) {
+        if (!ifTmp) {
             _loginState.tryEmit(LoginStateType.FAILURE)
         }
     }
 
     private fun loginStateSuccessEmit(ifTmp: Boolean) {
-        if (ifTmp)
+        if (!ifTmp)
             _loginState.tryEmit(LoginStateType.SUCCESS)
+    }
+
+    fun getLoginStateFlow(): Flow<LoginStateType> {
+        return loginState.filterNotNull().distinctUntilChanged()
     }
 
     /**

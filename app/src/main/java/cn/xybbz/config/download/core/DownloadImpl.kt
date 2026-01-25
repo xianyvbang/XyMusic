@@ -25,6 +25,7 @@ import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.enums.DownloadStatus
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.CopyOnWriteArrayList
@@ -36,11 +37,18 @@ class DownloadImpl(
 ) : IDownloader, IoScoped() {
 
     private val listeners = CopyOnWriteArrayList<DownloadListener>()
-    override suspend fun initData(connectionId:Long) {
-        downloadDispatcher.rehydrate(connectionId,scope.coroutineContext)
-        downloadDispatcher.taskUpdateEventFlow.collect { updatedTask ->
-            notifyListeners(updatedTask)
+
+    init {
+        createScope()
+        scope.launch {
+            downloadDispatcher.taskUpdateEventFlow.collect { updatedTask ->
+                notifyListeners(updatedTask)
+            }
         }
+    }
+    override suspend fun initData(connectionId: Long) {
+        downloadDispatcher.rehydrate(connectionId,scope.coroutineContext)
+
     }
 
     /**

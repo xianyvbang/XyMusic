@@ -29,7 +29,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ConnectionViewModel @Inject constructor(
     val dataSourceManager: DataSourceManager,
-    private val settingsManager: SettingsManager
+    val settingsManager: SettingsManager
 ) : ViewModel() {
 
 
