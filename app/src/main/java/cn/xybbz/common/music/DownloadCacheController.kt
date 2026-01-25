@@ -178,7 +178,7 @@ class DownloadCacheController(
     ) {
         if (settingsManager.get().cacheUpperLimit == CacheUpperLimitEnum.No) return
 
-        val itemId = music.itemId
+        val itemId = getCacheKey(music.itemId)
         val url = music.getMusicUrl()
         scope.launch(Dispatchers.IO) {
             Log.i("music", "开始缓存1")
@@ -200,7 +200,7 @@ class DownloadCacheController(
         if (oldDownload != null) {
             download = oldDownload
             _cacheSchedule.value = oldDownload.percentDownloaded / 100.0f
-            if (oldDownload.percentDownloaded == 100f){
+            if (oldDownload.percentDownloaded == 100f) {
                 return
             }
             resumeCache()
@@ -214,6 +214,7 @@ class DownloadCacheController(
                 downloadRequest,
                 /* foreground= */ false
             )
+            downloadCacheProgressTicker.start(itemId)
         } else {
             val downloadHelper =
                 DownloadHelper.Factory()
@@ -336,6 +337,13 @@ class DownloadCacheController(
     fun getCacheSize(): Long {
         //缓存大小
         return cacheDataSource.cache.cacheSpace
+    }
+
+    /**
+     * 获得缓存key
+     */
+    fun getCacheKey(musicId: String): String {
+        return musicId + settingsManager.getStatic() + settingsManager.get().transcodeFormat + settingsManager.getAudioBitRate()
     }
 
     /**

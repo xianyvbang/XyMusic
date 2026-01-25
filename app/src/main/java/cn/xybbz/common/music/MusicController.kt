@@ -617,7 +617,7 @@ class MusicController(
         //设置单个资源
         val itemId = playMusic.itemId
         var mediaItemBuilder = MediaItem.Builder()
-        mediaItemBuilder.setCustomCacheKey(itemId)
+        mediaItemBuilder.setCustomCacheKey(downloadCacheController.getCacheKey(itemId))
         val pic = playMusic.pic
 
         if (playMusic.filePath.isNullOrBlank()) {
@@ -646,14 +646,12 @@ class MusicController(
                 .setArtworkUri(pic?.toUri())
                 .setDurationMs(playMusic.runTimeTicks)
                 .setArtist(playMusic.artists?.joinToString()) // 可以设置其他元数据信息，例如专辑、时长等
-//                .setExtras(bundle)
                 .build()
             mediaItemBuilder.setMediaMetadata(mediaMetadata)
         } else {
             val mediaMetadata = MediaMetadata.Builder()
                 .setTitle(playMusic.name)
                 .setArtist(playMusic.artists?.joinToString()) // 可以设置其他元数据信息，例如专辑、时长等
-//                .setExtras(bundle)
                 .build()
             mediaItemBuilder.setUri(playMusic.filePath?.toUri())
                 .setMediaMetadata(mediaMetadata)
