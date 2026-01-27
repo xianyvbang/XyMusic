@@ -53,7 +53,6 @@ class DownloadCacheProgressTicker(
         } else if (download?.state == Download.STATE_QUEUED)
             onProgress(0.0f)
         else if (periodicUpdatesStarted) {
-            onProgress(download?.percentDownloaded ?: 0.0f)
             downloadCacheHandler.removeCallbacksAndMessages(null)
             downloadCacheHandler.postDelayed(this::updateProgress, intervalMs)
         }
