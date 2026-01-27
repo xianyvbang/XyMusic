@@ -617,7 +617,8 @@ class MusicController(
         //设置单个资源
         val itemId = playMusic.itemId
         var mediaItemBuilder = MediaItem.Builder()
-        mediaItemBuilder.setCustomCacheKey(downloadCacheController.getCacheKey(itemId))
+        val customCacheKey = downloadCacheController.getCacheKey(itemId)
+        mediaItemBuilder.setCustomCacheKey(customCacheKey)
         val pic = playMusic.pic
 
         if (playMusic.filePath.isNullOrBlank()) {
@@ -625,18 +626,29 @@ class MusicController(
                 getMusicUrl(itemId, playMusic.plexPlayKey)
             playMusic.setMusicUrl(transcodingAndMusicUrlInfo.musicUrl)
             mediaItemBuilder.setUri(transcodingAndMusicUrlInfo.musicUrl)
-
             val normalizeMimeType =
                 MimeTypes.normalizeMimeType(MimeTypes.BASE_TYPE_AUDIO + "/${playMusic.container}")
-            //todo 这里的判断临时先用这个判断,后面改成
+            val mimeType =
+                if (dataSourceManager.dataSourceType?.ifHls == true && !transcodingAndMusicUrlInfo.static) {
+                    MimeTypes.APPLICATION_M3U8
+                } else if (dataSourceManager.dataSourceType?.ifHls == false && !transcodingAndMusicUrlInfo.static) {
+                    normalizeMimeType
+                } else {
+                    val inferFileTypeFromMimeType =
+                        FileTypes.inferFileTypeFromMimeType(normalizeMimeType)
+                    if (inferFileTypeFromMimeType == -1) {
+                        MimeTypes.APPLICATION_M3U8
+                    } else {
+                        normalizeMimeType
+                    }
+                }
+            Log.i("music", "歌曲的类型为:${normalizeMimeType}")
             mediaItemBuilder.setMimeType(
-                if (FileTypes.inferFileTypeFromMimeType(normalizeMimeType) != -1
-                    && transcodingAndMusicUrlInfo.static
-                ) normalizeMimeType else MimeTypes.APPLICATION_M3U8
+                mimeType
             )
 
             val mediaItem =
-                downloadCacheController.downloadManager.downloadIndex.getDownload(itemId)?.request?.toMediaItem()
+                downloadCacheController.downloadManager.downloadIndex.getDownload(customCacheKey)?.request?.toMediaItem()
             if (mediaItem != null) {
                 mediaItemBuilder = mediaItem.buildUpon()
             }

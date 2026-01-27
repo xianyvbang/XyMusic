@@ -30,7 +30,6 @@ import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSink
 import androidx.media3.datasource.cache.CacheDataSource
-import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -103,15 +102,14 @@ class DownloadCacheController(
         cache = SimpleCache(
             cacheDir,
             //读取配置
-            LeastRecentlyUsedCacheEvictor(100 * 1024 * 1024)
-            /*XyCacheEvictor(settingsManager)*/, ExampleDatabaseProvider(context)
+//            LeastRecentlyUsedCacheEvictor(100 * 1024 * 1024)
+            XyCacheEvictor(settingsManager), ExampleDatabaseProvider(context)
         )
 
         // 根据缓存目录创建缓存数据源
         upstreamDataSourceFactory = DefaultDataSource.Factory(
             context,
             OkHttpDataSource.Factory(cacheApiClient.okhttpClientFunction())
-                .setDefaultRequestProperties(mapOf("11111" to "22222"))
         )
         cacheDataSourceFactory = CacheDataSource.Factory()
             .setCache(cache)
@@ -129,13 +127,12 @@ class DownloadCacheController(
             .setCache(cache)
             .setUpstreamDataSourceFactory(
                 upstreamDataSourceFactory
-            ).setCacheWriteDataSinkFactory(null)
+            )
             .setCacheWriteDataSinkFactory(
                 CacheDataSink.Factory()
                     .setCache(cache)
                     .setFragmentSize(2 * 1024 * 1024) // 2MB 分片写入
             )
-            .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
 
         cacheDataSource = cacheDataSourceFactory.createDataSource()
 
@@ -181,12 +178,19 @@ class DownloadCacheController(
         val itemId = getCacheKey(music.itemId)
         val url = music.getMusicUrl()
         scope.launch(Dispatchers.IO) {
-            Log.i("music", "开始缓存1")
+            Log.i("music", "开始缓存1 ${music.name}")
             /** 切换缓存 → 取消旧任务 */
             if (currentTaskId != null && currentTaskId != itemId) {
                 cancelCurrentCache()
             }
-            startNewCacheLocked(itemId, url, ifStatic)
+           val nowIfStatic = when (settingsManager.get().dataSourceType?.ifHls) {
+               true if !ifStatic -> false
+               false if !ifStatic
+                   -> true
+
+               else -> ifStatic
+           }
+            startNewCacheLocked(itemId, url, nowIfStatic)
         }
     }
 
