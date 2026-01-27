@@ -69,7 +69,9 @@ class DownloadCacheController(
     private var cacheDataSource: CacheDataSource
     private var upstreamDataSourceFactory: DefaultDataSource.Factory
     var downloadManager: DownloadManager
+        private set
     private val downloadCacheProgressTicker: DownloadCacheProgressTicker
+
 
 //    private val cacheTask: ConcurrentHashMap<String, CacheTask> = ConcurrentHashMap()
 
@@ -79,8 +81,17 @@ class DownloadCacheController(
 
     private val childPath = "cache"
 
+    /**
+     * 当前缓存进度
+     */
     private val _cacheSchedule = MutableStateFlow(0f)
     val cacheSchedule = _cacheSchedule.asStateFlow()
+
+    /**
+     * 所有缓存大小
+     */
+    private val _allCacheSizeFlow = MutableStateFlow(0L)
+    val allCacheSizeFlow = _allCacheSizeFlow.asStateFlow()
 
     init {
         //2025年1月20日 11:12:19 修改缓存数据目录到cache中,使其可以被系统的清除缓存功能删除
@@ -146,6 +157,12 @@ class DownloadCacheController(
                 Executors.newFixedThreadPool( /* nThreads= */6)
             )
 
+        downloadManager.addListener(object : DownloadManager.Listener {
+            override fun onIdle(downloadManager: DownloadManager) {
+                getCacheSize()
+            }
+        })
+
         downloadCacheProgressTicker = DownloadCacheProgressTicker(
             this,
             1000L,
@@ -183,13 +200,13 @@ class DownloadCacheController(
             if (currentTaskId != null && currentTaskId != itemId) {
                 cancelCurrentCache()
             }
-           val nowIfStatic = when (settingsManager.get().dataSourceType?.ifHls) {
-               true if !ifStatic -> false
-               false if !ifStatic
-                   -> true
+            val nowIfStatic = when (settingsManager.get().dataSourceType?.ifHls) {
+                true if !ifStatic -> false
+                false if !ifStatic
+                    -> true
 
-               else -> ifStatic
-           }
+                else -> ifStatic
+            }
             startNewCacheLocked(itemId, url, nowIfStatic)
         }
     }
@@ -338,9 +355,13 @@ class DownloadCacheController(
     /**
      * 获得所有缓存大小
      */
-    fun getCacheSize(): Long {
+    fun getCacheSize() {
+        val cacheSize = downloadManager.currentDownloads.sumOf {
+            it.bytesDownloaded
+        }
+        Log.i("music", "缓存大小${cacheSize}")
         //缓存大小
-        return cacheDataSource.cache.cacheSpace
+        _allCacheSizeFlow.value = cacheSize
     }
 
     /**

@@ -69,11 +69,18 @@ class MemoryManagementViewModel @Inject constructor(
     var databaseSize by mutableStateOf("0B")
         private set
 
+    init {
+        viewModelScope.launch {
+            downloadCacheController.getCacheSize()
+            downloadCacheController.allCacheSizeFlow.collect {
+                musicCacheSize = getFormatSize(it)
+            }
+        }
+    }
 
     fun logStorageInfo(context: Context) {
         appDataSize = getFormatSize(getAppDataSize(context))
         cacheSize = getTotalCacheSize(context)
-        musicCacheSize = getFormatSize(downloadCacheController.getCacheSize())
         databaseSize = getAppDatabaseSize()
     }
 
@@ -238,7 +245,6 @@ class MemoryManagementViewModel @Inject constructor(
     fun clearMusicCache() {
         viewModelScope.launch {
             downloadCacheController.clearCache()
-            musicCacheSize = getFormatSize(downloadCacheController.getCacheSize())
         }
     }
 
