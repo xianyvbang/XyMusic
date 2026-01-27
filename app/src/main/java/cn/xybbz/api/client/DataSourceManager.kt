@@ -71,7 +71,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
@@ -269,7 +268,7 @@ class DataSourceManager(
     }
 
     fun getLoginStateFlow(): Flow<LoginStateType> {
-        return loginState.filterNotNull().distinctUntilChanged()
+        return loginState.filterNotNull()
     }
 
     /**
