@@ -71,7 +71,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filterNotNull
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
 import javax.inject.Provider
@@ -267,8 +266,8 @@ class DataSourceManager(
             _loginState.tryEmit(LoginStateType.SUCCESS)
     }
 
-    fun getLoginStateFlow(): Flow<LoginStateType> {
-        return loginState.filterNotNull()
+    fun getLoginStateFlow(): StateFlow<LoginStateType?> {
+        return loginState
     }
 
     /**

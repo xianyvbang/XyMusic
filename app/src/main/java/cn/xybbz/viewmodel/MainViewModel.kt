@@ -439,6 +439,7 @@ class MainViewModel @Inject constructor(
      * 加载播放列表里的数据
      */
     private fun startPlayerListObserver() {
+        Log.i("music","重新加载数据列表")
         playerListJob?.cancel()
 
         playerListJob = viewModelScope.launch {
