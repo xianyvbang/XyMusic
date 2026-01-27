@@ -47,6 +47,7 @@ import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.config.setting.TranscodingState
 import cn.xybbz.config.update.VersionCheckScheduler
 import cn.xybbz.entity.data.PlayerTypeData
 import cn.xybbz.entity.data.music.MusicPlayContext
@@ -269,7 +270,7 @@ class MainViewModel @Inject constructor(
                 type = MusicTypeEnum.MUSIC,
                 itemId = musicId,
                 musicController = musicController,
-                ifFavorite =  db.musicDao.selectIfFavoriteByMusic(musicId)
+                ifFavorite = db.musicDao.selectIfFavoriteByMusic(musicId)
             )
         }
     }
@@ -664,8 +665,12 @@ class MainViewModel @Inject constructor(
     fun initTranscodeListener() {
         viewModelScope.launch {
             settingsManager.transcodingFlow.collect {
-                Log.i("music", "数据转码监听${it}")
-                //todo 这里要判断wifi和移动网络的设置是否一致,一致不更新
+                if (it is TranscodingState.NetWorkChange && (settingsManager.get().ifTranscoding
+                            || settingsManager.get().mobileNetworkAudioBitRate
+                            == settingsManager.get().wifiNetworkAudioBitRate
+                            )) {
+                    return@collect
+                }
                 musicController.replacePlaylistItemUrl()
             }
         }
