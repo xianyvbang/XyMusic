@@ -134,8 +134,8 @@ class XyPlayerListener(
 
                 //todo 替换mediaitem的位置
                 //如果状态是播放的话
-                if (onGetState() != PlayStateEnum.Pause)
-                    onMusicStartCache()
+//                if (onGetState() != PlayStateEnum.Pause)
+                onMusicStartCache()
                 onGetMusicInfo()?.let {
                     onEventEmit(
                         PlayerEvent.ChangeMusic(
