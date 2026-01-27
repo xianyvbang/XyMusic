@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.viewmodel
 
 import android.util.Log
@@ -10,9 +28,6 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
-import cn.xybbz.config.download.DownloadRepository
-import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.recommender.DailyRecommender
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
@@ -31,13 +46,13 @@ class DailyRecommendViewModel @Inject constructor(
     private val dataSourceManager: DataSourceManager,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicController,
-    val favoriteRepository: FavoriteRepository,
-    val downloadRepository: DownloadRepository,
     val backgroundConfig: BackgroundConfig,
     private val dailyRecommender: DailyRecommender,
-    private val connectionConfigServer: ConnectionConfigServer
 ) : ViewModel() {
 
+    val downloadMusicIdsFlow =
+        db.downloadDao.getAllMusicTaskUidsFlow()
+    val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     /**
      * 推荐音乐
@@ -56,7 +71,7 @@ class DailyRecommendViewModel @Inject constructor(
      */
     private fun observeLoginSuccessForRecommendedMusic() {
         viewModelScope.launch {
-            connectionConfigServer.loginSuccessEvent.collect {
+            dataSourceManager.getLoginStateFlow().collect {
                 startRecommendedMusicObserver()
             }
         }
@@ -103,7 +118,7 @@ class DailyRecommendViewModel @Inject constructor(
                 onMusicPlayParameter,
                 recommendedMusicList.map {
                     it.toPlayMusic()
-                        .copy(ifFavoriteStatus = it.music.itemId in favoriteRepository.favoriteSet.value)
+                        .copy(ifFavoriteStatus = db.musicDao.selectIfFavoriteByMusic(it.music.itemId))
                 }
             )
         }

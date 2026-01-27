@@ -36,10 +36,8 @@ class NetWorkMonitor(application: Context) {
     private val _isUnmeteredWifi = MutableStateFlow(false)
     val isUnmeteredWifi: StateFlow<Boolean> = _isUnmeteredWifi.asStateFlow()
 
-    var isWifiOrUnmetered: Boolean = false
-    var isTransportCellular: Boolean = false
 
-    var onNetworkChange: ((Boolean) -> Unit)? = null
+    val onNetworkChanges = mutableListOf<OnNetworkChangeListener>()
 
 
     private fun check(caps: NetworkCapabilities?) {
@@ -48,16 +46,15 @@ class NetWorkMonitor(application: Context) {
             return
         }
 
-        val isWifi = caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
-        val isUnmetered = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
-        isWifiOrUnmetered = isWifi || isUnmetered
+        val isWifi = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
+        val isUnmetered = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
 
-        val isTransportCellular = caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
-        this.isTransportCellular = isTransportCellular
 
         _isUnmeteredWifi.value = isWifi && isUnmetered
 
-        onNetworkChange?.invoke(isWifi || isUnmetered || isTransportCellular)
+        for (listener in onNetworkChanges) {
+            listener.onNetworkChange(isUnmetered)
+        }
     }
 
     private val callback = object : ConnectivityManager.NetworkCallback() {
@@ -77,32 +74,31 @@ class NetWorkMonitor(application: Context) {
 
         override fun onLost(network: Network) {
             _isUnmeteredWifi.value = false
-            onNetworkChange?.invoke(false)
+            for (listener in onNetworkChanges) {
+                listener.onNetworkChange(false)
+            }
         }
     }
 
-    fun start(
-        onNetworkChange: ((Boolean) -> Unit)
-    ) {
-        if (this.onNetworkChange == null) {
-            val request = NetworkRequest.Builder()
-                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-                .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
-                .build()
-            this.onNetworkChange = onNetworkChange
-            connectivityManager.registerNetworkCallback(request, callback)
-        }
+    fun start() {
+        val request = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .build()
+        connectivityManager.registerNetworkCallback(request, callback)
 
+    }
+
+    fun addListener(listener: OnNetworkChangeListener) {
+        onNetworkChanges.add(listener)
     }
 
     fun stop() {
-        if (this.onNetworkChange != null) {
-            this.onNetworkChange = null
-            try {
-                connectivityManager.unregisterNetworkCallback(callback)
-            } catch (_: Exception) {
+        try {
+            onNetworkChanges.clear()
+            connectivityManager.unregisterNetworkCallback(callback)
+        } catch (_: Exception) {
 
-            }
         }
     }
 }

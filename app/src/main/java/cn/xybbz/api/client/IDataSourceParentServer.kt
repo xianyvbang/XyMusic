@@ -19,9 +19,10 @@
 package cn.xybbz.api.client
 
 import android.content.Context
-import android.icu.text.Transliterator
-import android.os.Build
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.media3.common.util.UnstableApi
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.PagingData
@@ -32,15 +33,19 @@ import cn.xybbz.R
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
+import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.exception.UnauthorizedException
 import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.enums.LoginStateType
+import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.PasswordUtils
-import cn.xybbz.config.connection.ConnectionConfigServer
+import cn.xybbz.config.download.DownLoadManager
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.EncryptAesData
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.config.DatabaseClient
@@ -74,7 +79,10 @@ import coil.ImageLoader
 import com.github.promeg.pinyinhelper.Pinyin
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -86,19 +94,40 @@ import java.util.UUID
 
 abstract class IDataSourceParentServer(
     private val db: DatabaseClient,
-    private val connectionConfigServer: ConnectionConfigServer,
+    private val settingsManager: SettingsManager,
     private val application: Context,
-    val defaultParentApiClient: DefaultParentApiClient
+    private val defaultParentApiClient: DefaultParentApiClient,
+    private val mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
+    private val downloadManager: DownLoadManager
 ) : IDataSourceServer {
+
+    private var connectionConfig: ConnectionConfig? = null
+
+    var libraryId by mutableStateOf<String?>(null)
+        private set
+
+    /**
+     * 登录状态
+     */
+    private val _loginSuccessEvent = MutableSharedFlow<LoginStateType>(
+        replay = 1,
+        extraBufferCapacity = 1
+    )
+    private val loginSuccessEvent = _loginSuccessEvent.asSharedFlow()
+
 
     private var ifTmpObject = false
 
-    override fun ifTmpObject(): Boolean {
+    fun ifTmpObject(): Boolean {
         return ifTmpObject
     }
 
-    override fun updateIfTmpObject(ifTmp: Boolean) {
+    fun updateIfTmpObject(ifTmp: Boolean) {
         ifTmpObject = ifTmp
+    }
+
+    fun getApiClient():DefaultParentApiClient{
+        return defaultParentApiClient
     }
 
     /**
@@ -204,7 +233,7 @@ abstract class IDataSourceParentServer(
             emitAll(loginAfter(connectionConfig))
         }.flowOn(Dispatchers.IO).catch {
             it.printStackTrace()
-            connectionConfigServer.updateLoginStates(true)
+            sendLoginCompleted(LoginStateType.FAILURE)
             when (it) {
                 is SocketTimeoutException -> {
                     emit(ClientLoginInfoState.ServiceTimeOutState)
@@ -228,7 +257,9 @@ abstract class IDataSourceParentServer(
     /**
      * 登录后的数据
      */
-    private fun loginAfter(connectionConfig: ConnectionConfig): Flow<ClientLoginInfoState> {
+    private fun loginAfter(
+        connectionConfig: ConnectionConfig
+    ): Flow<ClientLoginInfoState> {
         return flow {
             db.withTransaction {
                 val connectionId = if (connectionConfig.id != 0L) {
@@ -237,22 +268,16 @@ abstract class IDataSourceParentServer(
                 } else {
                     db.connectionConfigDao.save(connectionConfig)
                 }
+
                 if (!ifTmpObject()) {
-                    connectionConfigServer.setConnectionConfigData(connectionConfig.copy(id = connectionId))
-//                    selectMediaLibrary()
-                    MessageUtils.sendDismiss()
+                    this@IDataSourceParentServer.connectionConfig =
+                        connectionConfig.copy(id = connectionId)
                     setCoilImageOkHttpClient()
-                    connectionConfigServer.updateLoginStates(true)
-//                    initFavoriteData()
-                    /* try {
-                         getDataInfoCount(connectionId)
-                     } catch (e: Exception) {
-                         Log.i(
-                             Constants.LOG_ERROR_PREFIX,
-                             "获取音乐/专辑/艺术家/收藏/流派数量异常",
-                             e
-                         )
-                     }*/
+                    downloadManager.initData(connectionId)
+                    connection(connectionConfig.copy(id = connectionId), connectionConfig.id != 0L)
+                    mediaLibraryAndFavoriteSyncScheduler.cancel()
+                    mediaLibraryAndFavoriteSyncScheduler.enqueueIfNeeded(connectionId)
+                    MessageUtils.sendDismiss()
                 }
             }
 
@@ -293,13 +318,20 @@ abstract class IDataSourceParentServer(
     /**
      * 自动登录
      */
-    override suspend fun autoLogin(ifLogin: Boolean): Flow<ClientLoginInfoState> {
+    override suspend fun autoLogin(
+        loginType: LoginType,
+        connectionConfig: ConnectionConfig?
+    ): Flow<ClientLoginInfoState> {
 
 
         //获得启用的连接信息
-        val connectionConfig = db.connectionConfigDao.selectConnectionConfig() ?: return flowOf(
-            ClientLoginInfoState.SelectServer
-        )
+        val connectionConfig =
+            connectionConfig ?: this.connectionConfig
+            ?: db.connectionConfigDao.selectConnectionConfig() ?: return flowOf(
+                ClientLoginInfoState.SelectServer
+            )
+
+        this.connectionConfig = connectionConfig
 
         val address = connectionConfig.address
 
@@ -332,7 +364,7 @@ abstract class IDataSourceParentServer(
                 serverName = connectionConfig.serverName,
                 serverId = connectionConfig.serverId,
             )
-            if (ifLogin || connectionConfig.accessToken.isNullOrBlank()) {
+            if (loginType == LoginType.API || connectionConfig.accessToken.isNullOrBlank()) {
 
                 MessageUtils.sendPopTipHint(
                     R.string.logging_in,
@@ -365,7 +397,8 @@ abstract class IDataSourceParentServer(
 
         }.flowOn(Dispatchers.IO).catch {
             Log.e(Constants.LOG_ERROR_PREFIX, "自动登录异常 ${it.message}", it)
-            connectionConfigServer.updateLoginStates(true)
+            if (loginType == LoginType.TOKEN)
+                sendLoginCompleted(LoginStateType.FAILURE)
             when (it) {
                 is SocketTimeoutException -> {
                     emit(ClientLoginInfoState.ServiceTimeOutState)
@@ -420,7 +453,7 @@ abstract class IDataSourceParentServer(
                 db = db,
                 datasourceServer = this,
                 dataSource = getDataSourceType(),
-                connectionId = connectionConfigServer.getConnectionId()
+                connectionId = getConnectionId()
             )
         ) {
             db.artistDao.selectListPagingSource()
@@ -449,7 +482,7 @@ abstract class IDataSourceParentServer(
                 datasourceServer = this,
                 db = db,
                 dataType = dataType,
-                connectionId = connectionConfigServer.getConnectionId(),
+                connectionId = getConnectionId(),
                 sortFlow = sortFlow
             )
         ) {
@@ -470,7 +503,7 @@ abstract class IDataSourceParentServer(
                 artistId = artistId,
                 datasourceServer = this,
                 db = db,
-                connectionId = connectionConfigServer.getConnectionId()
+                connectionId = getConnectionId()
             )
         ) {
             db.musicDao.selectArtistMusicListPage(
@@ -504,7 +537,7 @@ abstract class IDataSourceParentServer(
                 dataSource = getDataSourceType(),
                 db = db,
                 datasourceServer = this,
-                connectionId = connectionConfigServer.getConnectionId(),
+                connectionId = getConnectionId(),
                 sortFlow = sortFlow
             )
         ) {
@@ -538,7 +571,7 @@ abstract class IDataSourceParentServer(
             remoteMediator = FavoriteMusicRemoteMediator(
                 datasourceServer = this,
                 db = db,
-                connectionId = connectionConfigServer.getConnectionId()
+                connectionId = getConnectionId()
             )
         ) {
             db.musicDao.selectFavoriteMusicListPage()
@@ -557,7 +590,7 @@ abstract class IDataSourceParentServer(
                 genreId = genreId,
                 datasourceServer = this,
                 db = db,
-                connectionId = connectionConfigServer.getConnectionId()
+                connectionId = getConnectionId()
             )
         ) {
             db.albumDao.selectGenreAlbumListPage(genreId)
@@ -574,7 +607,7 @@ abstract class IDataSourceParentServer(
             remoteMediator = GenresRemoteMediator(
                 datasourceServer = this,
                 db = db,
-                connectionId = connectionConfigServer.getConnectionId()
+                connectionId = getConnectionId()
             )
         ) {
             db.genreDao.selectByDataSourceType()
@@ -593,7 +626,7 @@ abstract class IDataSourceParentServer(
             remoteMediator = MusicRemoteMediator(
                 db = db,
                 datasourceServer = this,
-                connectionId = connectionConfigServer.getConnectionId(),
+                connectionId = getConnectionId(),
                 sort = sortFlow
             )
         ) {
@@ -615,7 +648,7 @@ abstract class IDataSourceParentServer(
                 val album = XyAlbum(
                     itemId = playlistId,
                     name = name,
-                    connectionId = connectionConfigServer.getConnectionId(),
+                    connectionId = getConnectionId(),
                     ifPlaylist = true,
                     musicCount = 0
                 )
@@ -650,7 +683,7 @@ abstract class IDataSourceParentServer(
                 playlistId = playlistId,
                 musicId = musicId,
                 index = playlistIndex,
-                connectionId = connectionConfigServer.getConnectionId()
+                connectionId = getConnectionId()
             )
         }
         db.musicDao.savePlaylistMusic(playlists)
@@ -713,7 +746,7 @@ abstract class IDataSourceParentServer(
         if (items.isNotEmpty()) {
             db.artistDao.saveArtistBatch(
                 items,
-                connectionConfigServer.getConnectionId()
+                getConnectionId()
             )
         }
     }
@@ -733,7 +766,7 @@ abstract class IDataSourceParentServer(
             db.albumDao.saveBatch(
                 data = albumList,
                 dataType = dataType,
-                connectionId = connectionConfigServer.getConnectionId(),
+                connectionId = getConnectionId(),
                 artistId = artistId,
                 genreId = genreId
             )
@@ -756,7 +789,7 @@ abstract class IDataSourceParentServer(
             db.musicDao.saveBatch(
                 data = items,
                 dataType = dataType,
-                connectionId = connectionConfigServer.getConnectionId(),
+                connectionId = getConnectionId(),
                 artistId = artistId,
                 playlistId = playlistId
             )
@@ -812,7 +845,7 @@ abstract class IDataSourceParentServer(
     /**
      * 获得所有收藏数据
      */
-    open suspend fun initFavoriteData() {
+    override suspend fun initFavoriteData() {
 
     }
 
@@ -855,13 +888,6 @@ abstract class IDataSourceParentServer(
                 )
             )
         }
-    }
-
-    /**
-     * 释放
-     */
-    override suspend fun release() {
-        TokenServer.clearAllData()
     }
 
 
@@ -982,7 +1008,7 @@ abstract class IDataSourceParentServer(
             artistId = artistId,
             datasourceServer = this,
             db = db,
-            connectionId = connectionConfigServer.getConnectionId()
+            connectionId = getConnectionId()
         )
     }
 
@@ -1107,13 +1133,107 @@ abstract class IDataSourceParentServer(
      */
     fun toLatinCompat(text: String): String? {
         if (text.isBlank()) return null
-
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            Transliterator.getInstance("Han-Latin").transliterate(text)
-        } else {
-            Pinyin.toPinyin(text[0]) // 或其他兼容库
-        }
+        return Pinyin.toPinyin(text[0])
 
     }
 
+    /**
+     * 获得连接设置
+     */
+    override fun getConnectionConfig(): ConnectionConfig? {
+        return connectionConfig
+    }
+
+    /**
+     * 获得用户id
+     */
+    override fun getUserId(): String {
+        return connectionConfig?.userId ?: ""
+    }
+
+    /**
+     * 获得连接id
+     */
+    override fun getConnectionId(): Long {
+        return connectionConfig?.id ?: Constants.ZERO.toLong()
+    }
+
+    /**
+     * 获得连接地址
+     */
+    override fun getConnectionAddress(): String {
+        return connectionConfig?.address ?: ""
+    }
+
+    /**
+     * 获得登录成功flow
+     */
+    fun getLoginStateFlow(): SharedFlow<LoginStateType> {
+        return loginSuccessEvent
+    }
+
+    /**
+     * 更新媒体库设置
+     */
+    override suspend fun updateLibraryId(libraryId: String?, connectionId: Long) {
+        if (connectionId == getConnectionId()) {
+            setUpLibraryId(libraryId)
+        } else {
+            db.connectionConfigDao.updateLibraryId(
+                libraryId = libraryId,
+                connectionId = connectionId
+            )
+        }
+    }
+
+    /**
+     * 更新连接设置
+     */
+    override suspend fun updateConnectionConfig(connectionConfig: ConnectionConfig) {
+        db.connectionConfigDao.update(connectionConfig)
+    }
+
+    /**
+     * 写入连接信息
+     */
+    suspend fun connection(connectionConfig: ConnectionConfig, ifAutoLogin: Boolean) {
+        if (!ifAutoLogin)
+            this.connectionConfig = connectionConfig
+        settingsManager.saveConnectionId(connectionId = connectionConfig.id, connectionConfig.type)
+        setUpLibraryId(connectionConfig.libraryId)
+        sendLoginCompleted(LoginStateType.SUCCESS)
+    }
+
+    fun unConnection() {
+        connectionConfig = null
+    }
+
+
+    /**
+     * 设置媒体库id
+     */
+    protected open suspend fun setUpLibraryId(libraryId: String?) {
+        this.libraryId = libraryId
+        db.connectionConfigDao.updateLibraryId(
+            libraryId = libraryId,
+            connectionId = getConnectionId()
+        )
+    }
+
+    /**
+     * 发送登录动作完成通知(不管失败或成功)
+     */
+    private suspend fun sendLoginCompleted(loginState: LoginStateType) {
+        _loginSuccessEvent.emit(loginState)
+    }
+
+
+    override fun close() {
+        downloadManager.close()
+        defaultParentApiClient.release()
+        mediaLibraryAndFavoriteSyncScheduler.cancel()
+        TokenServer.clearAllData()
+        unConnection()
+        libraryId = null
+    }
 }

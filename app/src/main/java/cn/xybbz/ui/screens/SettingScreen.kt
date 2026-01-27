@@ -178,7 +178,7 @@ fun SettingScreen(
                         ifChecked = settingsViewModel.settingDataNow.ifHandleAudioFocus
                     ) { bol ->
                         coroutineScope.launch {
-                            settingsViewModel.settingsManager.setIfEnableSyncPlayProgress(
+                            settingsViewModel.settingsManager.setIfHandleAudioFocus(
                                 bol
                             )
                         }
@@ -189,7 +189,7 @@ fun SettingScreen(
                         ifChecked = settingsViewModel.settingDataNow.ifEnableSyncPlayProgress
                     ) { bol ->
                         coroutineScope.launch {
-                            settingsViewModel.settingsManager.setIfHandleAudioFocus(
+                            settingsViewModel.settingsManager.setIfEnableSyncPlayProgress(
                                 bol
                             )
                         }

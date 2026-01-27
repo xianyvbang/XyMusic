@@ -11,7 +11,6 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.proxy.ProxyConfigServer
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.proxy.XyProxyConfig
@@ -35,7 +34,6 @@ class ProxyConfigViewModel @Inject constructor(
     val db: DatabaseClient,
     val backgroundConfig: BackgroundConfig,
     val poxyConfigServer: ProxyConfigServer,
-    val connectionConfigServer: ConnectionConfigServer,
     private val dataSourceManager: DataSourceManager
 ) : ViewModel() {
 
@@ -116,7 +114,7 @@ class ProxyConfigViewModel @Inject constructor(
 
 
     suspend fun testUrlProxy(): Boolean = withContext(Dispatchers.IO) {
-        val address = connectionConfigServer.getAddress()
+        val address = dataSourceManager.getConnectionAddress()
         val request = Request.Builder()
             .url(address)
             .head() // 用 HEAD，快，不下内容
@@ -165,9 +163,14 @@ class ProxyConfigViewModel @Inject constructor(
             e.printStackTrace()
             false
         }
-
-
     }
 
+
+    /**
+     * 获取连接地址
+     */
+    fun getConnectionAddress(): String{
+        return dataSourceManager.getConnectionAddress()
+    }
 
 }

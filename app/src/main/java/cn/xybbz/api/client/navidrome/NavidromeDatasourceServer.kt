@@ -33,6 +33,7 @@ import cn.xybbz.api.client.navidrome.data.SongItem
 import cn.xybbz.api.client.navidrome.data.getWithTotalCount
 import cn.xybbz.api.client.subsonic.data.ScrobbleRequest
 import cn.xybbz.api.constants.ApiConstants
+import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.navidrome.OrderType
 import cn.xybbz.api.enums.navidrome.SortType
@@ -40,9 +41,11 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
+import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PlaylistParser
-import cn.xybbz.config.connection.ConnectionConfigServer
+import cn.xybbz.config.download.DownLoadManager
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.NavidromeOrder
 import cn.xybbz.entity.data.SearchData
@@ -64,19 +67,22 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
-import java.time.ZoneId
 import javax.inject.Inject
 
 class NavidromeDatasourceServer @Inject constructor(
     private val db: DatabaseClient,
-    private val application: Context,
-    private val connectionConfigServer: ConnectionConfigServer,
+    application: Context,
+    settingsManager: SettingsManager,
     private val navidromeApiClient: NavidromeApiClient,
+    mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
+    downloadManager: DownLoadManager
 ) : IDataSourceParentServer(
     db,
-    connectionConfigServer,
+    settingsManager,
     application,
-    navidromeApiClient
+    navidromeApiClient,
+    mediaLibraryAndFavoriteSyncScheduler,
+    downloadManager
 ) {
     /**
      * 获得当前数据源类型
@@ -119,8 +125,8 @@ class NavidromeDatasourceServer @Inject constructor(
         val response =
             getWithTotalCount {
                 navidromeApiClient.artistsApi().getArtists(
-                    start = 0,
-                    end = 0,
+                    start = startIndex,
+                    end = startIndex + pageSize,
                     name = search,
                     starred = isFavorite
                 )
@@ -327,7 +333,7 @@ class NavidromeDatasourceServer @Inject constructor(
 
             val playlist = async {
                 playlist = try {
-                    getPlaylistsServer(0, 0).totalRecordCount
+                    getPlaylistsServer(0, 1).totalRecordCount
                 } catch (e: SocketTimeoutException) {
                     Log.e(Constants.LOG_ERROR_PREFIX, "加载歌单数量超时", e)
                     null
@@ -355,7 +361,7 @@ class NavidromeDatasourceServer @Inject constructor(
             val favorite = async {
                 favorite = try {
                     val response = getServerMusicList(
-                        pageSize = 0, startIndex = 0, isFavorite = true
+                        pageSize = 1, startIndex = 0, isFavorite = true
                     )
                     response.totalRecordCount
                 } catch (e: Exception) {
@@ -403,7 +409,7 @@ class NavidromeDatasourceServer @Inject constructor(
     override suspend fun selectAlbumInfoByRemotely(
         albumId: String,
         dataType: MusicDataTypeEnum
-    ): XyAlbum? {
+    ): XyAlbum {
         val queryResult = navidromeApiClient.itemApi().getAlbum(albumId)
         return convertToAlbum(queryResult)
     }
@@ -518,7 +524,6 @@ class NavidromeDatasourceServer @Inject constructor(
                     null,
                     playlistId
                 )
-                val pic = if (removeDuplicatesMusicList.isNotEmpty()) musicList[0].pic else null
                 saveMusicPlaylist(
                     playlistId = playlistId,
                     musicIds = removeDuplicatesMusicList.map { music -> music.itemId }
@@ -564,7 +569,6 @@ class NavidromeDatasourceServer @Inject constructor(
      * 保存自建歌单中的音乐
      * @param [playlistId] 歌单id
      * @param [musicIds] 音乐id集合
-     * @param [pic] 自建歌单图片
      */
     override suspend fun saveMusicPlaylist(
         playlistId: String,
@@ -876,7 +880,7 @@ class NavidromeDatasourceServer @Inject constructor(
                 songId = musicId,
                 count = Constants.SIMILAR_MUSIC_LIST_PAGE
             ).subsonicResponse.songs.toXyMusic(
-                connectionConfigServer.getConnectionId(),
+                getConnectionId(),
                 createDownloadUrl = { createDownloadUrl(it) },
                 getImageUrl = {
                     navidromeApiClient.getImageUrl(
@@ -899,7 +903,7 @@ class NavidromeDatasourceServer @Inject constructor(
                 artistName = artistName ?: "",
                 count = Constants.ARTIST_HOT_MUSIC_LIST_PAGE
             ).subsonicResponse.topSongs.toXyMusic(
-                connectionConfigServer.getConnectionId(),
+                getConnectionId(),
                 createDownloadUrl = { createDownloadUrl(it) },
                 getImageUrl = { navidromeApiClient.getImageUrl(it) }
             )
@@ -909,8 +913,8 @@ class NavidromeDatasourceServer @Inject constructor(
     /**
      * 释放
      */
-    override suspend fun release() {
-        super.release()
+    override fun close() {
+        super.close()
         navidromeApiClient.release()
     }
 
@@ -988,7 +992,7 @@ class NavidromeDatasourceServer @Inject constructor(
     ): XyResponse<XyArtist> {
         val response =
             navidromeApiClient.artistsApi().getArtistInfo(id = artistId, count = pageSize)
-        return response.subsonicResponse.toArtists(connectionConfigServer.getConnectionId())
+        return response.subsonicResponse.toArtists(getConnectionId())
     }
 
     /**
@@ -1252,10 +1256,11 @@ class NavidromeDatasourceServer @Inject constructor(
             itemId = playlist.id,
             pic = navidromeApiClient.getImageUrl(ApiConstants.NAVIDROME_IMAGE_PREFIX_PLAYLIST + playlist.id),
             name = playlist.name,
-            connectionId = connectionConfigServer.getConnectionId(),
+            connectionId = getConnectionId(),
             ifFavorite = false,
             ifPlaylist = true,
-            musicCount = playlist.songCount
+            musicCount = playlist.songCount,
+            createTime = playlist.createdAt.toSecondMs()
         )
     }
 
@@ -1292,7 +1297,7 @@ class NavidromeDatasourceServer @Inject constructor(
             pic = artist.smallImageUrl,
             backdrop = artist.largeImageUrl,
             name = artist.name,
-            connectionId = connectionConfigServer.getConnectionId(),
+            connectionId = getConnectionId(),
             selectChat = selectChat,
             ifFavorite = artist.starred ?: false,
             indexNumber = indexNumber
@@ -1318,15 +1323,16 @@ class NavidromeDatasourceServer @Inject constructor(
                 ApiConstants.NAVIDROME_IMAGE_PREFIX_ALBUM + album.id
             ),
             name = album.name,
-            connectionId = connectionConfigServer.getConnectionId(),
+            connectionId = getConnectionId(),
             artists = album.albumArtist,
             artistIds = album.albumArtistId,
             ifPlaylist = ifPlaylist,
             musicCount = album.songCount,
-            premiereDate = album.date?.replace("-", "")?.toLong() ?: 0,
+            premiereDate = album.maxYear.toLong(),
             year = album.maxYear,
             ifFavorite = album.starred ?: false,
-            genreIds = album.genres?.joinToString { it.id }
+            genreIds = album.genres?.joinToString { it.id },
+            createTime = album.createdAt.toSecondMs()
         )
     }
 
@@ -1361,7 +1367,7 @@ class NavidromeDatasourceServer @Inject constructor(
             album = music.albumId,
             albumName = music.album,
             genreIds = music.genres?.map { it.id },
-            connectionId = connectionConfigServer.getConnectionId(),
+            connectionId = getConnectionId(),
             artists = listOf(music.artist),
             artistIds = listOf(music.artistId),
             albumArtist = listOf(music.artist),
@@ -1380,7 +1386,8 @@ class NavidromeDatasourceServer @Inject constructor(
             ifLyric = !music.lyrics.isNullOrBlank(),
             lyric = music.lyrics,
             playlistItemId = music.id,
-            lastPlayedDate = music.playDate?.atZone(ZoneId.systemDefault())?.toEpochSecond() ?: 0L
+            lastPlayedDate = music.playDate?.toSecondMs() ?: 0L,
+            createTime = music.createdAt.toSecondMs()
         )
     }
 
@@ -1401,7 +1408,7 @@ class NavidromeDatasourceServer @Inject constructor(
             itemId = genre.id,
             pic = "",
             name = genre.name,
-            connectionId = connectionConfigServer.getConnectionId()
+            connectionId = getConnectionId()
         )
     }
 

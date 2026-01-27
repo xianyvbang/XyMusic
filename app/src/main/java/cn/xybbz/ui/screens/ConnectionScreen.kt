@@ -572,11 +572,8 @@ fun ConnectionScreen(
                                     Button(
                                         modifier = Modifier.width(width = 150.dp),
                                         onClick = {
-                                            if (connectionViewModel.dataSourceManager.dataSourceType == null) {
-                                                connectionViewModel.changeDataSource()
-                                                connectionViewModel.connectionConfigServer.updateIfConnectionConfig(
-                                                    true
-                                                )
+                                            if (!connectionViewModel.settingsManager.ifConnectionConfig) {
+                                                connectionViewModel.updateIfConnectionConfig()
                                             } else {
                                                 navigator.goBack()
                                             }

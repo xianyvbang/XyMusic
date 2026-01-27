@@ -177,7 +177,7 @@ fun ConnectionConfigInfoScreen(
                         info = if (connectionConfigInfoViewModel.library.id == Constants.MINUS_ONE_INT.toString())
                             stringResource(connectionConfigInfoViewModel.library.name.toInt())
                         else connectionConfigInfoViewModel.library.name,
-                        enabled = connectionConfigInfoViewModel.connectionConfigServer.getConnectionId() == connectionId,
+                        enabled = connectionConfigInfoViewModel.getConnectionId() == connectionId,
                         onRouter = {
                             navigator.navigate(
                                 SelectLibrary(
@@ -228,7 +228,7 @@ fun ConnectionConfigInfoScreen(
                     SettingParentItemComponent(
                         title = stringResource(R.string.delete_connection),
                         onClick = {
-                            if (connectionConfigInfoViewModel.connectionConfigServer.getConnectionId() == connectionId) {
+                            if (connectionConfigInfoViewModel.getConnectionId() == connectionId) {
                                 MessageUtils.sendPopTipError(
                                     context.getString(R.string.cannot_delete_current_connection),
                                 )

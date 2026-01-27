@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.config.download.core
 
 import android.util.Log
@@ -6,10 +24,9 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.common.utils.CoroutineScopeUtils
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.download.notification.NotificationController
 import cn.xybbz.config.download.work.DownloadWork
+import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.enums.DownloadStatus
@@ -23,18 +40,17 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
+import kotlin.coroutines.CoroutineContext
 
 
 class DownloadDispatcherImpl(
     private val db: DatabaseClient,
     private val workManager: WorkManager,
     var config: DownloaderConfig,
-    val connectionConfigServer: ConnectionConfigServer,
     private val notificationController: NotificationController,
 //    private val netWorkMonitor: NetWorkMonitor
-) : IDownloadDispatcher {
+) : IDownloadDispatcher, IoScoped() {
 
-    val scope = CoroutineScopeUtils.getIo("download")
     private val globalMutex = Mutex()
 
     private val readyTasks = ConcurrentLinkedQueue<XyDownload>()
@@ -53,7 +69,8 @@ class DownloadDispatcherImpl(
      * 初始化加载数据库中的信息
      * todo 这里需要修改,改为初始化所有数据都是暂停状态
      */
-    suspend fun rehydrate() = withContext(Dispatchers.IO) {
+    suspend fun rehydrate(connectionId:Long,coroutineContext: CoroutineContext) = withContext(Dispatchers.IO) {
+        createScope(coroutineContext)
         // Only rehydrate once
         if (readyTasks.isNotEmpty() || runningTasks.isNotEmpty() || pausedTasks.isNotEmpty() || failedTasks.isNotEmpty()) {
             readyTasks.clear()
@@ -63,7 +80,7 @@ class DownloadDispatcherImpl(
         }
 
         val allTasks =
-            db.downloadDao.getAllTasksSuspend(connectionConfigServer.getConnectionId())
+            db.downloadDao.getAllTasksSuspend(connectionId)
         allTasks.forEach { task ->
             when (task.status) {
                 DownloadStatus.QUEUED -> readyTasks.add(task)
@@ -164,6 +181,14 @@ class DownloadDispatcherImpl(
             }
             promoteAndExecute()
         }
+    }
+
+    fun cancelAll() {
+        cancel(runningTasks.values.map { it.id })
+    }
+
+    fun pauseAll(){
+        pause(runningTasks.values.map { it.id })
     }
 
     fun delete(ids: List<Long>, deleteFile: Boolean) {
@@ -370,5 +395,13 @@ class DownloadDispatcherImpl(
         } catch (e: Exception) {
             Log.d(Constants.LOG_ERROR_PREFIX, "$e")
         }
+    }
+
+    override fun close() {
+        super.close()
+        readyTasks.clear()
+        runningTasks.clear()
+        pausedTasks.clear()
+        failedTasks.clear()
     }
 }

@@ -19,7 +19,6 @@
 package cn.xybbz.api.client.navidrome.data
 
 import com.squareup.moshi.JsonClass
-import java.time.LocalDateTime
 
 @JsonClass(generateAdapter = true)
 data class AlbumItem(
@@ -41,7 +40,7 @@ data class AlbumItem(
     /**
      * 播放时间
      */
-    val playDate: LocalDateTime? = null,
+    val playDate: String? = null,
     /**
      * 评价星级
      */
@@ -113,7 +112,7 @@ data class AlbumItem(
     /**
      * 外部数据更新时间
      */
-    val externalInfoUpdatedAt: LocalDateTime? = null,
+    val externalInfoUpdatedAt: String? = null,
     /**
      * 流派名称
      */
@@ -129,15 +128,15 @@ data class AlbumItem(
     /**
      * 导入时间
      */
-    val importedAt: LocalDateTime,
+    val importedAt: String,
     /**
      * 创建时间
      */
-    val createdAt: LocalDateTime,
+    val createdAt: String,
     /**
      * 更新时间
      */
-    val updatedAt: LocalDateTime,
+    val updatedAt: String,
     /**
      * 原始日期
      */

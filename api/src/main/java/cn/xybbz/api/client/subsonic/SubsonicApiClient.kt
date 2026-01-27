@@ -222,8 +222,12 @@ class SubsonicApiClient : DefaultParentApiClient() {
     /**
      * 获得音频url
      */
-    fun createAudioUrl(musicId: String, format: AudioCodecEnum? = AudioCodecEnum.ROW, maxBitRate: Int? = null): String {
-        return "${baseUrl}/rest/stream?id=${musicId}&maxBitRate=${maxBitRate}&format=${format}"
+    fun createAudioUrl(
+        musicId: String,
+        format: AudioCodecEnum? = AudioCodecEnum.ROW,
+        maxBitRate: Int? = null
+    ): String {
+        return "${baseUrl}/rest/stream?id=${musicId}&maxBitRate=${maxBitRate}&format=${format}${if (format != AudioCodecEnum.ROW) "&estimateContentLength=true" else ""}"
     }
 
     /**

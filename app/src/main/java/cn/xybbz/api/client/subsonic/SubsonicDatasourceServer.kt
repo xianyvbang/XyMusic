@@ -34,6 +34,7 @@ import cn.xybbz.api.client.subsonic.data.ScrobbleRequest
 import cn.xybbz.api.client.subsonic.data.SongID3
 import cn.xybbz.api.client.subsonic.data.SubsonicArtistsResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
+import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.CollectionType
 import cn.xybbz.api.enums.subsonic.AlbumType
@@ -42,10 +43,12 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
+import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.common.utils.PlaylistParser
-import cn.xybbz.config.connection.ConnectionConfigServer
+import cn.xybbz.config.download.DownLoadManager
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.Sort
@@ -71,13 +74,17 @@ import javax.inject.Inject
 class SubsonicDatasourceServer @Inject constructor(
     private val db: DatabaseClient,
     private val application: Context,
-    private val connectionConfigServer: ConnectionConfigServer,
-    private val subsonicApiClient: SubsonicApiClient
+    settingsManager: SettingsManager,
+    private val subsonicApiClient: SubsonicApiClient,
+    mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
+    downloadManager: DownLoadManager
 ) : IDataSourceParentServer(
     db,
-    connectionConfigServer,
+    settingsManager,
     application,
-    subsonicApiClient
+    subsonicApiClient,
+    mediaLibraryAndFavoriteSyncScheduler,
+    downloadManager
 ) {
     /**
      * 获得当前数据源类型
@@ -124,7 +131,7 @@ class SubsonicDatasourceServer @Inject constructor(
         search: String?
     ): XyResponse<XyArtist> {
         val response =
-            subsonicApiClient.artistsApi().getArtists(connectionConfigServer.libraryId)
+            subsonicApiClient.artistsApi().getArtists(libraryId)
         val artists = convertIndexToArtistList(response, false)
         return XyResponse(
             items = artists,
@@ -159,7 +166,7 @@ class SubsonicDatasourceServer @Inject constructor(
             val search3 =
                 subsonicApiClient.itemApi().search3(
                     query = search,
-                    musicFolderId = connectionConfigServer.libraryId
+                    musicFolderId = libraryId
                 )
             if (search3.subsonicResponse.status == Status.Ok) {
                 search3.subsonicResponse.searchResult3?.let { search ->
@@ -333,7 +340,7 @@ class SubsonicDatasourceServer @Inject constructor(
 
             }
         }
-        return XyResponse<XyMusic>(
+        return XyResponse(
             items = musicList,
             totalRecordCount = musicList.size,
             startIndex = 0
@@ -346,7 +353,7 @@ class SubsonicDatasourceServer @Inject constructor(
     override suspend fun getRandomMusicList(pageSize: Int, pageNum: Int): List<XyMusic>? {
         val randomSongs = subsonicApiClient.itemApi().getRandomSongs(
             size = pageSize,
-            musicFolderId = connectionConfigServer.libraryId
+            musicFolderId = libraryId
         )
         return randomSongs.subsonicResponse.randomSongs?.song?.let {
             convertToMusicList(
@@ -401,7 +408,7 @@ class SubsonicDatasourceServer @Inject constructor(
                         artistCount = 0,
                         albumCount = 0,
                         songCount = 1,
-                        musicFolderId = connectionConfigServer.libraryId
+                        musicFolderId = libraryId
                     ).subsonicResponse.searchResult3?.song
                 if (items.isNullOrEmpty()) null else {
                     val music = items[0]
@@ -432,7 +439,6 @@ class SubsonicDatasourceServer @Inject constructor(
                     null,
                     playlistId
                 )
-                val pic = if (removeDuplicatesMusicList.isNotEmpty()) musicList[0].pic else null
                 saveMusicPlaylist(
                     playlistId = playlistId,
                     musicIds = removeDuplicatesMusicList.map { music -> music.itemId }
@@ -476,7 +482,6 @@ class SubsonicDatasourceServer @Inject constructor(
      * 保存自建歌单中的音乐
      * @param [playlistId] 歌单id
      * @param [musicIds] 音乐id集合
-     * @param [pic] 自建歌单图片
      */
     override suspend fun saveMusicPlaylist(
         playlistId: String,
@@ -544,7 +549,7 @@ class SubsonicDatasourceServer @Inject constructor(
                 db.albumDao.saveBatch(
                     albumList,
                     dataType = MusicDataTypeEnum.ARTIST,
-                    connectionId = connectionConfigServer.getConnectionId(),
+                    connectionId = getConnectionId(),
                     artistId
                 )
 
@@ -573,8 +578,8 @@ class SubsonicDatasourceServer @Inject constructor(
                         XyLibrary(
                             id = it.id,
                             collectionType = CollectionType.MUSIC.serialName,
-                            name = it.name.toString(),
-                            connectionId = connectionConfigServer.getConnectionId()
+                            name = it.name,
+                            connectionId = getConnectionId()
                         )
                     }
                 if (!libraries.isNullOrEmpty()) {
@@ -597,7 +602,7 @@ class SubsonicDatasourceServer @Inject constructor(
             type = AlbumType.RECENT,
             size = pageSize,
             offset = 0,
-            musicFolderId = connectionConfigServer.libraryId
+            musicFolderId = libraryId
         ).subsonicResponse.albumList2?.album
         if (!albumList.isNullOrEmpty()) {
             db.withTransaction {
@@ -616,7 +621,7 @@ class SubsonicDatasourceServer @Inject constructor(
             type = AlbumType.FREQUENT,
             size = Constants.MIN_PAGE,
             offset = 0,
-            musicFolderId = connectionConfigServer.libraryId
+            musicFolderId = libraryId
         ).subsonicResponse.albumList2?.album
         if (!albumList.isNullOrEmpty()) {
             db.withTransaction {
@@ -635,7 +640,7 @@ class SubsonicDatasourceServer @Inject constructor(
             type = AlbumType.NEWEST,
             size = Constants.MIN_PAGE,
             offset = 0,
-            musicFolderId = connectionConfigServer.libraryId
+            musicFolderId = libraryId
         ).subsonicResponse.albumList2?.album
         if (!albumList.isNullOrEmpty()) {
             db.withTransaction {
@@ -654,7 +659,7 @@ class SubsonicDatasourceServer @Inject constructor(
     override suspend fun initFavoriteData() {
         try {
             val starred2 = subsonicApiClient.itemApi().getStarred2(
-                musicFolderId = connectionConfigServer.libraryId
+                musicFolderId = libraryId
             )
             starred2.subsonicResponse.starred2?.album?.let { albums ->
                 val albumList = convertToAlbumList(albums)
@@ -695,7 +700,7 @@ class SubsonicDatasourceServer @Inject constructor(
      */
     suspend fun getMusicFavoriteData(): List<XyMusic>? {
         val starred2 = subsonicApiClient.itemApi().getStarred2(
-            musicFolderId = connectionConfigServer.libraryId
+            musicFolderId = libraryId
         )
         return starred2.subsonicResponse.starred2?.song?.let { songs ->
             convertToMusicList(songs)
@@ -716,25 +721,25 @@ class SubsonicDatasourceServer @Inject constructor(
     override suspend fun selectMusicListByGenreIds(
         genreIds: List<String>,
         pageSize: Int
-    ): List<XyMusic>? {
+    ): List<XyMusic> {
 
         val map = genreIds.mapNotNull {
             try {
                 val randomSongs = subsonicApiClient.itemApi().getSongsByGenre(
                     genre = it,
                     size = pageSize,
-                    musicFolderId = connectionConfigServer.libraryId
+                    musicFolderId = libraryId
                 )
-                randomSongs.subsonicResponse.songsByGenre?.song?.let {
+                randomSongs.subsonicResponse.songsByGenre?.song?.let { song ->
                     convertToMusicList(
-                        it
+                        song
                     )
                 }
             } catch (e: Exception) {
                 Log.e(Constants.LOG_ERROR_PREFIX, "获取流派内音乐失败", e)
                 null
             }
-        }.flatten<XyMusic>()
+        }.flatten()
         return map
     }
 
@@ -806,7 +811,7 @@ class SubsonicDatasourceServer @Inject constructor(
                 songId = musicId,
                 count = Constants.SIMILAR_MUSIC_LIST_PAGE
             ).subsonicResponse.songs?.toXyMusic(
-                connectionConfigServer.getConnectionId(),
+                getConnectionId(),
                 { createDownloadUrl(it) },
                 {
                     subsonicApiClient.getImageUrl(
@@ -829,7 +834,7 @@ class SubsonicDatasourceServer @Inject constructor(
                 artistName = artistName ?: "",
                 count = Constants.ARTIST_HOT_MUSIC_LIST_PAGE
             ).subsonicResponse.topSongs.toXyMusic(
-                connectionConfigServer.getConnectionId(),
+                getConnectionId(),
                 createDownloadUrl = { createDownloadUrl(it) },
                 getImageUrl = { subsonicApiClient.getImageUrl(it) }
             )
@@ -839,8 +844,8 @@ class SubsonicDatasourceServer @Inject constructor(
     /**
      * 释放
      */
-    override suspend fun release() {
-        super.release()
+    override fun close() {
+        super.close()
         subsonicApiClient.release()
     }
 
@@ -908,7 +913,7 @@ class SubsonicDatasourceServer @Inject constructor(
     ): XyResponse<XyArtist> {
         val response =
             subsonicApiClient.artistsApi().getArtistInfo(id = artistId, count = pageSize)
-        return response.subsonicResponse.toArtists(connectionConfigServer.getConnectionId())
+        return response.subsonicResponse.toArtists(getConnectionId())
     }
 
     /**
@@ -1037,7 +1042,7 @@ class SubsonicDatasourceServer @Inject constructor(
                 )
             },
             name = artistId3.name,
-            connectionId = connectionConfigServer.getConnectionId(),
+            connectionId = getConnectionId(),
             selectChat = index ?: "",
             ifFavorite = ifFavorite,
             indexNumber = indexNumber
@@ -1065,12 +1070,13 @@ class SubsonicDatasourceServer @Inject constructor(
                 )
             },
             name = album.name,
-            connectionId = connectionConfigServer.getConnectionId(),
+            connectionId = getConnectionId(),
             ifFavorite = false,
             artists = album.artist,
             artistIds = album.artistId,
             ifPlaylist = ifPlaylist,
-            musicCount = album.songCount
+            musicCount = album.songCount,
+            createTime = album.created.toSecondMs()
         )
     }
 
@@ -1091,10 +1097,11 @@ class SubsonicDatasourceServer @Inject constructor(
             itemId = playlist.id + Constants.SUBSONIC_PLAYLIST_SUFFIX,
             pic = if (playlist.coverArt.isNotBlank()) subsonicApiClient.getImageUrl(playlist.coverArt) else null,
             name = playlist.name,
-            connectionId = connectionConfigServer.getConnectionId(),
+            connectionId = getConnectionId(),
             ifFavorite = false,
             ifPlaylist = true,
-            musicCount = playlist.songCount
+            musicCount = playlist.songCount,
+            createTime = playlist.created.toSecondMs()
         )
     }
 
@@ -1120,7 +1127,7 @@ class SubsonicDatasourceServer @Inject constructor(
                 )
             },
             downloadUrl = createDownloadUrl(music.id),
-            connectionId = connectionConfigServer.getConnectionId()
+            connectionId = getConnectionId()
         )
     }
 
@@ -1141,7 +1148,7 @@ class SubsonicDatasourceServer @Inject constructor(
             itemId = genre.value,
             pic = "",
             name = genre.value,
-            connectionId = connectionConfigServer.getConnectionId()
+            connectionId = getConnectionId()
         )
     }
 
@@ -1173,7 +1180,7 @@ class SubsonicDatasourceServer @Inject constructor(
             fromYear = years?.get(0),
             toYear = years?.get(years.size - 1),
             genre = genreId,
-            musicFolderId = connectionConfigServer.libraryId
+            musicFolderId = libraryId
         )
 
         val size = albumList.subsonicResponse.albumList2?.album?.size ?: 0

@@ -28,11 +28,11 @@ import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.download.DownLoadManager
-import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.data.music.XyMusic
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.sample
@@ -43,7 +43,6 @@ import javax.inject.Inject
 @SuppressLint("UnsafeOptInUsageError")
 @HiltViewModel
 class DownloadViewModel @Inject constructor(
-    val favoriteRepository: FavoriteRepository,
     val db: DatabaseClient,
     private val downLoadManager: DownLoadManager,
     private val datasourceServer: DataSourceManager,
@@ -51,6 +50,7 @@ class DownloadViewModel @Inject constructor(
 ) : ViewModel() {
 
 
+    @OptIn(FlowPreview::class)
     val musicDownloadInfo: StateFlow<List<XyDownload>> = db.downloadDao.getAllMusicTasksFlow()
         .sample(200)
         .stateIn(

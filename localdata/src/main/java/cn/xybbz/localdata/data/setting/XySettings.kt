@@ -22,6 +22,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
+import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.LanguageType
 import java.util.UUID
 
@@ -49,6 +50,10 @@ data class XySettings(
      * 连接id
      */
     val connectionId: Long? = null,
+    /**
+     * 链接类型
+     */
+    val dataSourceType: DataSourceType? = null,
     /**
      * 是否开启所有专辑的播放历史记录
      */

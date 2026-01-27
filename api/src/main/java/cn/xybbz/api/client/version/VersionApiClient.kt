@@ -1,7 +1,24 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.client.version
 
 import cn.xybbz.api.adapter.LocalDateAdapter
-import cn.xybbz.api.adapter.LocalDateTimeAdapter
 import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.api.client.version.service.GitHubVersionApi
 import com.squareup.moshi.Moshi
@@ -35,7 +52,8 @@ class VersionApiClient : ApiConfig {
             .baseUrl("https://api.github.com/").client(getOkHttpClient())
             .addConverterFactory(
                 MoshiConverterFactory.create(
-                    Moshi.Builder().add(LocalDateTimeAdapter())
+                    Moshi.Builder()
+//                        .add(LocalDateTimeAdapter())
                         .add(LocalDateAdapter()).add(KotlinJsonAdapterFactory())
                         .build()
                 )

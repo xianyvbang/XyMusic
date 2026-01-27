@@ -65,7 +65,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -90,6 +89,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
@@ -149,9 +149,9 @@ fun ArtistInfoScreen(
         artistInfoViewModel.albumList.collectAsLazyPagingItems()
     val resemblanceArtistList =
         artistInfoViewModel.resemblanceArtistList.collectAsLazyPagingItems()
-    val favoriteSet by artistInfoViewModel.favoriteRepository.favoriteSet.collectAsState()
-    val downloadMusicIds by artistInfoViewModel.downloadRepository.musicIdsFlow.collectAsState()
-    val ifOpenSelect by artistInfoViewModel.selectControl.uiState.collectAsState()
+    val favoriteSet by artistInfoViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
+    val downloadMusicIds by artistInfoViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(emptyList())
+    val ifOpenSelect by artistInfoViewModel.selectControl.uiState.collectAsStateWithLifecycle()
 
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
@@ -565,7 +565,7 @@ fun ArtistInfoScreen(
                                                         },
                                                         ifSelect = ifOpenSelect,
                                                         ifSelectCheckBox = { artistInfoViewModel.selectControl.selectMusicIdList.any { it == music.itemId } },
-                                                        trailingOnSelectClick = { select ->
+                                                        trailingOnSelectClick = { _ ->
                                                             artistInfoViewModel.selectControl.toggleSelection(
                                                                 music.itemId,
                                                                 onIsSelectAll = {

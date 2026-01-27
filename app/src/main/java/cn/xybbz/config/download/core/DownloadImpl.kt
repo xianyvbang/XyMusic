@@ -1,13 +1,30 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.config.download.core
 
 import android.content.Context
 import android.util.Log
-import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.common.utils.FileNameResolver
+import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.enums.DownloadStatus
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
@@ -17,34 +34,21 @@ class DownloadImpl(
     private val downloadDispatcher: DownloadDispatcherImpl,
     private val applicationContext: Context,
     private val db: DatabaseClient,
-) : IDownloader {
+) : IDownloader, IoScoped() {
 
-    val scope = CoroutineScopeUtils.getIo("downloadImpl")
     private val listeners = CopyOnWriteArrayList<DownloadListener>()
-    private var taskUpdateJob: Job? = null
-    override fun initData() {
-        observeLoginSuccessForDispatcher()
-    }
 
-    private fun observeLoginSuccessForDispatcher() {
+    init {
+        createScope()
         scope.launch {
-            downloadDispatcher.connectionConfigServer.loginSuccessEvent.collect {
-                startTaskUpdateObserver()
-            }
-        }
-    }
-
-    private fun startTaskUpdateObserver() {
-        // 取消之前的 Job，避免重复监听
-        taskUpdateJob?.cancel()
-
-        // 重新订阅 Dispatcher 更新事件
-        taskUpdateJob = scope.launch {
-            downloadDispatcher.rehydrate()
             downloadDispatcher.taskUpdateEventFlow.collect { updatedTask ->
                 notifyListeners(updatedTask)
             }
         }
+    }
+    override suspend fun initData(connectionId: Long) {
+        downloadDispatcher.rehydrate(connectionId,scope.coroutineContext)
+
     }
 
     /**
@@ -180,6 +184,10 @@ class DownloadImpl(
         if (ids.isNotEmpty()) downloadDispatcher.pause(ids.toList())
     }
 
+    override fun pauseAll() {
+        downloadDispatcher.pauseAll()
+    }
+
     override fun resume(vararg ids: Long) {
         if (ids.isNotEmpty()) downloadDispatcher.resume(ids.toList())
     }
@@ -188,11 +196,21 @@ class DownloadImpl(
         if (ids.isNotEmpty()) downloadDispatcher.cancel(ids.toList())
     }
 
+    override fun cancelAll() {
+       downloadDispatcher.cancelAll()
+    }
+
     override fun delete(vararg ids: Long, deleteFile: Boolean) {
         if (ids.isNotEmpty()) downloadDispatcher.delete(ids.toList(), deleteFile)
     }
 
     override fun updateConfig(config: DownloaderConfig) {
         downloadDispatcher.updateConfig(config)
+    }
+
+    override fun close() {
+        pauseAll()
+        super.close()
+        downloadDispatcher.close()
     }
 }

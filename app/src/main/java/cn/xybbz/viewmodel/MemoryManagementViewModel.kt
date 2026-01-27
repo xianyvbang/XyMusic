@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.viewmodel
 
 import android.content.Context
@@ -15,10 +33,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import androidx.room.withTransaction
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.common.music.CacheController
+import cn.xybbz.common.music.DownloadCacheController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
+import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,16 +47,15 @@ import javax.inject.Inject
 @OptIn(UnstableApi::class)
 @HiltViewModel
 class MemoryManagementViewModel @Inject constructor(
-    private val cacheController: CacheController,
+    private val downloadCacheController: DownloadCacheController,
     private val db: DatabaseClient,
     private val settingsManager: SettingsManager,
     private val dataSourceManager: DataSourceManager,
     private val musicController: MusicController,
-    private val _backgroundConfig: BackgroundConfig,
-    private val connectionConfigServer: ConnectionConfigServer
+    val backgroundConfig: BackgroundConfig,
+    private val downLoadManager: DownLoadManager
 ) : ViewModel() {
 
-    val backgroundConfig = _backgroundConfig
 
     var cacheSize by mutableStateOf("0B")
         private set
@@ -56,7 +73,7 @@ class MemoryManagementViewModel @Inject constructor(
     fun logStorageInfo(context: Context) {
         appDataSize = getFormatSize(getAppDataSize(context))
         cacheSize = getTotalCacheSize(context)
-        musicCacheSize = getFormatSize(cacheController.getCacheSize())
+        musicCacheSize = getFormatSize(downloadCacheController.getCacheSize())
         databaseSize = getAppDatabaseSize()
     }
 
@@ -220,8 +237,8 @@ class MemoryManagementViewModel @Inject constructor(
      */
     fun clearMusicCache() {
         viewModelScope.launch {
-            cacheController.clearCache()
-            musicCacheSize = getFormatSize(cacheController.getCacheSize())
+            downloadCacheController.clearCache()
+            musicCacheSize = getFormatSize(downloadCacheController.getCacheSize())
         }
     }
 
@@ -230,16 +247,14 @@ class MemoryManagementViewModel @Inject constructor(
      */
     fun clearDatabaseData() {
         viewModelScope.launch {
+            musicController.clearPlayerList()
+            dataSourceManager.release()
             db.withTransaction {
+                //清空缓存
                 db.clearAllTables()
             }
             databaseSize = "0B"
-
-            //取消缓存
-            musicController.clearPlayerList()
-            dataSourceManager.release()
             settingsManager.setSettingsData()
-            connectionConfigServer.clear()
         }
     }
 

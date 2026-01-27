@@ -104,10 +104,6 @@ fun ConnectionManagement(
                             shape = RoundedCornerShape(XyTheme.dimens.corner)
                         ),
                     backgroundColor = Color.Transparent,
-                    /*textColor = if (connectionManagementViewModel.connectionConfigServer.connectionConfig?.id == connectionConfig.id)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.onSurface,*/
                     name = connectionConfig.type.title + "-" + connectionConfig.username,
                     subordination = connectionConfig.address,
                     img = connectionConfig.type.img.let { img -> painterResource(img) },
@@ -120,7 +116,7 @@ fun ConnectionManagement(
                             horizontalArrangement = Arrangement.End
                         ) {
                             Switch(
-                                checked = connectionManagementViewModel.connectionConfigServer.getConnectionId() == connectionConfig.id,
+                                checked = connectionManagementViewModel.dataSourceManager.getConnectionId() == connectionConfig.id,
                                 onCheckedChange = {
                                     if (it)
                                         connectionManagementViewModel.changeDataSource(

@@ -1,6 +1,6 @@
 package cn.xybbz.config.module
 
-import cn.xybbz.config.connection.ConnectionConfigServer
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.HomeDataRepository
 import cn.xybbz.localdata.config.DatabaseClient
 import dagger.Module
@@ -17,8 +17,8 @@ object HomeDataModule {
     @Provides
     fun homeDataRepository(
         db: DatabaseClient,
-        connectionConfigServer: ConnectionConfigServer
+        datasourceServer: DataSourceManager
     ): HomeDataRepository {
-        return HomeDataRepository(db, connectionConfigServer)
+        return HomeDataRepository(db, datasourceServer)
     }
 }

@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.config.proxy
 
 import android.webkit.URLUtil
@@ -5,23 +23,17 @@ import cn.xybbz.api.client.data.ProxyConfig
 import cn.xybbz.api.okhttp.proxy.ProxyManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.AllDataEnum
-import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.proxy.XyProxyConfig
-import kotlinx.coroutines.launch
 import java.net.URI
 
 class ProxyConfigServer(private val db: DatabaseClient) {
 
-
-    val scope = CoroutineScopeUtils.getIo("ProxyConfig")
     lateinit var proxyConfig: XyProxyConfig
 
-    fun initConfig() {
-        scope.launch {
-            proxyConfig = db.proxyConfigDao.getConfig() ?: XyProxyConfig()
-            updateProxyConfig()
-        }
+    suspend fun initConfig() {
+        proxyConfig = db.proxyConfigDao.getConfig() ?: XyProxyConfig()
+        updateProxyConfig()
     }
 
     fun get(): XyProxyConfig {

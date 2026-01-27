@@ -25,26 +25,28 @@ import android.util.Log
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.cache.Cache
+import androidx.media3.datasource.cache.CacheDataSink
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.CacheWriter
+import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
 import cn.xybbz.api.client.CacheApiClient
-import cn.xybbz.common.utils.CoroutineScopeUtils
+import cn.xybbz.config.scope.XyCloseableCoroutineScope
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.entity.data.music.CacheTask
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.File
-import java.util.concurrent.ConcurrentHashMap
 
 
 @SuppressLint("UnsafeOptInUsageError")
@@ -52,20 +54,25 @@ class CacheController(
     private val context: Context,
     private val settingsManager: SettingsManager,
     private val cacheApiClient: CacheApiClient
-) {
+){
 
     private val cache: Cache
-    private var cacheDataSourceFactory: CacheDataSource.Factory
+     var cacheDataSourceFactory: CacheDataSource.Factory
     private var cacheDataSource: CacheDataSource
     private var upstreamDataSourceFactory: DefaultDataSource.Factory
 
-    private val cacheTask: ConcurrentHashMap<String, CacheTask> = ConcurrentHashMap()
-    private val cacheCoroutineScope = CoroutineScopeUtils.getIo(this.javaClass.name)
+//    private val cacheTask: ConcurrentHashMap<String, CacheTask> = ConcurrentHashMap()
+
+    /** 只允许一个任务 */
+    private var currentTask: CacheWriter? = null
+    private var currentTaskId: String? = null
+
+    private val cacheCoroutineScope = XyCloseableCoroutineScope(SupervisorJob() + Dispatchers.IO + CoroutineName((this.javaClass.name)))
 
     private val childPath = "cache"
 
-    private val cacheSchedule = MutableStateFlow(0f)
-    val _cacheSchedule = cacheSchedule.asStateFlow()
+    private val _cacheSchedule = MutableStateFlow(0f)
+    val cacheSchedule = _cacheSchedule.asStateFlow()
 
     init {
         //2025年1月20日 11:12:19 修改缓存数据目录到cache中,使其可以被系统的清除缓存功能删除
@@ -79,7 +86,7 @@ class CacheController(
             } else {
                 File(context.filesDir, childPath)
             }
-        Log.i("catch", "缓存初始化 $cacheParentDirectory")
+        Log.i("music", "缓存初始化 $cacheParentDirectory")
         // 设置缓存目录和缓存机制，如果不需要清除缓存可以使用NoOpCacheEvictor
 
         val cacheDir = File(cacheParentDirectory, "example_media_cache")
@@ -87,31 +94,36 @@ class CacheController(
         cache = SimpleCache(
             cacheDir,
             //读取配置
-            XyCacheEvictor(settingsManager), ExampleDatabaseProvider(context)
+            LeastRecentlyUsedCacheEvictor(100 * 1024 * 1024)
+            /*XyCacheEvictor(settingsManager)*/, ExampleDatabaseProvider(context)
         )
 
         // 根据缓存目录创建缓存数据源
         upstreamDataSourceFactory = DefaultDataSource.Factory(
             context,
             OkHttpDataSource.Factory(cacheApiClient.okhttpClientFunction())
+                .setDefaultRequestProperties(mapOf("11111" to "22222"))
         )
         cacheDataSourceFactory = CacheDataSource.Factory()
             .setCache(cache)
             .setUpstreamDataSourceFactory(
                 upstreamDataSourceFactory
-            ).setCacheWriteDataSinkFactory(null)
-        // 设置上游数据源，缓存未命中时通过此获取数据
-        /*.setUpstreamDataSourceFactory(
-            DefaultHttpDataSource.Factory().setAllowCrossProtocolRedirects(true)
-        )*/
+            )/*.setCacheWriteDataSinkFactory(null)*/
+            .setCacheWriteDataSinkFactory(
+                CacheDataSink.Factory()
+                    .setCache(cache)
+                    .setFragmentSize(2 * 1024 * 1024) // 2MB 分片写入
+            )
+            .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+
         cacheDataSource = cacheDataSourceFactory.createDataSource()
 
-        settingsManager.setOnListener(object :OnSettingsChangeListener {
+        settingsManager.setOnListener(object : OnSettingsChangeListener {
             override fun onCacheMaxBytesChanged(
                 cacheUpperLimit: CacheUpperLimitEnum,
                 oldCacheUpperLimit: CacheUpperLimitEnum
             ) {
-                if (cacheUpperLimit == CacheUpperLimitEnum.No){
+                if (cacheUpperLimit == CacheUpperLimitEnum.No) {
                     clearCache()
                 }
             }
@@ -120,86 +132,93 @@ class CacheController(
     }
 
     fun cacheMedia(music: XyPlayMusic) {
-        if (settingsManager.get().cacheUpperLimit != CacheUpperLimitEnum.No){
-            val url = music.getMusicUrl()
-            val itemId = music.itemId
-            cacheCoroutineScope.launch(Dispatchers.IO) {
-                val dataSpec = DataSpec.Builder()
-                    .setKey(itemId)
-                    .setUri(url)
-                    .setLength(music.size ?: 20000)
-                    .build()
 
-                val existingTask = cacheTask[itemId]
+        if (settingsManager.get().cacheUpperLimit == CacheUpperLimitEnum.No) return
 
-                try {
-                    if (existingTask != null) {
-                        if (existingTask.isPaused) {
-                            Log.i("=====", "继续缓存: $url --- $itemId")
-                            // 重新创建 CacheWriter（因为 cancel() 后不能恢复）
-                            val newWriter = createCacheWriter(dataSpec)
-                            cacheTask[itemId] = CacheTask(newWriter, isPaused = false)
-                            newWriter.cache()
-                        } else {
-                            Log.i("=====", "任务已在进行中: $url --- $itemId")
-                        }
-                    } else {
-                        Log.i("=====", "新建缓存: $url")
-                        val writer = createCacheWriter(dataSpec)
-                        cacheTask[itemId] = CacheTask(writer, isPaused = false)
-                        writer.cache()
-                    }
-                } catch (e: Exception) {
-                    Log.e("=====", "缓存数据报错: ${e.message} --- ${music.name}", e)
-                }
-
+        val itemId = music.itemId
+        val url = music.getMusicUrl()
+        cacheCoroutineScope.launch(Dispatchers.IO) {
+            Log.i("music", "开始缓存1")
+            Log.i("music", "开始缓存2")
+            /** 切换缓存 → 取消旧任务 */
+            if (currentTaskId != null && currentTaskId != itemId) {
+                pauseCache()
             }
+            val cachedBytes = cache.getCachedBytes(itemId, 0, music.size ?: 20000)
+            startNewCacheLocked(itemId, url, music,cachedBytes)
         }
-
     }
 
-    private fun createCacheWriter(dataSpec: DataSpec): CacheWriter {
-        val cacheDataSource = CacheDataSource.Factory()
-            .setCache(cache)
-            .setUpstreamDataSourceFactory(
-                upstreamDataSourceFactory
-            )
-            .createDataSource()
+    private fun cancelCurrentCacheLocked() {
+        cancelCurrentCache()
+    }
+
+    private fun startNewCacheLocked(
+        itemId: String,
+        url: String,
+        music: XyPlayMusic,
+        cachedLength: Long
+    ) {
+        val dataSpec = DataSpec.Builder()
+            .setKey(itemId)
+            .setUri(url)
+            .setPosition(cachedLength)
+            .setLength(music.size ?: 20000)
+            .build()
+
+
+        try {
+            val writer = createCacheWriter(dataSpec, itemId)
+            currentTask = writer
+            currentTaskId = itemId
+            Log.i("music", "开始缓存: $itemId")
+            writer.cache()
+        } catch (e: Exception) {
+            Log.e("music", "缓存数据报错: ${e.message} --- ${music.name}", e)
+        }
+    }
+
+    private fun createCacheWriter(dataSpec: DataSpec, itemId: String): CacheWriter {
         return CacheWriter(
             cacheDataSource, // 这里用你初始化好的 CacheDataSource
             dataSpec,
             null
         ) { requestLength, bytesCached, newBytesCached ->
-            val progress = bytesCached * 1f / requestLength
-            cacheSchedule.value = progress
-//            Log.i("=====", "进度: $progress url=${music.musicUrl}")
+            val cacheProgress = bytesCached.toFloat() / requestLength
+            _cacheSchedule.value = cacheProgress
+            Log.i("music", "缓存进度: ${cacheProgress} -- $requestLength --- $bytesCached -- $newBytesCached")
+            if (cacheProgress >= 1f)
+                pauseCache()
         }
+    }
+
+    /**
+     * 取消当前缓存
+     */
+    private fun cancelCurrentCache() {
+        pauseCache()
+        _cacheSchedule.value = 0f
+
+        Log.i("music", "已取消当前缓存")
     }
 
     /**
      * 暂停当前缓存
      */
-    fun pauseCache(itemId: String) {
-        val task = cacheTask[itemId]
-        if (task != null && !task.isPaused) {
-            task.cacheWriter.cancel() // 停止当前写入
-            task.isPaused = true
-            Log.i("=====", "已暂停缓存: $itemId")
-        }
+    fun pauseCache() {
+        currentTask?.cancel()
+        currentTask = null
+        currentTaskId = null
     }
 
     /**
      * 取消所有缓存
      */
     fun cancelAllCache() {
-        cacheTask.forEach { (_, u) ->
-            u.cacheWriter.cancel()
-            u.isPaused = true
-        }
-        cacheTask.clear()
+        cancelCurrentCacheLocked()
     }
 
-    fun getMediaSourceFactory(): MediaSource.Factory? {
+    fun getMediaSourceFactory(): MediaSource.Factory {
         // 创建逐步加载数据的数据源
 
 //        val mediaSourceFactory = ProgressiveMediaSource.Factory(cacheDataSourceFactory)
@@ -222,22 +241,19 @@ class CacheController(
      * 清空缓存
      */
     fun clearCache() {
-        cacheTask.forEach { (_, u) ->
-            u.cacheWriter.cancel()
-            u.isPaused = true
+        cacheCoroutineScope.launch {
+            cancelAllCache()
+            cache.keys.forEach {
+                cache.removeResource(it)
+            }
         }
-        cacheTask.clear()
-        cacheDataSource.cache.keys.forEach {
-            cacheDataSource.cache.removeResource(it)
-        }
+
     }
 
     fun release() {
-        cacheTask.values.forEach {
-            it.cacheWriter.cancel()
-            it.isPaused = true
+        cacheCoroutineScope.launch {
+            pauseCache()
+            cache.release()
         }
-        cacheTask.clear()
-        cache.release()
     }
 }

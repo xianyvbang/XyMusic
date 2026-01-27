@@ -32,9 +32,6 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
-import cn.xybbz.config.download.DownloadRepository
-import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -50,13 +47,13 @@ class SearchViewModel @OptIn(UnstableApi::class)
 @Inject constructor(
     private val db: DatabaseClient,
     private val dataSourceManager: DataSourceManager,
-    private val connectionConfigServer: ConnectionConfigServer,
     val musicController: MusicController,
-    val favoriteRepository: FavoriteRepository,
-    val downloadRepository: DownloadRepository,
     val backgroundConfig: BackgroundConfig
 ) : ViewModel() {
 
+    val downloadMusicIdsFlow =
+        db.downloadDao.getAllMusicTaskUidsFlow()
+    val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     /**
      * 搜索历史
@@ -125,7 +122,7 @@ class SearchViewModel @OptIn(UnstableApi::class)
                     saveSearchHistory(
                         SearchHistory(
                             searchQuery = searchQuery,
-                            connectionId = connectionConfigServer.getConnectionId()
+                            connectionId = dataSourceManager.getConnectionId()
                         )
                     )
                 } catch (e: Exception) {
@@ -156,7 +153,7 @@ class SearchViewModel @OptIn(UnstableApi::class)
         viewModelScope.launch {
             val download = db.downloadDao.getMusicCompleteTaskByUid(music.itemId)
             val playMusic = music.toPlayMusic().copy(
-                ifFavoriteStatus = music.itemId in favoriteRepository.favoriteSet.value,
+                ifFavoriteStatus = db.musicDao.selectIfFavoriteByMusic(music.itemId),
                 filePath = download?.filePath
             )
             musicController.addMusic(

@@ -85,6 +85,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.R
 import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.common.utils.LrcUtils.formatTime
@@ -108,23 +109,22 @@ private val lyricHorizontalPadding = 30.dp
 @Composable
 fun LrcViewNewCompose(
     modifier: Modifier = Modifier,
-    lcrEntryList: List<LrcEntryData>,
-    lrcConfig: XyLrcConfig?,
     onSetLrcOffset: (Long) -> Unit,
-    lrcViewModel: LrcViewModel = hiltViewModel(),
+    lrcViewModel: LrcViewModel = hiltViewModel<LrcViewModel>(),
     listState: LazyListState = rememberLazyListState(),
 ) {
 
+    val lcrEntryList by lrcViewModel.lrcServer.lcrEntryListFlow.collectAsStateWithLifecycle(emptyList())
     val coroutineScope = rememberCoroutineScope()
 
     var tmpOffsetMs by remember {
-        mutableStateOf(lrcConfig?.lrcOffsetMs ?: 0L)
+        mutableStateOf(lrcViewModel.lrcServer.lrcConfig?.lrcOffsetMs ?: 0L)
     }
     var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
 
     DisposableEffect(Unit) {
-        Log.i("=====", "歌词偏移 ${lrcConfig?.lrcOffsetMs}")
+        Log.i("=====", "歌词偏移 ${lrcViewModel.lrcServer.lrcConfig?.lrcOffsetMs}")
         onDispose {
             fabMenuExpanded = false
         }
@@ -274,37 +274,7 @@ fun LrcViewNewCompose(
                     }
 
 
-                    if (isDragState.value && dragLineIndex in lcrEntryList.indices) {
-                        val dragLine = lcrEntryList[dragLineIndex]
 
-                        // 绘制辅助线和时间
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .align(Alignment.Center)
-                                .padding(vertical = 8.dp)
-
-                        ) {
-                            HorizontalDivider(
-                                modifier = Modifier
-                                    .padding(horizontal = 16.dp)
-                                    .fillMaxWidth(),
-                                thickness = 1.dp,
-                                color = Color.Gray
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = formatTime(dragLine.startTime),
-                                color = Color.White,
-                                fontSize = 14.sp,
-                                modifier = Modifier
-                                    .align(Alignment.CenterHorizontally)
-                                    .background(Color.Black.copy(alpha = 0.5f))
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                                    .clip(RoundedCornerShape(4.dp))
-                            )
-                        }
-                    }
 
                 } else {
                     Box(
@@ -316,6 +286,38 @@ fun LrcViewNewCompose(
                             modifier = Modifier.align(Alignment.Center)
                         )
                     }
+                }
+            }
+
+            if (isDragState.value && dragLineIndex in lcrEntryList.indices) {
+                val dragLine = lcrEntryList[dragLineIndex]
+
+                // 绘制辅助线和时间
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.Center)
+                        .padding(vertical = 8.dp)
+
+                ) {
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .fillMaxWidth(),
+                        thickness = 1.dp,
+                        color = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = formatTime(dragLine.startTime),
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .background(Color.Black.copy(alpha = 0.5f))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                    )
                 }
             }
 

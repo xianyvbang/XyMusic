@@ -20,17 +20,13 @@ package cn.xybbz.common.music
 
 import android.media.AudioTrack
 import android.media.VolumeShaper
-import cn.xybbz.common.utils.CoroutineScopeUtils
+import cn.xybbz.config.scope.IoScoped
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class AudioFadeController(
-
-) {
-
-    val scope = CoroutineScopeUtils.getIo("AudioFadeController")
+class AudioFadeController() : IoScoped() {
 
     private var currentTrack: AudioTrack? = null
     private var volumeShaper: VolumeShaper? = null
@@ -73,6 +69,7 @@ class AudioFadeController(
         }
 
     }
+
     private var fadeJob: Job? = null
 
     fun fadeOut(onEnd: () -> Unit) {
@@ -87,7 +84,12 @@ class AudioFadeController(
         val token = ++pauseToken
         if (fadeDurationMs != 0L)
             try {
-                volumeShaper?.close()
+                try {
+                    volumeShaper?.close()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+
                 volumeShaper = track.createVolumeShaper(
                     VolumeShaper.Configuration.Builder()
                         .setDuration(fadeDurationMs)
@@ -98,11 +100,6 @@ class AudioFadeController(
                         .build()
                 )
                 volumeShaper?.apply(VolumeShaper.Operation.PLAY)
-                /*Handler(Looper.getMainLooper()).postDelayed({
-                    if (token == pauseToken) {
-                        onEnd()
-                    }
-                }, fadeDurationMs)*/
                 fadeJob?.cancel()
                 fadeJob = scope.launch(Dispatchers.Main) {
                     delay(fadeDurationMs)
@@ -117,10 +114,16 @@ class AudioFadeController(
     }
 
     fun release() {
+        currentTrack?.release()
         volumeShaper?.close()
         volumeShaper = null
         currentTrack = null
         released = true
+    }
+
+    override fun close() {
+        super.close()
+        release()
     }
 }
 

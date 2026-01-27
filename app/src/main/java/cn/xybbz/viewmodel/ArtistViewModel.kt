@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.viewmodel
 
 import androidx.compose.runtime.getValue
@@ -10,7 +28,6 @@ import androidx.paging.cachedIn
 import androidx.paging.filter
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.entity.data.ArtistFilter
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtistExt
@@ -31,7 +48,6 @@ import javax.inject.Inject
 @HiltViewModel
 class ArtistViewModel @Inject constructor(
     private val dataSourceManager: DataSourceManager,
-    connectionConfigServer: ConnectionConfigServer,
     private val db: DatabaseClient,
     val backgroundConfig: BackgroundConfig
 ) : ViewModel() {
@@ -60,7 +76,7 @@ class ArtistViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     // 先定义 artistListPage
     val artistListPage: Flow<PagingData<XyArtistExt>> =
-        connectionConfigServer.loginSuccessEvent
+        dataSourceManager.getLoginStateFlow()
             .flatMapLatest {
                 dataSourceManager.selectArtistFlowList()
             }
@@ -74,7 +90,6 @@ class ArtistViewModel @Inject constructor(
             }
         }
             .cachedIn(viewModelScope) // 外层只缓存一次
-
 
 
     fun setFavoriteFilterData(isFavorite: Boolean?) {
@@ -98,7 +113,7 @@ class ArtistViewModel @Inject constructor(
     fun getSelectCharList() {
         viewModelScope.launch {
             db.artistDao.getSelectCharList().collect {
-                selectArtistChars = it.map { it[0].uppercaseChar() }.distinct()
+                selectArtistChars = it.map { char -> char[0].uppercaseChar() }.distinct()
             }
         }
     }

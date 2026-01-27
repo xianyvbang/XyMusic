@@ -21,7 +21,6 @@ package cn.xybbz.config.recommender
 import android.util.Log
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
 import java.util.concurrent.TimeUnit
 import kotlin.math.log10
@@ -43,7 +42,6 @@ data class RecommenderConfig(
  */
 class DailyRecommender(
     private val repo: DataSourceManager,
-    private val db: DatabaseClient,
     private val recentHistory: RecentHistoryCache,
     private val config: RecommenderConfig = RecommenderConfig()
 ) {
@@ -52,7 +50,7 @@ class DailyRecommender(
     suspend fun generate() {
         // 1) 拉取必要数据（最近播放用于画像）
         val recentPlays =
-            repo.getPlayRecordMusicList(pageSize = (Constants.ALBUM_MUSIC_LIST_PAGE / 2.5).toInt())
+            repo.getPlayRecordMusicList(pageSize = (Constants.ALBUM_MUSIC_LIST_PAGE * 0.8).toInt())
         // 2) 构建用户画像（artist/genre 权重）
         val (artistPrefs: Map<String, Double>, genrePrefs) = buildUserProfile(recentPlays)
 
@@ -117,7 +115,8 @@ class DailyRecommender(
         }.shuffled().take(exploreCount)
         //大于5分钟的音乐都过滤
         val result =
-            (exploit + explorationPool).distinct().filter { it.runTimeTicks / 60.0 > 6 }
+            (exploit + explorationPool).distinctBy { it.itemId }
+                .filter { it.runTimeTicks / 1000 / 60.0 > 6 }
                 .take(n)
         val scoringEndTime5 = System.currentTimeMillis()
         Log.i(
@@ -130,7 +129,7 @@ class DailyRecommender(
         // 更新 recentHistory（异步安全）
         recentHistory.addAll(
             result,
-            repo.connectionConfigServer.getConnectionId()
+            repo.getConnectionId()
         )
     }
 
@@ -189,7 +188,7 @@ class DailyRecommender(
         val startTime = System.currentTimeMillis()
         val byArtists = repo.getMusicListByArtistIds(
             topArtists.toList(),
-            pageSize = (Constants.ALBUM_MUSIC_LIST_PAGE / 2.5).toInt()
+            pageSize = (Constants.ALBUM_MUSIC_LIST_PAGE * 0.8).toInt()
         ) ?: emptyList() // each artist 取部分
         val endTime = System.currentTimeMillis()
         Log.i("DailyRecommender", "Fetching music by artists took ${endTime - startTime} ms")
@@ -198,7 +197,7 @@ class DailyRecommender(
         val startTime1 = System.currentTimeMillis()
         val byGenres = repo.selectMusicListByGenreIds(
             topGenres.toList(),
-            pageSize = (Constants.ALBUM_MUSIC_LIST_PAGE / 4).toInt()
+            pageSize = (Constants.ALBUM_MUSIC_LIST_PAGE * 0.4).toInt()
         ) ?: emptyList()
         val endTime1 = System.currentTimeMillis()
         Log.i("DailyRecommender", "Fetching music by genres took ${endTime1 - startTime1} ms")

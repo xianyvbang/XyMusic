@@ -67,7 +67,7 @@ data class XyPlayMusic(
      */
     val filePath: String?,
     /**
-     * 时长 秒
+     * 时长 毫秒
      */
     val runTimeTicks: Long,
     /**

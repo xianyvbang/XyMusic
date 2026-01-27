@@ -1,9 +1,32 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.common.utils
 
+import android.util.Log
+import cn.xybbz.config.scope.XyCloseableCoroutineScope
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 /**
  * 获得CoroutineScope
@@ -11,16 +34,50 @@ import kotlinx.coroutines.SupervisorJob
 object CoroutineScopeUtils {
 
     /**
-     * 获得Main携程
+     * 获得Main协程
      */
-    fun getMain(name: String = "xy"): CoroutineScope {
-        return CoroutineScope(SupervisorJob() + Dispatchers.Main + CoroutineName(name))
+    fun getMain(name: String = "xy"): XyCloseableCoroutineScope {
+        return XyCloseableCoroutineScope(
+            CoroutineExceptionHandler(
+                handler = { context, throwable ->
+                    Log.e("CoroutineExceptionHandler", throwable.message, throwable)
+                }
+            ) + SupervisorJob() + Dispatchers.Main + CoroutineName(name))
     }
 
     /**
-     * 获得IO携程
+     * 获得IO协程
      */
-    fun getIo(name: String = "xy"): CoroutineScope {
-        return CoroutineScope(SupervisorJob() + Dispatchers.IO + CoroutineName(name))
+    fun getIo(name: String = "xy"): XyCloseableCoroutineScope {
+        return XyCloseableCoroutineScope(
+            CoroutineExceptionHandler(
+                handler = { context, throwable ->
+                    Log.e("CoroutineExceptionHandler", throwable.message, throwable)
+                }
+            ) + SupervisorJob() + Dispatchers.IO + CoroutineName(name))
     }
+
+    fun getIo(coroutineContext: CoroutineContext): XyCloseableCoroutineScope {
+        val job = coroutineContext[Job]
+        return XyCloseableCoroutineScope(
+            coroutineContext + SupervisorJob(job)
+        )
+    }
+
+    /**
+     * 获得Default协程
+     */
+    fun getDefault(name: String = "xy"): XyCloseableCoroutineScope {
+        return XyCloseableCoroutineScope(
+            CoroutineExceptionHandler(
+                handler = { context, throwable ->
+                    Log.e("CoroutineExceptionHandler", throwable.message, throwable)
+                }
+            ) + SupervisorJob() + Dispatchers.Default + CoroutineName(name))
+    }
+}
+
+fun CoroutineContext.childScope(coroutineContext: CoroutineContext = EmptyCoroutineContext): XyCloseableCoroutineScope {
+    val job = this[Job]
+    return XyCloseableCoroutineScope(this + SupervisorJob(job) + coroutineContext)
 }

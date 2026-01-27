@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.viewmodel
 
 import androidx.annotation.OptIn
@@ -7,10 +25,9 @@ import androidx.media3.common.util.UnstableApi
 import androidx.room.Transaction
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.common.music.CacheController
+import cn.xybbz.common.music.DownloadCacheController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.MessageUtils
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.download.core.DownloadRequest
 import cn.xybbz.config.select.SelectControl
@@ -25,11 +42,10 @@ import javax.inject.Inject
 class SnackBarPlayerViewModel @Inject constructor(
     val musicController: MusicController,
     val db: DatabaseClient,
-    private val cacheController: CacheController,
+    private val downloadCacheController: DownloadCacheController,
     val dataSourceManager: DataSourceManager,
     val selectControl: SelectControl,
-    private val downloadManager: DownLoadManager,
-    val connectionConfigServer: ConnectionConfigServer
+    private val downloadManager: DownLoadManager
 ) : ViewModel() {
 
 
@@ -41,7 +57,7 @@ class SnackBarPlayerViewModel @Inject constructor(
         db.playerDao.removeByDatasource()
         db.musicDao.removePlayQueueMusic()
         viewModelScope.launch {
-            cacheController.clearCache()
+            downloadCacheController.clearCache()
         }
     }
 
@@ -61,7 +77,7 @@ class SnackBarPlayerViewModel @Inject constructor(
                     type = downloadTypes,
                     cover = musicData.pic,
                     duration = musicData.runTimeTicks,
-                    connectionId = connectionConfigServer.getConnectionId(),
+                    connectionId = dataSourceManager.getConnectionId(),
                     music = musicData
                 )
             }

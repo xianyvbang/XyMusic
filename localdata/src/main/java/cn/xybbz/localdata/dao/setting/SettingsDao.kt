@@ -25,6 +25,7 @@ import androidx.room.Query
 import androidx.room.Update
 import cn.xybbz.localdata.data.setting.XySettings
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
+import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.LanguageType
 import kotlinx.coroutines.flow.Flow
 
@@ -64,8 +65,8 @@ interface SettingsDao {
     @Query("update xy_settings set ifEnableAlbumHistory = :ifEnableAlbumHistory where id = :id")
     suspend fun updateIfEnableAlbumHistory(ifEnableAlbumHistory: Boolean, id: Long)
 
-    @Query("update xy_settings set connectionId = :connectionId where id = :id")
-    suspend fun updateConnectionId(connectionId: Long?, id: Long)
+    @Query("update xy_settings set connectionId = :connectionId, dataSourceType = :dataSourceType where id = :id")
+    suspend fun updateConnectionId(connectionId: Long?, dataSourceType: DataSourceType?, id: Long)
 
     @Query("update xy_settings set ifHandleAudioFocus = :ifHandleAudioFocus where id = :id")
     suspend fun updateIfHandleAudioFocus(ifHandleAudioFocus: Boolean, id: Long)
