@@ -38,14 +38,14 @@ class XyPlayerListener(
     private val onGetMusicInfo: () -> XyPlayMusic?,
     private val onSetMusicInfo: () -> Unit,
     private val onSeekToNext: () -> Unit,
-    private val onEventEmit: (PlayerEvent) ->Unit,
-    private val onSetCurOriginIndex:()-> Unit,
-    private val onOriginMusicListIsNotEmptyAndIndexEnd:()-> Boolean,
-    private val onPageNumber:()->Int,
-    private val onUpdateDuration:()->Unit,
-    private val onMusicStartCache:()->Unit,
-    private val onUpdatePlayerHistory:(XyPlayMusic)-> Unit,
-    private val onPlaySessionId:()->String
+    private val onEventEmit: (PlayerEvent) -> Unit,
+    private val onSetCurOriginIndex: () -> Unit,
+    private val onOriginMusicListIsNotEmptyAndIndexEnd: () -> Boolean,
+    private val onPageNumber: () -> Int,
+    private val onUpdateDuration: () -> Unit,
+    private val onMusicStartCache: () -> Unit,
+    private val onUpdatePlayerHistory: (XyPlayMusic) -> Unit,
+    private val onPlaySessionId: () -> String
 ) : Player.Listener {
 
     override fun onPlaybackStateChanged(playbackState: Int) {
@@ -134,8 +134,9 @@ class XyPlayerListener(
 
                 //todo 替换mediaitem的位置
                 //如果状态是播放的话
-//                if (onGetState() != PlayStateEnum.Pause)
-                onMusicStartCache()
+                Log.i("music", "播放状态${onGetState()}")
+                if (onGetState() != PlayStateEnum.Pause && onGetState() != PlayStateEnum.None)
+                    onMusicStartCache()
                 onGetMusicInfo()?.let {
                     onEventEmit(
                         PlayerEvent.ChangeMusic(

@@ -174,25 +174,29 @@ class MusicController(
                 )
                 it
             }
-            musicInfo?.let {
-                it.setMusicUrl(
-                    getMusicUrl(
-                        it.itemId,
-                        it.plexPlayKey
-                    ).musicUrl
-                )
-                downloadCacheController.cancelAllCache()
-                startCache(it, settingsManager.getStatic())
-            }
+
 
             if (state == PlayStateEnum.Pause) {
+                mediaController?.stop()
                 mediaController?.replaceMediaItems(
                     0, originMusicList.size,
                     originMusicList.map {
                         musicSetMediaItem(it)
                     }
                 )
+                mediaController?.prepare()
+                mediaController?.pause()
             } else {
+
+                musicInfo?.let {
+                    it.setMusicUrl(
+                        getMusicUrl(
+                            it.itemId,
+                            it.plexPlayKey
+                        ).musicUrl
+                    )
+                }
+
                 val (left, right) = splitListExcludeIndex(originMusicList, curOriginIndex)
                 if (left.isNotEmpty()) {
                     val leftItem = left.map { item ->
@@ -356,6 +360,7 @@ class MusicController(
 
     fun seekToIndex(index: Int) {
         Log.i("music", "调用seekToIndex")
+        updateState(PlayStateEnum.Loading)
         setCurrentPositionData(Constants.ZERO.toLong())
         fadeController.fadeOut {
             mediaController?.seekToDefaultPosition(index)
@@ -388,7 +393,7 @@ class MusicController(
         Log.i("music", "调用seekToPrevious ${mediaController?.hasPreviousMediaItem()}")
 
         //这里进行缓存数据替换
-
+        updateState(PlayStateEnum.Loading)
         if (playType == PlayerTypeEnum.SINGLE_LOOP && mediaController?.hasPreviousMediaItem() != true) {
             seekToIndex((mediaController?.mediaItemCount ?: 1) - 1)
         } else {
@@ -405,6 +410,7 @@ class MusicController(
      * 获取当前播放模式下的下一首歌曲
      */
     fun seekToNext() {
+        updateState(PlayStateEnum.Loading)
         if (playType == PlayerTypeEnum.SINGLE_LOOP && mediaController?.hasNextMediaItem() != true) {
             seekToIndex(0)
         } else {
@@ -586,8 +592,6 @@ class MusicController(
         if (musicDataList.isNotEmpty()) {
             downloadCacheController.cancelAllCache()
         }
-        //设置播放类型
-        generateRealMusicList()
 
         // 停止之前播放
         mediaController?.run {
@@ -598,10 +602,11 @@ class MusicController(
             else
                 setMediaItems(mediaItemList)
             if (!ifInitPlayerList) {
+                updateState(PlayStateEnum.Loading)
                 thisPlay()
             } else {
-                stop()
                 prepare()
+                pause()
             }
             scope.launch {
                 _events.emit(PlayerEvent.AddMusicList(artistId, ifInitPlayerList))
@@ -642,7 +647,6 @@ class MusicController(
                         normalizeMimeType
                     }
                 }
-            Log.i("music", "歌曲的类型为:${normalizeMimeType}")
             mediaItemBuilder.setMimeType(
                 mimeType
             )

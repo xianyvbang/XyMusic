@@ -348,6 +348,10 @@ class MusicPlayContext @Inject constructor(
                 },
                 pageSize = player.pageSize
             )
+            player.playerType.let {
+                Log.i("=====", "当前的播放模式是${it}")
+                musicController.setPlayTypeData(it)
+            }
             musicOperate(
                 musicPlayData = musicPlayData,
                 ifSkip = player.ifSkip,
@@ -357,10 +361,7 @@ class MusicPlayContext @Inject constructor(
                 musicPlayTypeEnum = player.dataType
             )
 
-            player.playerType.let {
-                Log.i("=====", "当前的播放模式是${it}")
-                musicController.setPlayTypeData(it)
-            }
+
         }
 
 
