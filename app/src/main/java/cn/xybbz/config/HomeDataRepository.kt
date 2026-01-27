@@ -18,6 +18,7 @@
 
 package cn.xybbz.config
 
+import android.util.Log
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -65,7 +66,8 @@ class HomeDataRepository(
      * 执行登录状态数据监听
      */
     suspend fun initLoginChangeMonitor(){
-        dataSourceManager.getLoginStateFlow().collect { user ->
+        dataSourceManager.loginState.collect { user ->
+            Log.i("login","首页数据刷新")
             //切用户：取消旧监听
             collectJobs.forEach { it.cancel() }
             collectJobs.clear()

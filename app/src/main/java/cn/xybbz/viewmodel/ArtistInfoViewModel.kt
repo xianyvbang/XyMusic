@@ -84,7 +84,7 @@ class ArtistInfoViewModel @AssistedInject constructor(
     //艺术家的音乐列表
     @OptIn(ExperimentalCoroutinesApi::class)
     val musicList =
-        dataSourceManager.getLoginStateFlow()
+        dataSourceManager.loginState
             .flatMapLatest {
                 dataSourceManager.selectMusicListByArtistId(artistId).distinctUntilChanged()
             }
@@ -94,7 +94,7 @@ class ArtistInfoViewModel @AssistedInject constructor(
     //艺术家的专辑列表
     @OptIn(ExperimentalCoroutinesApi::class)
     val albumList =
-        dataSourceManager.getLoginStateFlow()
+        dataSourceManager.loginState
             .flatMapLatest {
                 dataSourceManager.selectAlbumListByArtistId(artistId).distinctUntilChanged()
             }
@@ -102,7 +102,7 @@ class ArtistInfoViewModel @AssistedInject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val resemblanceArtistList =
-        dataSourceManager.getLoginStateFlow()
+        dataSourceManager.loginState
             .flatMapLatest {
                 dataSourceManager.getResemblanceArtist(artistId).distinctUntilChanged()
             }

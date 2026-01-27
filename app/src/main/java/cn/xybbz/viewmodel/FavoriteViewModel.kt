@@ -47,7 +47,7 @@ class FavoriteViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val favoriteMusicList =
-        dataSourceManager.getLoginStateFlow()
+        dataSourceManager.loginState
             .flatMapLatest {
                 dataSourceManager.selectFavoriteMusicFlowList()
             }

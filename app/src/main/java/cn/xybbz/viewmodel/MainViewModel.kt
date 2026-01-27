@@ -188,7 +188,7 @@ class MainViewModel @Inject constructor(
         musicController.initController {
             // 查询是否存在播放列表,如果存在将内容写入
             viewModelScope.launch {
-                dataSourceManager.getLoginStateFlow().collect {
+                dataSourceManager.loginSuccessEvent.collect {
                     startPlayerListObserver()
                 }
             }
@@ -409,7 +409,7 @@ class MainViewModel @Inject constructor(
 
     private fun observeLoginSuccessForAndProgress() {
         viewModelScope.launch {
-            dataSourceManager.getLoginStateFlow().collect {
+            dataSourceManager.loginState.collect {
                 startEnableProgressObserver()
             }
         }
@@ -438,21 +438,17 @@ class MainViewModel @Inject constructor(
     /**
      * 加载播放列表里的数据
      */
-    private fun startPlayerListObserver() {
-        Log.i("music","重新加载数据列表")
-        playerListJob?.cancel()
-
-        playerListJob = viewModelScope.launch {
-            // 先读取播放队列
-            val musicList = db.musicDao.selectPlayQueuePlayMusicList()
-            if (dataSourceManager.dataSourceType != null && musicList.isNotEmpty()) {
-                val player = db.playerDao.selectPlayerByDataSource()
-                musicPlayContext.initPlayList(
-                    musicList = musicList,
-                    player = player
-                )
-                musicController.pause()
-            }
+    private suspend fun startPlayerListObserver() {
+        Log.i("login","重新加载数据列表")
+        // 先读取播放队列
+        val musicList = db.musicDao.selectPlayQueuePlayMusicList()
+        if (dataSourceManager.dataSourceType != null && musicList.isNotEmpty()) {
+            val player = db.playerDao.selectPlayerByDataSource()
+            musicPlayContext.initPlayList(
+                musicList = musicList,
+                player = player
+            )
+            musicController.pause()
         }
     }
 

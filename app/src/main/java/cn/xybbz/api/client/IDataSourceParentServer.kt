@@ -145,7 +145,6 @@ abstract class IDataSourceParentServer(
             Log.i("=====", "输入的地址: ${clientLoginInfoReq.address}")
             emit(ClientLoginInfoState.Connected(clientLoginInfoReq.address))
             var deviceId = getDeviceId()
-            var connectionConfig: ConnectionConfig? = null
             clientLoginInfoReq.connectionId?.let {
                 connectionConfig = db.connectionConfigDao.selectById(it)
                 connectionConfig?.deviceId?.let { device ->
@@ -191,28 +190,26 @@ abstract class IDataSourceParentServer(
 
             val encryptAES = PasswordUtils.encryptAES(clientLoginInfoReq.password)
 
-            connectionConfig = connectionConfig?.let {
-                connectionConfig.copy(
-                    serverId = responseData.serverId ?: "",
-                    name = responseData.serverName ?: getDataSourceType().title,
-                    serverName = responseData.serverName ?: "",
-                    address = clientLoginInfoReq.address,
-                    type = getDataSourceType(),
-                    userId = userId.toString(),
-                    username = clientLoginInfoReq.username,
-                    accessToken = accessToken,
-                    currentPassword = encryptAES.aesData,
-                    iv = encryptAES.aesIv,
-                    key = encryptAES.aesKey,
-                    serverVersion = version,
-                    updateTime = System.currentTimeMillis(),
-                    lastLoginTime = System.currentTimeMillis(),
-                    deviceId = deviceId,
-                    navidromeExtendToken = responseData.navidromeExtendToken,
-                    navidromeExtendSalt = responseData.navidromeExtendSalt,
-                    machineIdentifier = responseData.machineIdentifier
-                )
-            } ?: ConnectionConfig(
+            val tmpConfig = connectionConfig?.copy(
+                serverId = responseData.serverId ?: "",
+                name = responseData.serverName ?: getDataSourceType().title,
+                serverName = responseData.serverName ?: "",
+                address = clientLoginInfoReq.address,
+                type = getDataSourceType(),
+                userId = userId.toString(),
+                username = clientLoginInfoReq.username,
+                accessToken = accessToken,
+                currentPassword = encryptAES.aesData,
+                iv = encryptAES.aesIv,
+                key = encryptAES.aesKey,
+                serverVersion = version,
+                updateTime = System.currentTimeMillis(),
+                lastLoginTime = System.currentTimeMillis(),
+                deviceId = deviceId,
+                navidromeExtendToken = responseData.navidromeExtendToken,
+                navidromeExtendSalt = responseData.navidromeExtendSalt,
+                machineIdentifier = responseData.machineIdentifier
+            ) ?: ConnectionConfig(
                 serverId = responseData.serverId ?: "",
                 serverName = responseData.serverName ?: "",
                 name = responseData.serverName ?: getDataSourceType().title,
@@ -230,7 +227,8 @@ abstract class IDataSourceParentServer(
                 navidromeExtendSalt = responseData.navidromeExtendSalt,
                 machineIdentifier = responseData.machineIdentifier
             )
-            emitAll(loginAfter(connectionConfig))
+            connectionConfig = tmpConfig
+            emitAll(loginAfter(tmpConfig))
         }.flowOn(Dispatchers.IO).catch {
             it.printStackTrace()
             sendLoginCompleted(LoginStateType.FAILURE)
@@ -270,8 +268,6 @@ abstract class IDataSourceParentServer(
                 }
 
                 if (!ifTmpObject()) {
-                    this@IDataSourceParentServer.connectionConfig =
-                        connectionConfig.copy(id = connectionId)
                     setCoilImageOkHttpClient()
                     downloadManager.initData(connectionId)
                     connection(connectionConfig.copy(id = connectionId), connectionConfig.id != 0L)
@@ -376,6 +372,7 @@ abstract class IDataSourceParentServer(
                     )
                 )
             } else {
+                emit(ClientLoginInfoState.Connected(clientLoginInfoReq.address))
                 //保存客户端数据
                 createApiClient(
                     address,
@@ -763,13 +760,18 @@ abstract class IDataSourceParentServer(
     ): List<XyAlbum> {
         val albumList = baseItemList.map { it.copy(ifPlaylist = ifPlaylist) }
         if (albumList.isNotEmpty()) {
-            db.albumDao.saveBatch(
-                data = albumList,
-                dataType = dataType,
-                connectionId = getConnectionId(),
-                artistId = artistId,
-                genreId = genreId
-            )
+            try {
+                db.albumDao.saveBatch(
+                    data = albumList,
+                    dataType = dataType,
+                    connectionId = getConnectionId(),
+                    artistId = artistId,
+                    genreId = genreId
+                )
+            }catch (e: Exception){
+                e.printStackTrace()
+            }
+
         }
         return albumList
     }

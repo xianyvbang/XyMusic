@@ -68,9 +68,12 @@ import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
 import javax.inject.Provider
@@ -107,7 +110,16 @@ class DataSourceManager(
     private val _loginState = MutableStateFlow<LoginStateType?>(
         null
     )
-    private val loginState = _loginState.asStateFlow()
+    val loginState = _loginState.asStateFlow()
+
+    /**
+     * 登录状态
+     */
+    private val _loginSuccessEvent = MutableSharedFlow<Unit>(
+        replay = 1,
+        extraBufferCapacity = 1
+    )
+    val loginSuccessEvent = _loginSuccessEvent.asSharedFlow()
 
 
     //加载状态
@@ -184,6 +196,7 @@ class DataSourceManager(
         return when (loginState) {
             is ClientLoginInfoState.Connected -> {
                 Log.i("=====", "连接中")
+                _loginState.value = (LoginStateType.UNKNOWN)
                 LoginStateData(loading = true)
             }
 
@@ -257,17 +270,19 @@ class DataSourceManager(
 
     private fun loginStateErrorEmit(ifTmp: Boolean) {
         if (!ifTmp) {
-            _loginState.tryEmit(LoginStateType.FAILURE)
+            _loginState.value = (LoginStateType.FAILURE)
         }
     }
 
     private fun loginStateSuccessEmit(ifTmp: Boolean) {
-        if (!ifTmp)
-            _loginState.tryEmit(LoginStateType.SUCCESS)
-    }
+        if (!ifTmp){
+            Log.i("login","发送登录成功")
+            _loginState.value = (LoginStateType.SUCCESS)
+            scope.launch {
+                _loginSuccessEvent.emit(Unit)
+            }
+        }
 
-    fun getLoginStateFlow(): StateFlow<LoginStateType?> {
-        return loginState
     }
 
     /**

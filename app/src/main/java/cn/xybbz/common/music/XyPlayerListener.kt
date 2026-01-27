@@ -57,7 +57,8 @@ class XyPlayerListener(
 
             Player.STATE_BUFFERING -> {
                 // 正在缓冲数据
-                onUpdateState(PlayStateEnum.Loading)
+                if (onGetState() == PlayStateEnum.Playing)
+                    onUpdateState(PlayStateEnum.Loading)
 
                 Log.i("music", "STATE_BUFFERING")
             }

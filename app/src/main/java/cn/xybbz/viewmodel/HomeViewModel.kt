@@ -200,7 +200,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
      */
     private fun observeLoginSuccess() {
         viewModelScope.launch {
-            dataSourceManager.getLoginStateFlow().collect {
+            dataSourceManager.loginState.collect {
                 Log.i("home","登录数据变化${it}")
                 tryRefreshHome(
                     isRefresh = true,

@@ -62,7 +62,7 @@ class GenresInfoViewModel @AssistedInject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val albumList: Flow<PagingData<XyAlbum>> =
-        dataSourceManager.getLoginStateFlow()
+        dataSourceManager.loginState
             .flatMapLatest {
                 dataSourceManager.selectAlbumListByGenreId(genreId)
             }
