@@ -102,7 +102,7 @@ class ConnectionViewModel @Inject constructor(
             ifTemp = false
             dataSourceManager.switchDataSource(tmpDatasource)
             tmpDataSourceParentServer = dataSourceManager
-        } else if (tmpDataSourceParentServer == null) {
+        } else {
             tmpDataSourceParentServer =
                 dataSourceManager.getDataSourceServerByType(tmpDatasource, ifTemp)
         }
