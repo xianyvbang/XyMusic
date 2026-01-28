@@ -47,7 +47,7 @@ data class SongID3(
      */
     val track: Long? = null,
     /**
-     * 图片类型
+     * 音频类型: audio/flac
      */
     val contentType: String,
     /**
