@@ -43,7 +43,7 @@ fun SongID3.toXyMusic(pic: String?, downloadUrl: String, connectionId: Long): Xy
         albumArtistIds = this.artistId?.let { listOf(it) },
         year = this.year,
         playedCount = 0,
-        ifFavoriteStatus = this.starred != null,
+        ifFavoriteStatus = !this.starred.isNullOrBlank(),
         path = this.path,
         bitRate = this.bitRate,
         sampleRate = 0,

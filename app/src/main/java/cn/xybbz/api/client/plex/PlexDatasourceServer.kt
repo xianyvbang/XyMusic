@@ -103,7 +103,7 @@ class PlexDatasourceServer @Inject constructor(
     /**
      * 获得所有收藏数据
      */
-    override suspend fun initFavoriteData() {
+    override suspend fun initFavoriteData(connectionId: Long) {
         //查询收藏合集是否存在,如果不存在则查询
         val libraryIdTmp = libraryId
         if (libraryIdTmp != null) {
@@ -1030,7 +1030,7 @@ class PlexDatasourceServer @Inject constructor(
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibrary() {
+    override suspend fun selectMediaLibrary(connectionId: Long) {
         db.withTransaction {
             db.libraryDao.remove()
             val viewLibrary = plexApiClient.userViewsApi().getUserViews()
@@ -1042,7 +1042,7 @@ class PlexDatasourceServer @Inject constructor(
                             id = it.key,
                             collectionType = it.type.toString(),
                             name = it.title,
-                            connectionId = getConnectionId()
+                            connectionId = connectionId
                         )
                     }
             if (!libraries.isNullOrEmpty()) {

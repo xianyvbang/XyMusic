@@ -31,6 +31,7 @@ import cn.xybbz.api.client.navidrome.data.PlaylistItemData
 import cn.xybbz.api.client.navidrome.data.PlaylistUpdateRequest
 import cn.xybbz.api.client.navidrome.data.SongItem
 import cn.xybbz.api.client.navidrome.data.getWithTotalCount
+import cn.xybbz.api.client.subsonic.data.ArtistID3
 import cn.xybbz.api.client.subsonic.data.ScrobbleRequest
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
@@ -45,12 +46,12 @@ import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.download.DownLoadManager
+import cn.xybbz.config.module.ApiModule_SubsonicApiClientFactory.subsonicApiClient
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.NavidromeOrder
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.ext.joinToString
-import cn.xybbz.entity.data.ext.toArtists
 import cn.xybbz.entity.data.ext.toXyMusic
 import cn.xybbz.entity.data.toNavidromeOrder
 import cn.xybbz.entity.data.toNavidromeOrder2
@@ -63,6 +64,7 @@ import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import convertToArtist
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import okhttp3.OkHttpClient
@@ -623,7 +625,7 @@ class NavidromeDatasourceServer @Inject constructor(
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibrary() {
+    override suspend fun selectMediaLibrary(connectionId: Long) {
 
     }
 
@@ -992,7 +994,13 @@ class NavidromeDatasourceServer @Inject constructor(
     ): XyResponse<XyArtist> {
         val response =
             navidromeApiClient.artistsApi().getArtistInfo(id = artistId, count = pageSize)
-        return response.subsonicResponse.toArtists(getConnectionId())
+        return XyResponse(
+            response.subsonicResponse.artistInfo?.similarArtist?.map {
+                convertToArtist(
+                    artistId3 = it,
+                    indexNumber = 0
+                )
+            })
     }
 
     /**
@@ -1301,6 +1309,33 @@ class NavidromeDatasourceServer @Inject constructor(
             selectChat = selectChat,
             ifFavorite = artist.starred ?: false,
             indexNumber = indexNumber
+        )
+    }
+
+
+    /**
+     * 将ArtistID3转换成XyArtist
+     */
+    fun convertToArtist(
+        artistId3: ArtistID3,
+        index: String? = null,
+        indexNumber: Int,
+    ): XyArtist {
+
+        return artistId3.convertToArtist(
+            pic = if (artistId3.coverArt.isNullOrBlank()) null else artistId3.coverArt?.let { coverArt ->
+                navidromeApiClient.getImageUrl(
+                    coverArt
+                )
+            },
+            backdrop = if (artistId3.coverArt.isNullOrBlank()) null else artistId3.coverArt?.let { coverArt ->
+                navidromeApiClient.getImageUrl(
+                    coverArt
+                )
+            },
+            index = index,
+            indexNumber = indexNumber,
+            connectionId = getConnectionId()
         )
     }
 

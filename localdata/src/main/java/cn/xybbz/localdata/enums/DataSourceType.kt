@@ -128,7 +128,7 @@ enum class DataSourceType(
         ifAlbumInfoSort = false,
         ifAlbumInfoFavoriteFilter = false,
         ifStartEndYear = true,
-        ifArtistFavorite = false,
+        ifArtistFavorite = true,
     ),
 
     NAVIDROME(

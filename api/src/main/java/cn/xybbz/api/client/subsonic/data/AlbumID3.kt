@@ -60,5 +60,9 @@ data class AlbumID3  (
     /**
      * 专辑歌曲
      */
-    val song: List<SongID3>? = null
+    val song: List<SongID3>? = null,
+    /**
+     * 收藏时间 : 2026-01-28T02:00:15.76317727Z
+     */
+    val starred: String? = null,
 )
