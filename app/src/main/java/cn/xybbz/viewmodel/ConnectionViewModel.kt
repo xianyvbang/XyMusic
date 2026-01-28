@@ -132,14 +132,14 @@ class ConnectionViewModel @Inject constructor(
 
         val clientLoginInfoReq =
             ClientLoginInfoReq(
-                address = tmpAddress,
                 username = username,
                 password = password,
+                address = tmpAddress,
                 appName = appName,
                 clientVersion = tmpDatasource.version,
-                serverId = plexInfo?.serverId,
                 serverVersion = plexInfo?.serverVersion,
-                serverName = plexInfo?.serverName
+                serverName = plexInfo?.serverName,
+                serverId = plexInfo?.serverId
             )
         tmpDataSourceParentServer?.addClientAndLogin(clientLoginInfoReq,)?.onEach {
             Log.i("=====", "数据获取${it}")
@@ -277,9 +277,9 @@ class ConnectionViewModel @Inject constructor(
 
         val clientLoginInfoReq =
             ClientLoginInfoReq(
-                address = tmpAddress,
                 username = username,
                 password = password,
+                address = tmpAddress,
                 appName = "",
                 clientVersion = ""
             )

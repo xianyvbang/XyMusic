@@ -353,7 +353,6 @@ abstract class IDataSourceParentServer(
                 address = address,
                 appName = appName,
                 clientVersion = getDataSourceType().version,
-                connectionId = connectionConfig.id,
                 serverVersion = connectionConfig.serverVersion,
                 serverName = connectionConfig.serverName,
                 serverId = connectionConfig.serverId,
