@@ -48,9 +48,9 @@ class MediaLibraryAndFavoriteSyncWorker @AssistedInject constructor(
                 "获取音乐/专辑/艺术家/收藏/流派数量"
             )
             db.withTransaction {
-                dataSourceManager.selectMediaLibrary()
-                dataSourceManager.initFavoriteData()
                 val connectionId = inputData.getLong(Constants.CONNECTION_ID,0L)
+                dataSourceManager.selectMediaLibrary(connectionId = connectionId)
+                dataSourceManager.initFavoriteData(connectionId = connectionId)
                 try {
                     dataSourceManager.getDataInfoCount(connectionId)
                 } catch (e: Exception) {
