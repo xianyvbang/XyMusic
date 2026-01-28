@@ -92,9 +92,4 @@ class MainActivity : ComponentActivity() {
         super.attachBaseContext(MultiLanguages.attach(newBase));
     }
 
-    override fun onDestroy() {
-        netWorkMonitor.stop()
-        dataSourceManager.close()
-        super.onDestroy()
-    }
 }

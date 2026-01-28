@@ -68,9 +68,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
-import javax.inject.Inject
 
-class NavidromeDatasourceServer @Inject constructor(
+class NavidromeDatasourceServer constructor(
     private val db: DatabaseClient,
     application: Context,
     settingsManager: SettingsManager,
