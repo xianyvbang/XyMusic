@@ -596,15 +596,13 @@ class MusicController(
         // 停止之前播放
         mediaController?.run {
             clearMediaItems()
-            val mediaItemList = musicDataList.map { item -> musicSetMediaItem(item) }
-            if (originIndex != null)
-                setMediaItems(mediaItemList, originIndex, C.TIME_UNSET)
-            else
-                setMediaItems(mediaItemList)
             if (!ifInitPlayerList) {
                 updateState(PlayStateEnum.Loading)
+                musicListSetMediaItems(musicDataList,originIndex)
                 thisPlay()
             } else {
+                updateState(PlayStateEnum.Pause)
+                musicListSetMediaItems(musicDataList,originIndex)
                 prepare()
                 pause()
             }
@@ -612,6 +610,17 @@ class MusicController(
                 _events.emit(PlayerEvent.AddMusicList(artistId, ifInitPlayerList))
             }
         }
+    }
+
+    /**
+     * XyPlayMusic转换成MediaItem,并且加入到播放列表
+     */
+    private fun musicListSetMediaItems(playMusicList: List<XyPlayMusic>,originIndex:Int?){
+        val mediaItemList = playMusicList.map { item -> musicSetMediaItem(item) }
+        if (originIndex != null)
+            mediaController?.setMediaItems(mediaItemList, originIndex, C.TIME_UNSET)
+        else
+            mediaController?.setMediaItems(mediaItemList)
     }
 
     /**
