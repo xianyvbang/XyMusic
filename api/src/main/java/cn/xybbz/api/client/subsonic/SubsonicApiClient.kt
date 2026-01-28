@@ -253,7 +253,7 @@ class SubsonicApiClient : DefaultParentApiClient() {
         TokenServer.updateLoginRetry(false)
         return LoginSuccessData(
             userId = clientLoginInfoReq.username,
-            accessToken = "",
+            accessToken = clientLoginInfoReq.username,
             serverId = "",
             serverName = systemInfo.subsonicResponse.type,
             version = systemInfo.subsonicResponse.version
