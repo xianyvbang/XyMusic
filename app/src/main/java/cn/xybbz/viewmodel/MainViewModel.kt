@@ -188,7 +188,7 @@ class MainViewModel @Inject constructor(
         musicController.initController {
             // 查询是否存在播放列表,如果存在将内容写入
             viewModelScope.launch {
-                dataSourceManager.loginSuccessEvent.collect {
+                dataSourceManager.loginStateEvent.collect {
                     startPlayerListObserver()
                 }
             }
@@ -409,7 +409,7 @@ class MainViewModel @Inject constructor(
 
     private fun observeLoginSuccessForAndProgress() {
         viewModelScope.launch {
-            dataSourceManager.loginState.collect {
+            dataSourceManager.loginStateEvent.collect {
                 startEnableProgressObserver()
             }
         }

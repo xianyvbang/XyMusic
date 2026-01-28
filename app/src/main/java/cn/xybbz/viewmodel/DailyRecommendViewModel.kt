@@ -71,7 +71,7 @@ class DailyRecommendViewModel @Inject constructor(
      */
     private fun observeLoginSuccessForRecommendedMusic() {
         viewModelScope.launch {
-            dataSourceManager.loginState.collect {
+            dataSourceManager.loginStateEvent.collect {
                 startRecommendedMusicObserver()
             }
         }

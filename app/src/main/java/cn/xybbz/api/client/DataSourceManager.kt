@@ -72,7 +72,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
@@ -107,19 +106,19 @@ class DataSourceManager(
 
     val dataSourceServerFlow = MutableStateFlow<IDataSourceParentServer?>(null)
 
-    private val _loginState = MutableStateFlow<LoginStateType?>(
+/*    private val _loginState = MutableStateFlow<LoginStateType?>(
         null
     )
-    val loginState = _loginState.asStateFlow()
+    val loginState = _loginState.asStateFlow()*/
 
     /**
      * 登录状态
      */
-    private val _loginSuccessEvent = MutableSharedFlow<Unit>(
+    private val _loginStateEvent = MutableSharedFlow<LoginStateType>(
         replay = 1,
         extraBufferCapacity = 1
     )
-    val loginSuccessEvent = _loginSuccessEvent.asSharedFlow()
+    val loginStateEvent = _loginStateEvent.asSharedFlow()
 
 
     //加载状态
@@ -196,7 +195,6 @@ class DataSourceManager(
         return when (loginState) {
             is ClientLoginInfoState.Connected -> {
                 Log.i("=====", "连接中")
-                _loginState.value = (LoginStateType.UNKNOWN)
                 LoginStateData(loading = true)
             }
 
@@ -270,16 +268,17 @@ class DataSourceManager(
 
     private fun loginStateErrorEmit(ifTmp: Boolean) {
         if (!ifTmp) {
-            _loginState.value = (LoginStateType.FAILURE)
+            scope.launch {
+                _loginStateEvent.emit(LoginStateType.FAILURE)
+            }
         }
     }
 
     private fun loginStateSuccessEmit(ifTmp: Boolean) {
         if (!ifTmp){
             Log.i("login","发送登录成功")
-            _loginState.value = (LoginStateType.SUCCESS)
             scope.launch {
-                _loginSuccessEvent.emit(Unit)
+                _loginStateEvent.emit(LoginStateType.SUCCESS)
             }
         }
 
@@ -332,8 +331,11 @@ class DataSourceManager(
     /**
      * 绑定地址
      */
-    override suspend fun addClientAndLogin(clientLoginInfoReq: ClientLoginInfoReq): Flow<ClientLoginInfoState> {
-        return dataSourceServer.addClientAndLogin(clientLoginInfoReq)
+    override suspend fun addClientAndLogin(
+        clientLoginInfoReq: ClientLoginInfoReq,
+        connectionConfig: ConnectionConfig?
+    ): Flow<ClientLoginInfoState> {
+        return dataSourceServer.addClientAndLogin(clientLoginInfoReq,)
     }
 
     override suspend fun autoLogin(
@@ -690,7 +692,6 @@ class DataSourceManager(
      * 保存自建歌单中的音乐
      * @param [playlistId] 歌单id
      * @param [musicIds] 音乐id
-     * @param [pic] 照片
      */
     override suspend fun saveMusicPlaylist(
         playlistId: String,
@@ -738,9 +739,9 @@ class DataSourceManager(
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibrary() {
+    override suspend fun selectMediaLibrary(connectionId: Long) {
         try {
-            dataSourceServer.selectMediaLibrary()
+            dataSourceServer.selectMediaLibrary(connectionId)
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得媒体库列表失败", e)
         }
@@ -778,8 +779,8 @@ class DataSourceManager(
     /**
      * 初始化收藏数据
      */
-    override suspend fun initFavoriteData() {
-        return dataSourceServer.initFavoriteData()
+    override suspend fun initFavoriteData(connectionId: Long) {
+        return dataSourceServer.initFavoriteData(connectionId)
     }
 
     /**

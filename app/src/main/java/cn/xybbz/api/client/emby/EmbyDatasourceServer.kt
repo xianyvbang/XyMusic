@@ -637,7 +637,7 @@ class EmbyDatasourceServer @Inject constructor(
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibrary() {
+    override suspend fun selectMediaLibrary(connectionId: Long) {
         db.withTransaction {
             db.libraryDao.remove()
             val viewLibrary = embyApiClient.userViewsApi().getUserViews(
@@ -651,7 +651,7 @@ class EmbyDatasourceServer @Inject constructor(
                         id = it.id,
                         collectionType = it.collectionType.toString(),
                         name = it.name.toString(),
-                        connectionId = getConnectionId()
+                        connectionId = connectionId
                     )
                 }
             if (libraries.isNotEmpty()) {

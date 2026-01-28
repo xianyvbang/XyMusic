@@ -52,7 +52,6 @@ import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.Sort
-import cn.xybbz.entity.data.ext.toArtists
 import cn.xybbz.entity.data.ext.toXyMusic
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -66,6 +65,7 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.page.defaultLocalPager
+import convertToArtist
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
@@ -132,7 +132,7 @@ class SubsonicDatasourceServer @Inject constructor(
     ): XyResponse<XyArtist> {
         val response =
             subsonicApiClient.artistsApi().getArtists(libraryId)
-        val artists = convertIndexToArtistList(response, false)
+        val artists = convertIndexToArtistList(response)
         return XyResponse(
             items = artists,
             totalRecordCount = artists.size,
@@ -171,7 +171,7 @@ class SubsonicDatasourceServer @Inject constructor(
             if (search3.subsonicResponse.status == Status.Ok) {
                 search3.subsonicResponse.searchResult3?.let { search ->
                     searchData.artists = search.artist?.let {
-                        val artistList = convertToArtistList(it, false)
+                        val artistList = convertToArtistList(it)
                         saveBatchArtist(artistList)
                         artistList
                     }
@@ -530,7 +530,7 @@ class SubsonicDatasourceServer @Inject constructor(
      */
     override suspend fun selectArtistsByIds(artistIds: List<String>): List<XyArtist> {
         val artist = subsonicApiClient.artistsApi().getArtist(artistIds[0])
-        return artist.subsonicResponse.artist?.let { convertToArtistList(listOf(it), false) }
+        return artist.subsonicResponse.artist?.let { convertToArtistList(listOf(it)) }
             ?: emptyList()
     }
 
@@ -556,7 +556,6 @@ class SubsonicDatasourceServer @Inject constructor(
             artist.subsonicResponse.artist?.let {
                 convertToArtist(
                     it,
-                    false,
                     indexNumber = 0
                 )
             }
@@ -567,7 +566,7 @@ class SubsonicDatasourceServer @Inject constructor(
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibrary() {
+    override suspend fun selectMediaLibrary(connectionId: Long) {
         try {
             db.withTransaction {
                 db.libraryDao.remove()
@@ -579,7 +578,7 @@ class SubsonicDatasourceServer @Inject constructor(
                             id = it.id,
                             collectionType = CollectionType.MUSIC.serialName,
                             name = it.name,
-                            connectionId = getConnectionId()
+                            connectionId = connectionId
                         )
                     }
                 if (!libraries.isNullOrEmpty()) {
@@ -651,48 +650,6 @@ class SubsonicDatasourceServer @Inject constructor(
 
         }
 
-    }
-
-    /**
-     * 获得所有收藏数据
-     */
-    override suspend fun initFavoriteData() {
-        try {
-            val starred2 = subsonicApiClient.itemApi().getStarred2(
-                musicFolderId = libraryId
-            )
-            starred2.subsonicResponse.starred2?.album?.let { albums ->
-                val albumList = convertToAlbumList(albums)
-                saveBatchAlbum(albumList, MusicDataTypeEnum.FAVORITE)
-            }
-            starred2.subsonicResponse.starred2?.artist?.let { artists ->
-                val artistList = convertToArtistList(artists, true)
-                artistList.forEach {
-                    val artist = db.artistDao.selectById(it.artistId)
-                    if (artist == null) {
-                        db.artistDao.save(it)
-                    } else {
-                        db.artistDao.update(
-                            artist.copy(
-                                name = it.name,
-                                pic = it.pic,
-                                describe = it.describe,
-                                sortName = it.sortName,
-                                musicCount = it.musicCount,
-                                albumCount = it.albumCount,
-                                ifFavorite = true
-                            )
-                        )
-                    }
-                }
-            }
-            starred2.subsonicResponse.starred2?.song?.let { songs ->
-                val musicList = convertToMusicList(songs)
-                saveBatchMusic(musicList, dataType = MusicDataTypeEnum.FAVORITE)
-            }
-        } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获得收藏数据失败", e)
-        }
     }
 
     /**
@@ -913,7 +870,14 @@ class SubsonicDatasourceServer @Inject constructor(
     ): XyResponse<XyArtist> {
         val response =
             subsonicApiClient.artistsApi().getArtistInfo(id = artistId, count = pageSize)
-        return response.subsonicResponse.toArtists(getConnectionId())
+        return XyResponse(
+            response.subsonicResponse.artistInfo?.similarArtist?.map {
+                convertToArtist(
+                    artistId3 = it,
+                    indexNumber = 0
+                )
+            }
+        )
     }
 
     /**
@@ -983,11 +947,10 @@ class SubsonicDatasourceServer @Inject constructor(
 
     fun convertIndexToArtistList(
         response: SubsonicResponse<SubsonicArtistsResponse>,
-        ifFavorite: Boolean,
     ): List<XyArtist> {
         return if (response.subsonicResponse.status == Status.Ok) {
             response.subsonicResponse.artists?.index?.flatMap { index ->
-                convertToArtistList(index.artist, ifFavorite, index.name)
+                convertToArtistList(index.artist, index.name)
             }?.sortedBy { it.indexNumber }
                 ?.mapIndexed { indexNumber, artist -> artist.copy(indexNumber = indexNumber) }
                 ?: emptyList()
@@ -1001,7 +964,6 @@ class SubsonicDatasourceServer @Inject constructor(
      */
     fun convertToArtistList(
         item: List<ArtistID3>,
-        ifFavorite: Boolean,
         index: String? = null
     ): List<XyArtist> {
         val artistList = item.map { artist ->
@@ -1011,7 +973,7 @@ class SubsonicDatasourceServer @Inject constructor(
                 if (!CharUtils.isEnglishLetter(shortNameStart)) "#" else shortNameStart.toString()
                     .lowercase()
 
-            convertToArtist(artist, ifFavorite, selectChat, 0)
+            convertToArtist(artist, selectChat, 0)
         }
 
         return artistList
@@ -1023,14 +985,10 @@ class SubsonicDatasourceServer @Inject constructor(
      */
     fun convertToArtist(
         artistId3: ArtistID3,
-        ifFavorite: Boolean,
         index: String? = null,
         indexNumber: Int,
     ): XyArtist {
-
-
-        return XyArtist(
-            artistId = artistId3.id,
+       return artistId3.convertToArtist(
             pic = if (artistId3.coverArt.isNullOrBlank()) null else artistId3.coverArt?.let { coverArt ->
                 subsonicApiClient.getImageUrl(
                     coverArt
@@ -1041,11 +999,9 @@ class SubsonicDatasourceServer @Inject constructor(
                     coverArt
                 )
             },
-            name = artistId3.name,
-            connectionId = getConnectionId(),
-            selectChat = index ?: "",
-            ifFavorite = ifFavorite,
-            indexNumber = indexNumber
+            index = index,
+            indexNumber = indexNumber,
+            connectionId = getConnectionId()
         )
     }
 
@@ -1071,12 +1027,12 @@ class SubsonicDatasourceServer @Inject constructor(
             },
             name = album.name,
             connectionId = getConnectionId(),
-            ifFavorite = false,
+            ifFavorite = !album.starred.isNullOrBlank(),
             artists = album.artist,
             artistIds = album.artistId,
             ifPlaylist = ifPlaylist,
             musicCount = album.songCount,
-            createTime = album.created.toSecondMs()
+            createTime = album.created.toSecondMs(),
         )
     }
 

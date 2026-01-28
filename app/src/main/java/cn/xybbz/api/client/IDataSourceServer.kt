@@ -59,7 +59,10 @@ interface IDataSourceServer : AutoCloseable {
     /**
      * 用户登录逻辑
      */
-    suspend fun addClientAndLogin(clientLoginInfoReq: ClientLoginInfoReq): Flow<ClientLoginInfoState>?
+    suspend fun addClientAndLogin(
+        clientLoginInfoReq: ClientLoginInfoReq,
+        connectionConfig: ConnectionConfig? = null
+    ): Flow<ClientLoginInfoState>?
 
     /**
      * 自动登录
@@ -250,7 +253,7 @@ interface IDataSourceServer : AutoCloseable {
     /**
      * 初始化收藏数据
      */
-    suspend fun initFavoriteData()
+    suspend fun initFavoriteData(connectionId: Long)
     /**
      * 根据id获得艺术家信息
      * @param [artistId] 艺术家id
@@ -266,7 +269,7 @@ interface IDataSourceServer : AutoCloseable {
     /**
      * 获得媒体库列表
      */
-    suspend fun selectMediaLibrary()
+    suspend fun selectMediaLibrary(connectionId: Long)
 
     /**
      * 获得最近播放音乐或专辑

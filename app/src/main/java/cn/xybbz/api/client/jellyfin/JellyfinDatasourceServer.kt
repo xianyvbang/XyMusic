@@ -535,7 +535,7 @@ class JellyfinDatasourceServer @Inject constructor(
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibrary() {
+    override suspend fun selectMediaLibrary(connectionId: Long) {
         val viewLibrary = jellyfinApiClient.userViewsApi().getUserViews(
             ViewRequest(
 //                    includeExternalContent = false,
@@ -549,7 +549,7 @@ class JellyfinDatasourceServer @Inject constructor(
                     id = it.id,
                     collectionType = it.collectionType.toString(),
                     name = it.name.toString(),
-                    connectionId = getConnectionId()
+                    connectionId = connectionId
                 )
             }
         if (libraries.isNotEmpty()) {

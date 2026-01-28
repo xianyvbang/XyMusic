@@ -139,19 +139,17 @@ abstract class IDataSourceParentServer(
      * 根据输入地址获取服务器信息
      * @param [clientLoginInfoReq] 输入信息
      */
-    override suspend fun addClientAndLogin(clientLoginInfoReq: ClientLoginInfoReq): Flow<ClientLoginInfoState> {
+    override suspend fun addClientAndLogin(
+        clientLoginInfoReq: ClientLoginInfoReq,
+        connectionConfig: ConnectionConfig?
+    ): Flow<ClientLoginInfoState> {
 
         return flow {
             Log.i("=====", "输入的地址: ${clientLoginInfoReq.address}")
             emit(ClientLoginInfoState.Connected(clientLoginInfoReq.address))
             var deviceId = getDeviceId()
-            clientLoginInfoReq.connectionId?.let {
-                connectionConfig = db.connectionConfigDao.selectById(it)
-                connectionConfig?.deviceId?.let { device ->
-                    if (device.isNotBlank())
-                        deviceId = device
-                }
-
+            connectionConfig?.let {
+                deviceId = it.deviceId
             }
 
             //保存客户端数据
@@ -227,7 +225,7 @@ abstract class IDataSourceParentServer(
                 navidromeExtendSalt = responseData.navidromeExtendSalt,
                 machineIdentifier = responseData.machineIdentifier
             )
-            connectionConfig = tmpConfig
+            this@IDataSourceParentServer.connectionConfig = tmpConfig
             emitAll(loginAfter(tmpConfig))
         }.flowOn(Dispatchers.IO).catch {
             it.printStackTrace()
@@ -368,7 +366,8 @@ abstract class IDataSourceParentServer(
                 )
                 emitAll(
                     addClientAndLogin(
-                        clientLoginInfoReq = clientLoginInfoReq
+                        clientLoginInfoReq = clientLoginInfoReq,
+                        connectionConfig = connectionConfig
                     )
                 )
             } else {
@@ -847,7 +846,7 @@ abstract class IDataSourceParentServer(
     /**
      * 获得所有收藏数据
      */
-    override suspend fun initFavoriteData() {
+    override suspend fun initFavoriteData(connectionId: Long) {
 
     }
 
