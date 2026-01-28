@@ -50,26 +50,120 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 class DataSourceModule {
 
+    @Provides
+    fun jellyfinApiServer(
+        db: DatabaseClient,
+        settingsManager: SettingsManager,
+        jellyfinApiClient: JellyfinApiClient,
+        @ApplicationContext application: Context,
+        mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
+        downloadManager: DownLoadManager
+    ): JellyfinDatasourceServer {
+        return JellyfinDatasourceServer(
+            db,
+            application,
+            settingsManager,
+            jellyfinApiClient,
+            mediaLibraryAndFavoriteSyncScheduler,
+            downloadManager
+        )
+    }
+
+    @Provides
+    fun subsonicDataSourceServer(
+        db: DatabaseClient,
+        settingsManager: SettingsManager,
+        subsonicApiClient: SubsonicApiClient,
+        @ApplicationContext application: Context,
+        mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
+        downloadManager: DownLoadManager
+    ): SubsonicDatasourceServer {
+        return SubsonicDatasourceServer(
+            db,
+            application,
+            settingsManager,
+            subsonicApiClient,
+            mediaLibraryAndFavoriteSyncScheduler,
+            downloadManager
+        )
+    }
+
+    @Provides
+    fun navidromeDatasourceServer(
+        db: DatabaseClient,
+        settingsManager: SettingsManager,
+        navidromeApiClient: NavidromeApiClient,
+        @ApplicationContext application: Context,
+        mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
+        downloadManager: DownLoadManager
+    ): NavidromeDatasourceServer {
+        return NavidromeDatasourceServer(
+            db,
+            application,
+            settingsManager,
+            navidromeApiClient,
+            mediaLibraryAndFavoriteSyncScheduler,
+            downloadManager
+        )
+    }
+
+    @Provides
+    fun embyDatasourceServer(
+        db: DatabaseClient,
+        settingsManager: SettingsManager,
+        embyApiClient: EmbyApiClient,
+        @ApplicationContext application: Context,
+        mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
+        downloadManager: DownLoadManager
+    ): EmbyDatasourceServer {
+        return EmbyDatasourceServer(
+            db,
+            application,
+            settingsManager,
+            embyApiClient,
+            mediaLibraryAndFavoriteSyncScheduler,
+            downloadManager
+        )
+    }
+
+
+    @Provides
+    fun plexDatasourceServer(
+        db: DatabaseClient,
+        settingsManager: SettingsManager,
+        plexApiClient: PlexApiClient,
+        @ApplicationContext application: Context,
+        mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
+        downloadManager: DownLoadManager
+    ): PlexDatasourceServer {
+        return PlexDatasourceServer(
+            db,
+            application,
+            settingsManager,
+            plexApiClient,
+            mediaLibraryAndFavoriteSyncScheduler,
+            downloadManager
+        )
+    }
+
+
     @Singleton
     @Provides
     fun dataSourceManager(
         @ApplicationContext application: Context,
         db: DatabaseClient,
+        dataSources: Map<DataSourceType, @JvmSuppressWildcards Provider<IDataSourceParentServer>>,
         alarmConfig: AlarmConfig,
-        versionApiClient: VersionApiClient,
-        mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
-        downloadManager: DownLoadManager,
-        settingsManager: SettingsManager
+        versionApiClient: VersionApiClient
     ): DataSourceManager {
-        return DataSourceManager(
+        val dataSourceManager = DataSourceManager(
             application = application,
             db,
+            dataSources,
             alarmConfig,
-            versionApiClient,
-            mediaLibraryAndFavoriteSyncScheduler,
-            downloadManager,
-            settingsManager
+            versionApiClient
         )
+        return dataSourceManager
     }
 
 }

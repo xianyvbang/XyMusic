@@ -84,7 +84,7 @@ class JellyfinDatasourceServer(
     private val db: DatabaseClient,
     private val application: Context,
     settingsManager: SettingsManager,
-    private val jellyfinApiClient: JellyfinApiClient = JellyfinApiClient(),
+    private val jellyfinApiClient: JellyfinApiClient,
     mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     downloadManager: DownLoadManager
 ) : IDataSourceParentServer(

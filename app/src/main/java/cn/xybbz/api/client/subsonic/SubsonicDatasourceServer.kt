@@ -74,7 +74,7 @@ class SubsonicDatasourceServer constructor(
     private val db: DatabaseClient,
     private val application: Context,
     settingsManager: SettingsManager,
-    private val subsonicApiClient: SubsonicApiClient = SubsonicApiClient(),
+    private val subsonicApiClient: SubsonicApiClient,
     mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     downloadManager: DownLoadManager
 ) : IDataSourceParentServer(

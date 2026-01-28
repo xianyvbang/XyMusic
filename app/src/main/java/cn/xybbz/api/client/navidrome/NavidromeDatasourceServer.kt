@@ -73,7 +73,7 @@ class NavidromeDatasourceServer constructor(
     private val db: DatabaseClient,
     application: Context,
     settingsManager: SettingsManager,
-    private val navidromeApiClient: NavidromeApiClient = NavidromeApiClient(),
+    private val navidromeApiClient: NavidromeApiClient,
     mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     downloadManager: DownLoadManager
 ) : IDataSourceParentServer(

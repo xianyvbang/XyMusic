@@ -76,7 +76,7 @@ class EmbyDatasourceServer constructor(
     private val db: DatabaseClient,
     private val application: Context,
     settingsManager: SettingsManager,
-    private val embyApiClient: EmbyApiClient = EmbyApiClient(),
+    private val embyApiClient: EmbyApiClient,
     mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     downloadManager: DownLoadManager
 ) : IDataSourceParentServer(
