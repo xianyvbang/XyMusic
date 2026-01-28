@@ -143,9 +143,7 @@ class NavidromeApiClient : DefaultParentApiClient() {
      * 获得请求头Map
      */
     public override fun getHeadersMapData(): Map<String, String> {
-        val headerMap = mutableMapOf<String, String>()
-        headerMap.put(ApiConstants.NAVIDROME_HEADER, id)
-        return headerMap
+        return mapOf(ApiConstants.NAVIDROME_HEADER to id)
     }
 
     /**
