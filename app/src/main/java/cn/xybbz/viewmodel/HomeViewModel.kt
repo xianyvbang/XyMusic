@@ -236,7 +236,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
         if (reason == HomeRefreshReason.Manual) return true
 
         val remoteCurrent = db.remoteCurrentDao
-            .remoteKeyById(RemoteIdConstants.HOME_REFRESH + UUID.randomUUID().toString() + connectionId)
+            .remoteKeyById(RemoteIdConstants.HOME_REFRESH + connectionId)
 
         val lastTime = remoteCurrent?.createTime ?: 0L
         val now = System.currentTimeMillis()
