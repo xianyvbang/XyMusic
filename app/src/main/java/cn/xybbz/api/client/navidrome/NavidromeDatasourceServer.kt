@@ -46,7 +46,6 @@ import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.download.DownLoadManager
-import cn.xybbz.config.module.ApiModule_SubsonicApiClientFactory.subsonicApiClient
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.NavidromeOrder
