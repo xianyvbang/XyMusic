@@ -185,13 +185,19 @@ class MainViewModel @Inject constructor(
         /**
          * 应用启动,加载播放列表
          */
-        musicController.initController {
+        /*musicController.initController {
             // 查询是否存在播放列表,如果存在将内容写入
-            viewModelScope.launch {
-                dataSourceManager.loginStateEvent.collect {
-                    startPlayerListObserver()
-                }
+
+        }*/
+
+        viewModelScope.launch {
+            db.settingsDao.selectConnectionId().distinctUntilChanged().collect {
+                Log.i("=====", "MainViewModel: 登录状态改变: $it")
+                startPlayerListObserver()
             }
+            /*dataSourceManager.loginStateEvent.collect {
+                startPlayerListObserver()
+            }*/
         }
     }
 
@@ -439,16 +445,15 @@ class MainViewModel @Inject constructor(
      * 加载播放列表里的数据
      */
     private suspend fun startPlayerListObserver() {
-        Log.i("login","重新加载数据列表")
         // 先读取播放队列
         val musicList = db.musicDao.selectPlayQueuePlayMusicList()
-        if (dataSourceManager.dataSourceType != null && musicList.isNotEmpty()) {
+        if (musicList.isNotEmpty()) {
             val player = db.playerDao.selectPlayerByDataSource()
             musicPlayContext.initPlayList(
                 musicList = musicList,
                 player = player
             )
-            musicController.pause()
+//            musicController.pause()
         }
     }
 

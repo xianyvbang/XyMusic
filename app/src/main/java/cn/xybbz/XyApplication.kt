@@ -19,9 +19,11 @@
 package cn.xybbz
 
 import android.app.Application
+import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.HomeDataRepository
@@ -58,6 +60,9 @@ class XyApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var homeDataRepository: HomeDataRepository
 
+    @Inject
+    lateinit var musicController: MusicController
+
     override fun onCreate() {
         // 初始化语种切换框架
         super.onCreate()
@@ -85,6 +90,9 @@ class XyApplication : Application(), Configuration.Provider {
         scope.launch {
             homeDataRepository.initData()
         }
+
+        Log.i("init","musicController加载")
+        musicController.initController {  }
 
     }
 
