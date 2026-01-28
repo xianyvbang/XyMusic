@@ -85,7 +85,7 @@ class JellyfinDatasourceServer @Inject constructor(
     private val db: DatabaseClient,
     private val application: Context,
     settingsManager: SettingsManager,
-    private val jellyfinApiClient: JellyfinApiClient,
+    private val jellyfinApiClient: JellyfinApiClient = JellyfinApiClient(),
     mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     downloadManager: DownLoadManager
 ) : IDataSourceParentServer(

@@ -41,6 +41,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -105,6 +106,7 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.router.ArtistInfo
 import cn.xybbz.ui.components.LazyListComponent
+import cn.xybbz.ui.components.LazyVerticalGridComponent
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicArtistCardComponent
 import cn.xybbz.ui.components.MusicItemComponent
@@ -147,8 +149,6 @@ fun ArtistInfoScreen(
         artistInfoViewModel.musicList.collectAsLazyPagingItems()
     val albumPageList =
         artistInfoViewModel.albumList.collectAsLazyPagingItems()
-    val resemblanceArtistList =
-        artistInfoViewModel.resemblanceArtistList.collectAsLazyPagingItems()
     val favoriteSet by artistInfoViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val downloadMusicIds by artistInfoViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(emptyList())
     val ifOpenSelect by artistInfoViewModel.selectControl.uiState.collectAsStateWithLifecycle()
@@ -612,23 +612,21 @@ fun ArtistInfoScreen(
                                     }
                                     TabListEnum.RESEMBLANCE_ARTIST ->{
 
-                                        VerticalGridListComponent(
+
+                                        LazyVerticalGridComponent(
                                             modifier = Modifier.height(maxHeight),
-                                            collectAsLazyPagingItems = resemblanceArtistList,
                                         ){
                                             items(
-                                                resemblanceArtistList.itemCount,
-                                                key = resemblanceArtistList.itemKey { item -> item.artistId },
-                                                contentType = resemblanceArtistList.itemContentType { MusicTypeEnum.ARTIST }
-                                            ) { index ->
-                                                resemblanceArtistList[index]?.let { artist ->
-                                                    MusicArtistCardComponent(
-                                                        modifier = Modifier,
-                                                        onItem = { artist },
-                                                        enabled = true
-                                                    ) {
-                                                        navigator.navigate(ArtistInfo(it))
-                                                    }
+                                                artistInfoViewModel.resemblanceArtistList,
+                                                key = { item -> item.artistId },
+                                                contentType = { MusicTypeEnum.ARTIST }
+                                            ) { artist ->
+                                                MusicArtistCardComponent(
+                                                    modifier = Modifier,
+                                                    onItem = { artist },
+                                                    enabled = true
+                                                ) {
+                                                    navigator.navigate(ArtistInfo(it))
                                                 }
                                             }
                                         }

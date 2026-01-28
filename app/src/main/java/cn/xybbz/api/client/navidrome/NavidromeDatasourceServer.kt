@@ -75,7 +75,7 @@ class NavidromeDatasourceServer @Inject constructor(
     private val db: DatabaseClient,
     application: Context,
     settingsManager: SettingsManager,
-    private val navidromeApiClient: NavidromeApiClient,
+    private val navidromeApiClient: NavidromeApiClient = NavidromeApiClient(),
     mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     downloadManager: DownLoadManager
 ) : IDataSourceParentServer(

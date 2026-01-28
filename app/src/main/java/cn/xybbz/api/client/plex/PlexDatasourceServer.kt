@@ -76,7 +76,7 @@ class PlexDatasourceServer @Inject constructor(
     private val db: DatabaseClient,
     private val application: Context,
     settingsManager: SettingsManager,
-    private val plexApiClient: PlexApiClient,
+    private val plexApiClient: PlexApiClient = PlexApiClient(),
     mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     downloadManager: DownLoadManager
 ) : IDataSourceParentServer(

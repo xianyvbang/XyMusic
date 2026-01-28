@@ -75,7 +75,7 @@ class ArtistInfoViewModel @AssistedInject constructor(
     var artistDescribe by mutableStateOf<String?>(null)
         private set
 
-    var resemblanceArtistList by mutableStateOf<List<XyArtist>?>(emptyList())
+    var resemblanceArtistList by mutableStateOf<List<XyArtist>>(emptyList())
 
     /**
      * 是否收藏
