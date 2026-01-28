@@ -18,6 +18,7 @@
 
 package cn.xybbz.api.client
 
+import XyArtistInfo
 import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -712,7 +713,7 @@ abstract class IDataSourceParentServer(
      * @param [artistId] 艺术家id
      * @return [List<ArtistItem>?] 艺术家信息
      */
-    override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
+    override suspend fun selectArtistInfoById(artistId: String): XyArtistInfo {
         var artistInfo: XyArtist? = db.artistDao.selectById(artistId)
         if (artistInfo == null) {
             artistInfo = selectArtistInfoByRemotely(artistId)
@@ -721,7 +722,7 @@ abstract class IDataSourceParentServer(
             artistInfo = artistInfo.copy(ifFavorite = ifFavorite)
         }
 
-        return artistInfo
+        return XyArtistInfo(artist = artistInfo)
     }
 
     /**

@@ -39,3 +39,11 @@ fun ArtistID3.convertToArtist(
         indexNumber = indexNumber
     )
 }
+
+/**
+ * 艺术家详情信息
+ */
+data class XyArtistInfo(
+    val artist: XyArtist? = null,
+    val similarArtist: List<XyArtist>? = null
+)

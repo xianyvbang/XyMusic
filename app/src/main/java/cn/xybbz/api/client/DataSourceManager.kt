@@ -18,6 +18,7 @@
 
 package cn.xybbz.api.client
 
+import XyArtistInfo
 import android.content.Context
 import android.util.Log
 import androidx.annotation.OptIn
@@ -788,12 +789,12 @@ class DataSourceManager(
      * @param [artistId] 艺术家id
      * @return [List<ArtistItem>?] 艺术家信息
      */
-    override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
+    override suspend fun selectArtistInfoById(artistId: String): XyArtistInfo {
         return try {
             dataSourceServer.selectArtistInfoById(artistId)
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "根据id获得艺术家信息失败", e)
-            null
+            XyArtistInfo()
         }
     }
 

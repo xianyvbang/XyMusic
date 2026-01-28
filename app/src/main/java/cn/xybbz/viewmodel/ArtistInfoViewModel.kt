@@ -75,6 +75,8 @@ class ArtistInfoViewModel @AssistedInject constructor(
     var artistDescribe by mutableStateOf<String?>(null)
         private set
 
+    var resemblanceArtistList by mutableStateOf<List<XyArtist>?>(emptyList())
+
     /**
      * 是否收藏
      */
@@ -100,13 +102,13 @@ class ArtistInfoViewModel @AssistedInject constructor(
             }
             .cachedIn(viewModelScope)
 
-    @OptIn(ExperimentalCoroutinesApi::class)
+    /*@OptIn(ExperimentalCoroutinesApi::class)
     val resemblanceArtistList =
         dataSourceManager.loginStateEvent
             .flatMapLatest {
                 dataSourceManager.getResemblanceArtist(artistId).distinctUntilChanged()
             }
-            .cachedIn(viewModelScope)
+            .cachedIn(viewModelScope)*/
 
     init {
         getArtistInfoData()
@@ -118,9 +120,12 @@ class ArtistInfoViewModel @AssistedInject constructor(
     private fun getArtistInfoData() {
         viewModelScope.launch {
             val artistInfoTmp = dataSourceManager.selectArtistInfoById(artistId)
-            if (artistInfoTmp != null) {
-                artistInfoData = artistInfoTmp
-                ifFavorite = artistInfoTmp.ifFavorite
+            if (artistInfoTmp.artist != null) {
+                artistInfoData = artistInfoTmp.artist
+                ifFavorite = artistInfoTmp.artist.ifFavorite
+            }
+            if (artistInfoTmp.similarArtist != null){
+                resemblanceArtistList = artistInfoTmp.similarArtist
             }
         }
         viewModelScope.launch {

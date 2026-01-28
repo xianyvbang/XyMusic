@@ -18,6 +18,7 @@
 
 package cn.xybbz.api.client
 
+import XyArtistInfo
 import androidx.paging.PagingData
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
@@ -259,7 +260,7 @@ interface IDataSourceServer : AutoCloseable {
      * @param [artistId] 艺术家id
      * @return [List<ArtistItem>?] 艺术家信息
      */
-    suspend fun selectArtistInfoById(artistId: String): XyArtist?
+    suspend fun selectArtistInfoById(artistId: String): XyArtistInfo
 
     /**
      * 从远程获得艺术家信息
