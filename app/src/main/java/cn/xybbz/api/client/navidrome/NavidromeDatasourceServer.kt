@@ -46,7 +46,6 @@ import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.download.DownLoadManager
-import cn.xybbz.config.module.ApiModule_SubsonicApiClientFactory.subsonicApiClient
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.NavidromeOrder
@@ -69,13 +68,12 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
-import javax.inject.Inject
 
-class NavidromeDatasourceServer @Inject constructor(
+class NavidromeDatasourceServer constructor(
     private val db: DatabaseClient,
     application: Context,
     settingsManager: SettingsManager,
-    private val navidromeApiClient: NavidromeApiClient,
+    private val navidromeApiClient: NavidromeApiClient = NavidromeApiClient(),
     mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     downloadManager: DownLoadManager
 ) : IDataSourceParentServer(

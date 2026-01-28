@@ -69,13 +69,12 @@ import convertToArtist
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
-import javax.inject.Inject
 
-class SubsonicDatasourceServer @Inject constructor(
+class SubsonicDatasourceServer constructor(
     private val db: DatabaseClient,
     private val application: Context,
     settingsManager: SettingsManager,
-    private val subsonicApiClient: SubsonicApiClient,
+    private val subsonicApiClient: SubsonicApiClient = SubsonicApiClient(),
     mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     downloadManager: DownLoadManager
 ) : IDataSourceParentServer(
@@ -989,7 +988,7 @@ class SubsonicDatasourceServer @Inject constructor(
         index: String? = null,
         indexNumber: Int,
     ): XyArtist {
-       return artistId3.convertToArtist(
+        return artistId3.convertToArtist(
             pic = if (artistId3.coverArt.isNullOrBlank()) null else artistId3.coverArt?.let { coverArt ->
                 subsonicApiClient.getImageUrl(
                     coverArt

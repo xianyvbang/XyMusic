@@ -74,18 +74,17 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
-import javax.inject.Inject
 
 /**
  * Jellyfin api客户端管理
  * @author xybbz
  * @date 2024/06/12
  */
-class JellyfinDatasourceServer @Inject constructor(
+class JellyfinDatasourceServer(
     private val db: DatabaseClient,
     private val application: Context,
     settingsManager: SettingsManager,
-    private val jellyfinApiClient: JellyfinApiClient,
+    private val jellyfinApiClient: JellyfinApiClient = JellyfinApiClient(),
     mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     downloadManager: DownLoadManager
 ) : IDataSourceParentServer(

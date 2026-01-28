@@ -32,7 +32,13 @@ import androidx.room.Transaction
 import cn.xybbz.R
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
+import cn.xybbz.api.client.emby.EmbyDatasourceServer
+import cn.xybbz.api.client.jellyfin.JellyfinDatasourceServer
+import cn.xybbz.api.client.navidrome.NavidromeDatasourceServer
+import cn.xybbz.api.client.plex.PlexDatasourceServer
+import cn.xybbz.api.client.subsonic.SubsonicDatasourceServer
 import cn.xybbz.api.client.version.VersionApiClient
+import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.events.ReLoginEvent
 import cn.xybbz.api.exception.ServiceException
@@ -47,7 +53,9 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.alarm.AlarmConfig
+import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.scope.IoScoped
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LoginStateData
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.ResourceData
@@ -76,7 +84,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
-import javax.inject.Provider
 
 /**
  * 本地数据源管理类
@@ -86,9 +93,11 @@ import javax.inject.Provider
 class DataSourceManager(
     private val application: Context,
     private val db: DatabaseClient,
-    private val dataSources: Map<DataSourceType, @JvmSuppressWildcards Provider<IDataSourceParentServer>>,
     private val alarmConfig: AlarmConfig,
-    private val versionApiClient: VersionApiClient
+    private val versionApiClient: VersionApiClient,
+    private val mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
+    private val downloadManager: DownLoadManager,
+    private val settingsManager: SettingsManager,
 ) : IDataSourceServer, IoScoped() {
 
 
@@ -107,10 +116,10 @@ class DataSourceManager(
 
     val dataSourceServerFlow = MutableStateFlow<IDataSourceParentServer?>(null)
 
-/*    private val _loginState = MutableStateFlow<LoginStateType?>(
-        null
-    )
-    val loginState = _loginState.asStateFlow()*/
+    /*    private val _loginState = MutableStateFlow<LoginStateType?>(
+            null
+        )
+        val loginState = _loginState.asStateFlow()*/
 
     /**
      * 登录状态
@@ -276,8 +285,8 @@ class DataSourceManager(
     }
 
     private fun loginStateSuccessEmit(ifTmp: Boolean) {
-        if (!ifTmp){
-            Log.i("login","发送登录成功")
+        if (!ifTmp) {
+            Log.i("login", "发送登录成功")
             scope.launch {
                 _loginStateEvent.emit(LoginStateType.SUCCESS)
             }
@@ -295,7 +304,7 @@ class DataSourceManager(
     ) {
         updateDataSourceType(dataSourceType)
         Log.i("=====", "数据源开始切换")
-        getDataSourceServerByType(dataSourceType, false)?.let {
+        getDataSourceServerByType(dataSourceType, false).let {
             dataSourceServer = it
             dataSourceServerFlow.value = it
 
@@ -313,9 +322,46 @@ class DataSourceManager(
     fun getDataSourceServerByType(
         dataSourceType: DataSourceType,
         ifTmp: Boolean
-    ): IDataSourceParentServer? {
-        val iDataSourceParentServer = dataSourceType.let { dataSources[it]?.get() }
-        iDataSourceParentServer?.updateIfTmpObject(ifTmp)
+    ): IDataSourceParentServer {
+        val iDataSourceParentServer = when (dataSourceType) {
+            DataSourceType.JELLYFIN -> JellyfinDatasourceServer(
+                db = db,
+                application = application,
+                settingsManager = settingsManager,
+                mediaLibraryAndFavoriteSyncScheduler = mediaLibraryAndFavoriteSyncScheduler,
+                downloadManager = downloadManager
+            )
+
+            DataSourceType.SUBSONIC -> SubsonicDatasourceServer(
+                db = db,
+                application = application,
+                settingsManager = settingsManager,
+                mediaLibraryAndFavoriteSyncScheduler = mediaLibraryAndFavoriteSyncScheduler,
+                downloadManager = downloadManager
+            )
+            DataSourceType.NAVIDROME -> NavidromeDatasourceServer(
+                db = db,
+                application = application,
+                settingsManager = settingsManager,
+                mediaLibraryAndFavoriteSyncScheduler = mediaLibraryAndFavoriteSyncScheduler,
+                downloadManager = downloadManager
+            )
+            DataSourceType.EMBY -> EmbyDatasourceServer(
+                db = db,
+                application = application,
+                settingsManager = settingsManager,
+                mediaLibraryAndFavoriteSyncScheduler = mediaLibraryAndFavoriteSyncScheduler,
+                downloadManager = downloadManager
+            )
+            DataSourceType.PLEX -> PlexDatasourceServer(
+                db = db,
+                application = application,
+                settingsManager = settingsManager,
+                mediaLibraryAndFavoriteSyncScheduler = mediaLibraryAndFavoriteSyncScheduler,
+                downloadManager = downloadManager
+            )
+        }
+        iDataSourceParentServer.updateIfTmpObject(ifTmp)
         return iDataSourceParentServer
     }
 
@@ -336,7 +382,7 @@ class DataSourceManager(
         clientLoginInfoReq: ClientLoginInfoReq,
         connectionConfig: ConnectionConfig?
     ): Flow<ClientLoginInfoState> {
-        return dataSourceServer.addClientAndLogin(clientLoginInfoReq,)
+        return dataSourceServer.addClientAndLogin(clientLoginInfoReq)
     }
 
     override suspend fun autoLogin(

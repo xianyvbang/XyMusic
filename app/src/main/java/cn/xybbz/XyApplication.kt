@@ -73,6 +73,7 @@ class XyApplication : Application(), Configuration.Provider {
         //是否默认可以关闭
         DialogX.cancelableTipDialog = false
         DialogX.globalTheme = DialogX.THEME.DARK
+        Log.i("=====","XyApplication")
 
         val scope = CoroutineScopeUtils.getDefault("XyApplication")
         scope.launch {

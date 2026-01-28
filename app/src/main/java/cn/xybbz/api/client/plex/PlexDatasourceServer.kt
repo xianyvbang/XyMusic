@@ -70,13 +70,12 @@ import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
 import java.time.ZoneOffset
 import java.util.UUID
-import javax.inject.Inject
 
-class PlexDatasourceServer @Inject constructor(
+class PlexDatasourceServer constructor(
     private val db: DatabaseClient,
     private val application: Context,
     settingsManager: SettingsManager,
-    private val plexApiClient: PlexApiClient,
+    private val plexApiClient: PlexApiClient = PlexApiClient(),
     mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     downloadManager: DownLoadManager
 ) : IDataSourceParentServer(

@@ -17,37 +17,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 class ApiModule {
-
-    @Provides
-    fun jellyfinApiClient(): JellyfinApiClient {
-        val defaultApiConfig = JellyfinApiClient()
-        return defaultApiConfig
-    }
-
-    @Provides
-    fun subsonicApiClient(): SubsonicApiClient {
-        val subsonicApiClient = SubsonicApiClient()
-        return subsonicApiClient
-    }
-
-    @Provides
-    fun navidromeApiClient(): NavidromeApiClient {
-        val navidromeApiClient = NavidromeApiClient()
-        return navidromeApiClient
-    }
-
-    @Provides
-    fun embyApiClient(): EmbyApiClient {
-        val embyApiClient = EmbyApiClient()
-        return embyApiClient
-    }
-
-    @Provides
-    fun plexApiClient(): PlexApiClient {
-        val plexApiClient = PlexApiClient()
-        return plexApiClient
-    }
-
     @Singleton
     @Provides
     fun cacheApiClient(): CacheApiClient {

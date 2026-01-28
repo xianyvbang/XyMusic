@@ -71,13 +71,12 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
-import javax.inject.Inject
 
-class EmbyDatasourceServer @Inject constructor(
+class EmbyDatasourceServer constructor(
     private val db: DatabaseClient,
     private val application: Context,
     settingsManager: SettingsManager,
-    private val embyApiClient: EmbyApiClient,
+    private val embyApiClient: EmbyApiClient = EmbyApiClient(),
     mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     downloadManager: DownLoadManager
 ) : IDataSourceParentServer(
