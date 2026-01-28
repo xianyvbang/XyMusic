@@ -49,7 +49,7 @@ fun SongID3.toXyMusic(pic: String?, downloadUrl: String, connectionId: Long): Xy
         sampleRate = 0,
         bitDepth = 0,
         size = this.size,
-        runTimeTicks = this.duration,
+        runTimeTicks = this.duration * 1000,
         container = this.suffix,
         codec = this.suffix,
         ifLyric = true,
