@@ -196,14 +196,14 @@ class SubsonicApiClient : DefaultParentApiClient() {
      * 获得校验参数组成的Map
      */
     public override fun getQueryMapData(): Map<String, String> {
-        val queryMap = mutableMapOf<String, String>()
-        queryMap.put("u", username)
-        queryMap.put("t", passwordMd5)
-        queryMap.put("s", encryptedSalt)
-        queryMap.put("v", protocolVersion)
-        queryMap.put("c", clientName)
-        queryMap.put("f", responseFormat)
-        return queryMap
+        return mapOf(
+            "u" to username,
+            "t" to passwordMd5,
+            "s" to encryptedSalt,
+            "v" to protocolVersion,
+            "c" to clientName,
+            "f" to responseFormat,
+        )
     }
 
     /**
