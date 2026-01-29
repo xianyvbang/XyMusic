@@ -260,12 +260,12 @@ interface IDataSourceServer : AutoCloseable {
      * @param [artistId] 艺术家id
      * @return [List<ArtistItem>?] 艺术家信息
      */
-    suspend fun selectArtistInfoById(artistId: String): XyArtistInfo
+    suspend fun selectArtistInfoById(artistId: String): XyArtistInfo?
 
     /**
      * 从远程获得艺术家信息
      */
-    suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist?
+    suspend fun selectArtistInfoByRemotely(artistId: String): XyArtistInfo?
 
     /**
      * 获得媒体库列表
@@ -439,7 +439,7 @@ interface IDataSourceServer : AutoCloseable {
     /**
      * 获得相似歌手列表
      */
-    fun getResemblanceArtist(artistId: String): Flow<PagingData<XyArtist>>
+    suspend fun getResemblanceArtist(artistId: String): List<XyArtist>?
 
 
     /**

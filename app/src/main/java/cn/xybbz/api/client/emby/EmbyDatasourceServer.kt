@@ -18,6 +18,7 @@
 
 package cn.xybbz.api.client.emby
 
+import XyArtistInfo
 import android.content.Context
 import android.icu.math.BigDecimal
 import android.os.Build
@@ -624,11 +625,13 @@ class EmbyDatasourceServer constructor(
      * @param [artistId] 艺术家id
      * @return [List<ArtistItem>?] 艺术家信息
      */
-    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist {
+    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtistInfo {
         val item = embyApiClient.userLibraryApi()
             .getItem(userId = getUserId(), itemId = artistId)
-        val tmpArtistInfo = convertToArtistList(listOf(item))
-        return tmpArtistInfo[0]
+
+        val artistInfo = convertToArtist(item, 0)
+        val similarArtists = getSimilarArtistsRemotely(artistId, 0, 12)
+        return XyArtistInfo(artistInfo, similarArtists)
 
 
     }
@@ -1039,7 +1042,7 @@ class EmbyDatasourceServer constructor(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyResponse<XyArtist> {
+    ): List<XyArtist> {
         val response = embyApiClient.artistsApi().getSimilarArtists(
             artistId = artistId,
             ItemRequest(
@@ -1047,12 +1050,7 @@ class EmbyDatasourceServer constructor(
                 userId = getUserId()
             ).toMap()
         )
-        val artistList = convertToArtistList(response.items)
-        return XyResponse(
-            items = artistList,
-            totalRecordCount = response.totalRecordCount,
-            startIndex = startIndex
-        )
+        return convertToArtistList(response.items)
     }
 
     /**

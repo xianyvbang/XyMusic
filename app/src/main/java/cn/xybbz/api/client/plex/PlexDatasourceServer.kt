@@ -18,6 +18,7 @@
 
 package cn.xybbz.api.client.plex
 
+import XyArtistInfo
 import android.content.Context
 import android.os.Build
 import android.util.Log
@@ -1018,12 +1019,14 @@ class PlexDatasourceServer constructor(
      * @param [artistId] 艺术家id
      * @return [List<ArtistItem>?] 艺术家信息
      */
-    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist? {
+    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtistInfo? {
         val item = plexApiClient.itemApi()
             .getLibraryInfo(sectionKey = artistId)
-        return item.mediaContainer?.metadata?.get(0)?.let {
+        val artistInfo = item.mediaContainer?.metadata?.get(0)?.let {
             convertToArtist(it, 0)
         }
+        val similarArtists = getSimilarArtistsRemotely(artistId, 0, 12)
+        return XyArtistInfo(artistInfo,similarArtists)
     }
 
     /**
@@ -1446,8 +1449,8 @@ class PlexDatasourceServer constructor(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyResponse<XyArtist> {
-        return XyResponse()
+    ): List<XyArtist>? {
+        return null
     }
 
     /**

@@ -18,6 +18,7 @@
 
 package cn.xybbz.api.client.navidrome
 
+import XyArtistInfo
 import android.content.Context
 import android.util.Log
 import androidx.room.withTransaction
@@ -615,9 +616,11 @@ class NavidromeDatasourceServer constructor(
      * @param [artistId] 艺术家id
      * @return [List<ArtistItem>?] 艺术家信息
      */
-    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist? {
-        val artist = navidromeApiClient.artistsApi().getArtist(artistId)
-        return artist?.let { convertToArtist(it, indexNumber = 0) }
+    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtistInfo? {
+        val items = navidromeApiClient.artistsApi().getArtist(artistId)
+        val artist = items?.let { convertToArtist(it, indexNumber = 0) }
+        val similarArtists = getSimilarArtistsRemotely(artistId, 0, 12)
+        return XyArtistInfo(artist,similarArtists)
     }
 
     /**
@@ -989,16 +992,15 @@ class NavidromeDatasourceServer constructor(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyResponse<XyArtist> {
+    ): List<XyArtist>? {
         val response =
             navidromeApiClient.artistsApi().getArtistInfo(id = artistId, count = pageSize)
-        return XyResponse(
-            response.subsonicResponse.artistInfo?.similarArtist?.map {
-                convertToArtist(
-                    artistId3 = it,
-                    indexNumber = 0
-                )
-            })
+        return response.subsonicResponse.artistInfo?.similarArtist?.map {
+            convertToArtist(
+                artistId3 = it,
+                indexNumber = 0
+            )
+        }
     }
 
     /**

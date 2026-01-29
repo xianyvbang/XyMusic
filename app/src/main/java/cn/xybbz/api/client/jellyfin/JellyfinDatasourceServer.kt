@@ -18,6 +18,7 @@
 
 package cn.xybbz.api.client.jellyfin
 
+import XyArtistInfo
 import android.content.Context
 import android.icu.math.BigDecimal
 import android.os.Build
@@ -749,10 +750,19 @@ class JellyfinDatasourceServer(
      * @param [artistId] 艺术家id
      * @return [List<ArtistItem>?] 艺术家信息
      */
-    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist {
-        val item = jellyfinApiClient.userLibraryApi().getItem(itemId = artistId)
-        val tmpArtistInfo = convertToArtistList(listOf(item))
-        return tmpArtistInfo[0]
+    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtistInfo {
+        var artistInfo: XyArtist? = db.artistDao.selectById(artistId)
+        if (artistInfo == null) {
+            val item = jellyfinApiClient.userLibraryApi().getItem(itemId = artistId)
+            val tmpArtistInfo = convertToArtistList(listOf(item))
+            artistInfo = tmpArtistInfo[0]
+        } else {
+            val ifFavorite = db.artistDao.selectFavoriteById(artistId) == true
+            artistInfo = artistInfo.copy(ifFavorite = ifFavorite)
+        }
+        val similarArtists = getSimilarArtistsRemotely(artistId, 0, 12)
+        return XyArtistInfo(artistInfo, similarArtists)
+
     }
 
     /**
@@ -1015,7 +1025,7 @@ class JellyfinDatasourceServer(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyResponse<XyArtist> {
+    ): List<XyArtist> {
         val response = jellyfinApiClient.artistsApi().getSimilarArtists(
             artistId = artistId,
             ItemRequest(
@@ -1023,12 +1033,7 @@ class JellyfinDatasourceServer(
                 userId = getUserId()
             ).toMap()
         )
-        val artistList = convertToArtistList(response.items)
-        return XyResponse(
-            items = artistList,
-            totalRecordCount = response.totalRecordCount,
-            startIndex = startIndex
-        )
+        return convertToArtistList(response.items)
     }
 
     /**

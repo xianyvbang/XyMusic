@@ -74,7 +74,6 @@ import cn.xybbz.page.parent.FavoriteMusicRemoteMediator
 import cn.xybbz.page.parent.GenreAlbumListRemoteMediator
 import cn.xybbz.page.parent.GenresRemoteMediator
 import cn.xybbz.page.parent.MusicRemoteMediator
-import cn.xybbz.page.parent.ResemblanceArtistRemoteMediator
 import coil.Coil
 import coil.ImageLoader
 import com.github.promeg.pinyinhelper.Pinyin
@@ -127,7 +126,7 @@ abstract class IDataSourceParentServer(
         ifTmpObject = ifTmp
     }
 
-    fun getApiClient():DefaultParentApiClient{
+    fun getApiClient(): DefaultParentApiClient {
         return defaultParentApiClient
     }
 
@@ -716,7 +715,7 @@ abstract class IDataSourceParentServer(
     override suspend fun selectArtistInfoById(artistId: String): XyArtistInfo {
         var artistInfo: XyArtist? = db.artistDao.selectById(artistId)
         if (artistInfo == null) {
-            artistInfo = selectArtistInfoByRemotely(artistId)
+            artistInfo = selectArtistInfoByRemotely(artistId)?.artist
         } else {
             val ifFavorite = db.artistDao.selectFavoriteById(artistId) == true
             artistInfo = artistInfo.copy(ifFavorite = ifFavorite)
@@ -767,7 +766,7 @@ abstract class IDataSourceParentServer(
                     artistId = artistId,
                     genreId = genreId
                 )
-            }catch (e: Exception){
+            } catch (e: Exception) {
                 e.printStackTrace()
             }
 
@@ -918,7 +917,7 @@ abstract class IDataSourceParentServer(
     /**
      * 从远程获得艺术家信息
      */
-    abstract override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist?
+    abstract override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtistInfo?
 
 
     /**
@@ -958,21 +957,6 @@ abstract class IDataSourceParentServer(
     ): XyResponse<XyMusic>
 
     /**
-     * 获得相似歌手列表
-     */
-    @OptIn(ExperimentalPagingApi::class)
-    override fun getResemblanceArtist(artistId: String): Flow<PagingData<XyArtist>> {
-        return defaultPager(
-            pageSize = Constants.MIN_PAGE
-        ) {
-            ResemblanceArtistRemoteMediator(
-                artistId = artistId,
-                datasourceServer = this
-            )
-        }.flow
-    }
-
-    /**
      * 获取远程服务器专辑列表
      * @param [startIndex] 开始索引
      * @param [pageSize] 页面大小
@@ -998,7 +982,7 @@ abstract class IDataSourceParentServer(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyResponse<XyArtist>
+    ): List<XyArtist>?
 
     /**
      * 获得专辑列表的RemoteMediator

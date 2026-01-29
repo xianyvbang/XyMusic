@@ -18,6 +18,7 @@
 
 package cn.xybbz.api.client.subsonic
 
+import XyArtistInfo
 import android.content.Context
 import android.util.Log
 import androidx.paging.ExperimentalPagingApi
@@ -538,10 +539,10 @@ class SubsonicDatasourceServer constructor(
      * @param [artistId] 艺术家id
      * @return [List<ArtistItem>?] 艺术家信息
      */
-    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist? {
+    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtistInfo? {
         val artist = subsonicApiClient.artistsApi().getArtist(artistId)
         //专辑转换
-        return artist.subsonicResponse.artist?.album?.let { albums ->
+        artist.subsonicResponse.artist?.album?.let { albums ->
             val albumList = convertToAlbumList(albums)
             //存储到数据库中
             if (albumList.isNotEmpty())
@@ -551,14 +552,16 @@ class SubsonicDatasourceServer constructor(
                     connectionId = getConnectionId(),
                     artistId
                 )
-
-            artist.subsonicResponse.artist?.let {
-                convertToArtist(
-                    it,
-                    indexNumber = 0
-                )
-            }
         }
+        val artistList = artist.subsonicResponse.artist?.let {
+            convertToArtist(
+                it,
+                indexNumber = 0
+            )
+        }
+
+        val similarArtists = getSimilarArtistsRemotely(artistId, 0, 12)
+        return XyArtistInfo(artistList, similarArtists)
 
     }
 
@@ -867,17 +870,15 @@ class SubsonicDatasourceServer constructor(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyResponse<XyArtist> {
+    ): List<XyArtist>? {
         val response =
             subsonicApiClient.artistsApi().getArtistInfo(id = artistId, count = pageSize)
-        return XyResponse(
-            response.subsonicResponse.artistInfo?.similarArtist?.map {
-                convertToArtist(
-                    artistId3 = it,
-                    indexNumber = 0
-                )
-            }
-        )
+        return response.subsonicResponse.artistInfo?.similarArtist?.map {
+            convertToArtist(
+                artistId3 = it,
+                indexNumber = 0
+            )
+        }
     }
 
     /**

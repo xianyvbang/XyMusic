@@ -789,7 +789,7 @@ class DataSourceManager(
      * @param [artistId] 艺术家id
      * @return [List<ArtistItem>?] 艺术家信息
      */
-    override suspend fun selectArtistInfoById(artistId: String): XyArtistInfo {
+    override suspend fun selectArtistInfoById(artistId: String): XyArtistInfo? {
         return try {
             dataSourceServer.selectArtistInfoById(artistId)
         } catch (e: Exception) {
@@ -801,7 +801,7 @@ class DataSourceManager(
     /**
      * 从远程获得艺术家信息
      */
-    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist? {
+    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtistInfo? {
         return try {
             dataSourceServer.selectArtistInfoByRemotely(artistId)
         } catch (e: Exception) {
@@ -1095,12 +1095,6 @@ class DataSourceManager(
         } ?: emptyList()
     }
 
-    /**
-     * 获得相似歌手列表
-     */
-    override fun getResemblanceArtist(artistId: String): Flow<PagingData<XyArtist>> {
-        return dataSourceServer.getResemblanceArtist(artistId)
-    }
 
     /**
      * 获得连接设置
