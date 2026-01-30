@@ -628,18 +628,18 @@ class EmbyDatasourceServer constructor(
     override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
         var artistInfo: XyArtist? = db.artistDao.selectById(artistId)
         var artist: XyArtist? = null
-            try {
+        try {
             val item = embyApiClient.userLibraryApi()
                 .getItem(userId = getUserId(), itemId = artistId)
-                artist = convertToArtist(item, 0)
+            artist = convertToArtist(item, 0)
 
-        }catch (e: Exception){
+        } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获取艺术家信息失败", e)
         }
         artistInfo = artistInfo?.copy(
             describe = artist?.describe
         ) ?: artist
-        return XyArtistInfo(artistInfo, null)
+        return artistInfo
 
 
     }
@@ -1050,7 +1050,7 @@ class EmbyDatasourceServer constructor(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyArtistInfo? {
+    ): XyArtistInfo {
         val response = embyApiClient.artistsApi().getSimilarArtists(
             artistId = artistId,
             ItemRequest(
@@ -1058,7 +1058,7 @@ class EmbyDatasourceServer constructor(
                 userId = getUserId()
             ).toMap()
         )
-        return convertToArtistList(response.items)
+        return XyArtistInfo(null, convertToArtistList(response.items))
     }
 
     /**

@@ -141,7 +141,7 @@ class NavidromeDatasourceServer constructor(
     }
 
     /**
-     * 根据艺术家id获得专辑列表
+     * 根据艺术家id获得艺术家列表
      */
     override suspend fun selectArtistsByIds(artistIds: List<String>): List<XyArtist> {
         return artistIds.mapNotNull { artistId ->
@@ -623,13 +623,13 @@ class NavidromeDatasourceServer constructor(
         try {
             val items = navidromeApiClient.artistsApi().getArtist(artistId)
             artist = items?.let { convertToArtist(it, indexNumber = 0) }
-        }catch (e: Exception){
+        } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获取艺术家信息失败", e)
         }
         artistInfo = artistInfo?.copy(
             describe = artist?.describe
         ) ?: artist
-        return XyArtistInfo(artistInfo, null)
+        return artistInfo
     }
 
     /**
@@ -1001,15 +1001,15 @@ class NavidromeDatasourceServer constructor(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyArtistInfo? {
+    ): XyArtistInfo {
         val response =
             navidromeApiClient.artistsApi().getArtistInfo(id = artistId, count = pageSize)
-        return response.subsonicResponse.artistInfo?.similarArtist?.map {
+        return XyArtistInfo(null, response.subsonicResponse.artistInfo?.similarArtist?.map {
             convertToArtist(
                 artistId3 = it,
                 indexNumber = 0
             )
-        }
+        })
     }
 
     /**

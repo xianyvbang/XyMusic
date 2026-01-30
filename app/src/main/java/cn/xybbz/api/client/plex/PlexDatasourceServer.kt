@@ -1030,13 +1030,13 @@ class PlexDatasourceServer constructor(
             artist = item.mediaContainer?.metadata?.get(0)?.let {
                 convertToArtist(it, 0)
             }
-        }catch (e: Exception){
+        } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获取艺术家信息失败", e)
         }
         artistInfo = artistInfo?.copy(
             describe = artist?.describe
         ) ?: artist
-        return XyArtistInfo(artistInfo,null)
+        return artistInfo
     }
 
     /**
@@ -1459,8 +1459,11 @@ class PlexDatasourceServer constructor(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyArtistInfo? {
-        return null
+    ): XyArtistInfo {
+        val similarItem = plexApiClient.userLibraryApi().similarItem(artistId, pageSize)
+        return XyArtistInfo(
+            null,
+            similarItem.mediaContainer?.metadata?.let { convertToArtistList(it) })
     }
 
     /**

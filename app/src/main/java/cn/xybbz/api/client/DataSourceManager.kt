@@ -1102,13 +1102,13 @@ class DataSourceManager(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyArtistInfo? {
+    ): XyArtistInfo {
         return try {
             dataSourceServer.getSimilarArtistsRemotely(artistId,startIndex,pageSize)
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得歌手热门歌曲列表失败", e)
             null
-        } ?: emptyList()
+        } ?: XyArtistInfo()
     }
 
 

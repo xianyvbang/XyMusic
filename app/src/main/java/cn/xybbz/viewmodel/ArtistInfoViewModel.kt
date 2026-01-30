@@ -139,8 +139,8 @@ class ArtistInfoViewModel @AssistedInject constructor(
             val artistInfo =
                 dataSourceManager.getSimilarArtistsRemotely(artistId, 0, 12)
             artistDescribe2 =
-                artistInfo?.describe
-            resemblanceArtistList = artistInfo?.similarArtist ?: emptyList()
+                artistInfo.describe
+            resemblanceArtistList = artistInfo.similarArtist ?: emptyList()
         }
     }
 

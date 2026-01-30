@@ -766,7 +766,7 @@ class JellyfinDatasourceServer(
         artistInfo = artistInfo?.copy(
             describe = artist?.describe
         ) ?: artist
-        return XyArtistInfo(artistInfo, null)
+        return artistInfo
     }
 
     /**
@@ -1029,7 +1029,7 @@ class JellyfinDatasourceServer(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyArtistInfo? {
+    ): XyArtistInfo {
         val response = jellyfinApiClient.artistsApi().getSimilarArtists(
             artistId = artistId,
             ItemRequest(
@@ -1037,7 +1037,7 @@ class JellyfinDatasourceServer(
                 userId = getUserId()
             ).toMap()
         )
-        return convertToArtistList(response.items)
+        return XyArtistInfo(null, convertToArtistList(response.items))
     }
 
     /**

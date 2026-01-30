@@ -560,7 +560,7 @@ class SubsonicDatasourceServer constructor(
             )
         }
 
-        return XyArtistInfo(artistList, null)
+        return artistList
 
     }
 
@@ -872,12 +872,13 @@ class SubsonicDatasourceServer constructor(
     ): XyArtistInfo? {
         val response =
             subsonicApiClient.artistsApi().getArtistInfo(id = artistId, count = pageSize)
-        return response.subsonicResponse.artistInfo?.similarArtist?.map {
+        val artistInfo = response.subsonicResponse.artistInfo
+        return XyArtistInfo(artistInfo?.biography, artistInfo?.similarArtist?.map {
             convertToArtist(
                 artistId3 = it,
                 indexNumber = 0
             )
-        }
+        })
     }
 
     /**
