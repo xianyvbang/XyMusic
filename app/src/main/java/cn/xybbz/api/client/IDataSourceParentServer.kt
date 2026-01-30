@@ -712,10 +712,10 @@ abstract class IDataSourceParentServer(
      * @param [artistId] 艺术家id
      * @return [List<ArtistItem>?] 艺术家信息
      */
-    override suspend fun selectArtistInfoById(artistId: String): XyArtistInfo {
+    override suspend fun selectArtistInfoById1(artistId: String): XyArtistInfo {
         var artistInfo: XyArtist? = db.artistDao.selectById(artistId)
         if (artistInfo == null) {
-            artistInfo = selectArtistInfoByRemotely(artistId)?.artist
+            artistInfo = selectArtistInfoById(artistId)?.artist
         } else {
             val ifFavorite = db.artistDao.selectFavoriteById(artistId) == true
             artistInfo = artistInfo.copy(ifFavorite = ifFavorite)
@@ -917,7 +917,7 @@ abstract class IDataSourceParentServer(
     /**
      * 从远程获得艺术家信息
      */
-    abstract override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtistInfo?
+    abstract override suspend fun selectArtistInfoById(artistId: String): XyArtist?
 
 
     /**
@@ -975,14 +975,6 @@ abstract class IDataSourceParentServer(
         genreId: String? = null,
     ): XyResponse<XyAlbum>
 
-    /**
-     * 远程获得相似艺术家
-     */
-    abstract suspend fun getSimilarArtistsRemotely(
-        artistId: String,
-        startIndex: Int,
-        pageSize: Int
-    ): List<XyArtist>?
 
     /**
      * 获得专辑列表的RemoteMediator

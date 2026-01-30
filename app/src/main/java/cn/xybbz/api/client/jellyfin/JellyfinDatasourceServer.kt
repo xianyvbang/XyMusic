@@ -750,19 +750,23 @@ class JellyfinDatasourceServer(
      * @param [artistId] 艺术家id
      * @return [List<ArtistItem>?] 艺术家信息
      */
-    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtistInfo {
+    override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
         var artistInfo: XyArtist? = db.artistDao.selectById(artistId)
-        if (artistInfo == null) {
-            val item = jellyfinApiClient.userLibraryApi().getItem(itemId = artistId)
-            val tmpArtistInfo = convertToArtistList(listOf(item))
-            artistInfo = tmpArtistInfo[0]
-        } else {
-            val ifFavorite = db.artistDao.selectFavoriteById(artistId) == true
-            artistInfo = artistInfo.copy(ifFavorite = ifFavorite)
-        }
-        val similarArtists = getSimilarArtistsRemotely(artistId, 0, 12)
-        return XyArtistInfo(artistInfo, similarArtists)
+        var artist: XyArtist? = null
+        try {
+            val item = jellyfinApiClient.userLibraryApi()
+                .getItem(itemId = artistId)
+            val artistList = convertToArtistList(listOf(item))
+            if (artistList.isNotEmpty())
+                artist = artistList[0]
 
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取艺术家信息失败", e)
+        }
+        artistInfo = artistInfo?.copy(
+            describe = artist?.describe
+        ) ?: artist
+        return XyArtistInfo(artistInfo, null)
     }
 
     /**
@@ -1025,7 +1029,7 @@ class JellyfinDatasourceServer(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): List<XyArtist> {
+    ): XyArtistInfo? {
         val response = jellyfinApiClient.artistsApi().getSimilarArtists(
             artistId = artistId,
             ItemRequest(

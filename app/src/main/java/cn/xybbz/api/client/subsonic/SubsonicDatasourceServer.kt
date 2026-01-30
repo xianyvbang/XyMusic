@@ -539,7 +539,7 @@ class SubsonicDatasourceServer constructor(
      * @param [artistId] 艺术家id
      * @return [List<ArtistItem>?] 艺术家信息
      */
-    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtistInfo? {
+    override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
         val artist = subsonicApiClient.artistsApi().getArtist(artistId)
         //专辑转换
         artist.subsonicResponse.artist?.album?.let { albums ->
@@ -560,8 +560,7 @@ class SubsonicDatasourceServer constructor(
             )
         }
 
-        val similarArtists = getSimilarArtistsRemotely(artistId, 0, 12)
-        return XyArtistInfo(artistList, similarArtists)
+        return XyArtistInfo(artistList, null)
 
     }
 
@@ -870,7 +869,7 @@ class SubsonicDatasourceServer constructor(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): List<XyArtist>? {
+    ): XyArtistInfo? {
         val response =
             subsonicApiClient.artistsApi().getArtistInfo(id = artistId, count = pageSize)
         return response.subsonicResponse.artistInfo?.similarArtist?.map {

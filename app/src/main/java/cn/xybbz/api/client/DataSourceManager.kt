@@ -789,9 +789,9 @@ class DataSourceManager(
      * @param [artistId] 艺术家id
      * @return [List<ArtistItem>?] 艺术家信息
      */
-    override suspend fun selectArtistInfoById(artistId: String): XyArtistInfo? {
+    override suspend fun selectArtistInfoById1(artistId: String): XyArtistInfo? {
         return try {
-            dataSourceServer.selectArtistInfoById(artistId)
+            dataSourceServer.selectArtistInfoById1(artistId)
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "根据id获得艺术家信息失败", e)
             XyArtistInfo()
@@ -801,9 +801,9 @@ class DataSourceManager(
     /**
      * 从远程获得艺术家信息
      */
-    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtistInfo? {
+    override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
         return try {
-            dataSourceServer.selectArtistInfoByRemotely(artistId)
+            dataSourceServer.selectArtistInfoById(artistId)
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "根据id从远程获得艺术家信息失败", e)
             null
@@ -1089,6 +1089,22 @@ class DataSourceManager(
     ): List<XyMusicExtend> {
         return try {
             dataSourceServer.getArtistPopularMusicList(artistId, artistName)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得歌手热门歌曲列表失败", e)
+            null
+        } ?: emptyList()
+    }
+
+    /**
+     * 远程获得相似艺术家
+     */
+    override suspend fun getSimilarArtistsRemotely(
+        artistId: String,
+        startIndex: Int,
+        pageSize: Int
+    ): XyArtistInfo? {
+        return try {
+            dataSourceServer.getSimilarArtistsRemotely(artistId,startIndex,pageSize)
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得歌手热门歌曲列表失败", e)
             null

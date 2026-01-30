@@ -79,6 +79,8 @@ enum class DataSourceType(
     val ifInputUrl: Boolean = true,
     //是否转码的时候使用hls
     val ifHls: Boolean = false,
+    //是否单独获取相似艺术家
+    val ifSimilarArtist: Boolean = true,
 ) {
 
     JELLYFIN(
@@ -129,6 +131,7 @@ enum class DataSourceType(
         ifAlbumInfoFavoriteFilter = false,
         ifStartEndYear = true,
         ifArtistFavorite = true,
+        ifSimilarArtist = false
     ),
 
     NAVIDROME(

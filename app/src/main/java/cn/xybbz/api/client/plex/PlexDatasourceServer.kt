@@ -1019,14 +1019,24 @@ class PlexDatasourceServer constructor(
      * @param [artistId] 艺术家id
      * @return [List<ArtistItem>?] 艺术家信息
      */
-    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtistInfo? {
-        val item = plexApiClient.itemApi()
-            .getLibraryInfo(sectionKey = artistId)
-        val artistInfo = item.mediaContainer?.metadata?.get(0)?.let {
-            convertToArtist(it, 0)
+    override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
+
+        var artistInfo: XyArtist? = db.artistDao.selectById(artistId)
+
+        var artist: XyArtist? = null
+        try {
+            val item = plexApiClient.itemApi()
+                .getLibraryInfo(sectionKey = artistId)
+            artist = item.mediaContainer?.metadata?.get(0)?.let {
+                convertToArtist(it, 0)
+            }
+        }catch (e: Exception){
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取艺术家信息失败", e)
         }
-        val similarArtists = getSimilarArtistsRemotely(artistId, 0, 12)
-        return XyArtistInfo(artistInfo,similarArtists)
+        artistInfo = artistInfo?.copy(
+            describe = artist?.describe
+        ) ?: artist
+        return XyArtistInfo(artistInfo,null)
     }
 
     /**
@@ -1449,7 +1459,7 @@ class PlexDatasourceServer constructor(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): List<XyArtist>? {
+    ): XyArtistInfo? {
         return null
     }
 
