@@ -785,7 +785,7 @@ class DataSourceManager(
     }
 
     /**
-     * 从远程获得艺术家信息
+     * 获得艺术家信息
      */
     override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
         return try {

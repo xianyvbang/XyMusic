@@ -1020,22 +1020,11 @@ class PlexDatasourceServer constructor(
      * @return [List<ArtistItem>?] 艺术家信息
      */
     override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
-
         var artistInfo: XyArtist? = db.artistDao.selectById(artistId)
-
-        var artist: XyArtist? = null
-        try {
-            val item = plexApiClient.itemApi()
-                .getLibraryInfo(sectionKey = artistId)
-            artist = item.mediaContainer?.metadata?.get(0)?.let {
-                convertToArtist(it, 0)
-            }
-        } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获取艺术家信息失败", e)
+        if (artistInfo != null) {
+            artistInfo =
+                artistInfo.copy(ifFavorite = db.artistDao.selectFavoriteById(artistId) ?: false)
         }
-        artistInfo = artistInfo?.copy(
-            describe = artist?.describe
-        ) ?: artist
         return artistInfo
     }
 

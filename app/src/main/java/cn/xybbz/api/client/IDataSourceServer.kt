@@ -257,9 +257,14 @@ interface IDataSourceServer : AutoCloseable {
     suspend fun initFavoriteData(connectionId: Long)
 
     /**
-     * 从远程获得艺术家信息
+     * 根据id获得艺术家信息
      */
     suspend fun selectArtistInfoById(artistId: String): XyArtist?
+
+    /**
+     * 从远程获得艺术家描述
+     */
+    suspend fun selectArtistDescribe(artistId: String): String?
 
     /**
      * 获得媒体库列表

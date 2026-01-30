@@ -898,7 +898,7 @@ abstract class IDataSourceParentServer(
     ): XyAlbum?
 
     /**
-     * 从远程获得艺术家信息
+     * 根据id获得艺术家信息
      */
     abstract override suspend fun selectArtistInfoById(artistId: String): XyArtist?
 
