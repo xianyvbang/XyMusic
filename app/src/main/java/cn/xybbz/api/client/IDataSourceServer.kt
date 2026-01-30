@@ -255,12 +255,6 @@ interface IDataSourceServer : AutoCloseable {
      * 初始化收藏数据
      */
     suspend fun initFavoriteData(connectionId: Long)
-    /**
-     * 根据id获得艺术家信息
-     * @param [artistId] 艺术家id
-     * @return [List<ArtistItem>?] 艺术家信息
-     */
-    suspend fun selectArtistInfoById1(artistId: String): XyArtistInfo?
 
     /**
      * 从远程获得艺术家信息

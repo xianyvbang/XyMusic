@@ -708,23 +708,6 @@ abstract class IDataSourceParentServer(
     }
 
     /**
-     * 根据id获得艺术家信息
-     * @param [artistId] 艺术家id
-     * @return [List<ArtistItem>?] 艺术家信息
-     */
-    override suspend fun selectArtistInfoById1(artistId: String): XyArtistInfo {
-        var artistInfo: XyArtist? = db.artistDao.selectById(artistId)
-        if (artistInfo == null) {
-            artistInfo = selectArtistInfoById(artistId)?.artist
-        } else {
-            val ifFavorite = db.artistDao.selectFavoriteById(artistId) == true
-            artistInfo = artistInfo.copy(ifFavorite = ifFavorite)
-        }
-
-        return XyArtistInfo(artist = artistInfo)
-    }
-
-    /**
      * 获得最近播放音乐列表
      */
     override suspend fun getPlayRecordMusicList(pageSize: Int): List<XyMusic> {

@@ -785,20 +785,6 @@ class DataSourceManager(
     }
 
     /**
-     * 根据id获得艺术家信息
-     * @param [artistId] 艺术家id
-     * @return [List<ArtistItem>?] 艺术家信息
-     */
-    override suspend fun selectArtistInfoById1(artistId: String): XyArtistInfo? {
-        return try {
-            dataSourceServer.selectArtistInfoById1(artistId)
-        } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "根据id获得艺术家信息失败", e)
-            XyArtistInfo()
-        }
-    }
-
-    /**
      * 从远程获得艺术家信息
      */
     override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
