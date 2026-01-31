@@ -74,11 +74,7 @@ class ArtistInfoViewModel @AssistedInject constructor(
      */
     var artistDescribe by mutableStateOf<String?>(null)
         private set
-    /**
-     * 艺术家描述信息2
-     */
-    var artistDescribe2 by mutableStateOf<String?>(null)
-        private set
+
     /**
      * 相似艺术家
      */
@@ -127,20 +123,29 @@ class ArtistInfoViewModel @AssistedInject constructor(
      */
     private fun getArtistInfoData() {
         viewModelScope.launch {
-            val artistInfoTmp = dataSourceManager.selectArtistInfoById(artistId)
-            if (artistInfoTmp != null) {
-                artistInfoData = artistInfoTmp
-                ifFavorite = artistInfoTmp.ifFavorite
+            val artistInfo = dataSourceManager.selectArtistInfoById(artistId)
+            if (artistInfo != null && artistInfoData != null) {
+                artistInfoData = artistInfo
+                ifFavorite = artistInfo.ifFavorite
             }
-
-            artistDescribe = artistInfoTmp?.describe
+            if (artistDescribe.isNullOrBlank())
+                artistDescribe = artistInfo?.describe
         }
+
         viewModelScope.launch {
-            val artistInfo =
+            val artistInfo = dataSourceManager.selectServerArtistInfo(artistId)
+            if (artistInfo != null && artistInfoData != null) {
+                artistInfoData = artistInfo
+                ifFavorite = artistInfo.ifFavorite
+            }
+            if (artistDescribe.isNullOrBlank())
+                artistDescribe = artistInfo?.describe
+        }
+
+        viewModelScope.launch {
+            val similarArtists =
                 dataSourceManager.getSimilarArtistsRemotely(artistId, 0, 12)
-            artistDescribe2 =
-                artistInfo.describe
-            resemblanceArtistList = artistInfo.similarArtist ?: emptyList()
+            resemblanceArtistList = similarArtists
         }
     }
 

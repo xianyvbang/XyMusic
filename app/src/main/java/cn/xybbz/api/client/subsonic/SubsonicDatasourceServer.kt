@@ -18,7 +18,6 @@
 
 package cn.xybbz.api.client.subsonic
 
-import XyArtistInfo
 import android.content.Context
 import android.util.Log
 import androidx.paging.ExperimentalPagingApi
@@ -548,7 +547,7 @@ class SubsonicDatasourceServer constructor(
     /**
      * 从远程获得艺术家描述
      */
-    override suspend fun selectArtistDescribe(artistId: String): XyArtist? {
+    override suspend fun selectServerArtistInfo(artistId: String): XyArtist? {
         val artistInfo = try {
             val artist = subsonicApiClient.artistsApi().getArtist(artistId)
             //专辑转换
@@ -570,6 +569,7 @@ class SubsonicDatasourceServer constructor(
                 )
             }
         } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取艺术家: ${artistId} 信息失败", e)
             null
         }
 
@@ -578,9 +578,10 @@ class SubsonicDatasourceServer constructor(
                 subsonicApiClient.artistsApi().getArtistInfo(id = artistId, count = 0)
             response.subsonicResponse.artistInfo?.biography
         } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX,"读取艺术家描述失败",e)
             null
         }
-        return artistInfo.copy(describe =  artistInfoDescribe)
+        return artistInfo?.copy(describe =  artistInfoDescribe)
     }
 
     /**
@@ -892,12 +893,12 @@ class SubsonicDatasourceServer constructor(
         val response =
             subsonicApiClient.artistsApi().getArtistInfo(id = artistId, count = pageSize)
         val artistInfo = response.subsonicResponse.artistInfo
-        return XyArtistInfo(artistInfo?.biography, artistInfo?.similarArtist?.map {
+        return artistInfo?.similarArtist?.map {
             convertToArtist(
                 artistId3 = it,
                 indexNumber = 0
             )
-        })
+        }
     }
 
     /**

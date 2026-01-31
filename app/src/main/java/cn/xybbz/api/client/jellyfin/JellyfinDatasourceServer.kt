@@ -748,10 +748,10 @@ class JellyfinDatasourceServer(
     /**
      * 从远程获得艺术家描述
      */
-    override suspend fun selectArtistDescribe(artistId: String): XyArtist? {
+    override suspend fun selectServerArtistInfo(artistId: String): XyArtist? {
         val item = jellyfinApiClient.userLibraryApi()
             .getItem(itemId = artistId)
-        return XyArtistInfo(convertToArtistList(listOf(item))[0], null)
+        return convertToArtistList(listOf(item))[0]
     }
 
     /**
@@ -1022,7 +1022,7 @@ class JellyfinDatasourceServer(
                 userId = getUserId()
             ).toMap()
         )
-        return XyArtistInfo(null, convertToArtistList(response.items))
+        return convertToArtistList(response.items)
     }
 
     /**

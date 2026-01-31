@@ -1017,12 +1017,12 @@ class PlexDatasourceServer constructor(
     /**
      * 从远程获得艺术家描述
      */
-    override suspend fun selectArtistDescribe(artistId: String): XyArtist? {
+    override suspend fun selectServerArtistInfo(artistId: String): XyArtist? {
         val item = plexApiClient.itemApi()
             .getLibraryInfo(sectionKey = artistId)
-        return XyArtistInfo(item.mediaContainer?.metadata?.get(0)?.let {
+        return item.mediaContainer?.metadata?.get(0)?.let {
             convertToArtist(it, 0)
-        }, null)
+        }
     }
 
     /**
@@ -1447,9 +1447,7 @@ class PlexDatasourceServer constructor(
         pageSize: Int
     ): List<XyArtist>? {
         val similarItem = plexApiClient.userLibraryApi().similarItem(artistId, pageSize)
-        return XyArtistInfo(
-            null,
-            similarItem.mediaContainer?.metadata?.let { convertToArtistList(it) })
+        return similarItem.mediaContainer?.metadata?.let { convertToArtistList(it) }
     }
 
     /**

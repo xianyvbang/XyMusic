@@ -614,9 +614,9 @@ class NavidromeDatasourceServer constructor(
     /**
      * 从远程获得艺术家描述
      */
-    override suspend fun selectArtistDescribe(artistId: String): XyArtist? {
+    override suspend fun selectServerArtistInfo(artistId: String): XyArtist? {
         val items = navidromeApiClient.artistsApi().getArtist(artistId)
-        return XyArtistInfo(items?.let { convertToArtist(it, indexNumber = 0) }, null)
+        return items?.let { convertToArtist(it, indexNumber = 0) }
     }
 
     /**
@@ -991,12 +991,12 @@ class NavidromeDatasourceServer constructor(
     ): List<XyArtist>? {
         val response =
             navidromeApiClient.artistsApi().getArtistInfo(id = artistId, count = pageSize)
-        return XyArtistInfo(null, response.subsonicResponse.artistInfo?.similarArtist?.map {
+        return response.subsonicResponse.artistInfo?.similarArtist?.map {
             convertToArtist(
                 artistId3 = it,
                 indexNumber = 0
             )
-        })
+        }
     }
 
     /**

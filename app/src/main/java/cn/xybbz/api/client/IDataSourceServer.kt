@@ -263,7 +263,7 @@ interface IDataSourceServer : AutoCloseable {
     /**
      * 从远程获得艺术家描述
      */
-    suspend fun selectArtistDescribe(artistId: String): XyArtist?
+    suspend fun selectServerArtistInfo(artistId: String): XyArtist?
 
     /**
      * 获得媒体库列表

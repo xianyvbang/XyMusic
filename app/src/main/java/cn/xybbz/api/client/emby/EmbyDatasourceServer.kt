@@ -623,10 +623,10 @@ class EmbyDatasourceServer constructor(
     /**
      * 从远程获得艺术家描述
      */
-    override suspend fun selectArtistDescribe(artistId: String): XyArtist? {
+    override suspend fun selectServerArtistInfo(artistId: String): XyArtist? {
         val item = embyApiClient.userLibraryApi()
             .getItem(userId = getUserId(), itemId = artistId)
-        return XyArtistInfo(convertToArtist(item, 0), null)
+        return convertToArtist(item, 0)
     }
 
     /**
@@ -1043,7 +1043,7 @@ class EmbyDatasourceServer constructor(
                 userId = getUserId()
             ).toMap()
         )
-        return XyArtistInfo(null, convertToArtistList(response.items))
+        return convertToArtistList(response.items)
     }
 
     /**

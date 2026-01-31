@@ -799,9 +799,9 @@ class DataSourceManager(
     /**
      * 从远程获得艺术家描述
      */
-    override suspend fun selectArtistDescribe(artistId: String): XyArtist? {
+    override suspend fun selectServerArtistInfo(artistId: String): XyArtist? {
         return try {
-            dataSourceServer.selectArtistDescribe(artistId)
+            dataSourceServer.selectServerArtistInfo(artistId)
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "根据id从远程获得艺术家描述失败", e)
             null
@@ -1100,13 +1100,13 @@ class DataSourceManager(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): List<XyArtist>? {
+    ): List<XyArtist> {
         return try {
             dataSourceServer.getSimilarArtistsRemotely(artistId,startIndex,pageSize)
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得歌手热门歌曲列表失败", e)
             null
-        } ?: XyArtistInfo()
+        } ?: emptyList()
     }
 
 
