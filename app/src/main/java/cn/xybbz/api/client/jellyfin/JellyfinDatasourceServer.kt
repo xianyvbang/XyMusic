@@ -746,17 +746,12 @@ class JellyfinDatasourceServer(
     }
 
     /**
-     * 根据id获得艺术家信息
-     * @param [artistId] 艺术家id
-     * @return [List<ArtistItem>?] 艺术家信息
+     * 从远程获得艺术家描述
      */
-    override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
-        var artistInfo: XyArtist? = db.artistDao.selectById(artistId)
-        if (artistInfo != null) {
-            artistInfo =
-                artistInfo.copy(ifFavorite = db.artistDao.selectFavoriteById(artistId) ?: false)
-        }
-        return artistInfo
+    override suspend fun selectArtistDescribe(artistId: String): XyArtist? {
+        val item = jellyfinApiClient.userLibraryApi()
+            .getItem(itemId = artistId)
+        return XyArtistInfo(convertToArtistList(listOf(item))[0], null)
     }
 
     /**
@@ -1019,7 +1014,7 @@ class JellyfinDatasourceServer(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyArtistInfo {
+    ): List<XyArtist>? {
         val response = jellyfinApiClient.artistsApi().getSimilarArtists(
             artistId = artistId,
             ItemRequest(

@@ -18,7 +18,6 @@
 
 package cn.xybbz.api.client
 
-import XyArtistInfo
 import androidx.paging.PagingData
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
@@ -264,7 +263,7 @@ interface IDataSourceServer : AutoCloseable {
     /**
      * 从远程获得艺术家描述
      */
-    suspend fun selectArtistDescribe(artistId: String): String?
+    suspend fun selectArtistDescribe(artistId: String): XyArtist?
 
     /**
      * 获得媒体库列表
@@ -442,7 +441,7 @@ interface IDataSourceServer : AutoCloseable {
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyArtistInfo?
+    ): List<XyArtist>?
 
     /**
      * 获得连接设置

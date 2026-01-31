@@ -44,6 +44,6 @@ fun ArtistID3.convertToArtist(
  * 艺术家详情信息
  */
 data class XyArtistInfo(
-    val describe: String? = "",
+    val artist: XyArtist?,
     val similarArtist: List<XyArtist>? = null
 )

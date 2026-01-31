@@ -18,7 +18,6 @@
 
 package cn.xybbz.api.client
 
-import XyArtistInfo
 import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -900,7 +899,14 @@ abstract class IDataSourceParentServer(
     /**
      * 根据id获得艺术家信息
      */
-    abstract override suspend fun selectArtistInfoById(artistId: String): XyArtist?
+    override suspend fun selectArtistInfoById(artistId: String): XyArtist?{
+        var artistInfo: XyArtist? = db.artistDao.selectById(artistId)
+        if (artistInfo != null) {
+            artistInfo =
+                artistInfo.copy(ifFavorite = db.artistDao.selectFavoriteById(artistId) ?: false)
+        }
+        return artistInfo
+    }
 
 
     /**

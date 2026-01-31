@@ -621,26 +621,12 @@ class EmbyDatasourceServer constructor(
     }
 
     /**
-     * 根据id获得艺术家信息
-     * @param [artistId] 艺术家id
-     * @return [List<ArtistItem>?] 艺术家信息
-     */
-    override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
-        var artistInfo: XyArtist? = db.artistDao.selectById(artistId)
-        if (artistInfo != null) {
-            artistInfo =
-                artistInfo.copy(ifFavorite = db.artistDao.selectFavoriteById(artistId) ?: false)
-        }
-        return artistInfo
-    }
-
-    /**
      * 从远程获得艺术家描述
      */
-    override suspend fun selectArtistDescribe(artistId: String): String? {
+    override suspend fun selectArtistDescribe(artistId: String): XyArtist? {
         val item = embyApiClient.userLibraryApi()
             .getItem(userId = getUserId(), itemId = artistId)
-        return convertToArtist(item, 0).describe
+        return XyArtistInfo(convertToArtist(item, 0), null)
     }
 
     /**
@@ -1049,7 +1035,7 @@ class EmbyDatasourceServer constructor(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyArtistInfo {
+    ): List<XyArtist>? {
         val response = embyApiClient.artistsApi().getSimilarArtists(
             artistId = artistId,
             ItemRequest(

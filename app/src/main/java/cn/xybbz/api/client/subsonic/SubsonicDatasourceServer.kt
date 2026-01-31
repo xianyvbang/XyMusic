@@ -540,28 +540,47 @@ class SubsonicDatasourceServer constructor(
      * @return [List<ArtistItem>?] 艺术家信息
      */
     override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
-        val artist = subsonicApiClient.artistsApi().getArtist(artistId)
-        //专辑转换
-        artist.subsonicResponse.artist?.album?.let { albums ->
-            val albumList = convertToAlbumList(albums)
-            //存储到数据库中
-            if (albumList.isNotEmpty())
-                db.albumDao.saveBatch(
-                    albumList,
-                    dataType = MusicDataTypeEnum.ARTIST,
-                    connectionId = getConnectionId(),
-                    artistId
+        val artistInfo = super.selectArtistInfoById(artistId)
+        return artistInfo
+
+    }
+
+    /**
+     * 从远程获得艺术家描述
+     */
+    override suspend fun selectArtistDescribe(artistId: String): XyArtist? {
+        val artistInfo = try {
+            val artist = subsonicApiClient.artistsApi().getArtist(artistId)
+            //专辑转换
+            artist.subsonicResponse.artist?.album?.let { albums ->
+                val albumList = convertToAlbumList(albums)
+                //存储到数据库中
+                if (albumList.isNotEmpty())
+                    db.albumDao.saveBatch(
+                        albumList,
+                        dataType = MusicDataTypeEnum.ARTIST,
+                        connectionId = getConnectionId(),
+                        artistId
+                    )
+            }
+            artist.subsonicResponse.artist?.let {
+                convertToArtist(
+                    it,
+                    indexNumber = 0
                 )
-        }
-        val artistList = artist.subsonicResponse.artist?.let {
-            convertToArtist(
-                it,
-                indexNumber = 0
-            )
+            }
+        } catch (e: Exception) {
+            null
         }
 
-        return artistList
-
+        val artistInfoDescribe = try {
+            val response =
+                subsonicApiClient.artistsApi().getArtistInfo(id = artistId, count = 0)
+            response.subsonicResponse.artistInfo?.biography
+        } catch (e: Exception) {
+            null
+        }
+        return artistInfo.copy(describe =  artistInfoDescribe)
     }
 
     /**
@@ -869,7 +888,7 @@ class SubsonicDatasourceServer constructor(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyArtistInfo? {
+    ): List<XyArtist>? {
         val response =
             subsonicApiClient.artistsApi().getArtistInfo(id = artistId, count = pageSize)
         val artistInfo = response.subsonicResponse.artistInfo

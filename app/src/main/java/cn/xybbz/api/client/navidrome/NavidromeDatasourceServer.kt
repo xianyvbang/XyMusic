@@ -612,17 +612,11 @@ class NavidromeDatasourceServer constructor(
     }
 
     /**
-     * 根据id获得艺术家信息
-     * @param [artistId] 艺术家id
-     * @return [List<ArtistItem>?] 艺术家信息
+     * 从远程获得艺术家描述
      */
-    override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
-        var artistInfo: XyArtist? = db.artistDao.selectById(artistId)
-        if (artistInfo != null) {
-            artistInfo =
-                artistInfo.copy(ifFavorite = db.artistDao.selectFavoriteById(artistId) ?: false)
-        }
-        return artistInfo
+    override suspend fun selectArtistDescribe(artistId: String): XyArtist? {
+        val items = navidromeApiClient.artistsApi().getArtist(artistId)
+        return XyArtistInfo(items?.let { convertToArtist(it, indexNumber = 0) }, null)
     }
 
     /**
@@ -994,7 +988,7 @@ class NavidromeDatasourceServer constructor(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyArtistInfo {
+    ): List<XyArtist>? {
         val response =
             navidromeApiClient.artistsApi().getArtistInfo(id = artistId, count = pageSize)
         return XyArtistInfo(null, response.subsonicResponse.artistInfo?.similarArtist?.map {
