@@ -85,7 +85,7 @@ data class SongID3(
     /**
      * 比特率
      */
-    val bitRate: Int,
+    val bitRate: Int? = null,
     /**
      * 大小/字节(B)
      */
