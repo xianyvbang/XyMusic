@@ -87,7 +87,7 @@ fun MusicScreen(
             modifier = Modifier.statusBarsPadding(),
             title = stringResource(R.string.music),
             musicViewModel = musicViewModel,
-
+            onIfShowMusicDropdownMenu = { musicViewModel.dataSourceManager.dataSourceType?.ifShowMusicDropdownMenu == true },
             onRandomPlayerClick = {
                 coroutineScope.launch {
                     musicViewModel.musicPlayContext.randomMusic(
@@ -205,6 +205,7 @@ fun MusicSelectTopBarComponent(
     modifier: Modifier,
     title: String,
     musicViewModel: MusicViewModel,
+    onIfShowMusicDropdownMenu: () -> Boolean,
     onRandomPlayerClick: () -> Unit,
     onSelectAll: () -> Unit,
     ifOpenSelect: Boolean,
@@ -268,7 +269,8 @@ fun MusicSelectTopBarComponent(
                         contentDescription = stringResource(R.string.open_selection_function)
                     )
                 }
-                sortOrFilterContent()
+                if (onIfShowMusicDropdownMenu())
+                    sortOrFilterContent()
             }
 
 

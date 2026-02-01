@@ -953,7 +953,7 @@ class SubsonicDatasourceServer(
                     it
                 )
             },
-            totalRecordCount = pageSize,
+            totalRecordCount = 1000000,
             startIndex = startIndex
         )
     }
@@ -1224,7 +1224,20 @@ class SubsonicDatasourceServer(
         pageSize: Int,
         pageNum: Int
     ): List<XyPlayMusic>? {
-        return null
+        var selectMusicList =
+            super.getMusicList(pageSize = pageSize, pageNum = pageNum)
+        if (selectMusicList.isNullOrEmpty()) {
+            val homeMusicList = getRemoteServerMusicList(
+                pageNum * pageSize,
+                pageSize,
+                isFavorite = null,
+                sortType = null,
+                years = null,
+            )
+            selectMusicList = transitionPlayMusic(homeMusicList.items)
+
+        }
+        return selectMusicList
     }
 
     /**

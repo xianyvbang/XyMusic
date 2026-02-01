@@ -37,7 +37,7 @@ enum class DataSourceType(
     val describe: String,
     val title: String,
     val httpPort: Int,
-    val httpsPort:Int? = null,
+    val httpsPort: Int? = null,
     val ifSelectProtocolType: Boolean = false,
     val ifShow: Boolean = true,
     val options: List<String> = emptyList(),
@@ -46,6 +46,8 @@ enum class DataSourceType(
     //是否显示数量
     val ifShowCount: Boolean,
 
+    //是否在音乐页面显示筛选和排序菜单
+    val ifShowMusicDropdownMenu: Boolean = true,
     //是否音乐页面只能选单年
     val ifMusicSelectOneYear: Boolean,
     //是否音乐页面能进行排序功能
@@ -78,9 +80,7 @@ enum class DataSourceType(
     //是否需要输入需要服务端地址
     val ifInputUrl: Boolean = true,
     //是否转码的时候使用hls
-    val ifHls: Boolean = false,
-    //是否单独获取相似艺术家
-    val ifSimilarArtist: Boolean = true,
+    val ifHls: Boolean = false
 ) {
 
     JELLYFIN(
@@ -120,6 +120,7 @@ enum class DataSourceType(
         version = "1.16.0",
         ifShowCount = true,
         ifDelete = false,
+        ifShowMusicDropdownMenu = false,
         ifMusicSelectOneYear = false,
         ifMusicSort = false,
         ifMusicFavoriteFilter = false,
@@ -130,8 +131,7 @@ enum class DataSourceType(
         ifAlbumInfoSort = false,
         ifAlbumInfoFavoriteFilter = false,
         ifStartEndYear = true,
-        ifArtistFavorite = true,
-        ifSimilarArtist = false
+        ifArtistFavorite = true
     ),
 
     NAVIDROME(
@@ -181,7 +181,7 @@ enum class DataSourceType(
         ifStartEndYear = false,
         ifYearFilter = false,
         ifArtistFavorite = true,
-        ifHls =  true
+        ifHls = true
     ),
 
 
@@ -211,9 +211,8 @@ enum class DataSourceType(
     );
 
 
-
-    fun getDownloadType(): DownloadTypes{
-        return when(this){
+    fun getDownloadType(): DownloadTypes {
+        return when (this) {
             JELLYFIN -> DownloadTypes.JELLYFIN
             SUBSONIC -> DownloadTypes.SUBSONIC
             NAVIDROME -> DownloadTypes.NAVIDROME
