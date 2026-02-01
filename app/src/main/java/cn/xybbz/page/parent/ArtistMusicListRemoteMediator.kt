@@ -29,6 +29,7 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 @OptIn(ExperimentalPagingApi::class)
 class ArtistMusicListRemoteMediator(
     private val artistId: String,
+    private val artistName: String,
     private val datasourceServer: IDataSourceParentServer,
     private val db: DatabaseClient,
     private val connectionId: Long
@@ -48,7 +49,8 @@ class ArtistMusicListRemoteMediator(
         pageSize: Int
     ): XyResponse<XyMusic> {
         return datasourceServer.selectMusicListByArtistServer(
-            artistId = artistId,,
+            artistId = artistId,
+            artistName = artistName,
             pageSize = pageSize,
             startIndex = loadKey * pageSize
         )

@@ -18,7 +18,6 @@
 
 package cn.xybbz.api.client
 
-import XyArtistInfo
 import android.content.Context
 import android.util.Log
 import androidx.annotation.OptIn
@@ -107,10 +106,10 @@ class DataSourceManager(
 
     val dataSourceServerFlow = MutableStateFlow<IDataSourceParentServer?>(null)
 
-/*    private val _loginState = MutableStateFlow<LoginStateType?>(
-        null
-    )
-    val loginState = _loginState.asStateFlow()*/
+    /*    private val _loginState = MutableStateFlow<LoginStateType?>(
+            null
+        )
+        val loginState = _loginState.asStateFlow()*/
 
     /**
      * 登录状态
@@ -276,8 +275,8 @@ class DataSourceManager(
     }
 
     private fun loginStateSuccessEmit(ifTmp: Boolean) {
-        if (!ifTmp){
-            Log.i("login","发送登录成功")
+        if (!ifTmp) {
+            Log.i("login", "发送登录成功")
             scope.launch {
                 _loginStateEvent.emit(LoginStateType.SUCCESS)
             }
@@ -336,7 +335,7 @@ class DataSourceManager(
         clientLoginInfoReq: ClientLoginInfoReq,
         connectionConfig: ConnectionConfig?
     ): Flow<ClientLoginInfoState> {
-        return dataSourceServer.addClientAndLogin(clientLoginInfoReq,)
+        return dataSourceServer.addClientAndLogin(clientLoginInfoReq)
     }
 
     override suspend fun autoLogin(
@@ -555,8 +554,11 @@ class DataSourceManager(
     /**
      * 根据艺术家获得音乐列表
      */
-    override fun selectMusicListByArtistId(artistId: String): Flow<PagingData<XyMusic>> {
-        return dataSourceServer.selectMusicListByArtistId(artistId)
+    override fun selectMusicListByArtistId(
+        artistId: String,
+        artistName: String
+    ): Flow<PagingData<XyMusic>> {
+        return dataSourceServer.selectMusicListByArtistId(artistId, artistName)
     }
 
 
@@ -1102,7 +1104,7 @@ class DataSourceManager(
         pageSize: Int
     ): List<XyArtist> {
         return try {
-            dataSourceServer.getSimilarArtistsRemotely(artistId,startIndex,pageSize)
+            dataSourceServer.getSimilarArtistsRemotely(artistId, startIndex, pageSize)
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得歌手热门歌曲列表失败", e)
             null

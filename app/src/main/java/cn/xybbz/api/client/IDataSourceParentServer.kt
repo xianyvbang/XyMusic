@@ -491,10 +491,11 @@ abstract class IDataSourceParentServer(
      * 根据艺术家获得音乐列表
      */
     @OptIn(ExperimentalPagingApi::class)
-    override fun selectMusicListByArtistId(artistId: String): Flow<PagingData<XyMusic>> {
+    override fun selectMusicListByArtistId(artistId: String, artistName: String): Flow<PagingData<XyMusic>> {
         return defaultPager(
             remoteMediator = ArtistMusicListRemoteMediator(
                 artistId = artistId,
+                artistName = artistName,
                 datasourceServer = this,
                 db = db,
                 connectionId = getConnectionId()

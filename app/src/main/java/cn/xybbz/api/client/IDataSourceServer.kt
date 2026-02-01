@@ -181,7 +181,7 @@ interface IDataSourceServer : AutoCloseable {
     /**
      * 根据艺术家获得音乐列表
      */
-    fun selectMusicListByArtistId(artistId: String): Flow<PagingData<XyMusic>>
+    fun selectMusicListByArtistId(artistId: String, artistName: String): Flow<PagingData<XyMusic>>
 
 
     /**

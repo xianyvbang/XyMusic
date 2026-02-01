@@ -74,7 +74,7 @@ inline fun <reified T : NavKey> EntryProviderScope<NavKey>.nodeComposable(noinli
     }
 }
 
-val entryProvider = entryProvider{
+val entryProvider = entryProvider {
     nodeComposable<Connection> {
         ConnectionScreen(it.connectionUiType)
     }
@@ -95,7 +95,7 @@ val entryProvider = entryProvider{
         ArtistScreen()
     }
 
-    nodeComposable<AlbumInfo> {albumInfo ->
+    nodeComposable<AlbumInfo> { albumInfo ->
         AlbumInfoScreen(
             itemId = albumInfo.itemId,
             dataType = albumInfo.dataType,
@@ -118,7 +118,7 @@ val entryProvider = entryProvider{
         ConnectionManagement()
     }
 
-    nodeComposable<ConnectionInfo> {connectionInfo->
+    nodeComposable<ConnectionInfo> { connectionInfo ->
         ConnectionConfigInfoScreen(
             connectionId = connectionInfo.connectionId
         )
@@ -129,9 +129,10 @@ val entryProvider = entryProvider{
         MemoryManagementScreen()
     }
 
-    nodeComposable<ArtistInfo> {artistInfo->
+    nodeComposable<ArtistInfo> { artistInfo ->
         ArtistInfoScreen(
-            artistId = { artistInfo.artistId })
+            artistId = { artistInfo.artistId },
+            artistName = { artistInfo.artistName })
     }
 
     nodeComposable<InterfaceSetting> {
@@ -147,7 +148,7 @@ val entryProvider = entryProvider{
         GenresScreen()
     }
 
-    nodeComposable<GenreInfo> {genreInfo->
+    nodeComposable<GenreInfo> { genreInfo ->
         GenresInfoScreen(
             genreId = genreInfo.genreId
         )
@@ -161,7 +162,7 @@ val entryProvider = entryProvider{
         CacheLimitScreen()
     }
 
-    nodeComposable<SelectLibrary> {selectLibrary->
+    nodeComposable<SelectLibrary> { selectLibrary ->
         SelectLibraryScreen(
             connectionId = selectLibrary.connectionId,
             thisLibraryId = selectLibrary.libraryId

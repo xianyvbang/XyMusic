@@ -46,6 +46,7 @@ import kotlinx.coroutines.launch
 @HiltViewModel(assistedFactory = ArtistInfoViewModel.Factory::class)
 class ArtistInfoViewModel @AssistedInject constructor(
     @Assisted private val artistId: String,
+    @Assisted private val artistName: String,
     val dataSourceManager: DataSourceManager,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicController,
@@ -56,7 +57,7 @@ class ArtistInfoViewModel @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(artistId: String): ArtistInfoViewModel
+        fun create(artistId: String, artistName: String): ArtistInfoViewModel
     }
 
     val downloadMusicIdsFlow =
@@ -92,7 +93,8 @@ class ArtistInfoViewModel @AssistedInject constructor(
     val musicList =
         dataSourceManager.loginStateEvent
             .flatMapLatest {
-                dataSourceManager.selectMusicListByArtistId(artistId).distinctUntilChanged()
+                dataSourceManager.selectMusicListByArtistId(artistId, artistName)
+                    .distinctUntilChanged()
             }
             .cachedIn(viewModelScope)
 
@@ -137,7 +139,7 @@ class ArtistInfoViewModel @AssistedInject constructor(
 
     }
 
-    fun getSimilarArtistsRemotely(){
+    fun getSimilarArtistsRemotely() {
         viewModelScope.launch {
             val similarArtists =
                 dataSourceManager.getSimilarArtistsRemotely(artistId, 0, 12)

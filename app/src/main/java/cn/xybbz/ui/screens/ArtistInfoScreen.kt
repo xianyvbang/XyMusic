@@ -135,10 +135,12 @@ internal val DefaultImageHeight = 350.dp
 @Composable
 fun ArtistInfoScreen(
     artistId: () -> String = { "" },
+    artistName: () -> String = { "" },
     artistInfoViewModel: ArtistInfoViewModel = hiltViewModel<ArtistInfoViewModel, ArtistInfoViewModel.Factory>(
         creationCallback = { factory ->
             factory.create(
                 artistId = artistId(),
+                artistName = artistName()
             )
         }
     )
@@ -243,7 +245,7 @@ fun ArtistInfoScreen(
             modifier = Modifier.statusBarsPadding(),
             onIfDisplay = { ifOpenDescribe },
             onClose = { bool -> ifOpenDescribe = bool },
-            titleText = artistInfoViewModel.artistInfoData?.name ?: "",
+            titleText = artistName(),
             dragHandle = { BottomSheetDefaults.DragHandle(height = 2.dp) }
         ) {
             LazyColumnParentComponent(
@@ -311,7 +313,7 @@ fun ArtistInfoScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 BasicText(
-                                    text = artistInfoViewModel.artistInfoData?.name ?: "",
+                                    text = artistName(),
                                     modifier = Modifier.basicMarquee(
                                         iterations = Int.MAX_VALUE
                                     ),
@@ -427,7 +429,7 @@ fun ArtistInfoScreen(
                         ) {
 
                             BasicText(
-                                text = artistInfoViewModel.artistInfoData?.name ?: "",
+                                text = artistName(),
                                 modifier = Modifier.basicMarquee(
                                     iterations = Int.MAX_VALUE
                                 ),

@@ -140,23 +140,6 @@ class SubsonicDatasourceServer(
     }
 
     /**
-     * 获得音乐列表数据 Subsonic没办法一次性获得所有音乐
-     */
-    override fun selectMusicFlowList(
-        sortFlow: StateFlow<Sort>
-    ): Flow<PagingData<HomeMusic>> {
-        return defaultLocalPager {
-            val sort = sortFlow.value
-            val yearList = sort.yearList
-            db.musicDao.selectHomeMusicListPageByYear(
-                ifFavorite = sort.isFavorite,
-                if (yearList.isNullOrEmpty()) null else yearList[0],
-                if (yearList.isNullOrEmpty()) null else yearList[yearList.size - 1]
-            )
-        }.flow
-    }
-
-    /**
      * 搜索音乐,艺术家,专辑
      */
     override suspend fun searchAll(search: String): SearchData {
@@ -954,8 +937,24 @@ class SubsonicDatasourceServer(
         sortType: SortTypeEnum?,
         years: List<Int>?
     ): XyResponse<XyMusic> {
+        val subsonicResponse = subsonicApiClient.itemApi()
+            .search3(
+                query = "",
+                artistCount = 0,
+                albumCount = 0,
+                songCount = pageSize,
+                songOffset = startIndex
+            )
+
+
         return XyResponse(
-            items = emptyList()
+            items = subsonicResponse.subsonicResponse.searchResult3?.song?.let {
+                convertToMusicList(
+                    it
+                )
+            },
+            totalRecordCount = pageSize,
+            startIndex = startIndex
         )
     }
 
