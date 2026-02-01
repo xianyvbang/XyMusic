@@ -920,6 +920,7 @@ abstract class IDataSourceParentServer(
      */
     abstract suspend fun selectMusicListByArtistServer(
         artistId: String,
+        artistName: String,
         pageSize: Int,
         startIndex: Int
     ): XyResponse<XyMusic>

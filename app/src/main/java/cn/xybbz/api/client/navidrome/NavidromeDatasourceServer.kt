@@ -18,7 +18,6 @@
 
 package cn.xybbz.api.client.navidrome
 
-import XyArtistInfo
 import android.content.Context
 import android.util.Log
 import androidx.room.withTransaction
@@ -446,6 +445,7 @@ class NavidromeDatasourceServer constructor(
      */
     override suspend fun selectMusicListByArtistServer(
         artistId: String,
+        artistName: String,
         pageSize: Int,
         startIndex: Int
     ): XyResponse<XyMusic> {

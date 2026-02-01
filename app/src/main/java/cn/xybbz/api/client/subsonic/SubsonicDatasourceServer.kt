@@ -70,7 +70,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
 
-class SubsonicDatasourceServer constructor(
+class SubsonicDatasourceServer(
     private val db: DatabaseClient,
     private val application: Context,
     settingsManager: SettingsManager,
@@ -323,25 +323,18 @@ class SubsonicDatasourceServer constructor(
      */
     override suspend fun selectMusicListByArtistServer(
         artistId: String,
+        artistName: String,
         pageSize: Int,
         startIndex: Int
     ): XyResponse<XyMusic> {
         //获得艺术家专辑列表
-        val albumIds = db.albumDao.selectListByArtistId(artistId)
-        val musicList = mutableListOf<XyMusic>()
-        if (albumIds.isNotEmpty()) {
-            albumIds.forEach { albumId ->
-                val album = subsonicApiClient.itemApi().getAlbum(albumId)
-                album.subsonicResponse.album?.song?.let { musics ->
-                    val musicInfos = convertToMusicList(musics)
-                    musicList.addAll(musicInfos)
-                }
-
-            }
+        val album = subsonicApiClient.itemApi().getTopSongs(artistName)
+        val musicList = album.subsonicResponse.topSongs?.song?.let { musics ->
+            convertToMusicList(musics)
         }
         return XyResponse(
             items = musicList,
-            totalRecordCount = musicList.size,
+            totalRecordCount = musicList?.size ?: 0,
             startIndex = 0
         )
     }
@@ -578,10 +571,10 @@ class SubsonicDatasourceServer constructor(
                 subsonicApiClient.artistsApi().getArtistInfo(id = artistId, count = 0)
             response.subsonicResponse.artistInfo?.biography
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX,"读取艺术家描述失败",e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "读取艺术家描述失败", e)
             null
         }
-        return artistInfo?.copy(describe =  artistInfoDescribe)
+        return artistInfo?.copy(describe = artistInfoDescribe)
     }
 
     /**

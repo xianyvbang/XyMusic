@@ -48,7 +48,7 @@ data class AlbumID3  (
     /**
      * 持续时间
      */
-    val duration: Long,
+    val duration: Float,
     /**
      * 歌曲数量
      */

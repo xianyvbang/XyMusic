@@ -18,7 +18,6 @@
 
 package cn.xybbz.api.client.jellyfin
 
-import XyArtistInfo
 import android.content.Context
 import android.icu.math.BigDecimal
 import android.os.Build
@@ -397,6 +396,7 @@ class JellyfinDatasourceServer(
      */
     override suspend fun selectMusicListByArtistServer(
         artistId: String,
+        artistName: String,
         pageSize: Int,
         startIndex: Int
     ): XyResponse<XyMusic> {

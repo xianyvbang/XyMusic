@@ -48,9 +48,9 @@ class ArtistMusicListRemoteMediator(
         pageSize: Int
     ): XyResponse<XyMusic> {
         return datasourceServer.selectMusicListByArtistServer(
+            artistId = artistId,,
             pageSize = pageSize,
-            startIndex = loadKey * pageSize,
-            artistId = artistId
+            startIndex = loadKey * pageSize
         )
     }
 

@@ -18,7 +18,6 @@
 
 package cn.xybbz.api.client.plex
 
-import XyArtistInfo
 import android.content.Context
 import android.os.Build
 import android.util.Log
@@ -351,6 +350,7 @@ class PlexDatasourceServer constructor(
      */
     override suspend fun selectMusicListByArtistServer(
         artistId: String,
+        artistName: String,
         pageSize: Int,
         startIndex: Int
     ): XyResponse<XyMusic> {
