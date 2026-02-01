@@ -1039,7 +1039,7 @@ class EmbyDatasourceServer constructor(
         val response = embyApiClient.artistsApi().getSimilarArtists(
             artistId = artistId,
             ItemRequest(
-                limit = Constants.UI_LIST_PAGE,
+                limit = pageSize,
                 userId = getUserId()
             ).toMap()
         )

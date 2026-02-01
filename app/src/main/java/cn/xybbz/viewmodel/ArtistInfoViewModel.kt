@@ -124,7 +124,7 @@ class ArtistInfoViewModel @AssistedInject constructor(
     private fun getArtistInfoData() {
         viewModelScope.launch {
             val artistInfo = dataSourceManager.selectArtistInfoById(artistId)
-            if (artistInfo != null && artistInfoData != null) {
+            if (artistInfo != null && artistInfoData == null) {
                 artistInfoData = artistInfo
                 ifFavorite = artistInfo.ifFavorite
             }
@@ -134,7 +134,7 @@ class ArtistInfoViewModel @AssistedInject constructor(
 
         viewModelScope.launch {
             val artistInfo = dataSourceManager.selectServerArtistInfo(artistId)
-            if (artistInfo != null && artistInfoData != null) {
+            if (artistInfo != null && artistInfoData == null) {
                 artistInfoData = artistInfo
                 ifFavorite = artistInfo.ifFavorite
             }
@@ -142,6 +142,10 @@ class ArtistInfoViewModel @AssistedInject constructor(
                 artistDescribe = artistInfo?.describe
         }
 
+
+    }
+
+    fun getSimilarArtistsRemotely(){
         viewModelScope.launch {
             val similarArtists =
                 dataSourceManager.getSimilarArtistsRemotely(artistId, 0, 12)
