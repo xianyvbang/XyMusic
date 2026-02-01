@@ -126,7 +126,7 @@ fun ArtistScreen(
                             onItem = { artist },
                             enabled = !it
                         ) {
-                            navigator.navigate(ArtistInfo(it))
+                            navigator.navigate(ArtistInfo(it, artist.name ?: ""))
                         }
                     }
                 }

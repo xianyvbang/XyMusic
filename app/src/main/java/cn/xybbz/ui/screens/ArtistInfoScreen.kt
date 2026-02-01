@@ -92,7 +92,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
@@ -632,7 +631,12 @@ fun ArtistInfoScreen(
                                                     onItem = { artist },
                                                     enabled = true
                                                 ) {
-                                                    navigator.navigate(ArtistInfo(it))
+                                                    navigator.navigate(
+                                                        ArtistInfo(
+                                                            it,
+                                                            artist.name ?: ""
+                                                        )
+                                                    )
                                                 }
                                             }
                                             item(span = { GridItemSpan(maxLineSpan) }) {

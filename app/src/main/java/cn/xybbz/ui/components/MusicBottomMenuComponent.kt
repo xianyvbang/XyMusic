@@ -159,8 +159,8 @@ fun MusicBottomMenuComponent(
         mutableStateOf(musicBottomMenuViewModel.alarmConfig.canScheduleExactAlarm())
     }
 
-    val exactAlarmPermissionGranted =  stringResource(R.string.exact_alarm_permission_granted)
-    val exactAlarmPermissionNotGranted =  stringResource(R.string.exact_alarm_permission_not_granted)
+    val exactAlarmPermissionGranted = stringResource(R.string.exact_alarm_permission_granted)
+    val exactAlarmPermissionNotGranted = stringResource(R.string.exact_alarm_permission_not_granted)
     val addToNextPlaySuccess = stringResource(R.string.add_to_next_play_success)
     val deletePermanently = stringResource(R.string.delete_permanently)
 
@@ -184,8 +184,12 @@ fun MusicBottomMenuComponent(
         onIfShowArtistList = { ifShowArtistList },
         onSetShowArtistList = { ifShowArtistList = it },
     )
-    val favoriteMusicMap by musicBottomMenuViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
-    val downloadMusicIds by musicBottomMenuViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(emptyList())
+    val favoriteMusicMap by musicBottomMenuViewModel.favoriteSet.collectAsStateWithLifecycle(
+        emptyList()
+    )
+    val downloadMusicIds by musicBottomMenuViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
+        emptyList()
+    )
 
     bottomMenuMusicInfo.forEach { music ->
 
@@ -456,11 +460,16 @@ fun MusicBottomMenuComponent(
                                 if (artistIds.isNotEmpty()) {
                                     coroutineScope.launch {
                                         sheetState.hide()
-                                        if (artistIds.contains(",")) {
+                                        if (artistIds.size > 1) {
                                             ifShowArtistList = true
                                             musicBottomMenuViewModel.getArtistInfos(artistIds)
                                         } else {
-                                            navigator.navigate(ArtistInfo(artistIds[0]))
+                                            navigator.navigate(
+                                                ArtistInfo(
+                                                    artistIds[0],
+                                                    music.artists?.get(0) ?: ""
+                                                )
+                                            )
                                         }
                                     }.invokeOnCompletion {
                                         ifShowBottom = false
@@ -676,8 +685,8 @@ fun TimerComponent(
     )
     val coroutineScope = rememberCoroutineScope()
 
-    val customTimerClose =  stringResource(R.string.custom_timer_close)
-    val max24Hours =  stringResource(R.string.max_24_hours)
+    val customTimerClose = stringResource(R.string.custom_timer_close)
+    val max24Hours = stringResource(R.string.max_24_hours)
 
     //输入内容
     var customInputValue by remember {
@@ -1223,7 +1232,7 @@ fun ArtistItemListBottomSheet(
                 MusicArtistCardComponent(
                     onItem = { artist },
                     onRouter = {
-                        navHostController.navigate(ArtistInfo(it))
+                        navHostController.navigate(ArtistInfo(it, artist.name ?: ""))
                         coroutineScope.launch {
                             sheetState.hide()
                         }.invokeOnCompletion {

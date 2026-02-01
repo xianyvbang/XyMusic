@@ -45,8 +45,8 @@ import kotlinx.coroutines.launch
  */
 @HiltViewModel(assistedFactory = ArtistInfoViewModel.Factory::class)
 class ArtistInfoViewModel @AssistedInject constructor(
-    @Assisted private val artistId: String,
-    @Assisted private val artistName: String,
+    @Assisted("artistId") private val artistId: String,
+    @Assisted("artistName") private val artistName: String,
     val dataSourceManager: DataSourceManager,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicController,
@@ -57,7 +57,10 @@ class ArtistInfoViewModel @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(artistId: String, artistName: String): ArtistInfoViewModel
+        fun create(
+            @Assisted("artistId") artistId: String,
+            @Assisted("artistName") artistName: String
+        ): ArtistInfoViewModel
     }
 
     val downloadMusicIdsFlow =
