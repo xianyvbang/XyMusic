@@ -106,14 +106,6 @@ class ArtistInfoViewModel @AssistedInject constructor(
             }
             .cachedIn(viewModelScope)
 
-    /*@OptIn(ExperimentalCoroutinesApi::class)
-    val resemblanceArtistList =
-        dataSourceManager.loginStateEvent
-            .flatMapLatest {
-                dataSourceManager.getResemblanceArtist(artistId).distinctUntilChanged()
-            }
-            .cachedIn(viewModelScope)*/
-
     init {
         getArtistInfoData()
     }
