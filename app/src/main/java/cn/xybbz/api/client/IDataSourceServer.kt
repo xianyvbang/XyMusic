@@ -473,4 +473,9 @@ interface IDataSourceServer : AutoCloseable {
      */
     suspend fun updateLibraryId(libraryId: String?, connectionId: Long)
 
+    /**
+     * 获得数据源支持的转码类型
+     */
+    suspend fun getTranscodingType(): List<String>
+
 }
