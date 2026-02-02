@@ -236,6 +236,12 @@ class SettingsManager(
                 db.settingsDao.save(XySettings(ifHandleAudioFocus = ifHandleAudioFocus))
             settings = get().copy(id = settingId)
         }
+
+        for (listener in onSettingsChangeListeners.toList()) {
+            listener.onHandleAudioFocusChanged(
+                ifHandleAudioFocus
+            )
+        }
     }
 
     /**

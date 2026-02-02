@@ -53,6 +53,7 @@ import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.media.MediaServer
+import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import com.google.common.collect.ImmutableList
@@ -132,11 +133,21 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
         }
 
 //        AudioAttributes.DEFAULT.audioAttributesV21
+
+        settingsManager.setOnListener(object : OnSettingsChangeListener {
+            override fun onHandleAudioFocusChanged(ifHandleAudioFocus: Boolean) {
+                exoPlayer?.setAudioAttributes(
+                    AudioAttributes.DEFAULT,
+                    !ifHandleAudioFocus
+                )
+            }
+        })
+
         // 创建ExoPlayer
         exoPlayer = exoPlayerBuilder
             .setAudioAttributes(
                 AudioAttributes.DEFAULT, /* handleAudioFocus= */
-                settingsManager.get().ifHandleAudioFocus
+                !settingsManager.get().ifHandleAudioFocus
             )
             .setAudioOutputProvider(object : ForwardingAudioOutputProvider(defaultProvider) {
                 override fun getAudioOutput(config: AudioOutputProvider.OutputConfig): AudioOutput {
