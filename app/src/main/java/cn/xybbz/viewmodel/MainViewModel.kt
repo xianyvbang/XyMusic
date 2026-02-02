@@ -408,6 +408,8 @@ class MainViewModel @Inject constructor(
                         newMusicList,
                         musicPlayContext.musicPlayData?.onMusicPlayParameter?.artistId
                     )
+            }else {
+                musicController.updateIfNextPage(false)
             }
         }.invokeOnCompletion { ifNextPageNumList = false }
     }
