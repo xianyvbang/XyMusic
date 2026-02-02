@@ -31,6 +31,10 @@ data class XySettings(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     /**
+     * 是否开启边下边播
+     */
+    val ifEnableEdgeDownload: Boolean = true,
+    /**
      * 缓存上限
      */
     val cacheUpperLimit: CacheUpperLimitEnum = CacheUpperLimitEnum.Auto,

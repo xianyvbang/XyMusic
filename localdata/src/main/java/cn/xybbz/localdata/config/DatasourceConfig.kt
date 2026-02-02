@@ -47,6 +47,7 @@ class DatasourceConfig {
         Migration_17_18,
         Migration_18_19,
         Migration_19_20,
+        Migration_20_21,
     )
 
     fun createDatabaseClient(context: Context): DatabaseClient {

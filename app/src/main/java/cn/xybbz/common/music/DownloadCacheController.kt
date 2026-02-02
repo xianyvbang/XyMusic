@@ -190,7 +190,7 @@ class DownloadCacheController(
         music: XyPlayMusic,
         ifStatic: Boolean
     ) {
-        if (settingsManager.get().cacheUpperLimit == CacheUpperLimitEnum.No) return
+        if (settingsManager.get().cacheUpperLimit == CacheUpperLimitEnum.No || !settingsManager.get().ifEnableEdgeDownload) return
 
         val itemId = getCacheKey(music.itemId)
         val url = music.getMusicUrl()
