@@ -21,6 +21,7 @@ package cn.xybbz.api.client
 import androidx.paging.PagingData
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
+import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.constants.Constants
@@ -476,6 +477,6 @@ interface IDataSourceServer : AutoCloseable {
     /**
      * 获得数据源支持的转码类型
      */
-    suspend fun getTranscodingType(): List<String>
+    suspend fun getTranscodingType(): List<TranscodingInfo>
 
 }

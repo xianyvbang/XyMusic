@@ -30,6 +30,7 @@ import cn.xybbz.api.client.jellyfin.data.ItemRequest
 import cn.xybbz.api.client.jellyfin.data.ItemResponse
 import cn.xybbz.api.client.jellyfin.data.PlaybackStartInfo
 import cn.xybbz.api.client.jellyfin.data.ViewRequest
+import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.BaseItemKind
@@ -72,7 +73,7 @@ import kotlinx.coroutines.supervisorScope
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
 
-class EmbyDatasourceServer constructor(
+class EmbyDatasourceServer(
     private val db: DatabaseClient,
     private val application: Context,
     settingsManager: SettingsManager,
@@ -623,7 +624,7 @@ class EmbyDatasourceServer constructor(
     /**
      * 从远程获得艺术家描述
      */
-    override suspend fun selectServerArtistInfo(artistId: String): XyArtist? {
+    override suspend fun selectServerArtistInfo(artistId: String): XyArtist {
         val item = embyApiClient.userLibraryApi()
             .getItem(userId = getUserId(), itemId = artistId)
         return convertToArtist(item, 0)
@@ -1035,7 +1036,7 @@ class EmbyDatasourceServer constructor(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): List<XyArtist>? {
+    ): List<XyArtist> {
         val response = embyApiClient.artistsApi().getSimilarArtists(
             artistId = artistId,
             ItemRequest(
@@ -1044,6 +1045,13 @@ class EmbyDatasourceServer constructor(
             ).toMap()
         )
         return convertToArtistList(response.items)
+    }
+
+    /**
+     * 获得数据源支持的转码类型
+     */
+    override suspend fun getTranscodingType(): List<TranscodingInfo> {
+        return emptyList()
     }
 
     /**

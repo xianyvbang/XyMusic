@@ -30,6 +30,7 @@ import cn.xybbz.api.client.navidrome.data.PlaylistAddMusicsUpdateRequest
 import cn.xybbz.api.client.navidrome.data.PlaylistItemData
 import cn.xybbz.api.client.navidrome.data.PlaylistUpdateRequest
 import cn.xybbz.api.client.navidrome.data.SongItem
+import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.client.navidrome.data.getWithTotalCount
 import cn.xybbz.api.client.subsonic.data.ArtistID3
 import cn.xybbz.api.client.subsonic.data.ScrobbleRequest
@@ -69,7 +70,7 @@ import kotlinx.coroutines.supervisorScope
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
 
-class NavidromeDatasourceServer constructor(
+class NavidromeDatasourceServer(
     private val db: DatabaseClient,
     application: Context,
     settingsManager: SettingsManager,
@@ -997,6 +998,14 @@ class NavidromeDatasourceServer constructor(
                 indexNumber = 0
             )
         }
+    }
+
+    /**
+     * 获得数据源支持的转码类型
+     */
+    override suspend fun getTranscodingType(): List<TranscodingInfo> {
+        val response = getWithTotalCount { navidromeApiClient.userApi().getTranscodingInfo() }
+        return response.data ?:emptyList()
     }
 
     /**

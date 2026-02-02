@@ -27,6 +27,7 @@ import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
 import cn.xybbz.api.client.data.XyResponse
+import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.client.plex.data.Directory
 import cn.xybbz.api.client.plex.data.Metadatum
 import cn.xybbz.api.client.plex.data.PlaylistMetadatum
@@ -71,7 +72,7 @@ import java.net.SocketTimeoutException
 import java.time.ZoneOffset
 import java.util.UUID
 
-class PlexDatasourceServer constructor(
+class PlexDatasourceServer(
     private val db: DatabaseClient,
     private val application: Context,
     settingsManager: SettingsManager,
@@ -1448,6 +1449,13 @@ class PlexDatasourceServer constructor(
     ): List<XyArtist>? {
         val similarItem = plexApiClient.userLibraryApi().similarItem(artistId, pageSize)
         return similarItem.mediaContainer?.metadata?.let { convertToArtistList(it) }
+    }
+
+    /**
+     * 获得数据源支持的转码类型
+     */
+    override suspend fun getTranscodingType(): List<TranscodingInfo> {
+        return emptyList()
     }
 
     /**

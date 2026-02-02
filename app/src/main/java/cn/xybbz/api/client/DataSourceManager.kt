@@ -31,6 +31,7 @@ import androidx.room.Transaction
 import cn.xybbz.R
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
+import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.client.version.VersionApiClient
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.events.ReLoginEvent
@@ -180,7 +181,7 @@ class DataSourceManager(
             loginStatus = loginState
             //                ifLoginError = false
             val loginSateInfo = getLoginSateInfo(loginState, false)
-            Log.i("error", "${loginSateInfo}")
+            Log.i("error", "$loginSateInfo")
             errorHint = loginSateInfo.errorHint ?: R.string.empty_info
             errorMessage = loginSateInfo.errorMessage ?: ""
             ifLoginError = loginSateInfo.isError
@@ -775,7 +776,7 @@ class DataSourceManager(
     /**
      * 获得艺术家信息
      */
-    override suspend fun selectArtistInfoByIds(artistIds: List<String>): List<XyArtist>? {
+    override suspend fun selectArtistInfoByIds(artistIds: List<String>): List<XyArtist> {
         return dataSourceServer.selectArtistInfoByIds(artistIds)
     }
 
@@ -1152,6 +1153,18 @@ class DataSourceManager(
      */
     override suspend fun updateLibraryId(libraryId: String?, connectionId: Long) {
         return dataSourceServer.updateLibraryId(libraryId, connectionId)
+    }
+
+    /**
+     * 获得数据源支持的转码类型
+     */
+    override suspend fun getTranscodingType(): List<TranscodingInfo> {
+        return try {
+            dataSourceServer.getTranscodingType()
+        }catch (e: Exception){
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取转码类型失败", e)
+            emptyList()
+        }
     }
 
     /**

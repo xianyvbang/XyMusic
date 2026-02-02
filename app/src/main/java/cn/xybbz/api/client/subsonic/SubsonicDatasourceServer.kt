@@ -21,11 +21,11 @@ package cn.xybbz.api.client.subsonic
 import android.content.Context
 import android.util.Log
 import androidx.paging.ExperimentalPagingApi
-import androidx.paging.PagingData
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.XyResponse
+import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.client.subsonic.data.AlbumID3
 import cn.xybbz.api.client.subsonic.data.ArtistID3
 import cn.xybbz.api.client.subsonic.data.GenreID3
@@ -51,23 +51,18 @@ import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchData
-import cn.xybbz.entity.data.Sort
 import cn.xybbz.entity.data.ext.toXyMusic
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
-import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import cn.xybbz.page.defaultLocalPager
 import convertToArtist
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
 
 class SubsonicDatasourceServer(
@@ -545,7 +540,7 @@ class SubsonicDatasourceServer(
                 )
             }
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获取艺术家: ${artistId} 信息失败", e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取艺术家: $artistId 信息失败", e)
             null
         }
 
@@ -875,6 +870,13 @@ class SubsonicDatasourceServer(
                 indexNumber = 0
             )
         }
+    }
+
+    /**
+     * 获得数据源支持的转码类型
+     */
+    override suspend fun getTranscodingType(): List<TranscodingInfo> {
+        return emptyList()
     }
 
     /**

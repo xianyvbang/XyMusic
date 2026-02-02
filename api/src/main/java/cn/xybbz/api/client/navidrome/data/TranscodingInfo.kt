@@ -16,29 +16,12 @@
  *
  */
 
-package cn.xybbz.api.enums
+package cn.xybbz.api.client.navidrome.data
 
-enum class AudioCodecEnum(
-    val audioCodec: String,
-    val ifShow: Boolean = true,
-    val defaultBitRate: Int = 192000
-) {
-
-    AAC("aac"),
-    MP3("mp3"),
-    ROW("raw", false);
-
-    override fun toString(): String {
-        return audioCodec
-    }
-
-    companion object {
-        fun getAudioCodec(audioCodec: String): AudioCodecEnum {
-            return when (audioCodec) {
-                "aac" -> AAC
-                "mp3" -> MP3
-                else -> ROW
-            }
-        }
-    }
-}
+data class TranscodingInfo(
+    val command:String,
+    val defaultBitRate:Int,
+    val id:String,
+    val name:String,
+    val targetFormat:String
+)
