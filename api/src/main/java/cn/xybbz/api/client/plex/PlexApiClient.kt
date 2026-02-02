@@ -196,15 +196,15 @@ class PlexApiClient : DefaultParentApiClient() {
      * 获得请求头Map
      */
     public override fun getHeadersMapData(): Map<String, String> {
-        val headerMap = mutableMapOf<String, String>()
-        headerMap.put(ApiConstants.PLEX_CLIENT_IDENTIFIER, clientId.encodeUrlParameter())
-        headerMap.put(ApiConstants.PLEX_PRODUCT, clientName.encodeUrlParameter())
-        headerMap.put(ApiConstants.PLEX_VERSION, clientVersion.encodeUrlParameter())
-        headerMap.put(ApiConstants.PLEX_PLATFORM, "Android")
-        headerMap.put(ApiConstants.PLEX_PROVIDES, "player")
-        headerMap.put(ApiConstants.PLEX_DEVICE_NAME, deviceName.encodeUrlParameter())
-        headerMap.put(ApiConstants.PLEX_DEVICE, deviceModel.encodeUrlParameter())
-        return headerMap
+        return mapOf(
+            ApiConstants.PLEX_CLIENT_IDENTIFIER to clientId.encodeUrlParameter(),
+            ApiConstants.PLEX_PRODUCT to clientName.encodeUrlParameter(),
+            ApiConstants.PLEX_VERSION to clientVersion.encodeUrlParameter(),
+            ApiConstants.PLEX_PLATFORM to "Android",
+            ApiConstants.PLEX_PROVIDES to "player",
+            ApiConstants.PLEX_DEVICE_NAME to deviceName.encodeUrlParameter(),
+            ApiConstants.PLEX_DEVICE to deviceModel.encodeUrlParameter(),
+        )
     }
 
     /**

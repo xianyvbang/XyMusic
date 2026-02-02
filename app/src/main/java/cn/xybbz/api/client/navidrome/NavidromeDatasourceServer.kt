@@ -30,7 +30,9 @@ import cn.xybbz.api.client.navidrome.data.PlaylistAddMusicsUpdateRequest
 import cn.xybbz.api.client.navidrome.data.PlaylistItemData
 import cn.xybbz.api.client.navidrome.data.PlaylistUpdateRequest
 import cn.xybbz.api.client.navidrome.data.SongItem
+import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.client.navidrome.data.getWithTotalCount
+import cn.xybbz.api.client.subsonic.data.ArtistID3
 import cn.xybbz.api.client.subsonic.data.ScrobbleRequest
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
@@ -50,7 +52,6 @@ import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.NavidromeOrder
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.ext.joinToString
-import cn.xybbz.entity.data.ext.toArtists
 import cn.xybbz.entity.data.ext.toXyMusic
 import cn.xybbz.entity.data.toNavidromeOrder
 import cn.xybbz.entity.data.toNavidromeOrder2
@@ -63,13 +64,13 @@ import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import convertToArtist
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
-import javax.inject.Inject
 
-class NavidromeDatasourceServer @Inject constructor(
+class NavidromeDatasourceServer(
     private val db: DatabaseClient,
     application: Context,
     settingsManager: SettingsManager,
@@ -140,7 +141,7 @@ class NavidromeDatasourceServer @Inject constructor(
     }
 
     /**
-     * 根据艺术家id获得专辑列表
+     * 根据艺术家id获得艺术家列表
      */
     override suspend fun selectArtistsByIds(artistIds: List<String>): List<XyArtist> {
         return artistIds.mapNotNull { artistId ->
@@ -445,6 +446,7 @@ class NavidromeDatasourceServer @Inject constructor(
      */
     override suspend fun selectMusicListByArtistServer(
         artistId: String,
+        artistName: String,
         pageSize: Int,
         startIndex: Int
     ): XyResponse<XyMusic> {
@@ -611,19 +613,17 @@ class NavidromeDatasourceServer @Inject constructor(
     }
 
     /**
-     * 根据id获得艺术家信息
-     * @param [artistId] 艺术家id
-     * @return [List<ArtistItem>?] 艺术家信息
+     * 从远程获得艺术家描述
      */
-    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist? {
-        val artist = navidromeApiClient.artistsApi().getArtist(artistId)
-        return artist?.let { convertToArtist(it, indexNumber = 0) }
+    override suspend fun selectServerArtistInfo(artistId: String): XyArtist? {
+        val items = navidromeApiClient.artistsApi().getArtist(artistId)
+        return items?.let { convertToArtist(it, indexNumber = 0) }
     }
 
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibrary() {
+    override suspend fun selectMediaLibrary(connectionId: Long) {
 
     }
 
@@ -989,10 +989,23 @@ class NavidromeDatasourceServer @Inject constructor(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyResponse<XyArtist> {
+    ): List<XyArtist>? {
         val response =
             navidromeApiClient.artistsApi().getArtistInfo(id = artistId, count = pageSize)
-        return response.subsonicResponse.toArtists(getConnectionId())
+        return response.subsonicResponse.artistInfo?.similarArtist?.map {
+            convertToArtist(
+                artistId3 = it,
+                indexNumber = 0
+            )
+        }
+    }
+
+    /**
+     * 获得数据源支持的转码类型
+     */
+    override suspend fun getTranscodingType(): List<TranscodingInfo> {
+        val response = getWithTotalCount { navidromeApiClient.userApi().getTranscodingInfo() }
+        return response.data ?:emptyList()
     }
 
     /**
@@ -1301,6 +1314,33 @@ class NavidromeDatasourceServer @Inject constructor(
             selectChat = selectChat,
             ifFavorite = artist.starred ?: false,
             indexNumber = indexNumber
+        )
+    }
+
+
+    /**
+     * 将ArtistID3转换成XyArtist
+     */
+    fun convertToArtist(
+        artistId3: ArtistID3,
+        index: String? = null,
+        indexNumber: Int,
+    ): XyArtist {
+
+        return artistId3.convertToArtist(
+            pic = if (artistId3.coverArt.isNullOrBlank()) null else artistId3.coverArt?.let { coverArt ->
+                navidromeApiClient.getImageUrl(
+                    coverArt
+                )
+            },
+            backdrop = if (artistId3.coverArt.isNullOrBlank()) null else artistId3.coverArt?.let { coverArt ->
+                navidromeApiClient.getImageUrl(
+                    coverArt
+                )
+            },
+            index = index,
+            indexNumber = indexNumber,
+            connectionId = getConnectionId()
         )
     }
 

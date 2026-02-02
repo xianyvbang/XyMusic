@@ -129,23 +129,21 @@ class NavidromeApiClient : DefaultParentApiClient() {
      * 获得校验参数组成的Map
      */
     public override fun getQueryMapData(): Map<String, String> {
-        val queryMao = mutableMapOf<String, String>()
-        queryMao.put("u", username)
-        queryMao.put("t", subsonicToken)
-        queryMao.put("s", subsonicSalt)
-        queryMao.put("v", subsonicProtocolVersion)
-        queryMao.put("c", subsonicClientName)
-        queryMao.put("f", subsonicResponseFormat)
-        return queryMao
+        return mapOf(
+            "u" to username,
+            "t" to subsonicToken,
+            "s" to subsonicSalt,
+            "v" to subsonicProtocolVersion,
+            "c" to subsonicClientName,
+            "f" to subsonicResponseFormat,
+        )
     }
 
     /**
      * 获得请求头Map
      */
     public override fun getHeadersMapData(): Map<String, String> {
-        val headerMap = mutableMapOf<String, String>()
-        headerMap.put(ApiConstants.NAVIDROME_HEADER, id)
-        return headerMap
+        return mapOf(ApiConstants.NAVIDROME_HEADER to id)
     }
 
     /**

@@ -309,7 +309,7 @@ fun SearchResultScreen(
                             MusicArtistCardComponent(
                                 onItem = { artist },
                                 onRouter = {
-                                    navigator.navigate(ArtistInfo(it))
+                                    navigator.navigate(ArtistInfo(it, artist.name ?: ""))
                                 }
                             )
                         }

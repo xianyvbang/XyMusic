@@ -21,6 +21,7 @@ package cn.xybbz.api.client
 import androidx.paging.PagingData
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
+import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.constants.Constants
@@ -59,7 +60,10 @@ interface IDataSourceServer : AutoCloseable {
     /**
      * 用户登录逻辑
      */
-    suspend fun addClientAndLogin(clientLoginInfoReq: ClientLoginInfoReq): Flow<ClientLoginInfoState>?
+    suspend fun addClientAndLogin(
+        clientLoginInfoReq: ClientLoginInfoReq,
+        connectionConfig: ConnectionConfig? = null
+    ): Flow<ClientLoginInfoState>?
 
     /**
      * 自动登录
@@ -178,7 +182,7 @@ interface IDataSourceServer : AutoCloseable {
     /**
      * 根据艺术家获得音乐列表
      */
-    fun selectMusicListByArtistId(artistId: String): Flow<PagingData<XyMusic>>
+    fun selectMusicListByArtistId(artistId: String, artistName: String): Flow<PagingData<XyMusic>>
 
 
     /**
@@ -250,23 +254,22 @@ interface IDataSourceServer : AutoCloseable {
     /**
      * 初始化收藏数据
      */
-    suspend fun initFavoriteData()
+    suspend fun initFavoriteData(connectionId: Long)
+
     /**
      * 根据id获得艺术家信息
-     * @param [artistId] 艺术家id
-     * @return [List<ArtistItem>?] 艺术家信息
      */
     suspend fun selectArtistInfoById(artistId: String): XyArtist?
 
     /**
-     * 从远程获得艺术家信息
+     * 从远程获得艺术家描述
      */
-    suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist?
+    suspend fun selectServerArtistInfo(artistId: String): XyArtist?
 
     /**
      * 获得媒体库列表
      */
-    suspend fun selectMediaLibrary()
+    suspend fun selectMediaLibrary(connectionId: Long)
 
     /**
      * 获得最近播放音乐或专辑
@@ -433,10 +436,13 @@ interface IDataSourceServer : AutoCloseable {
     ): List<XyMusicExtend>?
 
     /**
-     * 获得相似歌手列表
+     * 远程获得相似艺术家
      */
-    fun getResemblanceArtist(artistId: String): Flow<PagingData<XyArtist>>
-
+    suspend fun getSimilarArtistsRemotely(
+        artistId: String,
+        startIndex: Int,
+        pageSize: Int
+    ): List<XyArtist>?
 
     /**
      * 获得连接设置
@@ -467,5 +473,10 @@ interface IDataSourceServer : AutoCloseable {
      * 更新媒体库id
      */
     suspend fun updateLibraryId(libraryId: String?, connectionId: Long)
+
+    /**
+     * 获得数据源支持的转码类型
+     */
+    suspend fun getTranscodingType(): List<TranscodingInfo>
 
 }

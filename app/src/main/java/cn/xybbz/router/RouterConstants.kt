@@ -111,7 +111,8 @@ data object ConnectionManagement : RouterConstants()
 @Serializable
 @SerialName("ArtistInfo")
 data class ArtistInfo(
-    val artistId: String
+    val artistId: String,
+    val artistName:String
 ) : RouterConstants()
 
 /**

@@ -126,6 +126,22 @@ class SettingsManager(
     }
 
     /**
+     * 设置是否开启边下边播
+     */
+    suspend fun setIfEnableEdgeDownload(ifEnableEdgeDownload: Boolean) {
+        settings = get().copy(ifEnableEdgeDownload = ifEnableEdgeDownload)
+        if (get().id != AllDataEnum.All.code) {
+            db.settingsDao.update(
+                get()
+            )
+        } else {
+            val settingId =
+                db.settingsDao.save(XySettings(ifEnableEdgeDownload = ifEnableEdgeDownload))
+            settings = get().copy(id = settingId)
+        }
+    }
+
+    /**
      * 设置缓存上限
      */
     suspend fun setCacheUpperLimit(cacheUpperLimit: CacheUpperLimitEnum) {
@@ -235,6 +251,12 @@ class SettingsManager(
             val settingId =
                 db.settingsDao.save(XySettings(ifHandleAudioFocus = ifHandleAudioFocus))
             settings = get().copy(id = settingId)
+        }
+
+        for (listener in onSettingsChangeListeners.toList()) {
+            listener.onHandleAudioFocusChanged(
+                ifHandleAudioFocus
+            )
         }
     }
 

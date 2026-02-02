@@ -31,6 +31,7 @@ import androidx.room.Transaction
 import cn.xybbz.R
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
+import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.client.version.VersionApiClient
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.events.ReLoginEvent
@@ -68,11 +69,11 @@ import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
 import javax.inject.Provider
@@ -106,10 +107,19 @@ class DataSourceManager(
 
     val dataSourceServerFlow = MutableStateFlow<IDataSourceParentServer?>(null)
 
-    private val _loginState = MutableStateFlow<LoginStateType?>(
-        null
+    /*    private val _loginState = MutableStateFlow<LoginStateType?>(
+            null
+        )
+        val loginState = _loginState.asStateFlow()*/
+
+    /**
+     * 登录状态
+     */
+    private val _loginStateEvent = MutableSharedFlow<LoginStateType>(
+        replay = 1,
+        extraBufferCapacity = 1
     )
-    private val loginState = _loginState.asStateFlow()
+    val loginStateEvent = _loginStateEvent.asSharedFlow()
 
 
     //加载状态
@@ -171,7 +181,7 @@ class DataSourceManager(
             loginStatus = loginState
             //                ifLoginError = false
             val loginSateInfo = getLoginSateInfo(loginState, false)
-            Log.i("error", "${loginSateInfo}")
+            Log.i("error", "$loginSateInfo")
             errorHint = loginSateInfo.errorHint ?: R.string.empty_info
             errorMessage = loginSateInfo.errorMessage ?: ""
             ifLoginError = loginSateInfo.isError
@@ -259,17 +269,20 @@ class DataSourceManager(
 
     private fun loginStateErrorEmit(ifTmp: Boolean) {
         if (!ifTmp) {
-            _loginState.tryEmit(LoginStateType.FAILURE)
+            scope.launch {
+                _loginStateEvent.emit(LoginStateType.FAILURE)
+            }
         }
     }
 
     private fun loginStateSuccessEmit(ifTmp: Boolean) {
-        if (!ifTmp)
-            _loginState.tryEmit(LoginStateType.SUCCESS)
-    }
+        if (!ifTmp) {
+            Log.i("login", "发送登录成功")
+            scope.launch {
+                _loginStateEvent.emit(LoginStateType.SUCCESS)
+            }
+        }
 
-    fun getLoginStateFlow(): Flow<LoginStateType> {
-        return loginState.filterNotNull().distinctUntilChanged()
     }
 
     /**
@@ -319,7 +332,10 @@ class DataSourceManager(
     /**
      * 绑定地址
      */
-    override suspend fun addClientAndLogin(clientLoginInfoReq: ClientLoginInfoReq): Flow<ClientLoginInfoState> {
+    override suspend fun addClientAndLogin(
+        clientLoginInfoReq: ClientLoginInfoReq,
+        connectionConfig: ConnectionConfig?
+    ): Flow<ClientLoginInfoState> {
         return dataSourceServer.addClientAndLogin(clientLoginInfoReq)
     }
 
@@ -539,8 +555,11 @@ class DataSourceManager(
     /**
      * 根据艺术家获得音乐列表
      */
-    override fun selectMusicListByArtistId(artistId: String): Flow<PagingData<XyMusic>> {
-        return dataSourceServer.selectMusicListByArtistId(artistId)
+    override fun selectMusicListByArtistId(
+        artistId: String,
+        artistName: String
+    ): Flow<PagingData<XyMusic>> {
+        return dataSourceServer.selectMusicListByArtistId(artistId, artistName)
     }
 
 
@@ -677,7 +696,6 @@ class DataSourceManager(
      * 保存自建歌单中的音乐
      * @param [playlistId] 歌单id
      * @param [musicIds] 音乐id
-     * @param [pic] 照片
      */
     override suspend fun saveMusicPlaylist(
         playlistId: String,
@@ -725,9 +743,9 @@ class DataSourceManager(
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibrary() {
+    override suspend fun selectMediaLibrary(connectionId: Long) {
         try {
-            dataSourceServer.selectMediaLibrary()
+            dataSourceServer.selectMediaLibrary(connectionId)
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得媒体库列表失败", e)
         }
@@ -758,39 +776,37 @@ class DataSourceManager(
     /**
      * 获得艺术家信息
      */
-    override suspend fun selectArtistInfoByIds(artistIds: List<String>): List<XyArtist>? {
+    override suspend fun selectArtistInfoByIds(artistIds: List<String>): List<XyArtist> {
         return dataSourceServer.selectArtistInfoByIds(artistIds)
     }
 
     /**
      * 初始化收藏数据
      */
-    override suspend fun initFavoriteData() {
-        return dataSourceServer.initFavoriteData()
+    override suspend fun initFavoriteData(connectionId: Long) {
+        return dataSourceServer.initFavoriteData(connectionId)
     }
 
     /**
-     * 根据id获得艺术家信息
-     * @param [artistId] 艺术家id
-     * @return [List<ArtistItem>?] 艺术家信息
+     * 获得艺术家信息
      */
     override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
         return try {
             dataSourceServer.selectArtistInfoById(artistId)
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "根据id获得艺术家信息失败", e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "根据id从远程获得艺术家信息失败", e)
             null
         }
     }
 
     /**
-     * 从远程获得艺术家信息
+     * 从远程获得艺术家描述
      */
-    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist? {
+    override suspend fun selectServerArtistInfo(artistId: String): XyArtist? {
         return try {
-            dataSourceServer.selectArtistInfoByRemotely(artistId)
+            dataSourceServer.selectServerArtistInfo(artistId)
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "根据id从远程获得艺术家信息失败", e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "根据id从远程获得艺术家描述失败", e)
             null
         }
     }
@@ -1081,11 +1097,21 @@ class DataSourceManager(
     }
 
     /**
-     * 获得相似歌手列表
+     * 远程获得相似艺术家
      */
-    override fun getResemblanceArtist(artistId: String): Flow<PagingData<XyArtist>> {
-        return dataSourceServer.getResemblanceArtist(artistId)
+    override suspend fun getSimilarArtistsRemotely(
+        artistId: String,
+        startIndex: Int,
+        pageSize: Int
+    ): List<XyArtist> {
+        return try {
+            dataSourceServer.getSimilarArtistsRemotely(artistId, startIndex, pageSize)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得歌手热门歌曲列表失败", e)
+            null
+        } ?: emptyList()
     }
+
 
     /**
      * 获得连接设置
@@ -1127,6 +1153,18 @@ class DataSourceManager(
      */
     override suspend fun updateLibraryId(libraryId: String?, connectionId: Long) {
         return dataSourceServer.updateLibraryId(libraryId, connectionId)
+    }
+
+    /**
+     * 获得数据源支持的转码类型
+     */
+    override suspend fun getTranscodingType(): List<TranscodingInfo> {
+        return try {
+            dataSourceServer.getTranscodingType()
+        }catch (e: Exception){
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取转码类型失败", e)
+            emptyList()
+        }
     }
 
     /**

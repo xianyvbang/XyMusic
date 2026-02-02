@@ -24,5 +24,7 @@ interface OnSettingsChangeListener {
     fun onCacheMaxBytesChanged(
         cacheUpperLimit: CacheUpperLimitEnum,
         oldCacheUpperLimit: CacheUpperLimitEnum
-    )
+    ){}
+
+    fun onHandleAudioFocusChanged(ifHandleAudioFocus: Boolean){}
 }

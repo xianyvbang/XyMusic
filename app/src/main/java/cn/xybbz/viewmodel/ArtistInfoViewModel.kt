@@ -45,7 +45,8 @@ import kotlinx.coroutines.launch
  */
 @HiltViewModel(assistedFactory = ArtistInfoViewModel.Factory::class)
 class ArtistInfoViewModel @AssistedInject constructor(
-    @Assisted private val artistId: String,
+    @Assisted("artistId") private val artistId: String,
+    @Assisted("artistName") private val artistName: String,
     val dataSourceManager: DataSourceManager,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicController,
@@ -56,7 +57,10 @@ class ArtistInfoViewModel @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(artistId: String): ArtistInfoViewModel
+        fun create(
+            @Assisted("artistId") artistId: String,
+            @Assisted("artistName") artistName: String
+        ): ArtistInfoViewModel
     }
 
     val downloadMusicIdsFlow =
@@ -76,6 +80,12 @@ class ArtistInfoViewModel @AssistedInject constructor(
         private set
 
     /**
+     * 相似艺术家
+     */
+    var resemblanceArtistList by mutableStateOf<List<XyArtist>>(emptyList())
+        private set
+
+    /**
      * 是否收藏
      */
     var ifFavorite by mutableStateOf(false)
@@ -84,9 +94,10 @@ class ArtistInfoViewModel @AssistedInject constructor(
     //艺术家的音乐列表
     @OptIn(ExperimentalCoroutinesApi::class)
     val musicList =
-        dataSourceManager.getLoginStateFlow()
+        dataSourceManager.loginStateEvent
             .flatMapLatest {
-                dataSourceManager.selectMusicListByArtistId(artistId).distinctUntilChanged()
+                dataSourceManager.selectMusicListByArtistId(artistId, artistName)
+                    .distinctUntilChanged()
             }
             .cachedIn(viewModelScope)
 
@@ -94,17 +105,9 @@ class ArtistInfoViewModel @AssistedInject constructor(
     //艺术家的专辑列表
     @OptIn(ExperimentalCoroutinesApi::class)
     val albumList =
-        dataSourceManager.getLoginStateFlow()
+        dataSourceManager.loginStateEvent
             .flatMapLatest {
                 dataSourceManager.selectAlbumListByArtistId(artistId).distinctUntilChanged()
-            }
-            .cachedIn(viewModelScope)
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val resemblanceArtistList =
-        dataSourceManager.getLoginStateFlow()
-            .flatMapLatest {
-                dataSourceManager.getResemblanceArtist(artistId).distinctUntilChanged()
             }
             .cachedIn(viewModelScope)
 
@@ -117,14 +120,33 @@ class ArtistInfoViewModel @AssistedInject constructor(
      */
     private fun getArtistInfoData() {
         viewModelScope.launch {
-            val artistInfoTmp = dataSourceManager.selectArtistInfoById(artistId)
-            if (artistInfoTmp != null) {
-                artistInfoData = artistInfoTmp
-                ifFavorite = artistInfoTmp.ifFavorite
+            val artistInfo = dataSourceManager.selectArtistInfoById(artistId)
+            if (artistInfo != null && artistInfoData == null) {
+                artistInfoData = artistInfo
+                ifFavorite = artistInfo.ifFavorite
             }
+            if (artistDescribe.isNullOrBlank())
+                artistDescribe = artistInfo?.describe
         }
+
         viewModelScope.launch {
-            artistDescribe = dataSourceManager.selectArtistInfoByRemotely(artistId)?.describe
+            val artistInfo = dataSourceManager.selectServerArtistInfo(artistId)
+            if (artistInfo != null && artistInfoData == null) {
+                artistInfoData = artistInfo
+                ifFavorite = artistInfo.ifFavorite
+            }
+            if (artistDescribe.isNullOrBlank())
+                artistDescribe = artistInfo?.describe
+        }
+
+
+    }
+
+    fun getSimilarArtistsRemotely() {
+        viewModelScope.launch {
+            val similarArtists =
+                dataSourceManager.getSimilarArtistsRemotely(artistId, 0, 12)
+            resemblanceArtistList = similarArtists
         }
     }
 

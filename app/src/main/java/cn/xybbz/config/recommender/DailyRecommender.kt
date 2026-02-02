@@ -114,9 +114,11 @@ class DailyRecommender(
             recentPlays.none { it.itemId == music.itemId } // never in recent plays -> good exploration candidate
         }.shuffled().take(exploreCount)
         //大于5分钟的音乐都过滤
+        val xyMusics = (exploit + explorationPool).distinctBy { it.itemId }
+        val filter = xyMusics
+            .filter { it.runTimeTicks.toFloat() / 1000 / 60.0 <= 6 }
         val result =
-            (exploit + explorationPool).distinctBy { it.itemId }
-                .filter { it.runTimeTicks / 1000 / 60.0 > 6 }
+            filter
                 .take(n)
         val scoringEndTime5 = System.currentTimeMillis()
         Log.i(

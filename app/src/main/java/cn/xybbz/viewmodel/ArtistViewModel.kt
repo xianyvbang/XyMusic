@@ -76,7 +76,7 @@ class ArtistViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     // 先定义 artistListPage
     val artistListPage: Flow<PagingData<XyArtistExt>> =
-        dataSourceManager.getLoginStateFlow()
+        dataSourceManager.loginStateEvent
             .flatMapLatest {
                 dataSourceManager.selectArtistFlowList()
             }

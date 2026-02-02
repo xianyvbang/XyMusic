@@ -49,6 +49,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -94,7 +95,6 @@ class HomeViewModel @OptIn(UnstableApi::class)
         observeLoginSuccess()
         observeLoginSuccessRoomData()
         getConnectionListData()
-
         initLoginChangeMonitor()
     }
 
@@ -190,6 +190,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
     fun onManualRefresh() {
         viewModelScope.launch {
             tryRefreshHome(
+                isRefresh = true,
                 reason = HomeRefreshReason.Manual
             )
         }
@@ -200,7 +201,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
      */
     private fun observeLoginSuccess() {
         viewModelScope.launch {
-            dataSourceManager.getLoginStateFlow().collect {
+            dataSourceManager.loginStateEvent.collect {
                 Log.i("home","登录数据变化${it}")
                 tryRefreshHome(
                     isRefresh = true,
@@ -218,37 +219,38 @@ class HomeViewModel @OptIn(UnstableApi::class)
         reason: HomeRefreshReason,
         onEnd: ((Boolean) -> Unit)? = null,
     ) {
-        if (!shouldRefresh(reason)) {
+        val connectionId =  dataSourceManager.getConnectionId()
+        if (!shouldRefresh(reason,connectionId)) {
             onEnd?.invoke(false)
             return
         }
         refreshDataAll(onEnd, isRefresh)
-        updateHomeRefreshTime()
+        updateHomeRefreshTime(connectionId)
     }
 
     /**
      * 判断是否可以刷新
      */
-    private suspend fun shouldRefresh(reason: HomeRefreshReason): Boolean {
+    private suspend fun shouldRefresh(reason: HomeRefreshReason,connectionId:Long): Boolean {
         // 手动刷新：永远刷新
         if (reason == HomeRefreshReason.Manual) return true
 
         val remoteCurrent = db.remoteCurrentDao
-            .remoteKeyById(RemoteIdConstants.HOME_REFRESH)
+            .remoteKeyById(RemoteIdConstants.HOME_REFRESH + connectionId)
 
         val lastTime = remoteCurrent?.createTime ?: 0L
         val now = System.currentTimeMillis()
 
-        return now - lastTime >= Constants.HOME_PAGE_TIME_FAILURE * 60_000
+        return (now - lastTime) >= (Constants.HOME_PAGE_TIME_FAILURE * 60_000)
     }
 
     /**
      * 更新刷新时间
      */
-    private suspend fun updateHomeRefreshTime() {
+    private suspend fun updateHomeRefreshTime(connectionId: Long) {
         db.remoteCurrentDao.insertOrReplace(
             RemoteCurrent(
-                id = RemoteIdConstants.HOME_REFRESH,
+                id = RemoteIdConstants.HOME_REFRESH + connectionId,
                 connectionId = dataSourceManager.getConnectionId(),
                 createTime = System.currentTimeMillis()
             )
@@ -328,6 +330,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
 
     private suspend fun generateRecommendedMusicList() {
         try {
+            Log.i("DailyRecommender", "生成每日推荐")
             dailyRecommender.generate()
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "生成每日推荐错误", e)

@@ -30,7 +30,6 @@ import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSink
 import androidx.media3.datasource.cache.CacheDataSource
-import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -70,7 +69,9 @@ class DownloadCacheController(
     private var cacheDataSource: CacheDataSource
     private var upstreamDataSourceFactory: DefaultDataSource.Factory
     var downloadManager: DownloadManager
+        private set
     private val downloadCacheProgressTicker: DownloadCacheProgressTicker
+
 
 //    private val cacheTask: ConcurrentHashMap<String, CacheTask> = ConcurrentHashMap()
 
@@ -80,8 +81,17 @@ class DownloadCacheController(
 
     private val childPath = "cache"
 
+    /**
+     * 当前缓存进度
+     */
     private val _cacheSchedule = MutableStateFlow(0f)
     val cacheSchedule = _cacheSchedule.asStateFlow()
+
+    /**
+     * 所有缓存大小
+     */
+    private val _allCacheSizeFlow = MutableStateFlow(0L)
+    val allCacheSizeFlow = _allCacheSizeFlow.asStateFlow()
 
     init {
         //2025年1月20日 11:12:19 修改缓存数据目录到cache中,使其可以被系统的清除缓存功能删除
@@ -103,15 +113,14 @@ class DownloadCacheController(
         cache = SimpleCache(
             cacheDir,
             //读取配置
-            LeastRecentlyUsedCacheEvictor(100 * 1024 * 1024)
-            /*XyCacheEvictor(settingsManager)*/, ExampleDatabaseProvider(context)
+//            LeastRecentlyUsedCacheEvictor(100 * 1024 * 1024)
+            XyCacheEvictor(settingsManager), ExampleDatabaseProvider(context)
         )
 
         // 根据缓存目录创建缓存数据源
         upstreamDataSourceFactory = DefaultDataSource.Factory(
             context,
             OkHttpDataSource.Factory(cacheApiClient.okhttpClientFunction())
-                .setDefaultRequestProperties(mapOf("11111" to "22222"))
         )
         cacheDataSourceFactory = CacheDataSource.Factory()
             .setCache(cache)
@@ -129,13 +138,12 @@ class DownloadCacheController(
             .setCache(cache)
             .setUpstreamDataSourceFactory(
                 upstreamDataSourceFactory
-            ).setCacheWriteDataSinkFactory(null)
+            )
             .setCacheWriteDataSinkFactory(
                 CacheDataSink.Factory()
                     .setCache(cache)
                     .setFragmentSize(2 * 1024 * 1024) // 2MB 分片写入
             )
-            .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
 
         cacheDataSource = cacheDataSourceFactory.createDataSource()
 
@@ -148,6 +156,12 @@ class DownloadCacheController(
                 downloadCacheDataSourceFactory,
                 Executors.newFixedThreadPool( /* nThreads= */6)
             )
+
+        downloadManager.addListener(object : DownloadManager.Listener {
+            override fun onIdle(downloadManager: DownloadManager) {
+                getCacheSize()
+            }
+        })
 
         downloadCacheProgressTicker = DownloadCacheProgressTicker(
             this,
@@ -176,17 +190,24 @@ class DownloadCacheController(
         music: XyPlayMusic,
         ifStatic: Boolean
     ) {
-        if (settingsManager.get().cacheUpperLimit == CacheUpperLimitEnum.No) return
+        if (settingsManager.get().cacheUpperLimit == CacheUpperLimitEnum.No || !settingsManager.get().ifEnableEdgeDownload) return
 
         val itemId = getCacheKey(music.itemId)
         val url = music.getMusicUrl()
         scope.launch(Dispatchers.IO) {
-            Log.i("music", "开始缓存1")
+            Log.i("music", "开始缓存1 ${music.name}")
             /** 切换缓存 → 取消旧任务 */
             if (currentTaskId != null && currentTaskId != itemId) {
                 cancelCurrentCache()
             }
-            startNewCacheLocked(itemId, url, ifStatic)
+            val nowIfStatic = when (settingsManager.get().dataSourceType?.ifHls) {
+                true if !ifStatic -> false
+                false if !ifStatic
+                    -> true
+
+                else -> ifStatic
+            }
+            startNewCacheLocked(itemId, url, nowIfStatic)
         }
     }
 
@@ -334,9 +355,13 @@ class DownloadCacheController(
     /**
      * 获得所有缓存大小
      */
-    fun getCacheSize(): Long {
+    fun getCacheSize() {
+        val cacheSize = downloadManager.currentDownloads.sumOf {
+            it.bytesDownloaded
+        }
+        Log.i("music", "缓存大小${cacheSize}")
         //缓存大小
-        return cacheDataSource.cache.cacheSpace
+        _allCacheSizeFlow.value = cacheSize
     }
 
     /**

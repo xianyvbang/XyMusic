@@ -30,6 +30,7 @@ import cn.xybbz.api.client.jellyfin.data.ItemRequest
 import cn.xybbz.api.client.jellyfin.data.ItemResponse
 import cn.xybbz.api.client.jellyfin.data.PlaybackStartInfo
 import cn.xybbz.api.client.jellyfin.data.ViewRequest
+import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.BaseItemKind
@@ -71,9 +72,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
-import javax.inject.Inject
 
-class EmbyDatasourceServer @Inject constructor(
+class EmbyDatasourceServer(
     private val db: DatabaseClient,
     private val application: Context,
     settingsManager: SettingsManager,
@@ -182,6 +182,7 @@ class EmbyDatasourceServer @Inject constructor(
      */
     override suspend fun selectMusicListByArtistServer(
         artistId: String,
+        artistName: String,
         pageSize: Int,
         startIndex: Int
     ): XyResponse<XyMusic> {
@@ -621,23 +622,18 @@ class EmbyDatasourceServer @Inject constructor(
     }
 
     /**
-     * 根据id获得艺术家信息
-     * @param [artistId] 艺术家id
-     * @return [List<ArtistItem>?] 艺术家信息
+     * 从远程获得艺术家描述
      */
-    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist {
+    override suspend fun selectServerArtistInfo(artistId: String): XyArtist {
         val item = embyApiClient.userLibraryApi()
             .getItem(userId = getUserId(), itemId = artistId)
-        val tmpArtistInfo = convertToArtistList(listOf(item))
-        return tmpArtistInfo[0]
-
-
+        return convertToArtist(item, 0)
     }
 
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibrary() {
+    override suspend fun selectMediaLibrary(connectionId: Long) {
         db.withTransaction {
             db.libraryDao.remove()
             val viewLibrary = embyApiClient.userViewsApi().getUserViews(
@@ -651,7 +647,7 @@ class EmbyDatasourceServer @Inject constructor(
                         id = it.id,
                         collectionType = it.collectionType.toString(),
                         name = it.name.toString(),
-                        connectionId = getConnectionId()
+                        connectionId = connectionId
                     )
                 }
             if (libraries.isNotEmpty()) {
@@ -1040,20 +1036,22 @@ class EmbyDatasourceServer @Inject constructor(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyResponse<XyArtist> {
+    ): List<XyArtist> {
         val response = embyApiClient.artistsApi().getSimilarArtists(
             artistId = artistId,
             ItemRequest(
-                limit = Constants.UI_LIST_PAGE,
+                limit = pageSize,
                 userId = getUserId()
             ).toMap()
         )
-        val artistList = convertToArtistList(response.items)
-        return XyResponse(
-            items = artistList,
-            totalRecordCount = response.totalRecordCount,
-            startIndex = startIndex
-        )
+        return convertToArtistList(response.items)
+    }
+
+    /**
+     * 获得数据源支持的转码类型
+     */
+    override suspend fun getTranscodingType(): List<TranscodingInfo> {
+        return emptyList()
     }
 
     /**

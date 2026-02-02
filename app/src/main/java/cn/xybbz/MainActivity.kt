@@ -93,8 +93,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        netWorkMonitor.stop()
-        dataSourceManager.close()
+/*        netWorkMonitor.stop()
+        dataSourceManager.close()*/
         super.onDestroy()
     }
 }

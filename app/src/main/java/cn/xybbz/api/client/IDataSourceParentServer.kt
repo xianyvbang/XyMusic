@@ -73,7 +73,6 @@ import cn.xybbz.page.parent.FavoriteMusicRemoteMediator
 import cn.xybbz.page.parent.GenreAlbumListRemoteMediator
 import cn.xybbz.page.parent.GenresRemoteMediator
 import cn.xybbz.page.parent.MusicRemoteMediator
-import cn.xybbz.page.parent.ResemblanceArtistRemoteMediator
 import coil.Coil
 import coil.ImageLoader
 import com.github.promeg.pinyinhelper.Pinyin
@@ -126,7 +125,7 @@ abstract class IDataSourceParentServer(
         ifTmpObject = ifTmp
     }
 
-    fun getApiClient():DefaultParentApiClient{
+    fun getApiClient(): DefaultParentApiClient {
         return defaultParentApiClient
     }
 
@@ -139,20 +138,17 @@ abstract class IDataSourceParentServer(
      * 根据输入地址获取服务器信息
      * @param [clientLoginInfoReq] 输入信息
      */
-    override suspend fun addClientAndLogin(clientLoginInfoReq: ClientLoginInfoReq): Flow<ClientLoginInfoState> {
+    override suspend fun addClientAndLogin(
+        clientLoginInfoReq: ClientLoginInfoReq,
+        connectionConfig: ConnectionConfig?
+    ): Flow<ClientLoginInfoState> {
 
         return flow {
             Log.i("=====", "输入的地址: ${clientLoginInfoReq.address}")
             emit(ClientLoginInfoState.Connected(clientLoginInfoReq.address))
             var deviceId = getDeviceId()
-            var connectionConfig: ConnectionConfig? = null
-            clientLoginInfoReq.connectionId?.let {
-                connectionConfig = db.connectionConfigDao.selectById(it)
-                connectionConfig?.deviceId?.let { device ->
-                    if (device.isNotBlank())
-                        deviceId = device
-                }
-
+            connectionConfig?.let {
+                deviceId = it.deviceId
             }
 
             //保存客户端数据
@@ -191,28 +187,26 @@ abstract class IDataSourceParentServer(
 
             val encryptAES = PasswordUtils.encryptAES(clientLoginInfoReq.password)
 
-            connectionConfig = connectionConfig?.let {
-                connectionConfig.copy(
-                    serverId = responseData.serverId ?: "",
-                    name = responseData.serverName ?: getDataSourceType().title,
-                    serverName = responseData.serverName ?: "",
-                    address = clientLoginInfoReq.address,
-                    type = getDataSourceType(),
-                    userId = userId.toString(),
-                    username = clientLoginInfoReq.username,
-                    accessToken = accessToken,
-                    currentPassword = encryptAES.aesData,
-                    iv = encryptAES.aesIv,
-                    key = encryptAES.aesKey,
-                    serverVersion = version,
-                    updateTime = System.currentTimeMillis(),
-                    lastLoginTime = System.currentTimeMillis(),
-                    deviceId = deviceId,
-                    navidromeExtendToken = responseData.navidromeExtendToken,
-                    navidromeExtendSalt = responseData.navidromeExtendSalt,
-                    machineIdentifier = responseData.machineIdentifier
-                )
-            } ?: ConnectionConfig(
+            val tmpConfig = connectionConfig?.copy(
+                serverId = responseData.serverId ?: "",
+                name = responseData.serverName ?: getDataSourceType().title,
+                serverName = responseData.serverName ?: "",
+                address = clientLoginInfoReq.address,
+                type = getDataSourceType(),
+                userId = userId.toString(),
+                username = clientLoginInfoReq.username,
+                accessToken = accessToken,
+                currentPassword = encryptAES.aesData,
+                iv = encryptAES.aesIv,
+                key = encryptAES.aesKey,
+                serverVersion = version,
+                updateTime = System.currentTimeMillis(),
+                lastLoginTime = System.currentTimeMillis(),
+                deviceId = deviceId,
+                navidromeExtendToken = responseData.navidromeExtendToken,
+                navidromeExtendSalt = responseData.navidromeExtendSalt,
+                machineIdentifier = responseData.machineIdentifier
+            ) ?: ConnectionConfig(
                 serverId = responseData.serverId ?: "",
                 serverName = responseData.serverName ?: "",
                 name = responseData.serverName ?: getDataSourceType().title,
@@ -230,7 +224,8 @@ abstract class IDataSourceParentServer(
                 navidromeExtendSalt = responseData.navidromeExtendSalt,
                 machineIdentifier = responseData.machineIdentifier
             )
-            emitAll(loginAfter(connectionConfig))
+            this@IDataSourceParentServer.connectionConfig = tmpConfig
+            emitAll(loginAfter(tmpConfig))
         }.flowOn(Dispatchers.IO).catch {
             it.printStackTrace()
             sendLoginCompleted(LoginStateType.FAILURE)
@@ -270,8 +265,6 @@ abstract class IDataSourceParentServer(
                 }
 
                 if (!ifTmpObject()) {
-                    this@IDataSourceParentServer.connectionConfig =
-                        connectionConfig.copy(id = connectionId)
                     setCoilImageOkHttpClient()
                     downloadManager.initData(connectionId)
                     connection(connectionConfig.copy(id = connectionId), connectionConfig.id != 0L)
@@ -359,7 +352,6 @@ abstract class IDataSourceParentServer(
                 address = address,
                 appName = appName,
                 clientVersion = getDataSourceType().version,
-                connectionId = connectionConfig.id,
                 serverVersion = connectionConfig.serverVersion,
                 serverName = connectionConfig.serverName,
                 serverId = connectionConfig.serverId,
@@ -372,10 +364,12 @@ abstract class IDataSourceParentServer(
                 )
                 emitAll(
                     addClientAndLogin(
-                        clientLoginInfoReq = clientLoginInfoReq
+                        clientLoginInfoReq = clientLoginInfoReq,
+                        connectionConfig = connectionConfig
                     )
                 )
             } else {
+                emit(ClientLoginInfoState.Connected(clientLoginInfoReq.address))
                 //保存客户端数据
                 createApiClient(
                     address,
@@ -497,10 +491,11 @@ abstract class IDataSourceParentServer(
      * 根据艺术家获得音乐列表
      */
     @OptIn(ExperimentalPagingApi::class)
-    override fun selectMusicListByArtistId(artistId: String): Flow<PagingData<XyMusic>> {
+    override fun selectMusicListByArtistId(artistId: String, artistName: String): Flow<PagingData<XyMusic>> {
         return defaultPager(
             remoteMediator = ArtistMusicListRemoteMediator(
                 artistId = artistId,
+                artistName = artistName,
                 datasourceServer = this,
                 db = db,
                 connectionId = getConnectionId()
@@ -713,23 +708,6 @@ abstract class IDataSourceParentServer(
     }
 
     /**
-     * 根据id获得艺术家信息
-     * @param [artistId] 艺术家id
-     * @return [List<ArtistItem>?] 艺术家信息
-     */
-    override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
-        var artistInfo: XyArtist? = db.artistDao.selectById(artistId)
-        if (artistInfo == null) {
-            artistInfo = selectArtistInfoByRemotely(artistId)
-        } else {
-            val ifFavorite = db.artistDao.selectFavoriteById(artistId) == true
-            artistInfo = artistInfo.copy(ifFavorite = ifFavorite)
-        }
-
-        return artistInfo
-    }
-
-    /**
      * 获得最近播放音乐列表
      */
     override suspend fun getPlayRecordMusicList(pageSize: Int): List<XyMusic> {
@@ -763,13 +741,18 @@ abstract class IDataSourceParentServer(
     ): List<XyAlbum> {
         val albumList = baseItemList.map { it.copy(ifPlaylist = ifPlaylist) }
         if (albumList.isNotEmpty()) {
-            db.albumDao.saveBatch(
-                data = albumList,
-                dataType = dataType,
-                connectionId = getConnectionId(),
-                artistId = artistId,
-                genreId = genreId
-            )
+            try {
+                db.albumDao.saveBatch(
+                    data = albumList,
+                    dataType = dataType,
+                    connectionId = getConnectionId(),
+                    artistId = artistId,
+                    genreId = genreId
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
         }
         return albumList
     }
@@ -845,7 +828,7 @@ abstract class IDataSourceParentServer(
     /**
      * 获得所有收藏数据
      */
-    override suspend fun initFavoriteData() {
+    override suspend fun initFavoriteData(connectionId: Long) {
 
     }
 
@@ -915,9 +898,16 @@ abstract class IDataSourceParentServer(
     ): XyAlbum?
 
     /**
-     * 从远程获得艺术家信息
+     * 根据id获得艺术家信息
      */
-    abstract override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist?
+    override suspend fun selectArtistInfoById(artistId: String): XyArtist?{
+        var artistInfo: XyArtist? = db.artistDao.selectById(artistId)
+        if (artistInfo != null) {
+            artistInfo =
+                artistInfo.copy(ifFavorite = db.artistDao.selectFavoriteById(artistId) ?: false)
+        }
+        return artistInfo
+    }
 
 
     /**
@@ -931,6 +921,7 @@ abstract class IDataSourceParentServer(
      */
     abstract suspend fun selectMusicListByArtistServer(
         artistId: String,
+        artistName: String,
         pageSize: Int,
         startIndex: Int
     ): XyResponse<XyMusic>
@@ -957,21 +948,6 @@ abstract class IDataSourceParentServer(
     ): XyResponse<XyMusic>
 
     /**
-     * 获得相似歌手列表
-     */
-    @OptIn(ExperimentalPagingApi::class)
-    override fun getResemblanceArtist(artistId: String): Flow<PagingData<XyArtist>> {
-        return defaultPager(
-            pageSize = Constants.MIN_PAGE
-        ) {
-            ResemblanceArtistRemoteMediator(
-                artistId = artistId,
-                datasourceServer = this
-            )
-        }.flow
-    }
-
-    /**
      * 获取远程服务器专辑列表
      * @param [startIndex] 开始索引
      * @param [pageSize] 页面大小
@@ -990,14 +966,6 @@ abstract class IDataSourceParentServer(
         genreId: String? = null,
     ): XyResponse<XyAlbum>
 
-    /**
-     * 远程获得相似艺术家
-     */
-    abstract suspend fun getSimilarArtistsRemotely(
-        artistId: String,
-        startIndex: Int,
-        pageSize: Int
-    ): XyResponse<XyArtist>
 
     /**
      * 获得专辑列表的RemoteMediator

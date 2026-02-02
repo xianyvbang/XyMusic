@@ -47,6 +47,9 @@ interface SettingsDao {
     @Query("select * from xy_settings limit 1")
     fun selectOne(): Flow<XySettings?>
 
+    @Query("select connectionId from xy_settings limit 1")
+    fun selectConnectionId(): Flow<Long?>
+
     @Query("select * from xy_settings limit 1")
     suspend fun selectOneData(): XySettings?
 

@@ -47,6 +47,7 @@ import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.config.setting.TranscodingState
 import cn.xybbz.config.update.VersionCheckScheduler
 import cn.xybbz.entity.data.PlayerTypeData
 import cn.xybbz.entity.data.music.MusicPlayContext
@@ -184,13 +185,19 @@ class MainViewModel @Inject constructor(
         /**
          * 应用启动,加载播放列表
          */
-        musicController.initController {
+        /*musicController.initController {
             // 查询是否存在播放列表,如果存在将内容写入
-            viewModelScope.launch {
-                dataSourceManager.getLoginStateFlow().collect {
-                    startPlayerListObserver()
-                }
+
+        }*/
+
+        viewModelScope.launch {
+            db.settingsDao.selectConnectionId().distinctUntilChanged().collect {
+                Log.i("=====", "MainViewModel: 登录状态改变: $it")
+                startPlayerListObserver()
             }
+            /*dataSourceManager.loginStateEvent.collect {
+                startPlayerListObserver()
+            }*/
         }
     }
 
@@ -269,7 +276,7 @@ class MainViewModel @Inject constructor(
                 type = MusicTypeEnum.MUSIC,
                 itemId = musicId,
                 musicController = musicController,
-                ifFavorite =  db.musicDao.selectIfFavoriteByMusic(musicId)
+                ifFavorite = db.musicDao.selectIfFavoriteByMusic(musicId)
             )
         }
     }
@@ -408,7 +415,7 @@ class MainViewModel @Inject constructor(
 
     private fun observeLoginSuccessForAndProgress() {
         viewModelScope.launch {
-            dataSourceManager.getLoginStateFlow().collect {
+            dataSourceManager.loginStateEvent.collect {
                 startEnableProgressObserver()
             }
         }
@@ -437,20 +444,16 @@ class MainViewModel @Inject constructor(
     /**
      * 加载播放列表里的数据
      */
-    private fun startPlayerListObserver() {
-        playerListJob?.cancel()
-
-        playerListJob = viewModelScope.launch {
-            // 先读取播放队列
-            val musicList = db.musicDao.selectPlayQueuePlayMusicList()
-            if (dataSourceManager.dataSourceType != null && musicList.isNotEmpty()) {
-                val player = db.playerDao.selectPlayerByDataSource()
-                musicPlayContext.initPlayList(
-                    musicList = musicList,
-                    player = player
-                )
-                musicController.pause()
-            }
+    private suspend fun startPlayerListObserver() {
+        // 先读取播放队列
+        val musicList = db.musicDao.selectPlayQueuePlayMusicList()
+        if (musicList.isNotEmpty()) {
+            val player = db.playerDao.selectPlayerByDataSource()
+            musicPlayContext.initPlayList(
+                musicList = musicList,
+                player = player
+            )
+//            musicController.pause()
         }
     }
 
@@ -664,8 +667,12 @@ class MainViewModel @Inject constructor(
     fun initTranscodeListener() {
         viewModelScope.launch {
             settingsManager.transcodingFlow.collect {
-                Log.i("music", "数据转码监听${it}")
-                //todo 这里要判断wifi和移动网络的设置是否一致,一致不更新
+                if (it is TranscodingState.NetWorkChange && (settingsManager.get().ifTranscoding
+                            || settingsManager.get().mobileNetworkAudioBitRate
+                            == settingsManager.get().wifiNetworkAudioBitRate
+                            )) {
+                    return@collect
+                }
                 musicController.replacePlaylistItemUrl()
             }
         }

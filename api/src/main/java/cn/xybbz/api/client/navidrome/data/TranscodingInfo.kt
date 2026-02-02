@@ -16,21 +16,12 @@
  *
  */
 
-package cn.xybbz.api.client.subsonic.data
+package cn.xybbz.api.client.navidrome.data
 
-import com.squareup.moshi.JsonClass
-
-/**
- * 相似艺术家
- */
-@JsonClass(generateAdapter = true)
-data class SimilarArtistID3(
-    /**
-     * 艺术家id
-     */
+data class TranscodingInfo(
+    val command:String,
+    val defaultBitRate:Int,
     val id:String,
-    /**
-     * 艺术家名称
-     */
     val name:String,
+    val targetFormat:String
 )

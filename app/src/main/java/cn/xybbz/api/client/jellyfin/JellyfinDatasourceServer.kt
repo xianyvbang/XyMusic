@@ -32,6 +32,7 @@ import cn.xybbz.api.client.jellyfin.data.ItemResponse
 import cn.xybbz.api.client.jellyfin.data.PlaybackStartInfo
 import cn.xybbz.api.client.jellyfin.data.PlaylistUserPermissions
 import cn.xybbz.api.client.jellyfin.data.ViewRequest
+import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.BaseItemKind
@@ -74,14 +75,13 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
-import javax.inject.Inject
 
 /**
  * Jellyfin api客户端管理
  * @author xybbz
  * @date 2024/06/12
  */
-class JellyfinDatasourceServer @Inject constructor(
+class JellyfinDatasourceServer(
     private val db: DatabaseClient,
     private val application: Context,
     settingsManager: SettingsManager,
@@ -397,6 +397,7 @@ class JellyfinDatasourceServer @Inject constructor(
      */
     override suspend fun selectMusicListByArtistServer(
         artistId: String,
+        artistName: String,
         pageSize: Int,
         startIndex: Int
     ): XyResponse<XyMusic> {
@@ -535,7 +536,7 @@ class JellyfinDatasourceServer @Inject constructor(
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibrary() {
+    override suspend fun selectMediaLibrary(connectionId: Long) {
         val viewLibrary = jellyfinApiClient.userViewsApi().getUserViews(
             ViewRequest(
 //                    includeExternalContent = false,
@@ -549,7 +550,7 @@ class JellyfinDatasourceServer @Inject constructor(
                     id = it.id,
                     collectionType = it.collectionType.toString(),
                     name = it.name.toString(),
-                    connectionId = getConnectionId()
+                    connectionId = connectionId
                 )
             }
         if (libraries.isNotEmpty()) {
@@ -746,14 +747,12 @@ class JellyfinDatasourceServer @Inject constructor(
     }
 
     /**
-     * 根据id获得艺术家信息
-     * @param [artistId] 艺术家id
-     * @return [List<ArtistItem>?] 艺术家信息
+     * 从远程获得艺术家描述
      */
-    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist {
-        val item = jellyfinApiClient.userLibraryApi().getItem(itemId = artistId)
-        val tmpArtistInfo = convertToArtistList(listOf(item))
-        return tmpArtistInfo[0]
+    override suspend fun selectServerArtistInfo(artistId: String): XyArtist? {
+        val item = jellyfinApiClient.userLibraryApi()
+            .getItem(itemId = artistId)
+        return convertToArtistList(listOf(item))[0]
     }
 
     /**
@@ -1016,20 +1015,22 @@ class JellyfinDatasourceServer @Inject constructor(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyResponse<XyArtist> {
+    ): List<XyArtist>? {
         val response = jellyfinApiClient.artistsApi().getSimilarArtists(
             artistId = artistId,
             ItemRequest(
-                limit = Constants.UI_LIST_PAGE,
+                limit = pageSize,
                 userId = getUserId()
             ).toMap()
         )
-        val artistList = convertToArtistList(response.items)
-        return XyResponse(
-            items = artistList,
-            totalRecordCount = response.totalRecordCount,
-            startIndex = startIndex
-        )
+        return convertToArtistList(response.items)
+    }
+
+    /**
+     * 获得数据源支持的转码类型
+     */
+    override suspend fun getTranscodingType(): List<TranscodingInfo> {
+        return emptyList()
     }
 
     /**

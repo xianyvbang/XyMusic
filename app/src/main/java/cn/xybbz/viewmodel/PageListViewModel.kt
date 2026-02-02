@@ -43,7 +43,7 @@ abstract class PageListViewModel<T: Any>(dataSourceManager: DataSourceManager) :
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val listPage: Flow<PagingData<T>> =
-        dataSourceManager.getLoginStateFlow()
+        dataSourceManager.loginStateEvent
             .flatMapLatest {
                 getFlowPageData(sortBy)
             }

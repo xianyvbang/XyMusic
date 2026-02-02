@@ -18,7 +18,11 @@
 
 package cn.xybbz.api.enums
 
-enum class AudioCodecEnum(val audioCodec: String, val ifShow: Boolean = true) {
+enum class AudioCodecEnum(
+    val audioCodec: String,
+    val ifShow: Boolean = true,
+    val defaultBitRate: Int = 192000
+) {
 
     AAC("aac"),
     MP3("mp3"),

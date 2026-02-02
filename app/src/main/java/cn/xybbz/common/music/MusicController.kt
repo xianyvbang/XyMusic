@@ -174,25 +174,29 @@ class MusicController(
                 )
                 it
             }
-            musicInfo?.let {
-                it.setMusicUrl(
-                    getMusicUrl(
-                        it.itemId,
-                        it.plexPlayKey
-                    ).musicUrl
-                )
-                downloadCacheController.cancelAllCache()
-                startCache(it, settingsManager.getStatic())
-            }
+
 
             if (state == PlayStateEnum.Pause) {
+                mediaController?.stop()
                 mediaController?.replaceMediaItems(
                     0, originMusicList.size,
                     originMusicList.map {
                         musicSetMediaItem(it)
                     }
                 )
+                mediaController?.prepare()
+                mediaController?.pause()
             } else {
+
+                musicInfo?.let {
+                    it.setMusicUrl(
+                        getMusicUrl(
+                            it.itemId,
+                            it.plexPlayKey
+                        ).musicUrl
+                    )
+                }
+
                 val (left, right) = splitListExcludeIndex(originMusicList, curOriginIndex)
                 if (left.isNotEmpty()) {
                     val leftItem = left.map { item ->
@@ -356,6 +360,7 @@ class MusicController(
 
     fun seekToIndex(index: Int) {
         Log.i("music", "调用seekToIndex")
+        updateState(PlayStateEnum.Loading)
         setCurrentPositionData(Constants.ZERO.toLong())
         fadeController.fadeOut {
             mediaController?.seekToDefaultPosition(index)
@@ -388,7 +393,7 @@ class MusicController(
         Log.i("music", "调用seekToPrevious ${mediaController?.hasPreviousMediaItem()}")
 
         //这里进行缓存数据替换
-
+        updateState(PlayStateEnum.Loading)
         if (playType == PlayerTypeEnum.SINGLE_LOOP && mediaController?.hasPreviousMediaItem() != true) {
             seekToIndex((mediaController?.mediaItemCount ?: 1) - 1)
         } else {
@@ -405,6 +410,7 @@ class MusicController(
      * 获取当前播放模式下的下一首歌曲
      */
     fun seekToNext() {
+        updateState(PlayStateEnum.Loading)
         if (playType == PlayerTypeEnum.SINGLE_LOOP && mediaController?.hasNextMediaItem() != true) {
             seekToIndex(0)
         } else {
@@ -586,27 +592,35 @@ class MusicController(
         if (musicDataList.isNotEmpty()) {
             downloadCacheController.cancelAllCache()
         }
-        //设置播放类型
-        generateRealMusicList()
 
         // 停止之前播放
         mediaController?.run {
             clearMediaItems()
-            val mediaItemList = musicDataList.map { item -> musicSetMediaItem(item) }
-            if (originIndex != null)
-                setMediaItems(mediaItemList, originIndex, C.TIME_UNSET)
-            else
-                setMediaItems(mediaItemList)
             if (!ifInitPlayerList) {
+                updateState(PlayStateEnum.Loading)
+                musicListSetMediaItems(musicDataList,originIndex)
                 thisPlay()
             } else {
-                stop()
+                updateState(PlayStateEnum.Pause)
+                musicListSetMediaItems(musicDataList,originIndex)
                 prepare()
+                pause()
             }
             scope.launch {
                 _events.emit(PlayerEvent.AddMusicList(artistId, ifInitPlayerList))
             }
         }
+    }
+
+    /**
+     * XyPlayMusic转换成MediaItem,并且加入到播放列表
+     */
+    private fun musicListSetMediaItems(playMusicList: List<XyPlayMusic>,originIndex:Int?){
+        val mediaItemList = playMusicList.map { item -> musicSetMediaItem(item) }
+        if (originIndex != null)
+            mediaController?.setMediaItems(mediaItemList, originIndex, C.TIME_UNSET)
+        else
+            mediaController?.setMediaItems(mediaItemList)
     }
 
     /**
@@ -617,7 +631,8 @@ class MusicController(
         //设置单个资源
         val itemId = playMusic.itemId
         var mediaItemBuilder = MediaItem.Builder()
-        mediaItemBuilder.setCustomCacheKey(downloadCacheController.getCacheKey(itemId))
+        val customCacheKey = downloadCacheController.getCacheKey(itemId)
+        mediaItemBuilder.setCustomCacheKey(customCacheKey)
         val pic = playMusic.pic
 
         if (playMusic.filePath.isNullOrBlank()) {
@@ -625,18 +640,28 @@ class MusicController(
                 getMusicUrl(itemId, playMusic.plexPlayKey)
             playMusic.setMusicUrl(transcodingAndMusicUrlInfo.musicUrl)
             mediaItemBuilder.setUri(transcodingAndMusicUrlInfo.musicUrl)
-
             val normalizeMimeType =
                 MimeTypes.normalizeMimeType(MimeTypes.BASE_TYPE_AUDIO + "/${playMusic.container}")
-            //todo 这里的判断临时先用这个判断,后面改成
+            val mimeType =
+                if (dataSourceManager.dataSourceType?.ifHls == true && !transcodingAndMusicUrlInfo.static) {
+                    MimeTypes.APPLICATION_M3U8
+                } else if (dataSourceManager.dataSourceType?.ifHls == false && !transcodingAndMusicUrlInfo.static) {
+                    normalizeMimeType
+                } else {
+                    val inferFileTypeFromMimeType =
+                        FileTypes.inferFileTypeFromMimeType(normalizeMimeType)
+                    if (inferFileTypeFromMimeType == -1) {
+                        MimeTypes.APPLICATION_M3U8
+                    } else {
+                        normalizeMimeType
+                    }
+                }
             mediaItemBuilder.setMimeType(
-                if (FileTypes.inferFileTypeFromMimeType(normalizeMimeType) != -1
-                    && transcodingAndMusicUrlInfo.static
-                ) normalizeMimeType else MimeTypes.APPLICATION_M3U8
+                mimeType
             )
 
             val mediaItem =
-                downloadCacheController.downloadManager.downloadIndex.getDownload(itemId)?.request?.toMediaItem()
+                downloadCacheController.downloadManager.downloadIndex.getDownload(customCacheKey)?.request?.toMediaItem()
             if (mediaItem != null) {
                 mediaItemBuilder = mediaItem.buildUpon()
             }

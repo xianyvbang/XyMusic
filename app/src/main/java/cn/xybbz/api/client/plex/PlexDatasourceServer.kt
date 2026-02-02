@@ -27,6 +27,7 @@ import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
 import cn.xybbz.api.client.data.XyResponse
+import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.client.plex.data.Directory
 import cn.xybbz.api.client.plex.data.Metadatum
 import cn.xybbz.api.client.plex.data.PlaylistMetadatum
@@ -70,9 +71,8 @@ import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
 import java.time.ZoneOffset
 import java.util.UUID
-import javax.inject.Inject
 
-class PlexDatasourceServer @Inject constructor(
+class PlexDatasourceServer(
     private val db: DatabaseClient,
     private val application: Context,
     settingsManager: SettingsManager,
@@ -103,7 +103,7 @@ class PlexDatasourceServer @Inject constructor(
     /**
      * 获得所有收藏数据
      */
-    override suspend fun initFavoriteData() {
+    override suspend fun initFavoriteData(connectionId: Long) {
         //查询收藏合集是否存在,如果不存在则查询
         val libraryIdTmp = libraryId
         if (libraryIdTmp != null) {
@@ -351,6 +351,7 @@ class PlexDatasourceServer @Inject constructor(
      */
     override suspend fun selectMusicListByArtistServer(
         artistId: String,
+        artistName: String,
         pageSize: Int,
         startIndex: Int
     ): XyResponse<XyMusic> {
@@ -1015,11 +1016,9 @@ class PlexDatasourceServer @Inject constructor(
     }
 
     /**
-     * 根据id获得艺术家信息
-     * @param [artistId] 艺术家id
-     * @return [List<ArtistItem>?] 艺术家信息
+     * 从远程获得艺术家描述
      */
-    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist? {
+    override suspend fun selectServerArtistInfo(artistId: String): XyArtist? {
         val item = plexApiClient.itemApi()
             .getLibraryInfo(sectionKey = artistId)
         return item.mediaContainer?.metadata?.get(0)?.let {
@@ -1030,7 +1029,7 @@ class PlexDatasourceServer @Inject constructor(
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibrary() {
+    override suspend fun selectMediaLibrary(connectionId: Long) {
         db.withTransaction {
             db.libraryDao.remove()
             val viewLibrary = plexApiClient.userViewsApi().getUserViews()
@@ -1042,7 +1041,7 @@ class PlexDatasourceServer @Inject constructor(
                             id = it.key,
                             collectionType = it.type.toString(),
                             name = it.title,
-                            connectionId = getConnectionId()
+                            connectionId = connectionId
                         )
                     }
             if (!libraries.isNullOrEmpty()) {
@@ -1447,8 +1446,16 @@ class PlexDatasourceServer @Inject constructor(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyResponse<XyArtist> {
-        return XyResponse()
+    ): List<XyArtist>? {
+        val similarItem = plexApiClient.userLibraryApi().similarItem(artistId, pageSize)
+        return similarItem.mediaContainer?.metadata?.let { convertToArtistList(it) }
+    }
+
+    /**
+     * 获得数据源支持的转码类型
+     */
+    override suspend fun getTranscodingType(): List<TranscodingInfo> {
+        return emptyList()
     }
 
     /**

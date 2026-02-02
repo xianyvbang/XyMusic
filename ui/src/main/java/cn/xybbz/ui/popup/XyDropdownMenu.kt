@@ -39,7 +39,7 @@ fun XyDropdownMenu(
         ),
         containerColor = containerColor
     ) {
-        itemDataList.forEachIndexed { index, data ->
+        itemDataList.filter { it.ifItemShow() }.forEachIndexed { index, data ->
             if (index != 0)
                 HorizontalDivider(modifier = Modifier.fillMaxWidth())
             XyDropdownMenuItem(

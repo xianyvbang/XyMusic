@@ -60,7 +60,7 @@ fun CacheLimitScreen(
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-        cacheLimitViewModel.getAutomaticCacheSize(context)
+        cacheLimitViewModel.getAutomaticCacheSize()
     }
 
     XyColumnScreen(
