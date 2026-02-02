@@ -48,6 +48,7 @@ import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.exoplayer.analytics.AnalyticsListener.EventTime
 import androidx.media3.exoplayer.audio.AudioSink.AudioTrackConfig
 import androidx.media3.exoplayer.drm.DrmSession
+import androidx.media3.exoplayer.drm.KeyRequestInfo
 import androidx.media3.exoplayer.source.LoadEventInfo
 import androidx.media3.exoplayer.source.MediaLoadData
 import androidx.media3.extractor.metadata.id3.BinaryFrame
@@ -481,7 +482,7 @@ class XyLogger @JvmOverloads constructor(
     }
 
     @UnstableApi
-    override fun onDrmKeysLoaded(eventTime: EventTime) {
+    override fun onDrmKeysLoaded(eventTime: EventTime, keyRequestInfo: KeyRequestInfo) {
         logd(eventTime, "drmKeysLoaded")
     }
 
