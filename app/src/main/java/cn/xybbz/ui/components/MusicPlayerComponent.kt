@@ -403,7 +403,7 @@ fun MusicPlayerScreen(
                     AnimatedVisibility(
                         visible = !musicPlayerViewModel.lrcServer.lrcText.isNullOrBlank() && horPagerState.currentPage == 0
                     ) {
-                        XyRow(modifier = Modifier.height(30.dp)) {
+                        XyRow(modifier = Modifier/*.height(30.dp)*/) {
                             LrcViewOneComponent(lrcText = musicPlayerViewModel.lrcServer.lrcText)
                         }
                     }
