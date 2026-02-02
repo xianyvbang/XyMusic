@@ -20,7 +20,6 @@ package cn.xybbz.api.client
 
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.adapter.LocalDateAdapter
-import cn.xybbz.api.adapter.LocalDateTimeAdapter
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.base.IDownLoadApi
 import cn.xybbz.api.constants.ApiConstants
@@ -78,7 +77,8 @@ abstract class DefaultApiClient : ApiConfig {
 //            .addConverterFactory(MyGsonConverterFactory.create()).build()
             .addConverterFactory(
                 MoshiConverterFactory.create(
-                    Moshi.Builder().add(LocalDateTimeAdapter())
+                    Moshi.Builder()
+//                        .add(LocalDateTimeAdapter())
                         .add(LocalDateAdapter()).add(KotlinJsonAdapterFactory())
                         .build()
                 )

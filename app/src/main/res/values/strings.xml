@@ -227,6 +227,7 @@
     <!--    设置页面-->
     <string name="settings">设置</string>
     <string name="playback">播放</string>
+    <string name="broadcast_while_down">边下边播</string>
     <string name="cache_limit">缓存上限</string>
     <string name="album_playback_history">专辑播放历史</string>
     <string name="allow_simultaneous_playback">允许与其他应用同时播放</string>

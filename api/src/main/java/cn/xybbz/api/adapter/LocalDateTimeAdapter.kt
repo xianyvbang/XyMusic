@@ -1,12 +1,28 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.adapter
 
 import com.squareup.moshi.FromJson
-import com.squareup.moshi.JsonReader
-import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.ToJson
+import java.time.Instant
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
+import java.time.ZoneId
 
 
 /**
@@ -18,26 +34,25 @@ import java.time.format.DateTimeFormatter
  */
 class LocalDateTimeAdapter {
 
-    private val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+    private val zoneId: ZoneId = ZoneId.systemDefault()
 
     @FromJson
-    fun fromJson(reader: JsonReader): LocalDateTime? {
-        return if (reader.peek() == JsonReader.Token.NULL) {
-            reader.nextNull()
+    fun fromJson(json: String): LocalDateTime {
+        // 只处理 Z 结尾的 UTC 时间，避免创建 OffsetDateTime
+        return if (json.endsWith("Z")) {
+            val instant = Instant.parse(json) // Instant 是轻量对象
+            LocalDateTime.ofInstant(instant, zoneId)
         } else {
-            val dateTimeString = reader.nextString()
-            // 将带时区的字符串解析为 OffsetDateTime，然后转为 LocalDateTime
-            OffsetDateTime.parse(dateTimeString, formatter).toLocalDateTime()
+            // 不带 Z 的情况，直接截断到毫秒解析，避免纳秒对象创建太多
+            val trimmed = json.takeWhile { it != 'Z' }  // 安全截断
+            LocalDateTime.parse(trimmed)
         }
     }
 
     @ToJson
-    fun toJson(writer: JsonWriter, value: LocalDateTime?) {
-        if (value == null) {
-            writer.nullValue()
-        } else {
-            // 如果需要，可以选择将 LocalDateTime 转换为 ISO 8601 格式的字符串
-            writer.value(value.toString())
-        }
+    fun toJson(value: LocalDateTime): String {
+        // 转回 UTC ISO 字符串
+        val instant = value.atZone(zoneId).toInstant()
+        return instant.toString() // 输出 2026-01-16T04:37:51.844Z
     }
 }

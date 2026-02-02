@@ -21,6 +21,7 @@ package cn.xybbz.ui.screens
 
 import android.content.ClipData
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -153,9 +154,21 @@ fun SettingScreen(
             }
             item {
                 SettingRoundedSurfaceColumn {
+                    MusicSettingSwitchItemComponent(
+                        title = stringResource(R.string.broadcast_while_down),
+                        ifChecked = settingsViewModel.settingDataNow.ifEnableEdgeDownload
+                    ) { bol ->
+                        coroutineScope.launch {
+                            settingsViewModel.settingsManager.setIfEnableEdgeDownload(
+                                bol
+                            )
+                        }
+                    }
 
-                    SettingItemComponent(title = stringResource(R.string.cache_limit)) {
-                        navigator.navigate(CacheLimit)
+                    AnimatedVisibility(visible = settingsViewModel.settingDataNow.ifEnableEdgeDownload) {
+                        SettingItemComponent(title = stringResource(R.string.cache_limit)) {
+                            navigator.navigate(CacheLimit)
+                        }
                     }
 
                     SettingItemComponent(title = "在线音乐品质") {
@@ -178,7 +191,7 @@ fun SettingScreen(
                         ifChecked = settingsViewModel.settingDataNow.ifHandleAudioFocus
                     ) { bol ->
                         coroutineScope.launch {
-                            settingsViewModel.settingsManager.setIfEnableSyncPlayProgress(
+                            settingsViewModel.settingsManager.setIfHandleAudioFocus(
                                 bol
                             )
                         }
@@ -189,7 +202,7 @@ fun SettingScreen(
                         ifChecked = settingsViewModel.settingDataNow.ifEnableSyncPlayProgress
                     ) { bol ->
                         coroutineScope.launch {
-                            settingsViewModel.settingsManager.setIfHandleAudioFocus(
+                            settingsViewModel.settingsManager.setIfEnableSyncPlayProgress(
                                 bol
                             )
                         }

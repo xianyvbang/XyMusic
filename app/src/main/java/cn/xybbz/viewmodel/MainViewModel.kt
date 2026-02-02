@@ -37,19 +37,17 @@ import androidx.media3.common.util.UnstableApi
 import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
+import cn.xybbz.api.events.ReLoginEvent
+import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.MusicTypeEnum
-import cn.xybbz.common.music.CacheController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.music.PlayerEvent
 import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.alarm.AlarmConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
-import cn.xybbz.config.favorite.FavoriteRepository
-import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.config.setting.TranscodingState
 import cn.xybbz.config.update.VersionCheckScheduler
 import cn.xybbz.entity.data.PlayerTypeData
 import cn.xybbz.entity.data.music.MusicPlayContext
@@ -64,8 +62,13 @@ import cn.xybbz.localdata.data.progress.Progress
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.time.Year
 import javax.inject.Inject
@@ -77,17 +80,12 @@ class MainViewModel @Inject constructor(
     val db: DatabaseClient,
     private val musicController: MusicController,
     val dataSourceManager: DataSourceManager,
-    val connectionConfigServer: ConnectionConfigServer,
     val settingsManager: SettingsManager,
     val backgroundConfig: BackgroundConfig,
     private val musicPlayContext: MusicPlayContext,
-    private val cacheController: CacheController,
     private val alarmConfig: AlarmConfig,
-    private val favoriteRepository: FavoriteRepository,
     val selectControl: SelectControl,
-    private val mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     private val versionCheckScheduler: VersionCheckScheduler,
-    private val lrcServer: LrcServer
 ) : ViewModel() {
 
     /**
@@ -104,8 +102,8 @@ class MainViewModel @Inject constructor(
 
     private var enableProgressJob: Job? = null
     private var playerListJob: Job? = null
-    private var mediaLibraryAndFavoriteSynJob: Job? = null
 
+    val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     /**
      * 相似歌曲
@@ -120,6 +118,7 @@ class MainViewModel @Inject constructor(
 
     init {
         Log.i("=====", "MainViewModel初始化")
+        startLoginEventBus()
         //加载是否开启专辑播放历史功能数据
         observeLoginSuccessForAndProgress()
         //初始化年代数据
@@ -128,8 +127,6 @@ class MainViewModel @Inject constructor(
         musicControllerInit()
         //初始化版本信息获取
         initGetVersionInfo()
-        //初始化媒体库和收藏信息
-        initMediaLibraryAndFavoriteSync()
         //设置转码监听
         initTranscodeListener()
     }
@@ -188,13 +185,19 @@ class MainViewModel @Inject constructor(
         /**
          * 应用启动,加载播放列表
          */
-        musicController.initController {
+        /*musicController.initController {
             // 查询是否存在播放列表,如果存在将内容写入
-            viewModelScope.launch {
-                connectionConfigServer.loginSuccessEvent.collect {
-                    startPlayerListObserver()
-                }
+
+        }*/
+
+        viewModelScope.launch {
+            db.settingsDao.selectConnectionId().distinctUntilChanged().collect {
+                Log.i("=====", "MainViewModel: 登录状态改变: $it")
+                startPlayerListObserver()
             }
+            /*dataSourceManager.loginStateEvent.collect {
+                startPlayerListObserver()
+            }*/
         }
     }
 
@@ -210,20 +213,19 @@ class MainViewModel @Inject constructor(
                 dataSourceManager.reportPlaying(
                     musicId,
                     playSessionId = playSessionId,
-                    positionTicks = musicController.currentPosition
+                    positionTicks = musicController.progressStateFlow.value
                 )
             }
             viewModelScope.launch {
                 dataSourceManager.reportProgress(
                     musicId,
                     playSessionId = playSessionId,
-                    positionTicks = musicController.currentPosition
+                    positionTicks = musicController.progressStateFlow.value
                 )
                 alarmConfig.scheduleNextReport()
             }
 
         }
-
     }
 
     fun onPause(musicId: String, playSessionId: String) {
@@ -233,20 +235,20 @@ class MainViewModel @Inject constructor(
                     musicId,
                     playSessionId = playSessionId,
                     true,
-                    musicController.currentPosition
+                    musicController.progressStateFlow.value
                 )
             }
             viewModelScope.launch {
                 dataSourceManager.reportProgress(
                     musicId,
                     playSessionId = playSessionId,
-                    positionTicks = musicController.currentPosition
+                    positionTicks = musicController.progressStateFlow.value
                 )
             }
         }
 
-        cacheController.pauseCache(musicId)
-        setPlayerProgress(musicController.currentPosition)
+//        cacheController.pauseCache(musicId)
+        setPlayerProgress(musicController.progressStateFlow.value)
     }
 
     fun onPositionSeekTo(millSeconds: Long, itemId: String, playSessionId: String) {
@@ -265,7 +267,7 @@ class MainViewModel @Inject constructor(
      * 设置手动音频切换方法
      */
     fun onBeforeChangeMusic() {
-        setPlayerProgress(musicController.currentPosition)
+        setPlayerProgress(musicController.progressStateFlow.value)
     }
 
     fun onFavoriteMusic(musicId: String) {
@@ -274,12 +276,17 @@ class MainViewModel @Inject constructor(
                 type = MusicTypeEnum.MUSIC,
                 itemId = musicId,
                 musicController = musicController,
-                ifFavorite = musicId in favoriteRepository.favoriteSet.value
+                ifFavorite = db.musicDao.selectIfFavoriteByMusic(musicId)
             )
         }
     }
 
     fun onOnChangeMusic(musicId: String, artistId: String?, artistName: String?) {
+
+        viewModelScope.launch {
+            musicController.updateButtonCommend(db.musicDao.selectIfFavoriteByMusic(musicId))
+        }
+
         viewModelScope.launch {
             similarMusicList = dataSourceManager.getSimilarMusicList(musicId)
         }
@@ -293,7 +300,6 @@ class MainViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            lrcServer.clear()
             //数据变化的时候进行数据变化
             putIterations(0)
             db.withTransaction {
@@ -310,7 +316,7 @@ class MainViewModel @Inject constructor(
                             PlayHistoryMusic(
                                 musicId = musicId,
                                 index = index - 1,
-                                connectionId = connectionConfigServer.getConnectionId()
+                                connectionId = dataSourceManager.getConnectionId()
                             )
                         )
                     )
@@ -345,7 +351,7 @@ class MainViewModel @Inject constructor(
                     PlayQueueMusic(
                         musicId = it.itemId,
                         index = index,
-                        connectionId = connectionConfigServer.getConnectionId()
+                        connectionId = dataSourceManager.getConnectionId()
                     )
                 }
                 if (xyMusicList.isNotEmpty()) {
@@ -362,7 +368,7 @@ class MainViewModel @Inject constructor(
                     val player =
                         db.playerDao.selectPlayerByDataSource()
                     val xyPlayer = XyPlayer(
-                        connectionId = connectionConfigServer.getConnectionId(),
+                        connectionId = dataSourceManager.getConnectionId(),
                         dataType = musicController.playDataType,
                         musicId = musicController.musicInfo?.itemId ?: "",
                         headTime = musicController.headTime,
@@ -409,7 +415,7 @@ class MainViewModel @Inject constructor(
 
     private fun observeLoginSuccessForAndProgress() {
         viewModelScope.launch {
-            connectionConfigServer.loginSuccessEvent.collect {
+            dataSourceManager.loginStateEvent.collect {
                 startEnableProgressObserver()
             }
         }
@@ -438,20 +444,16 @@ class MainViewModel @Inject constructor(
     /**
      * 加载播放列表里的数据
      */
-    private fun startPlayerListObserver() {
-        playerListJob?.cancel()
-
-        playerListJob = viewModelScope.launch {
-            // 先读取播放队列
-            val musicList = db.musicDao.selectPlayQueuePlayMusicList()
-            if (dataSourceManager.dataSourceType != null && musicList.isNotEmpty()) {
-                val player = db.playerDao.selectPlayerByDataSource()
-                musicPlayContext.initPlayList(
-                    musicList = musicList,
-                    player = player
-                )
-                musicController.pause()
-            }
+    private suspend fun startPlayerListObserver() {
+        // 先读取播放队列
+        val musicList = db.musicDao.selectPlayQueuePlayMusicList()
+        if (musicList.isNotEmpty()) {
+            val player = db.playerDao.selectPlayerByDataSource()
+            musicPlayContext.initPlayList(
+                musicList = musicList,
+                player = player
+            )
+//            musicController.pause()
         }
     }
 
@@ -483,25 +485,6 @@ class MainViewModel @Inject constructor(
                     )
                 }
             }
-        }
-    }
-
-    /**
-     * 加载收藏和媒体库
-     */
-    fun initMediaLibraryAndFavoriteSync() {
-        viewModelScope.launch {
-            connectionConfigServer.loginSuccessEvent.collect {
-                startMediaLibraryAndFavoriteSync()
-            }
-        }
-    }
-
-    fun startMediaLibraryAndFavoriteSync() {
-        mediaLibraryAndFavoriteSynJob?.cancel()
-        mediaLibraryAndFavoriteSyncScheduler.cancel()
-        mediaLibraryAndFavoriteSynJob = viewModelScope.launch {
-            mediaLibraryAndFavoriteSyncScheduler.enqueueIfNeeded()
         }
     }
 
@@ -635,7 +618,7 @@ class MainViewModel @Inject constructor(
         db.playerDao.save(
             XyPlayer(
                 playerType = playerTypeEnum,
-                connectionId = connectionConfigServer.getConnectionId(),
+                connectionId = dataSourceManager.getConnectionId(),
                 dataType = musicController.playDataType,
                 pageSize = 0
             )
@@ -661,7 +644,7 @@ class MainViewModel @Inject constructor(
                 progressPercentage = progressPercentage,
                 index = index,
                 musicName = musicName,
-                connectionId = connectionConfigServer.getConnectionId()
+                connectionId = dataSourceManager.getConnectionId()
             )
         )
     }
@@ -684,10 +667,41 @@ class MainViewModel @Inject constructor(
     fun initTranscodeListener() {
         viewModelScope.launch {
             settingsManager.transcodingFlow.collect {
-                Log.i("music", "数据转码监听${it}")
+                if (it is TranscodingState.NetWorkChange && (settingsManager.get().ifTranscoding
+                            || settingsManager.get().mobileNetworkAudioBitRate
+                            == settingsManager.get().wifiNetworkAudioBitRate
+                            )) {
+                    return@collect
+                }
                 musicController.replacePlaylistItemUrl()
             }
         }
+    }
+
+    /**
+     * 启动登陆监听重试登陆
+     */
+
+    @kotlin.OptIn(ExperimentalCoroutinesApi::class)
+    fun startLoginEventBus() {
+        viewModelScope.launch {
+            dataSourceManager.dataSourceServerFlow
+                .filterNotNull()
+                .flatMapLatest { server ->
+                    server.getApiClient().eventBus.events
+                }
+                .onEach { event ->
+                    if (event is ReLoginEvent.Unauthorized) dataSourceManager.serverLogin(
+                        loginType = LoginType.API,
+                        null
+                    )
+                }
+                .launchIn(viewModelScope)
+        }
+    }
+
+    fun updateIfShowSnackBar(ifShowSnackBar: Boolean) {
+        settingsManager.updateIfShowSnackBar(ifShowSnackBar)
     }
 
 }

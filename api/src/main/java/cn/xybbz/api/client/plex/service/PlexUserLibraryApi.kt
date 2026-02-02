@@ -21,7 +21,7 @@ interface PlexUserLibraryApi : BaseApi {
      */
     @POST("/library/collections")
     suspend fun addCollection(
-        @Query("title")title:String,
+        @Query("title") title: String,
         @Query("type") type: Int? = 10,
         @Query("smart") smart: String? = "0",
         @Query("sectionId") sectionId: String? = null
@@ -32,7 +32,7 @@ interface PlexUserLibraryApi : BaseApi {
      */
     @GET("/library/sections/{sectionKey}/collections")
     suspend fun getCollection(
-        @Path("sectionKey")sectionKey: String,
+        @Path("sectionKey") sectionKey: String,
         @Query("subtype") subtype: Int? = 10,
         @Query("smart") smart: String? = "0",
         @Query("sectionId") sectionId: String? = null,
@@ -75,4 +75,11 @@ interface PlexUserLibraryApi : BaseApi {
         @Query("X-Plex-Container-Start") start: Int,
         @Query("X-Plex-Container-Size") pageSize: Int
     ): PlexResponse<PlexLibraryItemResponse>
+
+    @GET("/library/metadata/{ids}/similarsimilar")
+    suspend fun similarItem(
+        @Path("ids") ids: String,
+        @Query("count") count: Int
+    ): PlexResponse<PlexLibraryItemResponse>
+
 }

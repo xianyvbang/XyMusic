@@ -164,6 +164,7 @@ dependencies {
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.media3.exoplayer.hls)
     implementation(libs.androidx.media3.inspector)
+    implementation(libs.androidx.media3.workmanager)
 
 
     //moshi 数据解析 类似json

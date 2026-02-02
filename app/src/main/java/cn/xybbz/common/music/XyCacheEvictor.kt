@@ -35,7 +35,13 @@ import java.util.TreeSet
 class XyCacheEvictor(private val settingsManager: SettingsManager) : CacheEvictor {
 
 
-    private var leastRecentlyUsed: TreeSet<CacheSpan>? = null
+    private var leastRecentlyUsed: TreeSet<CacheSpan> =
+        TreeSet<CacheSpan>(Comparator { lhs: CacheSpan, rhs: CacheSpan ->
+            compare(
+                lhs,
+                rhs
+            )
+        })
 
     private var currentSize: Long = 0
 
@@ -69,13 +75,13 @@ class XyCacheEvictor(private val settingsManager: SettingsManager) : CacheEvicto
     }
 
     override fun onSpanAdded(cache: Cache, span: CacheSpan) {
-        leastRecentlyUsed!!.add(span)
+        leastRecentlyUsed.add(span)
         currentSize += span.length
         evictCache(cache, 0)
     }
 
     override fun onSpanRemoved(cache: Cache, span: CacheSpan) {
-        leastRecentlyUsed!!.remove(span)
+        leastRecentlyUsed.remove(span)
         currentSize -= span.length
     }
 
@@ -85,8 +91,8 @@ class XyCacheEvictor(private val settingsManager: SettingsManager) : CacheEvicto
     }
 
     private fun evictCache(cache: Cache, requiredSpace: Long) {
-        while (currentSize + requiredSpace > settingsManager.maxBytes && !leastRecentlyUsed!!.isEmpty()) {
-            cache.removeSpan(leastRecentlyUsed!!.first())
+        while (currentSize + requiredSpace > settingsManager.maxBytes && !leastRecentlyUsed.isEmpty()) {
+            cache.removeSpan(leastRecentlyUsed.first())
         }
     }
 

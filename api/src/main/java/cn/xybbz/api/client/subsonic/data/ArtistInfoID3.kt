@@ -54,7 +54,11 @@ data class ArtistInfoID3(
      */
     val largeImageUrl: String? = null,
     /**
+     * 收藏时间 : 2026-01-28T02:00:15.76317727Z
+     */
+    val starred: String? = null,
+    /**
      * 相似艺术家
      */
-    val similarArtist: List<SimilarArtistID3>? = null
+    val similarArtist: List<ArtistID3>? = null
 )

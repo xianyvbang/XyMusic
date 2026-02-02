@@ -562,3 +562,24 @@ internal val Migration_18_19 = object : Migration(18, 19) {
         """)
     }
 }
+
+internal val Migration_19_20 = object : Migration(19, 20) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+
+        db.execSQL("""
+            ALTER TABLE xy_settings
+            ADD COLUMN dataSourceType TEXT
+        """)
+    }
+}
+
+internal val Migration_20_21 = object : Migration(20, 21) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+
+        db.execSQL("""
+            ALTER TABLE xy_settings
+            ADD COLUMN ifEnableEdgeDownload INTEGER NOT NULL
+            DEFAULT 1
+        """)
+    }
+}

@@ -12,7 +12,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -20,6 +19,7 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation3.runtime.NavKey
 import cn.xybbz.compositionLocal.LocalMainViewModel
@@ -53,7 +53,7 @@ import kotlinx.coroutines.launch
 fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
 
     val coroutineScope = rememberCoroutineScope()
-    val ifOpenSelect by mainViewModel.selectControl.uiState.collectAsState()
+    val ifOpenSelect by mainViewModel.selectControl.uiState.collectAsStateWithLifecycle()
 
     val navigationState = rememberNavigationState(
         startRoute = Home,
@@ -69,7 +69,7 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
                 navigator: Navigator,
                 destination: NavKey
             ) {
-                mainViewModel.connectionConfigServer.updateIfShowSnackBar(destination !is Connection)
+                mainViewModel.updateIfShowSnackBar(destination !is Connection)
             }
         })
         navigator.addOnDestinationChangedListener(object : OnDestinationChangedListener {
@@ -141,7 +141,7 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
             },
         ) {
 
-            RootNavTransition(!mainViewModel.connectionConfigServer.ifConnectionConfig) { bool ->
+            RootNavTransition(!mainViewModel.settingsManager.ifConnectionConfig) { bool ->
                 if (bool) {
                     ConnectionScreen(connectionUiType = null)
                 } else {
@@ -165,7 +165,7 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
 @Composable
 private fun SnackBarHostUi(modifier: Modifier = Modifier) {
     val mainViewModel = LocalMainViewModel.current
-    if (mainViewModel.connectionConfigServer.ifShowSnackBar)
+    if (mainViewModel.settingsManager.ifShowSnackBar)
         Column(modifier = Modifier.then(modifier)) {
             SnackBarPlayerComponent(
                 onClick = {

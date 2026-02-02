@@ -21,9 +21,11 @@ package cn.xybbz.api.client
 import androidx.paging.PagingData
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
+import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.PlaylistParser
@@ -34,6 +36,7 @@ import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.artist.XyArtistExt
+import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
@@ -43,6 +46,7 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
+import java.lang.AutoCloseable
 
 /**
  * 本地用户接口类
@@ -50,23 +54,25 @@ import okhttp3.OkHttpClient
  * @date 2024/06/12
  * @constructor 创建[IDataSourceServer]
  */
-interface IDataSourceServer {
+interface IDataSourceServer : AutoCloseable {
 
-
-    fun ifTmpObject(): Boolean
-
-    fun updateIfTmpObject(ifTmp: Boolean)
 
     /**
      * 用户登录逻辑
      */
-    suspend fun addClientAndLogin(clientLoginInfoReq: ClientLoginInfoReq): Flow<ClientLoginInfoState>?
+    suspend fun addClientAndLogin(
+        clientLoginInfoReq: ClientLoginInfoReq,
+        connectionConfig: ConnectionConfig? = null
+    ): Flow<ClientLoginInfoState>?
 
     /**
      * 自动登录
      * @return [Flow<ClientLoginInfoState>?]
      */
-    suspend fun autoLogin(ifLogin: Boolean = false): Flow<ClientLoginInfoState>?
+    suspend fun autoLogin(
+        loginType: LoginType = LoginType.TOKEN,
+        connectionConfig: ConnectionConfig? = null
+    ): Flow<ClientLoginInfoState>?
 
 
     /**
@@ -176,7 +182,7 @@ interface IDataSourceServer {
     /**
      * 根据艺术家获得音乐列表
      */
-    fun selectMusicListByArtistId(artistId: String): Flow<PagingData<XyMusic>>
+    fun selectMusicListByArtistId(artistId: String, artistName: String): Flow<PagingData<XyMusic>>
 
 
     /**
@@ -246,26 +252,29 @@ interface IDataSourceServer {
     suspend fun selectArtistInfoByIds(artistIds: List<String>): List<XyArtist>?
 
     /**
+     * 初始化收藏数据
+     */
+    suspend fun initFavoriteData(connectionId: Long)
+
+    /**
      * 根据id获得艺术家信息
-     * @param [artistId] 艺术家id
-     * @return [List<ArtistItem>?] 艺术家信息
      */
     suspend fun selectArtistInfoById(artistId: String): XyArtist?
 
     /**
-     * 从远程获得艺术家信息
+     * 从远程获得艺术家描述
      */
-    suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist?
+    suspend fun selectServerArtistInfo(artistId: String): XyArtist?
 
     /**
      * 获得媒体库列表
      */
-    suspend fun selectMediaLibrary()
+    suspend fun selectMediaLibrary(connectionId: Long)
 
     /**
      * 获得最近播放音乐或专辑
      */
-    suspend fun playRecordMusicOrAlbumList(pageSize: Int = Constants.ALBUM_MUSIC_LIST_PAGE)
+    suspend fun playRecordMusicOrAlbumList(pageSize: Int = Constants.MIN_PAGE)
 
     /**
      * 获得最近播放音乐列表
@@ -427,14 +436,47 @@ interface IDataSourceServer {
     ): List<XyMusicExtend>?
 
     /**
-     * 获得相似歌手列表
+     * 远程获得相似艺术家
      */
-    fun getResemblanceArtist(artistId: String): Flow<PagingData<XyArtist>>
+    suspend fun getSimilarArtistsRemotely(
+        artistId: String,
+        startIndex: Int,
+        pageSize: Int
+    ): List<XyArtist>?
 
     /**
-     * 释放
+     * 获得连接设置
      */
-    suspend fun release()
+    fun getConnectionConfig(): ConnectionConfig?
 
+    /**
+     * 获得用户id
+     */
+    fun getUserId(): String
+
+    /**
+     * 获得连接id
+     */
+    fun getConnectionId(): Long
+
+    /**
+     * 获得连接地址
+     */
+    fun getConnectionAddress(): String
+
+    /**
+     * 更新连接设置
+     */
+    suspend fun updateConnectionConfig(connectionConfig: ConnectionConfig)
+
+    /**
+     * 更新媒体库id
+     */
+    suspend fun updateLibraryId(libraryId: String?, connectionId: Long)
+
+    /**
+     * 获得数据源支持的转码类型
+     */
+    suspend fun getTranscodingType(): List<TranscodingInfo>
 
 }

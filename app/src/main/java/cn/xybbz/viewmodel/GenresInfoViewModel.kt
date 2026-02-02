@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.viewmodel
 
 import androidx.compose.runtime.getValue
@@ -9,7 +27,6 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.genre.XyGenre
 import dagger.assisted.Assisted
@@ -24,12 +41,9 @@ import kotlinx.coroutines.launch
 @HiltViewModel(assistedFactory = GenresInfoViewModel.Factory::class)
 class GenresInfoViewModel @AssistedInject constructor(
     @Assisted private val genreId: String,
-    private val _dataSourceManager: DataSourceManager,
-    private val connectionConfigServer: ConnectionConfigServer,
-    private val _backgroundConfig: BackgroundConfig
+    private val dataSourceManager: DataSourceManager,
+    val backgroundConfig: BackgroundConfig
 ) : ViewModel() {
-
-    val backgroundConfig = _backgroundConfig
 
     @AssistedFactory
     interface Factory {
@@ -48,16 +62,16 @@ class GenresInfoViewModel @AssistedInject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val albumList: Flow<PagingData<XyAlbum>> =
-        connectionConfigServer.loginSuccessEvent
+        dataSourceManager.loginStateEvent
             .flatMapLatest {
-                _dataSourceManager.selectAlbumListByGenreId(genreId)
+                dataSourceManager.selectAlbumListByGenreId(genreId)
             }
             .cachedIn(viewModelScope)
 
 
     private fun getGenreInfo() {
         viewModelScope.launch {
-            genreInfo = _dataSourceManager.getGenreById(genreId)
+            genreInfo = dataSourceManager.getGenreById(genreId)
         }
     }
 }

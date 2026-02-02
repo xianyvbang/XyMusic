@@ -34,7 +34,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
-import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.MusicSettingSwitchItemComponent
@@ -188,17 +187,17 @@ fun StreamingQualityScreen(
 
             item {
                 SettingRoundedSurfaceColumn {
-                    AudioCodecEnum.entries.forEach {
-                        if (it.ifShow)
-                            XyItemRadioButton(
-                                text = it.name,
-                                style = MaterialTheme.typography.titleSmall,
-                                selected = streamingQualityViewModel.transcodeFormat == it,
-                                onClick = {
-                                    coroutineScope.launch {
-                                        streamingQualityViewModel.updateTranscodeFormat(it)
-                                    }
-                                })
+                    streamingQualityViewModel.transcodeAudioBitRateType.forEach {
+                        XyItemRadioButton(
+                            text = it.name,
+                            style = MaterialTheme.typography.titleSmall,
+                            selected = streamingQualityViewModel.transcodeFormat == it.targetFormat,
+                            onClick = {
+                                coroutineScope.launch {
+                                    streamingQualityViewModel.updateTranscodeFormat(it.targetFormat)
+                                }
+                            })
+
                     }
                 }
             }

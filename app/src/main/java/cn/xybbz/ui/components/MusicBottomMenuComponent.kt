@@ -63,10 +63,10 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -86,6 +86,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.R
 import cn.xybbz.common.utils.DateUtil.millisecondsToTime
 import cn.xybbz.common.utils.DateUtil.toDateStr
@@ -158,6 +159,10 @@ fun MusicBottomMenuComponent(
         mutableStateOf(musicBottomMenuViewModel.alarmConfig.canScheduleExactAlarm())
     }
 
+    val exactAlarmPermissionGranted = stringResource(R.string.exact_alarm_permission_granted)
+    val exactAlarmPermissionNotGranted = stringResource(R.string.exact_alarm_permission_not_granted)
+    val addToNextPlaySuccess = stringResource(R.string.add_to_next_play_success)
+    val deletePermanently = stringResource(R.string.delete_permanently)
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -168,8 +173,8 @@ fun MusicBottomMenuComponent(
         Toast.makeText(
             context,
             if (canScheduleExactAlarms)
-                context.getString(R.string.exact_alarm_permission_granted)
-            else context.getString(R.string.exact_alarm_permission_not_granted),
+                exactAlarmPermissionGranted
+            else exactAlarmPermissionNotGranted,
             Toast.LENGTH_SHORT
         ).show()
     }
@@ -179,6 +184,12 @@ fun MusicBottomMenuComponent(
         onIfShowArtistList = { ifShowArtistList },
         onSetShowArtistList = { ifShowArtistList = it },
     )
+    val favoriteMusicMap by musicBottomMenuViewModel.favoriteSet.collectAsStateWithLifecycle(
+        emptyList()
+    )
+    val downloadMusicIds by musicBottomMenuViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
+        emptyList()
+    )
 
     bottomMenuMusicInfo.forEach { music ->
 
@@ -187,8 +198,7 @@ fun MusicBottomMenuComponent(
             //更新权限信息
             ifCanScheduleExactAlarms = musicBottomMenuViewModel.alarmConfig.canScheduleExactAlarm()
         }
-        val favoriteMusicMap by musicBottomMenuViewModel.favoriteRepository.favoriteSet.collectAsState()
-        val downloadMusicIds by musicBottomMenuViewModel.downloadRepository.musicIdsFlow.collectAsState()
+
         //收藏信息
         val favoriteState by remember {
             derivedStateOf {
@@ -433,7 +443,7 @@ fun MusicBottomMenuComponent(
                                 musicBottomMenuViewModel.addNextPlayer(
                                     music.itemId
                                 )
-                                MessageUtils.sendPopTip(context.getString(R.string.add_to_next_play_success))
+                                MessageUtils.sendPopTip(addToNextPlaySuccess)
                             }.invokeOnCompletion {
                                 ifShowBottom = false
                                 music.dismiss()
@@ -450,11 +460,16 @@ fun MusicBottomMenuComponent(
                                 if (artistIds.isNotEmpty()) {
                                     coroutineScope.launch {
                                         sheetState.hide()
-                                        if (artistIds.contains(",")) {
+                                        if (artistIds.size > 1) {
                                             ifShowArtistList = true
                                             musicBottomMenuViewModel.getArtistInfos(artistIds)
                                         } else {
-                                            navigator.navigate(ArtistInfo(artistIds.get(0)))
+                                            navigator.navigate(
+                                                ArtistInfo(
+                                                    artistIds[0],
+                                                    music.artists?.get(0) ?: ""
+                                                )
+                                            )
                                         }
                                     }.invokeOnCompletion {
                                         ifShowBottom = false
@@ -535,13 +550,13 @@ fun MusicBottomMenuComponent(
                             }
                         }
                     )
-                    if (ifDelete)
+                    if (ifDelete) {
                         IconBottomMenuHor(
                             imageVector = Icons.Outlined.DeleteForever,
-                            text = stringResource(R.string.delete_permanently),
+                            text = deletePermanently,
                             onClick = {
                                 AlertDialogObject(
-                                    title = context.getString(R.string.delete_permanently),
+                                    title = deletePermanently,
                                     content = {
                                         XyItemTextHorizontal(
                                             text = stringResource(R.string.delete_warning)
@@ -560,6 +575,7 @@ fun MusicBottomMenuComponent(
                                     },
                                     onDismissRequest = {}).show()
                             })
+                    }
 
                 }
             }
@@ -615,7 +631,7 @@ fun MusicBottomMenuComponent(
             onApplyPermission = {
                 val canScheduleExactAlarms =
                     musicBottomMenuViewModel.alarmConfig.canScheduleExactAlarm()
-                if (!canScheduleExactAlarms) {
+                if (!canScheduleExactAlarms && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
                         data = "package:${context.packageName}".toUri()
                     }
@@ -663,12 +679,14 @@ fun TimerComponent(
     ifCanScheduleExactAlarms: Boolean,
     onApplyPermission: () -> Unit
 ) {
-    val context = LocalContext.current
     val mainViewModel = LocalMainViewModel.current
     val sheetTimer = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
     val coroutineScope = rememberCoroutineScope()
+
+    val customTimerClose = stringResource(R.string.custom_timer_close)
+    val max24Hours = stringResource(R.string.max_24_hours)
 
     //输入内容
     var customInputValue by remember {
@@ -741,7 +759,7 @@ fun TimerComponent(
             onValueChange = {
                 if (it >= 75f) {
                     AlertDialogObject(
-                        title = context.getString(R.string.custom_timer_close),
+                        title = customTimerClose,
                         content = {
                             XyEdit(
                                 text = customInputValue,
@@ -750,7 +768,7 @@ fun TimerComponent(
                                     var replace = input.replace(pattern, "")
                                     if (replace.length >= 4) {
                                         MessageUtils.sendPopTipError(R.string.max_24_hours)
-                                        replace = replace.substring(0, 4)
+                                        replace = replace.take(4)
                                     } else {
                                         isError = false
                                     }
@@ -762,7 +780,7 @@ fun TimerComponent(
                                 ),
                                 singleLine = true,
                                 modifier = Modifier.semantics {
-                                    if (isError) error(context.getString(R.string.max_24_hours))
+                                    if (isError) error(max24Hours)
                                 }
                             )
                         },
@@ -1214,7 +1232,7 @@ fun ArtistItemListBottomSheet(
                 MusicArtistCardComponent(
                     onItem = { artist },
                     onRouter = {
-                        navHostController.navigate(ArtistInfo(it))
+                        navHostController.navigate(ArtistInfo(it, artist.name ?: ""))
                         coroutineScope.launch {
                             sheetState.hide()
                         }.invokeOnCompletion {
@@ -1238,7 +1256,7 @@ private fun FadeInOutBottomSheet(
 ) {
 
     var fadeDurationMs by remember {
-        mutableStateOf(onFadeDurationMs())
+        mutableLongStateOf(onFadeDurationMs())
     }
 
     val bottomSheetState = rememberModalBottomSheetState(

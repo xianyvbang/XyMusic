@@ -1,7 +1,24 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.client.navidrome.data
 
 import com.squareup.moshi.JsonClass
-import java.time.LocalDateTime
 
 @JsonClass(generateAdapter = true)
 data class SongItem(
@@ -58,7 +75,7 @@ data class SongItem(
     /**
      * 播放时间
      */
-    val playDate: LocalDateTime? = null,
+    val playDate: String? = null,
     /**
      * 是否收藏
      */
@@ -66,7 +83,7 @@ data class SongItem(
     /**
      * 收藏时间
      */
-    val starredAt: LocalDateTime? = null,
+    val starredAt: String? = null,
     /**
      * 文件夹编码
      */
@@ -164,32 +181,32 @@ data class SongItem(
     /**
      * 专辑增益
      */
-    val rgAlbumGain: Double,
+    val rgAlbumGain: Double? = null,
     /**
      * 专辑峰值
      */
-    val rgAlbumPeak: Double,
+    val rgAlbumPeak: Double? = null,
     /**
      * 通道增益
      */
-    val rgTrackGain: Double,
+    val rgTrackGain: Double? = null,
     /**
      * 通道峰值
      */
-    val rgTrackPeak: Double,
+    val rgTrackPeak: Double? = null,
     val missing: Boolean,
     /**
      * 诞生时间
      */
-    val birthTime: LocalDateTime,
+    val birthTime: String,
     /**
      * 创建时间
      */
-    val createdAt: LocalDateTime,
+    val createdAt: String,
     /**
      * 更新时间
      */
-    val updatedAt: LocalDateTime,
+    val updatedAt: String,
     /**
      * 星级
      */

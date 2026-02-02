@@ -460,14 +460,16 @@ class EmbyApiClient : DefaultParentApiClient() {
         static: Boolean = true,
         audioBitRate: Int? = null
     ): String {
-        return if (audioBitRate == null){
+        return if (static){
             "${baseUrl}/emby/Audio/${itemId}/stream?" +
-                    "deviceId=${deviceId}&userId=${userId}&static=${static}" +
-                    "&audioCodec=${audioCodec}"
+                    "deviceId=${deviceId}&userId=${userId}&static=${static}"
         }else {
-            "${baseUrl}/emby/Audio/${itemId}/stream?" +
-                    "deviceId=${deviceId}&userId=${userId}&static=${static}" +
-                    "&audioCodec=${audioCodec}&audioBitRate=${audioBitRate}"
+            "${baseUrl}/emby/Audio/${itemId}/universal?" +
+                    "deviceId=${deviceId}" +
+                    "&AudioCodec=${audioCodec}&MaxStreamingBitrate=${audioBitRate}" +
+                    "&Container=opus%2Cwebm%7Copus%2Cts%7Cmp3%2Cmp3%2Caac%2Cm4a%7Caac%2Cm4b%7Caac%2Cflac%2Cwebma%2Cwebm%7Cwebma%2Cwav%2Cogg" +
+                    "&EnableRedirection=true&EnableRemoteMedia=false&EnableAudioVbrEncoding=true" +
+                    "&transcodingProtocol=hls"
         }
     }
 

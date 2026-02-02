@@ -20,7 +20,9 @@ package cn.xybbz.api.client.subsonic.data
 
 import cn.xybbz.api.enums.subsonic.Status
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 
+@JsonClass(generateAdapter = true)
 data class SubsonicRandomResponse(
     override val type: String? = null,
     /**

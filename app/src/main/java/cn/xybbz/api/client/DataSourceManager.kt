@@ -31,22 +31,23 @@ import androidx.room.Transaction
 import cn.xybbz.R
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
+import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.client.version.VersionApiClient
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.events.ReLoginEvent
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.enums.LoginStateType
+import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.music.MusicController
-import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.alarm.AlarmConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
-import cn.xybbz.config.favorite.FavoriteRepository
+import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.entity.data.LoginStateData
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.ResourceData
@@ -67,14 +68,11 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
@@ -89,25 +87,39 @@ class DataSourceManager(
     private val application: Context,
     private val db: DatabaseClient,
     private val dataSources: Map<DataSourceType, @JvmSuppressWildcards Provider<IDataSourceParentServer>>,
-    val connectionConfigServer: ConnectionConfigServer,
     private val alarmConfig: AlarmConfig,
-    private val favoriteRepository: FavoriteRepository,
     private val versionApiClient: VersionApiClient
-) : IDataSourceServer {
+) : IDataSourceServer, IoScoped() {
 
 
     var dataSourceType by mutableStateOf<DataSourceType?>(null)
         private set
 
-    private val datasourceCoroutineScope = CoroutineScopeUtils.getIo(this.javaClass.name)
+
+    init {
+        createScope()
+    }
 
     /**
      * 用户数据源数据信息服务类
      */
-    lateinit var dataSourceServer: IDataSourceParentServer
-        private set
+    private lateinit var dataSourceServer: IDataSourceParentServer
 
     val dataSourceServerFlow = MutableStateFlow<IDataSourceParentServer?>(null)
+
+    /*    private val _loginState = MutableStateFlow<LoginStateType?>(
+            null
+        )
+        val loginState = _loginState.asStateFlow()*/
+
+    /**
+     * 登录状态
+     */
+    private val _loginStateEvent = MutableSharedFlow<LoginStateType>(
+        replay = 1,
+        extraBufferCapacity = 1
+    )
+    val loginStateEvent = _loginStateEvent.asSharedFlow()
 
 
     //加载状态
@@ -129,38 +141,17 @@ class DataSourceManager(
     var errorMessage by mutableStateOf("")
         private set
 
-
-    @kotlin.OptIn(ExperimentalCoroutinesApi::class)
-    fun startEventBus() {
-        datasourceCoroutineScope.launch {
-            dataSourceServerFlow
-                .filterNotNull()
-                .flatMapLatest { server ->
-                    server.defaultParentApiClient.eventBus.events
-                }
-                .onEach { event ->
-                    if (event is ReLoginEvent.Unauthorized) serverLogin(true)
-                }
-                .launchIn(datasourceCoroutineScope)
-        }
-    }
-
     /**
      * 初始化对象信息
      */
-    fun initDataSource(ifLogin: Boolean = false) {
-        startEventBus()
-        login(ifLogin)
-    }
-
-    fun login(ifLogin: Boolean = false) {
-        datasourceCoroutineScope.launch {
-            val connectionConfig = db.connectionConfigDao.selectConnectionConfig()
-            if (connectionConfig != null) {
-                setDataSourceTypeFun(connectionConfig.type)
-                serverLogin(ifLogin)
-            }
+    suspend fun initDataSource(dataSourceType: DataSourceType?) {
+        Log.i("=====", "开始自动登录")
+        if (dataSourceType != null) {
+            Log.i("=====", "开始自动登录中")
+            switchDataSource(dataSourceType)
+            serverLogin(LoginType.TOKEN, null)
         }
+
     }
 
     /**
@@ -173,7 +164,7 @@ class DataSourceManager(
             }
 
             else -> {
-                dataSourceServer.defaultParentApiClient
+                dataSourceServer.getApiClient()
             }
         }
     }
@@ -181,26 +172,27 @@ class DataSourceManager(
     /**
      * 登陆服务端
      */
-    fun serverLogin(ifLogin: Boolean) {
-        datasourceCoroutineScope.launch {
-            ifLoginError = false
-            autoLogin(ifLogin)?.onEach { loginState ->
-                loginStatus = loginState
-//                ifLoginError = false
-                val loginSateInfo = getLoginSateInfo(loginState)
-                Log.i("error", "${loginSateInfo}")
-                errorHint = loginSateInfo.errorHint ?: R.string.empty_info
-                errorMessage = loginSateInfo.errorMessage ?: ""
-                ifLoginError = loginSateInfo.isError
-                loading = loginSateInfo.loading
-            }?.launchIn(datasourceCoroutineScope)
+    suspend fun serverLogin(
+        loginType: LoginType = LoginType.TOKEN,
+        connectionConfig: ConnectionConfig?
+    ) {
+        ifLoginError = false
+        autoLogin(loginType, connectionConfig).collect { loginState ->
+            loginStatus = loginState
+            //                ifLoginError = false
+            val loginSateInfo = getLoginSateInfo(loginState, false)
+            Log.i("error", "$loginSateInfo")
+            errorHint = loginSateInfo.errorHint ?: R.string.empty_info
+            errorMessage = loginSateInfo.errorMessage ?: ""
+            ifLoginError = loginSateInfo.isError
+            loading = loginSateInfo.loading
         }
     }
 
     /**
      * 根据登录状态返回不同登录信息
      */
-    fun getLoginSateInfo(loginState: ClientLoginInfoState): LoginStateData {
+    fun getLoginSateInfo(loginState: ClientLoginInfoState, ifTmp: Boolean): LoginStateData {
         return when (loginState) {
             is ClientLoginInfoState.Connected -> {
                 Log.i("=====", "连接中")
@@ -209,6 +201,7 @@ class DataSourceManager(
 
             is ClientLoginInfoState.ConnectError -> {
                 MessageUtils.sendPopTipDismiss()
+                loginStateErrorEmit(ifTmp)
                 Log.i(Constants.LOG_ERROR_PREFIX, "服务端连接错误")
                 LoginStateData(
                     loading = false,
@@ -219,6 +212,7 @@ class DataSourceManager(
 
             ClientLoginInfoState.ServiceTimeOutState -> {
                 MessageUtils.sendPopTipDismiss()
+                loginStateErrorEmit(ifTmp)
                 Log.i(Constants.LOG_ERROR_PREFIX, "服务端连接超时")
                 LoginStateData(
                     loading = false,
@@ -228,6 +222,7 @@ class DataSourceManager(
             }
 
             is ClientLoginInfoState.ErrorState -> {
+                loginStateErrorEmit(ifTmp)
                 MessageUtils.sendPopTipDismiss()
                 Log.i(Constants.LOG_ERROR_PREFIX, loginState.error.message.toString())
                 LoginStateData(
@@ -239,6 +234,7 @@ class DataSourceManager(
             }
 
             ClientLoginInfoState.SelectServer -> {
+                loginStateErrorEmit(ifTmp)
                 MessageUtils.sendPopTipDismiss()
                 Log.i(Constants.LOG_ERROR_PREFIX, "未选择连接")
                 LoginStateData(
@@ -250,6 +246,7 @@ class DataSourceManager(
 
             ClientLoginInfoState.UnauthorizedErrorState -> {
                 MessageUtils.sendPopTipDismiss()
+                loginStateErrorEmit(ifTmp)
                 Log.i(Constants.LOG_ERROR_PREFIX, "登录失败,账号或密码错误")
                 LoginStateData(
                     loading = false,
@@ -260,6 +257,7 @@ class DataSourceManager(
 
             ClientLoginInfoState.UserLoginSuccess -> {
                 Log.i("=====", "登陆成功")
+                loginStateSuccessEmit(ifTmp)
                 LoginStateData(
                     loading = false,
                     isError = false,
@@ -269,11 +267,22 @@ class DataSourceManager(
         }
     }
 
-    /**
-     * 变更数据源
-     */
-    fun changeDataSource() {
-        login()
+    private fun loginStateErrorEmit(ifTmp: Boolean) {
+        if (!ifTmp) {
+            scope.launch {
+                _loginStateEvent.emit(LoginStateType.FAILURE)
+            }
+        }
+    }
+
+    private fun loginStateSuccessEmit(ifTmp: Boolean) {
+        if (!ifTmp) {
+            Log.i("login", "发送登录成功")
+            scope.launch {
+                _loginStateEvent.emit(LoginStateType.SUCCESS)
+            }
+        }
+
     }
 
     /**
@@ -282,9 +291,9 @@ class DataSourceManager(
      */
     @OptIn(UnstableApi::class)
     fun switchDataSource(
-        dataSourceType: DataSourceType? = null
+        dataSourceType: DataSourceType
     ) {
-
+        updateDataSourceType(dataSourceType)
         Log.i("=====", "数据源开始切换")
         getDataSourceServerByType(dataSourceType, false)?.let {
             dataSourceServer = it
@@ -294,13 +303,7 @@ class DataSourceManager(
         Log.i("=====", "数据源切换完成")
     }
 
-    fun setDataSourceTypeFun(type: DataSourceType?) {
-        switchDataSource(dataSourceType = type)
-        updateDataSourceType(type)
-
-    }
-
-    fun updateDataSourceType(type: DataSourceType?) {
+    fun updateDataSourceType(type: DataSourceType) {
         this.dataSourceType = type
     }
 
@@ -308,10 +311,10 @@ class DataSourceManager(
      * 根据数据源获得相应的服务类
      */
     fun getDataSourceServerByType(
-        dataSourceType: DataSourceType? = null,
+        dataSourceType: DataSourceType,
         ifTmp: Boolean
     ): IDataSourceParentServer? {
-        val iDataSourceParentServer = dataSourceType?.let { dataSources[it]?.get() }
+        val iDataSourceParentServer = dataSourceType.let { dataSources[it]?.get() }
         iDataSourceParentServer?.updateIfTmpObject(ifTmp)
         return iDataSourceParentServer
     }
@@ -321,30 +324,28 @@ class DataSourceManager(
      */
     suspend fun changeDataSource(connectionConfig: ConnectionConfig) {
         release()
-        connectionConfigServer.setConnectionConfigData(connectionConfig)
-        changeDataSource()
-    }
-
-    override fun ifTmpObject(): Boolean {
-        return false
-    }
-
-    override fun updateIfTmpObject(ifTmp: Boolean) {
-
+        switchDataSource(connectionConfig.type)
+        serverLogin(connectionConfig = connectionConfig)
     }
 
 
     /**
      * 绑定地址
      */
-    override suspend fun addClientAndLogin(clientLoginInfoReq: ClientLoginInfoReq): Flow<ClientLoginInfoState>? {
+    override suspend fun addClientAndLogin(
+        clientLoginInfoReq: ClientLoginInfoReq,
+        connectionConfig: ConnectionConfig?
+    ): Flow<ClientLoginInfoState> {
         return dataSourceServer.addClientAndLogin(clientLoginInfoReq)
     }
 
-    override suspend fun autoLogin(ifLogin: Boolean): Flow<ClientLoginInfoState>? {
+    override suspend fun autoLogin(
+        loginType: LoginType,
+        connectionConfig: ConnectionConfig?
+    ): Flow<ClientLoginInfoState> {
         loading = true
         Log.i("=====", "开始登录.............")
-        return dataSourceServer.autoLogin(ifLogin)
+        return dataSourceServer.autoLogin(loginType, connectionConfig)
     }
 
     /**
@@ -554,8 +555,11 @@ class DataSourceManager(
     /**
      * 根据艺术家获得音乐列表
      */
-    override fun selectMusicListByArtistId(artistId: String): Flow<PagingData<XyMusic>> {
-        return dataSourceServer.selectMusicListByArtistId(artistId)
+    override fun selectMusicListByArtistId(
+        artistId: String,
+        artistName: String
+    ): Flow<PagingData<XyMusic>> {
+        return dataSourceServer.selectMusicListByArtistId(artistId, artistName)
     }
 
 
@@ -595,16 +599,6 @@ class DataSourceManager(
         }
     }
 
-    /**
-     * 释放
-     */
-    override suspend fun release() {
-        dataSourceServer.release()
-        setDataSourceTypeFun(null)
-        //取消定时任务
-        alarmConfig.cancelAllAlarm()
-        connectionConfigServer.setConnectionConfigData(null)
-    }
 
     /**
      * 获取歌单列表
@@ -702,7 +696,6 @@ class DataSourceManager(
      * 保存自建歌单中的音乐
      * @param [playlistId] 歌单id
      * @param [musicIds] 音乐id
-     * @param [pic] 照片
      */
     override suspend fun saveMusicPlaylist(
         playlistId: String,
@@ -750,9 +743,9 @@ class DataSourceManager(
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibrary() {
+    override suspend fun selectMediaLibrary(connectionId: Long) {
         try {
-            dataSourceServer.selectMediaLibrary()
+            dataSourceServer.selectMediaLibrary(connectionId)
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得媒体库列表失败", e)
         }
@@ -783,32 +776,37 @@ class DataSourceManager(
     /**
      * 获得艺术家信息
      */
-    override suspend fun selectArtistInfoByIds(artistIds: List<String>): List<XyArtist>? {
+    override suspend fun selectArtistInfoByIds(artistIds: List<String>): List<XyArtist> {
         return dataSourceServer.selectArtistInfoByIds(artistIds)
     }
 
     /**
-     * 根据id获得艺术家信息
-     * @param [artistId] 艺术家id
-     * @return [List<ArtistItem>?] 艺术家信息
+     * 初始化收藏数据
+     */
+    override suspend fun initFavoriteData(connectionId: Long) {
+        return dataSourceServer.initFavoriteData(connectionId)
+    }
+
+    /**
+     * 获得艺术家信息
      */
     override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
         return try {
             dataSourceServer.selectArtistInfoById(artistId)
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "根据id获得艺术家信息失败", e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "根据id从远程获得艺术家信息失败", e)
             null
         }
     }
 
     /**
-     * 从远程获得艺术家信息
+     * 从远程获得艺术家描述
      */
-    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist? {
+    override suspend fun selectServerArtistInfo(artistId: String): XyArtist? {
         return try {
-            dataSourceServer.selectArtistInfoByRemotely(artistId)
+            dataSourceServer.selectServerArtistInfo(artistId)
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "根据id从远程获得艺术家信息失败", e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "根据id从远程获得艺术家描述失败", e)
             null
         }
     }
@@ -1099,10 +1097,74 @@ class DataSourceManager(
     }
 
     /**
-     * 获得相似歌手列表
+     * 远程获得相似艺术家
      */
-    override fun getResemblanceArtist(artistId: String): Flow<PagingData<XyArtist>> {
-        return dataSourceServer.getResemblanceArtist(artistId)
+    override suspend fun getSimilarArtistsRemotely(
+        artistId: String,
+        startIndex: Int,
+        pageSize: Int
+    ): List<XyArtist> {
+        return try {
+            dataSourceServer.getSimilarArtistsRemotely(artistId, startIndex, pageSize)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得歌手热门歌曲列表失败", e)
+            null
+        } ?: emptyList()
+    }
+
+
+    /**
+     * 获得连接设置
+     */
+    override fun getConnectionConfig(): ConnectionConfig? {
+        return dataSourceServer.getConnectionConfig()
+    }
+
+    /**
+     * 获得用户id
+     */
+    override fun getUserId(): String {
+        return dataSourceServer.getUserId()
+    }
+
+    /**
+     * 获得连接id
+     */
+    override fun getConnectionId(): Long {
+        return dataSourceServer.getConnectionId()
+    }
+
+    /**
+     * 获得连接地址
+     */
+    override fun getConnectionAddress(): String {
+        return dataSourceServer.getConnectionAddress()
+    }
+
+    /**
+     * 更新连接设置
+     */
+    override suspend fun updateConnectionConfig(connectionConfig: ConnectionConfig) {
+        dataSourceServer.updateConnectionConfig(connectionConfig)
+    }
+
+    /**
+     * 更新媒体库id
+     */
+    override suspend fun updateLibraryId(libraryId: String?, connectionId: Long) {
+        return dataSourceServer.updateLibraryId(libraryId, connectionId)
+    }
+
+    /**
+     * 获得数据源支持的转码类型
+     */
+    override suspend fun getTranscodingType(): List<TranscodingInfo> {
+        return try {
+            dataSourceServer.getTranscodingType()
+        }catch (e: Exception){
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取转码类型失败", e)
+            emptyList()
+        }
     }
 
     /**
@@ -1131,7 +1193,7 @@ class DataSourceManager(
                     db.musicDao.updateFavoriteByItemId(
                         favorite,
                         itemId,
-                        connectionConfigServer.getConnectionId()
+                        dataSourceServer.getConnectionId()
                     )
                 }
 
@@ -1142,7 +1204,7 @@ class DataSourceManager(
                         db.albumDao.saveFavoriteAlbum(
                             FavoriteAlbum(
                                 albumId = itemId,
-                                connectionId = connectionConfigServer.getConnectionId(),
+                                connectionId = dataSourceServer.getConnectionId(),
                                 ifFavorite = favorite
                             )
                         )
@@ -1158,7 +1220,7 @@ class DataSourceManager(
                         db.artistDao.saveFavoriteArtist(
                             FavoriteArtist(
                                 artistId = itemId,
-                                connectionId = connectionConfigServer.getConnectionId(),
+                                connectionId = dataSourceServer.getConnectionId(),
                                 ifFavorite = favorite
                             )
                         )
@@ -1196,5 +1258,28 @@ class DataSourceManager(
             db.musicDao.removeByItemIds(musicIds)
             bool
         }
+    }
+
+    /**
+     * 触发重新登陆
+     */
+    fun restartLogin() {
+        dataSourceServer.getApiClient().eventBus.notify(ReLoginEvent.Unauthorized)
+    }
+
+    fun dataSourceScope() = scope
+
+    fun release() {
+        dataSourceServer.close()
+        dataSourceServerFlow.value = null
+        dataSourceType = null
+        //取消定时任务
+        alarmConfig.cancelAllAlarm()
+    }
+
+    override fun close() {
+        super.close()
+        versionApiClient.release()
+        release()
     }
 }

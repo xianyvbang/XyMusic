@@ -29,24 +29,26 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cn.xybbz.common.enums.AllDataEnum
 import cn.xybbz.common.music.AudioFadeController
-import cn.xybbz.common.utils.CoroutineScopeUtils
+import cn.xybbz.config.network.NetWorkMonitor
+import cn.xybbz.config.network.OnNetworkChangeListener
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.setting.XySettings
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
+import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.LanguageType
 import com.hjq.language.MultiLanguages
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Locale
 
 class SettingsManager(
     private val db: DatabaseClient,
     private val applicationContext: Context,
-    private val audioFadeController: AudioFadeController
+    private val audioFadeController: AudioFadeController,
+    private val netWorkMonitor: NetWorkMonitor
 ) {
-
-    private val coroutineScope = CoroutineScopeUtils.getIo("settings")
 
     private var settings: XySettings? = null
 
@@ -64,11 +66,23 @@ class SettingsManager(
     var cacheFilePath by mutableStateOf("")
         private set
 
+    //是否为非计费网络
+    var isUnmeteredWifi: Boolean = false
+
     lateinit var packageInfo: PackageInfo
         private set
 
+    //是否有连接配置
+    var ifConnectionConfig by mutableStateOf(false)
+        private set
+
+    //是否显示SnackBar
+    var ifShowSnackBar by mutableStateOf(false)
+        private set
+
+
     //是否设置转码音质
-    private val _transcodingFlow = MutableSharedFlow<Boolean>(0,extraBufferCapacity = 1)
+    private val _transcodingFlow = MutableSharedFlow<TranscodingState>(0, extraBufferCapacity = 1)
     val transcodingFlow = _transcodingFlow.asSharedFlow()
 
     /**
@@ -81,25 +95,49 @@ class SettingsManager(
         return settings ?: XySettings()
     }
 
-    fun setSettingsData() {
-        coroutineScope.launch {
-            Log.i("=====", "开始存储设置")
-            this@SettingsManager.settings = db.settingsDao.selectOneData() ?: XySettings()
-            if (this@SettingsManager.get().languageType != null) {
-                this@SettingsManager.languageType = this@SettingsManager.get().languageType
-            } else {
-                setDefaultLanguage(applicationContext)
-            }
-            this@SettingsManager.cacheUpperLimit = this@SettingsManager.get().cacheUpperLimit
-            Log.i("api", "动态设置数据--读取配置")
-            audioFadeController.updateFadeDurationMs(this@SettingsManager.get().fadeDurationMs)
+    suspend fun setSettingsData(): XySettings = withContext(Dispatchers.IO) {
+        Log.i("=====", "开始存储设置")
+        this@SettingsManager.settings = db.settingsDao.selectOneData() ?: XySettings()
+
+        updateIfConnectionConfig(this@SettingsManager.get().connectionId != null)
+        if (this@SettingsManager.get().languageType != null) {
+            this@SettingsManager.languageType = this@SettingsManager.get().languageType
+        } else {
+            setDefaultLanguage(applicationContext)
         }
+        this@SettingsManager.cacheUpperLimit = this@SettingsManager.get().cacheUpperLimit
+        Log.i("api", "动态设置数据--读取配置")
+        audioFadeController.updateFadeDurationMs(this@SettingsManager.get().fadeDurationMs)
         val packageManager = applicationContext.packageManager
         val packageName = applicationContext.packageName
         packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0))
         } else {
             packageManager.getPackageInfo(packageName, 0)
+        }
+        netWorkMonitor.addListener(object : OnNetworkChangeListener {
+            override fun onNetworkChange(isUnmeteredWifi: Boolean) {
+                this@SettingsManager.isUnmeteredWifi = isUnmeteredWifi
+                sengTranscodingEvent(TranscodingState.NetWorkChange)
+            }
+        })
+        netWorkMonitor.start()
+        get()
+    }
+
+    /**
+     * 设置是否开启边下边播
+     */
+    suspend fun setIfEnableEdgeDownload(ifEnableEdgeDownload: Boolean) {
+        settings = get().copy(ifEnableEdgeDownload = ifEnableEdgeDownload)
+        if (get().id != AllDataEnum.All.code) {
+            db.settingsDao.update(
+                get()
+            )
+        } else {
+            val settingId =
+                db.settingsDao.save(XySettings(ifEnableEdgeDownload = ifEnableEdgeDownload))
+            settings = get().copy(id = settingId)
         }
     }
 
@@ -161,14 +199,19 @@ class SettingsManager(
     /**
      * 存储数据源类型
      */
-    suspend fun saveConnectionId(connectionId: Long?) {
+    suspend fun saveConnectionId(connectionId: Long?, dataSourceType: DataSourceType?) {
         if (connectionId != null) {
-            settings = get().copy(connectionId = connectionId)
+            settings = get().copy(connectionId = connectionId, dataSourceType = dataSourceType)
             if (get().id != AllDataEnum.All.code) {
-                db.settingsDao.updateConnectionId(connectionId, get().id)
+                db.settingsDao.updateConnectionId(connectionId, dataSourceType, get().id)
             } else {
                 val settingId =
-                    db.settingsDao.save(XySettings(connectionId = connectionId))
+                    db.settingsDao.save(
+                        XySettings(
+                            connectionId = connectionId,
+                            dataSourceType = dataSourceType
+                        )
+                    )
                 settings = get().copy(id = settingId)
             }
         }
@@ -208,6 +251,12 @@ class SettingsManager(
             val settingId =
                 db.settingsDao.save(XySettings(ifHandleAudioFocus = ifHandleAudioFocus))
             settings = get().copy(id = settingId)
+        }
+
+        for (listener in onSettingsChangeListeners.toList()) {
+            listener.onHandleAudioFocusChanged(
+                ifHandleAudioFocus
+            )
         }
     }
 
@@ -444,8 +493,40 @@ class SettingsManager(
         this.cacheFilePath = path
     }
 
-    fun sengTranscodingEvent() {
-        _transcodingFlow.tryEmit(true)
+    fun sengTranscodingEvent(transcodingState:TranscodingState = TranscodingState.Transcoding) {
+        _transcodingFlow.tryEmit(transcodingState)
+    }
+
+    /**
+     * 根据网络类型获得需要转码的比特率
+     */
+    fun getAudioBitRate(): Int {
+        return if (!isUnmeteredWifi)
+            get().mobileNetworkAudioBitRate
+        else get().wifiNetworkAudioBitRate
+    }
+
+    /**
+     * 获得是否静态资源不转码 true:不转码,false 转码
+     */
+    fun getStatic(): Boolean {
+        val audioBitRate = getAudioBitRate()
+        return if (get().ifTranscoding) true else if (audioBitRate == 0) true else false
+    }
+
+    /**
+     * 更新是否存在连接设置
+     */
+    fun updateIfConnectionConfig(ifConnectionConfig: Boolean) {
+        this.ifConnectionConfig = ifConnectionConfig
+        updateIfShowSnackBar(ifConnectionConfig)
+    }
+
+    /**
+     * 更新是否显示底部ShowSnackBar
+     */
+    fun updateIfShowSnackBar(ifShowSnackBar: Boolean) {
+        this.ifShowSnackBar = ifShowSnackBar
     }
 
 }

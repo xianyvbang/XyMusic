@@ -30,7 +30,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -48,7 +47,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,12 +61,11 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import cn.xybbz.R
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.compositionLocal.LocalNavigator
-import cn.xybbz.config.download.DownloadRepository
-import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -100,6 +97,11 @@ fun SearchScreen(
     searchViewModel: SearchViewModel = hiltViewModel<SearchViewModel>()
 ) {
     val navigator = LocalNavigator.current
+
+    val favoriteList by searchViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
+    val downloadMusicIds by searchViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
+        emptyList()
+    )
 
     var textFieldValue by remember {
         mutableStateOf(TextFieldValue(text = "", selection = TextRange("".length)))
@@ -207,8 +209,8 @@ fun SearchScreen(
                     onLoadingState = {
                         searchViewModel.isSearchLoad
                     },
-                    favoriteRepository = searchViewModel.favoriteRepository,
-                    downloadRepository = searchViewModel.downloadRepository,
+                    onFavoriteList = { favoriteList },
+                    onDownloadMusicIdList = { downloadMusicIds },
                     musicController = searchViewModel.musicController
                 )
             } else {
@@ -230,13 +232,8 @@ fun SearchScreen(
 
 /**
  * 列列表更改
- * @param [onSearchText] 搜索文本
  * @param [onClick] 点击方法
  * @param [onClear] 清除方法
- * @param [onList] 列表数据
- * @param [onIfSearchHintLoading] 搜索提示是否在加载中
- * @param [onErrorText] 错误文本
- * @param [onMusicSearchHintList] 搜索提示数据获取调用方法
  * @param [onHistoryList] 搜索历史列表
  */
 @Composable
@@ -275,14 +272,11 @@ fun SearchResultScreen(
     artistList: List<XyArtist>,
     onAddMusic: (XyMusic) -> Unit,
     onLoadingState: () -> Boolean,
-    favoriteRepository: FavoriteRepository,
-    downloadRepository: DownloadRepository,
+    onFavoriteList: () -> List<String>,
+    onDownloadMusicIdList: () -> List<String>,
     musicController: MusicController
 ) {
     val navigator = LocalNavigator.current
-
-    val favoriteSet by favoriteRepository.favoriteSet.collectAsState()
-    val downloadMusicIds by downloadRepository.musicIdsFlow.collectAsState()
 
 
     ScreenLazyColumn(
@@ -310,12 +304,12 @@ fun SearchResultScreen(
 
                 }
                 item {
-                    LazyRowComponent() {
+                    LazyRowComponent {
                         items(artistList, key = { it.artistId }) { artist ->
                             MusicArtistCardComponent(
                                 onItem = { artist },
                                 onRouter = {
-                                    navigator.navigate(ArtistInfo(it))
+                                    navigator.navigate(ArtistInfo(it, artist.name ?: ""))
                                 }
                             )
                         }
@@ -330,7 +324,7 @@ fun SearchResultScreen(
                     }
                 }
                 item {
-                    LazyRowComponent() {
+                    LazyRowComponent {
                         items(albumList, key = { it.itemId }) { album ->
                             MusicAlbumCardComponent(
                                 onItem = { album },
@@ -354,7 +348,7 @@ fun SearchResultScreen(
                         XyItemTitle(text = stringResource(R.string.music), fontSize = 18.sp)
                     }
                 }
-                itemsIndexed(musicList, key = { _, music -> music.itemId }) { index, music ->
+                items(musicList, key = { music -> music.itemId }) { music ->
                     MusicItemComponent(
                         itemId = music.itemId,
                         name = music.name,
@@ -364,9 +358,9 @@ fun SearchResultScreen(
                         codec = music.codec,
                         bitRate = music.bitRate,
                         onIfFavorite = {
-                            music.itemId in favoriteSet
+                            music.itemId in onFavoriteList()
                         },
-                        ifDownload = music.itemId in downloadMusicIds,
+                        ifDownload = music.itemId in onDownloadMusicIdList(),
                         ifPlay = music.itemId == musicController.musicInfo?.itemId,
                         onMusicPlay = {
                             onAddMusic(

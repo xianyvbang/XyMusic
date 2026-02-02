@@ -20,7 +20,7 @@ class RecommenderModule {
         dataSourceManager: DataSourceManager,
         db: DatabaseClient
     ): DailyRecommender {
-        val dailyRecommender = DailyRecommender(dataSourceManager, db, RecentHistoryCache(db))
+        val dailyRecommender = DailyRecommender(dataSourceManager, RecentHistoryCache(db))
         return dailyRecommender
     }
 }

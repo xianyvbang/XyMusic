@@ -30,13 +30,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
@@ -69,10 +69,12 @@ fun MusicScreen(
     val coroutineScope = rememberCoroutineScope()
     val mainViewModel = LocalMainViewModel.current
     val homeMusicPager = musicViewModel.listPage.collectAsLazyPagingItems()
-    val favoriteSet by musicViewModel.favoriteRepository.favoriteSet.collectAsState()
-    val downloadMusicIds by musicViewModel.downloadRepository.musicIdsFlow.collectAsState()
-    val sortBy by musicViewModel.sortBy.collectAsState()
-    val ifOpenSelect by musicViewModel.selectControl.uiState.collectAsState()
+    val favoriteSet by musicViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
+    val downloadMusicIds by musicViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
+        emptyList()
+    )
+    val sortBy by musicViewModel.sortBy.collectAsStateWithLifecycle()
+    val ifOpenSelect by musicViewModel.selectControl.uiState.collectAsStateWithLifecycle()
 
     XyColumnScreen(
         modifier = Modifier
@@ -85,7 +87,7 @@ fun MusicScreen(
             modifier = Modifier.statusBarsPadding(),
             title = stringResource(R.string.music),
             musicViewModel = musicViewModel,
-
+            onIfShowMusicDropdownMenu = { musicViewModel.dataSourceManager.dataSourceType?.ifShowMusicDropdownMenu == true },
             onRandomPlayerClick = {
                 coroutineScope.launch {
                     musicViewModel.musicPlayContext.randomMusic(
@@ -108,34 +110,34 @@ fun MusicScreen(
                     onIfSort = { musicViewModel.dataSourceManager.dataSourceType?.ifMusicSort },
                     onIfFavoriteFilter = { musicViewModel.dataSourceManager.dataSourceType?.ifMusicFavoriteFilter },
                     onSortTypeClick = {
-                        musicViewModel.setSortedData(it, { homeMusicPager.refresh() })
+                        musicViewModel.setSortedData(it) { homeMusicPager.refresh() }
                     },
                     onSortType = { sortBy.sortType },
                     onFilterEraTypeList = { mainViewModel.eraItemList },
                     onFilterEraTypeClick = {
                         musicViewModel.setFilterEraType(
-                            it,
-                            { homeMusicPager.refresh() })
+                            it
+                        ) { homeMusicPager.refresh() }
                     },
                     onIfFavorite = { sortBy.isFavorite == true },
-                    setFavorite = { musicViewModel.setFavorite(it, { homeMusicPager.refresh() }) },
+                    setFavorite = { musicViewModel.setFavorite(it) { homeMusicPager.refresh() } },
                     onYearSet = { mainViewModel.yearSet },
                     onSelectYear = { sortBy.yearList?.get(0) },
                     onSetSelectYear = { year ->
                         year?.let {
                             musicViewModel.setFilterYear(
-                                listOf(it),
-                                { homeMusicPager.refresh() })
+                                listOf(it)
+                            ) { homeMusicPager.refresh() }
                         }
                     },
                     onSelectRangeYear = { sortBy.yearList },
                     onSetSelectRangeYear = { years ->
                         musicViewModel.setFilterYear(
-                            years.mapNotNull { it },
-                            { homeMusicPager.refresh() })
+                            years.mapNotNull { it }
+                        ) { homeMusicPager.refresh() }
                     },
                     onClearFilterOrShort = {
-                        musicViewModel.clearFilterOrSort{homeMusicPager.refresh()}
+                        musicViewModel.clearFilterOrSort { homeMusicPager.refresh() }
                     }
                 )
             }
@@ -203,30 +205,15 @@ fun MusicSelectTopBarComponent(
     modifier: Modifier,
     title: String,
     musicViewModel: MusicViewModel,
-//    onIfOpenSelect: () -> Boolean,
-//    onSetIfOpenSelect: (Boolean) -> Unit,
-//    onIfAllSelect: () -> Boolean,
+    onIfShowMusicDropdownMenu: () -> Boolean,
     onRandomPlayerClick: () -> Unit,
-//    musicListCount: () -> Int,
     onSelectAll: () -> Unit,
-    ifOpenSelect:Boolean,
+    ifOpenSelect: Boolean,
     selectControl: SelectControl,
     sortOrFilterContent: @Composable () -> Unit
 ) {
     val navigator = LocalNavigator.current
-    val coroutineScope = rememberCoroutineScope()
 
-    /*val selectListSize by remember {
-        derivedStateOf {
-            selectControl.selectMusicDataList.size
-        }
-    }*/
-
-    /*LaunchedEffect(selectListSize) {
-        snapshotFlow { selectListSize }.collect {
-            onSetIfAllSelect(musicListCount() == selectListSize && musicListCount() > 0)
-        }
-    }*/
     TopAppBarComponent(
         modifier = modifier,
         title = {
@@ -282,7 +269,8 @@ fun MusicSelectTopBarComponent(
                         contentDescription = stringResource(R.string.open_selection_function)
                     )
                 }
-                sortOrFilterContent()
+                if (onIfShowMusicDropdownMenu())
+                    sortOrFilterContent()
             }
 
 

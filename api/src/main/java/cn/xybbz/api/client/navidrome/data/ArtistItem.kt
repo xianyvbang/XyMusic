@@ -1,7 +1,24 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.client.navidrome.data
 
 import com.squareup.moshi.JsonClass
-import java.time.LocalDateTime
 
 @JsonClass(generateAdapter = true)
 data class ArtistItem(
@@ -18,7 +35,7 @@ data class ArtistItem(
     /**
      * 收藏时间
      */
-    val starredAt: LocalDateTime? = null,
+    val starredAt: String? = null,
     /**
      * 所属歌曲文件大小,单位字节
      */
@@ -38,7 +55,7 @@ data class ArtistItem(
     /**
      * 播放时间
      */
-    val playDate: LocalDateTime? = null,
+    val playDate: String? = null,
     /**
      * 小图片链接地址
      */
@@ -54,7 +71,7 @@ data class ArtistItem(
     /**
      * 外部信息更新时间
      */
-    val externalInfoUpdatedAt: LocalDateTime,
+    val externalInfoUpdatedAt: String? = null,
     /**
      * 是否数据缺失
      */
@@ -62,11 +79,11 @@ data class ArtistItem(
     /**
      * 创建时间
      */
-    val createdAt: LocalDateTime,
+    val createdAt: String,
     /**
      * 更新时间
      */
-    val updatedAt: LocalDateTime,
+    val updatedAt: String,
     /**
      * 按艺术家姓名排序
      */
@@ -74,7 +91,7 @@ data class ArtistItem(
     /**
      * 艺术家排序名称
      */
-    val orderArtistName: String,
+    val orderArtistName: String ? = null,
     /**
      * mbz艺术家id
      */

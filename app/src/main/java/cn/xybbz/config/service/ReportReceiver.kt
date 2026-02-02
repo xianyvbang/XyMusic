@@ -24,7 +24,6 @@ import android.content.Intent
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.music.MusicController
-import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.setting.SettingsManager
 import dagger.hilt.android.AndroidEntryPoint
@@ -60,7 +59,7 @@ class ReportReceiver : BroadcastReceiver() {
     }
 
     private fun doUploadWork() {
-        CoroutineScopeUtils.getIo("ReportReceiver").launch {
+        datasourceManager.dataSourceScope().launch {
             datasourceManager.reportProgress(
                 musicController.musicInfo?.itemId ?: "",
                 settingsManager.get().playSessionId,

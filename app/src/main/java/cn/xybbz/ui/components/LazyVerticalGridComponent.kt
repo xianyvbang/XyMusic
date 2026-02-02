@@ -74,11 +74,8 @@ fun <T : Any> SwipeRefreshVerticalGridListComponent(
     //是否加载中
     val isLoading by remember {
         derivedStateOf {
-            (collectAsLazyPagingItems.loadState.refresh is LoadState.Loading
-                    || (collectAsLazyPagingItems.loadState.mediator != null
-                    && collectAsLazyPagingItems.loadState.mediator?.refresh is LoadState.Loading)
-                    || collectAsLazyPagingItems.loadState.source.refresh is LoadState.Loading)
-                    && collectAsLazyPagingItems.itemCount <= 0
+            collectAsLazyPagingItems.loadState.refresh is LoadState.Loading && collectAsLazyPagingItems.itemCount <= 0
+
         }
     }
 
@@ -130,11 +127,8 @@ fun <T : Any> VerticalGridListComponent(
     //是否加载中
     val isLoading by remember {
         derivedStateOf {
-            (collectAsLazyPagingItems.loadState.refresh is LoadState.Loading
-                    || (collectAsLazyPagingItems.loadState.mediator != null
-                    && collectAsLazyPagingItems.loadState.mediator?.refresh is LoadState.Loading)
-                    || collectAsLazyPagingItems.loadState.source.refresh is LoadState.Loading)
-                    && collectAsLazyPagingItems.itemCount <= 0
+            (collectAsLazyPagingItems.loadState.refresh is LoadState.Loading && collectAsLazyPagingItems.itemCount <= 0)
+
         }
     }
 

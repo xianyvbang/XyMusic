@@ -27,6 +27,7 @@ class XyMusicTypeConverter {
 
     private val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
+        .add(StringOrArrayAdapter())
         .build()
 
     private val adapter = moshi.adapter(XyMusic::class.java)

@@ -38,7 +38,7 @@ object Constants {
     /**
      * 加载所有数据
      */
-    const val PAGE_SIZE_ALL = 1000000
+    const val PAGE_SIZE_ALL = 100000
 
     /**
      * UI页面分页大小
@@ -58,7 +58,7 @@ object Constants {
     /**
      * 专辑音乐的分页大小
      */
-    const val ALBUM_MUSIC_LIST_PAGE = 1000
+    const val ALBUM_MUSIC_LIST_PAGE = 500
 
     /**
      * 歌词位置放大
@@ -206,4 +206,8 @@ object Constants {
      * 默认代理地址
      */
     const val DEFAULT_PROXY_ADDRESS = "127.0.0.1:7890"
+
+
+
+    const val DOWNLOAD_NOTIFICATION_CHANNEL_ID: String = "download_channel"
 }

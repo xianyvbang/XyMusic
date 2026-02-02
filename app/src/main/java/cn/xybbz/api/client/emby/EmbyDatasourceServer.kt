@@ -30,6 +30,8 @@ import cn.xybbz.api.client.jellyfin.data.ItemRequest
 import cn.xybbz.api.client.jellyfin.data.ItemResponse
 import cn.xybbz.api.client.jellyfin.data.PlaybackStartInfo
 import cn.xybbz.api.client.jellyfin.data.ViewRequest
+import cn.xybbz.api.client.navidrome.data.TranscodingInfo
+import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.BaseItemKind
 import cn.xybbz.api.enums.jellyfin.CollectionType
@@ -46,8 +48,10 @@ import cn.xybbz.common.constants.Constants.LYRICS_AMPLIFICATION
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
+import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.common.utils.PlaylistParser
-import cn.xybbz.config.connection.ConnectionConfigServer
+import cn.xybbz.config.download.DownLoadManager
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchAndOrder
 import cn.xybbz.entity.data.SearchData
@@ -68,20 +72,21 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
-import java.time.ZoneId
-import java.time.ZoneOffset
-import javax.inject.Inject
 
-class EmbyDatasourceServer @Inject constructor(
+class EmbyDatasourceServer(
     private val db: DatabaseClient,
     private val application: Context,
-    private val connectionConfigServer: ConnectionConfigServer,
+    settingsManager: SettingsManager,
     private val embyApiClient: EmbyApiClient,
+    mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
+    downloadManager: DownLoadManager
 ) : IDataSourceParentServer(
     db,
-    connectionConfigServer,
+    settingsManager,
     application,
-    embyApiClient
+    embyApiClient,
+    mediaLibraryAndFavoriteSyncScheduler,
+    downloadManager
 ) {
     /**
      * 获得当前数据源类型
@@ -116,7 +121,7 @@ class EmbyDatasourceServer @Inject constructor(
     /**
      * 创建歌单
      */
-    override suspend fun createPlaylist(name: String): String? {
+    override suspend fun createPlaylist(name: String): String {
         return embyApiClient.playlistsApi().createPlaylist(
             name = name
         ).id
@@ -146,7 +151,7 @@ class EmbyDatasourceServer @Inject constructor(
                 ),
                 searchTerm = search,
                 isFavorite = isFavorite,
-                parentId = connectionConfigServer.libraryId
+                parentId = libraryId
             ).toMap()
         )
         val artistList = convertToArtistList(response.items)
@@ -162,11 +167,11 @@ class EmbyDatasourceServer @Inject constructor(
      */
     override suspend fun selectArtistsByIds(artistIds: List<String>): List<XyArtist> {
         val items = embyApiClient.itemApi().getUserItems(
-            userId = connectionConfigServer.getUserId(),
+            userId = getUserId(),
             ItemRequest(
                 ids = artistIds,
-                parentId = connectionConfigServer.libraryId,
-                userId = connectionConfigServer.getUserId()
+                parentId = libraryId,
+                userId = getUserId()
             ).toMap()
         ).items
         return convertToArtistList(items)
@@ -177,6 +182,7 @@ class EmbyDatasourceServer @Inject constructor(
      */
     override suspend fun selectMusicListByArtistServer(
         artistId: String,
+        artistName: String,
         pageSize: Int,
         startIndex: Int
     ): XyResponse<XyMusic> {
@@ -286,7 +292,7 @@ class EmbyDatasourceServer @Inject constructor(
      */
     override suspend fun markFavoriteItem(itemId: String, dataType: MusicTypeEnum): Boolean {
         val favorite = embyApiClient.userLibraryApi()
-            .markFavoriteItem(connectionConfigServer.getUserId(), itemId).isFavorite
+            .markFavoriteItem(getUserId(), itemId).isFavorite
         return favorite
 
     }
@@ -297,7 +303,7 @@ class EmbyDatasourceServer @Inject constructor(
      */
     override suspend fun unmarkFavoriteItem(itemId: String, dataType: MusicTypeEnum): Boolean {
         val favorite = embyApiClient.userLibraryApi()
-            .unmarkFavoriteItem(connectionConfigServer.getUserId(), itemId).isFavorite
+            .unmarkFavoriteItem(getUserId(), itemId).isFavorite
         return favorite
     }
 
@@ -432,9 +438,9 @@ class EmbyDatasourceServer @Inject constructor(
     override suspend fun selectAlbumInfoByRemotely(
         albumId: String,
         dataType: MusicDataTypeEnum
-    ): XyAlbum? {
+    ): XyAlbum {
         val queryResult = embyApiClient.userLibraryApi()
-            .getItem(connectionConfigServer.getUserId(), albumId)
+            .getItem(getUserId(), albumId)
         return convertToAlbum(
             queryResult,
         )
@@ -531,7 +537,6 @@ class EmbyDatasourceServer @Inject constructor(
                     null,
                     playlistId
                 )
-                val pic = if (removeDuplicatesMusicList.isNotEmpty()) musicList[0].pic else null
                 saveMusicPlaylist(
                     playlistId = playlistId,
                     musicIds = removeDuplicatesMusicList.map { music -> music.itemId }
@@ -577,7 +582,6 @@ class EmbyDatasourceServer @Inject constructor(
      * 保存自建歌单中的音乐
      * @param [playlistId] 歌单id
      * @param [musicIds] 音乐id集合
-     * @param [pic] 自建歌单图片
      */
     override suspend fun saveMusicPlaylist(
         playlistId: String,
@@ -618,27 +622,22 @@ class EmbyDatasourceServer @Inject constructor(
     }
 
     /**
-     * 根据id获得艺术家信息
-     * @param [artistId] 艺术家id
-     * @return [List<ArtistItem>?] 艺术家信息
+     * 从远程获得艺术家描述
      */
-    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist? {
+    override suspend fun selectServerArtistInfo(artistId: String): XyArtist {
         val item = embyApiClient.userLibraryApi()
-            .getItem(userId = connectionConfigServer.getUserId(), itemId = artistId)
-        val tmpArtistInfo = convertToArtistList(listOf(item))
-        return tmpArtistInfo[0]
-
-
+            .getItem(userId = getUserId(), itemId = artistId)
+        return convertToArtist(item, 0)
     }
 
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibrary() {
+    override suspend fun selectMediaLibrary(connectionId: Long) {
         db.withTransaction {
             db.libraryDao.remove()
             val viewLibrary = embyApiClient.userViewsApi().getUserViews(
-                userId = connectionConfigServer.getUserId(),
+                userId = getUserId(),
                 ViewRequest().toMap()
             )
             //存储历史记录
@@ -648,7 +647,7 @@ class EmbyDatasourceServer @Inject constructor(
                         id = it.id,
                         collectionType = it.collectionType.toString(),
                         name = it.name.toString(),
-                        connectionId = connectionConfigServer.getConnectionId()
+                        connectionId = connectionId
                     )
                 }
             if (libraries.isNotEmpty()) {
@@ -701,7 +700,7 @@ class EmbyDatasourceServer @Inject constructor(
      */
     override suspend fun getNewestAlbumList() {
         val albumList = embyApiClient.userLibraryApi().getLatestMedia(
-            userId = connectionConfigServer.getUserId(),
+            userId = getUserId(),
             ItemRequest(
                 fields = listOf(ItemFields.PRIMARY_IMAGE_ASPECT_RATIO),
                 imageTypeLimit = 1,
@@ -709,8 +708,8 @@ class EmbyDatasourceServer @Inject constructor(
                     ImageType.PRIMARY, ImageType.BACKDROP, ImageType.BANNER, ImageType.THUMB
                 ),
                 limit = Constants.MIN_PAGE,
-                parentId = connectionConfigServer.libraryId,
-                userId = connectionConfigServer.getUserId()
+                parentId = libraryId,
+                userId = getUserId()
             ).toMap()
         )
         if (albumList.isNotEmpty())
@@ -729,11 +728,11 @@ class EmbyDatasourceServer @Inject constructor(
     /**
      * 获得流派详情
      */
-    override suspend fun getGenreById(genreId: String): XyGenre? {
+    override suspend fun getGenreById(genreId: String): XyGenre {
         var genre = db.genreDao.selectById(genreId)
         if (genre == null) {
             val queryResult =
-                embyApiClient.genreApi().getItem(connectionConfigServer.getUserId(), genreId)
+                embyApiClient.genreApi().getItem(getUserId(), genreId)
             genre = convertToGenre(queryResult)
         }
         return genre
@@ -935,7 +934,7 @@ class EmbyDatasourceServer @Inject constructor(
     override suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend>? {
         val response = embyApiClient.itemApi().getSimilarItems(
             itemId = musicId,
-            userId = connectionConfigServer.getUserId(),
+            userId = getUserId(),
             limit = Constants.SIMILAR_MUSIC_LIST_PAGE,
             fields = listOf(
                 ItemFields.PRIMARY_IMAGE_ASPECT_RATIO,
@@ -1037,20 +1036,22 @@ class EmbyDatasourceServer @Inject constructor(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyResponse<XyArtist> {
+    ): List<XyArtist> {
         val response = embyApiClient.artistsApi().getSimilarArtists(
             artistId = artistId,
             ItemRequest(
-                limit = Constants.UI_LIST_PAGE,
-                userId = connectionConfigServer.getUserId()
+                limit = pageSize,
+                userId = getUserId()
             ).toMap()
         )
-        val artistList = convertToArtistList(response.items)
-        return XyResponse(
-            items = artistList,
-            totalRecordCount = response.totalRecordCount,
-            startIndex = startIndex
-        )
+        return convertToArtistList(response.items)
+    }
+
+    /**
+     * 获得数据源支持的转码类型
+     */
+    override suspend fun getTranscodingType(): List<TranscodingInfo> {
+        return emptyList()
     }
 
     /**
@@ -1140,7 +1141,7 @@ class EmbyDatasourceServer @Inject constructor(
         path: String? = null,
     ): XyResponse<XyMusic> {
         val response = embyApiClient.itemApi().getUserItems(
-            userId = connectionConfigServer.getUserId(),
+            userId = getUserId(),
             itemRequest = ItemRequest(
                 artistIds = artistIds,
                 limit = pageSize,
@@ -1163,12 +1164,12 @@ class EmbyDatasourceServer @Inject constructor(
                 genreIds = genreIds,
                 years = years,
                 albumIds = albumId?.let { listOf(albumId) },
-                parentId = if (parentId.isNullOrBlank()) connectionConfigServer.libraryId else parentId,
-                userId = connectionConfigServer.getUserId(),
+                parentId = if (parentId.isNullOrBlank()) libraryId else parentId,
+                userId = getUserId(),
                 path = path
             ).toMap()
         )
-        return XyResponse<XyMusic>(
+        return XyResponse(
             items = convertToMusicList(response.items),
             totalRecordCount = response.totalRecordCount,
             startIndex = response.startIndex ?: 0
@@ -1193,7 +1194,7 @@ class EmbyDatasourceServer @Inject constructor(
         genreIds: List<String>? = null
     ): XyResponse<XyAlbum> {
         val albumResponse = embyApiClient.itemApi().getUserItems(
-            userId = connectionConfigServer.getUserId(),
+            userId = getUserId(),
             ItemRequest(
                 artistIds = artistIds,
                 limit = pageSize,
@@ -1219,8 +1220,8 @@ class EmbyDatasourceServer @Inject constructor(
                 ids = albumIds,
                 years = years,
                 genreIds = genreIds,
-                parentId = connectionConfigServer.libraryId,
-                userId = connectionConfigServer.getUserId()
+                parentId = libraryId,
+                userId = getUserId()
             ).toMap()
         )
 
@@ -1239,7 +1240,7 @@ class EmbyDatasourceServer @Inject constructor(
         return try {
             val playlists =
                 embyApiClient.itemApi().getUserItems(
-                    userId = connectionConfigServer.getUserId(),
+                    userId = getUserId(),
                     ItemRequest(
                         sortBy = listOf(ItemSortBy.DATE_CREATED),
                         sortOrder = listOf(SortOrder.DESCENDING),
@@ -1257,8 +1258,8 @@ class EmbyDatasourceServer @Inject constructor(
                         ),
                         startIndex = 0,
                         limit = pageSize,
-                        parentId = connectionConfigServer.libraryId,
-                        userId = connectionConfigServer.getUserId()
+                        parentId = libraryId,
+                        userId = getUserId()
                     ).toMap()
                 )
             val xyResponse = XyResponse(
@@ -1269,7 +1270,7 @@ class EmbyDatasourceServer @Inject constructor(
             xyResponse
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获取歌单失败", e)
-            XyResponse<XyAlbum>(items = emptyList(), 0, 0)
+            XyResponse(items = emptyList(), 0, 0)
         }
     }
 
@@ -1306,7 +1307,7 @@ class EmbyDatasourceServer @Inject constructor(
                 ),
                 searchTerm = search,
                 imageTypeLimit = 1,
-                parentId = connectionConfigServer.libraryId
+                parentId = libraryId
             ).toMap()
         )
 
@@ -1376,7 +1377,7 @@ class EmbyDatasourceServer @Inject constructor(
             name = artist.name ?: application.getString(Constants.UNKNOWN_ARTIST),
             pic = artistImageUrl,
             backdrop = backdropImageUrl,
-            connectionId = connectionConfigServer.getConnectionId(),
+            connectionId = getConnectionId(),
             sortName = sortName,
             describe = artist.overview,
             musicCount = artist.songCount,
@@ -1430,13 +1431,13 @@ class EmbyDatasourceServer @Inject constructor(
             downloadUrl = createDownloadUrl(item.id),
             album = item.albumId ?: "",
             albumName = item.album,
-            connectionId = connectionConfigServer.getConnectionId(),
+            connectionId = getConnectionId(),
             artists = item.artistItems?.mapNotNull { artist -> artist.name },
             artistIds = item.artistItems?.map { artist -> artist.id },
             albumArtist = item.albumArtists?.map { artist -> artist.name.toString() }
                 ?: listOf(application.getString(Constants.UNKNOWN_ARTIST)),
             albumArtistIds = item.albumArtists?.map { artist -> artist.id },
-            createTime = item.dateCreated?.atZone(ZoneId.systemDefault())?.toEpochSecond() ?: 0L,
+            createTime = item.dateCreated?.toSecondMs() ?: 0L,
             year = item.productionYear,
             genreIds = item.genreItems?.map { it.id },
             playedCount = item.userData?.playCount ?: 0,
@@ -1453,8 +1454,7 @@ class EmbyDatasourceServer @Inject constructor(
             codec = mediaStream?.codec,
             lyric = "",
             playlistItemId = item.id,
-            lastPlayedDate = item.userData?.lastPlayedDate?.atZone(ZoneId.systemDefault())
-                ?.toEpochSecond() ?: 0L,
+            lastPlayedDate = item.userData?.lastPlayedDate?.toSecondMs() ?: 0L,
         )
     }
 
@@ -1489,17 +1489,16 @@ class EmbyDatasourceServer @Inject constructor(
                 ?: if (ifPlaylist) application.getString(Constants.UNKNOWN_PLAYLIST) else application.getString(
                     Constants.UNKNOWN_ALBUM
                 ),
-            connectionId = connectionConfigServer.getConnectionId(),
-            artistIds = album.albumArtists?.joinToString() { it.id },
+            connectionId = getConnectionId(),
+            artistIds = album.albumArtists?.joinToString { it.id },
             artists = album.albumArtists?.mapNotNull { it.name }?.joinToString()
                 ?: application.getString(Constants.UNKNOWN_ARTIST),
             year = album.productionYear,
-            premiereDate = album.premiereDate?.atZone(ZoneOffset.ofHours(8))?.toInstant()
-                ?.toEpochMilli(),
-            genreIds = album.genreItems?.joinToString() { it.id },
+            premiereDate = album.productionYear?.toLong(),
+            genreIds = album.genreItems?.joinToString { it.id },
             ifFavorite = album.userData?.isFavorite == true,
             ifPlaylist = ifPlaylist,
-            createTime = album.dateCreated?.atZone(ZoneId.systemDefault())?.toEpochSecond() ?: 0L,
+            createTime = album.dateCreated?.toSecondMs() ?: 0L,
             musicCount = if (ifPlaylist) (album.childCount?.toLong()
                 ?: 0L) else (album.songCount?.toLong() ?: 0L)
         )
@@ -1534,8 +1533,8 @@ class EmbyDatasourceServer @Inject constructor(
             itemId = genre.id,
             pic = itemImageUrl ?: "",
             name = genre.name ?: application.getString(Constants.UNKNOWN_ALBUM),
-            connectionId = connectionConfigServer.getConnectionId(),
-            createTime = genre.dateCreated?.atZone(ZoneId.systemDefault())?.toEpochSecond() ?: 0L,
+            connectionId = getConnectionId(),
+            createTime = genre.dateCreated?.toSecondMs() ?: 0L,
         )
     }
 

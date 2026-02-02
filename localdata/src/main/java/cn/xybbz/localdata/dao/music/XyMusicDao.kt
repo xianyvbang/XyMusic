@@ -466,10 +466,10 @@ interface XyMusicDao {
 
     @Query(
         """
-        select musicId from favoritemusic fm where ifFavorite = 1 and connectionId = (select connectionId from xy_settings) 
+        select DISTINCT musicId from favoritemusic fm where ifFavorite = 1 and connectionId = (select connectionId from xy_settings) 
     """
     )
-    fun selectFavoriteList(): Flow<List<String>>
+    fun selectFavoriteListFlow(): Flow<List<String>>
 
     /**
      * 按艺术家id获得音乐分页列表
@@ -1152,4 +1152,15 @@ interface XyMusicDao {
      */
     @Query("delete from playlistmusic where playlistId = :playlistId and musicId = :musicId and connectionId = (select connectionId from xy_settings)")
     suspend fun removeByPlaylistMusicByMusicId(playlistId: String, musicId: String)
+
+    @Query("""
+        SELECT EXISTS (
+            SELECT 1
+            FROM favoritemusic
+            WHERE connectionId = (SELECT connectionId FROM xy_settings)
+            AND musicId = :itemId
+            AND `index` IS NOT NULL
+        )
+    """)
+    suspend fun selectIfFavoriteByMusic(itemId: String): Boolean
 }

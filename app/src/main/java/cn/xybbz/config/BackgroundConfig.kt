@@ -1,6 +1,23 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.config
 
-import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -12,15 +29,15 @@ import androidx.core.net.toUri
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.AllDataEnum
 import cn.xybbz.common.utils.CoroutineScopeUtils
+import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.setting.XyBackgroundConfig
 import cn.xybbz.ui.theme.xyBackgroundBrash
 import kotlinx.coroutines.launch
 
 class BackgroundConfig(
-    private val db: DatabaseClient,
-    private val applicationContext: Context
-) {
+    private val db: DatabaseClient
+){
 
     private var backgroundConfig: XyBackgroundConfig? = null
     fun get(): XyBackgroundConfig {
@@ -31,7 +48,7 @@ class BackgroundConfig(
 
 
 
-    private val coroutineScope = CoroutineScopeUtils.getIo("background")
+
 
 
     /**
@@ -231,41 +248,39 @@ class BackgroundConfig(
     ))
         private set
 
-    fun load() {
-        coroutineScope.launch {
-            backgroundConfig = db.backgroundConfigDao.selectOne()
-            imageFilePath = get().imageFilePath?.toUri()
-            ifChangeOneColor = get().ifChangeOneColor
-            ifGlobalBrash = get().ifGlobalBrash
-            globalBrash = stringToColors(get().globalBrash)
-            homeBrash = stringToColors(get().homeBrash)
-            musicBrash = stringToColors(get().musicBrash)
-            albumBrash = stringToColors(get().albumBrash)
-            albumInfoBrash = stringToColors(get().albumInfoBrash)
-            artistBrash = stringToColors(get().artistBrash)
-            artistInfoBrash = stringToColors(get().artistInfoBrash)
-            favoriteBrash = stringToColors(get().favoriteBrash)
-            genresBrash = stringToColors(get().genresBrash)
-            genresInfoBrash = stringToColors(get().genresInfoBrash)
-            settingsBrash = stringToColors(get().settingsBrash)
-            aboutBrash = stringToColors(get().aboutBrash)
-            connectionManagerBrash = stringToColors(get().connectionManagerBrash)
-            connectionInfoBrash = stringToColors(get().connectionInfoBrash)
-            searchBrash = stringToColors(get().searchBrash)
-            cacheLimitBrash = stringToColors(get().cacheLimitBrash)
-            languageBrash = stringToColors(get().languageBrash)
-            memoryManagementBrash = stringToColors(get().memoryManagementBrash)
-            bottomPlayerBrash = stringToColors(get().bottomPlayerBrash)
-            bottomSheetBrash = stringToColors(get().bottomSheetBrash)
-            alertDialogBrash = stringToColors(get().alertDialogBrash)
-            errorAlertDialogBrash = stringToColors(get().errorAlertDialogBrash)
-            selectLibraryBrash = stringToColors(get().selectLibraryBrash)
-            playerBackground = stringToColor(get().playerBackground)
-            dailyRecommendBrash = stringToColors(get().dailyRecommendBrash)
-            downloadListBrash = stringToColors(get().downloadListBrash)
-            localMusicBrash = stringToColors(get().localMusicBrash)
-            updateXyBackgroundBrash()
-        }
+    suspend fun load() {
+        backgroundConfig = db.backgroundConfigDao.selectOne()
+        imageFilePath = get().imageFilePath?.toUri()
+        ifChangeOneColor = get().ifChangeOneColor
+        ifGlobalBrash = get().ifGlobalBrash
+        globalBrash = stringToColors(get().globalBrash)
+        homeBrash = stringToColors(get().homeBrash)
+        musicBrash = stringToColors(get().musicBrash)
+        albumBrash = stringToColors(get().albumBrash)
+        albumInfoBrash = stringToColors(get().albumInfoBrash)
+        artistBrash = stringToColors(get().artistBrash)
+        artistInfoBrash = stringToColors(get().artistInfoBrash)
+        favoriteBrash = stringToColors(get().favoriteBrash)
+        genresBrash = stringToColors(get().genresBrash)
+        genresInfoBrash = stringToColors(get().genresInfoBrash)
+        settingsBrash = stringToColors(get().settingsBrash)
+        aboutBrash = stringToColors(get().aboutBrash)
+        connectionManagerBrash = stringToColors(get().connectionManagerBrash)
+        connectionInfoBrash = stringToColors(get().connectionInfoBrash)
+        searchBrash = stringToColors(get().searchBrash)
+        cacheLimitBrash = stringToColors(get().cacheLimitBrash)
+        languageBrash = stringToColors(get().languageBrash)
+        memoryManagementBrash = stringToColors(get().memoryManagementBrash)
+        bottomPlayerBrash = stringToColors(get().bottomPlayerBrash)
+        bottomSheetBrash = stringToColors(get().bottomSheetBrash)
+        alertDialogBrash = stringToColors(get().alertDialogBrash)
+        errorAlertDialogBrash = stringToColors(get().errorAlertDialogBrash)
+        selectLibraryBrash = stringToColors(get().selectLibraryBrash)
+        playerBackground = stringToColor(get().playerBackground)
+        dailyRecommendBrash = stringToColors(get().dailyRecommendBrash)
+        downloadListBrash = stringToColors(get().downloadListBrash)
+        localMusicBrash = stringToColors(get().localMusicBrash)
+        updateXyBackgroundBrash()
     }
 
     /**

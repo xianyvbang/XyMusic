@@ -35,7 +35,6 @@ import cn.xybbz.common.utils.DefaultObjectUtils
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
@@ -50,20 +49,16 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
 @AssistedInject constructor(
     @Assisted private val connectionId: Long,
     private val dataSourceManager: DataSourceManager,
-    private val _connectionConfigServer: ConnectionConfigServer,
     private val db: DatabaseClient,
     private val musicController: MusicController,
     private val settingsManager: SettingsManager,
-    private val _backgroundConfig: BackgroundConfig
+    val backgroundConfig: BackgroundConfig
 ) : ViewModel() {
 
     @AssistedFactory
     interface Factory {
         fun create(connectionId: Long): ConnectionConfigInfoViewModel
     }
-
-    val connectionConfigServer = _connectionConfigServer
-    val backgroundConfig = _backgroundConfig
 
     var connectionConfig by mutableStateOf<ConnectionConfig?>(null)
         private set
@@ -137,22 +132,26 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
      * 更新用户密码,并且判断是否需要重新登录
      */
     fun savePasswordAndLogin() {
-        viewModelScope.launch {
-            //更新密码
-            val encryptAES = PasswordUtils.encryptAES(password ?: "")
-            db.connectionConfigDao.updatePassword(
-                currentPassword = encryptAES.aesData,
-                iv = encryptAES.aesIv,
-                key = encryptAES.aesKey,
-                connectionId = connectionId
-            )
-            if (connectionConfigServer.getConnectionId() == connectionId) {
-                viewModelScope.launch {
-                    dataSourceManager.login(true)
-                }
-            }
+        this.connectionConfig?.let { config ->
+            viewModelScope.launch {
+                //更新密码
+                val encryptAES = PasswordUtils.encryptAES(password ?: "")
 
-            password = ""
+                dataSourceManager.updateConnectionConfig(
+                    config.copy(
+                        currentPassword = encryptAES.aesData,
+                        iv = encryptAES.aesIv,
+                        key = encryptAES.aesKey
+                    )
+                )
+                if (getConnectionId() == connectionId) {
+                    viewModelScope.launch {
+                        dataSourceManager.restartLogin()
+                    }
+                }
+
+                password = ""
+            }
         }
 
 
@@ -164,7 +163,7 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
     @OptIn(UnstableApi::class)
     suspend fun removeThisConnection() {
 
-        if (connectionConfigServer.getConnectionId() == connectionId) {
+        if (getConnectionId() == connectionId) {
             //如果当前链接是最后链接,则直接删除数据里的数据
             val connectionCount = db.connectionConfigDao.selectCount()
             if (connectionCount == 0) {
@@ -219,9 +218,9 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
                 connectionId = connectionId
             )
             //判断是否需要重新登录
-            if (connectionConfigServer.getConnectionId() == connectionId) {
-                Log.i("connection","数据加载3")
-                dataSourceManager.login(true)
+            if (getConnectionId() == connectionId) {
+                Log.i("connection", "数据加载3")
+                dataSourceManager.restartLogin()
             }
 
         }
@@ -263,5 +262,9 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
                 connectionId = connectionId
             )
         }
+    }
+
+    fun getConnectionId():Long{
+        return dataSourceManager.getConnectionId()
     }
 }

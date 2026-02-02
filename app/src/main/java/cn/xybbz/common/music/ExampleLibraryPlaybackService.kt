@@ -24,11 +24,9 @@ import android.media.AudioManager
 import android.media.AudioTrack
 import android.os.Bundle
 import android.util.Log
+import androidx.core.util.Preconditions
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.ForwardingPlayer
-import androidx.media3.common.Player
-import androidx.media3.common.Player.PlayWhenReadyChangeReason
-import androidx.media3.common.util.Assertions
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSourceBitmapLoader
 import androidx.media3.datasource.DefaultDataSource
@@ -39,6 +37,7 @@ import androidx.media3.exoplayer.audio.AudioOutput
 import androidx.media3.exoplayer.audio.AudioOutputProvider
 import androidx.media3.exoplayer.audio.AudioTrackAudioOutputProvider
 import androidx.media3.exoplayer.audio.ForwardingAudioOutputProvider
+import androidx.media3.session.CacheBitmapLoader
 import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
@@ -51,8 +50,10 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
 import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
 import cn.xybbz.common.enums.PlayStateEnum
+import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.media.MediaServer
+import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import com.google.common.collect.ImmutableList
@@ -78,9 +79,11 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
 
     lateinit var audioTrack: AudioTrack
 
+    val scope = CoroutineScopeUtils.getIo("ExamplePlaybackService")
+
 
     @Inject
-    lateinit var cacheController: CacheController
+    lateinit var downloadCacheController: DownloadCacheController
 
     @Inject
     lateinit var musicController: MusicController
@@ -106,16 +109,17 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
     @Inject
     lateinit var mediaServer: MediaServer
 
+    private var exoPlayerListener: ExoPlayerListener? = null
 
     override fun onCreate() {
         super.onCreate()
-//        setMediaNotificationProvider(ExampleMediaNotificationProvider(this))
+        downloadCacheController.createScope(scope.coroutineContext)
+        musicController.createScope(scope.coroutineContext)
+        fadeController.createScope(scope.coroutineContext)
+        lrcServer.init(scope.coroutineContext)
 //重试次数和重试时间 https://stackoverflow.com/questions/78042428/how-can-i-increase-exoplayers-buffering-time
 
         //可以自定义解码
-        /*val renderersFactory: RenderersFactory = DefaultRenderersFactory(this)
-            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)*/
-
         val renderersFactory = DefaultRenderersFactory(this)
             .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
 
@@ -123,17 +127,27 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
         // 设置逐步加载数据的缓存数据源
         val defaultProvider =
             AudioTrackAudioOutputProvider.Builder(this).build()
-        cacheController.getMediaSourceFactory()?.let {
+        downloadCacheController.getMediaSourceFactory().let {
             exoPlayerBuilder.setMediaSourceFactory(it)
             Log.i("catch", "设置缓存工厂")
         }
 
 //        AudioAttributes.DEFAULT.audioAttributesV21
+
+        settingsManager.setOnListener(object : OnSettingsChangeListener {
+            override fun onHandleAudioFocusChanged(ifHandleAudioFocus: Boolean) {
+                exoPlayer?.setAudioAttributes(
+                    AudioAttributes.DEFAULT,
+                    !ifHandleAudioFocus
+                )
+            }
+        })
+
         // 创建ExoPlayer
         exoPlayer = exoPlayerBuilder
             .setAudioAttributes(
                 AudioAttributes.DEFAULT, /* handleAudioFocus= */
-                settingsManager.get().ifHandleAudioFocus
+                !settingsManager.get().ifHandleAudioFocus
             )
             .setAudioOutputProvider(object : ForwardingAudioOutputProvider(defaultProvider) {
                 override fun getAudioOutput(config: AudioOutputProvider.OutputConfig): AudioOutput {
@@ -145,36 +159,17 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                 }
             })
             .build()
-
+        val exoPlayerListener = ExoPlayerListener(
+            musicController,
+            downloadCacheController,
+            lrcServer,
+            exoPlayer
+        )
+        this.exoPlayerListener = exoPlayerListener
 
         //这里的可以获得元数据
         exoPlayer?.addAnalyticsListener(XyLogger(mediaServer = mediaServer))
-        exoPlayer?.addListener(object : Player.Listener {
-
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                Log.i("music", "当前播放状态$isPlaying")
-                if (isPlaying) {
-                    musicController.progressTicker.start()
-                    musicController.reportedPlayEvent()
-                } else if (musicController.state != PlayStateEnum.Loading) {
-                    musicController.progressTicker.stop()
-                    musicController.reportedPauseEvent()
-                } else {
-                    musicController.progressTicker.stop()
-                }
-            }
-
-            override fun onPlayWhenReadyChanged(
-                playWhenReady: Boolean,
-                @PlayWhenReadyChangeReason reason: Int
-            ) {
-                Log.i(
-                    "music",
-                    "播放状态改变$playWhenReady --- ${reason} -- ${exoPlayer?.isPlaying}"
-                )
-                musicController.updateState(if (playWhenReady) PlayStateEnum.Playing else PlayStateEnum.Pause)
-            }
-        })
+        exoPlayer?.addListener(exoPlayerListener)
 
         val sessionCommand = SessionCommand(SAVE_TO_FAVORITES, Bundle.EMPTY)
         val removeFavorites = SessionCommand(REMOVE_FROM_FAVORITES, Bundle.EMPTY)
@@ -233,30 +228,6 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
             forwardingPlayer,
             object : MediaLibrarySession.Callback {
 
-//                    override fun onAddMediaItems(
-//                        mediaSession: MediaSession,
-//                        controller: MediaSession.ControllerInfo,
-//                        mediaItems: MutableList<MediaItem>
-//                    ): ListenableFuture<MutableList<MediaItem>> {
-//                        Log.i("=====","重新填充数据")
-//                        // NOTE: You can use the id from the mediaItems to look up missing
-//                        // information (e.g. get URI from a database) and return a Future with
-//                        // a list of playable MediaItems.
-//
-//                        // If your use case is really simple and the security/privacy reasons
-//                        // mentioned earlier don't apply to you, you can add the URI to the
-//                        // MediaItem request metadata in your activity/fragment and use it
-//                        // to rebuild the playable MediaItem.
-//                        val updatedMediaItems = mediaItems.map { mediaItem ->
-//                            mediaItem.buildUpon()
-//                                .build()
-//                        }
-//                        val mutableListOf = mutableListOf<MediaItem>()
-//                        mutableListOf.addAll(updatedMediaItems)
-//                        return Futures.immediateFuture<MutableList<MediaItem>>(mutableListOf);
-//                    }
-
-
                 override fun onCustomCommand(
                     session: MediaSession,
                     controller: MediaSession.ControllerInfo,
@@ -265,13 +236,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                 ): ListenableFuture<SessionResult> {
                     val argsValue = args.getString(Constants.MUSIC_PLAY_CUSTOM_COMMAND_TYPE_KEY)
                     //根据args附件参数,进行判断是否是默认行为和主动调用行为
-                    Log.i(
-                        "music",
-                        "点击按钮数据${customCommand.customAction}----附加参数${args}"
-                    )
                     if (customCommand.customAction == SAVE_TO_FAVORITES) {
-                        // Do custom logic here
-//                            saveToFavorites(session.player.currentMediaItem)
                         Log.i("music", "取消收藏音乐")
                         //更新音乐收藏
                         if (!argsValue.equals(Constants.MUSIC_PLAY_CUSTOM_COMMAND_TYPE)) {
@@ -280,8 +245,6 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                                     it.itemId
                                 )
                             }
-
-
                         }
                         session.setCustomLayout(ImmutableList.of(removeFromFavoritesButton))
 
@@ -314,8 +277,6 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                     session: MediaSession,
                     controller: MediaSession.ControllerInfo
                 ): MediaSession.ConnectionResult {
-
-//                            return super.onConnect(session, controller)
                     return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
                         .setAvailableSessionCommands(
                             MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS.buildUpon()
@@ -329,30 +290,40 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
             .setCustomLayout(ImmutableList.of(favoriteButton))
 
         mediaSessionBuilder.setBitmapLoader(
-            DataSourceBitmapLoader(
-                Assertions.checkStateNotNull<ListeningExecutorService>(
-                    DataSourceBitmapLoader.DEFAULT_EXECUTOR_SERVICE.get()
-                ), DefaultDataSource.Factory(
-                    this,
-                    OkHttpDataSource.Factory(imageApiClient.okhttpClientFunction())
-                )
+            CacheBitmapLoader(
+                DataSourceBitmapLoader
+                    .Builder(this)
+                    .setExecutorService(
+                        Preconditions.checkNotNull<ListeningExecutorService>(
+                            DataSourceBitmapLoader.DEFAULT_EXECUTOR_SERVICE.get()
+                        )
+                    )
+                    .setDataSourceFactory(
+                        DefaultDataSource.Factory(
+                            this,
+                            OkHttpDataSource.Factory(imageApiClient.okhttpClientFunction())
+                        )
+                    ).build()
             )
         )
-
         mediaSession = mediaSessionBuilder.build()
     }
 
     override fun onDestroy() {
         // 释放相关实例
         Log.i("music", "数据释放")
+        lrcServer.close()
+        exoPlayerListener?.let { exoPlayer?.removeListener(it) }
         exoPlayer?.stop()
         exoPlayer?.release()
         exoPlayer = null
         mediaSession?.release()
         mediaSession = null
-        cacheController.release()
-        musicController.clear()
+        downloadCacheController.close()
+        musicController.close()
         clearListener()
+        unregisterReceiver(myNoisyAudioStreamReceiver)
+        scope.close()
         super.onDestroy()
     }
 

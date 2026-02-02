@@ -196,14 +196,14 @@ class SubsonicApiClient : DefaultParentApiClient() {
      * 获得校验参数组成的Map
      */
     public override fun getQueryMapData(): Map<String, String> {
-        val queryMap = mutableMapOf<String, String>()
-        queryMap.put("u", username)
-        queryMap.put("t", passwordMd5)
-        queryMap.put("s", encryptedSalt)
-        queryMap.put("v", protocolVersion)
-        queryMap.put("c", clientName)
-        queryMap.put("f", responseFormat)
-        return queryMap
+        return mapOf(
+            "u" to username,
+            "t" to passwordMd5,
+            "s" to encryptedSalt,
+            "v" to protocolVersion,
+            "c" to clientName,
+            "f" to responseFormat,
+        )
     }
 
     /**
@@ -222,8 +222,12 @@ class SubsonicApiClient : DefaultParentApiClient() {
     /**
      * 获得音频url
      */
-    fun createAudioUrl(musicId: String, format: AudioCodecEnum? = AudioCodecEnum.ROW, maxBitRate: Int? = null): String {
-        return "${baseUrl}/rest/stream?id=${musicId}&maxBitRate=${maxBitRate}&format=${format}"
+    fun createAudioUrl(
+        musicId: String,
+        format: AudioCodecEnum? = AudioCodecEnum.ROW,
+        maxBitRate: Int? = null
+    ): String {
+        return "${baseUrl}/rest/stream?id=${musicId}&maxBitRate=${maxBitRate}&format=${format}${if (format != AudioCodecEnum.ROW) "&estimateContentLength=true" else ""}"
     }
 
     /**
@@ -249,7 +253,7 @@ class SubsonicApiClient : DefaultParentApiClient() {
         TokenServer.updateLoginRetry(false)
         return LoginSuccessData(
             userId = clientLoginInfoReq.username,
-            accessToken = "",
+            accessToken = clientLoginInfoReq.username,
             serverId = "",
             serverName = systemInfo.subsonicResponse.type,
             version = systemInfo.subsonicResponse.version

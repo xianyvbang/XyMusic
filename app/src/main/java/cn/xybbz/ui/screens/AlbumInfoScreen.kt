@@ -71,7 +71,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -88,7 +87,6 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -96,6 +94,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
@@ -169,19 +168,20 @@ fun AlbumInfoScreen(
         Log.d("=====", "MusicAudiobookInfoScreen重组一次")
     }
 
-    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val lazyListState = rememberLazyListState()
     val navigator = LocalNavigator.current
     val isSticking by remember(lazyListState) { lazyListState.isSticking(1) }
 
-    val favoriteSet by albumInfoViewModel.favoriteRepository.favoriteSet.collectAsState()
-    val downloadMusicIds by albumInfoViewModel.downloadRepository.musicIdsFlow.collectAsState()
-    val ifOpenSelect by albumInfoViewModel.selectControl.uiState.collectAsState()
+    val favoriteSet by albumInfoViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
+    val downloadMusicIds by albumInfoViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
+        emptyList()
+    )
+    val ifOpenSelect by albumInfoViewModel.selectControl.uiState.collectAsStateWithLifecycle()
 
     val musicListPage =
         albumInfoViewModel.listPage.collectAsLazyPagingItems()
-    val sortBy by albumInfoViewModel.sortBy.collectAsState()
+    val sortBy by albumInfoViewModel.sortBy.collectAsStateWithLifecycle()
 
     var ifShowMenu by remember {
         mutableStateOf(false)
@@ -441,7 +441,7 @@ fun AlbumInfoScreen(
                         musicController = albumInfoViewModel.musicController
                     )
                 }
-                stickyHeader(key = 2) { headerIndex ->
+                stickyHeader(key = 2) {
                     StickyHeaderOperationParent(
                         albumInfoViewModel = albumInfoViewModel,
                         musicListPage = musicListPage,
@@ -491,7 +491,7 @@ fun AlbumInfoScreen(
                                     },
                                     ifSelect = ifOpenSelect,
                                     ifSelectCheckBox = { albumInfoViewModel.selectControl.selectMusicIdList.any { it == music.itemId } },
-                                    trailingOnSelectClick = { select ->
+                                    trailingOnSelectClick = { _ ->
                                         albumInfoViewModel.selectControl.toggleSelection(
                                             music.itemId,
                                             onIsSelectAll = {
@@ -534,7 +534,6 @@ private fun MusicListOperation(
     sortContent: @Composable () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val context = LocalContext.current
 
     val iconImageVector by remember {
         derivedStateOf {
@@ -822,20 +821,20 @@ private fun StickyHeaderOperationParent(
                 onIfSort = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifAlbumInfoSort },
                 onIfFavoriteFilter = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifAlbumInfoFavoriteFilter },
                 onSortTypeClick = {
-                    albumInfoViewModel.setSortedData(it, { musicListPage.refresh() })
+                    albumInfoViewModel.setSortedData(it) { musicListPage.refresh() }
                 },
                 onSortType = { sortBy.sortType },
                 onFilterEraTypeList = { mainViewModel.eraItemList },
                 onFilterEraTypeClick = {
                     albumInfoViewModel.setFilterEraType(
-                        it,
-                        { musicListPage.refresh() })
+                        it
+                    ) { musicListPage.refresh() }
                 },
                 onIfFavorite = { sortBy.isFavorite == true },
                 setFavorite = {
                     albumInfoViewModel.setFavorite(
-                        it,
-                        { musicListPage.refresh() })
+                        it
+                    ) { musicListPage.refresh() }
                 },
                 sortTypeList = listOf(
                     SortTypeEnum.CREATE_TIME_ASC,
@@ -848,18 +847,18 @@ private fun StickyHeaderOperationParent(
                 onSetSelectYear = { year ->
                     year?.let {
                         albumInfoViewModel.setFilterYear(
-                            listOf(it), { musicListPage.refresh() }
-                        )
+                            listOf(it)
+                        ) { musicListPage.refresh() }
                     }
                 },
                 onSelectRangeYear = { sortBy.yearList },
                 onSetSelectRangeYear = { years ->
                     albumInfoViewModel.setFilterYear(
-                        years.mapNotNull { it },
-                        { musicListPage.refresh() })
+                        years.mapNotNull { it }
+                    ) { musicListPage.refresh() }
                 },
                 onClearFilterOrShort = {
-                    albumInfoViewModel.clearFilterOrSort{musicListPage.refresh()}
+                    albumInfoViewModel.clearFilterOrSort { musicListPage.refresh() }
                 }
             )
         }

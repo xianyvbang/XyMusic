@@ -1,5 +1,6 @@
 package cn.xybbz.ui.components
 
+import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +33,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -81,11 +83,8 @@ fun <T : Any> SwipeRefreshListComponent(
     //是否加载中
     val isLoading by remember {
         derivedStateOf {
-            collectAsLazyPagingItems == null || (collectAsLazyPagingItems.loadState.refresh is LoadState.Loading
-                    || (collectAsLazyPagingItems.loadState.mediator != null
-                    && collectAsLazyPagingItems.loadState.mediator?.refresh is LoadState.Loading)
-                    || collectAsLazyPagingItems.loadState.source.refresh is LoadState.Loading)
-                    && collectAsLazyPagingItems.itemCount <= 0
+            collectAsLazyPagingItems == null || (collectAsLazyPagingItems.loadState.refresh is LoadState.Loading && collectAsLazyPagingItems.itemCount <= 0)
+
         }
     }
 
@@ -149,10 +148,7 @@ fun <T : Any> LazyListComponent(
     val isLoading by remember {
         derivedStateOf {
             collectAsLazyPagingItems == null || (collectAsLazyPagingItems.loadState.refresh is LoadState.Loading
-                    || (collectAsLazyPagingItems.loadState.mediator != null
-                    && collectAsLazyPagingItems.loadState.mediator?.refresh is LoadState.Loading)
-                    || collectAsLazyPagingItems.loadState.source.refresh is LoadState.Loading)
-                    && collectAsLazyPagingItems.itemCount <= 0
+                    && collectAsLazyPagingItems.itemCount <= 0)
         }
     }
 

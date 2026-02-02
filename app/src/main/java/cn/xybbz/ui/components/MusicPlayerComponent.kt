@@ -67,8 +67,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -89,13 +87,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.compositionLocal.LocalMainViewModel
-import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.PlayerTypeEnum
@@ -157,7 +155,7 @@ fun MusicPlayerComponent(
             mainViewModel.putSheetState(false)
         },
         containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = { WindowInsets.Companion.captionBar },
+        contentWindowInsets = { WindowInsets.captionBar },
     ) {
         MusicPlayerScreen(
             musicDetail = music,
@@ -198,9 +196,10 @@ fun MusicPlayerScreen(
     horPagerState: PagerState
 ) {
 
-    val lcrEntryList by musicPlayerViewModel.lrcServer.lcrEntryListFlow.collectAsState(emptyList())
 
-    val cacheScheduleData by musicPlayerViewModel.cacheController._cacheSchedule.collectAsState()
+    val cacheScheduleData by musicPlayerViewModel.downloadCacheController.cacheSchedule.collectAsStateWithLifecycle()
+
+    val favoriteList by musicPlayerViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -283,47 +282,49 @@ fun MusicPlayerScreen(
                         .weight(4f),
                     state = horPagerState
                 ) { page ->
-                    if (page == 0) {
-                        Box(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            XyImage(
-                                model = musicDetail.pic ?: picByte,
-                                contentDescription = stringResource(R.string.album_cover),
-                                modifier = Modifier
-                                    .align(Alignment.Center)
-                                    .size(300.dp)
-                                    .aspectRatio(1F)
-                                    .clip(
-                                        CircleShape
-                                    ),
-                                /*.graphicsLayer(rotationZ = rotationState)*/
-                                placeholder = painterResource(id = R.drawable.disc_placeholder),
-                                error = painterResource(id = R.drawable.disc_placeholder),
-                                fallback = painterResource(id = R.drawable.disc_placeholder),
-                                contentScale = ContentScale.Crop
+                    when (page) {
+                        0 -> {
+                            Box(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                XyImage(
+                                    model = musicDetail.pic ?: picByte,
+                                    contentDescription = stringResource(R.string.album_cover),
+                                    modifier = Modifier
+                                        .align(Alignment.Center)
+                                        .size(300.dp)
+                                        .aspectRatio(1F)
+                                        .clip(
+                                            CircleShape
+                                        ),
+                                    /*.graphicsLayer(rotationZ = rotationState)*/
+                                    placeholder = painterResource(id = R.drawable.disc_placeholder),
+                                    error = painterResource(id = R.drawable.disc_placeholder),
+                                    fallback = painterResource(id = R.drawable.disc_placeholder),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+
+                        }
+                        1 -> {
+                            LrcViewNewCompose(
+                                listState = lrcListState,
+                                onSetLrcOffset = { offsetMs ->
+                                    coroutineScope.launch {
+                                        musicPlayerViewModel.lrcServer.updateLrcConfig(offsetMs)
+                                    }
+                                }
                             )
                         }
-
-                    } else if (page == 1) {
-                        LrcViewNewCompose(
-                            listState = lrcListState,
-                            lcrEntryList = lcrEntryList,
-                            lrcConfig = musicPlayerViewModel.lrcServer.lrcConfig,
-                            onSetLrcOffset = { offsetMs ->
-                                coroutineScope.launch {
-                                    musicPlayerViewModel.lrcServer.updateLrcConfig(offsetMs)
-                                }
-                            }
-                        )
-                    } else {
-                        MusicPlayerSimilarPopularComponent(
-                            listState = similarPopularListState,
-                            onFavoriteSet = { emptySet() },
-                            onDownloadMusicIds = { emptyList() },
-                            playMusicList = musicPlayerViewModel.musicController.originMusicList,
-                            onAddPlayMusic = { musicPlayerViewModel.addNextPlayer(it) }
-                        )
+                        else -> {
+                            MusicPlayerSimilarPopularComponent(
+                                listState = similarPopularListState,
+                                onFavoriteSet = { emptySet() },
+                                onDownloadMusicIds = { emptyList() },
+                                playMusicList = musicPlayerViewModel.musicController.originMusicList,
+                                onAddPlayMusic = { musicPlayerViewModel.addNextPlayer(it) }
+                            )
+                        }
                     }
                 }
 
@@ -373,7 +374,7 @@ fun MusicPlayerScreen(
                             musicDetail = musicDetail,
                             dataSourceManager = musicPlayerViewModel.dataSourceManager,
                             musicController = musicPlayerViewModel.musicController,
-                            favoriteRepository = musicPlayerViewModel.favoriteRepository
+                            onFavoriteMusicIdSet = {favoriteList}
                         )
                         IconButton(
                             modifier = Modifier.offset(x = (10).dp),
@@ -506,11 +507,7 @@ private fun PlayerCurrentPosition(
     onCacheProgress: () -> Float
 ) {
 
-    val progress by remember {
-        derivedStateOf {
-            musicController.currentPosition.toFloat() / musicController.duration.toFloat()
-        }
-    }
+    val currentPosition by musicController.progressStateFlow.collectAsStateWithLifecycle()
 
     XyColumn(
         backgroundColor = Color.Transparent,
@@ -522,9 +519,9 @@ private fun PlayerCurrentPosition(
         ) {
 
             MusicProgressBar(
-                currentTime = musicController.currentPosition,
+                currentTime = currentPosition,
+                progressStateFlow = musicController.progressStateFlow,
                 totalTime = musicController.duration,
-                progress = progress,
                 cacheProgress = onCacheProgress(),
                 onProgressChanged = { newProgress ->
                     musicController.seekTo(
@@ -585,21 +582,19 @@ private fun FavoriteMusicIconComponent(
     musicDetail: XyPlayMusic,
     dataSourceManager: DataSourceManager,
     musicController: MusicController,
-    favoriteRepository: FavoriteRepository
+    onFavoriteMusicIdSet: () -> List<String>
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val favoriteSet by favoriteRepository.favoriteSet.collectAsState()
 
     IconButton(
         onClick = {
             coroutineScope.launch {
-                val ifFavoriteData = dataSourceManager.setFavoriteData(
+                dataSourceManager.setFavoriteData(
                     MusicTypeEnum.MUSIC,
                     itemId = musicDetail.itemId,
                     musicController = musicController,
-                    ifFavorite = musicDetail.itemId in favoriteSet
+                    ifFavorite = musicDetail.itemId in onFavoriteMusicIdSet()
                 )
-//                ifFavorite = ifFavoriteData
             }
         },
     ) {
@@ -607,12 +602,12 @@ private fun FavoriteMusicIconComponent(
             modifier = Modifier
                 .size(60.dp),
             imageVector =
-                if (musicDetail.itemId in favoriteSet)
+                if (musicDetail.itemId in onFavoriteMusicIdSet())
                     Icons.Rounded.Favorite
                 else
                     Icons.Rounded.FavoriteBorder,
             contentDescription = stringResource(R.string.favorite_button),
-            tint = if (musicDetail.itemId in favoriteSet) Color.Red else LocalContentColor.current
+            tint = if (musicDetail.itemId in onFavoriteMusicIdSet()) Color.Red else LocalContentColor.current
         )
     }
 

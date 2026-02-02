@@ -21,26 +21,30 @@ package cn.xybbz.common.music
 import android.os.Handler
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
-import cn.xybbz.common.utils.CoroutineScopeUtils
-import kotlinx.coroutines.CoroutineScope
+import cn.xybbz.config.scope.IoScoped
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 
-class PlaybackProgressTicker(
+class PlayProgressTicker(
     private val controller: MediaController,
     private val intervalMs: Long = 1000L,
+    coroutineContext: CoroutineContext,
     private val onProgress: (Long) -> Unit
-) {
+) : IoScoped(){
 
-    private val scope: CoroutineScope = CoroutineScopeUtils.getIo("PlaybackProgressTicker")
     private var job: Job? = null
 
     private val controllerHandler =
         Handler(controller.applicationLooper)
+
+    init {
+        createScope(coroutineContext)
+    }
 
     fun start() {
         if (job != null) return
@@ -48,14 +52,15 @@ class PlaybackProgressTicker(
         job = scope.launch {
             withContext(Dispatchers.IO){
                 while (coroutineContext.isActive) {
-                    controllerHandler.post {
+                    controllerHandler.removeCallbacksAndMessages(null)
+                    controllerHandler.post( {
                         if (
                             controller.isPlaying &&
                             controller.playbackState == Player.STATE_READY
                         ) {
                             onProgress(controller.currentPosition)
                         }
-                    }
+                    })
                     delay(intervalMs)
                 }
             }
@@ -63,11 +68,13 @@ class PlaybackProgressTicker(
     }
 
     fun stop() {
+        controllerHandler.removeCallbacksAndMessages(null)
         job?.cancel()
         job = null
     }
 
-    fun release() {
+    override fun close() {
         stop()
+        super.close()
     }
 }

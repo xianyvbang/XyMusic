@@ -21,11 +21,11 @@ package cn.xybbz.api.client.subsonic
 import android.content.Context
 import android.util.Log
 import androidx.paging.ExperimentalPagingApi
-import androidx.paging.PagingData
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.XyResponse
+import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.client.subsonic.data.AlbumID3
 import cn.xybbz.api.client.subsonic.data.ArtistID3
 import cn.xybbz.api.client.subsonic.data.GenreID3
@@ -34,6 +34,7 @@ import cn.xybbz.api.client.subsonic.data.ScrobbleRequest
 import cn.xybbz.api.client.subsonic.data.SongID3
 import cn.xybbz.api.client.subsonic.data.SubsonicArtistsResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
+import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.CollectionType
 import cn.xybbz.api.enums.subsonic.AlbumType
@@ -42,42 +43,42 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
+import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.common.utils.PlaylistParser
-import cn.xybbz.config.connection.ConnectionConfigServer
+import cn.xybbz.config.download.DownLoadManager
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchData
-import cn.xybbz.entity.data.Sort
-import cn.xybbz.entity.data.ext.toArtists
 import cn.xybbz.entity.data.ext.toXyMusic
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
-import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import cn.xybbz.page.defaultLocalPager
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
+import convertToArtist
 import okhttp3.OkHttpClient
-import javax.inject.Inject
 
-class SubsonicDatasourceServer @Inject constructor(
+class SubsonicDatasourceServer(
     private val db: DatabaseClient,
     private val application: Context,
-    private val connectionConfigServer: ConnectionConfigServer,
-    private val subsonicApiClient: SubsonicApiClient
+    settingsManager: SettingsManager,
+    private val subsonicApiClient: SubsonicApiClient,
+    mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
+    downloadManager: DownLoadManager
 ) : IDataSourceParentServer(
     db,
-    connectionConfigServer,
+    settingsManager,
     application,
-    subsonicApiClient
+    subsonicApiClient,
+    mediaLibraryAndFavoriteSyncScheduler,
+    downloadManager
 ) {
     /**
      * 获得当前数据源类型
@@ -124,30 +125,13 @@ class SubsonicDatasourceServer @Inject constructor(
         search: String?
     ): XyResponse<XyArtist> {
         val response =
-            subsonicApiClient.artistsApi().getArtists(connectionConfigServer.libraryId)
-        val artists = convertIndexToArtistList(response, false)
+            subsonicApiClient.artistsApi().getArtists(libraryId)
+        val artists = convertIndexToArtistList(response)
         return XyResponse(
             items = artists,
             totalRecordCount = artists.size,
             startIndex = 0
         )
-    }
-
-    /**
-     * 获得音乐列表数据 Subsonic没办法一次性获得所有音乐
-     */
-    override fun selectMusicFlowList(
-        sortFlow: StateFlow<Sort>
-    ): Flow<PagingData<HomeMusic>> {
-        return defaultLocalPager {
-            val sort = sortFlow.value
-            val yearList = sort.yearList
-            db.musicDao.selectHomeMusicListPageByYear(
-                ifFavorite = sort.isFavorite,
-                if (yearList.isNullOrEmpty()) null else yearList[0],
-                if (yearList.isNullOrEmpty()) null else yearList[yearList.size - 1]
-            )
-        }.flow
     }
 
     /**
@@ -159,12 +143,12 @@ class SubsonicDatasourceServer @Inject constructor(
             val search3 =
                 subsonicApiClient.itemApi().search3(
                     query = search,
-                    musicFolderId = connectionConfigServer.libraryId
+                    musicFolderId = libraryId
                 )
             if (search3.subsonicResponse.status == Status.Ok) {
                 search3.subsonicResponse.searchResult3?.let { search ->
                     searchData.artists = search.artist?.let {
-                        val artistList = convertToArtistList(it, false)
+                        val artistList = convertToArtistList(it)
                         saveBatchArtist(artistList)
                         artistList
                     }
@@ -317,25 +301,18 @@ class SubsonicDatasourceServer @Inject constructor(
      */
     override suspend fun selectMusicListByArtistServer(
         artistId: String,
+        artistName: String,
         pageSize: Int,
         startIndex: Int
     ): XyResponse<XyMusic> {
         //获得艺术家专辑列表
-        val albumIds = db.albumDao.selectListByArtistId(artistId)
-        val musicList = mutableListOf<XyMusic>()
-        if (albumIds.isNotEmpty()) {
-            albumIds.forEach { albumId ->
-                val album = subsonicApiClient.itemApi().getAlbum(albumId)
-                album.subsonicResponse.album?.song?.let { musics ->
-                    val musicInfos = convertToMusicList(musics)
-                    musicList.addAll(musicInfos)
-                }
-
-            }
+        val album = subsonicApiClient.itemApi().getTopSongs(artistName)
+        val musicList = album.subsonicResponse.topSongs?.song?.let { musics ->
+            convertToMusicList(musics)
         }
-        return XyResponse<XyMusic>(
+        return XyResponse(
             items = musicList,
-            totalRecordCount = musicList.size,
+            totalRecordCount = musicList?.size ?: 0,
             startIndex = 0
         )
     }
@@ -346,7 +323,7 @@ class SubsonicDatasourceServer @Inject constructor(
     override suspend fun getRandomMusicList(pageSize: Int, pageNum: Int): List<XyMusic>? {
         val randomSongs = subsonicApiClient.itemApi().getRandomSongs(
             size = pageSize,
-            musicFolderId = connectionConfigServer.libraryId
+            musicFolderId = libraryId
         )
         return randomSongs.subsonicResponse.randomSongs?.song?.let {
             convertToMusicList(
@@ -401,7 +378,7 @@ class SubsonicDatasourceServer @Inject constructor(
                         artistCount = 0,
                         albumCount = 0,
                         songCount = 1,
-                        musicFolderId = connectionConfigServer.libraryId
+                        musicFolderId = libraryId
                     ).subsonicResponse.searchResult3?.song
                 if (items.isNullOrEmpty()) null else {
                     val music = items[0]
@@ -432,7 +409,6 @@ class SubsonicDatasourceServer @Inject constructor(
                     null,
                     playlistId
                 )
-                val pic = if (removeDuplicatesMusicList.isNotEmpty()) musicList[0].pic else null
                 saveMusicPlaylist(
                     playlistId = playlistId,
                     musicIds = removeDuplicatesMusicList.map { music -> music.itemId }
@@ -476,7 +452,6 @@ class SubsonicDatasourceServer @Inject constructor(
      * 保存自建歌单中的音乐
      * @param [playlistId] 歌单id
      * @param [musicIds] 音乐id集合
-     * @param [pic] 自建歌单图片
      */
     override suspend fun saveMusicPlaylist(
         playlistId: String,
@@ -525,7 +500,7 @@ class SubsonicDatasourceServer @Inject constructor(
      */
     override suspend fun selectArtistsByIds(artistIds: List<String>): List<XyArtist> {
         val artist = subsonicApiClient.artistsApi().getArtist(artistIds[0])
-        return artist.subsonicResponse.artist?.let { convertToArtistList(listOf(it), false) }
+        return artist.subsonicResponse.artist?.let { convertToArtistList(listOf(it)) }
             ?: emptyList()
     }
 
@@ -534,35 +509,56 @@ class SubsonicDatasourceServer @Inject constructor(
      * @param [artistId] 艺术家id
      * @return [List<ArtistItem>?] 艺术家信息
      */
-    override suspend fun selectArtistInfoByRemotely(artistId: String): XyArtist? {
-        val artist = subsonicApiClient.artistsApi().getArtist(artistId)
-        //专辑转换
-        return artist.subsonicResponse.artist?.album?.let { albums ->
-            val albumList = convertToAlbumList(albums)
-            //存储到数据库中
-            if (albumList.isNotEmpty())
-                db.albumDao.saveBatch(
-                    albumList,
-                    dataType = MusicDataTypeEnum.ARTIST,
-                    connectionId = connectionConfigServer.getConnectionId(),
-                    artistId
-                )
+    override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
+        val artistInfo = super.selectArtistInfoById(artistId)
+        return artistInfo
 
+    }
+
+    /**
+     * 从远程获得艺术家描述
+     */
+    override suspend fun selectServerArtistInfo(artistId: String): XyArtist? {
+        val artistInfo = try {
+            val artist = subsonicApiClient.artistsApi().getArtist(artistId)
+            //专辑转换
+            artist.subsonicResponse.artist?.album?.let { albums ->
+                val albumList = convertToAlbumList(albums)
+                //存储到数据库中
+                if (albumList.isNotEmpty())
+                    db.albumDao.saveBatch(
+                        albumList,
+                        dataType = MusicDataTypeEnum.ARTIST,
+                        connectionId = getConnectionId(),
+                        artistId
+                    )
+            }
             artist.subsonicResponse.artist?.let {
                 convertToArtist(
                     it,
-                    false,
                     indexNumber = 0
                 )
             }
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取艺术家: $artistId 信息失败", e)
+            null
         }
 
+        val artistInfoDescribe = try {
+            val response =
+                subsonicApiClient.artistsApi().getArtistInfo(id = artistId, count = 0)
+            response.subsonicResponse.artistInfo?.biography
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "读取艺术家描述失败", e)
+            null
+        }
+        return artistInfo?.copy(describe = artistInfoDescribe)
     }
 
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibrary() {
+    override suspend fun selectMediaLibrary(connectionId: Long) {
         try {
             db.withTransaction {
                 db.libraryDao.remove()
@@ -573,8 +569,8 @@ class SubsonicDatasourceServer @Inject constructor(
                         XyLibrary(
                             id = it.id,
                             collectionType = CollectionType.MUSIC.serialName,
-                            name = it.name.toString(),
-                            connectionId = connectionConfigServer.getConnectionId()
+                            name = it.name,
+                            connectionId = connectionId
                         )
                     }
                 if (!libraries.isNullOrEmpty()) {
@@ -597,7 +593,7 @@ class SubsonicDatasourceServer @Inject constructor(
             type = AlbumType.RECENT,
             size = pageSize,
             offset = 0,
-            musicFolderId = connectionConfigServer.libraryId
+            musicFolderId = libraryId
         ).subsonicResponse.albumList2?.album
         if (!albumList.isNullOrEmpty()) {
             db.withTransaction {
@@ -616,7 +612,7 @@ class SubsonicDatasourceServer @Inject constructor(
             type = AlbumType.FREQUENT,
             size = Constants.MIN_PAGE,
             offset = 0,
-            musicFolderId = connectionConfigServer.libraryId
+            musicFolderId = libraryId
         ).subsonicResponse.albumList2?.album
         if (!albumList.isNullOrEmpty()) {
             db.withTransaction {
@@ -635,7 +631,7 @@ class SubsonicDatasourceServer @Inject constructor(
             type = AlbumType.NEWEST,
             size = Constants.MIN_PAGE,
             offset = 0,
-            musicFolderId = connectionConfigServer.libraryId
+            musicFolderId = libraryId
         ).subsonicResponse.albumList2?.album
         if (!albumList.isNullOrEmpty()) {
             db.withTransaction {
@@ -649,53 +645,11 @@ class SubsonicDatasourceServer @Inject constructor(
     }
 
     /**
-     * 获得所有收藏数据
-     */
-    override suspend fun initFavoriteData() {
-        try {
-            val starred2 = subsonicApiClient.itemApi().getStarred2(
-                musicFolderId = connectionConfigServer.libraryId
-            )
-            starred2.subsonicResponse.starred2?.album?.let { albums ->
-                val albumList = convertToAlbumList(albums)
-                saveBatchAlbum(albumList, MusicDataTypeEnum.FAVORITE)
-            }
-            starred2.subsonicResponse.starred2?.artist?.let { artists ->
-                val artistList = convertToArtistList(artists, true)
-                artistList.forEach {
-                    val artist = db.artistDao.selectById(it.artistId)
-                    if (artist == null) {
-                        db.artistDao.save(it)
-                    } else {
-                        db.artistDao.update(
-                            artist.copy(
-                                name = it.name,
-                                pic = it.pic,
-                                describe = it.describe,
-                                sortName = it.sortName,
-                                musicCount = it.musicCount,
-                                albumCount = it.albumCount,
-                                ifFavorite = true
-                            )
-                        )
-                    }
-                }
-            }
-            starred2.subsonicResponse.starred2?.song?.let { songs ->
-                val musicList = convertToMusicList(songs)
-                saveBatchMusic(musicList, dataType = MusicDataTypeEnum.FAVORITE)
-            }
-        } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获得收藏数据失败", e)
-        }
-    }
-
-    /**
      * 获得收藏的音乐
      */
     suspend fun getMusicFavoriteData(): List<XyMusic>? {
         val starred2 = subsonicApiClient.itemApi().getStarred2(
-            musicFolderId = connectionConfigServer.libraryId
+            musicFolderId = libraryId
         )
         return starred2.subsonicResponse.starred2?.song?.let { songs ->
             convertToMusicList(songs)
@@ -716,25 +670,25 @@ class SubsonicDatasourceServer @Inject constructor(
     override suspend fun selectMusicListByGenreIds(
         genreIds: List<String>,
         pageSize: Int
-    ): List<XyMusic>? {
+    ): List<XyMusic> {
 
         val map = genreIds.mapNotNull {
             try {
                 val randomSongs = subsonicApiClient.itemApi().getSongsByGenre(
                     genre = it,
                     size = pageSize,
-                    musicFolderId = connectionConfigServer.libraryId
+                    musicFolderId = libraryId
                 )
-                randomSongs.subsonicResponse.songsByGenre?.song?.let {
+                randomSongs.subsonicResponse.songsByGenre?.song?.let { song ->
                     convertToMusicList(
-                        it
+                        song
                     )
                 }
             } catch (e: Exception) {
                 Log.e(Constants.LOG_ERROR_PREFIX, "获取流派内音乐失败", e)
                 null
             }
-        }.flatten<XyMusic>()
+        }.flatten()
         return map
     }
 
@@ -806,7 +760,7 @@ class SubsonicDatasourceServer @Inject constructor(
                 songId = musicId,
                 count = Constants.SIMILAR_MUSIC_LIST_PAGE
             ).subsonicResponse.songs?.toXyMusic(
-                connectionConfigServer.getConnectionId(),
+                getConnectionId(),
                 { createDownloadUrl(it) },
                 {
                     subsonicApiClient.getImageUrl(
@@ -829,18 +783,19 @@ class SubsonicDatasourceServer @Inject constructor(
                 artistName = artistName ?: "",
                 count = Constants.ARTIST_HOT_MUSIC_LIST_PAGE
             ).subsonicResponse.topSongs.toXyMusic(
-                connectionConfigServer.getConnectionId(),
+                getConnectionId(),
                 createDownloadUrl = { createDownloadUrl(it) },
                 getImageUrl = { subsonicApiClient.getImageUrl(it) }
             )
         return transitionMusicExtend(items)
     }
 
+
     /**
      * 释放
      */
-    override suspend fun release() {
-        super.release()
+    override fun close() {
+        super.close()
         subsonicApiClient.release()
     }
 
@@ -905,10 +860,23 @@ class SubsonicDatasourceServer @Inject constructor(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): XyResponse<XyArtist> {
+    ): List<XyArtist>? {
         val response =
             subsonicApiClient.artistsApi().getArtistInfo(id = artistId, count = pageSize)
-        return response.subsonicResponse.toArtists(connectionConfigServer.getConnectionId())
+        val artistInfo = response.subsonicResponse.artistInfo
+        return artistInfo?.similarArtist?.map {
+            convertToArtist(
+                artistId3 = it,
+                indexNumber = 0
+            )
+        }
+    }
+
+    /**
+     * 获得数据源支持的转码类型
+     */
+    override suspend fun getTranscodingType(): List<TranscodingInfo> {
+        return emptyList()
     }
 
     /**
@@ -971,18 +939,33 @@ class SubsonicDatasourceServer @Inject constructor(
         sortType: SortTypeEnum?,
         years: List<Int>?
     ): XyResponse<XyMusic> {
+        val subsonicResponse = subsonicApiClient.itemApi()
+            .search3(
+                query = "",
+                artistCount = 0,
+                albumCount = 0,
+                songCount = pageSize,
+                songOffset = startIndex
+            )
+
+
         return XyResponse(
-            items = emptyList()
+            items = subsonicResponse.subsonicResponse.searchResult3?.song?.let {
+                convertToMusicList(
+                    it
+                )
+            },
+            totalRecordCount = 1000000,
+            startIndex = startIndex
         )
     }
 
     fun convertIndexToArtistList(
         response: SubsonicResponse<SubsonicArtistsResponse>,
-        ifFavorite: Boolean,
     ): List<XyArtist> {
         return if (response.subsonicResponse.status == Status.Ok) {
             response.subsonicResponse.artists?.index?.flatMap { index ->
-                convertToArtistList(index.artist, ifFavorite, index.name)
+                convertToArtistList(index.artist, index.name)
             }?.sortedBy { it.indexNumber }
                 ?.mapIndexed { indexNumber, artist -> artist.copy(indexNumber = indexNumber) }
                 ?: emptyList()
@@ -996,7 +979,6 @@ class SubsonicDatasourceServer @Inject constructor(
      */
     fun convertToArtistList(
         item: List<ArtistID3>,
-        ifFavorite: Boolean,
         index: String? = null
     ): List<XyArtist> {
         val artistList = item.map { artist ->
@@ -1006,7 +988,7 @@ class SubsonicDatasourceServer @Inject constructor(
                 if (!CharUtils.isEnglishLetter(shortNameStart)) "#" else shortNameStart.toString()
                     .lowercase()
 
-            convertToArtist(artist, ifFavorite, selectChat, 0)
+            convertToArtist(artist, selectChat, 0)
         }
 
         return artistList
@@ -1018,14 +1000,10 @@ class SubsonicDatasourceServer @Inject constructor(
      */
     fun convertToArtist(
         artistId3: ArtistID3,
-        ifFavorite: Boolean,
         index: String? = null,
         indexNumber: Int,
     ): XyArtist {
-
-
-        return XyArtist(
-            artistId = artistId3.id,
+        return artistId3.convertToArtist(
             pic = if (artistId3.coverArt.isNullOrBlank()) null else artistId3.coverArt?.let { coverArt ->
                 subsonicApiClient.getImageUrl(
                     coverArt
@@ -1036,11 +1014,9 @@ class SubsonicDatasourceServer @Inject constructor(
                     coverArt
                 )
             },
-            name = artistId3.name,
-            connectionId = connectionConfigServer.getConnectionId(),
-            selectChat = index ?: "",
-            ifFavorite = ifFavorite,
-            indexNumber = indexNumber
+            index = index,
+            indexNumber = indexNumber,
+            connectionId = getConnectionId()
         )
     }
 
@@ -1065,12 +1041,13 @@ class SubsonicDatasourceServer @Inject constructor(
                 )
             },
             name = album.name,
-            connectionId = connectionConfigServer.getConnectionId(),
-            ifFavorite = false,
+            connectionId = getConnectionId(),
+            ifFavorite = !album.starred.isNullOrBlank(),
             artists = album.artist,
             artistIds = album.artistId,
             ifPlaylist = ifPlaylist,
-            musicCount = album.songCount
+            musicCount = album.songCount,
+            createTime = album.created.toSecondMs(),
         )
     }
 
@@ -1091,10 +1068,11 @@ class SubsonicDatasourceServer @Inject constructor(
             itemId = playlist.id + Constants.SUBSONIC_PLAYLIST_SUFFIX,
             pic = if (playlist.coverArt.isNotBlank()) subsonicApiClient.getImageUrl(playlist.coverArt) else null,
             name = playlist.name,
-            connectionId = connectionConfigServer.getConnectionId(),
+            connectionId = getConnectionId(),
             ifFavorite = false,
             ifPlaylist = true,
-            musicCount = playlist.songCount
+            musicCount = playlist.songCount,
+            createTime = playlist.created.toSecondMs()
         )
     }
 
@@ -1120,7 +1098,7 @@ class SubsonicDatasourceServer @Inject constructor(
                 )
             },
             downloadUrl = createDownloadUrl(music.id),
-            connectionId = connectionConfigServer.getConnectionId()
+            connectionId = getConnectionId()
         )
     }
 
@@ -1141,7 +1119,7 @@ class SubsonicDatasourceServer @Inject constructor(
             itemId = genre.value,
             pic = "",
             name = genre.value,
-            connectionId = connectionConfigServer.getConnectionId()
+            connectionId = getConnectionId()
         )
     }
 
@@ -1173,7 +1151,7 @@ class SubsonicDatasourceServer @Inject constructor(
             fromYear = years?.get(0),
             toYear = years?.get(years.size - 1),
             genre = genreId,
-            musicFolderId = connectionConfigServer.libraryId
+            musicFolderId = libraryId
         )
 
         val size = albumList.subsonicResponse.albumList2?.album?.size ?: 0
@@ -1207,12 +1185,18 @@ class SubsonicDatasourceServer @Inject constructor(
      * @param [itemId] 专辑/音乐id
      */
     override suspend fun markFavoriteItem(itemId: String, dataType: MusicTypeEnum): Boolean {
-        val favorite = subsonicApiClient.userLibraryApi()
-            .markFavoriteItem(
-                id = if (dataType == MusicTypeEnum.MUSIC) listOf(itemId) else null,
-                albumId = if (dataType == MusicTypeEnum.ALBUM) listOf(itemId) else null,
-                artistId = if (dataType == MusicTypeEnum.ARTIST) listOf(itemId) else null
-            ).isFavorite
+        val favorite = try {
+            subsonicApiClient.userLibraryApi()
+                .markFavoriteItem(
+                    id = if (dataType == MusicTypeEnum.MUSIC) listOf(itemId) else null,
+                    albumId = if (dataType == MusicTypeEnum.ALBUM) listOf(itemId) else null,
+                    artistId = if (dataType == MusicTypeEnum.ARTIST) listOf(itemId) else null
+                )
+            true
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "收藏失败", e)
+            false
+        }
         return favorite
     }
 
@@ -1221,11 +1205,17 @@ class SubsonicDatasourceServer @Inject constructor(
      * @param [itemId] 专辑/音乐id
      */
     override suspend fun unmarkFavoriteItem(itemId: String, dataType: MusicTypeEnum): Boolean {
-        val favorite = subsonicApiClient.userLibraryApi().unmarkFavoriteItem(
-            id = if (dataType == MusicTypeEnum.MUSIC) listOf(itemId) else null,
-            albumId = if (dataType == MusicTypeEnum.ALBUM) listOf(itemId) else null,
-            artistId = if (dataType == MusicTypeEnum.ARTIST) listOf(itemId) else null
-        ).isFavorite
+        val favorite = try {
+            subsonicApiClient.userLibraryApi().unmarkFavoriteItem(
+                id = if (dataType == MusicTypeEnum.MUSIC) listOf(itemId) else null,
+                albumId = if (dataType == MusicTypeEnum.ALBUM) listOf(itemId) else null,
+                artistId = if (dataType == MusicTypeEnum.ARTIST) listOf(itemId) else null
+            )
+            true
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "取消收藏失败", e)
+            false
+        }
         return favorite
     }
 
@@ -1236,7 +1226,20 @@ class SubsonicDatasourceServer @Inject constructor(
         pageSize: Int,
         pageNum: Int
     ): List<XyPlayMusic>? {
-        return null
+        var selectMusicList =
+            super.getMusicList(pageSize = pageSize, pageNum = pageNum)
+        if (selectMusicList.isNullOrEmpty()) {
+            val homeMusicList = getRemoteServerMusicList(
+                pageNum * pageSize,
+                pageSize,
+                isFavorite = null,
+                sortType = null,
+                years = null,
+            )
+            selectMusicList = transitionPlayMusic(homeMusicList.items)
+
+        }
+        return selectMusicList
     }
 
     /**

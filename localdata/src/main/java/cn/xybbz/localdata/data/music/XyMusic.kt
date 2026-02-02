@@ -135,7 +135,7 @@ data class XyMusic(
      */
     val size: Long? = 0,
     /**
-     * 时长=
+     * 时长 毫秒
      * 1383720630 / 10000/1000/60
      */
     val runTimeTicks: Long = 0,

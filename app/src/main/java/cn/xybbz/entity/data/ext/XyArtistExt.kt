@@ -16,22 +16,34 @@
  *
  */
 
-package cn.xybbz.entity.data.ext
 
-import cn.xybbz.api.client.data.XyResponse
-import cn.xybbz.api.client.subsonic.data.SubsonicArtistInfoResponse
+import cn.xybbz.api.client.subsonic.data.ArtistID3
 import cn.xybbz.localdata.data.artist.XyArtist
 
-fun SubsonicArtistInfoResponse?.toArtists(connectionId: Long): XyResponse<XyArtist>{
-    return XyResponse(
-        items = this?.artistInfo?.similarArtist?.map { artist ->
-            XyArtist(
-                artistId = artist.id,
-                name = artist.name,
-                connectionId = connectionId,
-            )
-        },
-        totalRecordCount = 0,
-        startIndex = 0
+
+fun ArtistID3.convertToArtist(
+    pic:String?,
+    backdrop:String?,
+    index: String? = null,
+    indexNumber: Int,
+    connectionId:Long,
+): XyArtist {
+    return XyArtist(
+        artistId = this.id,
+        pic = pic,
+        backdrop = backdrop,
+        name = this.name,
+        connectionId = connectionId,
+        selectChat = index ?: "",
+        ifFavorite = !this.starred.isNullOrBlank(),
+        indexNumber = indexNumber
     )
 }
+
+/**
+ * 艺术家详情信息
+ */
+data class XyArtistInfo(
+    val artist: XyArtist?,
+    val similarArtist: List<XyArtist>? = null
+)

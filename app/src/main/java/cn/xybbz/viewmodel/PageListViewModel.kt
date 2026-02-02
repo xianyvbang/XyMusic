@@ -18,13 +18,12 @@
 
 package cn.xybbz.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.SortTypeEnum
-import cn.xybbz.config.connection.ConnectionConfigServer
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.data.era.XyEraItem
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -35,16 +34,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 
-abstract class PageListViewModel<T: Any>(connectionConfigServer: ConnectionConfigServer) : ViewModel() {
+abstract class PageListViewModel<T: Any>(dataSourceManager: DataSourceManager) : ViewModel() {
 
-    protected val _sortType = MutableStateFlow(Sort())
+    private val _sortType = MutableStateFlow(Sort())
 
     val sortBy: StateFlow<Sort> = _sortType.asStateFlow()
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val listPage: Flow<PagingData<T>> =
-        connectionConfigServer.loginSuccessEvent
+        dataSourceManager.loginStateEvent
             .flatMapLatest {
                 getFlowPageData(sortBy)
             }

@@ -115,7 +115,7 @@ fun ProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = hiltViewModel
                 SettingRoundedSurfaceColumn {
                     SettingItemComponent(
                         title = stringResource(R.string.test_connection),
-                        info = proxyConfigViewModel.connectionConfigServer.getAddress(),
+                        info = proxyConfigViewModel.getConnectionAddress(),
                         imageVector = null,
                         onClick = {
                             proxyConfigViewModel.testProxyConfig()

@@ -16,18 +16,19 @@
  *
  */
 
-package cn.xybbz.api.client.subsonic.data
+package cn.xybbz.common.enums
 
 /**
- * 相似艺术家
+ * 登陆类型
  */
-data class SimilarArtistID3(
+enum class LoginType() {
     /**
-     * 艺术家id
+     * 使用api登陆
      */
-    val id:String,
+    API,
+
     /**
-     * 艺术家名称
+     * 使用现有token
      */
-    val name:String,
-)
+    TOKEN
+}

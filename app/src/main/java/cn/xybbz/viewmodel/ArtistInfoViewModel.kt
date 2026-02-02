@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.viewmodel
 
 import androidx.compose.runtime.getValue
@@ -9,9 +27,6 @@ import androidx.paging.cachedIn
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.connection.ConnectionConfigServer
-import cn.xybbz.config.download.DownloadRepository
-import cn.xybbz.config.favorite.FavoriteRepository
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.music.MusicPlayContext
 import cn.xybbz.localdata.config.DatabaseClient
@@ -30,13 +45,11 @@ import kotlinx.coroutines.launch
  */
 @HiltViewModel(assistedFactory = ArtistInfoViewModel.Factory::class)
 class ArtistInfoViewModel @AssistedInject constructor(
-    @Assisted private val artistId: String,
+    @Assisted("artistId") private val artistId: String,
+    @Assisted("artistName") private val artistName: String,
     val dataSourceManager: DataSourceManager,
     val musicPlayContext: MusicPlayContext,
-    val connectionConfigServer: ConnectionConfigServer,
     val musicController: MusicController,
-    val favoriteRepository: FavoriteRepository,
-    val downloadRepository: DownloadRepository,
     val backgroundConfig: BackgroundConfig,
     val db: DatabaseClient,
     val selectControl: SelectControl
@@ -44,8 +57,15 @@ class ArtistInfoViewModel @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(artistId: String): ArtistInfoViewModel
+        fun create(
+            @Assisted("artistId") artistId: String,
+            @Assisted("artistName") artistName: String
+        ): ArtistInfoViewModel
     }
+
+    val downloadMusicIdsFlow =
+        db.downloadDao.getAllMusicTaskUidsFlow()
+    val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     /**
      * 艺术家信息
@@ -60,6 +80,12 @@ class ArtistInfoViewModel @AssistedInject constructor(
         private set
 
     /**
+     * 相似艺术家
+     */
+    var resemblanceArtistList by mutableStateOf<List<XyArtist>>(emptyList())
+        private set
+
+    /**
      * 是否收藏
      */
     var ifFavorite by mutableStateOf(false)
@@ -68,9 +94,10 @@ class ArtistInfoViewModel @AssistedInject constructor(
     //艺术家的音乐列表
     @OptIn(ExperimentalCoroutinesApi::class)
     val musicList =
-        connectionConfigServer.loginSuccessEvent
+        dataSourceManager.loginStateEvent
             .flatMapLatest {
-                dataSourceManager.selectMusicListByArtistId(artistId).distinctUntilChanged()
+                dataSourceManager.selectMusicListByArtistId(artistId, artistName)
+                    .distinctUntilChanged()
             }
             .cachedIn(viewModelScope)
 
@@ -78,17 +105,9 @@ class ArtistInfoViewModel @AssistedInject constructor(
     //艺术家的专辑列表
     @OptIn(ExperimentalCoroutinesApi::class)
     val albumList =
-        connectionConfigServer.loginSuccessEvent
+        dataSourceManager.loginStateEvent
             .flatMapLatest {
                 dataSourceManager.selectAlbumListByArtistId(artistId).distinctUntilChanged()
-            }
-            .cachedIn(viewModelScope)
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val resemblanceArtistList =
-        connectionConfigServer.loginSuccessEvent
-            .flatMapLatest {
-                dataSourceManager.getResemblanceArtist(artistId).distinctUntilChanged()
             }
             .cachedIn(viewModelScope)
 
@@ -101,14 +120,33 @@ class ArtistInfoViewModel @AssistedInject constructor(
      */
     private fun getArtistInfoData() {
         viewModelScope.launch {
-            val artistInfoTmp = dataSourceManager.selectArtistInfoById(artistId)
-            if (artistInfoTmp != null) {
-                artistInfoData = artistInfoTmp
-                ifFavorite = artistInfoTmp.ifFavorite
+            val artistInfo = dataSourceManager.selectArtistInfoById(artistId)
+            if (artistInfo != null && artistInfoData == null) {
+                artistInfoData = artistInfo
+                ifFavorite = artistInfo.ifFavorite
             }
+            if (artistDescribe.isNullOrBlank())
+                artistDescribe = artistInfo?.describe
         }
+
         viewModelScope.launch {
-            artistDescribe = dataSourceManager.selectArtistInfoByRemotely(artistId)?.describe
+            val artistInfo = dataSourceManager.selectServerArtistInfo(artistId)
+            if (artistInfo != null && artistInfoData == null) {
+                artistInfoData = artistInfo
+                ifFavorite = artistInfo.ifFavorite
+            }
+            if (artistDescribe.isNullOrBlank())
+                artistDescribe = artistInfo?.describe
+        }
+
+
+    }
+
+    fun getSimilarArtistsRemotely() {
+        viewModelScope.launch {
+            val similarArtists =
+                dataSourceManager.getSimilarArtistsRemotely(artistId, 0, 12)
+            resemblanceArtistList = similarArtists
         }
     }
 
