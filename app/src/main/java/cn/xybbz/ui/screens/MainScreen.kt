@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 @file:kotlin.OptIn(ExperimentalMaterial3Api::class)
 
 package cn.xybbz.ui.screens
@@ -24,8 +42,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.navigation3.runtime.NavKey
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
-import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import cn.xybbz.router.AlbumInfo
 import cn.xybbz.router.Connection
 import cn.xybbz.router.Home
 import cn.xybbz.router.Navigator
@@ -38,7 +54,6 @@ import cn.xybbz.ui.components.AlertDialogComponent
 import cn.xybbz.ui.components.BottomSheetCompose
 import cn.xybbz.ui.components.LifecycleEffect
 import cn.xybbz.ui.components.LoadingCompose
-import cn.xybbz.ui.components.MusicBottomMenuComponent
 import cn.xybbz.ui.components.SnackBarPlayerComponent
 import cn.xybbz.viewmodel.MainViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -131,9 +146,7 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
 
         AlertDialogComponent()
         BottomSheetCompose()
-        MusicBottomMenuComponent(onAlbumRouter = { albumId ->
-            navigator.navigate(AlbumInfo(albumId, MusicDataTypeEnum.ALBUM))
-        })
+
         AddPlaylistBottomComponent()
         Scaffold(
             snackbarHost = {

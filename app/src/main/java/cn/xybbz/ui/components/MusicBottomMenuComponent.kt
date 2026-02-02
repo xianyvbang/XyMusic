@@ -135,6 +135,7 @@ var bottomMenuMusicInfo = mutableStateListOf<XyMusic>()
 fun MusicBottomMenuComponent(
     musicBottomMenuViewModel: MusicBottomMenuViewModel = hiltViewModel<MusicBottomMenuViewModel>(),
     onAlbumRouter: (String) -> Unit,
+    onPlayerSheetClose:()->Unit
 ) {
     val mainViewModel = LocalMainViewModel.current
 
@@ -464,6 +465,7 @@ fun MusicBottomMenuComponent(
                                             ifShowArtistList = true
                                             musicBottomMenuViewModel.getArtistInfos(artistIds)
                                         } else {
+                                            onPlayerSheetClose()
                                             navigator.navigate(
                                                 ArtistInfo(
                                                     artistIds[0],
@@ -488,6 +490,7 @@ fun MusicBottomMenuComponent(
                         onClick = {
                             coroutineScope.launch {
                                 sheetState.hide()
+                                onPlayerSheetClose()
                                 onAlbumRouter(
                                     music.album
                                 )

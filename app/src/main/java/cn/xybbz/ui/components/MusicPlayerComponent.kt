@@ -63,9 +63,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -116,15 +116,16 @@ import kotlin.math.roundToInt
 fun MusicPlayerComponent(
     music: XyPlayMusic,
     picByte: ByteArray? = null,
+    sheetStateR: SheetState,
     toNext: () -> Unit,
     backNext: () -> Unit,
     onSetState: (Boolean) -> Unit
 ) {
     val mainViewModel = LocalMainViewModel.current
     val coroutineScope = rememberCoroutineScope()
-    val sheetStateR = rememberModalBottomSheetState(
+  /*  val sheetStateR = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
-    )
+    )*/
 
     val horPagerState =
         rememberPagerState {
@@ -163,6 +164,7 @@ fun MusicPlayerComponent(
             onCloseSheet = {
                 coroutineScope.launch {
                     sheetStateR.hide()
+                }.invokeOnCompletion {
                     mainViewModel.putIterations(1)
                     mainViewModel.putSheetState(false)
                 }

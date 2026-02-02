@@ -54,9 +54,11 @@ import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.PlaylistRemove
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -93,7 +95,10 @@ import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.ResourcesUtils.drawableToBitmap
 import cn.xybbz.compositionLocal.LocalMainViewModel
+import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.extension.playProgress
+import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyImage
@@ -101,7 +106,7 @@ import cn.xybbz.viewmodel.SnackBarPlayerViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun SnackBarPlayerComponent(
     modifier: Modifier = Modifier,
@@ -109,11 +114,12 @@ fun SnackBarPlayerComponent(
     onClick: () -> Unit
 ) {
     val mainViewModel = LocalMainViewModel.current
+    val navigator = LocalNavigator.current
     var musicListState by remember {
         mutableStateOf(false)
     }
     val coroutineScope = rememberCoroutineScope()
-   val ifOpenSelect by snackBarPlayerViewModel.selectControl.uiState.collectAsStateWithLifecycle()
+    val ifOpenSelect by snackBarPlayerViewModel.selectControl.uiState.collectAsStateWithLifecycle()
 
     var colorPurple by remember {
         mutableStateOf(Color.Transparent)
@@ -127,11 +133,27 @@ fun SnackBarPlayerComponent(
     val permissionState = downloadPermission {
         snackBarPlayerViewModel.downloadMusics()
     }
+    val playerSheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
+
+    MusicBottomMenuComponent(
+        onAlbumRouter = { albumId ->
+            navigator.navigate(AlbumInfo(albumId, MusicDataTypeEnum.ALBUM))
+        }, onPlayerSheetClose = {
+            coroutineScope.launch {
+                playerSheetState.hide()
+            }.invokeOnCompletion {
+                mainViewModel.putIterations(1)
+                mainViewModel.putSheetState(false)
+            }
+        })
 
     snackBarPlayerViewModel.musicController.musicInfo?.let {
         MusicPlayerComponent(
             music = it,
             snackBarPlayerViewModel.musicController.picByte,
+            sheetStateR = playerSheetState,
             toNext = {
                 Log.i("=====", "数据调用SnackBarPlayerComponent")
                 snackBarPlayerViewModel.musicController.seekToNext()
@@ -570,7 +592,7 @@ fun AsyncImageCover(
     XyImage(
         modifier = Modifier
             .size(XyTheme.dimens.snackBarPlayerHeight),
-        model = if(musicController.musicInfo?.pic.isNullOrBlank())musicController.picByte else musicController.musicInfo?.pic,
+        model = if (musicController.musicInfo?.pic.isNullOrBlank()) musicController.picByte else musicController.musicInfo?.pic,
         contentScale = ContentScale.Crop,
         contentDescription = stringResource(R.string.music_cover),
         placeholder = painterResource(R.drawable.music_xy_placeholder_foreground),
