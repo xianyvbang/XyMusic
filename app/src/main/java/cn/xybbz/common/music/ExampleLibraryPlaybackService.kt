@@ -24,9 +24,9 @@ import android.media.AudioManager
 import android.media.AudioTrack
 import android.os.Bundle
 import android.util.Log
+import androidx.core.util.Preconditions
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.ForwardingPlayer
-import androidx.media3.common.util.Assertions
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSourceBitmapLoader
 import androidx.media3.datasource.DefaultDataSource
@@ -291,17 +291,21 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
 
         mediaSessionBuilder.setBitmapLoader(
             CacheBitmapLoader(
-                DataSourceBitmapLoader(
-                    Assertions.checkStateNotNull<ListeningExecutorService>(
-                        DataSourceBitmapLoader.DEFAULT_EXECUTOR_SERVICE.get()
-                    ), DefaultDataSource.Factory(
-                        this,
-                        OkHttpDataSource.Factory(imageApiClient.okhttpClientFunction())
+                DataSourceBitmapLoader
+                    .Builder(this)
+                    .setExecutorService(
+                        Preconditions.checkNotNull<ListeningExecutorService>(
+                            DataSourceBitmapLoader.DEFAULT_EXECUTOR_SERVICE.get()
+                        )
                     )
-                )
+                    .setDataSourceFactory(
+                        DefaultDataSource.Factory(
+                            this,
+                            OkHttpDataSource.Factory(imageApiClient.okhttpClientFunction())
+                        )
+                    ).build()
             )
         )
-
         mediaSession = mediaSessionBuilder.build()
     }
 
