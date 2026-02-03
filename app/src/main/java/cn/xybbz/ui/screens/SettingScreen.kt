@@ -171,7 +171,7 @@ fun SettingScreen(
                         }
                     }
 
-                    SettingItemComponent(title = "在线音乐品质") {
+                    SettingItemComponent(title = stringResource(R.string.online_music_quality)) {
                         navigator.navigate(StreamingQuality)
                     }
 
@@ -206,6 +206,12 @@ fun SettingScreen(
                                 bol
                             )
                         }
+                    }
+                    SettingItemComponent(
+                        title = stringResource(R.string.customize_lyric_settings),
+                        enabled = false
+                    ) {
+//                        navigator.navigate(CustomLyrics)
                     }
 
                     SettingItemComponent(

@@ -112,7 +112,7 @@ data object ConnectionManagement : RouterConstants()
 @SerialName("ArtistInfo")
 data class ArtistInfo(
     val artistId: String,
-    val artistName:String
+    val artistName: String
 ) : RouterConstants()
 
 /**
@@ -235,3 +235,10 @@ data object ProxyConfig : RouterConstants()
 @Serializable
 @SerialName("StreamingQuality")
 data object StreamingQuality : RouterConstants()
+
+/**
+ * 自定义歌词设置
+ */
+@Serializable
+@SerialName("CustomLyrics")
+data object CustomLyrics : RouterConstants()

@@ -228,10 +228,12 @@
     <string name="settings">设置</string>
     <string name="playback">播放</string>
     <string name="broadcast_while_down">边下边播</string>
+    <string name="online_music_quality">在线音乐品质</string>
     <string name="cache_limit">缓存上限</string>
     <string name="album_playback_history">专辑播放历史</string>
     <string name="allow_simultaneous_playback">允许与其他应用同时播放</string>
     <string name="enabled_sync_play_progress">开启播放进度同步</string>
+    <string name="customize_lyric_settings">自定义歌词设置</string>
     <string name="cache_location">缓存位置</string>
     <string name="song_cache_location">歌曲存储位置</string>
     <string name="connection_management">连接管理</string>
