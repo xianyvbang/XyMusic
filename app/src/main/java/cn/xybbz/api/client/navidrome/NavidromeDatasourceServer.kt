@@ -1005,7 +1005,7 @@ class NavidromeDatasourceServer(
      */
     override suspend fun getTranscodingType(): List<TranscodingInfo> {
         val response = getWithTotalCount { navidromeApiClient.userApi().getTranscodingInfo() }
-        return response.data ?:emptyList()
+        return response.data ?: emptyList()
     }
 
     /**
@@ -1307,9 +1307,10 @@ class NavidromeDatasourceServer(
                 .lowercase()
         return XyArtist(
             artistId = artist.id,
-            pic = artist.smallImageUrl,
-            backdrop = artist.largeImageUrl,
+            pic = artist.smallImageUrl ?: artist.largeImageUrl,
+            backdrop = artist.largeImageUrl ?: artist.smallImageUrl,
             name = artist.name,
+            describe = artist.biography,
             connectionId = getConnectionId(),
             selectChat = selectChat,
             ifFavorite = artist.starred ?: false,
