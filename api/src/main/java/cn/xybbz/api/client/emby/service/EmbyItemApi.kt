@@ -19,6 +19,7 @@
 package cn.xybbz.api.client.emby.service
 
 import cn.xybbz.api.base.BaseApi
+import cn.xybbz.api.client.jellyfin.data.CountsResponse
 import cn.xybbz.api.client.jellyfin.data.ItemResponse
 import cn.xybbz.api.client.jellyfin.data.Response
 import retrofit2.http.GET
@@ -54,4 +55,12 @@ interface EmbyItemApi : BaseApi {
         @Query("Fields") fields: String? = null
     ): Response<ItemResponse>
 
+    /**
+     * 获得数量统计
+     */
+    @GET("/emby/Items/Counts")
+    suspend fun getCounts(
+        @Query("userId") userId: String? = null,
+        @Query("isFavorite") isFavorite: Boolean? = null
+    ): CountsResponse
 }

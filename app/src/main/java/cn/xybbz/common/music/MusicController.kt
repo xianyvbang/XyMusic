@@ -133,6 +133,10 @@ class MusicController(
     var playType by mutableStateOf(PlayerTypeEnum.SEQUENTIAL_PLAYBACK)
         private set
 
+    var ifNextPage = true
+
+    var ifGetNextPageMusicDataIsNullCount:Int = 0
+
     //事件发送流
     private val _events = MutableSharedFlow<PlayerEvent>(
         replay = 0,
@@ -246,7 +250,7 @@ class MusicController(
             curOriginIndex = mediaController?.currentMediaItemIndex ?: 0
         },
         onOriginMusicListIsNotEmptyAndIndexEnd = {
-            originMusicList.isNotEmpty() && curOriginIndex >= originMusicList.size - 1
+            originMusicList.isNotEmpty() && curOriginIndex >= originMusicList.size - 1 && ifNextPage
         },
         onPageNumber = { pageNum },
         onUpdateDuration = {
@@ -573,7 +577,7 @@ class MusicController(
         playDataType = musicPlayTypeEnum
 
         Log.i("music", "初始化音乐列表开始播放")
-
+        updateRestartCount()
         originMusicList = emptyList()
 
         if (musicCurrentPositionMapData != null) {
@@ -586,7 +590,7 @@ class MusicController(
         val tmpList = mutableListOf<XyPlayMusic>()
         tmpList.addAll(musicDataList)
         originMusicList = tmpList
-        this.pageNum = pageNum
+        setPageNumData(pageNum)
         this.pageSize = pageSize
 
         if (musicDataList.isNotEmpty()) {
@@ -749,7 +753,7 @@ class MusicController(
         updateState(PlayStateEnum.None)
         headTime = Constants.ZERO.toLong()
         endTime = Constants.ZERO.toLong()
-        pageNum = Constants.ZERO
+        setPageNumData(Constants.ZERO)
         pageSize = Constants.ZERO
         fadeController.release()
     }
@@ -835,6 +839,30 @@ class MusicController(
         this.duration = duration
     }
 
+
+    /**
+     * 更新获取下一页音乐数据为空的次数
+     */
+    @Synchronized
+    fun updateIfGetNextPageMusicDataIsNullCount(count: Int){
+        this.ifGetNextPageMusicDataIsNullCount += count
+        if (this.ifGetNextPageMusicDataIsNullCount >= 3){
+            updateIfNextPage(false)
+        }
+    }
+
+    fun updateRestartCount(){
+        this.ifGetNextPageMusicDataIsNullCount = 0
+        updateIfNextPage(true)
+    }
+
+    /**
+     * 更新是否可以加载下一页音乐数据
+     */
+    private fun updateIfNextPage(ifNextPage: Boolean){
+        this.ifNextPage = ifNextPage
+    }
+
     fun reportedPlayEvent() {
         musicInfo?.let {
             scope.launch {
@@ -863,7 +891,7 @@ class MusicController(
         updateState(PlayStateEnum.None)
         headTime = Constants.ZERO.toLong()
         endTime = Constants.ZERO.toLong()
-        pageNum = Constants.ZERO
+        setPageNumData(Constants.ZERO)
         pageSize = Constants.ZERO
         fadeController.close()
         mediaController?.release()

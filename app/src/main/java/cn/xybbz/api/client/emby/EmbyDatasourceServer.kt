@@ -318,42 +318,29 @@ class EmbyDatasourceServer(
         var genres: Int? = null
         var favorite: Int? = null
         supervisorScope {
-            val album = async {
-                album = try {
-                    getAlbumList(pageSize = 1, startIndex = 0).totalRecordCount
+            val counts = async {
+                try {
+                    val counts = embyApiClient.itemApi().getCounts(getUserId())
+                    album = counts.albumCount
+                    artist = counts.artistCount
+                    music = counts.songCount
                 } catch (e: SocketTimeoutException) {
-                    Log.e(Constants.LOG_ERROR_PREFIX, "加载专辑数量超时", e)
-                    null
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载数量超时", e)
                 } catch (e: Exception) {
-                    Log.e(Constants.LOG_ERROR_PREFIX, "加载专辑数量报错", e)
-                    null
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载数量报错", e)
                 }
 
             }
 
-            val artist = async {
-                artist = try {
-                    getArtistList(startIndex = 0, pageSize = 0).totalRecordCount
+            val favoriteCounts = async {
+                try {
+                    val counts =
+                        embyApiClient.itemApi().getCounts(getUserId(), isFavorite = true)
+                    favorite = counts.songCount
                 } catch (e: SocketTimeoutException) {
-                    Log.e(Constants.LOG_ERROR_PREFIX, "加载艺术家数量超时", e)
-                    null
-
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载收藏数量超时", e)
                 } catch (e: Exception) {
-                    Log.e(Constants.LOG_ERROR_PREFIX, "加载艺术家数量报错", e)
-                    null
-                }
-            }
-
-            val music = async {
-                music = try {
-                    getServerMusicList(startIndex = 0, pageSize = 0).totalRecordCount
-                } catch (e: SocketTimeoutException) {
-                    Log.e(Constants.LOG_ERROR_PREFIX, "加载音乐数量超时", e)
-                    null
-
-                } catch (e: Exception) {
-                    Log.e(Constants.LOG_ERROR_PREFIX, "加载音乐数量报错", e)
-                    null
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载收藏数量报错", e)
                 }
             }
 
@@ -384,25 +371,10 @@ class EmbyDatasourceServer(
                 }
             }
 
-            val favorite = async {
-                favorite = try {
-                    val response = getServerMusicList(
-                        startIndex = 0, pageSize = 0, isFavorite = true
-                    )
-                    response.totalRecordCount
-                } catch (e: Exception) {
-                    Log.e(Constants.LOG_ERROR_PREFIX, "加载收藏数量报错", e)
-                    null
-                }
-
-            }
-
-            album.await()
-            artist.await()
-            music.await()
+            counts.await()
+            favoriteCounts.await()
             playlist.await()
             genres.await()
-            favorite.await()
         }
 
         updateOrSaveDataInfoCount(music, album, artist, playlist, genres, favorite, connectionId)
