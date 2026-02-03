@@ -135,6 +135,8 @@ class MusicController(
 
     var ifNextPage = true
 
+    var ifGetNextPageMusicDataIsNullCount:Int = 0
+
     //事件发送流
     private val _events = MutableSharedFlow<PlayerEvent>(
         replay = 0,
@@ -575,7 +577,7 @@ class MusicController(
         playDataType = musicPlayTypeEnum
 
         Log.i("music", "初始化音乐列表开始播放")
-        updateIfNextPage(true)
+        updateRestartCount()
         originMusicList = emptyList()
 
         if (musicCurrentPositionMapData != null) {
@@ -837,7 +839,27 @@ class MusicController(
         this.duration = duration
     }
 
-    fun updateIfNextPage(ifNextPage: Boolean){
+
+    /**
+     * 更新获取下一页音乐数据为空的次数
+     */
+    @Synchronized
+    fun updateIfGetNextPageMusicDataIsNullCount(count: Int){
+        this.ifGetNextPageMusicDataIsNullCount += count
+        if (this.ifGetNextPageMusicDataIsNullCount >= 3){
+            updateIfNextPage(false)
+        }
+    }
+
+    fun updateRestartCount(){
+        this.ifGetNextPageMusicDataIsNullCount = 0
+        updateIfNextPage(true)
+    }
+
+    /**
+     * 更新是否可以加载下一页音乐数据
+     */
+    private fun updateIfNextPage(ifNextPage: Boolean){
         this.ifNextPage = ifNextPage
     }
 

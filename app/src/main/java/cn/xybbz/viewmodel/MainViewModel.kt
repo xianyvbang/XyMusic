@@ -403,13 +403,13 @@ class MainViewModel @Inject constructor(
             val newMusicList = musicPlayContext.musicPlayData?.onNextMusicList?.invoke(newPageNum)
             if (!newMusicList.isNullOrEmpty()) {
                 musicController.setPageNumData(newPageNum)
-                if (newMusicList.isNotEmpty())
-                    musicController.addMusicList(
-                        newMusicList,
-                        musicPlayContext.musicPlayData?.onMusicPlayParameter?.artistId
-                    )
+                musicController.addMusicList(
+                    newMusicList,
+                    musicPlayContext.musicPlayData?.onMusicPlayParameter?.artistId
+                )
+                musicController.updateRestartCount()
             }else {
-                musicController.updateIfNextPage(false)
+                musicController.updateIfGetNextPageMusicDataIsNullCount(1)
             }
         }.invokeOnCompletion { ifNextPageNumList = false }
     }
