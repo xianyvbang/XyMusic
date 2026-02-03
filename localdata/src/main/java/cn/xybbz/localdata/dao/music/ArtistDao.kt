@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.localdata.dao.music
 
 import androidx.paging.PagingSource
@@ -68,9 +86,10 @@ interface ArtistDao {
 
     @Query(
         """
-        select xa.*,fa.ifFavorite as favorite from xy_artist xa
+        select xa.*,row_number() over (order by xa.selectChat) as indexNumber,fa.ifFavorite as favorite from xy_artist xa
         left join favoriteartist fa on fa.artistId = xa.artistId
         where xa.connectionId = (select connectionId from xy_settings)
+        order by xa.selectChat
     """
     )
     fun selectListPagingSource(): PagingSource<Int, XyArtistExt>
