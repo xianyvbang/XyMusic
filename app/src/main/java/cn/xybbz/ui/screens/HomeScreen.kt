@@ -160,6 +160,7 @@ fun HomeScreen(
         skipPartiallyExpanded = false
     )
 
+   val deletePlaylist =  stringResource(R.string.delete_playlist)
 
     var playlistName by remember {
         mutableStateOf("")
@@ -988,7 +989,7 @@ fun HomeScreen(
                             },
                             removePlaylistClick = {
                                 AlertDialogObject(
-                                    title = context.getString(R.string.delete_playlist),
+                                    title = deletePlaylist,
                                     content = {
                                         XyItemTextHorizontal(
                                             text = stringResource(

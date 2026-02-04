@@ -21,6 +21,7 @@ package cn.xybbz.viewmodel
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -49,7 +50,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
-import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -77,7 +77,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
     /**
      * 下载中的任务的数量
      */
-    var downloadCount by mutableStateOf(0)
+    var downloadCount by mutableIntStateOf(0)
         private set
 
 

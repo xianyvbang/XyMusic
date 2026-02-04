@@ -60,13 +60,7 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        /* Thread.setDefaultUncaughtExceptionHandler { _, throwable ->
-             // 在这里处理异常，可以进行日志记录或其他操作
-             throwable.printStackTrace()
-             Log.e("=====", "有异常" + throwable.message.toString())
-             // 退出应用程序
- //            exitProcess(1)
-         }*/
+
         enableEdgeToEdge()
 
         setContent {

@@ -27,6 +27,7 @@ import cn.xybbz.api.client.navidrome.data.AlbumItem
 import cn.xybbz.api.client.navidrome.data.ArtistItem
 import cn.xybbz.api.client.navidrome.data.Genre
 import cn.xybbz.api.client.navidrome.data.PlaylistAddMusicsUpdateRequest
+import cn.xybbz.api.client.navidrome.data.PlaylistCreateRequest
 import cn.xybbz.api.client.navidrome.data.PlaylistItemData
 import cn.xybbz.api.client.navidrome.data.PlaylistUpdateRequest
 import cn.xybbz.api.client.navidrome.data.SongItem
@@ -110,7 +111,7 @@ class NavidromeDatasourceServer(
      */
     override suspend fun createPlaylist(name: String): String? {
         val id = navidromeApiClient.playlistsApi()
-            .createPlaylist(name = name)?.id
+            .createPlaylist(PlaylistCreateRequest(name = name))?.id
         return id
     }
 
@@ -994,8 +995,7 @@ class NavidromeDatasourceServer(
             navidromeApiClient.artistsApi().getArtistInfo(id = artistId, count = pageSize)
         return response.subsonicResponse.artistInfo?.similarArtist?.map {
             convertToArtist(
-                artistId3 = it,
-                indexNumber = 0
+                artistId3 = it
             )
         }
     }
@@ -1323,7 +1323,6 @@ class NavidromeDatasourceServer(
     fun convertToArtist(
         artistId3: ArtistID3,
         index: String? = null,
-        indexNumber: Int,
     ): XyArtist {
 
         return artistId3.convertToArtist(

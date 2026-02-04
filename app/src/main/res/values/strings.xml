@@ -83,7 +83,7 @@
     <string name="rename_playlist">重命名歌单</string>
     <string name="delete_playlist">删除歌单</string>
     <string name="modify_playlist_name">修改歌单名称</string>
-    <string name="confirm_delete_playlist">确定要删除 $s 吗?</string>
+    <string name="confirm_delete_playlist">确定要删除 %s 吗?</string>
 
     <!--    艺术家详情-->
     <string name="no_description">暂无简介</string>
@@ -346,7 +346,7 @@
     <string name="year_selection">年份选择</string>
     <string name="can_cancel_favorite_filter">已经进行收藏筛选</string>
     <string name="can_get_favorite_music">已经取消收藏筛选</string>
-    <string name="enter_settings">进入$s设置</string>
+    <string name="enter_settings">进入%s设置</string>
 
 
     <string name="please_select">请选择</string>
