@@ -24,9 +24,9 @@ import android.media.AudioManager
 import android.media.AudioTrack
 import android.os.Bundle
 import android.util.Log
-import androidx.core.util.Preconditions
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.ForwardingPlayer
+import androidx.media3.common.TrackSelectionParameters
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSourceBitmapLoader
 import androidx.media3.datasource.DefaultDataSource
@@ -56,10 +56,10 @@ import cn.xybbz.config.media.MediaServer
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
+import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
-import com.google.common.util.concurrent.ListeningExecutorService
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -143,8 +143,9 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
             }
         })
 
+
         // 创建ExoPlayer
-        exoPlayer = exoPlayerBuilder
+        val exoPlayer = exoPlayerBuilder
             .setAudioAttributes(
                 AudioAttributes.DEFAULT, /* handleAudioFocus= */
                 !settingsManager.get().ifHandleAudioFocus
@@ -159,6 +160,19 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                 }
             })
             .build()
+        //设置音乐分流
+        val audioOffloadPreferences =
+            TrackSelectionParameters.AudioOffloadPreferences.Builder()
+                .setAudioOffloadMode(TrackSelectionParameters.AudioOffloadPreferences.AUDIO_OFFLOAD_MODE_ENABLED)
+                // Add additional options as needed
+                .setIsGaplessSupportRequired(true)
+                .build()
+        exoPlayer.trackSelectionParameters = exoPlayer.trackSelectionParameters
+            .buildUpon()
+            .setAudioOffloadPreferences(audioOffloadPreferences)
+            .build()
+        this.exoPlayer = exoPlayer
+
         val exoPlayerListener = ExoPlayerListener(
             musicController,
             downloadCacheController,
@@ -168,8 +182,8 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
         this.exoPlayerListener = exoPlayerListener
 
         //这里的可以获得元数据
-        exoPlayer?.addAnalyticsListener(XyLogger(mediaServer = mediaServer))
-        exoPlayer?.addListener(exoPlayerListener)
+        exoPlayer.addAnalyticsListener(XyLogger(mediaServer = mediaServer))
+        exoPlayer.addListener(exoPlayerListener)
 
         val sessionCommand = SessionCommand(SAVE_TO_FAVORITES, Bundle.EMPTY)
         val removeFavorites = SessionCommand(REMOVE_FROM_FAVORITES, Bundle.EMPTY)
@@ -294,7 +308,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                 DataSourceBitmapLoader
                     .Builder(this)
                     .setExecutorService(
-                        Preconditions.checkNotNull<ListeningExecutorService>(
+                        Preconditions.checkNotNull(
                             DataSourceBitmapLoader.DEFAULT_EXECUTOR_SERVICE.get()
                         )
                     )
