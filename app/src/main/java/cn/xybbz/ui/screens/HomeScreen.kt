@@ -178,16 +178,6 @@ fun HomeScreen(
     }
 
     /**
-     * 是否显示无数据信息
-     */
-    /*val ifShowNotData by remember {
-        derivedStateOf {
-            homeViewModel.newAlbumList.isEmpty() && homeViewModel.musicRecentlyList.isEmpty()
-                    && mostPlayerMusicList.isEmpty()
-        }
-    }*/
-
-    /**
      * 歌单列表是否存在
      */
     val ifShowPlaylist by remember {
@@ -207,11 +197,6 @@ fun HomeScreen(
 
     val coroutineScope = rememberCoroutineScope()
 
-    /* BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-         val width = this.maxWidth
-
-     }
- */
     XyColumnScreen(
         modifier = modifier
             .brashColor(
