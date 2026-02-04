@@ -35,6 +35,7 @@ import com.kongzue.dialogx.DialogX
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.system.exitProcess
 
 @HiltAndroidApp
 class XyApplication : Application(), Configuration.Provider {
@@ -64,6 +65,13 @@ class XyApplication : Application(), Configuration.Provider {
     lateinit var musicController: MusicController
 
     override fun onCreate() {
+        Thread.setDefaultUncaughtExceptionHandler { _, throwable ->
+            // 在这里处理异常，可以进行日志记录或其他操作
+            throwable.printStackTrace()
+            Log.e("=====", "有异常" + throwable.message.toString())
+            // 退出应用程序
+            exitProcess(1)
+        }
         // 初始化语种切换框架
         super.onCreate()
         MultiLanguages.init(this)
@@ -76,6 +84,9 @@ class XyApplication : Application(), Configuration.Provider {
 
         val scope = CoroutineScopeUtils.getDefault("XyApplication")
         scope.launch {
+            homeDataRepository.initData()
+        }
+        scope.launch {
             val settings = settingsManager.setSettingsData()
             dataSourceManager.initDataSource(settings.dataSourceType)
         }
@@ -87,12 +98,10 @@ class XyApplication : Application(), Configuration.Provider {
             proxyConfigServer.initConfig()
         }
 
-        scope.launch {
-            homeDataRepository.initData()
-        }
 
-        Log.i("init","musicController加载")
-        musicController.initController {  }
+
+        Log.i("init", "musicController加载")
+        musicController.initController { }
 
     }
 

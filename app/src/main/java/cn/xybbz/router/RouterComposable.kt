@@ -37,6 +37,7 @@ import cn.xybbz.ui.screens.CacheLimitScreen
 import cn.xybbz.ui.screens.ConnectionConfigInfoScreen
 import cn.xybbz.ui.screens.ConnectionManagement
 import cn.xybbz.ui.screens.ConnectionScreen
+import cn.xybbz.ui.screens.CustomLyricsScreen
 import cn.xybbz.ui.screens.DailyRecommendScreen
 import cn.xybbz.ui.screens.DownloadScreen
 import cn.xybbz.ui.screens.FavoriteScreen
@@ -191,5 +192,9 @@ val entryProvider = entryProvider {
 
     nodeComposable<StreamingQuality> {
         StreamingQualityScreen()
+    }
+
+    nodeComposable<CustomLyrics> {
+        CustomLyricsScreen()
     }
 }

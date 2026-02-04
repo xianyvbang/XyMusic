@@ -113,6 +113,7 @@ class ArtistInfoViewModel @AssistedInject constructor(
 
     init {
         getArtistInfoData()
+        getSimilarArtistsRemotely()
     }
 
     /**

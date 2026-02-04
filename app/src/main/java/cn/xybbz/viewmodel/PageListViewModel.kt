@@ -96,7 +96,7 @@ abstract class PageListViewModel<T: Any>(dataSourceManager: DataSourceManager) :
      */
     suspend fun setFavorite(isFavorite: Boolean, refreshPage: suspend () -> Unit) {
         val sort = this._sortType.value
-        sort.isFavorite = isFavorite
+        sort.isFavorite = if (isFavorite) true else null
         updateSort(sort.copy(), refreshPage = refreshPage)
     }
 

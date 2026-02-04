@@ -27,6 +27,7 @@ import cn.xybbz.api.client.navidrome.data.AlbumItem
 import cn.xybbz.api.client.navidrome.data.ArtistItem
 import cn.xybbz.api.client.navidrome.data.Genre
 import cn.xybbz.api.client.navidrome.data.PlaylistAddMusicsUpdateRequest
+import cn.xybbz.api.client.navidrome.data.PlaylistCreateRequest
 import cn.xybbz.api.client.navidrome.data.PlaylistItemData
 import cn.xybbz.api.client.navidrome.data.PlaylistUpdateRequest
 import cn.xybbz.api.client.navidrome.data.SongItem
@@ -51,6 +52,7 @@ import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.NavidromeOrder
 import cn.xybbz.entity.data.SearchData
+import cn.xybbz.entity.data.ext.convertToArtist
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.ext.toXyMusic
 import cn.xybbz.entity.data.toNavidromeOrder
@@ -64,7 +66,6 @@ import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import convertToArtist
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import okhttp3.OkHttpClient
@@ -110,7 +111,7 @@ class NavidromeDatasourceServer(
      */
     override suspend fun createPlaylist(name: String): String? {
         val id = navidromeApiClient.playlistsApi()
-            .createPlaylist(name = name)?.id
+            .createPlaylist(PlaylistCreateRequest(name = name))?.id
         return id
     }
 
@@ -146,7 +147,7 @@ class NavidromeDatasourceServer(
     override suspend fun selectArtistsByIds(artistIds: List<String>): List<XyArtist> {
         return artistIds.mapNotNull { artistId ->
             val artist = navidromeApiClient.artistsApi().getArtist(artistId)
-            artist?.let { artist -> convertToArtist(artist, 0) }
+            artist?.let { artist -> convertToArtist(artist) }
         }
     }
 
@@ -617,7 +618,7 @@ class NavidromeDatasourceServer(
      */
     override suspend fun selectServerArtistInfo(artistId: String): XyArtist? {
         val items = navidromeApiClient.artistsApi().getArtist(artistId)
-        return items?.let { convertToArtist(it, indexNumber = 0) }
+        return items?.let { convertToArtist(it) }
     }
 
     /**
@@ -994,8 +995,7 @@ class NavidromeDatasourceServer(
             navidromeApiClient.artistsApi().getArtistInfo(id = artistId, count = pageSize)
         return response.subsonicResponse.artistInfo?.similarArtist?.map {
             convertToArtist(
-                artistId3 = it,
-                indexNumber = 0
+                artistId3 = it
             )
         }
     }
@@ -1005,7 +1005,7 @@ class NavidromeDatasourceServer(
      */
     override suspend fun getTranscodingType(): List<TranscodingInfo> {
         val response = getWithTotalCount { navidromeApiClient.userApi().getTranscodingInfo() }
-        return response.data ?:emptyList()
+        return response.data ?: emptyList()
     }
 
     /**
@@ -1283,8 +1283,8 @@ class NavidromeDatasourceServer(
     fun convertToArtistList(
         item: List<ArtistItem>
     ): List<XyArtist> {
-        val artistList = item.mapIndexed { index, artist ->
-            convertToArtist(artist, index)
+        val artistList = item.map { artist ->
+            convertToArtist(artist)
         }
         return artistList
     }
@@ -1294,7 +1294,6 @@ class NavidromeDatasourceServer(
      */
     fun convertToArtist(
         artist: ArtistItem,
-        indexNumber: Int,
     ): XyArtist {
         val orderArtistName = artist.orderArtistName
         val result =
@@ -1307,13 +1306,13 @@ class NavidromeDatasourceServer(
                 .lowercase()
         return XyArtist(
             artistId = artist.id,
-            pic = artist.smallImageUrl,
-            backdrop = artist.largeImageUrl,
+            pic = artist.smallImageUrl ?: artist.largeImageUrl,
+            backdrop = artist.largeImageUrl ?: artist.smallImageUrl,
             name = artist.name,
+            describe = artist.biography,
             connectionId = getConnectionId(),
             selectChat = selectChat,
-            ifFavorite = artist.starred ?: false,
-            indexNumber = indexNumber
+            ifFavorite = artist.starred ?: false
         )
     }
 
@@ -1324,7 +1323,6 @@ class NavidromeDatasourceServer(
     fun convertToArtist(
         artistId3: ArtistID3,
         index: String? = null,
-        indexNumber: Int,
     ): XyArtist {
 
         return artistId3.convertToArtist(
@@ -1339,7 +1337,6 @@ class NavidromeDatasourceServer(
                 )
             },
             index = index,
-            indexNumber = indexNumber,
             connectionId = getConnectionId()
         )
     }

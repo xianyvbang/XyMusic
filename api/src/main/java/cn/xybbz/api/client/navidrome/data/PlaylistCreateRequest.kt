@@ -16,16 +16,12 @@
  *
  */
 
-package cn.xybbz.localdata.data.artist
+package cn.xybbz.api.client.navidrome.data
 
-import androidx.room.Embedded
+import com.squareup.moshi.JsonClass
 
-data class XyArtistExt(
-    @Embedded
-    val artist: XyArtist,
-    val favorite: Boolean? = false,
-    /**
-     * 加载数据所在索引
-     */
-    val indexNumber: Int = 0,
+@JsonClass(generateAdapter = true)
+data class PlaylistCreateRequest(
+    val name:String,
+    val public: Boolean = false
 )

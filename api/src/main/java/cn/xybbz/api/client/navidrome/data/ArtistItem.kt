@@ -57,6 +57,10 @@ data class ArtistItem(
      */
     val playDate: String? = null,
     /**
+     * 简介
+     */
+    val biography: String? = null,
+    /**
      * 小图片链接地址
      */
     val smallImageUrl: String? = null,
@@ -91,7 +95,7 @@ data class ArtistItem(
     /**
      * 艺术家排序名称
      */
-    val orderArtistName: String ? = null,
+    val orderArtistName: String? = null,
     /**
      * mbz艺术家id
      */

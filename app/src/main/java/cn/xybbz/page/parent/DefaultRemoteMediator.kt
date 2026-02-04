@@ -30,7 +30,7 @@ import cn.xybbz.localdata.data.remote.RemoteCurrent
 import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalPagingApi::class)
-abstract class DefaultRemoteMediator<T:Any,K : Any>(
+abstract class DefaultRemoteMediator<T : Any, K : Any>(
     private val db: DatabaseClient,
     protected val remoteId: String,
     private val connectionId: Long
@@ -54,7 +54,7 @@ abstract class DefaultRemoteMediator<T:Any,K : Any>(
                     val remoteKey = db.withTransaction {
                         remoteKeyDao.remoteKeyById(remoteId)
                     }
-                    if (remoteKey == null || (remoteKey.nextKey * state.config.pageSize) >= remoteKey.total
+                    if (remoteKey == null || (remoteKey.nextKey + 1 * state.config.pageSize) >= remoteKey.total
                     ) {
                         return MediatorResult.Success(
                             endOfPaginationReached = true

@@ -22,6 +22,7 @@ import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.navidrome.data.NavidromeCreatePlaylistResponse
 import cn.xybbz.api.client.navidrome.data.PlaylistAddMusicsUpdateRequest
 import cn.xybbz.api.client.navidrome.data.PlaylistAddMusicsUpdateResponse
+import cn.xybbz.api.client.navidrome.data.PlaylistCreateRequest
 import cn.xybbz.api.client.navidrome.data.PlaylistItemData
 import cn.xybbz.api.client.navidrome.data.PlaylistRemoveMusicsUpdateResponse
 import cn.xybbz.api.client.navidrome.data.PlaylistUpdateRequest
@@ -32,6 +33,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -40,9 +42,9 @@ import retrofit2.http.Query
 interface NavidromePlaylistsApi : BaseApi {
 
     @POST("/api/playlist")
+    @Headers("Content-Type: application/json")
     suspend fun createPlaylist(
-        @Query("name") name: String? = null,
-        @Query("public") public: Boolean = false
+        @Body playlistCreateRequest: PlaylistCreateRequest
     ): NavidromeCreatePlaylistResponse?
 
     @PUT("/api/playlist/{playlistId}")
@@ -53,7 +55,7 @@ interface NavidromePlaylistsApi : BaseApi {
 
     @DELETE("/api/playlist/{playlistId}")
     suspend fun deletePlaylist(
-        @Query("playlistId") playlistId: String
+        @Path("playlistId") playlistId: String
     )
 
     @GET("/api/playlist")

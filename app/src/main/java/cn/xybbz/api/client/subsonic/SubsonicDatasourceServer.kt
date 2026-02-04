@@ -51,6 +51,7 @@ import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchData
+import cn.xybbz.entity.data.ext.convertToArtist
 import cn.xybbz.entity.data.ext.toXyMusic
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -62,7 +63,6 @@ import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import convertToArtist
 import okhttp3.OkHttpClient
 
 class SubsonicDatasourceServer(
@@ -535,8 +535,7 @@ class SubsonicDatasourceServer(
             }
             artist.subsonicResponse.artist?.let {
                 convertToArtist(
-                    it,
-                    indexNumber = 0
+                    it
                 )
             }
         } catch (e: Exception) {
@@ -866,8 +865,7 @@ class SubsonicDatasourceServer(
         val artistInfo = response.subsonicResponse.artistInfo
         return artistInfo?.similarArtist?.map {
             convertToArtist(
-                artistId3 = it,
-                indexNumber = 0
+                artistId3 = it
             )
         }
     }
@@ -966,9 +964,7 @@ class SubsonicDatasourceServer(
         return if (response.subsonicResponse.status == Status.Ok) {
             response.subsonicResponse.artists?.index?.flatMap { index ->
                 convertToArtistList(index.artist, index.name)
-            }?.sortedBy { it.indexNumber }
-                ?.mapIndexed { indexNumber, artist -> artist.copy(indexNumber = indexNumber) }
-                ?: emptyList()
+            }?: emptyList()
         } else {
             emptyList()
         }
@@ -988,7 +984,7 @@ class SubsonicDatasourceServer(
                 if (!CharUtils.isEnglishLetter(shortNameStart)) "#" else shortNameStart.toString()
                     .lowercase()
 
-            convertToArtist(artist, selectChat, 0)
+            convertToArtist(artist, selectChat)
         }
 
         return artistList
@@ -1001,7 +997,6 @@ class SubsonicDatasourceServer(
     fun convertToArtist(
         artistId3: ArtistID3,
         index: String? = null,
-        indexNumber: Int,
     ): XyArtist {
         return artistId3.convertToArtist(
             pic = if (artistId3.coverArt.isNullOrBlank()) null else artistId3.coverArt?.let { coverArt ->
@@ -1015,7 +1010,6 @@ class SubsonicDatasourceServer(
                 )
             },
             index = index,
-            indexNumber = indexNumber,
             connectionId = getConnectionId()
         )
     }

@@ -16,16 +16,15 @@
  *
  */
 
-package cn.xybbz.localdata.data.artist
+package cn.xybbz.ui.screens
 
-import androidx.room.Embedded
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 
-data class XyArtistExt(
-    @Embedded
-    val artist: XyArtist,
-    val favorite: Boolean? = false,
-    /**
-     * 加载数据所在索引
-     */
-    val indexNumber: Int = 0,
-)
+/**
+ * 自定义歌词设置
+ */
+@Composable
+fun CustomLyricsScreen(modifier: Modifier = Modifier) {
+
+}

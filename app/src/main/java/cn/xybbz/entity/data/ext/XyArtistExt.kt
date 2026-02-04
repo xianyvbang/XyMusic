@@ -15,18 +15,17 @@
  *   limitations under the License.
  *
  */
-
+package cn.xybbz.entity.data.ext
 
 import cn.xybbz.api.client.subsonic.data.ArtistID3
 import cn.xybbz.localdata.data.artist.XyArtist
 
 
 fun ArtistID3.convertToArtist(
-    pic:String?,
-    backdrop:String?,
+    pic: String?,
+    backdrop: String?,
     index: String? = null,
-    indexNumber: Int,
-    connectionId:Long,
+    connectionId: Long,
 ): XyArtist {
     return XyArtist(
         artistId = this.id,
@@ -35,15 +34,6 @@ fun ArtistID3.convertToArtist(
         name = this.name,
         connectionId = connectionId,
         selectChat = index ?: "",
-        ifFavorite = !this.starred.isNullOrBlank(),
-        indexNumber = indexNumber
+        ifFavorite = !this.starred.isNullOrBlank()
     )
 }
-
-/**
- * 艺术家详情信息
- */
-data class XyArtistInfo(
-    val artist: XyArtist?,
-    val similarArtist: List<XyArtist>? = null
-)

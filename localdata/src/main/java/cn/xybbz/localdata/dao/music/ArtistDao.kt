@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.localdata.dao.music
 
 import androidx.paging.PagingSource
@@ -5,10 +23,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.RawQuery
 import androidx.room.Update
-import androidx.sqlite.db.SimpleSQLiteQuery
-import androidx.sqlite.db.SupportSQLiteQuery
 import cn.xybbz.localdata.data.artist.FavoriteArtist
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.artist.XyArtistExt
@@ -68,9 +83,10 @@ interface ArtistDao {
 
     @Query(
         """
-        select xa.*,fa.ifFavorite as favorite from xy_artist xa
+        select xa.*,row_number() over (order by xa.selectChat) as indexNumber,fa.ifFavorite as favorite from xy_artist xa
         left join favoriteartist fa on fa.artistId = xa.artistId
         where xa.connectionId = (select connectionId from xy_settings)
+        order by xa.selectChat
     """
     )
     fun selectListPagingSource(): PagingSource<Int, XyArtistExt>
@@ -110,34 +126,6 @@ interface ArtistDao {
     )
     suspend fun selectCount(): Int
 
-    /**
-     * 查询分页数据
-     */
-    fun selectListPage(
-        ifFavorite: Boolean?,
-        selectLetter: String?
-    ): PagingSource<Int, XyArtist> {
-        val stringBuilder = StringBuilder(
-            """
-            select xa.* from xy_artist xa
-             inner join xy_favorite xf on xf.itemId = xa.artistId
-        where xa.dataSource = (select dataSourceType from xy_settings)
-        """.trimIndent()
-        )
-
-        if (ifFavorite == true) {
-            stringBuilder.append(" and xf.ifFavorite = 1")
-        }
-        if (!selectLetter.isNullOrBlank()) {
-            stringBuilder.append(" and xf.selectChat = '$selectLetter'")
-        }
-
-        return selectListPage(SimpleSQLiteQuery(stringBuilder.toString()))
-    }
-
-    @RawQuery(observedEntities = [XyArtist::class])
-    fun selectListPage(sql: SupportSQLiteQuery): PagingSource<Int, XyArtist>
-
     @Query("select * from xy_artist where artistId in (:artistIds) and connectionId = (select connectionId from xy_settings) ")
     suspend fun selectByIds(artistIds: List<String>): List<XyArtist>
 
@@ -153,7 +141,15 @@ interface ArtistDao {
     /**
      * 根据selectChat获得所属位置索引
      */
-    @Query("select indexNumber from xy_artist where selectChat = :selectChat and connectionId = (select connectionId from xy_settings) order by indexNumber limit 1")
+    @Query("""
+        select t.indexNumber from (
+        select xa.selectChat,row_number() over (order by xa.selectChat) as indexNumber,fa.ifFavorite as favorite from xy_artist xa
+        left join favoriteartist fa on fa.artistId = xa.artistId
+        where xa.connectionId = (select connectionId from xy_settings)
+        order by xa.selectChat
+        )t where t.selectChat = :selectChat
+        
+    """)
     suspend fun selectIndexBySelectChat(selectChat: String): Int
 
     /**
