@@ -1022,7 +1022,7 @@ class PlexDatasourceServer(
         val item = plexApiClient.itemApi()
             .getLibraryInfo(sectionKey = artistId)
         return item.mediaContainer?.metadata?.get(0)?.let {
-            convertToArtist(it, 0)
+            convertToArtist(it)
         }
     }
 
@@ -1934,8 +1934,8 @@ class PlexDatasourceServer(
      * @return [List<ArtistItem>]
      */
     fun convertToArtistList(items: List<Metadatum>): List<XyArtist> {
-        val xyArtists = items.mapIndexed { index, item ->
-            convertToArtist(item, index)
+        val xyArtists = items.map { item ->
+            convertToArtist(item)
         }
         return xyArtists
     }
@@ -1945,7 +1945,6 @@ class PlexDatasourceServer(
      */
     fun convertToArtist(
         artist: Metadatum,
-        indexNumber: Int,
     ): XyArtist {
         val artistImageUrl =
             artist.image?.let { images ->
@@ -1986,7 +1985,6 @@ class PlexDatasourceServer(
             describe = artist.summary,
             selectChat = selectChat,
             ifFavorite = artist.collection?.any { it.tag == application.getString(Constants.PLEX_ARTIST_COLLECTION_TITLE) } == true,
-            indexNumber = indexNumber,
         )
     }
 

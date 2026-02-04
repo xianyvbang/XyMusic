@@ -338,7 +338,7 @@ class JellyfinDatasourceServer(
     override suspend fun selectAlbumInfoByRemotely(
         albumId: String,
         dataType: MusicDataTypeEnum
-    ): XyAlbum? {
+    ): XyAlbum {
         val queryResult = jellyfinApiClient.userLibraryApi().getItem(albumId)
         return convertToAlbum(queryResult)
     }
@@ -626,7 +626,7 @@ class JellyfinDatasourceServer(
                     null,
                     playlistId
                 )
-                val pic = if (removeDuplicatesMusicList.isNotEmpty()) musicList[0].pic else null
+
                 saveMusicPlaylist(
                     playlistId = playlistId,
                     musicIds = removeDuplicatesMusicList.map { music -> music.itemId }
@@ -671,7 +671,6 @@ class JellyfinDatasourceServer(
      * 保存自建歌单中的音乐
      * @param [playlistId] 歌单id
      * @param [musicIds] 音乐id
-     * @param [pic] 照片
      */
     override suspend fun saveMusicPlaylist(
         playlistId: String, musicIds: List<String>
@@ -726,7 +725,7 @@ class JellyfinDatasourceServer(
     /**
      * 从远程获得艺术家描述
      */
-    override suspend fun selectServerArtistInfo(artistId: String): XyArtist? {
+    override suspend fun selectServerArtistInfo(artistId: String): XyArtist {
         val item = jellyfinApiClient.userLibraryApi()
             .getItem(itemId = artistId)
         return convertToArtistList(listOf(item))[0]
@@ -896,7 +895,7 @@ class JellyfinDatasourceServer(
     /**
      * 获得流派详情
      */
-    override suspend fun getGenreById(genreId: String): XyGenre? {
+    override suspend fun getGenreById(genreId: String): XyGenre {
         var genre = db.genreDao.selectById(genreId)
         if (genre == null) {
             val queryResult = jellyfinApiClient.userLibraryApi().getItem(genreId)
@@ -992,7 +991,7 @@ class JellyfinDatasourceServer(
         artistId: String,
         startIndex: Int,
         pageSize: Int
-    ): List<XyArtist>? {
+    ): List<XyArtist> {
         val response = jellyfinApiClient.artistsApi().getSimilarArtists(
             artistId = artistId,
             ItemRequest(
@@ -1185,7 +1184,7 @@ class JellyfinDatasourceServer(
             convertToMusic(it)
         }
 
-        return XyResponse<XyMusic>(
+        return XyResponse(
             items = items,
             totalRecordCount = response.totalRecordCount,
             startIndex = response.startIndex ?: 0
@@ -1263,7 +1262,7 @@ class JellyfinDatasourceServer(
                 parentId = libraryId
             ).toMap()
         )
-        return XyResponse<XyGenre>(
+        return XyResponse(
             items = convertToGenreList(genres.items),
             totalRecordCount = genres.totalRecordCount,
             startIndex = genres.startIndex ?: 0
@@ -1301,7 +1300,7 @@ class JellyfinDatasourceServer(
             xyResponse
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获取歌单失败", e)
-            XyResponse<XyAlbum>(items = emptyList(), 0, 0)
+            XyResponse(items = emptyList(), 0, 0)
         }
     }
 
@@ -1341,12 +1340,12 @@ class JellyfinDatasourceServer(
                     Constants.UNKNOWN_ALBUM
                 ),
             connectionId = getConnectionId(),
-            artistIds = item.albumArtists?.joinToString() { it.id },
+            artistIds = item.albumArtists?.joinToString { it.id },
             artists = item.albumArtists?.mapNotNull { it.name }?.joinToString()
                 ?: application.getString(Constants.UNKNOWN_ARTIST),
             year = item.productionYear,
             premiereDate = item.productionYear?.toLong(),
-            genreIds = item.genreItems?.joinToString() { it.id },
+            genreIds = item.genreItems?.joinToString { it.id },
             ifFavorite = item.userData?.isFavorite == true,
             ifPlaylist = ifPlaylist,
             createTime = item.dateCreated?.toSecondMs() ?: 0L,
@@ -1428,7 +1427,7 @@ class JellyfinDatasourceServer(
      * @return [List<ArtistItem>]
      */
     fun convertToArtistList(items: List<ItemResponse>): List<XyArtist> {
-        val xyArtists = items.mapIndexed { index, item ->
+        val xyArtists = items.map { item ->
             val artistImageUrl =
                 if (!item.name.isNullOrBlank() && !item.imageTags.isNullOrEmpty() && item.imageTags?.containsKey(
                         ImageType.PRIMARY
@@ -1476,7 +1475,6 @@ class JellyfinDatasourceServer(
                 albumCount = item.albumCount,
                 selectChat = selectChat,
                 ifFavorite = item.userData?.isFavorite == true,
-                indexNumber = index
             )
         }
         return xyArtists

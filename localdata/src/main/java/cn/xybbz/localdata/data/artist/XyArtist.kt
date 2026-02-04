@@ -63,10 +63,6 @@ data class XyArtist(
     val albumCount: Int? = 0,
     val selectChat: String = "",
     /**
-     * 加载数据所在索引
-     */
-    val indexNumber: Int = 0,
-    /**
      * 是否已经收藏
      */
     @Ignore val ifFavorite: Boolean = false,
@@ -81,8 +77,7 @@ data class XyArtist(
         connectionId: Long,
         musicCount: Int? = 0,
         albumCount: Int? = 0,
-        selectChat: String,
-        indexNumber: Int = 0
+        selectChat: String
     ) : this(
         artistId = artistId,
         pic = pic,
@@ -94,7 +89,6 @@ data class XyArtist(
         musicCount = musicCount,
         albumCount = albumCount,
         selectChat = selectChat,
-        indexNumber = indexNumber,
         ifFavorite = false
     )
 }

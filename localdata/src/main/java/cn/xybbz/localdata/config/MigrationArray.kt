@@ -583,3 +583,56 @@ internal val Migration_20_21 = object : Migration(20, 21) {
         """)
     }
 }
+
+internal val Migration_21_22 = object : Migration(21, 22) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+
+        //创建新表（不包含 indexNumber）
+        db.execSQL("""
+        CREATE TABLE xy_artist_new (
+            artistId TEXT NOT NULL PRIMARY KEY,
+            pic TEXT,
+            backdrop TEXT,
+            describe TEXT,
+            name TEXT,
+            sortName TEXT,
+            connectionId INTEGER NOT NULL,
+            musicCount INTEGER,
+            albumCount INTEGER,
+            selectChat TEXT NOT NULL,
+            FOREIGN KEY(connectionId)
+            REFERENCES xy_connection_config(id)
+            ON DELETE CASCADE
+        )
+        """)
+
+        //迁移旧数据（不拷贝 indexNumber）
+        db.execSQL("""
+        INSERT INTO xy_artist_new (
+            artistId, pic, backdrop, describe, name,
+            sortName, connectionId, musicCount,
+            albumCount, selectChat
+        )
+        SELECT
+            artistId, pic, backdrop, describe, name,
+            sortName, connectionId, musicCount,
+            albumCount, selectChat
+        FROM xy_artist
+        """)
+
+        //删除旧表
+        db.execSQL("DROP TABLE xy_artist")
+
+        //重命名
+        db.execSQL("""
+            ALTER TABLE xy_artist_new
+            RENAME TO xy_artist
+        """)
+
+        //重建索引
+        db.execSQL("""
+            CREATE INDEX index_xy_artist_connectionId
+            ON xy_artist(connectionId)
+        """)
+    }
+}

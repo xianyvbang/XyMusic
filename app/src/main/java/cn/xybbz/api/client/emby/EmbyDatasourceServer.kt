@@ -599,7 +599,7 @@ class EmbyDatasourceServer(
     override suspend fun selectServerArtistInfo(artistId: String): XyArtist {
         val item = embyApiClient.userLibraryApi()
             .getItem(userId = getUserId(), itemId = artistId)
-        return convertToArtist(item, 0)
+        return convertToArtist(item)
     }
 
     /**
@@ -1296,8 +1296,8 @@ class EmbyDatasourceServer(
      * @return [List<ArtistItem>]
      */
     fun convertToArtistList(items: List<ItemResponse>): List<XyArtist> {
-        val xyArtists = items.mapIndexed { index, item ->
-            convertToArtist(item, index)
+        val xyArtists = items.map { item ->
+            convertToArtist(item)
         }
         return xyArtists
     }
@@ -1307,7 +1307,6 @@ class EmbyDatasourceServer(
      */
     fun convertToArtist(
         artist: ItemResponse,
-        indexNumber: Int,
     ): XyArtist {
         val artistImageUrl =
             if (!artist.name.isNullOrBlank() && !artist.imageTags.isNullOrEmpty() && artist.imageTags?.containsKey(
@@ -1355,8 +1354,7 @@ class EmbyDatasourceServer(
             musicCount = artist.songCount,
             albumCount = artist.albumCount,
             selectChat = selectChat,
-            ifFavorite = artist.userData?.isFavorite == true,
-            indexNumber = indexNumber
+            ifFavorite = artist.userData?.isFavorite == true
         )
     }
 
