@@ -69,35 +69,36 @@ class DownloadDispatcherImpl(
      * 初始化加载数据库中的信息
      * todo 这里需要修改,改为初始化所有数据都是暂停状态
      */
-    suspend fun rehydrate(connectionId:Long,coroutineContext: CoroutineContext) = withContext(Dispatchers.IO) {
-        createScope(coroutineContext)
-        // Only rehydrate once
-        if (readyTasks.isNotEmpty() || runningTasks.isNotEmpty() || pausedTasks.isNotEmpty() || failedTasks.isNotEmpty()) {
-            readyTasks.clear()
-            runningTasks.clear()
-            pausedTasks.clear()
-            failedTasks.clear()
-        }
+    suspend fun rehydrate(connectionId: Long, coroutineContext: CoroutineContext) =
+        withContext(Dispatchers.IO) {
+            createScope(coroutineContext)
+            // Only rehydrate once
+            if (readyTasks.isNotEmpty() || runningTasks.isNotEmpty() || pausedTasks.isNotEmpty() || failedTasks.isNotEmpty()) {
+                readyTasks.clear()
+                runningTasks.clear()
+                pausedTasks.clear()
+                failedTasks.clear()
+            }
 
-        val allTasks =
-            db.downloadDao.getAllTasksSuspend(connectionId)
-        allTasks.forEach { task ->
-            when (task.status) {
-                DownloadStatus.QUEUED -> readyTasks.add(task)
+            val allTasks =
+                db.downloadDao.getAllTasksSuspend(connectionId)
+            allTasks.forEach { task ->
+                when (task.status) {
+                    DownloadStatus.QUEUED -> readyTasks.add(task)
 
-                DownloadStatus.DOWNLOADING -> {
-                    task.status = DownloadStatus.QUEUED
-                    readyTasks.add(task)
-                }
+                    DownloadStatus.DOWNLOADING -> {
+                        task.status = DownloadStatus.QUEUED
+                        readyTasks.add(task)
+                    }
 
-                DownloadStatus.PAUSED -> pausedTasks[task.id] = task
-                DownloadStatus.FAILED -> failedTasks[task.id] = task
-                else -> {
+                    DownloadStatus.PAUSED -> pausedTasks[task.id] = task
+                    DownloadStatus.FAILED -> failedTasks[task.id] = task
+                    else -> {
+                    }
                 }
             }
+            promoteAndExecute()
         }
-        promoteAndExecute()
-    }
 
     fun enqueue(newTasks: List<XyDownload>) {
         scope.launch {
@@ -184,11 +185,11 @@ class DownloadDispatcherImpl(
     }
 
     fun cancelAll() {
-        cancel(runningTasks.values.map { it.id })
+        cancel(runningTasks.values.map { it.id } + readyTasks.map { it.id })
     }
 
-    fun pauseAll(){
-        pause(runningTasks.values.map { it.id })
+    fun pauseAll() {
+        pause(runningTasks.values.map { it.id } + readyTasks.map { it.id })
     }
 
     fun delete(ids: List<Long>, deleteFile: Boolean) {
