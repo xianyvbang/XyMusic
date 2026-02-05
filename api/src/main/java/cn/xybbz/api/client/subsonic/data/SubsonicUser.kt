@@ -18,6 +18,9 @@
 
 package cn.xybbz.api.client.subsonic.data
 
+import com.squareup.moshi.JsonClass
+
+@JsonClass(generateAdapter = true)
 data class SubsonicUser(
     val username: String,
     val email: String? = null,
