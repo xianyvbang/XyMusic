@@ -16,15 +16,28 @@
  *
  */
 
-package cn.xybbz.entity.data
+package cn.xybbz.api.client.subsonic.data
 
-import androidx.compose.ui.graphics.vector.ImageVector
+import cn.xybbz.api.enums.subsonic.Status
+import com.squareup.moshi.Json
 
-/**
- * 歌曲独立菜单item数据
- */
-data class MusicItemMenuData(
-    val imageVector: ImageVector,
-    val enabled: Boolean = true,
-    val name: String,
-)
+data class SubsonicUserResponse(
+    override val type: String? = null,
+    /**
+     * 版本号
+     */
+    override val version: String,
+    /**
+     * 状态
+     */
+    override val status: Status,
+    /**
+     * 相似歌曲
+     */
+    @param:Json(name = "user")
+    val user: SubsonicUser? = null,
+    /**
+     * 报错信息
+     */
+    override val error: SubsonicError? = null
+) : SubsonicParentResponse(type, version, status, error)

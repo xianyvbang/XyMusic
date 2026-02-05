@@ -269,7 +269,9 @@ class JellyfinApiClient : DefaultParentApiClient() {
             accessToken = responseData.accessToken,
             serverId = responseData.serverId,
             serverName = systemInfo.serverName,
-            version = systemInfo.version
+            version = systemInfo.version,
+            ifEnabledDownload = responseData.user?.policy?.enableContentDownloading ?: false,
+            ifEnabledDelete = responseData.user?.policy?.enableContentDeletion ?: false
         )
     }
 

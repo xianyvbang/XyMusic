@@ -16,15 +16,21 @@
  *
  */
 
-package cn.xybbz.entity.data
+package cn.xybbz.api.client.subsonic.data
 
-import androidx.compose.ui.graphics.vector.ImageVector
-
-/**
- * 歌曲独立菜单item数据
- */
-data class MusicItemMenuData(
-    val imageVector: ImageVector,
-    val enabled: Boolean = true,
-    val name: String,
+data class SubsonicUser(
+    val username: String,
+    val email: String? = null,
+    val scrobblingEnabled: Boolean? = null,
+    val adminRole: Boolean? = null,
+    val settingsRole: Boolean? = null,
+    val downloadRole: Boolean? = null,
+    val uploadRole: Boolean? = null,
+    val playlistRole: Boolean? = null,
+    val coverArtRole: Boolean? = null,
+    val commentRole: Boolean? = null,
+    val podcastRole: Boolean? = null,
+    val streamRole: Boolean? = null,
+    val jukeboxRole: Boolean? = null,
+    val shareRole: Boolean? = null,
 )

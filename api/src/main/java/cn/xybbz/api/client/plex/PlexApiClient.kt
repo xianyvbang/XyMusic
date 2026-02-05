@@ -323,7 +323,9 @@ class PlexApiClient : DefaultParentApiClient() {
             accessToken = createToken(),
             serverId = clientLoginInfoReq.serverId,
             serverName = clientLoginInfoReq.serverName,
-            version = clientLoginInfoReq.serverVersion
+            version = clientLoginInfoReq.serverVersion,
+            ifEnabledDownload = false,
+            ifEnabledDelete = false
         )
         if (createToken().isBlank()) {
             loginSuccessData = plexLogin(clientLoginInfoReq)
@@ -335,7 +337,11 @@ class PlexApiClient : DefaultParentApiClient() {
             //获得machineIdentifier
             pingAfter(postPingSystem.mediaContainer?.machineIdentifier)
             loginSuccessData =
-                loginSuccessData.copy(machineIdentifier = postPingSystem.mediaContainer?.machineIdentifier)
+                loginSuccessData.copy(
+                    machineIdentifier = postPingSystem.mediaContainer?.machineIdentifier,
+                    ifEnabledDownload = postPingSystem.mediaContainer?.allowSync ?: false,
+                    ifEnabledDelete = postPingSystem.mediaContainer?.allowSync ?: false
+                )
         } catch (e: Exception) {
             Log.i("error", "ping服务器失败", e)
             throw ServiceException("ping服务器失败")
@@ -376,7 +382,9 @@ class PlexApiClient : DefaultParentApiClient() {
             accessToken = createToken(),
             serverId = clientLoginInfoReq.serverId,
             serverName = clientLoginInfoReq.serverName,
-            version = clientLoginInfoReq.serverVersion
+            version = clientLoginInfoReq.serverVersion,
+            ifEnabledDownload = false,
+            ifEnabledDelete = false
         )
     }
 

@@ -258,7 +258,9 @@ class EmbyApiClient : DefaultParentApiClient() {
             accessToken = responseData.accessToken,
             serverId = responseData.serverId,
             serverName = systemInfo.serverName,
-            version = systemInfo.version
+            version = systemInfo.version,
+            ifEnabledDownload = responseData.user?.policy?.enableContentDownloading ?: false,
+            ifEnabledDelete = responseData.user?.policy?.enableContentDeletion ?: false
         )
     }
 
@@ -460,10 +462,10 @@ class EmbyApiClient : DefaultParentApiClient() {
         static: Boolean = true,
         audioBitRate: Int? = null
     ): String {
-        return if (static){
+        return if (static) {
             "${baseUrl}/emby/Audio/${itemId}/stream?" +
                     "deviceId=${deviceId}&userId=${userId}&static=${static}"
-        }else {
+        } else {
             "${baseUrl}/emby/Audio/${itemId}/universal?" +
                     "deviceId=${deviceId}" +
                     "&AudioCodec=${audioCodec}&MaxStreamingBitrate=${audioBitRate}" +

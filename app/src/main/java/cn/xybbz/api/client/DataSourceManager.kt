@@ -68,11 +68,16 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
@@ -106,6 +111,13 @@ class DataSourceManager(
     private lateinit var dataSourceServer: IDataSourceParentServer
 
     val dataSourceServerFlow = MutableStateFlow<IDataSourceParentServer?>(null)
+
+    @kotlin.OptIn(ExperimentalCoroutinesApi::class)
+    val loginState = dataSourceServerFlow
+        .filterNotNull()
+        .flatMapLatest { server ->
+            server.getLoginStateFlow()
+        }.launchIn(scope)
 
     /*    private val _loginState = MutableStateFlow<LoginStateType?>(
             null
@@ -1161,10 +1173,24 @@ class DataSourceManager(
     override suspend fun getTranscodingType(): List<TranscodingInfo> {
         return try {
             dataSourceServer.getTranscodingType()
-        }catch (e: Exception){
+        } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获取转码类型失败", e)
             emptyList()
         }
+    }
+
+    /**
+     * 获得是否可以下载
+     */
+    override fun getCanDownload(): Boolean {
+        return dataSourceServer.getCanDownload()
+    }
+
+    /**
+     * 获得登录成功flow
+     */
+    fun getLoginStateFlow(): SharedFlow<LoginStateType> {
+        return dataSourceServer.getLoginStateFlow()
     }
 
     /**

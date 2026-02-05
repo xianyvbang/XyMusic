@@ -30,6 +30,7 @@ import cn.xybbz.api.client.navidrome.service.NavidromeItemApi
 import cn.xybbz.api.client.navidrome.service.NavidromePlaylistsApi
 import cn.xybbz.api.client.navidrome.service.NavidromeUserApi
 import cn.xybbz.api.client.navidrome.service.NavidromeUserLibraryApi
+import cn.xybbz.api.client.navidrome.service.NavidromeUserViewsApi
 import cn.xybbz.api.client.subsonic.SubsonicApiClient
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.enums.AudioCodecEnum
@@ -85,6 +86,7 @@ class NavidromeApiClient : DefaultParentApiClient() {
     private lateinit var navidromeArtistsApi: NavidromeArtistsApi
     private lateinit var navidromeGenreApi: NavidromeGenreApi
     private lateinit var navidromeUserLibraryApi: NavidromeUserLibraryApi
+    private lateinit var navidromeUserViewsApi: NavidromeUserViewsApi
 
 
     /**
@@ -201,7 +203,7 @@ class NavidromeApiClient : DefaultParentApiClient() {
      * 创建下载链接
      */
     override fun createDownloadUrl(itemId: String): String {
-        return baseUrl + "/rest/download?id=${itemId}"
+        return baseUrl + "/rest/download?id=${itemId}&format=raw&bitrate=0"
     }
 
     /**
@@ -218,7 +220,8 @@ class NavidromeApiClient : DefaultParentApiClient() {
             clientLoginInfoReq = clientLoginInfoReq
         )
         val systemInfo = userApi().postPingSystem()
-        Log.i("=====", "服务器信息 $systemInfo")
+        val user = userApi().getUser(username)
+        Log.i("=====", "服务器信息 $systemInfo 用户信息 $user")
         TokenServer.updateLoginRetry(false)
         return LoginSuccessData(
             userId = responseData.id,
@@ -228,6 +231,8 @@ class NavidromeApiClient : DefaultParentApiClient() {
             version = systemInfo.subsonicResponse.serverVersion,
             navidromeExtendToken = responseData.subsonicToken,
             navidromeExtendSalt = responseData.subsonicSalt,
+            ifEnabledDownload = user.subsonicResponse.user?.downloadRole ?: false,
+            ifEnabledDelete = user.subsonicResponse.user?.adminRole ?: false
         )
     }
 
@@ -264,6 +269,16 @@ class NavidromeApiClient : DefaultParentApiClient() {
     }
 
     /**
+     * 用户视图信息
+     */
+    override fun userViewsApi(restart: Boolean): NavidromeUserViewsApi {
+        if (!this::navidromeUserViewsApi.isInitialized || restart) {
+            navidromeUserViewsApi = instance().create(NavidromeUserViewsApi::class.java)
+        }
+        return navidromeUserViewsApi
+    }
+
+    /**
      * 获取图像URL
      * @param [imageId] 图像ID
      * @param [size] 尺寸
@@ -279,7 +294,11 @@ class NavidromeApiClient : DefaultParentApiClient() {
     /**
      * 获得音频url
      */
-    fun createAudioUrl(musicId: String, format: AudioCodecEnum? = AudioCodecEnum.ROW, maxBitRate: Int? = null): String {
+    fun createAudioUrl(
+        musicId: String,
+        format: AudioCodecEnum? = AudioCodecEnum.ROW,
+        maxBitRate: Int? = null
+    ): String {
         return "${baseUrl}/rest/stream?id=${musicId}&maxBitRate=${maxBitRate}&format=${format}${if (format != AudioCodecEnum.ROW) "&estimateContentLength=true" else ""}"
     }
 

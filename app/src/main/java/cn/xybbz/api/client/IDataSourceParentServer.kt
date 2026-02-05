@@ -222,7 +222,9 @@ abstract class IDataSourceParentServer(
                 deviceId = deviceId,
                 navidromeExtendToken = responseData.navidromeExtendToken,
                 navidromeExtendSalt = responseData.navidromeExtendSalt,
-                machineIdentifier = responseData.machineIdentifier
+                machineIdentifier = responseData.machineIdentifier,
+                ifEnabledDownload = responseData.ifEnabledDownload,
+                ifEnabledDelete = responseData.ifEnabledDelete
             )
             this@IDataSourceParentServer.connectionConfig = tmpConfig
             emitAll(loginAfter(tmpConfig))
@@ -491,7 +493,10 @@ abstract class IDataSourceParentServer(
      * 根据艺术家获得音乐列表
      */
     @OptIn(ExperimentalPagingApi::class)
-    override fun selectMusicListByArtistId(artistId: String, artistName: String): Flow<PagingData<XyMusic>> {
+    override fun selectMusicListByArtistId(
+        artistId: String,
+        artistName: String
+    ): Flow<PagingData<XyMusic>> {
         return defaultPager(
             remoteMediator = ArtistMusicListRemoteMediator(
                 artistId = artistId,
@@ -900,7 +905,7 @@ abstract class IDataSourceParentServer(
     /**
      * 根据id获得艺术家信息
      */
-    override suspend fun selectArtistInfoById(artistId: String): XyArtist?{
+    override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
         var artistInfo: XyArtist? = db.artistDao.selectById(artistId)
         if (artistInfo != null) {
             artistInfo =
@@ -1159,6 +1164,13 @@ abstract class IDataSourceParentServer(
      */
     override suspend fun updateConnectionConfig(connectionConfig: ConnectionConfig) {
         db.connectionConfigDao.update(connectionConfig)
+    }
+
+    /**
+     * 获得是否可以下载
+     */
+    override fun getCanDownload(): Boolean {
+        return getConnectionConfig()?.ifEnabledDownload ?: false
     }
 
     /**

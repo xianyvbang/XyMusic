@@ -249,14 +249,17 @@ class SubsonicApiClient : DefaultParentApiClient() {
      */
     override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
         val systemInfo = userApi().postPingSystem()
-        Log.i("=====", "服务器信息 $systemInfo")
+        val user = userApi().getUser(username)
+        Log.i("=====", "服务器信息 $systemInfo 用户信息 $user")
         TokenServer.updateLoginRetry(false)
         return LoginSuccessData(
             userId = clientLoginInfoReq.username,
             accessToken = clientLoginInfoReq.username,
             serverId = "",
             serverName = systemInfo.subsonicResponse.type,
-            version = systemInfo.subsonicResponse.version
+            version = systemInfo.subsonicResponse.version,
+            ifEnabledDownload = user.subsonicResponse.user?.downloadRole ?: false,
+            ifEnabledDelete = user.subsonicResponse.user?.adminRole ?: false
         )
     }
 

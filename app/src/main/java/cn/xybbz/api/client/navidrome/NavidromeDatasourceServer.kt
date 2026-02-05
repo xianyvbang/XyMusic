@@ -38,6 +38,7 @@ import cn.xybbz.api.client.subsonic.data.ScrobbleRequest
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.enums.AudioCodecEnum
+import cn.xybbz.api.enums.jellyfin.CollectionType
 import cn.xybbz.api.enums.navidrome.OrderType
 import cn.xybbz.api.enums.navidrome.SortType
 import cn.xybbz.common.constants.Constants
@@ -61,6 +62,7 @@ import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
+import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
@@ -625,7 +627,25 @@ class NavidromeDatasourceServer(
      * 获得媒体库列表
      */
     override suspend fun selectMediaLibrary(connectionId: Long) {
-
+        db.withTransaction {
+            db.libraryDao.remove()
+            val viewLibrary = navidromeApiClient.userViewsApi().getUserViews(
+                userId = getUserId()
+            )
+            //存储历史记录
+            val libraries =
+                viewLibrary.libraries?.map {
+                    XyLibrary(
+                        id = it.id?.toString() ?: "",
+                        collectionType = CollectionType.MUSIC.toString(),
+                        name = it.name.toString(),
+                        connectionId = connectionId
+                    )
+                } ?: emptyList()
+            if (libraries.isNotEmpty()) {
+                db.libraryDao.saveBatch(libraries)
+            }
+        }
     }
 
     /**

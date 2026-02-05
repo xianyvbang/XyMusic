@@ -479,4 +479,9 @@ interface IDataSourceServer : AutoCloseable {
      */
     suspend fun getTranscodingType(): List<TranscodingInfo>
 
+    /**
+     * 获得是否可以下载
+     */
+    fun getCanDownload(): Boolean
+
 }

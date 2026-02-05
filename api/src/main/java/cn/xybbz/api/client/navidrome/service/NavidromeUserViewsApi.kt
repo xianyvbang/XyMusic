@@ -16,15 +16,23 @@
  *
  */
 
-package cn.xybbz.entity.data
+package cn.xybbz.api.client.navidrome.service
 
-import androidx.compose.ui.graphics.vector.ImageVector
+import cn.xybbz.api.base.BaseApi
+import cn.xybbz.api.client.navidrome.data.NavidromeUser
+import retrofit2.http.GET
+import retrofit2.http.Path
 
-/**
- * 歌曲独立菜单item数据
- */
-data class MusicItemMenuData(
-    val imageVector: ImageVector,
-    val enabled: Boolean = true,
-    val name: String,
-)
+interface NavidromeUserViewsApi : BaseApi {
+
+    /**
+     * 获得媒体库列表
+     * @param [userId] 用户ID
+     * @param [viewRequest] 请求
+     * @return [Response<ItemResponse>]
+     */
+    @GET("/api/user/{userId}")
+    suspend fun getUserViews(
+        @Path("userId") userId: String
+    ): NavidromeUser
+}
