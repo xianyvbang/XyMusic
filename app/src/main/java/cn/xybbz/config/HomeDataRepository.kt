@@ -56,8 +56,6 @@ class HomeDataRepository(
     val dataCount: StateFlow<XyDataCount?> get() = _dataCount
 
 
-    private var collectJobs = mutableListOf<Job>()
-
    suspend fun initData(){
         loadOnce()
     }
@@ -66,21 +64,7 @@ class HomeDataRepository(
      * 执行登录状态数据监听
      */
     suspend fun initLoginChangeMonitor(){
-        dataSourceManager.loginStateEvent.collect { user ->
-            Log.i("login","首页数据刷新")
-            //切用户：取消旧监听
-            collectJobs.forEach { it.cancel() }
-            collectJobs.clear()
-
-            //清空旧缓存（防串数据）
-            clearAll()
-
-            //首次加载（不阻塞 UI）
-            loadOnce()
-
-            //监听数据库变化
-            observeFlows()
-        }
+        observeFlows()
     }
 
 
@@ -120,71 +104,60 @@ class HomeDataRepository(
     }
 
     private suspend fun observeFlows() =coroutineScope{
-        collectJobs += launch {
+        launch {
             db.musicDao
                 .selectLimitMusicListFlow(MusicDataTypeEnum.MAXIMUM_PLAY, 20)
                 .distinctUntilChanged()
                 .collect { _mostPlayedMusic.value = it }
         }
 
-        collectJobs += launch {
+        launch {
             db.albumDao
                 .selectNewestListFlow(20)
                 .distinctUntilChanged()
                 .collect { _newestAlbums.value = it }
         }
 
-        collectJobs += launch {
+        launch {
             db.musicDao
                 .selectLimitMusicListFlow(MusicDataTypeEnum.PLAY_HISTORY, 20)
                 .distinctUntilChanged()
                 .collect { _recentMusic.value = it }
         }
 
-        collectJobs += launch {
+        launch {
             db.albumDao
                 .selectPlayHistoryAlbumListFlow(20)
                 .distinctUntilChanged()
                 .collect { _recentAlbums.value = it }
         }
 
-        collectJobs += launch {
+        launch {
             db.albumDao
                 .selectMaximumPlayAlbumListFlow(20)
                 .distinctUntilChanged()
                 .collect { _mostPlayedAlbums.value = it }
         }
 
-        collectJobs += launch {
+        launch {
             db.musicDao
                 .selectRecommendedMusicExtendListFlow(20)
                 .distinctUntilChanged()
                 .collect { _recommendedMusic.value = it }
         }
 
-        collectJobs += launch {
+        launch {
             db.albumDao
                 .selectPlaylistFlow()
                 .distinctUntilChanged()
                 .collect { _playlists.value = it }
         }
 
-        collectJobs += launch {
+        launch {
             db.dataCountDao
                 .selectOneFlow()
                 .distinctUntilChanged()
                 .collect { _dataCount.value = it }
         }
-    }
-
-    private fun clearAll() {
-        _mostPlayedMusic.value = emptyList()
-        _newestAlbums.value = emptyList()
-        _recentMusic.value = emptyList()
-        _recentAlbums.value = emptyList()
-        _mostPlayedAlbums.value = emptyList()
-        _recommendedMusic.value = emptyList()
-        _playlists.value = emptyList()
-        _dataCount.value = null
     }
 }

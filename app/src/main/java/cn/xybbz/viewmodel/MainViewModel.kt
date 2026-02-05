@@ -195,7 +195,7 @@ class MainViewModel @Inject constructor(
                 Log.i("=====", "MainViewModel: 登录状态改变: $it")
                 startPlayerListObserver()
             }
-            /*dataSourceManager.loginStateEvent.collect {
+            /*dataSourceManager.loginStateFlow.collect {
                 startPlayerListObserver()
             }*/
         }
@@ -417,7 +417,7 @@ class MainViewModel @Inject constructor(
 
     private fun observeLoginSuccessForAndProgress() {
         viewModelScope.launch {
-            dataSourceManager.loginStateEvent.collect {
+            dataSourceManager.loginStateFlow.collect {
                 startEnableProgressObserver()
             }
         }

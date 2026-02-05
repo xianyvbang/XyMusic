@@ -62,7 +62,7 @@ class PlaylistBottomViewModel @Inject constructor(
 
     private fun observeLoginSuccessForPlaylist() {
         viewModelScope.launch {
-            dataSourceManager.loginStateEvent.collect {
+            dataSourceManager.loginStateFlow.collect {
                 startPlaylistObserver()
             }
         }
