@@ -77,7 +77,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
@@ -117,7 +116,7 @@ class DataSourceManager(
         .filterNotNull()
         .flatMapLatest { server ->
             server.getLoginStateFlow()
-        }.launchIn(scope)
+        }
 
     /*    private val _loginState = MutableStateFlow<LoginStateType?>(
             null
@@ -189,6 +188,7 @@ class DataSourceManager(
         connectionConfig: ConnectionConfig?
     ) {
         ifLoginError = false
+//        loginStateUnknownEmit(false)
         autoLogin(loginType, connectionConfig).collect { loginState ->
             loginStatus = loginState
             //                ifLoginError = false
@@ -294,7 +294,15 @@ class DataSourceManager(
                 _loginStateEvent.emit(LoginStateType.SUCCESS)
             }
         }
+    }
 
+    private fun loginStateUnknownEmit(ifTmp: Boolean) {
+        if (!ifTmp) {
+            Log.i("login", "发送未知成功")
+            scope.launch {
+                _loginStateEvent.emit(LoginStateType.UNKNOWN)
+            }
+        }
     }
 
     /**
