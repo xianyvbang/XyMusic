@@ -18,6 +18,7 @@
 
 package cn.xybbz.api.client.subsonic.data
 
+import cn.xybbz.api.serializers.LocalDateTimeTimestampSerializer
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -65,7 +66,8 @@ data class SongID3(
     /**
      * 创建时间
      */
-    val created: String,
+    @Serializable(LocalDateTimeTimestampSerializer::class)
+    val created: Long,
     /**
      * 专辑编码
      */

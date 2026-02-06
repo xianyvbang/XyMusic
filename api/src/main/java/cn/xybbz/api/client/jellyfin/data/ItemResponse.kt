@@ -23,6 +23,7 @@ import cn.xybbz.api.enums.jellyfin.ImageType
 import cn.xybbz.api.enums.jellyfin.MediaProtocol
 import cn.xybbz.api.enums.jellyfin.MediaSourceType
 import cn.xybbz.api.enums.jellyfin.MediaStreamType
+import cn.xybbz.api.serializers.LocalDateTimeTimestampSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -87,7 +88,7 @@ data class ItemResponse(
     val genres: List<String>? = null,
 
     @SerialName(value = "GenreItems")
-    val genreItems:List<NameGuidPair>? = null,
+    val genreItems: List<NameGuidPair>? = null,
 
     /**
      * The album.
@@ -105,7 +106,8 @@ data class ItemResponse(
      * The date created.
      */
     @SerialName(value = "DateCreated")
-    val dateCreated: String? = null,
+    @Serializable(LocalDateTimeTimestampSerializer::class)
+    val dateCreated: Long,
 
     /**
      * The user data for this item based on the user it's being requested for.
@@ -204,7 +206,8 @@ data class UserItemDataDto(
      * The last played date.
      */
     @SerialName(value = "LastPlayedDate")
-    val lastPlayedDate: String? = null,
+    @Serializable(LocalDateTimeTimestampSerializer::class)
+    val lastPlayedDate: Long,
     /**
      * A value indicating whether this MediaBrowser.Model.Dto.UserItemDataDto is played.
      */

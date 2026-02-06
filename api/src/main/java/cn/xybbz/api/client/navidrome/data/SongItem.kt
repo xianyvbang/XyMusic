@@ -18,6 +18,7 @@
 
 package cn.xybbz.api.client.navidrome.data
 
+import cn.xybbz.api.serializers.LocalDateTimeTimestampSerializer
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -75,7 +76,8 @@ data class SongItem(
     /**
      * 播放时间
      */
-    val playDate: String? = null,
+    @Serializable(LocalDateTimeTimestampSerializer::class)
+    val playDate: Long,
     /**
      * 是否收藏
      */
@@ -202,7 +204,8 @@ data class SongItem(
     /**
      * 创建时间
      */
-    val createdAt: String,
+    @Serializable(LocalDateTimeTimestampSerializer::class)
+    val createdAt: Long,
     /**
      * 更新时间
      */

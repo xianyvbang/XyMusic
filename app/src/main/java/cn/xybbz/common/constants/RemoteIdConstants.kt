@@ -60,8 +60,4 @@ object RemoteIdConstants {
      */
     const val MEDIA_LIBRARY_AND_FAVORITE = "mediaLibraryAndFavorite"
 
-    /**
-     * 版本信息数据
-     */
-    const val VERSION_INFO = "versionInfo"
 }

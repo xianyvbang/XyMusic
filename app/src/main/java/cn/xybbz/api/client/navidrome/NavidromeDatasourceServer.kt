@@ -45,7 +45,6 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
-import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.download.DownLoadManager
@@ -1293,7 +1292,7 @@ class NavidromeDatasourceServer(
             ifFavorite = false,
             ifPlaylist = true,
             musicCount = playlist.songCount,
-            createTime = playlist.createdAt.toSecondMs()
+            createTime = playlist.createdAt
         )
     }
 
@@ -1389,7 +1388,7 @@ class NavidromeDatasourceServer(
             year = album.maxYear,
             ifFavorite = album.starred ?: false,
             genreIds = album.genres?.joinToString { it.id },
-            createTime = album.createdAt.toSecondMs()
+            createTime = album.createdAt
         )
     }
 
@@ -1443,8 +1442,8 @@ class NavidromeDatasourceServer(
             ifLyric = !music.lyrics.isNullOrBlank(),
             lyric = music.lyrics,
             playlistItemId = music.id,
-            lastPlayedDate = music.playDate?.toSecondMs() ?: 0L,
-            createTime = music.createdAt.toSecondMs()
+            lastPlayedDate = music.playDate,
+            createTime = music.createdAt
         )
     }
 

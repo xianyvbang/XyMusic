@@ -43,7 +43,6 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
-import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.common.utils.PlaylistParser
@@ -1041,7 +1040,7 @@ class SubsonicDatasourceServer(
             artistIds = album.artistId,
             ifPlaylist = ifPlaylist,
             musicCount = album.songCount,
-            createTime = album.created.toSecondMs(),
+            createTime = album.created,
         )
     }
 
@@ -1066,7 +1065,7 @@ class SubsonicDatasourceServer(
             ifFavorite = false,
             ifPlaylist = true,
             musicCount = playlist.songCount,
-            createTime = playlist.created.toSecondMs()
+            createTime = playlist.created
         )
     }
 
