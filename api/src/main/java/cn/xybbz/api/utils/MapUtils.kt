@@ -34,7 +34,7 @@ inline fun <reified T> T.toQueryMap(
     isConvertList: Boolean = true
 ): Map<String, String> where T : Any {
     // 1. 把对象序列化为 JsonElement
-    val jsonElement = Json.encodeToJsonElement<T>(this)
+    val jsonElement = Json.encodeToJsonElement(this)
 
     if (jsonElement !is JsonObject) return emptyMap()
 
