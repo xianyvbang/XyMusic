@@ -1,9 +1,28 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.client.plex.data
 
 import cn.xybbz.api.enums.plex.FlattenSeasons
 import cn.xybbz.api.enums.plex.MetadatumType
-import com.squareup.moshi.Json
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * The available images for this media item
@@ -11,6 +30,7 @@ import java.time.LocalDate
  *
  * Unknown
  */
+@Serializable
 data class Metadatum(
     val type: MetadatumType,
 
@@ -28,7 +48,7 @@ data class Metadatum(
     /**
      * The globally unique identifier for the media item.
      */
-    @param:Json(name = "guid")
+    @SerialName(value = "guid")
     val guid: String,
 
     /**
@@ -69,7 +89,7 @@ data class Metadatum(
     /**
      * The critic rating for the media item.
      */
-    @param:Json(name = "rating")
+    @SerialName(value = "rating")
     val metadatumRating: Double? = null,
 
     /**
@@ -177,13 +197,13 @@ data class Metadatum(
     /**
      * The GUID of the parent media item.
      */
-    @param:Json(name = "parentGuid")
+    @SerialName(value = "parentGuid")
     val parentGUID: String? = null,
 
     /**
      * The GUID of the grandparent media item.
      */
-    @param:Json(name = "grandparentGuid")
+    @SerialName(value = "grandparentGuid")
     val grandparentGUID: String? = null,
 
     /**
@@ -291,13 +311,13 @@ data class Metadatum(
      */
     val userRating: Double? = null,
 
-    @param:Json(name = "Image")
+    @SerialName(value = "Image")
     val image: List<Image>? = null,
 
-    @param:Json(name = "UltraBlurColors")
+    @SerialName(value = "UltraBlurColors")
     val ultraBlurColors: UltraBlurColors? = null,
 
-    @param:Json(name = "Guid")
+    @SerialName(value = "Guid")
     val guidList: List<GUID>? = null,
 
     /**
@@ -337,48 +357,48 @@ data class Metadatum(
      */
     val skipChildren: Boolean? = null,
 
-    @param:Json(name = "Chapter")
+    @SerialName(value = "Chapter")
     val chapter: List<Chapter>? = null,
 
-    @param:Json(name = "Collection")
+    @SerialName(value = "Collection")
     val collection: List<Collection>? = null,
 
-    @param:Json(name = "Country")
+    @SerialName(value = "Country")
     val country: List<Country>? = null,
 
-    @param:Json(name = "Director")
+    @SerialName(value = "Director")
     val director: List<Director>? = null,
 
-    @param:Json(name = "Extras")
+    @SerialName(value = "Extras")
     val extras: Extras? = null,
 
-    @param:Json(name = "Genre")
+    @SerialName(value = "Genre")
     val genre: List<Genre>? = null,
 
-    @param:Json(name = "Location")
+    @SerialName(value = "Location")
     val location: List<Location>? = null,
 
-    @param:Json(name = "Marker")
+    @SerialName(value = "Marker")
     val marker: List<Marker>? = null,
 
-    @param:Json(name = "Media")
+    @SerialName(value = "Media")
     val media: List<Media>? = null,
 
-    @param:Json(name = "Producer")
+    @SerialName(value = "Producer")
     val producer: List<Producer>? = null,
 
-    @param:Json(name = "Rating")
+    @SerialName(value = "Rating")
     val rating: List<Rating>? = null,
 
-    @param:Json(name = "Role")
+    @SerialName(value = "Role")
     val role: List<Role>? = null,
 
-    @param:Json(name = "Similar")
+    @SerialName(value = "Similar")
     val similar: List<Similar>? = null,
 
-    @param:Json(name = "Writer")
+    @SerialName(value = "Writer")
     val writer: List<Writer>? = null,
 
-    @param:Json(name = "playlistItemID")
+    @SerialName(value = "playlistItemID")
     val playlistItemID: String? = null
 )

@@ -18,9 +18,9 @@
 
 package cn.xybbz.api.client.subsonic.data
 
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class PlaylistID3(
     /**
      * 歌单编码
@@ -33,7 +33,7 @@ data class PlaylistID3(
     /**
      * 歌单评价
      */
-    val comment: String,
+    val comment: String? = null,
     /**
      * 所属用户
      */

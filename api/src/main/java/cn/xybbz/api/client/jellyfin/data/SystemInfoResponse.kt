@@ -1,104 +1,122 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.client.jellyfin.data
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * Class SystemInfo.
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class SystemInfoResponse(
     /**
      * The local address.
      */
-    @param:Json(name = "LocalAddress")
+    @SerialName(value= "LocalAddress")
     val localAddress: String? = null,
     /**
      * The name of the server.
      */
-    @param:Json(name = "ServerName")
+    @SerialName(value= "ServerName")
     val serverName: String? = null,
     /**
      * The server version.
      */
-    @param:Json(name = "Version")
+    @SerialName(value= "Version")
     val version: String? = null,
     /**
      * The product name. This is the AssemblyProduct name.
      */
-    @param:Json(name = "ProductName")
+    @SerialName(value= "ProductName")
     val productName: String? = null,
     /**
      * The operating system.
      */
     @Deprecated("This member is deprecated and may be removed in the future")
-    @param:Json(name = "OperatingSystem")
+    @SerialName(value= "OperatingSystem")
     val operatingSystem: String? = null,
     /**
      * The id.
      */
-    @param:Json(name = "Id")
+    @SerialName(value= "Id")
     val id: String? = null,
     /**
      * A value indicating whether the startup wizard is completed.
      */
-    @param:Json(name = "StartupWizardCompleted")
+    @SerialName(value= "StartupWizardCompleted")
     val startupWizardCompleted: Boolean? = null,
     /**
      * The package name.
      */
-    @param:Json(name = "PackageName")
+    @SerialName(value= "PackageName")
     val packageName: String? = null,
     /**
      * A value indicating whether this instance has pending restart.
      */
-    @param:Json(name = "HasPendingRestart")
+    @SerialName(value= "HasPendingRestart")
     val hasPendingRestart: Boolean,
-    @param:Json(name = "IsShuttingDown")
+    @SerialName(value= "IsShuttingDown")
     val isShuttingDown: Boolean,
     /**
      * A value indicating whether [supports library monitor].
      */
-    @param:Json(name = "SupportsLibraryMonitor")
+    @SerialName(value= "SupportsLibraryMonitor")
     val supportsLibraryMonitor: Boolean,
     /**
      * The web socket port number.
      */
-    @param:Json(name = "WebSocketPortNumber")
+    @SerialName(value= "WebSocketPortNumber")
     val webSocketPortNumber: Int,
     /**
      * The program data path.
      */
-    @param:Json(name = "ProgramDataPath")
+    @SerialName(value= "ProgramDataPath")
     val programDataPath: String? = null,
     /**
      * The web UI resources path.
      */
-    @param:Json(name = "WebPath")
+    @SerialName(value= "WebPath")
     val webPath: String? = null,
     /**
      * The items by name path.
      */
-    @param:Json(name = "ItemsByNamePath")
+    @SerialName(value= "ItemsByNamePath")
     val itemsByNamePath: String? = null,
     /**
      * The cache path.
      */
-    @param:Json(name = "CachePath")
+    @SerialName(value= "CachePath")
     val cachePath: String? = null,
     /**
      * The log path.
      */
-    @param:Json(name = "LogPath")
+    @SerialName(value= "LogPath")
     val logPath: String? = null,
     /**
      * The internal metadata path.
      */
-    @param:Json(name = "InternalMetadataPath")
+    @SerialName(value= "InternalMetadataPath")
     val internalMetadataPath: String? = null,
     /**
      * The transcode path.
      */
-    @param:Json(name = "TranscodingTempPath")
+    @SerialName(value= "TranscodingTempPath")
     val transcodingTempPath: String? = null,
 )

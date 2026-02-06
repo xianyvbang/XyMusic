@@ -18,12 +18,12 @@
 
 package cn.xybbz.api.client.subsonic.data
 
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
 /**
  * AlbumID3，Album with songs.
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class AlbumID3  (
     /**
      * 专辑编码

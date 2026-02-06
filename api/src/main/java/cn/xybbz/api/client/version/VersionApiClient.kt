@@ -18,14 +18,11 @@
 
 package cn.xybbz.api.client.version
 
-import cn.xybbz.api.adapter.LocalDateAdapter
 import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.api.client.version.service.GitHubVersionApi
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import cn.xybbz.api.converter.kotlinxJsonConverter
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
-import retrofit2.converter.moshi.MoshiConverterFactory
 import java.util.concurrent.TimeUnit
 
 class VersionApiClient : ApiConfig {
@@ -37,7 +34,7 @@ class VersionApiClient : ApiConfig {
     private lateinit var gitHubVersionApi: GitHubVersionApi
 
     init {
-        setRetrofitData("",false)
+        setRetrofitData("", false)
     }
 
     /**
@@ -51,12 +48,7 @@ class VersionApiClient : ApiConfig {
         retrofit = Retrofit.Builder()
             .baseUrl("https://api.github.com/").client(getOkHttpClient())
             .addConverterFactory(
-                MoshiConverterFactory.create(
-                    Moshi.Builder()
-//                        .add(LocalDateTimeAdapter())
-                        .add(LocalDateAdapter()).add(KotlinJsonAdapterFactory())
-                        .build()
-                )
+                kotlinxJsonConverter()
             ).build()
     }
 
@@ -97,7 +89,7 @@ class VersionApiClient : ApiConfig {
     /**
      * 获取版本号信息的Api
      */
-   override fun downloadApi(restart: Boolean): GitHubVersionApi {
+    override fun downloadApi(restart: Boolean): GitHubVersionApi {
         if (!this::gitHubVersionApi.isInitialized || restart) {
             gitHubVersionApi = instance().create(GitHubVersionApi::class.java)
         }

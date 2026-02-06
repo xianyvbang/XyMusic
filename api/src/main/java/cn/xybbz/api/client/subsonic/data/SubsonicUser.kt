@@ -18,22 +18,35 @@
 
 package cn.xybbz.api.client.subsonic.data
 
-import com.squareup.moshi.JsonClass
+import cn.xybbz.api.serializers.BooleanStringSerializer
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class SubsonicUser(
     val username: String,
     val email: String? = null,
-    val scrobblingEnabled: String? = null,
-    val adminRole: String? = null,
-    val settingsRole: String? = null,
-    val downloadRole: String? = null,
-    val uploadRole: String? = null,
-    val playlistRole: String? = null,
-    val coverArtRole: String? = null,
-    val commentRole: String? = null,
-    val podcastRole: String? = null,
-    val streamRole: String? = null,
-    val jukeboxRole: String? = null,
-    val shareRole: String? = null,
+    @Serializable(BooleanStringSerializer::class)
+    val scrobblingEnabled: Boolean,
+    @Serializable(BooleanStringSerializer::class)
+    val adminRole: Boolean,
+    @Serializable(BooleanStringSerializer::class)
+    val settingsRole: Boolean,
+    @Serializable(BooleanStringSerializer::class)
+    val downloadRole: Boolean,
+    @Serializable(BooleanStringSerializer::class)
+    val uploadRole: Boolean,
+    @Serializable(BooleanStringSerializer::class)
+    val playlistRole: Boolean,
+    @Serializable(BooleanStringSerializer::class)
+    val coverArtRole: Boolean,
+    @Serializable(BooleanStringSerializer::class)
+    val commentRole: Boolean,
+    @Serializable(BooleanStringSerializer::class)
+    val podcastRole: Boolean,
+    @Serializable(BooleanStringSerializer::class)
+    val streamRole: Boolean,
+    @Serializable(BooleanStringSerializer::class)
+    val jukeboxRole: Boolean,
+    @Serializable(BooleanStringSerializer::class)
+    val shareRole: Boolean,
 )

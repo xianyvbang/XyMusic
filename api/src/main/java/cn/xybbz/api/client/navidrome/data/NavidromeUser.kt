@@ -18,6 +18,9 @@
 
 package cn.xybbz.api.client.navidrome.data
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class NavidromeUser(
     val id: String? = null,
     val userName: String? = null,
@@ -30,7 +33,7 @@ data class NavidromeUser(
     val updatedAt: String? = null,
     val libraries: List<Libraries>? = null,
 )
-
+@Serializable
 data class Libraries(
     val id: Int? = null,
     val name: String? = null,

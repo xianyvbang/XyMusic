@@ -81,10 +81,6 @@ dependencies {
     // optional - Paging 3 Integration
     api(libs.androidx.room.paging)
 
-    //moshi 进行json
-    api(libs.moshi.kotlin)
-    ksp(libs.moshi.kotlin.codegen)
-
     implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.androidx.core.ktx)

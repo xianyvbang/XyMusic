@@ -18,13 +18,13 @@
 
 package cn.xybbz.api.client.subsonic.data
 
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
 
 /**
  * 艺术家和相似艺术家详情
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class ArtistInfoID3(
     /**
      * 描述

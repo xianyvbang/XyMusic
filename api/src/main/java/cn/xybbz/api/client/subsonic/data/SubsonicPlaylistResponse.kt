@@ -19,12 +19,12 @@
 package cn.xybbz.api.client.subsonic.data
 
 import cn.xybbz.api.enums.subsonic.Status
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
 /**
  * 专辑信息包含歌曲列表
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class SubsonicPlaylistResponse(
     override val type: String? = null,
     /**
@@ -43,4 +43,4 @@ data class SubsonicPlaylistResponse(
      * 报错信息
      */
     override val error: SubsonicError? = null
-) : SubsonicParentResponse(type, version, status, error)
+) : SubsonicParentResponse()

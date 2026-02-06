@@ -20,25 +20,23 @@ package cn.xybbz.localdata.converter
 
 import androidx.room.TypeConverter
 import cn.xybbz.localdata.data.music.XyMusic
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import kotlinx.serialization.json.Json
 
 class XyMusicTypeConverter {
 
-    private val moshi = Moshi.Builder()
-        .add(KotlinJsonAdapterFactory())
-        .add(StringOrArrayAdapter())
-        .build()
-
-    private val adapter = moshi.adapter(XyMusic::class.java)
-
-    @TypeConverter
-    fun fromMusic(music: XyMusic?): String? {
-        return music?.let { adapter.toJson(it) }
+    private val json = Json {
+        ignoreUnknownKeys = true  // JSON 多字段不报错
+        encodeDefaults = true     // 默认值也写入（可选）
+        explicitNulls = false     // null 不输出（可选）
     }
 
     @TypeConverter
-    fun toMusic(json: String?): XyMusic? {
-        return json?.let { adapter.fromJson(it) }
+    fun fromMusic(music: XyMusic?): String? {
+        return music?.let { json.encodeToString(it) }
+    }
+
+    @TypeConverter
+    fun toMusic(value: String?): XyMusic? {
+        return value?.let { json.decodeFromString<XyMusic>(it) }
     }
 }

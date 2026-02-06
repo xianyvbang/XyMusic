@@ -1,135 +1,153 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.enums.jellyfin
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 
 /**
  * Used to control the data that gets attached to DtoBaseItems.
  */
-@JsonClass(generateAdapter = false)
+@Serializable
 enum class ItemFields(
     private val serialName: String,
 ) {
-    @Json(name = "AirTime")
+    @SerialName(value = "AirTime")
     AIR_TIME("AirTime"),
-    @Json(name = "CanDelete")
+    @SerialName(value = "CanDelete")
     CAN_DELETE("CanDelete"),
-    @Json(name = "CanDownload")
+    @SerialName(value = "CanDownload")
     CAN_DOWNLOAD("CanDownload"),
-    @Json(name = "ChannelInfo")
+    @SerialName(value = "ChannelInfo")
     CHANNEL_INFO("ChannelInfo"),
-    @Json(name = "Chapters")
+    @SerialName(value = "Chapters")
     CHAPTERS("Chapters"),
-    @Json(name = "Trickplay")
+    @SerialName(value = "Trickplay")
     TRICKPLAY("Trickplay"),
-    @Json(name = "ChildCount")
+    @SerialName(value = "ChildCount")
     CHILD_COUNT("ChildCount"),
-    @Json(name = "CumulativeRunTimeTicks")
+    @SerialName(value = "CumulativeRunTimeTicks")
     CUMULATIVE_RUN_TIME_TICKS("CumulativeRunTimeTicks"),
-    @Json(name = "CustomRating")
+    @SerialName(value = "CustomRating")
     CUSTOM_RATING("CustomRating"),
-    @Json(name = "DateCreated")
+    @SerialName(value = "DateCreated")
     DATE_CREATED("DateCreated"),
-    @Json(name = "DateLastMediaAdded")
+    @SerialName(value = "DateLastMediaAdded")
     DATE_LAST_MEDIA_ADDED("DateLastMediaAdded"),
-    @Json(name = "DisplayPreferencesId")
+    @SerialName(value = "DisplayPreferencesId")
     DISPLAY_PREFERENCES_ID("DisplayPreferencesId"),
-    @Json(name = "Etag")
+    @SerialName(value = "Etag")
     ETAG("Etag"),
-    @Json(name = "ExternalUrls")
+    @SerialName(value = "ExternalUrls")
     EXTERNAL_URLS("ExternalUrls"),
-    @Json(name = "Genres")
+    @SerialName(value = "Genres")
     GENRES("Genres"),
-    @Json(name = "HomePageUrl")
+    @SerialName(value = "HomePageUrl")
     HOME_PAGE_URL("HomePageUrl"),
-    @Json(name = "ItemCounts")
+    @SerialName(value = "ItemCounts")
     ITEM_COUNTS("ItemCounts"),
-    @Json(name = "MediaSourceCount")
+    @SerialName(value = "MediaSourceCount")
     MEDIA_SOURCE_COUNT("MediaSourceCount"),
-    @Json(name = "MediaSources")
+    @SerialName(value = "MediaSources")
     MEDIA_SOURCES("MediaSources"),
-    @Json(name = "OriginalTitle")
+    @SerialName(value = "OriginalTitle")
     ORIGINAL_TITLE("OriginalTitle"),
-    @Json(name = "Overview")
+    @SerialName(value = "Overview")
     OVERVIEW("Overview"),
-    @Json(name = "ParentId")
+    @SerialName(value = "ParentId")
     PARENT_ID("ParentId"),
-    @Json(name = "Path")
+    @SerialName(value = "Path")
     PATH("Path"),
-    @Json(name = "People")
+    @SerialName(value = "People")
     PEOPLE("People"),
-    @Json(name = "PlayAccess")
+    @SerialName(value = "PlayAccess")
     PLAY_ACCESS("PlayAccess"),
-    @Json(name = "ProductionLocations")
+    @SerialName(value = "ProductionLocations")
     PRODUCTION_LOCATIONS("ProductionLocations"),
-    @Json(name = "ProviderIds")
+    @SerialName(value = "ProviderIds")
     PROVIDER_IDS("ProviderIds"),
-    @Json(name = "PrimaryImageAspectRatio")
+    @SerialName(value = "PrimaryImageAspectRatio")
     PRIMARY_IMAGE_ASPECT_RATIO("PrimaryImageAspectRatio"),
-    @Json(name = "RecursiveItemCount")
+    @SerialName(value = "RecursiveItemCount")
     RECURSIVE_ITEM_COUNT("RecursiveItemCount"),
-    @Json(name = "Settings")
+    @SerialName(value = "Settings")
     SETTINGS("Settings"),
-    @Json(name = "ScreenshotImageTags")
+    @SerialName(value = "ScreenshotImageTags")
     SCREENSHOT_IMAGE_TAGS("ScreenshotImageTags"),
-    @Json(name = "SeriesPrimaryImage")
+    @SerialName(value = "SeriesPrimaryImage")
     SERIES_PRIMARY_IMAGE("SeriesPrimaryImage"),
-    @Json(name = "SeriesStudio")
+    @SerialName(value = "SeriesStudio")
     SERIES_STUDIO("SeriesStudio"),
-    @Json(name = "SortName")
+    @SerialName(value = "SortName")
     SORT_NAME("SortName"),
-    @Json(name = "SpecialEpisodeNumbers")
+    @SerialName(value = "SpecialEpisodeNumbers")
     SPECIAL_EPISODE_NUMBERS("SpecialEpisodeNumbers"),
-    @Json(name = "Studios")
+    @SerialName(value = "Studios")
     STUDIOS("Studios"),
-    @Json(name = "Taglines")
+    @SerialName(value = "Taglines")
     TAGLINES("Taglines"),
-    @Json(name = "Tags")
+    @SerialName(value = "Tags")
     TAGS("Tags"),
-    @Json(name = "RemoteTrailers")
+    @SerialName(value = "RemoteTrailers")
     REMOTE_TRAILERS("RemoteTrailers"),
-    @Json(name = "MediaStreams")
+    @SerialName(value = "MediaStreams")
     MEDIA_STREAMS("MediaStreams"),
-    @Json(name = "SeasonUserData")
+    @SerialName(value = "SeasonUserData")
     SEASON_USER_DATA("SeasonUserData"),
-    @Json(name = "ServiceName")
+    @SerialName(value = "ServiceName")
     SERVICE_NAME("ServiceName"),
-    @Json(name = "ThemeSongIds")
+    @SerialName(value = "ThemeSongIds")
     THEME_SONG_IDS("ThemeSongIds"),
-    @Json(name = "ThemeVideoIds")
+    @SerialName(value = "ThemeVideoIds")
     THEME_VIDEO_IDS("ThemeVideoIds"),
-    @Json(name = "ExternalEtag")
+    @SerialName(value = "ExternalEtag")
     EXTERNAL_ETAG("ExternalEtag"),
-    @Json(name = "PresentationUniqueKey")
+    @SerialName(value = "PresentationUniqueKey")
     PRESENTATION_UNIQUE_KEY("PresentationUniqueKey"),
-    @Json(name = "InheritedParentalRatingValue")
+    @SerialName(value = "InheritedParentalRatingValue")
     INHERITED_PARENTAL_RATING_VALUE("InheritedParentalRatingValue"),
-    @Json(name = "ExternalSeriesId")
+    @SerialName(value = "ExternalSeriesId")
     EXTERNAL_SERIES_ID("ExternalSeriesId"),
-    @Json(name = "SeriesPresentationUniqueKey")
+    @SerialName(value = "SeriesPresentationUniqueKey")
     SERIES_PRESENTATION_UNIQUE_KEY("SeriesPresentationUniqueKey"),
-    @Json(name = "DateLastRefreshed")
+    @SerialName(value = "DateLastRefreshed")
     DATE_LAST_REFRESHED("DateLastRefreshed"),
-    @Json(name = "DateLastSaved")
+    @SerialName(value = "DateLastSaved")
     DATE_LAST_SAVED("DateLastSaved"),
-    @Json(name = "RefreshState")
+    @SerialName(value = "RefreshState")
     REFRESH_STATE("RefreshState"),
-    @Json(name = "ChannelImage")
+    @SerialName(value = "ChannelImage")
     CHANNEL_IMAGE("ChannelImage"),
-    @Json(name = "EnableMediaSourceDisplay")
+    @SerialName(value = "EnableMediaSourceDisplay")
     ENABLE_MEDIA_SOURCE_DISPLAY("EnableMediaSourceDisplay"),
-    @Json(name = "Width")
+    @SerialName(value = "Width")
     WIDTH("Width"),
-    @Json(name = "Height")
+    @SerialName(value = "Height")
     HEIGHT("Height"),
-    @Json(name = "ExtraIds")
+    @SerialName(value = "ExtraIds")
     EXTRA_IDS("ExtraIds"),
-    @Json(name = "LocalTrailerCount")
+    @SerialName(value = "LocalTrailerCount")
     LOCAL_TRAILER_COUNT("LocalTrailerCount"),
-    @Json(name = "IsHD")
+    @SerialName(value = "IsHD")
     IS_HD("IsHD"),
-    @Json(name = "SpecialFeatureCount")
+    @SerialName(value = "SpecialFeatureCount")
     SPECIAL_FEATURE_COUNT("SpecialFeatureCount"),
     ;
 

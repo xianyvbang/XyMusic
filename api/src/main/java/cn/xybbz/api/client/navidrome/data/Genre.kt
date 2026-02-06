@@ -18,9 +18,9 @@
 
 package cn.xybbz.api.client.navidrome.data
 
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class Genre (
     val id: String,
     val name: String

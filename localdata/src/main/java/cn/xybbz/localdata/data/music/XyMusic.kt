@@ -26,6 +26,7 @@ import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import cn.xybbz.localdata.converter.StringListTypeConverter
 import cn.xybbz.localdata.data.connection.ConnectionConfig
+import kotlinx.serialization.Serializable
 
 @Entity(
     tableName = "xy_music",
@@ -38,6 +39,7 @@ import cn.xybbz.localdata.data.connection.ConnectionConfig
     indices = [Index("connectionId")]
 )
 @TypeConverters(StringListTypeConverter::class)
+@Serializable
 data class XyMusic(
     /**
      * 数据音乐

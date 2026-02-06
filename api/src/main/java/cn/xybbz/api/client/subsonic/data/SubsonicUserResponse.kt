@@ -19,10 +19,10 @@
 package cn.xybbz.api.client.subsonic.data
 
 import cn.xybbz.api.enums.subsonic.Status
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class SubsonicUserResponse(
     override val type: String? = null,
     /**
@@ -36,10 +36,10 @@ data class SubsonicUserResponse(
     /**
      * 相似歌曲
      */
-    @param:Json(name = "user")
+    @SerialName(value = "user")
     val user: SubsonicUser? = null,
     /**
      * 报错信息
      */
     override val error: SubsonicError? = null
-) : SubsonicParentResponse(type, version, status, error)
+) : SubsonicParentResponse()

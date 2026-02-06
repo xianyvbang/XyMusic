@@ -28,7 +28,6 @@ import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.localdata.enums.DownloadTypes
 
 @Entity(tableName = "xy_download")
-@TypeConverters(XyMusicTypeConverter::class)
 data class XyDownload(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
@@ -52,6 +51,7 @@ data class XyDownload(
     val duration: Long? = null,
     val connectionId: Long? = null,
     val extend:String? = null,
+    @field:TypeConverters(XyMusicTypeConverter::class)
     val music: XyMusic? = null,
 
     val updateTime: Long = System.currentTimeMillis(),

@@ -18,9 +18,9 @@
 
 package cn.xybbz.api.client.navidrome.data
 
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class PlaylistAddMusicsUpdateRequest(
     val ids: List<String>
 )

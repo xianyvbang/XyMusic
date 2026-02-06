@@ -19,20 +19,20 @@
 package cn.xybbz.api.client.plex.data
 
 import cn.xybbz.api.enums.plex.MetadatumType
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class PlexLibrary(
-    @param:Json(name = "Directory")
+    @SerialName(value = "Directory")
     val directory: List<Directory>? = null,
-    @param:Json(name = "size")
+    @SerialName(value = "size")
     override val size: Int,
-    @param:Json(name = "totalSize")
+    @SerialName(value = "totalSize")
     override val totalSize: Int? = null
-) : PlexParentResponse(size, totalSize = totalSize)
+) : PlexParentResponse()
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class Directory(
     val title: String,
     val type: MetadatumType? = null,

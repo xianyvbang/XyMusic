@@ -18,16 +18,16 @@
 
 package cn.xybbz.api.client.plex.data
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class PlexPingSystemResponse(
-    @param:Json(name = "MediaContainer")
+    @SerialName(value = "MediaContainer")
     val mediaContainer: MediaContainer? = null
 )
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class MediaContainer(
     val allowCameraUpload: Boolean? = null,
     val allowChannelAccess: Boolean? = null,
@@ -47,7 +47,7 @@ data class MediaContainer(
     val countryCode: String? = null,
     val diagnostics: String? = null,
 
-    @param:Json(name = "Directory")
+    @SerialName(value = "Directory")
     val directory: List<Directory>? = null,
 
     val eventStream: Boolean? = null,

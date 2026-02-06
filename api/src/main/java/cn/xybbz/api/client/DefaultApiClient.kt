@@ -19,22 +19,19 @@
 package cn.xybbz.api.client
 
 import cn.xybbz.api.TokenServer
-import cn.xybbz.api.adapter.LocalDateAdapter
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.base.IDownLoadApi
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.constants.ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
+import cn.xybbz.api.converter.kotlinxJsonConverter
 import cn.xybbz.api.events.ReLoginEventBus
 import cn.xybbz.api.okhttp.DefaultAuthenticator
 import cn.xybbz.api.okhttp.LoggingInterceptor
 import cn.xybbz.api.okhttp.NetWorkInterceptor
 import cn.xybbz.api.okhttp.plex.PlexQueryInterceptor
 import cn.xybbz.api.okhttp.proxy.ProxyManager
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
-import retrofit2.converter.moshi.MoshiConverterFactory
 import java.util.concurrent.TimeUnit
 
 abstract class DefaultApiClient : ApiConfig {
@@ -76,12 +73,7 @@ abstract class DefaultApiClient : ApiConfig {
             .baseUrl(baseUrl).client(getOkHttpClient(ifTmp))
 //            .addConverterFactory(MyGsonConverterFactory.create()).build()
             .addConverterFactory(
-                MoshiConverterFactory.create(
-                    Moshi.Builder()
-//                        .add(LocalDateTimeAdapter())
-                        .add(LocalDateAdapter()).add(KotlinJsonAdapterFactory())
-                        .build()
-                )
+                kotlinxJsonConverter()
             ).build()
         userApi(true)
         userLibraryApi(true)

@@ -18,8 +18,8 @@
 
 package cn.xybbz.api.client.jellyfin.data
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 认证响应
@@ -30,13 +30,13 @@ import com.squareup.moshi.JsonClass
  * @param [serverId] 服务器ID
  * @param [user] 用户信息
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class AuthenticateResponse(
-    @param:Json(name = "AccessToken")
+    @SerialName(value = "AccessToken")
     val accessToken: String?,
-    @param:Json(name = "ServerId")
+    @SerialName(value = "ServerId")
     val serverId: String?,
-    @param:Json(name = "User")
+    @SerialName(value = "User")
     val user: User?
 )
 
@@ -47,24 +47,24 @@ data class AuthenticateResponse(
  * @constructor 创建[User]
  * @param [id] 用户id
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class User(
-    @param:Json(name = "Id")
+    @SerialName(value = "Id")
     val id: String?,
-    @param:Json(name = "Policy")
+    @SerialName(value = "Policy")
     val policy:Policy?
 )
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class Policy(
     /**
      * 是否开启内容下载
      */
-    @param:Json(name = "EnableContentDownloading")
+    @SerialName(value = "EnableContentDownloading")
     val enableContentDownloading: Boolean?,
     /**
      * 是否开启内容删除
      */
-    @param:Json(name = "EnableContentDeletion")
+    @SerialName(value = "EnableContentDeletion")
     val enableContentDeletion:Boolean?
 )

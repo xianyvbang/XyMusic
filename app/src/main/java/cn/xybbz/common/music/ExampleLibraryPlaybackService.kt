@@ -203,7 +203,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
 
         registerReceiver(myNoisyAudioStreamReceiver, intentFilter)
 
-        val forwardingPlayer = object : ForwardingPlayer(exoPlayer!!) {
+        val forwardingPlayer = object : ForwardingPlayer(exoPlayer) {
 
             override fun play() {
                 Log.i("music", "音乐播放")

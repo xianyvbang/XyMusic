@@ -18,12 +18,12 @@
 
 package cn.xybbz.api.client.subsonic.data
 
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
 /**
  * 音乐文件夹对象
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class MusicFolderID3(
     val id:String,
     val name:String

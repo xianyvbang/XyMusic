@@ -16,24 +16,15 @@
  *
  */
 
-package cn.xybbz.api.enums.plex
+package cn.xybbz.api.converter
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import cn.xybbz.api.constants.ApiConstants.HEADER_ACCEPT
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
-
-@Serializable
-enum class ImageType(val value: String) {
-    @SerialName(value = "background")
-    Background("background"),
-    @SerialName(value = "clearLogo")
-    ClearLogo("clearLogo"),
-    @SerialName(value = "coverPoster")
-    CoverPoster("coverPoster"),
-    @SerialName(value = "snapshot")
-    Snapshot("snapshot");
-
-    override fun toString(): String {
-        return value
-    }
-}
+fun kotlinxJsonConverter() = Json{
+    ignoreUnknownKeys = true  // JSON 多字段不报错
+    encodeDefaults = true     // 默认值也写入（可选）
+    explicitNulls = false     // null 不输出（可选）
+}.asConverterFactory(HEADER_ACCEPT.toMediaType())

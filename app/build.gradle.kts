@@ -138,7 +138,7 @@ composeCompiler {
 
 
 dependencies {
-    implementation(libs.kotlinx.serialization.json)
+
     //颜色提取
     implementation(libs.androidx.palette.ktx)
     implementation(libs.androidx.core.ktx)
@@ -217,8 +217,6 @@ dependencies {
 
     //拼音相关
     implementation(libs.tinypinyin)
-
-    implementation(libs.kotlinx.coroutines.guava)
 
     //UI的module
     implementation(project(path = ":ui"))

@@ -19,7 +19,7 @@
 package cn.xybbz.api.client.subsonic.service
 
 import cn.xybbz.api.base.BaseApi
-import cn.xybbz.api.client.subsonic.data.SubsonicParentResponse
+import cn.xybbz.api.client.subsonic.data.SubsonicDefaultResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicUserResponse
 import retrofit2.http.GET
@@ -37,7 +37,7 @@ interface SubsonicUserApi : BaseApi {
      * @return [String]
      */
     @POST("/rest/ping")
-    suspend fun postPingSystem(): SubsonicResponse<SubsonicParentResponse>
+    suspend fun postPingSystem(): SubsonicResponse<SubsonicDefaultResponse>
 
     /**
      * 获取用户信息
@@ -49,6 +49,6 @@ interface SubsonicUserApi : BaseApi {
      * 上报播放记录
      */
     @GET("/rest/scrobble")
-    suspend fun scrobble(@QueryMap scrobbleRequest: Map<String, String>):SubsonicResponse<SubsonicParentResponse>
+    suspend fun scrobble(@QueryMap scrobbleRequest: Map<String, String>):SubsonicResponse<SubsonicDefaultResponse>
 
 }

@@ -22,9 +22,8 @@ import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.jellyfin.data.AuthenticateResponse
 import cn.xybbz.api.client.navidrome.data.NavidromeLoginRequest
 import cn.xybbz.api.client.navidrome.data.NavidromeLoginResponse
-import cn.xybbz.api.client.navidrome.data.NavidromePingResponse
 import cn.xybbz.api.client.navidrome.data.TranscodingInfo
-import cn.xybbz.api.client.subsonic.data.SubsonicParentResponse
+import cn.xybbz.api.client.subsonic.data.SubsonicDefaultResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicUserResponse
 import cn.xybbz.api.enums.navidrome.OrderType
@@ -60,13 +59,13 @@ interface NavidromeUserApi : BaseApi {
      * @return [String]
      */
     @POST("/rest/ping")
-    suspend fun postPingSystem(): SubsonicResponse<NavidromePingResponse>
+    suspend fun postPingSystem(): SubsonicResponse<SubsonicDefaultResponse>
 
     /**
      * 上报播放记录
      */
     @GET("/rest/scrobble")
-    suspend fun scrobble(@QueryMap scrobbleRequest: Map<String, String>): SubsonicResponse<SubsonicParentResponse>
+    suspend fun scrobble(@QueryMap scrobbleRequest: Map<String, String>): SubsonicResponse<SubsonicDefaultResponse>
 
     /**
      * 获得转码信息

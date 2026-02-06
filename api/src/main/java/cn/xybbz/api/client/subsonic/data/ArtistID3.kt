@@ -18,13 +18,13 @@
 
 package cn.xybbz.api.client.subsonic.data
 
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
 
 /**
  * ArtistID3，An artist from ID3 tags.
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class ArtistID3 (
     /**
      * Artist album count.

@@ -25,13 +25,11 @@ import androidx.media3.exoplayer.offline.Download
 import androidx.media3.exoplayer.offline.DownloadManager
 import androidx.media3.exoplayer.offline.DownloadNotificationHelper
 import androidx.media3.exoplayer.offline.DownloadService
-import androidx.media3.exoplayer.scheduler.PlatformScheduler
 import androidx.media3.exoplayer.scheduler.Scheduler
 import androidx.media3.exoplayer.workmanager.WorkManagerScheduler
 import cn.xybbz.R
 import cn.xybbz.common.constants.Constants.DOWNLOAD_NOTIFICATION_CHANNEL_ID
 import dagger.hilt.android.AndroidEntryPoint
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull
 import javax.inject.Inject
 
 
@@ -47,7 +45,7 @@ class ExoPlayerDownloadService : DownloadService(
 
 
     private
-    var downloadNotificationHelper: @MonotonicNonNull DownloadNotificationHelper? = null
+    var downloadNotificationHelper: DownloadNotificationHelper? = null
 
     override fun getDownloadManager(): DownloadManager {
 
@@ -85,7 +83,7 @@ class ExoPlayerDownloadService : DownloadService(
                 /* message= */ null,
                 downloads,
                 notMetRequirements
-            );
+            )
     }
 
     companion object {
@@ -100,7 +98,7 @@ class ExoPlayerDownloadService : DownloadService(
     fun getDownloadNotificationHelper(context: Context):DownloadNotificationHelper {
     if (downloadNotificationHelper == null) {
       downloadNotificationHelper =
-           DownloadNotificationHelper(context, DOWNLOAD_NOTIFICATION_CHANNEL_ID);
+           DownloadNotificationHelper(context, DOWNLOAD_NOTIFICATION_CHANNEL_ID)
     }
     return downloadNotificationHelper!!
   }
