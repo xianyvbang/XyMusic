@@ -73,8 +73,6 @@ enum class DataSourceType(
     val ifStartEndYear: Boolean,
     //是否能进行年筛选
     val ifYearFilter: Boolean = true,
-    //是否支持删除功能
-    val ifDelete: Boolean,
     //是否艺术家可以进行收藏筛选
     val ifArtistFavorite: Boolean,
     //是否需要输入需要服务端地址
@@ -104,7 +102,6 @@ enum class DataSourceType(
         ifAlbumInfoSort = true,
         ifAlbumInfoFavoriteFilter = true,
         ifStartEndYear = false,
-        ifDelete = true,
         ifArtistFavorite = true,
         ifHls = true
     ),
@@ -119,7 +116,6 @@ enum class DataSourceType(
         code = "2",
         version = "1.16.0",
         ifShowCount = true,
-        ifDelete = false,
         ifShowMusicDropdownMenu = false,
         ifMusicSelectOneYear = false,
         ifMusicSort = false,
@@ -144,7 +140,6 @@ enum class DataSourceType(
         code = "3",
         version = "0.56.0",
         ifShowCount = true,
-        ifDelete = false,
         ifMusicSelectOneYear = true,
         ifMusicSort = true,
         ifMusicFavoriteFilter = true,
@@ -168,7 +163,6 @@ enum class DataSourceType(
         code = "4",
         version = "4.1.1.0",
         ifShowCount = true,
-        ifDelete = true,
         ifMusicSelectOneYear = false,
         ifMusicSort = true,
         ifMusicFavoriteFilter = true,
@@ -195,7 +189,6 @@ enum class DataSourceType(
         code = "4",
         version = "4.1.1.0",
         ifShowCount = true,
-        ifDelete = true,
         ifInputUrl = false,
         ifMusicSelectOneYear = true,
         ifMusicSort = true,

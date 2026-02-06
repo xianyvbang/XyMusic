@@ -246,7 +246,7 @@ fun MusicBottomMenuComponent(
          */
         val ifDelete by remember {
             derivedStateOf {
-                musicBottomMenuViewModel.dataSourceManager.dataSourceType?.ifDelete == true
+                musicBottomMenuViewModel.dataSourceManager.getCanDelete()
             }
         }
 

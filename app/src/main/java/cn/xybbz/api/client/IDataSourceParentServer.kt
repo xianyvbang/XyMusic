@@ -1162,8 +1162,15 @@ abstract class IDataSourceParentServer(
     /**
      * 获得是否可以下载
      */
-    override fun getCanDownload(): Boolean {
+    fun getCanDownload(): Boolean {
         return getConnectionConfig()?.ifEnabledDownload ?: false
+    }
+
+    /**
+     * 获取是否可以删除
+     */
+    fun getCanDelete(): Boolean {
+        return getConnectionConfig()?.ifEnabledDelete ?: false
     }
 
     /**

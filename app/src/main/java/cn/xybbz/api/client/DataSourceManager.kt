@@ -1143,8 +1143,12 @@ class DataSourceManager(
     /**
      * 获得是否可以下载
      */
-    override fun getCanDownload(): Boolean {
+    fun getCanDownload(): Boolean {
         return dataSourceServer.getCanDownload()
+    }
+
+    fun getCanDelete(): Boolean {
+        return dataSourceServer.getCanDelete()
     }
 
     /**

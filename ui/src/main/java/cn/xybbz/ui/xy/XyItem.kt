@@ -707,9 +707,7 @@ fun XyItemTabButton(
     text: String,
     imageVector: ImageVector,
     enabled: Boolean = true,
-    iconColor: Color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(
-        alpha = 0.3f
-    ),
+    iconColor: Color? = null,
     color: Color = MaterialTheme.colorScheme.surfaceContainerLowest
 ) {
     Surface(
@@ -726,7 +724,10 @@ fun XyItemTabButton(
                 Icon(
                     imageVector = imageVector,
                     contentDescription = text,
-                    tint = iconColor,
+                    tint = iconColor
+                        ?: if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                            alpha = 0.3f
+                        ),
                     modifier = Modifier.padding(
                         XyTheme.dimens.contentPadding
                     )
@@ -752,9 +753,7 @@ fun XyItemTabBigButton(
     sub: String? = null,
     imageVector: ImageVector,
     enabled: Boolean = true,
-    iconColor: Color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(
-        alpha = 0.3f
-    ),
+    iconColor: Color? = null,
     brush: Brush
 ) {
     Column(
@@ -770,7 +769,10 @@ fun XyItemTabBigButton(
         Icon(
             imageVector = imageVector,
             contentDescription = text,
-            tint = iconColor,
+            tint = iconColor
+                ?: if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                    alpha = 0.3f
+                ),
             modifier = Modifier
                 .padding(
                     top = XyTheme.dimens.outerVerticalPadding,
