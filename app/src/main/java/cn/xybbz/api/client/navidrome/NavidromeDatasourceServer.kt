@@ -1442,7 +1442,7 @@ class NavidromeDatasourceServer(
             ifLyric = !music.lyrics.isNullOrBlank(),
             lyric = music.lyrics,
             playlistItemId = music.id,
-            lastPlayedDate = music.playDate,
+            lastPlayedDate = music.playDate ?: 0L,
             createTime = music.createdAt
         )
     }

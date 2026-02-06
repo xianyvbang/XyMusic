@@ -28,7 +28,7 @@ data class SongItem(
     /**
      * 数据id
      */
-    val mediaFileId:String? = null,
+    val mediaFileId: String? = null,
     /**
      * 歌曲标题
      */
@@ -77,7 +77,7 @@ data class SongItem(
      * 播放时间
      */
     @Serializable(LocalDateTimeTimestampSerializer::class)
-    val playDate: Long,
+    val playDate: Long? = null,
     /**
      * 是否收藏
      */

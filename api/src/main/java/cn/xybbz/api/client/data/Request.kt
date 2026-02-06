@@ -19,10 +19,12 @@
 package cn.xybbz.api.client.data
 
 import cn.xybbz.api.utils.toQueryMap
+import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
 
 
 @Serializable
+@Polymorphic
 open class Request {
 
     /**

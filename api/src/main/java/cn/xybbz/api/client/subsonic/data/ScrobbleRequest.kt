@@ -19,12 +19,14 @@
 package cn.xybbz.api.client.subsonic.data
 
 import cn.xybbz.api.client.data.Request
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * 上报播放记录请求实体类
  */
 @Serializable
+@SerialName(value = "ScrobbleRequest")
 data class ScrobbleRequest(
     /**
      * 歌曲id

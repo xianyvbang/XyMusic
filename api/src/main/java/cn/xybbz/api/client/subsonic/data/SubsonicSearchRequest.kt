@@ -19,9 +19,11 @@
 package cn.xybbz.api.client.subsonic.data
 
 import cn.xybbz.api.client.data.Request
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+@SerialName(value = "SubsonicSearchRequest")
 data class SubsonicSearchRequest(
     /**
      * Search query.

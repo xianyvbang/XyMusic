@@ -207,7 +207,7 @@ data class UserItemDataDto(
      */
     @SerialName(value = "LastPlayedDate")
     @Serializable(LocalDateTimeTimestampSerializer::class)
-    val lastPlayedDate: Long,
+    val lastPlayedDate: Long? = null,
     /**
      * A value indicating whether this MediaBrowser.Model.Dto.UserItemDataDto is played.
      */

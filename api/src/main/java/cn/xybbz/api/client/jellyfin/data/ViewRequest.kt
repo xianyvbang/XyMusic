@@ -30,6 +30,7 @@ import kotlinx.serialization.Serializable
  * @constructor 创建[ViewRequest]
  */
 @Serializable
+@SerialName(value = "ViewRequest")
 data class ViewRequest(
     /**
      * 是否包括外部视图，如频道或直播电视。

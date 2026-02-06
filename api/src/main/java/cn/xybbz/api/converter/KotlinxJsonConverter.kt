@@ -18,13 +18,33 @@
 
 package cn.xybbz.api.converter
 
+import cn.xybbz.api.client.data.Request
+import cn.xybbz.api.client.jellyfin.data.ItemRequest
+import cn.xybbz.api.client.jellyfin.data.ViewRequest
+import cn.xybbz.api.client.subsonic.data.ScrobbleRequest
+import cn.xybbz.api.client.subsonic.data.SubsonicSearchRequest
 import cn.xybbz.api.constants.ApiConstants.HEADER_ACCEPT
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
 import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
-fun kotlinxJsonConverter() = Json{
+val module = SerializersModule {
+    polymorphic(Request::class) {
+        subclass(ItemRequest::class, ItemRequest.serializer())
+        subclass(ScrobbleRequest::class, ScrobbleRequest.serializer())
+        subclass(SubsonicSearchRequest::class, SubsonicSearchRequest.serializer())
+        subclass(ViewRequest::class, ViewRequest.serializer())
+        // 其他子类都要注册
+    }
+}
+
+val json = Json {
+    serializersModule = module
     ignoreUnknownKeys = true  // JSON 多字段不报错
     encodeDefaults = true     // 默认值也写入（可选）
     explicitNulls = false     // null 不输出（可选）
-}.asConverterFactory(HEADER_ACCEPT.toMediaType())
+}
+
+fun kotlinxJsonConverter() = json.asConverterFactory(HEADER_ACCEPT.toMediaType())

@@ -18,13 +18,16 @@
 
 package cn.xybbz.api.utils
 
-import kotlinx.serialization.json.Json
+import android.util.Log
+import cn.xybbz.api.client.data.Request
+import cn.xybbz.api.converter.json
+import kotlinx.serialization.PolymorphicSerializer
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonPrimitive
+
 
 /**
  * 把任意 @Serializable 对象转换成 Map<String, String>
@@ -32,12 +35,14 @@ import kotlinx.serialization.json.jsonPrimitive
  */
 inline fun <reified T> T.toQueryMap(
     isConvertList: Boolean = true
-): Map<String, String> where T : Any {
+): Map<String, String> where T : Request {
+
     // 1. 把对象序列化为 JsonElement
-    val jsonElement = Json.encodeToJsonElement(this)
+    val jsonElement = json.encodeToJsonElement(PolymorphicSerializer(Request::class), this)
 
     if (jsonElement !is JsonObject) return emptyMap()
-
+    val currentTimeMillis = System.currentTimeMillis()
+    Log.i("=======","转换开始时间: $currentTimeMillis")
     val toMap = jsonElement.toMap()
     val mapNotNull = toMap.mapNotNull { (key, value) ->
         val stringValue = when (value) {
@@ -48,5 +53,8 @@ inline fun <reified T> T.toQueryMap(
         }
         key to stringValue
     }.filter { it.second.isNotEmpty() }
-    return mapNotNull.toMap()
+    val toMutableMap = mapNotNull.toMap().toMutableMap()
+    toMutableMap.remove("type")
+    Log.i("=======","转换结束时间: ${System.currentTimeMillis() - currentTimeMillis}")
+    return toMutableMap
 }

@@ -36,6 +36,7 @@ import kotlinx.serialization.Serializable
  * @constructor 创建[ItemRequest]
  */
 @Serializable
+@SerialName(value = "ItemRequest")
 data class ItemRequest(
     /**
      * 分页大小
