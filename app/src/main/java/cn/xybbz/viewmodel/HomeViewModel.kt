@@ -33,6 +33,7 @@ import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.common.enums.HomeRefreshReason
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.music.MusicController
+import cn.xybbz.common.utils.DataRefreshEstimateUtils
 import cn.xybbz.common.utils.DataSourceChangeUtils
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.HomeDataRepository
@@ -42,7 +43,6 @@ import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.music.XyMusicExtend
-import cn.xybbz.localdata.data.remote.RemoteCurrent
 import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -101,7 +101,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
     /**
      * 监听登录状态加载数据
      */
-    private fun initLoginChangeMonitor(){
+    private fun initLoginChangeMonitor() {
         viewModelScope.launch {
             homeDataRepository.initLoginChangeMonitor()
         }
@@ -202,7 +202,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
     private fun observeLoginSuccess() {
         viewModelScope.launch {
             dataSourceManager.loginStateFlow.collect {
-                Log.i("home","登录数据变化${it}")
+                Log.i("home", "登录数据变化${it}")
                 tryRefreshHome(
                     isRefresh = true,
                     reason = HomeRefreshReason.Login
@@ -219,42 +219,14 @@ class HomeViewModel @OptIn(UnstableApi::class)
         reason: HomeRefreshReason,
         onEnd: ((Boolean) -> Unit)? = null,
     ) {
-        val connectionId =  dataSourceManager.getConnectionId()
-        if (!shouldRefresh(reason,connectionId)) {
+        val connectionId = dataSourceManager.getConnectionId()
+        val key = RemoteIdConstants.HOME_REFRESH + connectionId
+        if (!DataRefreshEstimateUtils.shouldRefresh(reason, db, key)) {
             onEnd?.invoke(false)
             return
         }
         refreshDataAll(onEnd, isRefresh)
-        updateHomeRefreshTime(connectionId)
-    }
-
-    /**
-     * 判断是否可以刷新
-     */
-    private suspend fun shouldRefresh(reason: HomeRefreshReason,connectionId:Long): Boolean {
-        // 手动刷新：永远刷新
-        if (reason == HomeRefreshReason.Manual) return true
-
-        val remoteCurrent = db.remoteCurrentDao
-            .remoteKeyById(RemoteIdConstants.HOME_REFRESH + connectionId)
-
-        val lastTime = remoteCurrent?.createTime ?: 0L
-        val now = System.currentTimeMillis()
-
-        return (now - lastTime) >= (Constants.HOME_PAGE_TIME_FAILURE * 60_000)
-    }
-
-    /**
-     * 更新刷新时间
-     */
-    private suspend fun updateHomeRefreshTime(connectionId: Long) {
-        db.remoteCurrentDao.insertOrReplace(
-            RemoteCurrent(
-                id = RemoteIdConstants.HOME_REFRESH + connectionId,
-                connectionId = dataSourceManager.getConnectionId(),
-                createTime = System.currentTimeMillis()
-            )
-        )
+        DataRefreshEstimateUtils.updateHomeRefreshTime(connectionId, db, key)
     }
 
     /**
@@ -357,7 +329,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
         }
     }
 
-    fun autoLogin(){
+    fun autoLogin() {
         viewModelScope.launch {
             dataSourceManager.serverLogin(LoginType.API, null)
         }

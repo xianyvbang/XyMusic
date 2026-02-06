@@ -155,6 +155,11 @@ object Constants {
     const val ARTIST_PAGE_TIME_FAILURE = 60L
 
     /**
+     * 版本数据获取间隔
+     */
+    const val VERSION_INFO_INTERVAL = 1440L
+
+    /**
      * 相似歌曲分页大小
      */
     const val SIMILAR_MUSIC_LIST_PAGE = 6

@@ -38,10 +38,14 @@ import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.events.ReLoginEvent
+import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.constants.RemoteIdConstants
+import cn.xybbz.common.enums.HomeRefreshReason
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.music.PlayerEvent
+import cn.xybbz.common.utils.DataRefreshEstimateUtils
 import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.alarm.AlarmConfig
@@ -408,7 +412,7 @@ class MainViewModel @Inject constructor(
                     musicPlayContext.musicPlayData?.onMusicPlayParameter?.artistId
                 )
                 musicController.updateRestartCount()
-            }else {
+            } else {
                 musicController.updateIfGetNextPageMusicDataIsNullCount(1)
             }
         }.invokeOnCompletion { ifNextPageNumList = false }
@@ -663,7 +667,20 @@ class MainViewModel @Inject constructor(
      * 初始化版本信息获取
      */
     fun initGetVersionInfo() {
-        versionCheckScheduler.enqueueIfNeeded()
+        viewModelScope.launch {
+            val key = RemoteIdConstants.VERSION_INFO
+            if (!DataRefreshEstimateUtils.shouldRefresh(
+                    HomeRefreshReason.EnterHome, db, key,
+                    Constants.VERSION_INFO_INTERVAL
+                )
+            ) {
+                return@launch
+            }
+            versionCheckScheduler.enqueueIfNeeded()
+            DataRefreshEstimateUtils.updateHomeRefreshTime(null, db, key)
+        }
+
+
     }
 
     fun initTranscodeListener() {
@@ -672,7 +689,8 @@ class MainViewModel @Inject constructor(
                 if (it is TranscodingState.NetWorkChange && (settingsManager.get().ifTranscoding
                             || settingsManager.get().mobileNetworkAudioBitRate
                             == settingsManager.get().wifiNetworkAudioBitRate
-                            )) {
+                            )
+                ) {
                     return@collect
                 }
                 musicController.replacePlaylistItemUrl()
