@@ -18,9 +18,9 @@
 
 package cn.xybbz.api.serializers
 
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -28,6 +28,7 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlin.time.Instant
 
 object LocalDateTimeTimestampSerializer : KSerializer<Long> {
     override val descriptor: SerialDescriptor =
@@ -48,8 +49,8 @@ object LocalDateTimeTimestampSerializer : KSerializer<Long> {
 
         val str = decoder.decodeString() // JSON 中的时间字符串
         if (str.isBlank()) return 0L
-        val ldt = LocalDateTime.parse(str) // 转 LocalDateTime
-        val instant = ldt.toInstant(TimeZone.currentSystemDefault())// 转 Instant
-        return instant.toEpochMilliseconds()
+        val instant  = Instant.parse(str) // 转 LocalDateTime
+        val ldt = instant.toLocalDateTime(TimeZone.currentSystemDefault())// 转 Instant
+        return ldt.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
     }
 }
