@@ -1398,7 +1398,7 @@ class EmbyDatasourceServer(
             albumArtist = item.albumArtists?.map { artist -> artist.name.toString() }
                 ?: listOf(application.getString(Constants.UNKNOWN_ARTIST)),
             albumArtistIds = item.albumArtists?.map { artist -> artist.id },
-            createTime = item.dateCreated,
+            createTime = item.dateCreated ?: 0L,
             year = item.productionYear,
             genreIds = item.genreItems?.map { it.id },
             playedCount = item.userData?.playCount ?: 0,
@@ -1459,7 +1459,7 @@ class EmbyDatasourceServer(
             genreIds = album.genreItems?.joinToString { it.id },
             ifFavorite = album.userData?.isFavorite == true,
             ifPlaylist = ifPlaylist,
-            createTime = album.dateCreated,
+            createTime = album.dateCreated ?: 0L,
             musicCount = if (ifPlaylist) (album.childCount?.toLong()
                 ?: 0L) else (album.songCount?.toLong() ?: 0L)
         )
@@ -1495,7 +1495,7 @@ class EmbyDatasourceServer(
             pic = itemImageUrl ?: "",
             name = genre.name ?: application.getString(Constants.UNKNOWN_ALBUM),
             connectionId = getConnectionId(),
-            createTime = genre.dateCreated,
+            createTime = genre.dateCreated ?: 0L,
         )
     }
 

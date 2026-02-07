@@ -107,7 +107,7 @@ data class ItemResponse(
      */
     @SerialName(value = "DateCreated")
     @Serializable(LocalDateTimeTimestampSerializer::class)
-    val dateCreated: Long,
+    val dateCreated: Long? = null,
 
     /**
      * The user data for this item based on the user it's being requested for.

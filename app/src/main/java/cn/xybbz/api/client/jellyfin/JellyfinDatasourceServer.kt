@@ -1336,7 +1336,7 @@ class JellyfinDatasourceServer(
             genreIds = item.genreItems?.joinToString { it.id },
             ifFavorite = item.userData?.isFavorite == true,
             ifPlaylist = ifPlaylist,
-            createTime = item.dateCreated,
+            createTime = item.dateCreated ?: 0L,
             musicCount = if (ifPlaylist) (item.childCount?.toLong()
                 ?: 0L) else (item.songCount?.toLong() ?: 0L)
         )
@@ -1387,7 +1387,7 @@ class JellyfinDatasourceServer(
             albumArtist = item.albumArtists?.map { artist -> artist.name.toString() }
                 ?: listOf(application.getString(Constants.UNKNOWN_ARTIST)),
             albumArtistIds = item.albumArtists?.map { artist -> artist.id },
-            createTime = item.dateCreated,
+            createTime = item.dateCreated ?: 0L,
             year = item.productionYear,
             genreIds = item.genreItems?.map { it.id },
             playedCount = item.userData?.playCount ?: 0,
@@ -1497,7 +1497,7 @@ class JellyfinDatasourceServer(
             pic = itemImageUrl ?: "",
             name = item.name ?: application.getString(Constants.UNKNOWN_ALBUM),
             connectionId = getConnectionId(),
-            createTime = item.dateCreated
+            createTime = item.dateCreated ?: 0L
         )
     }
 }
