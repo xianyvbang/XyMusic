@@ -43,6 +43,7 @@ import cn.xybbz.api.enums.jellyfin.MediaProtocol
 import cn.xybbz.api.enums.jellyfin.MediaStreamType
 import cn.xybbz.api.enums.jellyfin.PlayMethod
 import cn.xybbz.api.enums.jellyfin.SortOrder
+import cn.xybbz.api.utils.toStringMap
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.Constants.LYRICS_AMPLIFICATION
 import cn.xybbz.common.enums.MusicTypeEnum
@@ -135,23 +136,24 @@ class EmbyDatasourceServer(
         isFavorite: Boolean?,
         search: String?
     ): XyResponse<XyArtist> {
+        val itemRequest = ItemRequest(
+            limit = pageSize,
+            startIndex = startIndex,
+            sortBy = listOf(ItemSortBy.SORT_NAME),
+            sortOrder = listOf(SortOrder.ASCENDING),
+            fields = listOf(
+                ItemFields.SORT_NAME,
+            ),
+            imageTypeLimit = 1,
+            enableImageTypes = listOf(
+                ImageType.PRIMARY, ImageType.BACKDROP
+            ),
+            searchTerm = search,
+            isFavorite = isFavorite,
+            parentId = libraryId
+        )
         val response = embyApiClient.artistsApi().getArtists(
-            ItemRequest(
-                limit = pageSize,
-                startIndex = startIndex,
-                sortBy = listOf(ItemSortBy.SORT_NAME),
-                sortOrder = listOf(SortOrder.ASCENDING),
-                fields = listOf(
-                    ItemFields.SORT_NAME,
-                ),
-                imageTypeLimit = 1,
-                enableImageTypes = listOf(
-                    ImageType.PRIMARY, ImageType.BACKDROP
-                ),
-                searchTerm = search,
-                isFavorite = isFavorite,
-                parentId = libraryId
-            ).toMap()
+            itemRequest.toStringMap()
         )
         val artistList = convertToArtistList(response.items)
         return XyResponse(
@@ -171,7 +173,7 @@ class EmbyDatasourceServer(
                 ids = artistIds,
                 parentId = libraryId,
                 userId = getUserId()
-            ).toMap()
+            ).toStringMap()
         ).items
         return convertToArtistList(items)
     }
@@ -609,7 +611,7 @@ class EmbyDatasourceServer(
             db.libraryDao.remove()
             val viewLibrary = embyApiClient.userViewsApi().getUserViews(
                 userId = getUserId(),
-                ViewRequest().toMap()
+                ViewRequest().toStringMap()
             )
             //存储历史记录
             val libraries =
@@ -681,7 +683,7 @@ class EmbyDatasourceServer(
                 limit = Constants.MIN_PAGE,
                 parentId = libraryId,
                 userId = getUserId()
-            ).toMap()
+            ).toStringMap()
         )
         if (albumList.isNotEmpty())
             db.withTransaction {
@@ -1013,7 +1015,7 @@ class EmbyDatasourceServer(
             ItemRequest(
                 limit = pageSize,
                 userId = getUserId()
-            ).toMap()
+            ).toStringMap()
         )
         return convertToArtistList(response.items)
     }
@@ -1138,7 +1140,7 @@ class EmbyDatasourceServer(
                 parentId = if (parentId.isNullOrBlank()) libraryId else parentId,
                 userId = getUserId(),
                 path = path
-            ).toMap()
+            ).toStringMap()
         )
         return XyResponse(
             items = convertToMusicList(response.items),
@@ -1193,7 +1195,7 @@ class EmbyDatasourceServer(
                 genreIds = genreIds,
                 parentId = libraryId,
                 userId = getUserId()
-            ).toMap()
+            ).toStringMap()
         )
 
         return XyResponse(
@@ -1231,7 +1233,7 @@ class EmbyDatasourceServer(
                         limit = pageSize,
                         parentId = libraryId,
                         userId = getUserId()
-                    ).toMap()
+                    ).toStringMap()
                 )
             val xyResponse = XyResponse(
                 items = convertToAlbumList(playlists.items, true),
@@ -1279,7 +1281,7 @@ class EmbyDatasourceServer(
                 searchTerm = search,
                 imageTypeLimit = 1,
                 parentId = libraryId
-            ).toMap()
+            ).toStringMap()
         )
 
         return XyResponse(

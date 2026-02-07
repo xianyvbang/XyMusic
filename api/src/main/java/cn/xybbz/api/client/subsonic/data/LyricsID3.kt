@@ -22,7 +22,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class LyricsID3(
-    val artist: String,
-    val title: String,
+    val artist: String?,
+    val title: String?,
     val value: String?
 )

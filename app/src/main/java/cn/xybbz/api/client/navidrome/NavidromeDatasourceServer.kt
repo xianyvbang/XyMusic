@@ -41,6 +41,7 @@ import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.CollectionType
 import cn.xybbz.api.enums.navidrome.OrderType
 import cn.xybbz.api.enums.navidrome.SortType
+import cn.xybbz.api.utils.toStringMap
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
@@ -855,11 +856,12 @@ class NavidromeDatasourceServer(
         isPaused: Boolean,
         positionTicks: Long?
     ) {
+        val scrobbleRequest = ScrobbleRequest(
+            id = musicId,
+            submission = isPaused
+        )
         navidromeApiClient.userApi().scrobble(
-            ScrobbleRequest(
-                id = musicId,
-                submission = isPaused
-            ).toMap()
+            scrobbleRequest.toStringMap()
         )
     }
 

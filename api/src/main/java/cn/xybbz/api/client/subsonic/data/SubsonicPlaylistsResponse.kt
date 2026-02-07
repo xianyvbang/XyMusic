@@ -43,4 +43,4 @@ data class SubsonicPlaylistsResponse(
      * 报错信息
      */
     override val error: SubsonicError? = null
-) : SubsonicParentResponse()
+) : SubsonicParentResponse

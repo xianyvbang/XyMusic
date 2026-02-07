@@ -39,6 +39,7 @@ import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.CollectionType
 import cn.xybbz.api.enums.subsonic.AlbumType
 import cn.xybbz.api.enums.subsonic.Status
+import cn.xybbz.api.utils.toStringMap
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
@@ -717,7 +718,7 @@ class SubsonicDatasourceServer(
             ScrobbleRequest(
                 id = musicId,
                 submission = isPaused
-            ).toMap()
+            ).toStringMap()
         )
     }
 

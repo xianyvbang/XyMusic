@@ -53,4 +53,4 @@ data class SubsonicDefaultResponse(
      * 异常对象
      */
     override val error: SubsonicError?
-):SubsonicParentResponse()
+):SubsonicParentResponse

@@ -19,29 +19,27 @@
 package cn.xybbz.api.client.subsonic.data
 
 import cn.xybbz.api.enums.subsonic.Status
-import kotlinx.serialization.Serializable
 
-@Serializable
-abstract class SubsonicParentResponse {
+interface SubsonicParentResponse {
     /**
      * The server actual name. [Ex: Navidrome or gonic]
      */
-    abstract val type: String?
+    val type: String?
 
     /**
      * The server supported Subsonic API version.
      */
-    abstract val version: String
+    val version: String
 
     /**
      * The command result. `ok`
      *
      * The command result. `failed`
      */
-    abstract val status: Status
+    val status: Status
 
     /**
      * 异常对象
      */
-    abstract val error: SubsonicError?
+    val error: SubsonicError?
 }

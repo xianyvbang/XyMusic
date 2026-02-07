@@ -18,22 +18,8 @@
 
 package cn.xybbz.api.client.data
 
-import cn.xybbz.api.utils.toQueryMap
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
 
 
 @Serializable
-@Polymorphic
-open class Request {
-
-    /**
-     * 将对象转换成map
-     * @return [Map<String, Any>]
-     */
-    fun toMap(/*serializer: KSerializer<Any>*/): Map<String, String> = this.toQueryMap(
-        true,
-//        serializer
-    )
-}
+open class Request

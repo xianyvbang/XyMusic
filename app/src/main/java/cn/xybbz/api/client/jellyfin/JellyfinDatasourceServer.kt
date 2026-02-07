@@ -46,6 +46,7 @@ import cn.xybbz.api.enums.jellyfin.MediaStreamType
 import cn.xybbz.api.enums.jellyfin.MediaType
 import cn.xybbz.api.enums.jellyfin.PlayMethod
 import cn.xybbz.api.enums.jellyfin.SortOrder
+import cn.xybbz.api.utils.toStringMap
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.Constants.LYRICS_AMPLIFICATION
 import cn.xybbz.common.enums.MusicTypeEnum
@@ -517,7 +518,7 @@ class JellyfinDatasourceServer(
             ViewRequest(
 //                    includeExternalContent = false,
 //                    presetViews = listOf(CollectionType.MUSIC)
-            ).toMap()
+            ).toStringMap()
         )
         //存储历史记录
         val libraries =
@@ -716,7 +717,7 @@ class JellyfinDatasourceServer(
         val items = jellyfinApiClient.itemApi().getItems(
             ItemRequest(
                 ids = artistIds, parentId = libraryId
-            ).toMap()
+            ).toStringMap()
         ).items
         return convertToArtistList(items)
     }
@@ -761,7 +762,7 @@ class JellyfinDatasourceServer(
                 ),
                 limit = Constants.MIN_PAGE,
                 parentId = libraryId
-            ).toMap()
+            ).toStringMap()
         )
         if (albumList.isNotEmpty())
             db.withTransaction {
@@ -996,7 +997,7 @@ class JellyfinDatasourceServer(
             ItemRequest(
                 limit = pageSize,
                 userId = getUserId()
-            ).toMap()
+            ).toStringMap()
         )
         return convertToArtistList(response.items)
     }
@@ -1114,7 +1115,7 @@ class JellyfinDatasourceServer(
                 years = years,
                 genreIds = genreIds,
                 parentId = libraryId
-            ).toMap()
+            ).toStringMap()
         )
 
         return XyResponse(
@@ -1177,7 +1178,7 @@ class JellyfinDatasourceServer(
                 albumIds = albumId?.let { listOf(albumId) },
                 parentId = if (parentId.isNullOrBlank()) libraryId else parentId,
                 path = path
-            ).toMap()
+            ).toStringMap()
         )
         val items = response.items.map {
             convertToMusic(it)
@@ -1215,7 +1216,7 @@ class JellyfinDatasourceServer(
                 searchTerm = search,
                 isFavorite = isFavorite,
                 parentId = libraryId
-            ).toMap()
+            ).toStringMap()
         )
         val artistList = convertToArtistList(response.items)
         return XyResponse(
@@ -1259,7 +1260,7 @@ class JellyfinDatasourceServer(
                 searchTerm = search,
                 imageTypeLimit = 1,
                 parentId = libraryId
-            ).toMap()
+            ).toStringMap()
         )
         return XyResponse(
             items = convertToGenreList(genres.items),
@@ -1289,7 +1290,7 @@ class JellyfinDatasourceServer(
                         startIndex = 0,
                         limit = pageSize,
                         userId = getUserId()
-                    ).toMap()
+                    ).toStringMap()
                 )
             val xyResponse = XyResponse(
                 items = convertToAlbumList(playlists.items, true),
