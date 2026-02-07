@@ -78,7 +78,7 @@ import coil.ImageLoader
 import com.github.promeg.pinyinhelper.Pinyin
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -108,11 +108,8 @@ abstract class IDataSourceParentServer(
     /**
      * 登录状态
      */
-    private val _loginSuccessEvent = MutableSharedFlow<LoginStateType>(
-        replay = 1,
-        extraBufferCapacity = 1
-    )
-    private val loginSuccessEvent = _loginSuccessEvent.asSharedFlow()
+    private val _loginSuccessEvent = MutableStateFlow(LoginStateType.UNKNOWN)
+    val loginSuccessEvent = _loginSuccessEvent.asSharedFlow()
 
 
     private var ifTmpObject = false
@@ -222,7 +219,9 @@ abstract class IDataSourceParentServer(
                 deviceId = deviceId,
                 navidromeExtendToken = responseData.navidromeExtendToken,
                 navidromeExtendSalt = responseData.navidromeExtendSalt,
-                machineIdentifier = responseData.machineIdentifier
+                machineIdentifier = responseData.machineIdentifier,
+                ifEnabledDownload = responseData.ifEnabledDownload,
+                ifEnabledDelete = responseData.ifEnabledDelete
             )
             this@IDataSourceParentServer.connectionConfig = tmpConfig
             emitAll(loginAfter(tmpConfig))
@@ -457,9 +456,6 @@ abstract class IDataSourceParentServer(
 
     /**
      * 获得专辑或歌单内音乐列表
-     * @param [sortType] 排序类型
-     * @param [ifFavorite] 是否收藏筛选
-     * @param [years] 筛选年代数据
      * @param [itemId] 专辑id
      * @param [dataType] 数据类型
      * @return [Flow<PagingData<XyMusic>>]
@@ -491,7 +487,10 @@ abstract class IDataSourceParentServer(
      * 根据艺术家获得音乐列表
      */
     @OptIn(ExperimentalPagingApi::class)
-    override fun selectMusicListByArtistId(artistId: String, artistName: String): Flow<PagingData<XyMusic>> {
+    override fun selectMusicListByArtistId(
+        artistId: String,
+        artistName: String
+    ): Flow<PagingData<XyMusic>> {
         return defaultPager(
             remoteMediator = ArtistMusicListRemoteMediator(
                 artistId = artistId,
@@ -665,7 +664,6 @@ abstract class IDataSourceParentServer(
      * 保存自建歌单中的音乐
      * @param [playlistId] 歌单id
      * @param [musicIds] 音乐id集合
-     * @param [pic] 自建歌单图片
      */
     override suspend fun saveMusicPlaylist(
         playlistId: String,
@@ -684,6 +682,29 @@ abstract class IDataSourceParentServer(
         db.musicDao.savePlaylistMusic(playlists)
         //更新歌单的封面信息
         db.albumDao.updatePic(playlistId)
+        return true
+    }
+
+    /**
+     * 删除自建歌单中的音乐
+     * @param [playlistId] 歌单id
+     * @param [musicIds] 音乐id集合
+     */
+    override suspend fun removeMusicPlaylist(
+        playlistId: String,
+        musicIds: List<String>
+    ): Boolean {
+        db.musicDao.removeByPlaylistMusicByMusicId(
+            playlistId = playlistId,
+            musicIds = musicIds
+        )
+        //获得歌单中的第一个音乐,并写入歌单封面
+        val musicInfo = db.musicDao.selectPlaylistMusicOneById(playlistId)
+        if (musicInfo != null && !musicInfo.pic.isNullOrBlank()) {
+            musicInfo.pic?.let {
+                db.albumDao.updatePicAndCount(playlistId, it)
+            }
+        }
         return true
     }
 
@@ -900,7 +921,7 @@ abstract class IDataSourceParentServer(
     /**
      * 根据id获得艺术家信息
      */
-    override suspend fun selectArtistInfoById(artistId: String): XyArtist?{
+    override suspend fun selectArtistInfoById(artistId: String): XyArtist? {
         var artistInfo: XyArtist? = db.artistDao.selectById(artistId)
         if (artistInfo != null) {
             artistInfo =
@@ -1159,6 +1180,20 @@ abstract class IDataSourceParentServer(
      */
     override suspend fun updateConnectionConfig(connectionConfig: ConnectionConfig) {
         db.connectionConfigDao.update(connectionConfig)
+    }
+
+    /**
+     * 获得是否可以下载
+     */
+    fun getCanDownload(): Boolean {
+        return getConnectionConfig()?.ifEnabledDownload ?: false
+    }
+
+    /**
+     * 获取是否可以删除
+     */
+    fun getCanDelete(): Boolean {
+        return getConnectionConfig()?.ifEnabledDelete ?: false
     }
 
     /**

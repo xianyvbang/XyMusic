@@ -38,13 +38,14 @@ import cn.xybbz.api.client.subsonic.data.ScrobbleRequest
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.enums.AudioCodecEnum
+import cn.xybbz.api.enums.jellyfin.CollectionType
 import cn.xybbz.api.enums.navidrome.OrderType
 import cn.xybbz.api.enums.navidrome.SortType
+import cn.xybbz.api.utils.toStringMap
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
-import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.download.DownLoadManager
@@ -61,6 +62,7 @@ import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
+import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
@@ -596,18 +598,7 @@ class NavidromeDatasourceServer(
             playlistId = playlistId, id = musicIds
         )
         return if (response.id != null || !response.ids.isNullOrEmpty()) {
-            db.musicDao.removeByPlaylistMusicByMusicId(
-                playlistId = playlistId,
-                musicIds = musicIds
-            )
-            //获得歌单中的第一个音乐,并写入歌单封面
-            val musicInfo = db.musicDao.selectPlaylistMusicOneById(playlistId)
-            if (musicInfo != null && !musicInfo.pic.isNullOrBlank()) {
-                musicInfo.pic?.let {
-                    db.albumDao.updatePicAndCount(playlistId, it)
-                }
-            }
-            true
+            super.removeMusicPlaylist(playlistId, musicIds)
         } else {
             false
         }
@@ -625,7 +616,25 @@ class NavidromeDatasourceServer(
      * 获得媒体库列表
      */
     override suspend fun selectMediaLibrary(connectionId: Long) {
-
+        db.withTransaction {
+            db.libraryDao.remove()
+            val viewLibrary = navidromeApiClient.userViewsApi().getUserViews(
+                userId = getUserId()
+            )
+            //存储历史记录
+            val libraries =
+                viewLibrary.libraries?.map {
+                    XyLibrary(
+                        id = it.id?.toString() ?: "",
+                        collectionType = CollectionType.MUSIC.toString(),
+                        name = it.name.toString(),
+                        connectionId = connectionId
+                    )
+                } ?: emptyList()
+            if (libraries.isNotEmpty()) {
+                db.libraryDao.saveBatch(libraries)
+            }
+        }
     }
 
     /**
@@ -836,11 +845,12 @@ class NavidromeDatasourceServer(
         isPaused: Boolean,
         positionTicks: Long?
     ) {
+        val scrobbleRequest = ScrobbleRequest(
+            id = musicId,
+            submission = isPaused
+        )
         navidromeApiClient.userApi().scrobble(
-            ScrobbleRequest(
-                id = musicId,
-                submission = isPaused
-            ).toMap()
+            scrobbleRequest.toStringMap()
         )
     }
 
@@ -1273,7 +1283,7 @@ class NavidromeDatasourceServer(
             ifFavorite = false,
             ifPlaylist = true,
             musicCount = playlist.songCount,
-            createTime = playlist.createdAt.toSecondMs()
+            createTime = playlist.createdAt
         )
     }
 
@@ -1369,7 +1379,7 @@ class NavidromeDatasourceServer(
             year = album.maxYear,
             ifFavorite = album.starred ?: false,
             genreIds = album.genres?.joinToString { it.id },
-            createTime = album.createdAt.toSecondMs()
+            createTime = album.createdAt
         )
     }
 
@@ -1423,8 +1433,8 @@ class NavidromeDatasourceServer(
             ifLyric = !music.lyrics.isNullOrBlank(),
             lyric = music.lyrics,
             playlistItemId = music.id,
-            lastPlayedDate = music.playDate?.toSecondMs() ?: 0L,
-            createTime = music.createdAt.toSecondMs()
+            lastPlayedDate = music.playDate ?: 0L,
+            createTime = music.createdAt
         )
     }
 

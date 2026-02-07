@@ -108,9 +108,6 @@ interface IDataSourceServer : AutoCloseable {
 
     /**
      * 获得专辑或歌单内音乐列表
-     * @param [sortType] 排序类型
-     * @param [ifFavorite] 是否收藏筛选
-     * @param [years] 筛选年代数据
      * @param [itemId] 专辑id
      * @param [dataType] 数据类型
      * @return [Flow<PagingData<XyMusic>>]
@@ -229,7 +226,6 @@ interface IDataSourceServer : AutoCloseable {
      * 保存自建歌单中的音乐
      * @param [playlistId] 歌单id
      * @param [musicIds] 音乐id集合
-     * @param [pic] 自建歌单图片
      */
     suspend fun saveMusicPlaylist(
         playlistId: String,
@@ -478,5 +474,6 @@ interface IDataSourceServer : AutoCloseable {
      * 获得数据源支持的转码类型
      */
     suspend fun getTranscodingType(): List<TranscodingInfo>
+
 
 }

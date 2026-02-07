@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.ksp)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -57,18 +58,14 @@ android {
 
 dependencies {
     //网络请求框架
-    implementation(libs.squareup.retrofit2){
-        exclude (group = "com.squareup.okhttp3",module = "okhttp")
-    }
+    api(libs.squareup.retrofit2)
     //moshi 数据解析 类似json
-    api(libs.squareup.converter.moshi)
+    api(libs.kotlinx.serialization.json)
+    api(libs.kotlinx.datetime)
     implementation(libs.squareup.okhttp)
-    implementation(libs.moshi.kotlin)
-    ksp(libs.moshi.kotlin.codegen)
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.squareup.converter.kotlinx.serialization)
 
-    //json
-//    implementation(libs.google.gson)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

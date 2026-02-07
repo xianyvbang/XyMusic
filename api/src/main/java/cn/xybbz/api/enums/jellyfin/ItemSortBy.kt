@@ -1,110 +1,128 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.enums.jellyfin
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 
 /**
  * These represent sort orders.
  */
-@JsonClass(generateAdapter = false)
+@Serializable
 enum class ItemSortBy(
     private val serialName: String,
 ) {
-    @Json(name = "Default")
+    @SerialName(value = "Default")
     DEFAULT("Default"),
 
-    @Json(name = "AiredEpisodeOrder")
+    @SerialName(value = "AiredEpisodeOrder")
     AIRED_EPISODE_ORDER("AiredEpisodeOrder"),
 
-    @Json(name = "Album")
+    @SerialName(value = "Album")
     ALBUM("Album"),
 
-    @Json(name = "AlbumArtist")
+    @SerialName(value = "AlbumArtist")
     ALBUM_ARTIST("AlbumArtist"),
 
-    @Json(name = "Artist")
+    @SerialName(value = "Artist")
     ARTIST("Artist"),
 
-    @Json(name = "DateCreated")
+    @SerialName(value = "DateCreated")
     DATE_CREATED("DateCreated"),
 
-    @Json(name = "OfficialRating")
+    @SerialName(value = "OfficialRating")
     OFFICIAL_RATING("OfficialRating"),
 
-    @Json(name = "DatePlayed")
+    @SerialName(value = "DatePlayed")
     DATE_PLAYED("DatePlayed"),
 
-    @Json(name = "PremiereDate")
+    @SerialName(value = "PremiereDate")
     PREMIERE_DATE("PremiereDate"),
 
-    @Json(name = "StartDate")
+    @SerialName(value = "StartDate")
     START_DATE("StartDate"),
 
-    @Json(name = "SortName")
+    @SerialName(value = "SortName")
     SORT_NAME("SortName"),
 
-    @Json(name = "Name")
+    @SerialName(value = "Name")
     NAME("Name"),
 
-    @Json(name = "Random")
+    @SerialName(value = "Random")
     RANDOM("Random"),
 
-    @Json(name = "Runtime")
+    @SerialName(value = "Runtime")
     RUNTIME("Runtime"),
 
-    @Json(name = "CommunityRating")
+    @SerialName(value = "CommunityRating")
     COMMUNITY_RATING("CommunityRating"),
 
-    @Json(name = "ProductionYear")
+    @SerialName(value = "ProductionYear")
     PRODUCTION_YEAR("ProductionYear"),
 
-    @Json(name = "PlayCount")
+    @SerialName(value = "PlayCount")
     PLAY_COUNT("PlayCount"),
 
-    @Json(name = "CriticRating")
+    @SerialName(value = "CriticRating")
     CRITIC_RATING("CriticRating"),
 
-    @Json(name = "IsFolder")
+    @SerialName(value = "IsFolder")
     IS_FOLDER("IsFolder"),
 
-    @Json(name = "IsUnplayed")
+    @SerialName(value = "IsUnplayed")
     IS_UNPLAYED("IsUnplayed"),
 
-    @Json(name = "IsPlayed")
+    @SerialName(value = "IsPlayed")
     IS_PLAYED("IsPlayed"),
 
-    @Json(name = "SeriesSortName")
+    @SerialName(value = "SeriesSortName")
     SERIES_SORT_NAME("SeriesSortName"),
 
-    @Json(name = "VideoBitRate")
+    @SerialName(value = "VideoBitRate")
     VIDEO_BIT_RATE("VideoBitRate"),
 
-    @Json(name = "AirTime")
+    @SerialName(value = "AirTime")
     AIR_TIME("AirTime"),
 
-    @Json(name = "Studio")
+    @SerialName(value = "Studio")
     STUDIO("Studio"),
 
-    @Json(name = "IsFavoriteOrLiked")
+    @SerialName(value = "IsFavoriteOrLiked")
     IS_FAVORITE_OR_LIKED("IsFavoriteOrLiked"),
 
-    @Json(name = "DateLastContentAdded")
+    @SerialName(value = "DateLastContentAdded")
     DATE_LAST_CONTENT_ADDED("DateLastContentAdded"),
 
-    @Json(name = "SeriesDatePlayed")
+    @SerialName(value = "SeriesDatePlayed")
     SERIES_DATE_PLAYED("SeriesDatePlayed"),
 
-    @Json(name = "ParentIndexNumber")
+    @SerialName(value = "ParentIndexNumber")
     PARENT_INDEX_NUMBER("ParentIndexNumber"),
 
-    @Json(name = "IndexNumber")
+    @SerialName(value = "IndexNumber")
     INDEX_NUMBER("IndexNumber"),
 
-    @Json(name = "SimilarityScore")
+    @SerialName(value = "SimilarityScore")
     SIMILARITY_SCORE("SimilarityScore"),
 
-    @Json(name = "SearchScore")
+    @SerialName(value = "SearchScore")
     SEARCH_SCORE("SearchScore"),
     ;
 

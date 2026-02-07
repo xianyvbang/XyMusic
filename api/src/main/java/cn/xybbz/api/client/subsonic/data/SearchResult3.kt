@@ -18,12 +18,12 @@
 
 package cn.xybbz.api.client.subsonic.data
 
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
 /**
  * SearchResult3，searchResult3
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class SearchResult3(
     /**
      * Matching albums

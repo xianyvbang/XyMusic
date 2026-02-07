@@ -1,65 +1,83 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.enums.navidrome
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = false)
+@Serializable
 enum class SortType(private val sortName: String) {
-    @Json(name = "id")
+    @SerialName(value = "id")
     ID("id"),
 
-    @Json(name = "updatedAt")
+    @SerialName(value = "updatedAt")
     UPDATED_AT("updatedAt"),
 
-    @Json(name = "createdAt")
+    @SerialName(value = "createdAt")
     CREATED_AT("createdAt"),
 
-    @Json(name = "name")
+    @SerialName(value = "name")
     NAME("name"),
 
-    @Json(name = "title")
+    @SerialName(value = "title")
     TITLE("title"),
 
-    @Json(name = "sync")
+    @SerialName(value = "sync")
     SYNC("sync"),
 
-    @Json(name = "starred_at")
+    @SerialName(value = "starred_at")
     STARRED_AT("starred_at"),
 
     /**
      * 最近添加
      */
-    @Json(name = "recently_added")
+    @SerialName(value = "recently_added")
     RECENTLY_ADDED("recently_added"),
 
     /**
      * 播放时间
      */
-    @Json(name = "play_date")
+    @SerialName(value = "play_date")
     PLAY_DATE("play_date"),
 
     /**
      * 播放次数
      */
-    @Json(name = "play_count")
+    @SerialName(value = "play_count")
     PLAY_COUNT("play_count"),
 
-    @Json(name = "albumArtist")
+    @SerialName(value = "albumArtist")
     ALBUM_ARTIST("albumArtist"),
 
-    @Json(name = "max_year")
+    @SerialName(value = "max_year")
     MAX_YEAR("max_year"),
 
-    @Json(name = "album")
+    @SerialName(value = "album")
     ALBUM("album"),
 
-    @Json(name = "artist")
+    @SerialName(value = "artist")
     ARTIST("artist"),
 
-    @Json(name = "year")
+    @SerialName(value = "year")
     YEAR("year"),
 
-    @Json(name = "random")
+    @SerialName(value = "random")
     RANDOM("random")
     ;
 

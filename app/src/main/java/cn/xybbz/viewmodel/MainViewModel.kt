@@ -195,7 +195,7 @@ class MainViewModel @Inject constructor(
                 Log.i("=====", "MainViewModel: 登录状态改变: $it")
                 startPlayerListObserver()
             }
-            /*dataSourceManager.loginStateEvent.collect {
+            /*dataSourceManager.loginStateFlow.collect {
                 startPlayerListObserver()
             }*/
         }
@@ -408,7 +408,7 @@ class MainViewModel @Inject constructor(
                     musicPlayContext.musicPlayData?.onMusicPlayParameter?.artistId
                 )
                 musicController.updateRestartCount()
-            }else {
+            } else {
                 musicController.updateIfGetNextPageMusicDataIsNullCount(1)
             }
         }.invokeOnCompletion { ifNextPageNumList = false }
@@ -417,7 +417,7 @@ class MainViewModel @Inject constructor(
 
     private fun observeLoginSuccessForAndProgress() {
         viewModelScope.launch {
-            dataSourceManager.loginStateEvent.collect {
+            dataSourceManager.loginStateFlow.collect {
                 startEnableProgressObserver()
             }
         }
@@ -672,7 +672,8 @@ class MainViewModel @Inject constructor(
                 if (it is TranscodingState.NetWorkChange && (settingsManager.get().ifTranscoding
                             || settingsManager.get().mobileNetworkAudioBitRate
                             == settingsManager.get().wifiNetworkAudioBitRate
-                            )) {
+                            )
+                ) {
                     return@collect
                 }
                 musicController.replacePlaylistItemUrl()

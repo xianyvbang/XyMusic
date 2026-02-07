@@ -224,7 +224,6 @@ class MusicBottomMenuViewModel @Inject constructor(
             try {
                 xyArtists =
                     dataSourceManager.selectArtistInfoByIds(artists)
-                        ?: emptyList()
             } catch (e: Exception) {
                 Log.e(Constants.LOG_ERROR_PREFIX, "获得艺术家信息失败", e)
             }

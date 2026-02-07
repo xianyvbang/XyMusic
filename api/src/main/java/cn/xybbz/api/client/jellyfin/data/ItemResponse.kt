@@ -23,8 +23,9 @@ import cn.xybbz.api.enums.jellyfin.ImageType
 import cn.xybbz.api.enums.jellyfin.MediaProtocol
 import cn.xybbz.api.enums.jellyfin.MediaSourceType
 import cn.xybbz.api.enums.jellyfin.MediaStreamType
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import cn.xybbz.api.serializers.LocalDateTimeTimestampSerializer
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 
 /**
@@ -33,129 +34,130 @@ import com.squareup.moshi.JsonClass
  * @date 2025/12/02
  * @constructor 创建[ItemResponse]
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class ItemResponse(
     /**
      * The id.
      */
-    @param:Json(name = "Id")
+    @SerialName(value = "Id")
     val id: String,
     /**
      * The name.
      */
-    @param:Json(name = "Name")
+    @SerialName(value = "Name")
     val name: String? = null,
     /**
      * 专辑图片标签
      */
-    @param:Json(name = "AlbumPrimaryImageTag")
+    @SerialName(value = "AlbumPrimaryImageTag")
     val albumPrimaryImageTag: String? = null,
     /**
      * The album artists.
      */
-    @param:Json(name = "AlbumArtists")
+    @SerialName(value = "AlbumArtists")
     val albumArtists: List<NameGuidPair>? = null,
 
     /**
      * The production year.
      */
-    @param:Json(name = "ProductionYear")
+    @SerialName(value = "ProductionYear")
     val productionYear: Int? = null,
 
     /**
      * The premiere date.
      */
-    @param:Json(name = "PremiereDate")
+    @SerialName(value = "PremiereDate")
     val premiereDate: String? = null,
 
     /**
      * The album id.
      */
-    @param:Json(name = "AlbumId")
+    @SerialName(value = "AlbumId")
     val albumId: String? = null,
 
     /**
      * The media versions.
      */
-    @param:Json(name = "MediaSources")
+    @SerialName(value = "MediaSources")
     val mediaSources: List<MediaSourceInfo>? = null,
 
     /**
      * The genres.
      */
-    @param:Json(name = "Genres")
+    @SerialName(value = "Genres")
     val genres: List<String>? = null,
 
-    @param:Json(name = "GenreItems")
-    val genreItems:List<NameGuidPair>? = null,
+    @SerialName(value = "GenreItems")
+    val genreItems: List<NameGuidPair>? = null,
 
     /**
      * The album.
      */
-    @param:Json(name = "Album")
+    @SerialName(value = "Album")
     val album: String? = null,
 
     /**
      * The artist items.
      */
-    @param:Json(name = "ArtistItems")
+    @SerialName(value = "ArtistItems")
     val artistItems: List<NameGuidPair>? = null,
 
     /**
      * The date created.
      */
-    @param:Json(name = "DateCreated")
-    val dateCreated: String? = null,
+    @SerialName(value = "DateCreated")
+    @Serializable(LocalDateTimeTimestampSerializer::class)
+    val dateCreated: Long,
 
     /**
      * The user data for this item based on the user it's being requested for.
      */
-    @param:Json(name = "UserData")
+    @SerialName(value = "UserData")
     val userData: UserItemDataDto? = null,
 
     /**
      * The type of the collection.
      */
-    @param:Json(name = "CollectionType")
+    @SerialName(value = "CollectionType")
     val collectionType: CollectionType? = null,
 
     /**
      * The image tags.
      */
-    @param:Json(name = "ImageTags")
+    @SerialName(value = "ImageTags")
     val imageTags: Map<ImageType, String>? = null,
 
     /**
      * backdrop image tags
      */
-    @param:Json(name = "BackdropImageTags")
+    @SerialName(value = "BackdropImageTags")
     val backdropImageTags: List<String>? = null,
 
     /**
      * The name of the sort.
      */
-    @param:Json(name = "SortName")
+    @SerialName(value = "SortName")
     val sortName: String? = null,
 
     /**
      * The overview.
      */
-    @param:Json(name = "Overview")
+    @SerialName(value = "Overview")
     val overview: String? = null,
 
     /**
      * The song count.
      */
-    @param:Json(name = "SongCount")
+    @SerialName(value = "SongCount")
     val songCount: Int? = null,
 
     /**
      * The album count.
      */
-    @param:Json(name = "AlbumCount")
+    @SerialName(value = "AlbumCount")
     val albumCount: Int? = null,
 
-    @param:Json(name = "ChildCount")
+    @SerialName(value = "ChildCount")
     val childCount: Int? = null,
 )
 
@@ -163,357 +165,358 @@ data class ItemResponse(
 /**
  * Class UserItemDataDto.
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class UserItemDataDto(
     /**
      * The rating.
      */
-    @param:Json(name = "Rating")
+    @SerialName(value = "Rating")
     val rating: Double? = null,
     /**
      * The played percentage.
      */
-    @param:Json(name = "PlayedPercentage")
+    @SerialName(value = "PlayedPercentage")
     val playedPercentage: Double? = null,
     /**
      * The unplayed item count.
      */
-    @param:Json(name = "UnplayedItemCount")
+    @SerialName(value = "UnplayedItemCount")
     val unplayedItemCount: Int? = null,
     /**
      * The playback position ticks.
      */
-    @param:Json(name = "PlaybackPositionTicks")
+    @SerialName(value = "PlaybackPositionTicks")
     val playbackPositionTicks: Long,
     /**
      * The play count.
      */
-    @param:Json(name = "PlayCount")
+    @SerialName(value = "PlayCount")
     val playCount: Int,
     /**
      * A value indicating whether this instance is favorite.
      */
-    @param:Json(name = "IsFavorite")
+    @SerialName(value = "IsFavorite")
     val isFavorite: Boolean,
     /**
      * A value indicating whether this MediaBrowser.Model.Dto.UserItemDataDto is likes.
      */
-    @param:Json(name = "Likes")
+    @SerialName(value = "Likes")
     val likes: Boolean? = null,
     /**
      * The last played date.
      */
-    @param:Json(name = "LastPlayedDate")
-    val lastPlayedDate: String? = null,
+    @SerialName(value = "LastPlayedDate")
+    @Serializable(LocalDateTimeTimestampSerializer::class)
+    val lastPlayedDate: Long? = null,
     /**
      * A value indicating whether this MediaBrowser.Model.Dto.UserItemDataDto is played.
      */
-    @param:Json(name = "Played")
+    @SerialName(value = "Played")
     val played: Boolean,
     /**
      * The key.
      */
-    @param:Json(name = "Key")
+    @SerialName(value = "Key")
     val key: String? = null,
     /**
      * The item identifier.
      */
-    @param:Json(name = "ItemId")
+    @SerialName(value = "ItemId")
     val itemId: String? = null,
 )
 
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class MediaSourceInfo(
-    @param:Json(name = "Protocol")
+    @SerialName(value = "Protocol")
     val protocol: MediaProtocol,
-    @param:Json(name = "Id")
+    @SerialName(value = "Id")
     val id: String? = null,
-    @param:Json(name = "Path")
+    @SerialName(value = "Path")
     val path: String,
-    @param:Json(name = "EncoderPath")
+    @SerialName(value = "EncoderPath")
     val encoderPath: String? = null,
-    @param:Json(name = "EncoderProtocol")
+    @SerialName(value = "EncoderProtocol")
     val encoderProtocol: MediaProtocol? = null,
-    @param:Json(name = "Type")
+    @SerialName(value = "Type")
     val type: MediaSourceType,
-    @param:Json(name = "Container")
+    @SerialName(value = "Container")
     val container: String? = null,
-    @param:Json(name = "Size")
+    @SerialName(value = "Size")
     val size: Long? = null,
-    @param:Json(name = "Name")
+    @SerialName(value = "Name")
     val name: String? = null,
-    @param:Json(name = "RunTimeTicks")
+    @SerialName(value = "RunTimeTicks")
     val runTimeTicks: Long? = null,
-    @param:Json(name = "MediaStreams")
+    @SerialName(value = "MediaStreams")
     val mediaStreams: List<MediaStream>? = null,
-    @param:Json(name = "Bitrate")
+    @SerialName(value = "Bitrate")
     val bitrate: Int? = null
 )
 
 /**
  * Class MediaStream.
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class MediaStream(
     /**
      * The codec.
      */
-    @param:Json(name = "Codec")
+    @SerialName(value = "Codec")
     val codec: String? = null,
     /**
      * The codec tag.
      */
-    @param:Json(name = "CodecTag")
+    @SerialName(value = "CodecTag")
     val codecTag: String? = null,
     /**
      * The language.
      */
-    @param:Json(name = "Language")
+    @SerialName(value = "Language")
     val language: String? = null,
     /**
      * The color range.
      */
-    @param:Json(name = "ColorRange")
+    @SerialName(value = "ColorRange")
     val colorRange: String? = null,
     /**
      * The color space.
      */
-    @param:Json(name = "ColorSpace")
+    @SerialName(value = "ColorSpace")
     val colorSpace: String? = null,
     /**
      * The color transfer.
      */
-    @param:Json(name = "ColorTransfer")
+    @SerialName(value = "ColorTransfer")
     val colorTransfer: String? = null,
     /**
      * The color primaries.
      */
-    @param:Json(name = "ColorPrimaries")
+    @SerialName(value = "ColorPrimaries")
     val colorPrimaries: String? = null,
     /**
      * The Dolby Vision version major.
      */
-    @param:Json(name = "DvVersionMajor")
+    @SerialName(value = "DvVersionMajor")
     val dvVersionMajor: Int? = null,
     /**
      * The Dolby Vision version minor.
      */
-    @param:Json(name = "DvVersionMinor")
+    @SerialName(value = "DvVersionMinor")
     val dvVersionMinor: Int? = null,
     /**
      * The Dolby Vision profile.
      */
-    @param:Json(name = "DvProfile")
+    @SerialName(value = "DvProfile")
     val dvProfile: Int? = null,
     /**
      * The Dolby Vision level.
      */
-    @param:Json(name = "DvLevel")
+    @SerialName(value = "DvLevel")
     val dvLevel: Int? = null,
     /**
      * The Dolby Vision rpu present flag.
      */
-    @param:Json(name = "RpuPresentFlag")
+    @SerialName(value = "RpuPresentFlag")
     val rpuPresentFlag: Int? = null,
     /**
      * The Dolby Vision el present flag.
      */
-    @param:Json(name = "ElPresentFlag")
+    @SerialName(value = "ElPresentFlag")
     val elPresentFlag: Int? = null,
     /**
      * The Dolby Vision bl present flag.
      */
-    @param:Json(name = "BlPresentFlag")
+    @SerialName(value = "BlPresentFlag")
     val blPresentFlag: Int? = null,
     /**
      * The Dolby Vision bl signal compatibility id.
      */
-    @param:Json(name = "DvBlSignalCompatibilityId")
+    @SerialName(value = "DvBlSignalCompatibilityId")
     val dvBlSignalCompatibilityId: Int? = null,
     /**
      * The Rotation in degrees.
      */
-    @param:Json(name = "Rotation")
+    @SerialName(value = "Rotation")
     val rotation: Int? = null,
     /**
      * The comment.
      */
-    @param:Json(name = "Comment")
+    @SerialName(value = "Comment")
     val comment: String? = null,
     /**
      * The time base.
      */
-    @param:Json(name = "TimeBase")
+    @SerialName(value = "TimeBase")
     val timeBase: String? = null,
     /**
      * The codec time base.
      */
-    @param:Json(name = "CodecTimeBase")
+    @SerialName(value = "CodecTimeBase")
     val codecTimeBase: String? = null,
     /**
      * The title.
      */
-    @param:Json(name = "Title")
+    @SerialName(value = "Title")
     val title: String? = null,
     /**
      * The video dovi title.
      */
-    @param:Json(name = "VideoDoViTitle")
+    @SerialName(value = "VideoDoViTitle")
     val videoDoViTitle: String? = null,
-    @param:Json(name = "LocalizedUndefined")
+    @SerialName(value = "LocalizedUndefined")
     val localizedUndefined: String? = null,
-    @param:Json(name = "LocalizedDefault")
+    @SerialName(value = "LocalizedDefault")
     val localizedDefault: String? = null,
-    @param:Json(name = "LocalizedForced")
+    @SerialName(value = "LocalizedForced")
     val localizedForced: String? = null,
-    @param:Json(name = "LocalizedExternal")
+    @SerialName(value = "LocalizedExternal")
     val localizedExternal: String? = null,
-    @param:Json(name = "LocalizedHearingImpaired")
+    @SerialName(value = "LocalizedHearingImpaired")
     val localizedHearingImpaired: String? = null,
-    @param:Json(name = "DisplayTitle")
+    @SerialName(value = "DisplayTitle")
     val displayTitle: String? = null,
-    @param:Json(name = "NalLengthSize")
+    @SerialName(value = "NalLengthSize")
     val nalLengthSize: String? = null,
     /**
      * A value indicating whether this instance is interlaced.
      */
-    @param:Json(name = "IsInterlaced")
+    @SerialName(value = "IsInterlaced")
     val isInterlaced: Boolean,
-    @param:Json(name = "IsAVC")
+    @SerialName(value = "IsAVC")
     val isAvc: Boolean? = null,
     /**
      * The channel layout.
      */
-    @param:Json(name = "ChannelLayout")
+    @SerialName(value = "ChannelLayout")
     val channelLayout: String? = null,
     /**
      * The bit rate.
      */
-    @param:Json(name = "BitRate")
+    @SerialName(value = "BitRate")
     val bitRate: Int? = null,
     /**
      * The bit depth.
      */
-    @param:Json(name = "BitDepth")
+    @SerialName(value = "BitDepth")
     val bitDepth: Int? = null,
     /**
      * The reference frames.
      */
-    @param:Json(name = "RefFrames")
+    @SerialName(value = "RefFrames")
     val refFrames: Int? = null,
     /**
      * The length of the packet.
      */
-    @param:Json(name = "PacketLength")
+    @SerialName(value = "PacketLength")
     val packetLength: Int? = null,
     /**
      * The channels.
      */
-    @param:Json(name = "Channels")
+    @SerialName(value = "Channels")
     val channels: Int? = null,
     /**
      * The sample rate.
      */
-    @param:Json(name = "SampleRate")
+    @SerialName(value = "SampleRate")
     val sampleRate: Int? = null,
     /**
      * A value indicating whether this instance is default.
      */
-    @param:Json(name = "IsDefault")
+    @SerialName(value = "IsDefault")
     val isDefault: Boolean,
     /**
      * A value indicating whether this instance is forced.
      */
-    @param:Json(name = "IsForced")
+    @SerialName(value = "IsForced")
     val isForced: Boolean,
     /**
      * A value indicating whether this instance is for the hearing impaired.
      */
-    @param:Json(name = "IsHearingImpaired")
+    @SerialName(value = "IsHearingImpaired")
     val isHearingImpaired: Boolean? = null,
     /**
      * The height.
      */
-    @param:Json(name = "Height")
+    @SerialName(value = "Height")
     val height: Int? = null,
     /**
      * The width.
      */
-    @param:Json(name = "Width")
+    @SerialName(value = "Width")
     val width: Int? = null,
     /**
      * The average frame rate.
      */
-    @param:Json(name = "AverageFrameRate")
+    @SerialName(value = "AverageFrameRate")
     val averageFrameRate: Float? = null,
     /**
      * The real frame rate.
      */
-    @param:Json(name = "RealFrameRate")
+    @SerialName(value = "RealFrameRate")
     val realFrameRate: Float? = null,
     /**
      * Gets the framerate used as reference.
      * Prefer AverageFrameRate, if that is null or an unrealistic value
      * then fallback to RealFrameRate.
      */
-    @param:Json(name = "ReferenceFrameRate")
+    @SerialName(value = "ReferenceFrameRate")
     val referenceFrameRate: Float? = null,
     /**
      * The profile.
      */
-    @param:Json(name = "Profile")
+    @SerialName(value = "Profile")
     val profile: String? = null,
     /**
      * The type.
      */
-    @param:Json(name = "Type")
+    @SerialName(value = "Type")
     val type: MediaStreamType,
     /**
      * The aspect ratio.
      */
-    @param:Json(name = "AspectRatio")
+    @SerialName(value = "AspectRatio")
     val aspectRatio: String? = null,
     /**
      * The index.
      */
-    @param:Json(name = "Index")
+    @SerialName(value = "Index")
     val index: Int,
     /**
      * The score.
      */
-    @param:Json(name = "Score")
+    @SerialName(value = "Score")
     val score: Int? = null,
     /**
      * A value indicating whether this instance is external.
      */
-    @param:Json(name = "IsExternal")
+    @SerialName(value = "IsExternal")
     val isExternal: Boolean,
     /**
      * The delivery URL.
      */
-    @param:Json(name = "DeliveryUrl")
+    @SerialName(value = "DeliveryUrl")
     val deliveryUrl: String? = null,
     /**
      * A value indicating whether this instance is external URL.
      */
-    @param:Json(name = "IsExternalUrl")
+    @SerialName(value = "IsExternalUrl")
     val isExternalUrl: Boolean? = null,
-    @param:Json(name = "IsTextSubtitleStream")
+    @SerialName(value = "IsTextSubtitleStream")
     val isTextSubtitleStream: Boolean,
     /**
      * A value indicating whether [supports external stream].
      */
-    @param:Json(name = "SupportsExternalStream")
+    @SerialName(value = "SupportsExternalStream")
     val supportsExternalStream: Boolean,
     /**
      * The filename.
      */
-    @param:Json(name = "Path")
+    @SerialName(value = "Path")
     val path: String? = null,
     /**
      * The pixel format.
      */
-    @param:Json(name = "PixelFormat")
+    @SerialName(value = "PixelFormat")
     val pixelFormat: String? = null,
 )

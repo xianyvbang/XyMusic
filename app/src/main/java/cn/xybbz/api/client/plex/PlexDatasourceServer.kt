@@ -67,9 +67,10 @@ import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
-import java.time.ZoneOffset
 import java.util.UUID
 
 class PlexDatasourceServer(
@@ -1005,14 +1006,7 @@ class PlexDatasourceServer(
             }
         }
 
-        //获得歌单中的第一个音乐,并写入歌单封面
-        val musicInfo = db.musicDao.selectPlaylistMusicOneById(playlistId)
-        if (musicInfo != null && !musicInfo.pic.isNullOrBlank()) {
-            musicInfo.pic?.let {
-                db.albumDao.updatePicAndCount(playlistId, it)
-            }
-        }
-        return true
+        return super.removeMusicPlaylist(playlistId, musicIds)
     }
 
     /**
@@ -1821,9 +1815,8 @@ class PlexDatasourceServer(
             artistIds = album.parentRatingKey.toString(),
             artists = album.parentTitle.toString(),
             year = album.year,
-            premiereDate = album.originallyAvailableAt?.atStartOfDay(ZoneOffset.ofHours(8))
-                ?.toInstant()
-                ?.toEpochMilli(),
+            premiereDate = album.originallyAvailableAt?.atStartOfDayIn(TimeZone.currentSystemDefault())
+                ?.toEpochMilliseconds(),
             genreIds = album.genre?.joinToString { it.tag },
             ifFavorite = album.collection?.any { it.tag == application.getString(Constants.PLEX_ALBUM_COLLECTION_TITLE) } == true,
             ifPlaylist = false,

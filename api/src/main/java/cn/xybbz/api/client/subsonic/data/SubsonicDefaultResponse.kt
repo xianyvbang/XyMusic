@@ -16,16 +16,13 @@
  *
  */
 
-package cn.xybbz.api.client.navidrome.data
+package cn.xybbz.api.client.subsonic.data
 
-import cn.xybbz.api.client.subsonic.data.SubsonicError
-import cn.xybbz.api.client.subsonic.data.SubsonicParentResponse
 import cn.xybbz.api.enums.subsonic.Status
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
-open class NavidromePingResponse(
-
+@Serializable
+data class SubsonicDefaultResponse(
     /**
      * 是否为openSubsonic
      */
@@ -34,7 +31,7 @@ open class NavidromePingResponse(
     /**
      * Navidrome版本空格拆分
      */
-    val serverVersion:String = "",
+    val serverVersion: String = "",
     /**
      * The server actual name. [Ex: Navidrome or gonic]
      */
@@ -56,4 +53,4 @@ open class NavidromePingResponse(
      * 异常对象
      */
     override val error: SubsonicError?
-): SubsonicParentResponse(type, version, status, error)
+):SubsonicParentResponse

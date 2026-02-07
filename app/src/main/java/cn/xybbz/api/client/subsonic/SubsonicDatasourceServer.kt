@@ -39,11 +39,11 @@ import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.CollectionType
 import cn.xybbz.api.enums.subsonic.AlbumType
 import cn.xybbz.api.enums.subsonic.Status
+import cn.xybbz.api.utils.toStringMap
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
-import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.common.utils.PlaylistParser
@@ -480,19 +480,7 @@ class SubsonicDatasourceServer(
             playlistId = playlistId.replace(Constants.SUBSONIC_PLAYLIST_SUFFIX, ""),
             songIndexToRemove = musicIndexList
         )
-        db.musicDao.removeByPlaylistMusicByIndex(
-            playlistId = playlistId,
-            musicIndex = musicIndexList
-        )
-
-        //获得歌单中的第一个音乐,并写入歌单封面
-        val musicInfo = db.musicDao.selectPlaylistMusicOneById(playlistId)
-        if (musicInfo != null && !musicInfo.pic.isNullOrBlank()) {
-            musicInfo.pic?.let {
-                db.albumDao.updatePicAndCount(playlistId, it)
-            }
-        }
-        return true
+        return super.removeMusicPlaylist(playlistId, musicIds)
     }
 
     /**
@@ -718,7 +706,7 @@ class SubsonicDatasourceServer(
             ScrobbleRequest(
                 id = musicId,
                 submission = isPaused
-            ).toMap()
+            ).toStringMap()
         )
     }
 
@@ -1041,7 +1029,7 @@ class SubsonicDatasourceServer(
             artistIds = album.artistId,
             ifPlaylist = ifPlaylist,
             musicCount = album.songCount,
-            createTime = album.created.toSecondMs(),
+            createTime = album.created,
         )
     }
 
@@ -1066,7 +1054,7 @@ class SubsonicDatasourceServer(
             ifFavorite = false,
             ifPlaylist = true,
             musicCount = playlist.songCount,
-            createTime = playlist.created.toSecondMs()
+            createTime = playlist.created
         )
     }
 

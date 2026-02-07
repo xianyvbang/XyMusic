@@ -20,60 +20,66 @@ package cn.xybbz.api.client.plex.data
 
 import cn.xybbz.api.enums.plex.HasThumbnail
 import cn.xybbz.api.enums.plex.ImageType
-import com.squareup.moshi.Json
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class PlexLibraryItemResponse(
 
     /**
      * The Meta object is only included in the response if the `includeMeta` parameter is set to
      * `1`.
      */
-    @param:Json(name = "Meta")
+    @SerialName(value = "Meta")
     val meta: Meta? = null,
 
     /**
      * An array of metadata items.
      */
-    @param:Json(name = "Metadata")
+    @SerialName(value = "Metadata")
     val metadata: List<Metadatum>? = null,
-    @param:Json(name = "size")
+    @SerialName(value = "size")
     override val size: Int,
-    @param:Json(name = "totalSize")
+    @SerialName(value = "totalSize")
     override val totalSize: Int
-) : PlexParentResponse(size, totalSize)
+) : PlexParentResponse()
 
 
 /**
  * The Meta object is only included in the response if the `includeMeta` parameter is set to
  * `1`.
  */
+@Serializable
 data class Meta(
-    @param:Json(name = "FieldType")
+    @SerialName(value = "FieldType")
     val fieldType: List<FieldType>? = null,
 
-    @param:Json(name = "Type")
+    @SerialName(value = "Type")
     val type: List<Type>? = null
 )
 
+@Serializable
 data class FieldType(
-    @param:Json(name = "Operator")
+    @SerialName(value = "Operator")
     val operator: List<Operator>,
 
     val type: String
 )
 
+@Serializable
 data class Operator(
     val key: String,
     val title: String
 )
 
+@Serializable
 data class Type(
     val active: Boolean,
 
-    @param:Json(name = "Field")
+    @SerialName(value = "Field")
     val field: List<Field>? = null,
 
-    @param:Json(name = "Filter")
+    @SerialName(value = "Filter")
     val filter: List<Filter>? = null,
 
     val key: String,
@@ -82,6 +88,7 @@ data class Type(
     val type: String
 )
 
+@Serializable
 data class Field(
     val key: String,
     val subType: String? = null,
@@ -89,6 +96,7 @@ data class Field(
     val type: String
 )
 
+@Serializable
 data class Filter(
     val filter: String,
     val filterType: String,
@@ -111,6 +119,7 @@ data class Filter(
  *
  * The thumbnail for the chapter
  */
+@Serializable
 data class Chapter(
     val id: Long,
     val filter: String,
@@ -120,6 +129,7 @@ data class Chapter(
     val thumb: String
 )
 
+@Serializable
 data class Collection(
     /**
      * The user-made collection this media item belongs to
@@ -127,6 +137,7 @@ data class Collection(
     val tag: String
 )
 
+@Serializable
 data class Country(
     /**
      * The unique identifier for the country.
@@ -140,6 +151,7 @@ data class Country(
     val tag: String
 )
 
+@Serializable
 data class Director(
     /**
      * Unique identifier for the director.
@@ -157,6 +169,7 @@ data class Director(
     val thumb: String? = null
 )
 
+@Serializable
 data class Extras(
     /**
      * The size of the extras.
@@ -164,6 +177,7 @@ data class Extras(
     val size: Long? = null
 )
 
+@Serializable
 data class Genre(
 
     /**
@@ -172,6 +186,7 @@ data class Genre(
     val tag: String
 )
 
+@Serializable
 data class GUID(
     /**
      * The unique identifier for the Guid. Can be prefixed with imdb://, tmdb://, tvdb://
@@ -179,6 +194,7 @@ data class GUID(
     val id: String
 )
 
+@Serializable
 data class Image(
     val alt: String,
     val type: ImageType,
@@ -189,6 +205,7 @@ data class Image(
 /**
  * The folder path for the media item.
  */
+@Serializable
 data class Location(
     val path: String
 )
@@ -204,6 +221,7 @@ data class Location(
  *
  * The final status of the marker
  */
+@Serializable
 data class Marker(
     val id: Long,
     val type: String,
@@ -214,13 +232,14 @@ data class Marker(
     /**
      * Attributes associated with the marker.
      */
-    @param:Json(name = "Attributes")
+    @SerialName(value = "Attributes")
     val attributes: Attributes? = null
 )
 
 /**
  * Attributes associated with the marker.
  */
+@Serializable
 data class Attributes(
     /**
      * The identifier for the attributes.
@@ -233,6 +252,7 @@ data class Attributes(
     val version: Long? = null
 )
 
+@Serializable
 data class Media(
     /**
      * Unique media identifier.
@@ -321,14 +341,14 @@ data class Media(
      * This is relevant for media files that may require larger offsets than what 32-bit
      * integers can provide.
      */
-    @param:Json(name = "has64bitOffsets")
+    @SerialName(value = "has64bitOffsets")
     val has64BitOffsets: Boolean? = null,
 
-    @param:Json(name = "Part")
+    @SerialName(value = "Part")
     val part: List<Part>? = null
 )
 
-
+@Serializable
 data class Part(
     /**
      * Indicates if the part is accessible.
@@ -384,7 +404,7 @@ data class Part(
      */
     val audioProfile: String? = null,
 
-    @param:Json(name = "has64bitOffsets")
+    @SerialName(value = "has64bitOffsets")
     val has64BitOffsets: Boolean? = null,
 
     /**
@@ -397,6 +417,7 @@ data class Part(
     val stream: List<Stream>? = null
 )
 
+@Serializable
 data class Stream(
     /**
      * Unique stream identifier.
@@ -459,49 +480,49 @@ data class Stream(
     /**
      * Dolby Vision BL compatibility ID.
      */
-    @param:Json(name = "DOVIBLCompatID")
+    @SerialName(value = "DOVIBLCompatID")
     val doviblCompatID: Long? = null,
 
     /**
      * Indicates if Dolby Vision BL is present.
      */
-    @param:Json(name = "DOVIBLPresent")
+    @SerialName(value = "DOVIBLPresent")
     val doviblPresent: Boolean? = null,
 
     /**
      * Indicates if Dolby Vision EL is present.
      */
-    @param:Json(name = "DOVIELPresent")
+    @SerialName(value = "DOVIELPresent")
     val dovielPresent: Boolean? = null,
 
     /**
      * Dolby Vision level.
      */
-    @param:Json(name = "DOVILevel")
+    @SerialName(value = "DOVILevel")
     val doviLevel: Long? = null,
 
     /**
      * Indicates if Dolby Vision is present.
      */
-    @param:Json(name = "DOVIPresent")
+    @SerialName(value = "DOVIPresent")
     val doviPresent: Boolean? = null,
 
     /**
      * Dolby Vision profile.
      */
-    @param:Json(name = "DOVIProfile")
+    @SerialName(value = "DOVIProfile")
     val doviProfile: Long? = null,
 
     /**
      * Indicates if Dolby Vision RPU is present.
      */
-    @param:Json(name = "DOVIRPUPresent")
+    @SerialName(value = "DOVIRPUPresent")
     val dovirpuPresent: Boolean? = null,
 
     /**
      * Dolby Vision version.
      */
-    @param:Json(name = "DOVIVersion")
+    @SerialName(value = "DOVIVersion")
     val doviVersion: String? = null,
 
     /**
@@ -649,7 +670,7 @@ data class Stream(
     val title: String? = null
 )
 
-
+@Serializable
 data class Producer(
     /**
      * The filter string for the role.
@@ -682,6 +703,7 @@ data class Producer(
     val thumb: String? = null
 )
 
+@Serializable
 data class Rating(
     /**
      * The image or reference for the rating.
@@ -699,6 +721,7 @@ data class Rating(
     val value: Double
 )
 
+@Serializable
 data class Role(
     /**
      * The unique identifier for the role.
@@ -737,8 +760,13 @@ enum class ShowOrdering(val value: String) {
     DVD("dvd"),
     None("None"),
     TmdbAiring("tmdbAiring");
+
+    override fun toString(): String {
+        return value
+    }
 }
 
+@Serializable
 data class Similar(
     /**
      * The filter string for similar items.
@@ -756,6 +784,7 @@ data class Similar(
     val tag: String
 )
 
+@Serializable
 
 data class UltraBlurColors(
     val bottomLeft: String,
@@ -764,6 +793,7 @@ data class UltraBlurColors(
     val topRight: String
 )
 
+@Serializable
 data class Writer(
     /**
      * Unique identifier for the writer.

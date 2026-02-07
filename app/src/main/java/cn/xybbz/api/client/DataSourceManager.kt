@@ -68,12 +68,14 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
 import javax.inject.Provider
@@ -107,19 +109,14 @@ class DataSourceManager(
 
     val dataSourceServerFlow = MutableStateFlow<IDataSourceParentServer?>(null)
 
-    /*    private val _loginState = MutableStateFlow<LoginStateType?>(
-            null
-        )
-        val loginState = _loginState.asStateFlow()*/
+    @kotlin.OptIn(ExperimentalCoroutinesApi::class)
+    val loginStateFlow: Flow<LoginStateType> =
+        dataSourceServerFlow
+            .filterNotNull()
+            .flatMapLatest { server ->
+                server.loginSuccessEvent
+            }.filter { it != LoginStateType.UNKNOWN }
 
-    /**
-     * 登录状态
-     */
-    private val _loginStateEvent = MutableSharedFlow<LoginStateType>(
-        replay = 1,
-        extraBufferCapacity = 1
-    )
-    val loginStateEvent = _loginStateEvent.asSharedFlow()
 
 
     //加载状态
@@ -201,7 +198,6 @@ class DataSourceManager(
 
             is ClientLoginInfoState.ConnectError -> {
                 MessageUtils.sendPopTipDismiss()
-                loginStateErrorEmit(ifTmp)
                 Log.i(Constants.LOG_ERROR_PREFIX, "服务端连接错误")
                 LoginStateData(
                     loading = false,
@@ -212,7 +208,6 @@ class DataSourceManager(
 
             ClientLoginInfoState.ServiceTimeOutState -> {
                 MessageUtils.sendPopTipDismiss()
-                loginStateErrorEmit(ifTmp)
                 Log.i(Constants.LOG_ERROR_PREFIX, "服务端连接超时")
                 LoginStateData(
                     loading = false,
@@ -222,7 +217,6 @@ class DataSourceManager(
             }
 
             is ClientLoginInfoState.ErrorState -> {
-                loginStateErrorEmit(ifTmp)
                 MessageUtils.sendPopTipDismiss()
                 Log.i(Constants.LOG_ERROR_PREFIX, loginState.error.message.toString())
                 LoginStateData(
@@ -234,7 +228,6 @@ class DataSourceManager(
             }
 
             ClientLoginInfoState.SelectServer -> {
-                loginStateErrorEmit(ifTmp)
                 MessageUtils.sendPopTipDismiss()
                 Log.i(Constants.LOG_ERROR_PREFIX, "未选择连接")
                 LoginStateData(
@@ -246,7 +239,6 @@ class DataSourceManager(
 
             ClientLoginInfoState.UnauthorizedErrorState -> {
                 MessageUtils.sendPopTipDismiss()
-                loginStateErrorEmit(ifTmp)
                 Log.i(Constants.LOG_ERROR_PREFIX, "登录失败,账号或密码错误")
                 LoginStateData(
                     loading = false,
@@ -257,7 +249,6 @@ class DataSourceManager(
 
             ClientLoginInfoState.UserLoginSuccess -> {
                 Log.i("=====", "登陆成功")
-                loginStateSuccessEmit(ifTmp)
                 LoginStateData(
                     loading = false,
                     isError = false,
@@ -265,24 +256,6 @@ class DataSourceManager(
                 )
             }
         }
-    }
-
-    private fun loginStateErrorEmit(ifTmp: Boolean) {
-        if (!ifTmp) {
-            scope.launch {
-                _loginStateEvent.emit(LoginStateType.FAILURE)
-            }
-        }
-    }
-
-    private fun loginStateSuccessEmit(ifTmp: Boolean) {
-        if (!ifTmp) {
-            Log.i("login", "发送登录成功")
-            scope.launch {
-                _loginStateEvent.emit(LoginStateType.SUCCESS)
-            }
-        }
-
     }
 
     /**
@@ -707,7 +680,7 @@ class DataSourceManager(
             errorMessage = R.string.add_music_to_playlist_failed
         ) {
             try {
-                dataSourceServer.saveMusicPlaylist(playlistId, musicIds)
+                dataSourceServer.saveMusicPlaylist(playlistId, musicIds,)
             } catch (e: Exception) {
                 Log.e(Constants.LOG_ERROR_PREFIX, "保存自建歌单中的音乐失败", e)
                 false
@@ -1161,10 +1134,28 @@ class DataSourceManager(
     override suspend fun getTranscodingType(): List<TranscodingInfo> {
         return try {
             dataSourceServer.getTranscodingType()
-        }catch (e: Exception){
+        } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获取转码类型失败", e)
             emptyList()
         }
+    }
+
+    /**
+     * 获得是否可以下载
+     */
+    fun getCanDownload(): Boolean {
+        return dataSourceServer.getCanDownload()
+    }
+
+    fun getCanDelete(): Boolean {
+        return dataSourceServer.getCanDelete()
+    }
+
+    /**
+     * 获得登录成功flow
+     */
+    fun getLoginStateFlow(): SharedFlow<LoginStateType> {
+        return dataSourceServer.getLoginStateFlow()
     }
 
     /**

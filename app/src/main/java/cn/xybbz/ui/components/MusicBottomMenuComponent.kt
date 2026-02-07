@@ -246,7 +246,7 @@ fun MusicBottomMenuComponent(
          */
         val ifDelete by remember {
             derivedStateOf {
-                musicBottomMenuViewModel.dataSourceManager.dataSourceType?.ifDelete == true
+                musicBottomMenuViewModel.dataSourceManager.getCanDelete()
             }
         }
 
@@ -391,6 +391,7 @@ fun MusicBottomMenuComponent(
                     IconButtonComponent(
                         MusicItemMenuData(
                             imageVector = Icons.Outlined.Download,
+                            enabled = musicBottomMenuViewModel.dataSourceManager.getCanDownload(),
                             name = "下载"
                         ),
                         onClick = {
@@ -1067,6 +1068,7 @@ private fun IconButtonComponent(
     XyItemTabButton(
         onClick = onClick,
         imageVector = musicItemMenuData.imageVector,
+        enabled = musicItemMenuData.enabled,
         text = musicItemMenuData.name,
         iconColor = iconColor,
         color = Color.Transparent

@@ -18,9 +18,10 @@
 
 package cn.xybbz.api.client.subsonic.data
 
-import com.squareup.moshi.JsonClass
+import cn.xybbz.api.serializers.LocalDateTimeTimestampSerializer
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class PlaylistID3(
     /**
      * 歌单编码
@@ -33,7 +34,7 @@ data class PlaylistID3(
     /**
      * 歌单评价
      */
-    val comment: String,
+    val comment: String? = null,
     /**
      * 所属用户
      */
@@ -49,7 +50,8 @@ data class PlaylistID3(
     /**
      * 创建时间
      */
-    val created: String,
+    @Serializable(LocalDateTimeTimestampSerializer::class)
+    val created: Long,
     /**
      * 封面图片编码
      */

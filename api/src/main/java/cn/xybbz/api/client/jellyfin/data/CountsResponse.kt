@@ -18,33 +18,33 @@
 
 package cn.xybbz.api.client.jellyfin.data
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class CountsResponse(
-    @param:Json(name = "MovieCount")
+    @SerialName(value = "MovieCount")
     val movieCount: Int,
-    @param:Json(name = "SeriesCount")
+    @SerialName(value = "SeriesCount")
     val seriesCount: Int,
-    @param:Json(name = "EpisodeCount")
+    @SerialName(value = "EpisodeCount")
     val episodeCount: Int,
-    @param:Json(name = "ArtistCount")
+    @SerialName(value = "ArtistCount")
     val artistCount: Int,
-    @param:Json(name = "ProgramCount")
+    @SerialName(value = "ProgramCount")
     val programCount: Int,
-    @param:Json(name = "TrailerCount")
+    @SerialName(value = "TrailerCount")
     val trailerCount: Int,
-    @param:Json(name = "SongCount")
+    @SerialName(value = "SongCount")
     val songCount: Int,
-    @param:Json(name = "AlbumCount")
+    @SerialName(value = "AlbumCount")
     val albumCount: Int,
-    @param:Json(name = "MusicVideoCount")
+    @SerialName(value = "MusicVideoCount")
     val musicVideoCount: Int,
-    @param:Json(name = "BoxSetCount")
+    @SerialName(value = "BoxSetCount")
     val boxSetCount: Int,
-    @param:Json(name = "BookCount")
+    @SerialName(value = "BookCount")
     val bookCount: Int,
-    @param:Json(name = "ItemCount")
+    @SerialName(value = "ItemCount")
     val itemCount: Int
 )

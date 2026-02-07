@@ -1,44 +1,62 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.client.jellyfin.data
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class LyricResponse(
     /**
      * Metadata for the lyrics.
      */
-    @param:Json(name = "Metadata")
+    @SerialName(value = "Metadata")
     val metadata: LyricMetadata,
     /**
      * A collection of individual lyric lines.
      */
-    @param:Json(name = "Lyrics")
+    @SerialName(value = "Lyrics")
     val lyrics: List<LyricLine>,
 )
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class LyricMetadata(
     /**
      * The lyric offset compared to audio in ticks.
      */
-    @param:Json(name = "Offset")
+    @SerialName(value = "Offset")
     val offset: Long? = null,
 )
 
 /**
  * Lyric model.
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class LyricLine(
     /**
      * The text of this lyric line.
      */
-    @param:Json(name = "Text")
+    @SerialName(value = "Text")
     val text: String,
     /**
      * The start time in ticks.
      */
-    @param:Json(name = "Start")
+    @SerialName(value = "Start")
     val start: Long? = null,
 )

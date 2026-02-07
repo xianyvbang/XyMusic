@@ -231,7 +231,7 @@ fun SnackBarPlayerComponent(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (snackBarPlayerViewModel.dataSourceManager.dataSourceType?.ifDelete == true)
+                    if (snackBarPlayerViewModel.dataSourceManager.getCanDelete())
                         IconButton(onClick = {
 
                             if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
@@ -314,7 +314,7 @@ fun SnackBarPlayerComponent(
                         )
                     }
 
-                    if (!snackBarPlayerViewModel.selectControl.ifLocal)
+                    if (!snackBarPlayerViewModel.selectControl.ifLocal && snackBarPlayerViewModel.dataSourceManager.getCanDownload())
                         IconButton(onClick = {
                             if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
                                 MessageUtils.sendPopTip(R.string.please_select)

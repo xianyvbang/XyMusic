@@ -22,15 +22,15 @@ import android.util.Log
 import cn.xybbz.api.enums.subsonic.Status
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.exception.UnauthorizedException
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * GetArtistsResponse，A subsonic-response element with a nested artists element on success.
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class SubsonicResponse<T : SubsonicParentResponse>(
-    @param:Json(name = "subsonic-response")
+    @SerialName(value = "subsonic-response")
     val subsonicResponse: T
 ){
     init {

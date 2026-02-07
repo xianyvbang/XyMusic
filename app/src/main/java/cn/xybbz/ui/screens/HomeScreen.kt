@@ -83,7 +83,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -92,8 +91,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.R
-import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.UiConstants.MusicCardImageSize
+import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.img
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
@@ -154,13 +153,16 @@ fun HomeScreen(
     val recommendedMusicList by homeViewModel.homeDataRepository.recommendedMusic.collectAsStateWithLifecycle()
     val playlists by homeViewModel.homeDataRepository.playlists.collectAsStateWithLifecycle()
     val dataCount by homeViewModel.homeDataRepository.dataCount.collectAsStateWithLifecycle()
-    val context = LocalContext.current
     val navigator = LocalNavigator.current
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = false
     )
 
-   val deletePlaylist =  stringResource(R.string.delete_playlist)
+    val deletePlaylist = stringResource(R.string.delete_playlist)
+    val loginExceptionInfo = stringResource(R.string.login_exception_info)
+    val newPlaylist = stringResource(R.string.new_playlist)
+    val createPlaylist = stringResource(R.string.create_playlist)
+    val modifyPlaylistName = stringResource(R.string.modify_playlist_name)
 
     var playlistName by remember {
         mutableStateOf("")
@@ -174,16 +176,6 @@ fun HomeScreen(
     var ifShowPlaylistMenu by remember {
         mutableStateOf(false)
     }
-
-    /**
-     * 是否显示无数据信息
-     */
-    /*val ifShowNotData by remember {
-        derivedStateOf {
-            homeViewModel.newAlbumList.isEmpty() && homeViewModel.musicRecentlyList.isEmpty()
-                    && mostPlayerMusicList.isEmpty()
-        }
-    }*/
 
     /**
      * 歌单列表是否存在
@@ -205,11 +197,6 @@ fun HomeScreen(
 
     val coroutineScope = rememberCoroutineScope()
 
-    /* BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-         val width = this.maxWidth
-
-     }
- */
     XyColumnScreen(
         modifier = modifier
             .brashColor(
@@ -323,7 +310,7 @@ fun HomeScreen(
                             BottomSheetObject(
                                 sheetState = sheetState,
                                 state = true,
-                                titleText = context.getString(R.string.login_exception_info),
+                                titleText = loginExceptionInfo,
                                 content = {
                                     Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
                                     HorizontalDivider()
@@ -710,7 +697,10 @@ fun HomeScreen(
                                 TextButton(onClick = composeClick {
                                     navigator.navigate(DailyRecommend)
                                 }, contentPadding = PaddingValues()) {
-                                    XyItemTextLarge(text = stringResource(R.string.view_more), color = Color(0xFFC6E5F5))
+                                    XyItemTextLarge(
+                                        text = stringResource(R.string.view_more),
+                                        color = Color(0xFFC6E5F5)
+                                    )
                                 }
 
                             }
@@ -915,21 +905,21 @@ fun HomeScreen(
                                     .width(200.dp),
                                 itemDataList = listOf(
                                     MenuItemDefaultData(
-                                        title = stringResource(R.string.create_playlist),
+                                        title = createPlaylist,
                                         trailingIcon = {
                                             Icon(
                                                 imageVector = Icons.Rounded.Add,
-                                                contentDescription = stringResource(R.string.create_playlist)
+                                                contentDescription = createPlaylist
                                             )
                                         },
                                         onClick = {
                                             ifShowPlaylistMenu = false
                                             //新增歌单
                                             playlistName =
-                                                context.getString(R.string.new_playlist) + playlists.size
+                                                newPlaylist + playlists.size
 
                                             AlertDialogObject(
-                                                title = context.getString(R.string.create_playlist),
+                                                title = createPlaylist,
                                                 content = {
                                                     XyEdit(text = playlistName, onChange = {
                                                         playlistName = it
@@ -1012,9 +1002,9 @@ fun HomeScreen(
                             editPlaylistClick = {
                                 playlistName = item.name
                                 AlertDialogObject(
-                                    title = context.getString(R.string.modify_playlist_name),
+                                    title = modifyPlaylistName,
                                     content = {
-                                        XyEdit(text = item.name, onChange = {
+                                        XyEdit(text = playlistName, onChange = {
                                             playlistName = it
                                         })
                                     },

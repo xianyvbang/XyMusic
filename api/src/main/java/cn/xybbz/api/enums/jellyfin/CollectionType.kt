@@ -1,65 +1,83 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.enums.jellyfin
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 
 /**
  * Collection type.
  */
-@JsonClass(generateAdapter = false)
+@Serializable
 enum class CollectionType(
     val serialName: String,
 ) {
-    @Json(name = "unknown")
+    @SerialName(value = "unknown")
     UNKNOWN("unknown"),
 
-    @Json(name = "movies")
+    @SerialName(value = "movies")
     MOVIES("movies"),
 
-    @Json(name = "tvshows")
+    @SerialName(value = "tvshows")
     TVSHOWS("tvshows"),
 
-    @Json(name = "music")
+    @SerialName(value = "music")
     MUSIC("music"),
 
-    @Json(name = "musicvideos")
+    @SerialName(value = "musicvideos")
     MUSICVIDEOS("musicvideos"),
 
-    @Json(name = "trailers")
+    @SerialName(value = "trailers")
     TRAILERS("trailers"),
 
-    @Json(name = "homevideos")
+    @SerialName(value = "homevideos")
     HOMEVIDEOS("homevideos"),
 
-    @Json(name = "boxsets")
+    @SerialName(value = "boxsets")
     BOXSETS("boxsets"),
 
-    @Json(name = "books")
+    @SerialName(value = "books")
     BOOKS("books"),
 
-    @Json(name = "photos")
+    @SerialName(value = "photos")
     PHOTOS("photos"),
 
-    @Json(name = "livetv")
+    @SerialName(value = "livetv")
     LIVETV("livetv"),
 
-    @Json(name = "playlists")
+    @SerialName(value = "playlists")
     PLAYLISTS("playlists"),
 
-    @Json(name = "folders")
+    @SerialName(value = "folders")
     FOLDERS("folders"),
 
-    @Json(name = "otherVideos")
+    @SerialName(value = "otherVideos")
     OTHER_VIDEOS("otherVideos"),
 
-    @Json(name = "people")
+    @SerialName(value = "people")
     PEOPLE("people"),
 
-    @Json(name = "tv")
+    @SerialName(value = "tv")
     TV("tv"),
 
-    @Json(name = "artist")
+    @SerialName(value = "artist")
     ARTIST("artist")
     ;
 

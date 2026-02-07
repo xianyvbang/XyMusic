@@ -1,44 +1,54 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.utils
 
-import com.squareup.moshi.FromJson
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonReader
-import com.squareup.moshi.JsonWriter
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.ToJson
-import com.squareup.moshi.Types
+import android.util.Log
+import cn.xybbz.api.converter.json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonPrimitive
 
-fun <T> convertToMap(dataClass: T,isConvertList: Boolean = true): Map<String, String> {
-    val moshi = Moshi.Builder().add(IntOrDoubleAdapter()).build()
-    val type = Types.newParameterizedType(Map::class.java, String::class.java, Any::class.java)
-    val adapter: JsonAdapter<Map<String, Any>> = moshi.adapter(type)
-    val dataJson = moshi.adapter<T>(dataClass!!::class.java).toJson(dataClass)
-    val fromJson = adapter.fromJson(dataJson)
-    return if (isConvertList){
-        (fromJson ?: emptyMap()).toValueString().filterValues { it.isNotBlank() }
-    }else {
-        (fromJson ?: emptyMap()).mapValues { it.value.toString() }.filterValues { it.isNotBlank() }
-    }
+inline fun <reified T> T.toStringMap(
+    isConvertList: Boolean = true
+): Map<String, String> {
+    val currentTimeMillis = System.currentTimeMillis()
+    Log.i("=======", "转换开始时间: $currentTimeMillis")
+    val jsonElement = json.encodeToJsonElement(this)
+
+    if (jsonElement !is JsonObject) return emptyMap()
+    return jsonElement.toStringMap(isConvertList)
 }
 
-fun Map<String, Any>.toValueString(): Map<String, String> {
-    return this.mapValues {
-        when (it.value) {
-            is List<*> -> (it.value as List<*>).joinToString(",")  // 转换为逗号分隔的字符串
-            else -> it.value.toString()
+fun JsonObject.toStringMap(isConvertList: Boolean = true): Map<String, String> {
+    val toMap = this.toMap()
+    val mapNotNull = toMap.mapNotNull { (key, value) ->
+        val stringValue = when (value) {
+            is JsonPrimitive -> value.content
+            is JsonArray -> if (isConvertList) value.filter { !it.jsonPrimitive.contentOrNull.isNullOrEmpty() }
+                .joinToString(",") { it.jsonPrimitive.content } else value.toString() // List -> CSV
+            else -> value.toString()
         }
-    }
-}
-
-class IntOrDoubleAdapter : JsonAdapter<Int>() {
-    @FromJson
-    override fun fromJson(reader: JsonReader): Int {
-        val value = reader.nextString()
-        return value.toInt()
-    }
-
-    @ToJson
-    override fun toJson(writer: JsonWriter, value: Int?) {
-        writer.value(value?.toString())
-    }
+        key to stringValue
+    }.filter { it.second.isNotEmpty() }
+    val toMutableMap = mapNotNull.toMap().toMutableMap()
+    return toMutableMap
 }

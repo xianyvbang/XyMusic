@@ -43,7 +43,7 @@ class NetWorkInterceptor(
                     .addHeader(tokenHeaderName(), token)
 
             }
-            if (!request.url.encodedPath.contains("/stream")){
+            if (!request.url.encodedPath.contains("/stream") && !request.url.encodedPath.contains("/download")){
                 requestNewBuilder.addHeader(
                     name = ApiConstants.ACCEPT,
                     value = ApiConstants.HEADER_ACCEPT,

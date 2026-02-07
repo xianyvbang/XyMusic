@@ -1,125 +1,143 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.enums.jellyfin
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 
 /**
  * The base item kind.
  */
-@JsonClass(generateAdapter = false)
+@Serializable
 enum class BaseItemKind(
     private val serialName: String,
 ) {
-    @Json(name = "AggregateFolder")
+    @SerialName(value = "AggregateFolder")
     AGGREGATE_FOLDER("AggregateFolder"),
 
-    @Json(name = "Audio")
+    @SerialName(value = "Audio")
     AUDIO("Audio"),
 
-    @Json(name = "AudioBook")
+    @SerialName(value = "AudioBook")
     AUDIO_BOOK("AudioBook"),
 
-    @Json(name = "BasePluginFolder")
+    @SerialName(value = "BasePluginFolder")
     BASE_PLUGIN_FOLDER("BasePluginFolder"),
 
-    @Json(name = "Book")
+    @SerialName(value = "Book")
     BOOK("Book"),
 
-    @Json(name = "BoxSet")
+    @SerialName(value = "BoxSet")
     BOX_SET("BoxSet"),
 
-    @Json(name = "Channel")
+    @SerialName(value = "Channel")
     CHANNEL("Channel"),
 
-    @Json(name = "ChannelFolderItem")
+    @SerialName(value = "ChannelFolderItem")
     CHANNEL_FOLDER_ITEM("ChannelFolderItem"),
 
-    @Json(name = "CollectionFolder")
+    @SerialName(value = "CollectionFolder")
     COLLECTION_FOLDER("CollectionFolder"),
 
-    @Json(name = "Episode")
+    @SerialName(value = "Episode")
     EPISODE("Episode"),
 
-    @Json(name = "Folder")
+    @SerialName(value = "Folder")
     FOLDER("Folder"),
 
-    @Json(name = "Genre")
+    @SerialName(value = "Genre")
     GENRE("Genre"),
 
-    @Json(name = "ManualPlaylistsFolder")
+    @SerialName(value = "ManualPlaylistsFolder")
     MANUAL_PLAYLISTS_FOLDER("ManualPlaylistsFolder"),
 
-    @Json(name = "Movie")
+    @SerialName(value = "Movie")
     MOVIE("Movie"),
 
-    @Json(name = "LiveTvChannel")
+    @SerialName(value = "LiveTvChannel")
     LIVE_TV_CHANNEL("LiveTvChannel"),
 
-    @Json(name = "LiveTvProgram")
+    @SerialName(value = "LiveTvProgram")
     LIVE_TV_PROGRAM("LiveTvProgram"),
 
-    @Json(name = "MusicAlbum")
+    @SerialName(value = "MusicAlbum")
     MUSIC_ALBUM("MusicAlbum"),
 
-    @Json(name = "MusicArtist")
+    @SerialName(value = "MusicArtist")
     MUSIC_ARTIST("MusicArtist"),
 
-    @Json(name = "MusicGenre")
+    @SerialName(value = "MusicGenre")
     MUSIC_GENRE("MusicGenre"),
 
-    @Json(name = "MusicVideo")
+    @SerialName(value = "MusicVideo")
     MUSIC_VIDEO("MusicVideo"),
 
-    @Json(name = "Person")
+    @SerialName(value = "Person")
     PERSON("Person"),
 
-    @Json(name = "Photo")
+    @SerialName(value = "Photo")
     PHOTO("Photo"),
 
-    @Json(name = "PhotoAlbum")
+    @SerialName(value = "PhotoAlbum")
     PHOTO_ALBUM("PhotoAlbum"),
 
-    @Json(name = "Playlist")
+    @SerialName(value = "Playlist")
     PLAYLIST("Playlist"),
 
-    @Json(name = "PlaylistsFolder")
+    @SerialName(value = "PlaylistsFolder")
     PLAYLISTS_FOLDER("PlaylistsFolder"),
 
-    @Json(name = "Program")
+    @SerialName(value = "Program")
     PROGRAM("Program"),
 
-    @Json(name = "Recording")
+    @SerialName(value = "Recording")
     RECORDING("Recording"),
 
-    @Json(name = "Season")
+    @SerialName(value = "Season")
     SEASON("Season"),
 
-    @Json(name = "Series")
+    @SerialName(value = "Series")
     SERIES("Series"),
 
-    @Json(name = "Studio")
+    @SerialName(value = "Studio")
     STUDIO("Studio"),
 
-    @Json(name = "Trailer")
+    @SerialName(value = "Trailer")
     TRAILER("Trailer"),
 
-    @Json(name = "TvChannel")
+    @SerialName(value = "TvChannel")
     TV_CHANNEL("TvChannel"),
 
-    @Json(name = "TvProgram")
+    @SerialName(value = "TvProgram")
     TV_PROGRAM("TvProgram"),
 
-    @Json(name = "UserRootFolder")
+    @SerialName(value = "UserRootFolder")
     USER_ROOT_FOLDER("UserRootFolder"),
 
-    @Json(name = "UserView")
+    @SerialName(value = "UserView")
     USER_VIEW("UserView"),
 
-    @Json(name = "Video")
+    @SerialName(value = "Video")
     VIDEO("Video"),
 
-    @Json(name = "Year")
+    @SerialName(value = "Year")
     YEAR("Year"),
     ;
 

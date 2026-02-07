@@ -18,9 +18,10 @@
 
 package cn.xybbz.api.client.navidrome.data
 
-import com.squareup.moshi.JsonClass
+import cn.xybbz.api.serializers.LocalDateTimeTimestampSerializer
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class PlaylistItemData(
     val id: String,
     /**
@@ -66,7 +67,8 @@ data class PlaylistItemData(
     /**
      * 创建时间
      */
-    val createdAt: String,
+    @Serializable(LocalDateTimeTimestampSerializer::class)
+    val createdAt: Long,
     /**
      * 更新时间
      */

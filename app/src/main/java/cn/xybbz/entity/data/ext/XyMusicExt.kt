@@ -21,7 +21,6 @@ package cn.xybbz.entity.data.ext
 import cn.xybbz.api.client.subsonic.data.SongID3
 import cn.xybbz.api.client.subsonic.data.Songs
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
@@ -56,7 +55,7 @@ fun SongID3.toXyMusic(pic: String?, downloadUrl: String, connectionId: Long): Xy
         lyric = "",
         playlistItemId = this.id,
         lastPlayedDate = 0L,
-        createTime = this.created.toSecondMs()
+        createTime = this.created
     )
 }
 

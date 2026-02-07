@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.ui.screens
 
 import androidx.compose.animation.AnimatedContent
@@ -108,7 +126,12 @@ private enum class ScreenType {
     /**
      * 选择地址
      */
-    SELECT_ADDRESS
+    SELECT_ADDRESS,
+
+    /**
+     * 登陆
+     */
+    LOGIN
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -133,6 +156,8 @@ fun ConnectionScreen(
     var showPassword by remember {
         mutableStateOf(false)
     }
+
+    val pleaseEnterRequiredContent = stringResource(R.string.please_enter_required_content)
 
     //自己构建图片加载器
     val imageLoader = ImageLoader.Builder(context).components {
@@ -394,7 +419,7 @@ fun ConnectionScreen(
                                                 connectionViewModel.clearLoginStatus()
                                                 ifSelectDataSource = ScreenType.SELECT_ADDRESS
                                             } else {
-                                                ifSelectDataSource = ScreenType.SELECT_ADDRESS
+                                                ifSelectDataSource = ScreenType.LOGIN
                                                 coroutineScope.launch {
                                                     connectionViewModel.setTmpAddressData(
                                                         connectionViewModel.address
@@ -403,7 +428,7 @@ fun ConnectionScreen(
                                                 }
                                             }
                                         } else {
-                                            MessageUtils.sendPopTipError(context.getString(R.string.please_enter_required_content))
+                                            MessageUtils.sendPopTipError(pleaseEnterRequiredContent)
                                         }
                                     }
                                 ) {
@@ -427,6 +452,85 @@ fun ConnectionScreen(
 
                 ScreenType.SELECT_ADDRESS -> {
 
+                    LazyColumnComponent {
+                        item {
+                            XyColumnNotHorizontalPadding(backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest) {
+                                connectionViewModel.dataSourceType?.let {
+                                    if (connectionViewModel.tmpAddressList.isNotEmpty())
+                                        LazyColumnNotComponent(
+                                            modifier = Modifier.height(
+                                                200.dp
+                                            )
+                                        ) {
+                                            itemsIndexed(connectionViewModel.tmpAddressList) { index, item ->
+                                                XyItemTextCheckSelectHeightSmall(
+                                                    text = item,
+                                                    selected = index == connectionViewModel.selectUrlIndex,
+                                                    onClick = {
+                                                        connectionViewModel.setSelectUrlIndexData(
+                                                            index
+                                                        )
+                                                    })
+                                            }
+                                        }
+
+                                    if (connectionViewModel.tmpPlexInfo.isNotEmpty())
+                                        LazyColumnNotComponent(
+                                            modifier = Modifier.height(
+                                                200.dp
+                                            )
+                                        ) {
+                                            itemsIndexed(connectionViewModel.tmpPlexInfo) { index, item ->
+                                                PlexResourceItem(
+                                                    text = item.name,
+                                                    serverName = item.product,
+                                                    address = item.addressUrl,
+                                                    select = index == connectionViewModel.selectUrlIndex,
+                                                    onClick = {
+                                                        connectionViewModel.setSelectInfoIndexData(
+                                                            index
+                                                        )
+                                                    })
+                                            }
+                                        }
+                                }
+                            }
+                        }
+                        item {
+                            Column {
+                                Button(
+                                    modifier = Modifier.width(width = 150.dp),
+                                    onClick = {
+                                        coroutineScope.launch {
+
+                                            connectionViewModel.setSelectInfoIndexData(
+                                                connectionViewModel.selectUrlIndex
+                                            )
+                                            connectionViewModel.setSelectUrlIndexData(
+                                                connectionViewModel.selectUrlIndex
+                                            )
+                                            ifSelectDataSource = ScreenType.LOGIN
+                                            connectionViewModel.inputAddress(context)
+                                        }
+                                    }) {
+                                    Text(text = stringResource(R.string.connect))
+                                }
+                                Button(
+                                    modifier = Modifier.width(width = 150.dp),
+                                    onClick = {
+                                        isLoad = false
+                                        connectionViewModel.setSelectUrlIndexData(0)
+                                        ifSelectDataSource = ScreenType.INPUT_DATA
+                                    }) {
+                                    Text(stringResource(R.string.back_to_input_credentials))
+                                }
+                            }
+
+                        }
+                    }
+                }
+
+                ScreenType.LOGIN -> {
                     if (connectionViewModel.loading) {
                         XyLoadingItem(
                             modifier = Modifier.height(200.dp),
@@ -458,93 +562,15 @@ fun ConnectionScreen(
                                             connectionViewModel.clearLoginStatus()
                                             connectionViewModel.setSelectUrlIndexData(0)
                                             ifSelectDataSource =
-                                                if (connectionViewModel.dataSourceType?.ifInputUrl == false) {
+                                                if (connectionViewModel.isHttpStartAndPortEnd())
                                                     ScreenType.INPUT_DATA
-                                                } else {
+                                                else
                                                     ScreenType.SELECT_ADDRESS
-                                                }
-
                                         }) {
                                         Text(text = stringResource(R.string.reconnect))
                                     }
                                 }
                             }
-
-                            if (!connectionViewModel.isLoginError && !connectionViewModel.isLoginSuccess) {
-                                item {
-                                    XyColumnNotHorizontalPadding(backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest) {
-                                        connectionViewModel.dataSourceType?.let {
-                                            if (connectionViewModel.tmpAddressList.isNotEmpty())
-                                                LazyColumnNotComponent(
-                                                    modifier = Modifier.height(
-                                                        200.dp
-                                                    )
-                                                ) {
-                                                    itemsIndexed(connectionViewModel.tmpAddressList) { index, item ->
-                                                        XyItemTextCheckSelectHeightSmall(
-                                                            text = item,
-                                                            selected = index == connectionViewModel.selectUrlIndex,
-                                                            onClick = {
-                                                                connectionViewModel.setSelectUrlIndexData(
-                                                                    index
-                                                                )
-                                                            })
-                                                    }
-                                                }
-
-                                            if (connectionViewModel.tmpPlexInfo.isNotEmpty())
-                                                LazyColumnNotComponent(
-                                                    modifier = Modifier.height(
-                                                        200.dp
-                                                    )
-                                                ) {
-                                                    itemsIndexed(connectionViewModel.tmpPlexInfo) { index, item ->
-                                                        PlexResourceItem(
-                                                            text = item.name,
-                                                            serverName = item.product,
-                                                            address = item.addressUrl,
-                                                            select = index == connectionViewModel.selectUrlIndex,
-                                                            onClick = {
-                                                                connectionViewModel.setSelectInfoIndexData(
-                                                                    index
-                                                                )
-                                                            })
-                                                    }
-                                                }
-                                        }
-                                    }
-                                }
-                                item {
-                                    Column {
-                                        Button(
-                                            modifier = Modifier.width(width = 150.dp),
-                                            onClick = {
-                                                coroutineScope.launch {
-                                                    connectionViewModel.setSelectInfoIndexData(
-                                                        connectionViewModel.selectUrlIndex
-                                                    )
-                                                    connectionViewModel.setSelectUrlIndexData(
-                                                        connectionViewModel.selectUrlIndex
-                                                    )
-                                                    connectionViewModel.inputAddress(context)
-                                                }
-                                            }) {
-                                            Text(text = stringResource(R.string.connect))
-                                        }
-                                        Button(
-                                            modifier = Modifier.width(width = 150.dp),
-                                            onClick = {
-                                                isLoad = false
-                                                connectionViewModel.setSelectUrlIndexData(0)
-                                                ifSelectDataSource = ScreenType.INPUT_DATA
-                                            }) {
-                                            Text(stringResource(R.string.back_to_input_credentials))
-                                        }
-                                    }
-
-                                }
-                            }
-
 
                             if (connectionViewModel.isLoginSuccess) {
                                 item {
@@ -583,7 +609,6 @@ fun ConnectionScreen(
                                     }
                                 }
                             }
-
                         }
                     }
                 }

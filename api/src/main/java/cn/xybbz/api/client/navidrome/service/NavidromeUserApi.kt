@@ -22,10 +22,10 @@ import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.jellyfin.data.AuthenticateResponse
 import cn.xybbz.api.client.navidrome.data.NavidromeLoginRequest
 import cn.xybbz.api.client.navidrome.data.NavidromeLoginResponse
-import cn.xybbz.api.client.navidrome.data.NavidromePingResponse
 import cn.xybbz.api.client.navidrome.data.TranscodingInfo
-import cn.xybbz.api.client.subsonic.data.SubsonicParentResponse
+import cn.xybbz.api.client.subsonic.data.SubsonicDefaultResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
+import cn.xybbz.api.client.subsonic.data.SubsonicUserResponse
 import cn.xybbz.api.enums.navidrome.OrderType
 import cn.xybbz.api.enums.navidrome.SortType
 import retrofit2.Response
@@ -48,27 +48,32 @@ interface NavidromeUserApi : BaseApi {
     @POST("/auth/login")
     suspend fun login(@Body loginRequest: NavidromeLoginRequest): NavidromeLoginResponse
 
+    /**
+     * 获取用户信息
+     */
+    @GET("/rest/getUser")
+    suspend fun getUser(@Query("username") username: String): SubsonicResponse<SubsonicUserResponse>
 
     /**
      * POST PING系统
      * @return [String]
      */
     @POST("/rest/ping")
-    suspend fun postPingSystem(): SubsonicResponse<NavidromePingResponse>
+    suspend fun postPingSystem(): SubsonicResponse<SubsonicDefaultResponse>
 
     /**
      * 上报播放记录
      */
     @GET("/rest/scrobble")
-    suspend fun scrobble(@QueryMap scrobbleRequest: Map<String, String>): SubsonicResponse<SubsonicParentResponse>
+    suspend fun scrobble(@QueryMap scrobbleRequest: Map<String, String>): SubsonicResponse<SubsonicDefaultResponse>
 
     /**
      * 获得转码信息
      */
     @GET("/api/transcoding")
     suspend fun getTranscodingInfo(
-        @Query("_start")start:Int=0,
-        @Query("_end")end:Int=1000,
+        @Query("_start") start: Int = 0,
+        @Query("_end") end: Int = 1000,
         @Query("_order") order: OrderType = OrderType.ASC,
         @Query("_sort") sort: SortType = SortType.NAME,
     ): Response<List<TranscodingInfo>>

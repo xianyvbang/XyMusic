@@ -1,20 +1,44 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.api.client.plex.data
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class PlexPingSystemResponse(
-    @param:Json(name = "MediaContainer")
+    @SerialName(value = "MediaContainer")
     val mediaContainer: MediaContainer? = null
 )
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class MediaContainer(
     val allowCameraUpload: Boolean? = null,
     val allowChannelAccess: Boolean? = null,
+    /**
+     * 是否可以删除
+     */
     val allowMediaDeletion: Boolean? = null,
     val allowSharing: Boolean? = null,
+    /**
+     * 是否可以下载
+     */
     val allowSync: Boolean? = null,
     val allowTuners: Boolean? = null,
     val backgroundProcessing: Boolean? = null,
@@ -23,7 +47,7 @@ data class MediaContainer(
     val countryCode: String? = null,
     val diagnostics: String? = null,
 
-    @param:Json(name = "Directory")
+    @SerialName(value = "Directory")
     val directory: List<Directory>? = null,
 
     val eventStream: Boolean? = null,

@@ -18,12 +18,13 @@
 
 package cn.xybbz.api.client.subsonic.data
 
-import com.squareup.moshi.JsonClass
+import cn.xybbz.api.serializers.LocalDateTimeTimestampSerializer
+import kotlinx.serialization.Serializable
 
 /**
  * AlbumID3，Album with songs.
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class AlbumID3  (
     /**
      * 专辑编码
@@ -44,7 +45,8 @@ data class AlbumID3  (
     /**
      * 创建时间
      */
-    val created: String,
+    @Serializable(LocalDateTimeTimestampSerializer::class)
+    val created: Long,
     /**
      * 持续时间
      */

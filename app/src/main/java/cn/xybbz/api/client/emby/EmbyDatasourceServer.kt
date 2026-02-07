@@ -43,12 +43,12 @@ import cn.xybbz.api.enums.jellyfin.MediaProtocol
 import cn.xybbz.api.enums.jellyfin.MediaStreamType
 import cn.xybbz.api.enums.jellyfin.PlayMethod
 import cn.xybbz.api.enums.jellyfin.SortOrder
+import cn.xybbz.api.utils.toStringMap
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.Constants.LYRICS_AMPLIFICATION
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
-import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.setting.SettingsManager
@@ -136,23 +136,24 @@ class EmbyDatasourceServer(
         isFavorite: Boolean?,
         search: String?
     ): XyResponse<XyArtist> {
+        val itemRequest = ItemRequest(
+            limit = pageSize,
+            startIndex = startIndex,
+            sortBy = listOf(ItemSortBy.SORT_NAME),
+            sortOrder = listOf(SortOrder.ASCENDING),
+            fields = listOf(
+                ItemFields.SORT_NAME,
+            ),
+            imageTypeLimit = 1,
+            enableImageTypes = listOf(
+                ImageType.PRIMARY, ImageType.BACKDROP
+            ),
+            searchTerm = search,
+            isFavorite = isFavorite,
+            parentId = libraryId
+        )
         val response = embyApiClient.artistsApi().getArtists(
-            ItemRequest(
-                limit = pageSize,
-                startIndex = startIndex,
-                sortBy = listOf(ItemSortBy.SORT_NAME),
-                sortOrder = listOf(SortOrder.ASCENDING),
-                fields = listOf(
-                    ItemFields.SORT_NAME,
-                ),
-                imageTypeLimit = 1,
-                enableImageTypes = listOf(
-                    ImageType.PRIMARY, ImageType.BACKDROP
-                ),
-                searchTerm = search,
-                isFavorite = isFavorite,
-                parentId = libraryId
-            ).toMap()
+            itemRequest.toStringMap()
         )
         val artistList = convertToArtistList(response.items)
         return XyResponse(
@@ -172,7 +173,7 @@ class EmbyDatasourceServer(
                 ids = artistIds,
                 parentId = libraryId,
                 userId = getUserId()
-            ).toMap()
+            ).toStringMap()
         ).items
         return convertToArtistList(items)
     }
@@ -579,18 +580,8 @@ class EmbyDatasourceServer(
             playlistId = playlistId,
             entryIds = musicIds.joinToString()
         )
-        db.musicDao.removeByPlaylistMusicByMusicId(
-            playlistId = playlistId,
-            musicIds = musicIds
-        )
-        //获得歌单中的第一个音乐,并写入歌单封面
-        val musicInfo = db.musicDao.selectPlaylistMusicOneById(playlistId)
-        if (musicInfo != null && !musicInfo.pic.isNullOrBlank()) {
-            musicInfo.pic?.let {
-                db.albumDao.updatePicAndCount(playlistId, it)
-            }
-        }
-        return true
+
+        return super.removeMusicPlaylist(playlistId, musicIds)
     }
 
     /**
@@ -610,7 +601,7 @@ class EmbyDatasourceServer(
             db.libraryDao.remove()
             val viewLibrary = embyApiClient.userViewsApi().getUserViews(
                 userId = getUserId(),
-                ViewRequest().toMap()
+                ViewRequest().toStringMap()
             )
             //存储历史记录
             val libraries =
@@ -682,7 +673,7 @@ class EmbyDatasourceServer(
                 limit = Constants.MIN_PAGE,
                 parentId = libraryId,
                 userId = getUserId()
-            ).toMap()
+            ).toStringMap()
         )
         if (albumList.isNotEmpty())
             db.withTransaction {
@@ -1014,7 +1005,7 @@ class EmbyDatasourceServer(
             ItemRequest(
                 limit = pageSize,
                 userId = getUserId()
-            ).toMap()
+            ).toStringMap()
         )
         return convertToArtistList(response.items)
     }
@@ -1139,7 +1130,7 @@ class EmbyDatasourceServer(
                 parentId = if (parentId.isNullOrBlank()) libraryId else parentId,
                 userId = getUserId(),
                 path = path
-            ).toMap()
+            ).toStringMap()
         )
         return XyResponse(
             items = convertToMusicList(response.items),
@@ -1194,7 +1185,7 @@ class EmbyDatasourceServer(
                 genreIds = genreIds,
                 parentId = libraryId,
                 userId = getUserId()
-            ).toMap()
+            ).toStringMap()
         )
 
         return XyResponse(
@@ -1232,7 +1223,7 @@ class EmbyDatasourceServer(
                         limit = pageSize,
                         parentId = libraryId,
                         userId = getUserId()
-                    ).toMap()
+                    ).toStringMap()
                 )
             val xyResponse = XyResponse(
                 items = convertToAlbumList(playlists.items, true),
@@ -1280,7 +1271,7 @@ class EmbyDatasourceServer(
                 searchTerm = search,
                 imageTypeLimit = 1,
                 parentId = libraryId
-            ).toMap()
+            ).toStringMap()
         )
 
         return XyResponse(
@@ -1407,7 +1398,7 @@ class EmbyDatasourceServer(
             albumArtist = item.albumArtists?.map { artist -> artist.name.toString() }
                 ?: listOf(application.getString(Constants.UNKNOWN_ARTIST)),
             albumArtistIds = item.albumArtists?.map { artist -> artist.id },
-            createTime = item.dateCreated?.toSecondMs() ?: 0L,
+            createTime = item.dateCreated,
             year = item.productionYear,
             genreIds = item.genreItems?.map { it.id },
             playedCount = item.userData?.playCount ?: 0,
@@ -1424,7 +1415,7 @@ class EmbyDatasourceServer(
             codec = mediaStream?.codec,
             lyric = "",
             playlistItemId = item.id,
-            lastPlayedDate = item.userData?.lastPlayedDate?.toSecondMs() ?: 0L,
+            lastPlayedDate = item.userData?.lastPlayedDate ?: 0L,
         )
     }
 
@@ -1468,7 +1459,7 @@ class EmbyDatasourceServer(
             genreIds = album.genreItems?.joinToString { it.id },
             ifFavorite = album.userData?.isFavorite == true,
             ifPlaylist = ifPlaylist,
-            createTime = album.dateCreated?.toSecondMs() ?: 0L,
+            createTime = album.dateCreated,
             musicCount = if (ifPlaylist) (album.childCount?.toLong()
                 ?: 0L) else (album.songCount?.toLong() ?: 0L)
         )
@@ -1504,7 +1495,7 @@ class EmbyDatasourceServer(
             pic = itemImageUrl ?: "",
             name = genre.name ?: application.getString(Constants.UNKNOWN_ALBUM),
             connectionId = getConnectionId(),
-            createTime = genre.dateCreated?.toSecondMs() ?: 0L,
+            createTime = genre.dateCreated,
         )
     }
 

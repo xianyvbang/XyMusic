@@ -18,8 +18,8 @@
 
 package cn.xybbz.api.client.data
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 用户登录请求实体类
@@ -31,16 +31,15 @@ import com.squareup.moshi.JsonClass
  * @param [address] 客户端连接地址
  * @param [appName] 客户端应用名称
  * @param [clientVersion] 服务客户端支持版本
- * @param [connectionId] 连接设置id
  * @param [serverVersion] 服务端版本
  * @param [serverName] 服务端名称
  * @param [serverId] 服务端ID
  */
-@JsonClass(generateAdapter = true)
+@Serializable
 data class ClientLoginInfoReq(
-    @param:Json(name = "Username")
+    @SerialName(value = "Username")
     val username: String,
-    @param:Json(name = "Pw")
+    @SerialName(value = "Pw")
     val password: String,
     val address: String,
     val appName: String,
