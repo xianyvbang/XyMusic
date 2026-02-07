@@ -580,18 +580,8 @@ class EmbyDatasourceServer(
             playlistId = playlistId,
             entryIds = musicIds.joinToString()
         )
-        db.musicDao.removeByPlaylistMusicByMusicId(
-            playlistId = playlistId,
-            musicIds = musicIds
-        )
-        //获得歌单中的第一个音乐,并写入歌单封面
-        val musicInfo = db.musicDao.selectPlaylistMusicOneById(playlistId)
-        if (musicInfo != null && !musicInfo.pic.isNullOrBlank()) {
-            musicInfo.pic?.let {
-                db.albumDao.updatePicAndCount(playlistId, it)
-            }
-        }
-        return true
+
+        return super.removeMusicPlaylist(playlistId, musicIds)
     }
 
     /**

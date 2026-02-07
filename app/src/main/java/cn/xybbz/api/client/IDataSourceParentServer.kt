@@ -686,6 +686,29 @@ abstract class IDataSourceParentServer(
     }
 
     /**
+     * 删除自建歌单中的音乐
+     * @param [playlistId] 歌单id
+     * @param [musicIds] 音乐id集合
+     */
+    override suspend fun removeMusicPlaylist(
+        playlistId: String,
+        musicIds: List<String>
+    ): Boolean {
+        db.musicDao.removeByPlaylistMusicByMusicId(
+            playlistId = playlistId,
+            musicIds = musicIds
+        )
+        //获得歌单中的第一个音乐,并写入歌单封面
+        val musicInfo = db.musicDao.selectPlaylistMusicOneById(playlistId)
+        if (musicInfo != null && !musicInfo.pic.isNullOrBlank()) {
+            musicInfo.pic?.let {
+                db.albumDao.updatePicAndCount(playlistId, it)
+            }
+        }
+        return true
+    }
+
+    /**
      * 获得专辑信息
      * @param [albumId] 专辑id
      * @return 专辑+艺术家信息
