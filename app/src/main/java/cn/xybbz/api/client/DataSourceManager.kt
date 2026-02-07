@@ -680,7 +680,7 @@ class DataSourceManager(
             errorMessage = R.string.add_music_to_playlist_failed
         ) {
             try {
-                dataSourceServer.saveMusicPlaylist(playlistId, musicIds)
+                dataSourceServer.saveMusicPlaylist(playlistId, musicIds,)
             } catch (e: Exception) {
                 Log.e(Constants.LOG_ERROR_PREFIX, "保存自建歌单中的音乐失败", e)
                 false
