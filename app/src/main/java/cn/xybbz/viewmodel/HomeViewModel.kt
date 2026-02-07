@@ -180,7 +180,6 @@ class HomeViewModel @OptIn(UnstableApi::class)
      * 获得服务端歌单
      */
     suspend fun getServerPlaylists() {
-        Log.i("=====", "获得歌单数据")
         dataSourceManager.getPlaylists()
     }
 

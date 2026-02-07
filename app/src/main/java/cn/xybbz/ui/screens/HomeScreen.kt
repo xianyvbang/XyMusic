@@ -55,6 +55,7 @@ import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
@@ -174,6 +175,13 @@ fun HomeScreen(
     }
 
     var ifShowPlaylistMenu by remember {
+        mutableStateOf(false)
+    }
+
+    /**
+     * 歌单刷新状态
+     */
+    var ifRefreshingPlaylist by remember {
         mutableStateOf(false)
     }
 
@@ -946,7 +954,10 @@ fun HomeScreen(
                                         onClick = composeClick {
                                             ifShowPlaylistMenu = false
                                             coroutineScope.launch {
+                                                ifRefreshingPlaylist = true
                                                 homeViewModel.getServerPlaylists()
+                                            }.invokeOnCompletion {
+                                                ifRefreshingPlaylist = false
                                             }
                                         })
                                 )
@@ -963,65 +974,80 @@ fun HomeScreen(
                         }
                     }
                 }
-                itemsIndexed(playlists) { _, item ->
-                    //歌单信息
-                    XyRow {
-                        MusicPlaylistItemComponent(
-                            name = item.name,
-                            imgUrl = item.pic,
-                            onClick = {
-                                navigator.navigate(
-                                    AlbumInfo(
-                                        item.itemId,
-                                        MusicDataTypeEnum.PLAYLIST
-                                    )
-                                )
-                            },
-                            removePlaylistClick = {
-                                AlertDialogObject(
-                                    title = deletePlaylist,
-                                    content = {
-                                        XyItemTextHorizontal(
-                                            text = stringResource(
-                                                R.string.confirm_delete_playlist,
-                                                item.name
-                                            )
-                                        )
-                                    },
-                                    ifWarning = true,
-                                    onConfirmation = {
-                                        homeViewModel.removePlaylist(
-                                            item.itemId
-                                        )
-                                    },
-                                    onDismissRequest = {
 
-                                    }
-                                ).show()
-                            },
-                            editPlaylistClick = {
-                                playlistName = item.name
-                                AlertDialogObject(
-                                    title = modifyPlaylistName,
-                                    content = {
-                                        XyEdit(text = playlistName, onChange = {
-                                            playlistName = it
-                                        })
-                                    },
-                                    onConfirmation = {
-                                        homeViewModel.editPlaylistName(
-                                            item.itemId,
-                                            playlistName
-                                        )
-                                    },
-                                    onDismissRequest = {
-                                        playlistName = ""
-                                    }
-                                ).show()
-                            }
-                        )
+                if (ifRefreshingPlaylist) {
+                    item {
+                        XyRow(horizontalArrangement = Arrangement.Center) {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .size(50.dp)
+                                    .clip(CircleShape),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        }
+
                     }
-                }
+                } else
+                    itemsIndexed(playlists) { _, item ->
+                        //歌单信息
+                        XyRow {
+                            MusicPlaylistItemComponent(
+                                name = item.name,
+                                imgUrl = item.pic,
+                                onClick = {
+                                    navigator.navigate(
+                                        AlbumInfo(
+                                            item.itemId,
+                                            MusicDataTypeEnum.PLAYLIST
+                                        )
+                                    )
+                                },
+                                removePlaylistClick = {
+                                    AlertDialogObject(
+                                        title = deletePlaylist,
+                                        content = {
+                                            XyItemTextHorizontal(
+                                                text = stringResource(
+                                                    R.string.confirm_delete_playlist,
+                                                    item.name
+                                                )
+                                            )
+                                        },
+                                        ifWarning = true,
+                                        onConfirmation = {
+                                            homeViewModel.removePlaylist(
+                                                item.itemId
+                                            )
+                                        },
+                                        onDismissRequest = {
+
+                                        }
+                                    ).show()
+                                },
+                                editPlaylistClick = {
+                                    playlistName = item.name
+                                    AlertDialogObject(
+                                        title = modifyPlaylistName,
+                                        content = {
+                                            XyEdit(text = playlistName, onChange = {
+                                                playlistName = it
+                                            })
+                                        },
+                                        onConfirmation = {
+                                            homeViewModel.editPlaylistName(
+                                                item.itemId,
+                                                playlistName
+                                            )
+                                        },
+                                        onDismissRequest = {
+                                            playlistName = ""
+                                        }
+                                    ).show()
+                                }
+                            )
+                        }
+                    }
                 if (!ifShowPlaylist) {
                     item {
                         XyRow(
