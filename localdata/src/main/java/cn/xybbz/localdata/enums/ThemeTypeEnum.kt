@@ -19,6 +19,10 @@ enum class ThemeTypeEnum {
     /**
      * 亮色
      */
-    LIGHT
+    LIGHT,
+    /**
+     * 花里胡哨
+     */
+    FLOWER
 
 }

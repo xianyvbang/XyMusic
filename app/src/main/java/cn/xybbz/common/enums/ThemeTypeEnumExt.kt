@@ -8,5 +8,6 @@ fun ThemeTypeEnum.toResStringInt():Int{
         ThemeTypeEnum.SYSTEM -> R.string.system
         ThemeTypeEnum.DARK -> R.string.dark
         ThemeTypeEnum.LIGHT -> R.string.light
+        ThemeTypeEnum.FLOWER -> R.string.flower
     }
 }
