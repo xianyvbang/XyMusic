@@ -7,9 +7,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,7 +33,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
+import cn.xybbz.common.enums.toResStringInt
 import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.localdata.enums.ThemeTypeEnum
 import cn.xybbz.router.SetBackgroundImage
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.SettingItemComponent
@@ -39,6 +44,8 @@ import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.dismiss
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
+import cn.xybbz.ui.popup.MenuItemDefaultData
+import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
@@ -70,6 +77,9 @@ fun InterfaceSettingScreen(
 
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
+    var ifShowThemeMenu by remember {
+        mutableStateOf(false)
+    }
 
 
     XyColumnScreen(
@@ -115,6 +125,46 @@ fun InterfaceSettingScreen(
 
                     }) {
                         navigator.navigate(SetBackgroundImage)
+                    }
+
+                    SettingItemComponent(
+                        title = "主题模式",
+                        info = stringResource(interfaceSettingViewModel.settingsManager.themeType.toResStringInt()),
+                        imageVector = Icons.Rounded.KeyboardArrowDown,
+                        trailingContent = {
+                            XyDropdownMenu(
+                                onIfShowMenu = { ifShowThemeMenu },
+                                onSetIfShowMenu = { ifShowThemeMenu = it },
+                                modifier = Modifier
+                                    .width(200.dp),
+                                itemDataList = ThemeTypeEnum.entries.map {
+                                    MenuItemDefaultData(
+                                        title = stringResource(it.toResStringInt()),
+                                        leadingIcon = {
+                                            if (interfaceSettingViewModel.settingsManager.themeType == it)
+                                                Icon(
+                                                    Icons.Rounded.Check,
+                                                    contentDescription = stringResource(
+                                                        it.toResStringInt()
+                                                    )
+                                                )
+                                        },
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                ifShowThemeMenu = false
+                                                interfaceSettingViewModel.settingsManager.setThemeTypeData(
+                                                    it
+                                                )
+                                            }.invokeOnCompletion {
+
+                                            }
+
+                                        })
+                                }
+                            )
+                        }
+                    ) {
+                        ifShowThemeMenu = true
                     }
                 }
             }

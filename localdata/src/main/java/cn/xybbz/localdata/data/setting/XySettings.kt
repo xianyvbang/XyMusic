@@ -24,6 +24,7 @@ import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.LanguageType
+import cn.xybbz.localdata.enums.ThemeTypeEnum
 import java.util.UUID
 
 @Entity(tableName = "xy_settings")
@@ -114,5 +115,13 @@ data class XySettings(
     /**
      * 播放会话ID
      */
-    val playSessionId: String = UUID.randomUUID().toString()
+    val playSessionId: String = UUID.randomUUID().toString(),
+    /**
+     *  主题类型
+     */
+    val themeType: ThemeTypeEnum = ThemeTypeEnum.SYSTEM,
+    /**
+     * 是否动态颜色
+     */
+    val isDynamic: Boolean = false,
 )

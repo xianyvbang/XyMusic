@@ -652,3 +652,18 @@ internal val Migration_22_23 = object : Migration(22, 23) {
         """)
     }
 }
+
+val MIGRATION_23_24 = object : Migration(23, 24) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+
+        db.execSQL("""
+            ALTER TABLE xy_settings
+            ADD COLUMN themeType TEXT NOT NULL DEFAULT 'SYSTEM'
+        """)
+
+        db.execSQL("""
+            ALTER TABLE xy_settings
+            ADD COLUMN isDynamic INTEGER NOT NULL DEFAULT 0
+        """)
+    }
+}

@@ -24,6 +24,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.OptIn
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -34,7 +35,10 @@ import androidx.media3.common.util.UnstableApi
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.network.NetWorkMonitor
+import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.localdata.enums.ThemeTypeEnum
 import cn.xybbz.ui.screens.MainScreen
+import cn.xybbz.ui.theme.XyConfigs
 import cn.xybbz.ui.theme.XyTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.hjq.language.MultiLanguages
@@ -48,10 +52,15 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var backgroundConfig: BackgroundConfig
+
     @Inject
     lateinit var netWorkMonitor: NetWorkMonitor
+
     @Inject
     lateinit var dataSourceManager: DataSourceManager
+
+    @Inject
+    lateinit var settingsManager: SettingsManager
 
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,8 +73,19 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
+
+            val isDark = when (settingsManager.themeType) {
+                ThemeTypeEnum.SYSTEM -> isSystemInDarkTheme()
+                ThemeTypeEnum.DARK -> true
+                ThemeTypeEnum.LIGHT -> false
+            }
+
             XyTheme(
-                brash = backgroundConfig.xyBackgroundBrash
+                brash = backgroundConfig.xyBackgroundBrash,
+                xyConfigs = XyConfigs(
+                    isDarkTheme = isDark,
+                    isDynamic = settingsManager.isDynamic
+                )
 //                xyBackground = backgroundConfig.xyBackground
             ) {
                 // A surface container using the 'background' color from the theme
@@ -87,8 +107,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-/*        netWorkMonitor.stop()
-        dataSourceManager.close()*/
+        /*        netWorkMonitor.stop()
+                dataSourceManager.close()*/
         super.onDestroy()
     }
 }

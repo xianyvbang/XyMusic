@@ -9,11 +9,17 @@ import androidx.compose.ui.graphics.Color
 
 @Stable
 class XyBackgroundBrash(
+    ifEnabled: Boolean,
     ifChangeOneColor: Boolean,
     ifGlobalBrash: Boolean,
     backgroundImageUri: Uri?,
     globalBrash: List<Color>
 ) {
+    /**
+     * 是否启用渐变色
+     */
+
+    val ifEnabled by mutableStateOf(ifEnabled, structuralEqualityPolicy())
 
     /**
      * 是否切换为单一颜色背景
@@ -37,11 +43,13 @@ class XyBackgroundBrash(
 }
 
 fun xyBackgroundBrash(
+    ifEnabled: Boolean = false,
     ifChangeOneColor: Boolean = false,
     ifGlobalBrash: Boolean = false,
     backgroundImageUri: Uri? = null,
     globalBrash: List<Color> = listOf(Color(0xFF600015), Color(0xFF04727E))
 ): XyBackgroundBrash = XyBackgroundBrash(
+    ifEnabled = ifEnabled,
     ifChangeOneColor = ifChangeOneColor,
     ifGlobalBrash = ifGlobalBrash,
     backgroundImageUri = backgroundImageUri,

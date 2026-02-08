@@ -36,6 +36,7 @@ import cn.xybbz.localdata.data.setting.XySettings
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.LanguageType
+import cn.xybbz.localdata.enums.ThemeTypeEnum
 import com.hjq.language.MultiLanguages
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -80,6 +81,18 @@ class SettingsManager(
     var ifShowSnackBar by mutableStateOf(false)
         private set
 
+    /**
+     * 主题类型
+     */
+    var themeType by mutableStateOf(ThemeTypeEnum.SYSTEM)
+        private set
+
+    /**
+     * 是否动态颜色
+     */
+    var isDynamic by mutableStateOf(false)
+        private set
+
 
     //是否设置转码音质
     private val _transcodingFlow = MutableSharedFlow<TranscodingState>(0, extraBufferCapacity = 1)
@@ -98,6 +111,9 @@ class SettingsManager(
     suspend fun setSettingsData(): XySettings = withContext(Dispatchers.IO) {
         Log.i("=====", "开始存储设置")
         this@SettingsManager.settings = db.settingsDao.selectOneData() ?: XySettings()
+
+        this@SettingsManager.themeType = this@SettingsManager.get().themeType
+        this@SettingsManager.isDynamic = this@SettingsManager.get().isDynamic
 
         updateIfConnectionConfig(this@SettingsManager.get().connectionId != null)
         if (this@SettingsManager.get().languageType != null) {
@@ -484,6 +500,25 @@ class SettingsManager(
 
         if (!get().ifTranscoding)
             sengTranscodingEvent()
+    }
+
+
+    /**
+     * 更新主题颜色类型
+     */
+    suspend fun setThemeTypeData(themeType: ThemeTypeEnum) {
+        this.themeType = themeType
+        settings = get().copy(themeType = themeType)
+        if (get().id != AllDataEnum.All.code) {
+            db.settingsDao.update(
+                get()
+            )
+
+        } else {
+            val settingId =
+                db.settingsDao.save(XySettings(themeType = themeType))
+            settings = get().copy(id = settingId)
+        }
     }
 
     /**

@@ -40,6 +40,8 @@ fun Modifier.brashColor(
     // 读取 CompositionLocal
     val cfg = LocalXyBackgroundBrash.current
 
+    if (!cfg.ifEnabled) return this
+
     val topColor = topGlobalColor ?: cfg.globalBrash[0]
     val bottomColor = bottomGlobalColor ?: cfg.globalBrash[1]
     val useOne = ifOneColor ?: cfg.ifChangeOneColor
