@@ -62,9 +62,9 @@ import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyItemBig
 import cn.xybbz.ui.xy.XyItemTextLarge
 import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.xy.XyText
 import cn.xybbz.viewmodel.AboutViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.launch
@@ -138,7 +138,7 @@ fun AboutScreen(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    XyItemBig(text = stringResource(R.string.app_name))
+                    XyText(text = stringResource(R.string.app_name))
                 }
 
             }

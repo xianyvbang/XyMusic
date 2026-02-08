@@ -88,6 +88,7 @@ import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyItemTextLarge
 import cn.xybbz.ui.xy.XyItemTitle
 import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.xy.XyText
 import cn.xybbz.viewmodel.SearchViewModel
 
 
@@ -296,9 +297,8 @@ fun SearchResultScreen(
             if (artistList.isNotEmpty()) {
                 item {
                     XyRow {
-                        XyItemTitle(
+                        XyText(
                             text = stringResource(R.string.artist),
-                            fontSize = 18.sp,
                         )
                     }
 
@@ -320,7 +320,7 @@ fun SearchResultScreen(
             if (albumList.isNotEmpty()) {
                 item {
                     XyRow {
-                        XyItemTitle(text = stringResource(R.string.album), fontSize = 18.sp)
+                        XyText(text = stringResource(R.string.album))
                     }
                 }
                 item {
@@ -345,7 +345,7 @@ fun SearchResultScreen(
             if (musicList.isNotEmpty()) {
                 item {
                     XyRow {
-                        XyItemTitle(text = stringResource(R.string.music), fontSize = 18.sp)
+                        XyText(text = stringResource(R.string.music))
                     }
                 }
                 items(musicList, key = { music -> music.itemId }) { music ->

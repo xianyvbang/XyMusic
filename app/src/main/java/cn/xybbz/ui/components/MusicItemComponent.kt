@@ -43,7 +43,6 @@ import com.google.common.collect.Multimaps.index
 /**
  * 音乐列表item
  * @param [modifier] 修饰符
- * @param [onMusicData] 关于音乐信息数据
  * @param [index] 索引
  * @param [onMusicPlay] 播放方法
  */
@@ -52,7 +51,6 @@ import com.google.common.collect.Multimaps.index
 fun MusicItemComponent(
     modifier: Modifier = Modifier,
     music: XyMusic,
-    index: Int? = null,
     enabledPic: Boolean = true,
     onIfFavorite: () -> Boolean,
     ifDownload: Boolean,
@@ -69,7 +67,6 @@ fun MusicItemComponent(
 ) {
     MusicItemComponent(
         modifier = modifier,
-        index = index,
         enabledPic = enabledPic,
         itemId = music.itemId,
         name = music.name,
@@ -103,7 +100,6 @@ fun MusicItemComponent(
     pic: String? = "",
     codec: String? = "",
     bitRate: Int? = 0,
-    index: Int? = null,
     enabledPic: Boolean = true,
     onIfFavorite: () -> Boolean,
     ifDownload: Boolean,
@@ -126,7 +122,6 @@ fun MusicItemComponent(
         subordination = subordination ?: (artists ?: ""),
         favoriteState = onIfFavorite(),
         imgUrl = pic,
-        index = index,
         media = getMusicMedia(codec, bitRate),
         enabledPic = enabledPic,
         ifDownload = ifDownload,
@@ -213,55 +208,6 @@ fun MusicItemNotClickComponent(
         ifShowTrailingContent = false,
         trailingOnClick = {},
         onMusicPlay = {},
-    )
-
-}
-
-
-/**
- * 音乐列表的index item
- * @param [modifier] 修饰符
- * @param [onMusicData] 关于音乐信息数据
- * @param [index] 索引
- * @param [onMusicPlay] 播放方法
- */
-@Composable
-fun MusicItemIndexComponent(
-    modifier: Modifier = Modifier,
-    music: XyMusic,
-    onIfFavorite: () -> Boolean,
-    ifDownload: Boolean,
-    subordination: String? = null,
-    index: Int,
-    backgroundColor: Color = MaterialTheme.colorScheme.background,
-    onMusicPlay: (OnMusicPlayParameter) -> Unit,
-    ifSelect: Boolean = false,
-    ifPlay: Boolean,
-    trailingOnSelectClick: (Boolean) -> Unit,
-    trailingOnClick: () -> Unit,
-    ifSelectCheckBox: (() -> Boolean)? = null
-) {
-
-    MusicItemComponent(
-        itemId = music.itemId,
-        name = music.name,
-        album = music.album,
-        artists = music.artists?.joinToString(),
-        pic = music.pic,
-        codec = music.codec,
-        bitRate = music.bitRate,
-        index = index,
-        subordination = subordination,
-        onIfFavorite = onIfFavorite,
-        ifDownload = ifDownload,
-        ifPlay = ifPlay,
-        modifier = modifier,
-        backgroundColor = backgroundColor,
-        ifSelect = ifSelect,
-        trailingOnSelectClick = trailingOnSelectClick,
-        trailingOnClick = trailingOnClick,
-        ifSelectCheckBox = ifSelectCheckBox,
-        onMusicPlay = onMusicPlay,
     )
 }
 

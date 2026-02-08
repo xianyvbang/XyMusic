@@ -118,7 +118,7 @@ import cn.xybbz.localdata.data.progress.Progress
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.LazyListComponent
-import cn.xybbz.ui.components.MusicItemIndexComponent
+import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.SelectSortBottomSheetComponent
 import cn.xybbz.ui.components.SwipeRefreshListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
@@ -466,7 +466,7 @@ fun AlbumInfoScreen(
                         ) { index ->
 
                             list[index]?.let { music ->
-                                MusicItemIndexComponent(
+                                MusicItemComponent(
                                     modifier = Modifier.fillMaxWidth(),
                                     backgroundColor = Color.Transparent,
                                     music = music,
@@ -475,7 +475,6 @@ fun AlbumInfoScreen(
                                     },
                                     ifDownload = music.itemId in downloadMusicIds,
                                     ifPlay = albumInfoViewModel.musicController.musicInfo?.itemId == music.itemId,
-                                    index = index + 1,
                                     subordination =
                                         if (albumInfoViewModel.albumPlayerHistoryProgressMap.containsKey(
                                                 music.itemId

@@ -27,6 +27,7 @@ import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyItemOutSpacer
 import cn.xybbz.ui.xy.XyItemTitle
+import cn.xybbz.ui.xy.XyScreenTitle
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
@@ -94,10 +95,8 @@ fun AlertDialogComponent() {
             ) {
                 XyItemOutSpacer()
                 it.title?.let { title ->
-                    XyItemTitle(
+                    XyScreenTitle(
                         text = title,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 18.sp,
                         color = if (it.ifWarning) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurface
                     )
                 }

@@ -77,6 +77,7 @@ import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyItemTitle
 import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.xy.XyText
 import cn.xybbz.viewmodel.SettingsViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.launch
@@ -146,7 +147,7 @@ fun SettingScreen(
                     ),
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    XyItemTitle(
+                    XyText(
                         text = stringResource(R.string.playback)
                     )
                 }
@@ -246,7 +247,7 @@ fun SettingScreen(
                     ),
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    XyItemTitle(
+                    XyText(
                         text = stringResource(R.string.connection_management)
                     )
                 }
@@ -269,7 +270,7 @@ fun SettingScreen(
                     ),
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    XyItemTitle(
+                    XyText(
                         text = stringResource(R.string.download_management)
                     )
                 }
@@ -394,7 +395,7 @@ fun SettingScreen(
                     ),
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    XyItemTitle(
+                    XyText(
                         text = stringResource(R.string.more)
                     )
                 }

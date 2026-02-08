@@ -103,7 +103,7 @@ fun ModalBottomSheetExtendComponent(
                                 verticalArrangement = Arrangement.Top,
                                 horizontalAlignment = Alignment.Start
                             ) {
-                                XyItemTitle(text = titleText, fontSize = 18.sp)
+                                XyText(text = titleText)
                                 titleSub?.let {
                                     Text(
                                         text = titleSub,

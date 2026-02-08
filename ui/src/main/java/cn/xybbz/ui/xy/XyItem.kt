@@ -107,7 +107,6 @@ fun ItemTrailingContent(
     subordination: String?,
     favoriteState: Boolean,
     imgUrl: String? = null,
-    index: Int? = null,
     media: String? = null,
     enabledPic: Boolean = true,
     ifDownload: Boolean,
@@ -183,18 +182,14 @@ fun ItemTrailingContent(
                 onClick?.invoke()
             }, onLongClick = { onLongClick?.invoke() }),
         headlineContent = {
-            Text(
+            XyText(
                 text = name,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                style = MaterialTheme.typography.bodySmall,
-                overflow = TextOverflow.Ellipsis,
                 color = if (ifPlay) Color(0xFFABE2FF) else MaterialTheme.colorScheme.onSurface
             )
         },
         supportingContent = if (!media.isNullOrBlank() || !subordination.isNullOrBlank()) {
             {
-                Text(
+                XyTextSub(
                     text = buildAnnotatedString {
                         if (favoriteState)
                             appendInlineContent(inlineContentId, "[icon]")
@@ -224,19 +219,15 @@ fun ItemTrailingContent(
 
                     },
                     inlineContent = inlineContent,
-                    fontStyle = MaterialTheme.typography.titleSmall.fontStyle
                 )
             }
         } else null,
         leadingContent = if (enabledPic) {
             {
-                if (index == null)
-                    XySmallImage(
-                        model = imgUrl,
-                        contentDescription = "${name}${stringResource(R.string.image_suffix)}"
-                    )
-                else
-                    Text(text = index.toString(), style = MaterialTheme.typography.bodySmall)
+                XySmallImage(
+                    model = imgUrl,
+                    contentDescription = "${name}${stringResource(R.string.image_suffix)}"
+                )
             }
         } else null, trailingContent = {
             trailingContent?.invoke()
@@ -277,12 +268,8 @@ fun ItemTrailingArrowRight(
             },
         shadowElevation = shadowElevation,
         headlineContent = {
-            Text(
+            XyText(
                 text = name,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onSurface
             )
         },
         supportingContent = {
@@ -306,14 +293,10 @@ fun ItemTrailingArrowRight(
                         })
                 }
                 subordination?.let {
-                    Text(
+                    XyTextSub(
                         modifier = Modifier.padding(start = 5.dp),
                         text = subordination,
-                        style = MaterialTheme.typography.titleSmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -324,40 +307,6 @@ fun ItemTrailingArrowRight(
                 contentDescription = "${name}${stringResource(R.string.image_suffix)}"
             )
         }, trailingContent = trailingContent
-    )
-}
-
-@Composable
-fun XyItemBig(
-    modifier: Modifier = Modifier,
-    text: String,
-    color: Color = MaterialTheme.colorScheme.onSurface
-) {
-    Text(
-        modifier = modifier,
-        text = text,
-        fontWeight = FontWeight.Bold,
-        color = color,
-        style = MaterialTheme.typography.titleLarge,
-    )
-}
-
-@Composable
-fun XyItemTitle(
-    text: String,
-    modifier: Modifier = Modifier,
-    color: Color = MaterialTheme.colorScheme.onSurface,
-    fontWeight: FontWeight? = FontWeight.Bold,
-    fontSize: TextUnit = TextUnit.Unspecified,
-    style: TextStyle = MaterialTheme.typography.labelSmall
-) {
-    Text(
-        modifier = modifier,
-        text = text,
-        fontWeight = fontWeight,
-        fontSize = fontSize,
-        color = color,
-        style = style
     )
 }
 

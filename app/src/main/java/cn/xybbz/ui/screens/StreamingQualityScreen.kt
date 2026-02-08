@@ -46,6 +46,7 @@ import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyItemRadioButton
 import cn.xybbz.ui.xy.XyItemTitle
 import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.xy.XyText
 import cn.xybbz.viewmodel.StreamingQualityViewModel
 import kotlinx.coroutines.launch
 
@@ -92,7 +93,7 @@ fun StreamingQualityScreen(
             item {
                 SettingRoundedSurfaceColumn {
                     MusicSettingSwitchItemComponent(
-                        title = "任何网络都不转码",
+                        title = stringResource(R.string.any_network),
                         ifChecked = streamingQualityViewModel.ifTranscoding
                     ) { bol ->
                         coroutineScope.launch {
@@ -112,8 +113,8 @@ fun StreamingQualityScreen(
                     ),
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    XyItemTitle(
-                        text = "移动网络播放音质"
+                    XyText(
+                        text = stringResource(R.string.mobile_network_playback_sound_quality)
                     )
                 }
 
@@ -144,8 +145,8 @@ fun StreamingQualityScreen(
                     ),
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    XyItemTitle(
-                        text = "Wi-Fi网络播放音质"
+                    XyText(
+                        text = stringResource(R.string.wifi_network)
                     )
                 }
 
@@ -178,8 +179,8 @@ fun StreamingQualityScreen(
                     ),
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    XyItemTitle(
-                        text = "转码格式"
+                    XyText(
+                        text = stringResource(R.string.transcoding_format)
                     )
                 }
 

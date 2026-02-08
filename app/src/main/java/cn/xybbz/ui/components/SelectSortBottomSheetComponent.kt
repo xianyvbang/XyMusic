@@ -60,6 +60,7 @@ import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
 import cn.xybbz.ui.xy.XyItemTextIconCheckSelect
 import cn.xybbz.ui.xy.XyItemTitle
 import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.xy.XyText
 import kotlinx.coroutines.launch
 
 
@@ -422,7 +423,7 @@ private fun YearFilterComponent(
                 Text(stringResource(R.string.cancel))
             }
 
-            XyItemTitle(text = stringResource(R.string.year_selection), fontSize = 18.sp)
+            XyText(text = stringResource(R.string.year_selection))
 
             TextButton(onClick = {
                 coroutineScope.launch {
@@ -483,7 +484,7 @@ private fun YearRangeFilterComponent(
             }) {
                 Text(stringResource(R.string.cancel))
             }
-            XyItemTitle(text = stringResource(R.string.year_selection), fontSize = 18.sp)
+            XyText(text = stringResource(R.string.year_selection))
 
             TextButton(onClick = {
                 coroutineScope.launch {

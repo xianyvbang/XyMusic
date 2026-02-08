@@ -127,13 +127,14 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
-import cn.xybbz.ui.xy.XyItemBig
 import cn.xybbz.ui.xy.XyItemMedium
 import cn.xybbz.ui.xy.XyItemTabBigButton
 import cn.xybbz.ui.xy.XyItemText
 import cn.xybbz.ui.xy.XyItemTextHorizontal
 import cn.xybbz.ui.xy.XyItemTextLarge
 import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.xy.XyScreenTitle
+import cn.xybbz.ui.xy.XyText
 import cn.xybbz.viewmodel.HomeViewModel
 import kotlinx.coroutines.launch
 
@@ -301,9 +302,8 @@ fun HomeScreen(
                 }
 
             }, title = {
-                XyItemBig(
-                    text = stringResource(R.string.home),
-                    color = MaterialTheme.colorScheme.onSurface
+                XyScreenTitle(
+                    text = stringResource(R.string.home)
                 )
             }, actions = {
                 Row(
