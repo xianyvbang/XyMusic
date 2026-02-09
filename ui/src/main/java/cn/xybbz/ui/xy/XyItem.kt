@@ -44,12 +44,10 @@ import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -307,7 +305,7 @@ fun ItemTrailingArrowRight(
 }
 
 @Composable
-fun XyItemText(
+fun XyItem(
     modifier: Modifier = Modifier,
     text: String,
     sub: String?
@@ -335,7 +333,7 @@ fun XyItemText(
  * 将次要信息和主要信息样式反转
  */
 @Composable
-fun XyItemTextReversal(
+fun XyItemReversal(
     modifier: Modifier = Modifier,
     text: String,
     sub: String?
@@ -361,10 +359,10 @@ fun XyItemTextReversal(
 
 
 /**
- * bottom的hor按钮
+ * 横向带图标的文本Item
  */
 @Composable
-fun XyTextIconButton(
+fun XyItemIcon(
     modifier: Modifier = Modifier,
     imageVector: ImageVector,
     text: String,
@@ -417,11 +415,10 @@ fun XyTextIconButton(
 
 
 /**
- * 列表item 增加尾部选中显示对号Icon
- * 高度正常
+ * 带图标可选择的文本的Item
  */
 @Composable
-fun XyItemTextIconSelect(
+fun XyItemIconSelect(
     modifier: Modifier = Modifier,
     text: String,
     imageVector: ImageVector? = null,
@@ -462,7 +459,7 @@ fun XyItemTextIconSelect(
             )
 
         }
-        if (onIfSelected()){
+        if (onIfSelected()) {
             Row {
                 Icon(
                     imageVector = Icons.Rounded.Check,
@@ -479,30 +476,33 @@ fun XyItemTextIconSelect(
  * 带切换按钮的 item
  */
 @Composable
-fun XyItemSwitcherNotTextColor(
+fun XyItemSwitcher(
     modifier: Modifier = Modifier,
     state: Boolean,
     onChange: (Boolean) -> Unit,
     enabled: Boolean = true,
     text: String,
+    paddingValue: PaddingValues = PaddingValues(
+        horizontal = XyTheme.dimens.outerHorizontalPadding,
+        vertical = XyTheme.dimens.outerVerticalPadding
+    )
 ) {
     Row(
         modifier = Modifier
             .then(modifier)
             .fillMaxWidth()
-            .heightIn(min = 56.dp)
+            .heightIn(min = XyTheme.dimens.itemHeight)
             .alpha(if (enabled) 1f else 0.5f)
             .debounceClickable(enabled = enabled) {
                 onChange(!state)
             }
             .padding(
-                horizontal = XyTheme.dimens.outerHorizontalPadding,
-                vertical = XyTheme.dimens.outerVerticalPadding
+                paddingValue
             ),
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        XyTextSubSmall(
+        XyText(
             modifier = Modifier.weight(1f),
             text = text
         )
@@ -516,100 +516,22 @@ fun XyItemSwitcherNotTextColor(
     }
 }
 
+/**
+ * 竖向排列的item
+ */
 @Composable
-fun XyItemSwitcherNotPadding(
-    modifier: Modifier = Modifier,
-    state: Boolean,
-    onChange: (Boolean) -> Unit,
-    enabled: Boolean = true,
-    text: String
-) {
-    Row(
-        modifier = Modifier
-            .then(modifier)
-            .heightIn(min = 28.dp)
-            .alpha(if (enabled) 1f else 0.5f)
-            .debounceClickable(enabled = enabled) {
-                onChange(!state)
-            },
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-
-        XyTextSubSmall(
-            modifier = Modifier,
-            text = text,
-        )
-        Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
-        Switch(
-            checked = state, onCheckedChange = onChange, enabled = enabled,
-            colors = SwitchDefaults.colors(
-                uncheckedBorderColor = Color.Transparent,
-                checkedThumbColor = MaterialTheme.colorScheme.surface
-            )
-        )
-    }
-
-}
-
-@Composable
-fun XyItemTabButton(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-    text: String,
-    imageVector: ImageVector,
-    enabled: Boolean = true,
-    iconColor: Color? = null,
-    color: Color = MaterialTheme.colorScheme.surfaceContainerLowest
-) {
-    Surface(
-        enabled = enabled,
-        modifier = modifier.padding(vertical = XyTheme.dimens.contentPadding),
-        onClick = onClick,
-        color = color
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            XyRoundedSurface(color = color) {
-                Icon(
-                    imageVector = imageVector,
-                    contentDescription = text,
-                    tint = iconColor
-                        ?: if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                            alpha = 0.3f
-                        ),
-                    modifier = Modifier.padding(
-                        XyTheme.dimens.contentPadding
-                    )
-                )
-            }
-            Spacer(modifier = Modifier.height(2.dp))
-            XyTextSubSmall(
-                text = text,
-                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                    alpha = 0.3f
-                )
-            )
-        }
-
-    }
-}
-
-@Composable
-fun XyItemTabBigButton(
+fun XyItemLabel(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     text: String,
     sub: String? = null,
     imageVector: ImageVector,
     enabled: Boolean = true,
-    iconColor: Color? = null,
-    brush: Brush
+    iconColor: Color? = null
 ) {
     Column(
         modifier = modifier
-            .background(brush, RoundedCornerShape(XyTheme.dimens.corner))
+            .clip(RoundedCornerShape(XyTheme.dimens.corner))
             .debounceClickable(enabled = enabled) {
                 onClick.invoke()
             },
@@ -644,18 +566,6 @@ fun XyItemTabBigButton(
         }
 
     }
-}
-
-@Composable
-fun XyItemTextHorizontal(text: String, modifier: Modifier = Modifier) {
-    XyTextSubSmall(
-        modifier = Modifier
-            .then(modifier)
-            .padding(
-                horizontal = XyTheme.dimens.innerHorizontalPadding
-            ),
-        text = text
-    )
 }
 
 @Composable
@@ -739,55 +649,6 @@ fun XyItemSlider(
 }
 
 @Composable
-fun XyItemHorizontalSlider(
-    value: Float,
-    onValueChange: (Float) -> Unit,
-    iconVector: ImageVector? = null,
-    iconPaddingValues: PaddingValues = PaddingValues(0.dp),
-    iconColor: Color? = null,
-    text: String,
-    sub: String? = null
-) {
-    XyRowHeightSmall(
-        modifier = Modifier
-            .clip(RoundedCornerShape(XyTheme.dimens.corner))
-    ) {
-        Row(
-            modifier = Modifier,
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            iconVector?.let {
-                Icon(
-                    imageVector = iconVector,
-                    modifier = Modifier.padding(iconPaddingValues),
-                    contentDescription = text,
-                    tint = iconColor ?: LocalContentColor.current,
-                )
-            }
-
-            XyTextSubSmall(text = text)
-        }
-        Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
-        XySmallSlider(
-            modifier = Modifier.weight(7f),
-            progress = value,
-            onProgressChanged = onValueChange,
-            cacheProgressBarColor = Color.Transparent,
-        )
-        sub?.let {
-            Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
-            XyTextSubSmall(
-                text = sub,
-                modifier = Modifier.weight(2f),
-                color = Color(0xFFCBCBCB)
-            )
-        }
-    }
-}
-
-
-@Composable
 fun XyItemRadioButton(
     modifier: Modifier = Modifier,
     text: String,
@@ -805,11 +666,11 @@ fun XyItemRadioButton(
                 onClick()
             }
             .padding(
-                start = XyTheme.dimens.outerHorizontalPadding,
-                end = XyTheme.dimens.outerHorizontalPadding / 2
+                start = XyTheme.dimens.innerHorizontalPadding,
+                end = XyTheme.dimens.innerHorizontalPadding / 2
             )
     ) {
-        XyItemText(
+        XyItem(
             text = text,
             sub = sub,
             modifier = Modifier.weight(1f)

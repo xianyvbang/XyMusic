@@ -46,7 +46,7 @@ import cn.xybbz.R
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnButton
-import cn.xybbz.ui.xy.XyItemSwitcherNotTextColor
+import cn.xybbz.ui.xy.XyItemSwitcher
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyTextSubSmall
 import kotlinx.coroutines.launch
@@ -200,5 +200,5 @@ fun MusicSettingSwitchItemComponent(
     ifChecked: Boolean,
     onRouter: (Boolean) -> Unit,
 ) {
-    XyItemSwitcherNotTextColor(state = ifChecked, onChange = { onRouter(it) }, text = title)
+    XyItemSwitcher(state = ifChecked, onChange = { onRouter(it) }, text = title)
 }

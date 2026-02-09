@@ -59,7 +59,7 @@ import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.xy.LazyColumnBottomSheetComponent
 import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
 import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
-import cn.xybbz.ui.xy.XyItemTextIconSelect
+import cn.xybbz.ui.xy.XyItemIconSelect
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import kotlinx.coroutines.launch
@@ -316,7 +316,7 @@ fun SelectSortBottomSheetComponent(
         filterContent = {
             LazyColumnBottomSheetComponent(vertical = 0.dp) {
                 items(sortTypeList) { item ->
-                    XyItemTextIconSelect(
+                    XyItemIconSelect(
                         text = stringResource(item.title),
                         imageVector = item.imageVector,
                         onIfSelected = { onSortType() == item }) {
@@ -365,7 +365,7 @@ private fun AgeFilterComponent(
             color = Color.Transparent
         ) {
             onFilterEraTypeList().forEach {
-                XyItemTextIconSelect(
+                XyItemIconSelect(
                     onClick = {
                         coroutineScope
                             .launch {

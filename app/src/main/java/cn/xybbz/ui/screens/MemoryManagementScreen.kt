@@ -49,9 +49,9 @@ import cn.xybbz.ui.xy.LazyColumnHorizontalComponent
 import cn.xybbz.ui.xy.RoundedSurfaceColumn
 import cn.xybbz.ui.xy.XyButtonNotPadding
 import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyItemTextHorizontal
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
+import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.MemoryManagementViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -121,7 +121,7 @@ fun MemoryManagementScreen(
                         AlertDialogObject(
                             title = warning,
                             content = {
-                                XyItemTextHorizontal(
+                                XyTextSubSmall(
                                     text = stringResource(R.string.confirm_delete_database)
                                 )
                             },

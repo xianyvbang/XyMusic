@@ -20,6 +20,7 @@ package cn.xybbz.ui.components
 
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,6 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -42,6 +44,7 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyItemOutSpacer
+import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyScreenTitle
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -100,7 +103,7 @@ fun AlertDialogComponent() {
             XyColumn(
                 paddingValues = PaddingValues(0.dp),
                 clipSize = XyTheme.dimens.dialogCorner,
-                backgroundColor = Color.Transparent,
+//                backgroundColor = Color.Transparent,
                 modifier = Modifier
                     .clip(RoundedCornerShape(XyTheme.dimens.corner))
                     .brashColor(
@@ -116,7 +119,12 @@ fun AlertDialogComponent() {
                     )
                 }
                 XyItemOutSpacer()
-                it.content?.invoke(it)
+                XyRow(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    it.content?.invoke(it)
+                }
                 XyItemOutSpacer()
                 if (it.onDismissRequest != null || it.onConfirmation != null) {
                     Row(modifier = Modifier.padding(horizontal = XyTheme.dimens.outerHorizontalPadding)) {

@@ -70,7 +70,7 @@ import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
 import cn.xybbz.ui.xy.XyButtonNotPadding
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyItemSwitcherNotTextColor
+import cn.xybbz.ui.xy.XyItemSwitcher
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyRowButton
 import cn.xybbz.ui.xy.XyText
@@ -190,7 +190,7 @@ fun InterfaceSettingScreen(
             if (interfaceSettingViewModel.settingsManager.themeType == ThemeTypeEnum.FLOWER)
                 item {
                     RoundedSurfaceColumnPadding(color = Color.Black.copy(alpha = 0.3f)) {
-                        XyItemSwitcherNotTextColor(
+                        XyItemSwitcher(
                             state = interfaceSettingViewModel.backgroundConfig.ifChangeOneColor,
                             text = stringResource(R.string.single_color_setting),
                             onChange = {
@@ -201,7 +201,7 @@ fun InterfaceSettingScreen(
                                 }
                             })
 
-                        XyItemSwitcherNotTextColor(
+                        XyItemSwitcher(
                             state = interfaceSettingViewModel.backgroundConfig.ifGlobalBrash,
                             text = stringResource(R.string.global_gradient_setting),
                             onChange = {

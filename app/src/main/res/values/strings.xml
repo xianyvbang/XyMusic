@@ -292,7 +292,7 @@
     <string name="delete_warning">注意!!会同步删除服务端中文件</string>
     <string name="exact_alarm_permission_granted">已开启精确闹钟权限</string>
     <string name="exact_alarm_permission_not_granted">未开启精确闹钟权限</string>
-    <string name="timer_close_subtitle">定时关闭需要申请精准闹钟权限才能使用</string>
+    <string name="timer_close_subtitle">需要申请精准闹钟权限</string>
     <string name="apply_permission">申请权限</string>
     <string name="custom_timer_close">自定义定时关闭事件</string>
     <string name="max_24_hours">最大设置24小时</string>

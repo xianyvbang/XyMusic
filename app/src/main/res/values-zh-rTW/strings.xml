@@ -289,7 +289,6 @@
     <string name="delete_warning">注意！！ 會同步刪除服務端中檔</string>
     <string name="exact_alarm_permission_granted">已開啟精確鬧鐘許可權</string>
     <string name="exact_alarm_permission_not_granted">未開啟精確鬧鐘許可權</string>
-    <string name="timer_close_subtitle">定時關閉需要申請精準鬧鐘許可權才能使用</string>
     <string name="apply_permission">申請許可權</string>
     <string name="custom_timer_close">自訂定時關閉事件</string>
     <string name="max_24_hours">最大設置24小時</string>

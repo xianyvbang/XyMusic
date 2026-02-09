@@ -65,7 +65,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -89,8 +88,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -100,11 +97,9 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import cn.xybbz.R
-import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.enums.SortTypeEnum
-import cn.xybbz.common.music.MusicController
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.entity.data.Sort
@@ -136,9 +131,11 @@ import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyImage
-import cn.xybbz.ui.xy.XyItemSwitcherNotPadding
-import cn.xybbz.ui.xy.XyItemTextHorizontal
+import cn.xybbz.ui.xy.XyItemSwitcher
 import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyTextSub
+import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.AlbumInfoViewModel
 import kotlinx.coroutines.launch
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -309,7 +306,7 @@ fun AlbumInfoScreen(
                                             AlertDialogObject(
                                                 title = importPlaylistAlertTitle,
                                                 content = {
-                                                    XyItemTextHorizontal(
+                                                    XyTextSubSmall(
                                                         text = stringResource(R.string.import_playlist_hint)
                                                     )
                                                 },
@@ -387,7 +384,7 @@ fun AlbumInfoScreen(
                                             AlertDialogObject(
                                                 title = removePlaylistAlertTitle,
                                                 content = {
-                                                    XyItemTextHorizontal(
+                                                    XyTextSubSmall(
                                                         text = stringResource(
                                                             R.string.confirm_delete_playlist,
                                                             albumInfoViewModel.xyAlbumInfoData?.name
@@ -412,6 +409,26 @@ fun AlbumInfoScreen(
                                 )
                             )
                         }
+                    else
+                        IconButton(onClick = composeClick {
+                            coroutineScope.launch {
+                                val ifFavoriteData = albumInfoViewModel.dataSourceManager.setFavoriteData(
+                                    type = MusicTypeEnum.ALBUM,
+                                    itemId = albumInfoViewModel.xyAlbumInfoData?.itemId ?: "",
+                                    musicController = albumInfoViewModel.musicController,
+                                    ifFavorite = albumInfoViewModel.ifFavorite
+                                )
+                                albumInfoViewModel.updateIfFavorite(ifFavoriteData)
+                            }
+                        }) {
+                            Icon(
+                                imageVector = if (albumInfoViewModel.ifFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                                contentDescription = if (albumInfoViewModel.ifFavorite) stringResource(R.string.favorite_added) else stringResource(
+                                    R.string.favorite_removed
+                                ),
+                                tint = if (albumInfoViewModel.ifFavorite) Color.Red else LocalContentColor.current
+                            )
+                        }
                 }
             )
 
@@ -428,17 +445,13 @@ fun AlbumInfoScreen(
                         onData = {
                             albumInfoViewModel.xyAlbumInfoData
                         },
-                        onIfFavorite = { albumInfoViewModel.ifFavorite },
-                        onSetIfFavorite = { albumInfoViewModel.updateIfFavorite(it) },
                         onIfSavePlaybackHistory = { albumInfoViewModel.ifSavePlaybackHistory },
                         onSetIfSavePlaybackHistory = {
                             albumInfoViewModel.setIfSavePlaybackHistoryData(
                                 itemId,
                                 it
                             )
-                        },
-                        dataSourceManager = albumInfoViewModel.dataSourceManager,
-                        musicController = albumInfoViewModel.musicController
+                        }
                     )
                 }
                 stickyHeader(key = 2) {
@@ -455,7 +468,7 @@ fun AlbumInfoScreen(
                         modifier = Modifier.height(
                             maxHeight - DefaultAlbumInfoHeight - /*XyTheme.dimens.contentPadding -*/ TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
                                 .calculateTopPadding() + XyTheme.dimens.snackBarPlayerHeight + WindowInsets.navigationBars.asPaddingValues()
-                                .calculateBottomPadding()
+                                .calculateBottomPadding() - XyTheme.dimens.outerHorizontalPadding
                         ),
                         collectAsLazyPagingItems = musicListPage
                     ) {
@@ -664,18 +677,18 @@ private fun MusicListOperation(
 @Composable
 private fun MusicAlbumInfoComponent(
     onData: () -> XyAlbum?,
-    onIfFavorite: () -> Boolean,
-    onSetIfFavorite: (Boolean) -> Unit,
     onIfSavePlaybackHistory: () -> Boolean,
     onSetIfSavePlaybackHistory: (Boolean) -> Unit,
-    dataSourceManager: DataSourceManager,
-    musicController: MusicController,
     ifShowPlaybackHistory: Boolean = true
 ) {
-    val coroutineScope = rememberCoroutineScope()
 
     XyColumn(
-        backgroundColor = Color.Transparent
+        backgroundColor = Color.Transparent,
+        paddingValues = PaddingValues(
+            start = XyTheme.dimens.outerHorizontalPadding,
+            end = XyTheme.dimens.outerHorizontalPadding,
+            top = XyTheme.dimens.outerVerticalPadding
+        )
     ) {
         Row(
             modifier = Modifier
@@ -709,54 +722,26 @@ private fun MusicAlbumInfoComponent(
                 modifier = Modifier
                     .fillMaxHeight(),
             ) {
-                Text(
+                XyText(
                     text = onData()?.name ?: "",
-                    fontWeight = FontWeight.W700,
                     maxLines = 2,
-                    style = MaterialTheme.typography.bodySmall,
-                    overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(modifier = Modifier.height(XyTheme.dimens.contentPadding))
-                Text(
+                XyTextSub(
                     text = onData()?.artists ?: "",
                     maxLines = 3,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.W500,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
         }
         if (ifShowPlaybackHistory)
         //修改为切换开启播放历史
-            XyRow(paddingValues = PaddingValues(top = XyTheme.dimens.outerVerticalPadding)) {
-                XyItemSwitcherNotPadding(
-                    state = onIfSavePlaybackHistory(),
-                    onChange = { onSetIfSavePlaybackHistory(it) },
-                    text = stringResource(R.string.enable_playback_history)
-                )
-
-                IconButton(onClick = composeClick {
-                    coroutineScope.launch {
-                        val ifFavoriteData = dataSourceManager.setFavoriteData(
-                            type = MusicTypeEnum.ALBUM,
-                            itemId = onData()?.itemId ?: "",
-                            musicController = musicController,
-                            ifFavorite = onIfFavorite()
-                        )
-                        onSetIfFavorite(ifFavoriteData)
-                    }
-                }) {
-                    Icon(
-                        imageVector = if (onIfFavorite()) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                        contentDescription = if (onIfFavorite()) stringResource(R.string.favorite_added) else stringResource(
-                            R.string.favorite_removed
-                        ),
-                        tint = if (onIfFavorite()) Color.Red else LocalContentColor.current
-                    )
-                }
-            }
+            XyItemSwitcher(
+                state = onIfSavePlaybackHistory(),
+                onChange = { onSetIfSavePlaybackHistory(it) },
+                text = stringResource(R.string.enable_playback_history),
+                paddingValue = PaddingValues()
+            )
     }
 
 }

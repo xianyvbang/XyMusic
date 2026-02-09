@@ -45,7 +45,7 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyItemRadioButton
-import cn.xybbz.ui.xy.XyItemTextHorizontal
+import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.CacheLimitViewModel
 import kotlinx.coroutines.launch
 
@@ -110,9 +110,13 @@ fun CacheLimitScreen(
                 }
             }
             item {
-                XyItemTextHorizontal(
+                XyTextSubSmall(
                     text = stringResource(R.string.auto_cache_limit_description).trimIndent(),
-                    modifier = Modifier.padding(top = XyTheme.dimens.outerVerticalPadding)
+                    modifier = Modifier.padding(
+                        top = XyTheme.dimens.innerVerticalPadding,
+                        start = XyTheme.dimens.innerHorizontalPadding,
+                        end = XyTheme.dimens.innerHorizontalPadding
+                    )
                 )
             }
         }

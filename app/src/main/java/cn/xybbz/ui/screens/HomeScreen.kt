@@ -81,8 +81,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -127,8 +125,7 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
-import cn.xybbz.ui.xy.XyItemTabBigButton
-import cn.xybbz.ui.xy.XyItemTextHorizontal
+import cn.xybbz.ui.xy.XyItemLabel
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyScreenTitle
 import cn.xybbz.ui.xy.XyText
@@ -412,7 +409,7 @@ fun HomeScreen(
                     XyRow(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        XyItemTabBigButton(
+                        XyItemLabel(
                             modifier = Modifier
                                 .weight(1f),
                             text = stringResource(R.string.all_music),
@@ -424,15 +421,10 @@ fun HomeScreen(
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
                                 navigator.navigate(Music)
-                            },
-                            brush = Brush.linearGradient(
-                                colors = listOf(Color(0xff3b82f6), Color(0xff8b5cf6)),
-                                start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
-                                end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
-                            )
+                            }
                         )
 
-                        XyItemTabBigButton(
+                        XyItemLabel(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.local),
                             sub = if (ifShowCount) homeViewModel.localCount ?: stringResource(
@@ -442,15 +434,10 @@ fun HomeScreen(
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
                                 navigator.navigate(Local)
-                            },
-                            brush = Brush.linearGradient(
-                                colors = listOf(Color(0xFF0A7B88), Color(0xFFFFBA6C)),
-                                start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
-                                end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
-                            )
+                            }
                         )
 
-                        XyItemTabBigButton(
+                        XyItemLabel(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.album),
                             sub = if (ifShowCount) dataCount?.albumCount?.toString()
@@ -461,14 +448,9 @@ fun HomeScreen(
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
                                 navigator.navigate(Album)
-                            },
-                            brush = Brush.linearGradient(
-                                colors = listOf(Color(0xffec4899), Color(0xffa855f7)),
-                                start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
-                                end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
-                            )
+                            }
                         )
-                        XyItemTabBigButton(
+                        XyItemLabel(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.artist),
                             sub = if (ifShowCount) dataCount?.artistCount?.toString()
@@ -479,14 +461,9 @@ fun HomeScreen(
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
                                 navigator.navigate(Artist)
-                            },
-                            brush = Brush.linearGradient(
-                                colors = listOf(Color(0xff10b981), Color(0xff06b6d4)),
-                                start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
-                                end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
-                            )
+                            }
                         )
-                        XyItemTabBigButton(
+                        XyItemLabel(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.favorite),
                             sub = if (ifShowCount) dataCount?.favoriteCount?.toString()
@@ -497,15 +474,10 @@ fun HomeScreen(
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
                                 navigator.navigate(FavoriteList)
-                            },
-                            brush = Brush.linearGradient(
-                                colors = listOf(Color(0xfff97316), Color(0xfffb7185)),
-                                start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
-                                end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
-                            )
+                            }
                         )
 
-                        XyItemTabBigButton(
+                        XyItemLabel(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.genres),
                             sub = if (ifShowCount) dataCount?.genreCount?.toString()
@@ -516,31 +488,10 @@ fun HomeScreen(
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
                                 navigator.navigate(Genres)
-                            },
-                            brush = Brush.linearGradient(
-                                colors = listOf(Color(0xffc026d3), Color(0xff7e22ce)),
-                                start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
-                                end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
-                            )
+                            }
                         )
                     }
                 }
-
-                /*if (ifShowNotData) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(MusicCardImageSize + 50.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            XyItemBig(
-                                text = stringResource(R.string.no_data),
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                }*/
 
                 if (mostPlayerAlbumList.isNotEmpty()) {
                     item {
@@ -997,7 +948,7 @@ fun HomeScreen(
                                     AlertDialogObject(
                                         title = deletePlaylist,
                                         content = {
-                                            XyItemTextHorizontal(
+                                            XyTextSubSmall(
                                                 text = stringResource(
                                                     R.string.confirm_delete_playlist,
                                                     item.name

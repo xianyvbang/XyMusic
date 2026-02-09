@@ -60,7 +60,6 @@ import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
-import cn.xybbz.ui.xy.XyItemTextHorizontal
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.ConnectionConfigInfoViewModel
 import kotlinx.coroutines.launch
@@ -243,7 +242,7 @@ fun ConnectionConfigInfoScreen(
                                 AlertDialogObject(
                                     title = warning,
                                     content = {
-                                        XyItemTextHorizontal(
+                                        XyTextSubSmall(
                                             text = stringResource(R.string.confirm_delete_connection)
                                         )
                                     },

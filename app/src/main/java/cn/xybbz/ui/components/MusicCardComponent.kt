@@ -59,7 +59,7 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.xy.XyImage
-import cn.xybbz.ui.xy.XyItemText
+import cn.xybbz.ui.xy.XyItem
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 /**
@@ -119,7 +119,7 @@ fun MusicCardComponent(
         Spacer(modifier = Modifier.height(3.dp))
 
 
-        XyItemText(
+        XyItem(
             modifier = Modifier
                 .then(modifier)
                 .fillMaxWidth()

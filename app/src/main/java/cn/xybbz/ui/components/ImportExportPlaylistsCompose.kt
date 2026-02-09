@@ -33,7 +33,7 @@ import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyColumn
-import cn.xybbz.ui.xy.XyItemTextHorizontal
+import cn.xybbz.ui.xy.XyTextSubSmall
 import kotlinx.coroutines.launch
 
 /**
@@ -134,7 +134,7 @@ fun ExportPlaylistsCompose(
         backgroundColor = Color.Transparent,
         paddingValues = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding)
     ) {
-        XyItemTextHorizontal(
+        XyTextSubSmall(
             text = stringResource(R.string.please_select_export_format)
         )
         Row(

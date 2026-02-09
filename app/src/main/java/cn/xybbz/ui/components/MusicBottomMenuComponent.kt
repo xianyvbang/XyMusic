@@ -33,6 +33,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -54,7 +55,6 @@ import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.SettingsVoice
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Speed
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -103,13 +103,12 @@ import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
 import cn.xybbz.ui.xy.XyButtonHorizontalPadding
 import cn.xybbz.ui.xy.XyColumnNotHorizontalPadding
 import cn.xybbz.ui.xy.XyEdit
+import cn.xybbz.ui.xy.XyItemIcon
+import cn.xybbz.ui.xy.XyItemReversal
 import cn.xybbz.ui.xy.XyItemSlider
-import cn.xybbz.ui.xy.XyItemSwitcherNotTextColor
-import cn.xybbz.ui.xy.XyItemTextHorizontal
-import cn.xybbz.ui.xy.XyItemTextReversal
+import cn.xybbz.ui.xy.XyItemSwitcher
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XySmallSlider
-import cn.xybbz.ui.xy.XyTextIconButton
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.MusicBottomMenuViewModel
@@ -302,7 +301,7 @@ fun MusicBottomMenuComponent(
                 }
 
                 item {
-                    XyTextIconButton(
+                    XyItemIcon(
                         imageVector = Icons.Rounded.Download,
 //                        enabled = musicBottomMenuViewModel.dataSourceManager.getCanDownload(),
                         text = stringResource(R.string.download),
@@ -313,7 +312,7 @@ fun MusicBottomMenuComponent(
 
 
                 item {
-                    XyTextIconButton(
+                    XyItemIcon(
                         imageVector = Icons.Rounded.Person,
                         text = "${stringResource(R.string.artist)}: ${music.artists}",
                         onClick = {
@@ -344,7 +343,7 @@ fun MusicBottomMenuComponent(
                 }
 
                 item {
-                    XyTextIconButton(
+                    XyItemIcon(
                         imageVector = Icons.Rounded.Album,
                         text = "${stringResource(R.string.album)}: ${music.albumName ?: ""}",
                         onClick = {
@@ -362,7 +361,7 @@ fun MusicBottomMenuComponent(
                 }
 
                 item {
-                    XyTextIconButton(
+                    XyItemIcon(
                         imageVector = Icons.Rounded.KeyboardDoubleArrowRight,
                         text = stringResource(R.string.skip_head_tail),
                         onClick = {
@@ -379,7 +378,7 @@ fun MusicBottomMenuComponent(
 
 
                 item {
-                    XyTextIconButton(
+                    XyItemIcon(
                         imageVector = Icons.Rounded.AvTimer,
                         text = stringResource(R.string.timer_close),
                         onClick = {
@@ -394,7 +393,7 @@ fun MusicBottomMenuComponent(
                 }
 
                 item {
-                    XyTextIconButton(
+                    XyItemIcon(
                         imageVector = Icons.Rounded.Speed,
                         text = stringResource(R.string.double_speed),
                         onClick = {
@@ -410,7 +409,7 @@ fun MusicBottomMenuComponent(
 
 
                 item {
-                    XyTextIconButton(
+                    XyItemIcon(
                         imageVector = Icons.Rounded.Add,
                         text = stringResource(R.string.add_to_playlist),
                         onClick = {
@@ -429,7 +428,7 @@ fun MusicBottomMenuComponent(
                 }
 
                 item {
-                    XyTextIconButton(
+                    XyItemIcon(
                         text = stringResource(R.string.volume_value_setting),
                         sub = (musicBottomMenuViewModel.volumeValue * 100).toInt().toString(),
                         imageVector = Icons.AutoMirrored.Rounded.VolumeUp,
@@ -446,7 +445,7 @@ fun MusicBottomMenuComponent(
                 }
 
                 item {
-                    XyTextIconButton(
+                    XyItemIcon(
                         imageVector = Icons.Rounded.SettingsVoice,
                         text = "${stringResource(R.string.play_settings)}: ${
                             musicBottomMenuViewModel.getFadeDurationMs().toSecondMsString()
@@ -463,7 +462,7 @@ fun MusicBottomMenuComponent(
                 }
 
                 item {
-                    XyTextIconButton(
+                    XyItemIcon(
                         imageVector = Icons.AutoMirrored.Rounded.PlaylistAdd,
                         text = stringResource(R.string.play_next),
                         onClick = {
@@ -482,7 +481,7 @@ fun MusicBottomMenuComponent(
                 }
 
                 item {
-                    XyTextIconButton(
+                    XyItemIcon(
                         imageVector = Icons.Rounded.Share,
                         text = stringResource(R.string.share_song),
                         onClick = {
@@ -525,7 +524,7 @@ fun MusicBottomMenuComponent(
                 }
 
                 item {
-                    XyTextIconButton(
+                    XyItemIcon(
                         imageVector = Icons.Rounded.Info,
                         text = stringResource(R.string.song_info),
                         onClick = {
@@ -540,14 +539,14 @@ fun MusicBottomMenuComponent(
                 }
                 if (ifDelete) {
                     item {
-                        XyTextIconButton(
+                        XyItemIcon(
                             imageVector = Icons.Rounded.DeleteForever,
                             text = deletePermanently,
                             onClick = {
                                 AlertDialogObject(
                                     title = deletePermanently,
                                     content = {
-                                        XyItemTextHorizontal(
+                                        XyTextSubSmall(
                                             text = stringResource(R.string.delete_warning)
                                         )
                                     },
@@ -706,11 +705,13 @@ fun TimerComponent(
             onSetIfTimer(it)
         },
         titleText = stringResource(R.string.timer_close),
-        titleSub = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) stringResource(R.string.timer_close_subtitle) else null,
+        titleSub = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !ifCanScheduleExactAlarms) stringResource(
+            R.string.timer_close_subtitle
+        ) else null,
         titleTailContent = if (!ifCanScheduleExactAlarms) {
             {
                 OutlinedButton(
-                    modifier = Modifier.size(height = 25.dp, width = 50.dp),
+                    modifier = Modifier/*size(height = 25.dp, width = 50.dp)*/.height(25.dp),
                     contentPadding = PaddingValues(horizontal = 2.dp),
                     onClick = {
                         onApplyPermission()
@@ -809,15 +810,33 @@ fun TimerComponent(
         )
 
         XyRow {
-            XyTextSubSmall(text = stringResource(R.string.timer_close_disabled))
-            XyTextSubSmall(text = "15${stringResource(R.string.minutes)}")
-            XyTextSubSmall(text = "30${stringResource(R.string.minutes)}")
-            XyTextSubSmall(text = "45${stringResource(R.string.minutes)}")
-            XyTextSubSmall(text = "60${stringResource(R.string.minutes)}")
-            XyTextSubSmall(text = stringResource(R.string.timer_close_custom))
+            XyTextSubSmall(
+                text = stringResource(R.string.timer_close_disabled),
+                color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            XyTextSubSmall(
+                text = "15${stringResource(R.string.minutes)}",
+                color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            XyTextSubSmall(
+                text = "30${stringResource(R.string.minutes)}",
+                color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            XyTextSubSmall(
+                text = "45${stringResource(R.string.minutes)}",
+                color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            XyTextSubSmall(
+                text = "60${stringResource(R.string.minutes)}",
+                color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            XyTextSubSmall(
+                text = stringResource(R.string.timer_close_custom),
+                color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
-        XyItemSwitcherNotTextColor(
+        XyItemSwitcher(
             state = onIfPlayEndClose(),
             enabled = ifCanScheduleExactAlarms,
             onChange = {
@@ -1074,33 +1093,33 @@ fun MusicInfoBottomComponent(
     ) {
 
         LazyColumnBottomSheetComponent(horizontal = XyTheme.dimens.outerHorizontalPadding) {
-            item { XyItemTextReversal(text = stringResource(R.string.title), sub = musicInfo.name) }
+            item { XyItemReversal(text = stringResource(R.string.title), sub = musicInfo.name) }
             item {
-                XyItemTextReversal(
+                XyItemReversal(
                     text = stringResource(R.string.artist),
                     sub = musicInfo.artists?.joinToString() ?: ""
                 )
             }
             item {
-                XyItemTextReversal(
+                XyItemReversal(
                     text = stringResource(R.string.album),
                     sub = musicInfo.albumName ?: ""
                 )
             }
             item {
-                XyItemTextReversal(
+                XyItemReversal(
                     text = stringResource(R.string.album_artist),
                     sub = musicInfo.albumArtist?.joinToString() ?: ""
                 )
             }
             item {
-                XyItemTextReversal(
+                XyItemReversal(
                     text = stringResource(R.string.media_source),
                     sub = dataSourceType?.title ?: ""
                 )
             }
             item {
-                XyItemTextReversal(
+                XyItemReversal(
                     text = stringResource(R.string.duration),
                     sub = millisecondsToTime(
                         BigDecimal(
@@ -1110,25 +1129,25 @@ fun MusicInfoBottomComponent(
                 )
             }
             item {
-                XyItemTextReversal(
+                XyItemReversal(
                     text = stringResource(R.string.bitrate),
                     sub = "${(musicInfo.bitRate ?: 0) / 1000}kbps"
                 )
             }
             item {
-                XyItemTextReversal(
+                XyItemReversal(
                     text = stringResource(R.string.sample_rate),
                     sub = "${musicInfo.sampleRate ?: 0}Hz"
                 )
             }
             item {
-                XyItemTextReversal(
+                XyItemReversal(
                     text = stringResource(R.string.bit_depth),
                     sub = "${musicInfo.bitDepth ?: 0}bit"
                 )
             }
             item {
-                XyItemTextReversal(
+                XyItemReversal(
                     text = stringResource(R.string.size),
                     sub = "${
                         BigDecimal(musicInfo.size ?: 0).divide(BigDecimal(1024))
@@ -1139,19 +1158,19 @@ fun MusicInfoBottomComponent(
                 )
             }
             item {
-                XyItemTextReversal(
+                XyItemReversal(
                     text = stringResource(R.string.format),
                     sub = musicInfo.container ?: ""
                 )
             }
             item {
-                XyItemTextReversal(
+                XyItemReversal(
                     text = stringResource(R.string.actual_path),
                     sub = musicInfo.path
                 )
             }
             item {
-                XyItemTextReversal(
+                XyItemReversal(
                     text = stringResource(R.string.add_time),
                     sub = musicInfo.createTime.toDateStr(
                         "yyyy/MM/dd HH:mm"
