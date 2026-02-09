@@ -23,21 +23,22 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import cn.xybbz.R
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
-import cn.xybbz.ui.xy.XyItemMedium
 import cn.xybbz.ui.xy.XyNoData
+import cn.xybbz.ui.xy.XyText
 
 @Composable
 fun MusicPlayerSimilarPopularComponent(
@@ -61,13 +62,12 @@ fun MusicPlayerSimilarPopularComponent(
         bottomItem = null,
     ) {
         item {
-            XyItemMedium(
+            XyText(
                 modifier = Modifier.padding(
                     vertical = XyTheme.dimens.outerVerticalPadding,
                     horizontal = XyTheme.dimens.outerHorizontalPadding
                 ),
-                text = "热门歌曲",
-                color = MaterialTheme.colorScheme.onSurface
+                text = stringResource(R.string.top_music)
             )
         }
         if (mainViewModel.popularMusicList.isEmpty())
@@ -103,13 +103,12 @@ fun MusicPlayerSimilarPopularComponent(
             )
         }
         item {
-            XyItemMedium(
+            XyText(
                 modifier = Modifier.padding(
                     vertical = XyTheme.dimens.outerVerticalPadding,
                     horizontal = XyTheme.dimens.outerHorizontalPadding
                 ),
-                text = "相似歌曲",
-                color = MaterialTheme.colorScheme.onSurface
+                text = stringResource(R.string.similar_music)
             )
         }
 

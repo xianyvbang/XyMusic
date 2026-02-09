@@ -24,12 +24,14 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +43,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.sp
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.theme.XyTheme
 
@@ -49,7 +50,7 @@ import cn.xybbz.ui.theme.XyTheme
 @Composable
 fun ModalBottomSheetExtendComponent(
     modifier: Modifier = Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.background,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
     contentWindowInsets: @Composable () -> WindowInsets = {
         WindowInsets.Companion.systemBars.only(
             WindowInsetsSides.Top
@@ -93,9 +94,10 @@ fun ModalBottomSheetExtendComponent(
                     titleText?.let {
                         XyRow(
                             paddingValues = PaddingValues(
-                                start = XyTheme.dimens.outerHorizontalPadding,
-                                end = XyTheme.dimens.outerHorizontalPadding,
-                                bottom = XyTheme.dimens.outerVerticalPadding
+                                top = XyTheme.dimens.innerVerticalPadding,
+                                start = XyTheme.dimens.innerHorizontalPadding,
+                                end = XyTheme.dimens.innerHorizontalPadding,
+                                bottom = XyTheme.dimens.innerVerticalPadding
                             )
                         ) {
                             Column(
@@ -104,6 +106,7 @@ fun ModalBottomSheetExtendComponent(
                                 horizontalAlignment = Alignment.Start
                             ) {
                                 XyText(text = titleText)
+                                Spacer(modifier = Modifier.width(XyTheme.dimens.innerHorizontalPadding))
                                 titleSub?.let {
                                     Text(
                                         text = titleSub,

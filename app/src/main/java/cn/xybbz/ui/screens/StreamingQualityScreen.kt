@@ -44,7 +44,6 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyItemRadioButton
-import cn.xybbz.ui.xy.XyItemTitle
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.viewmodel.StreamingQualityViewModel
@@ -125,7 +124,6 @@ fun StreamingQualityScreen(
                     TranscodeAudioBitRateType.entries.forEach {
                         XyItemRadioButton(
                             text = it.audioBitRateStr,
-                            style = MaterialTheme.typography.titleSmall,
                             selected = streamingQualityViewModel.mobileNetworkAudioBitRate == it,
                             onClick = {
                                 coroutineScope.launch {
@@ -157,7 +155,6 @@ fun StreamingQualityScreen(
                     TranscodeAudioBitRateType.entries.forEach {
                         XyItemRadioButton(
                             text = it.audioBitRateStr,
-                            style = MaterialTheme.typography.titleSmall,
                             selected = streamingQualityViewModel.wifiNetworkAudioBitRate == it,
                             onClick = {
                                 coroutineScope.launch {
@@ -191,7 +188,6 @@ fun StreamingQualityScreen(
                     streamingQualityViewModel.transcodeAudioBitRateType.forEach {
                         XyItemRadioButton(
                             text = it.name,
-                            style = MaterialTheme.typography.titleSmall,
                             selected = streamingQualityViewModel.transcodeFormat == it.targetFormat,
                             onClick = {
                                 coroutineScope.launch {

@@ -127,14 +127,12 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
-import cn.xybbz.ui.xy.XyItemMedium
 import cn.xybbz.ui.xy.XyItemTabBigButton
-import cn.xybbz.ui.xy.XyItemText
 import cn.xybbz.ui.xy.XyItemTextHorizontal
-import cn.xybbz.ui.xy.XyItemTextLarge
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyScreenTitle
 import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.HomeViewModel
 import kotlinx.coroutines.launch
 
@@ -335,7 +333,7 @@ fun HomeScreen(
                                                 )
                                                 if (homeViewModel.dataSourceManager.errorMessage.isNotBlank()) {
                                                     HorizontalDivider()
-                                                    XyItemText(text = homeViewModel.dataSourceManager.errorMessage)
+                                                    XyTextSubSmall(text = homeViewModel.dataSourceManager.errorMessage)
                                                 }
                                             }
                                         }
@@ -547,10 +545,9 @@ fun HomeScreen(
                 if (mostPlayerAlbumList.isNotEmpty()) {
                     item {
                         XyRow {
-                            XyItemMedium(
+                            XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
                                 text = stringResource(R.string.most_played),
-                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -584,10 +581,9 @@ fun HomeScreen(
                 if (mostPlayerMusicList.isNotEmpty()) {
                     item {
                         XyRow {
-                            XyItemMedium(
+                            XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(R.string.most_played),
-                                color = MaterialTheme.colorScheme.onSurface
+                                text = stringResource(R.string.most_played)
                             )
 
                             Row(
@@ -661,10 +657,9 @@ fun HomeScreen(
                 if (recommendedMusicList.isNotEmpty()) {
                     item {
                         XyRow {
-                            XyItemMedium(
+                            XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(R.string.daily_recommendations),
-                                color = MaterialTheme.colorScheme.onSurface
+                                text = stringResource(R.string.daily_recommendations)
                             )
 
                             Row(
@@ -705,9 +700,8 @@ fun HomeScreen(
                                 TextButton(onClick = composeClick {
                                     navigator.navigate(DailyRecommend)
                                 }, contentPadding = PaddingValues()) {
-                                    XyItemTextLarge(
-                                        text = stringResource(R.string.view_more),
-                                        color = Color(0xFFC6E5F5)
+                                    XyText(
+                                        text = stringResource(R.string.view_more)
                                     )
                                 }
 
@@ -746,10 +740,9 @@ fun HomeScreen(
                 if (newAlbumList.isNotEmpty()) {
                     item {
                         XyRow {
-                            XyItemMedium(
+                            XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(R.string.latest_albums),
-                                color = MaterialTheme.colorScheme.onSurface
+                                text = stringResource(R.string.latest_albums)
                             )
                         }
                     }
@@ -782,10 +775,9 @@ fun HomeScreen(
                 if (albumRecentlyList.isNotEmpty()) {
                     item {
                         XyRow {
-                            XyItemMedium(
+                            XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(R.string.recently_played_albums),
-                                color = MaterialTheme.colorScheme.onSurface
+                                text = stringResource(R.string.recently_played_albums)
                             )
                         }
                     }
@@ -819,10 +811,9 @@ fun HomeScreen(
                 if (musicRecentlyList.isNotEmpty()) {
                     item {
                         XyRow {
-                            XyItemMedium(
+                            XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(R.string.recently_played_music),
-                                color = MaterialTheme.colorScheme.onSurface
+                                text = stringResource(R.string.recently_played_music)
                             )
 
                             Row(
@@ -896,10 +887,9 @@ fun HomeScreen(
 
                 item {
                     XyRow {
-                        XyItemMedium(
+                        XyText(
                             modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                            text = stringResource(R.string.playlist),
-                            color = MaterialTheme.colorScheme.onSurface
+                            text = stringResource(R.string.playlist)
                         )
                         Box(contentAlignment = Alignment.CenterEnd) {
                             XyDropdownMenu(
@@ -1054,7 +1044,7 @@ fun HomeScreen(
                             modifier = Modifier.height(40.dp),
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            XyItemText(text = stringResource(R.string.no_playlists))
+                            XyTextSubSmall(text = stringResource(R.string.no_playlists))
                         }
                     }
                 }

@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.ui.screens
 
 import android.util.Log
@@ -62,9 +80,9 @@ import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyItemTextLarge
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.AboutViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.launch
@@ -88,6 +106,9 @@ fun AboutScreen(
     val permissionState = downloadPermission(ifDownloadApk = true) {
         aboutViewModel.downloadAndInstall()
     }
+
+    val newVersionDownload = stringResource(R.string.new_version_download)
+
     LaunchedEffect(apkDownloadInfo) {
         Log.i("=====", "数据变化 ${apkDownloadInfo}")
     }
@@ -164,9 +185,10 @@ fun AboutScreen(
                     coroutineScope.launch {
                         val initLatestVersion =
                             aboutViewModel.apkUpdateManager.initLatestVersion(true)
-                        if (initLatestVersion && !aboutViewModel.apkUpdateManager.ifMaxVersion) {
+//                        if (initLatestVersion && !aboutViewModel.apkUpdateManager.ifMaxVersion) {
+                        if (true) {
                             AlertDialogObject(
-                                title = context.getString(R.string.new_version_download),
+                                title = newVersionDownload,
                                 content = {
                                     XyColumn(backgroundColor = Color.Transparent) {
                                         LazyColumnBottomSheetComponent(
@@ -175,11 +197,11 @@ fun AboutScreen(
                                             )
                                         ) {
                                             item {
-                                                XyItemTextLarge(text = "${aboutViewModel.apkUpdateManager.releasesInfo?.body}")
+                                                XyTextSub(text = "${aboutViewModel.apkUpdateManager.releasesInfo?.body}")
                                             }
                                         }
                                         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                                        XyItemTextLarge(text = "${stringResource(R.string.version_number)}: ${aboutViewModel.apkUpdateManager.latestVersion}")
+                                        XyTextSub(text = "${stringResource(R.string.version_number)}: ${aboutViewModel.apkUpdateManager.latestVersion}")
                                         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
                                         LinearProgressIndicator(
                                             progress = {
@@ -201,7 +223,7 @@ fun AboutScreen(
                                         BasicText(text = "${stringResource(R.string.current_download_progress)}: ${apkDownloadInfo?.progress ?: 0f}%")
                                         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
                                         if (apkDownloadInfo?.status == DownloadStatus.FAILED) {
-                                            XyItemTextLarge(
+                                            XyTextSub(
                                                 text = stringResource(R.string.download_failed),
                                                 color = MaterialTheme.colorScheme.onErrorContainer
                                             )

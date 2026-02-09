@@ -97,13 +97,14 @@ import cn.xybbz.ui.xy.LazyColumnNotHorizontalComponent
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnNotHorizontalPadding
 import cn.xybbz.ui.xy.XyItemOutSpacer
-import cn.xybbz.ui.xy.XyItemTextCheckSelectHeightSmall
-import cn.xybbz.ui.xy.XyItemTextLarge
-import cn.xybbz.ui.xy.XyItemTextPadding
+import cn.xybbz.ui.xy.XyItemRadioButton
 import cn.xybbz.ui.xy.XyLoadingItem
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyRowHeightSmall
 import cn.xybbz.ui.xy.XySmallImage
+import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyTextSub
+import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.ConnectionViewModel
 import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
@@ -463,7 +464,7 @@ fun ConnectionScreen(
                                             )
                                         ) {
                                             itemsIndexed(connectionViewModel.tmpAddressList) { index, item ->
-                                                XyItemTextCheckSelectHeightSmall(
+                                                XyItemRadioButton(
                                                     text = item,
                                                     selected = index == connectionViewModel.selectUrlIndex,
                                                     onClick = {
@@ -546,12 +547,12 @@ fun ConnectionScreen(
                                             horizontalArrangement = Arrangement.Center,
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            XyItemTextLarge(text = stringResource(R.string.login_failed))
+                                            XyText(text = stringResource(R.string.login_failed))
                                         }
-                                        XyItemTextPadding(text = stringResource(connectionViewModel.errorHint))
+                                        XyTextSubSmall(text = stringResource(connectionViewModel.errorHint))
                                         XyItemOutSpacer()
                                         if (connectionViewModel.errorMessage.isNotBlank())
-                                            XyItemTextPadding(text = connectionViewModel.errorMessage)
+                                            XyTextSub(text = connectionViewModel.errorMessage)
                                     }
                                 }
                                 item {
@@ -576,7 +577,7 @@ fun ConnectionScreen(
                                 item {
 
                                     XyColumn {
-                                        XyItemTextLarge(text = stringResource(R.string.connection_successful))
+                                        XyText(text = stringResource(R.string.connection_successful))
                                         XySmallImage(
                                             modifier = Modifier.size(150.dp),
                                             shape = RoundedCornerShape(XyTheme.dimens.corner),

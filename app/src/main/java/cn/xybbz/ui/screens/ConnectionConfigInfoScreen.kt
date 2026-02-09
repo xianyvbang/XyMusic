@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.ui.screens
 
 import android.content.ClipData
@@ -12,7 +30,6 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -43,9 +60,8 @@ import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
-import cn.xybbz.ui.xy.XyItemText
 import cn.xybbz.ui.xy.XyItemTextHorizontal
-import cn.xybbz.ui.xy.XyItemTextPadding
+import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.ConnectionConfigInfoViewModel
 import kotlinx.coroutines.launch
 
@@ -65,6 +81,9 @@ fun ConnectionConfigInfoScreen(
     val navigator = LocalNavigator.current
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val copySuccess = stringResource(R.string.copy_success)
+    val cannotDeleteCurrentConnection = stringResource(R.string.cannot_delete_current_connection)
+    val warning = stringResource(R.string.warning)
 
     XyColumnScreen(
         modifier =
@@ -105,17 +124,11 @@ fun ConnectionConfigInfoScreen(
                         )
                         .height(20.dp),
                     content = {
-                        XyItemText(text = "${connectionConfigInfoViewModel.connectionConfig?.name} ${connectionConfigInfoViewModel.connectionConfig?.serverVersion}")
+                        XyTextSubSmall(text = "${connectionConfigInfoViewModel.connectionConfig?.name} ${connectionConfigInfoViewModel.connectionConfig?.serverVersion}")
                     }
                 )
             }
 
-            item {
-                XyItemTextPadding(
-                    text = stringResource(R.string.user_settings),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
             item {
                 RoundedSurfaceColumnPadding(
                     brush = Brush.horizontalGradient(
@@ -137,7 +150,7 @@ fun ConnectionConfigInfoScreen(
                                 )
                             clipboardManager.setClipEntry(ClipEntry(clipData))
                         }.invokeOnCompletion {
-                            MessageUtils.sendPopTip(context.getString(R.string.copy_success))
+                            MessageUtils.sendPopTip(copySuccess)
                         }
                     }
                     SettingItemComponent(
@@ -157,12 +170,6 @@ fun ConnectionConfigInfoScreen(
                 }
             }
 
-            item {
-                XyItemTextPadding(
-                    text = stringResource(R.string.media_library_management),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
             item {
                 RoundedSurfaceColumnPadding(
                     brush = Brush.horizontalGradient(
@@ -230,11 +237,11 @@ fun ConnectionConfigInfoScreen(
                         onClick = {
                             if (connectionConfigInfoViewModel.getConnectionId() == connectionId) {
                                 MessageUtils.sendPopTipError(
-                                    context.getString(R.string.cannot_delete_current_connection),
+                                    cannotDeleteCurrentConnection
                                 )
                             } else {
                                 AlertDialogObject(
-                                    title = context.getString(R.string.warning),
+                                    title = warning,
                                     content = {
                                         XyItemTextHorizontal(
                                             text = stringResource(R.string.confirm_delete_connection)
@@ -267,6 +274,6 @@ private fun ConnectionInfoTextItem(title: String, info: String, onClick: (() -> 
         title = title,
         onClick = onClick,
         trailingContent = {
-            XyItemText(text = info)
+            XyTextSubSmall(text = info)
         })
 }

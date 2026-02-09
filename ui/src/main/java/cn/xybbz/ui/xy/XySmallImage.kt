@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.R
 import coil.compose.AsyncImage
@@ -39,12 +40,13 @@ import coil.compose.AsyncImagePainter.State
 fun XySmallImage(
     modifier: Modifier = Modifier,
     model: Any?,
+    size: Dp = 50.dp,
     contentDescription: String? = null
 ) {
     XyImage(
         modifier = Modifier
             .then(modifier)
-            .size(44.dp)
+            .size(size)
             .aspectRatio(1F)
             .clip(RoundedCornerShape(8.dp)),
         model = model,

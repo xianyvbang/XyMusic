@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cn.xybbz.R
 import cn.xybbz.entity.data.ext.joinToString
@@ -185,29 +186,41 @@ fun MusicItemNotClickComponent(
     music: XyMusic,
     ifDownload: Boolean,
     ifPlay: Boolean = false,
-    subordination: String? = null,
     backgroundColor: Color = MaterialTheme.colorScheme.background,
-    brush: Brush? = null
+    picSize: Dp = 62.dp,
+    brush: Brush? = null,
+    trailingIcon: ImageVector,
+    trailingOnClick: () -> Unit,
+    trailingColor: Color
 ) {
 
-    MusicItemComponent(
-        itemId = music.itemId,
+    ItemTrailingContent(
         name = music.name,
-        album = music.album,
-        artists = music.artists?.joinToString(),
-        pic = music.pic,
-        codec = music.codec,
-        bitRate = music.bitRate,
-        subordination = subordination,
+        subordination = music.artists?.joinToString(),
+        imgUrl = music.pic,
+        media = getMusicMedia(music.codec, music.bitRate),
         backgroundColor = backgroundColor,
+        picSize = picSize,
         brush = brush,
         modifier = modifier,
-        onIfFavorite = { false },
+        favoriteState = false,
         ifDownload = ifDownload,
         ifPlay = ifPlay,
-        ifShowTrailingContent = false,
-        trailingOnClick = {},
-        onMusicPlay = {},
+        trailingContent = {
+            IconButton(
+                modifier = Modifier.offset(x = (10).dp),
+                onClick = {
+                    trailingOnClick.invoke()
+                },
+            ) {
+                Icon(
+                    imageVector = trailingIcon,
+                    contentDescription = stringResource(R.string.favorite_button),
+                    tint = trailingColor
+                )
+            }
+
+        }
     )
 }
 

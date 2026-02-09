@@ -49,8 +49,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cn.xybbz.R
-import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.UiConstants.MusicCardImageSize
+import cn.xybbz.common.constants.Constants
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist

@@ -20,6 +20,7 @@ package cn.xybbz.viewmodel
 
 import androidx.paging.PagingData
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.select.SelectControl
@@ -32,6 +33,7 @@ import cn.xybbz.localdata.data.music.XyMusic
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
@@ -45,8 +47,7 @@ class MusicViewModel @Inject constructor(
     val musicController: MusicController,
     val selectControl: SelectControl,
     val backgroundConfig: BackgroundConfig
-) : PageListViewModel<HomeMusic>(dataSourceManager) {
-
+) : PageListViewModel<HomeMusic>(dataSourceManager,SortTypeEnum.MUSIC_NAME_ASC) {
 
     val downloadMusicIdsFlow =
         db.downloadDao.getAllMusicTaskUidsFlow()

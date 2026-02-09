@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.Box
@@ -53,9 +71,9 @@ import cn.xybbz.ui.xy.XyButtonNotPadding
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyItemSwitcherNotTextColor
-import cn.xybbz.ui.xy.XyItemTitlePadding
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyRowButton
+import cn.xybbz.ui.xy.XyText
 import cn.xybbz.viewmodel.InterfaceSettingViewModel
 import com.github.skydoves.colorpicker.compose.AlphaSlider
 import com.github.skydoves.colorpicker.compose.AlphaTile
@@ -927,10 +945,12 @@ private fun BrashColorConfigItem(
             }, onDismissRequest = {}).show()
 
     }) {
-        XyItemTitlePadding(
-            modifier = Modifier, text = title, paddingValues = PaddingValues(
-                vertical = XyTheme.dimens.innerVerticalPadding
-            )
+        XyText(
+            modifier = Modifier.padding(
+                PaddingValues(
+                    vertical = XyTheme.dimens.innerVerticalPadding
+                )
+            ), text = title
         )
 
         if (onIfChangeOneColor())
@@ -1006,10 +1026,12 @@ private fun ColorConfigItem(
             }, onDismissRequest = {}).show()
 
     }) {
-        XyItemTitlePadding(
-            modifier = Modifier, text = title, paddingValues = PaddingValues(
-                vertical = XyTheme.dimens.innerVerticalPadding
-            )
+        XyText(
+            modifier = Modifier.padding(
+                PaddingValues(
+                    vertical = XyTheme.dimens.innerVerticalPadding
+                )
+            ), text = title
         )
 
         Box(

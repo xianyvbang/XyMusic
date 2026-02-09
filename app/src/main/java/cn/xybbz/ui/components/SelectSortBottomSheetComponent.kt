@@ -19,8 +19,10 @@
 package cn.xybbz.ui.components
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.MenuOpen
 import androidx.compose.material.icons.automirrored.rounded.Sort
@@ -47,7 +49,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cn.xybbz.R
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.DateUtil
@@ -55,10 +56,10 @@ import cn.xybbz.localdata.data.era.XyEraItem
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
+import cn.xybbz.ui.xy.LazyColumnBottomSheetComponent
 import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
 import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
-import cn.xybbz.ui.xy.XyItemTextIconCheckSelect
-import cn.xybbz.ui.xy.XyItemTitle
+import cn.xybbz.ui.xy.XyItemTextIconSelect
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import kotlinx.coroutines.launch
@@ -81,13 +82,14 @@ fun SelectSortBottomSheet(
     ),
     ifDisplay: () -> Boolean,
     onSetDisplay: (Boolean) -> Unit,
-    filterContent: @Composable () -> Unit
+    filterContent: @Composable ColumnScope.() -> Unit
 ) {
     ModalBottomSheetExtendComponent(
         bottomSheetState = bottomSheetState,
         modifier = modifier,
         onIfDisplay = ifDisplay,
         onClose = onSetDisplay,
+        dragHandle = null,
         titleText = stringResource(R.string.select_sort_method)
     ) {
         filterContent()
@@ -312,13 +314,11 @@ fun SelectSortBottomSheetComponent(
         ifDisplay = { ifOpenSortBottom },
         onSetDisplay = { ifOpenSortBottom = it },
         filterContent = {
-            RoundedSurfaceColumnPadding(
-                color = Color.Transparent
-            ) {
-                sortTypeList.forEach { item ->
-                    XyItemTextIconCheckSelect(
+            LazyColumnBottomSheetComponent(vertical = 0.dp) {
+                items(sortTypeList) { item ->
+                    XyItemTextIconSelect(
                         text = stringResource(item.title),
-                        icon = item.imageVector,
+                        imageVector = item.imageVector,
                         onIfSelected = { onSortType() == item }) {
                         coroutineScope.launch {
                             if (onSortType() == item) {
@@ -365,7 +365,7 @@ private fun AgeFilterComponent(
             color = Color.Transparent
         ) {
             onFilterEraTypeList().forEach {
-                XyItemTextIconCheckSelect(
+                XyItemTextIconSelect(
                     onClick = {
                         coroutineScope
                             .launch {

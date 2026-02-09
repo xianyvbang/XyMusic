@@ -34,9 +34,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 
-abstract class PageListViewModel<T: Any>(dataSourceManager: DataSourceManager) : ViewModel() {
+abstract class PageListViewModel<T : Any>(
+    dataSourceManager: DataSourceManager,
+    defaultSortType: SortTypeEnum
+) : ViewModel() {
 
-    private val _sortType = MutableStateFlow(Sort())
+    private val _sortType = MutableStateFlow(Sort(defaultSortType))
 
     val sortBy: StateFlow<Sort> = _sortType.asStateFlow()
 
@@ -110,7 +113,7 @@ abstract class PageListViewModel<T: Any>(dataSourceManager: DataSourceManager) :
         refreshPage()
     }
 
-    suspend fun clearFilterOrSort(refreshPage: suspend () -> Unit){
+    suspend fun clearFilterOrSort(refreshPage: suspend () -> Unit) {
         val sort = Sort()
         updateSort(sort, refreshPage = refreshPage)
     }

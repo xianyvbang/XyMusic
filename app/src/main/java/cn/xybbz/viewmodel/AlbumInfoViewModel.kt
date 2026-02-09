@@ -27,6 +27,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.room.Transaction
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.PlaylistFileUtils
 import cn.xybbz.common.utils.PlaylistParser
@@ -59,7 +60,7 @@ class AlbumInfoViewModel @AssistedInject constructor(
     val musicController: MusicController,
     val selectControl: SelectControl,
     val backgroundConfig: BackgroundConfig
-) : PageListViewModel<XyMusic>(dataSourceManager) {
+) : PageListViewModel<XyMusic>(dataSourceManager, SortTypeEnum.MUSIC_NAME_ASC) {
 
     /**
      * 创建方法
@@ -69,7 +70,6 @@ class AlbumInfoViewModel @AssistedInject constructor(
     interface Factory {
         fun create(itemId: String, dataType: MusicDataTypeEnum): AlbumInfoViewModel
     }
-
 
     val downloadMusicIdsFlow =
         db.downloadDao.getAllMusicTaskUidsFlow()

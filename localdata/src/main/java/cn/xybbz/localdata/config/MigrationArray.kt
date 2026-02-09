@@ -665,11 +665,6 @@ val MIGRATION_23_24 = object : Migration(23, 24) {
             ALTER TABLE xy_settings
             ADD COLUMN isDynamic INTEGER NOT NULL DEFAULT 0
         """)
-
-        db.execSQL("""
-            ALTER TABLE xy_background_config
-            ADD COLUMN ifEnabled INTEGER NOT NULL DEFAULT 0
-        """)
     }
 }
 

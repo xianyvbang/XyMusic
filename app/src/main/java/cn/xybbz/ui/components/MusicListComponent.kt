@@ -66,8 +66,8 @@ import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnParentComponent
 import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
-import cn.xybbz.ui.xy.XyItemText
 import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.xy.XyTextSubSmall
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -117,9 +117,8 @@ fun MusicListComponent(
                         //删除数据库内容
                         onClearPlayerList()
                     }) {
-                        XyItemText(
-                            text = stringResource(R.string.clear),
-                            color = MaterialTheme.colorScheme.primary
+                        XyTextSubSmall(
+                            text = stringResource(R.string.clear)
                         )
                     }
 

@@ -1193,10 +1193,10 @@ class SubsonicDatasourceServer(
                 albumId = if (dataType == MusicTypeEnum.ALBUM) listOf(itemId) else null,
                 artistId = if (dataType == MusicTypeEnum.ARTIST) listOf(itemId) else null
             )
-            true
+            false
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "取消收藏失败", e)
-            false
+            true
         }
         return favorite
     }

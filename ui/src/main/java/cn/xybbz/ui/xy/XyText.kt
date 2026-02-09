@@ -1,3 +1,21 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.ui.xy
 
 import androidx.compose.foundation.text.InlineTextContent
@@ -19,7 +37,7 @@ import androidx.compose.ui.text.style.TextOverflow
 fun XyText(
     modifier: Modifier = Modifier,
     text: String,
-    fontWeight: FontWeight = FontWeight.Bold,
+    fontWeight: FontWeight? = FontWeight.Bold,
     maxLines: Int = 1,
     style: TextStyle = MaterialTheme.typography.bodyLarge,
     overflow: TextOverflow = TextOverflow.Ellipsis,
@@ -48,7 +66,7 @@ fun XyTextSub(
     style: TextStyle = MaterialTheme.typography.bodySmall,
     overflow: TextOverflow = TextOverflow.Ellipsis,
     textAlign: TextAlign? = null,
-    color: Color = MaterialTheme.colorScheme.onSurface,
+    color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 ) {
     Text(
         modifier = modifier,
@@ -72,7 +90,8 @@ fun XyTextSub(
     style: TextStyle = MaterialTheme.typography.bodySmall,
     overflow: TextOverflow = TextOverflow.Ellipsis,
     textAlign: TextAlign? = null,
-    color: Color = MaterialTheme.colorScheme.onSurface,
+    maxLines: Int = Int.MAX_VALUE,
+    color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 ) {
     Text(
         modifier = modifier,
@@ -80,7 +99,24 @@ fun XyTextSub(
         style = style,
         overflow = overflow,
         textAlign = textAlign,
+        maxLines = maxLines,
         color = color
+    )
+}
+
+@Composable
+fun XyTextSubSmall(
+    text: String,
+    modifier: Modifier = Modifier,
+    maxLines: Int = Int.MAX_VALUE,
+    color: Color = MaterialTheme.colorScheme.onSurface
+) {
+    XyTextSub(
+        modifier = Modifier
+            .then(modifier),
+        text = text,
+        color = color,
+        maxLines = maxLines
     )
 }
 

@@ -37,9 +37,6 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,10 +49,10 @@ import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.LazyColumnNotComponent
-import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
+import cn.xybbz.ui.xy.LazyColumnHorizontalComponent
+import cn.xybbz.ui.xy.RoundedSurfaceColumn
 import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyItemTextPadding
+import cn.xybbz.ui.xy.XyText
 import cn.xybbz.viewmodel.LanguageConfigViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -101,20 +98,14 @@ fun LanguageConfigScreen(
                 }
             )
 
-            LazyColumnNotComponent {
+            LazyColumnHorizontalComponent {
                 item {
-                    XyItemTextPadding(
-                        text = stringResource(R.string.selected_language),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    XyText(
+                        text = stringResource(R.string.selected_language)
                     )
                 }
                 item {
-                    RoundedSurfaceColumnPadding(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(Color(0xFF5A524C), Color(0xFF726B66)),
-                            tileMode = TileMode.Repeated
-                        )
-                    ) {
+                    RoundedSurfaceColumn {
                         LanguageTextItem(
                             languageType = languageConfigViewModel.settingsConfig.languageType,
                             enabled = false,
@@ -122,18 +113,12 @@ fun LanguageConfigScreen(
                     }
                 }
                 item {
-                    XyItemTextPadding(
-                        text = stringResource(R.string.available_languages),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    XyText(
+                        text = stringResource(R.string.available_languages)
                     )
                 }
                 item {
-                    RoundedSurfaceColumnPadding(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(Color(0xFF5A524C), Color(0xFF726B66)),
-                            tileMode = TileMode.Repeated
-                        )
-                    ) {
+                    RoundedSurfaceColumn {
                         LanguageType.entries.filter { it != languageConfigViewModel.settingsConfig.languageType }
                             .forEach {
                                 LanguageTextItem(

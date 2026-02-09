@@ -20,6 +20,7 @@ package cn.xybbz.viewmodel
 
 import androidx.paging.PagingData
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -34,8 +35,7 @@ import javax.inject.Inject
 class AlbumViewModel @Inject constructor(
     val dataSourceManager: DataSourceManager,
     val backgroundConfig: BackgroundConfig
-) : PageListViewModel<XyAlbum>(dataSourceManager) {
-
+) : PageListViewModel<XyAlbum>(dataSourceManager, SortTypeEnum.ALBUM_NAME_ASC) {
 
     /**
      * 首页专辑信息
