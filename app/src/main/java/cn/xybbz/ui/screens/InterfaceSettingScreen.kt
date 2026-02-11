@@ -62,17 +62,17 @@ import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.dismiss
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
+import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
-import cn.xybbz.ui.xy.XyButtonNotPadding
+import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyItemSwitcher
 import cn.xybbz.ui.xy.XyRow
-import cn.xybbz.ui.xy.XyRowButton
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.viewmodel.InterfaceSettingViewModel
 import com.github.skydoves.colorpicker.compose.AlphaSlider
@@ -187,7 +187,7 @@ fun InterfaceSettingScreen(
                     }
                 }
             }
-            if (interfaceSettingViewModel.settingsManager.themeType == ThemeTypeEnum.FLOWER)
+            if (false)
                 item {
                     RoundedSurfaceColumnPadding(color = Color.Black.copy(alpha = 0.3f)) {
                         XyItemSwitcher(
@@ -878,7 +878,7 @@ private fun BrashColorConfigItem(
         mutableStateOf("#%08X".format(onBottomColor().toArgb()))
     }
 
-    XyRowButton(modifier = modifier, onClick = {
+    XyRow(modifier = modifier.debounceClickable {
         AlertDialogObject(
             title = title,
             content = { alertObject ->
@@ -928,7 +928,7 @@ private fun BrashColorConfigItem(
                             onBottomColor = { bottomColorController.selectedColor.value }
                         )
 
-                    XyButtonNotPadding(onClick = {
+                    XyButton(onClick = {
                         onSetColors(
                             onDefaultColors().map {
                                 "#%08X".format(it.toArgb())
@@ -985,7 +985,7 @@ private fun ColorConfigItem(
         mutableStateOf("#%08X".format(onColor().toArgb()))
     }
 
-    XyRowButton(modifier = modifier, onClick = {
+    XyRow(modifier = modifier.debounceClickable {
         AlertDialogObject(
             title = title,
             content = { alertObject ->
@@ -1013,7 +1013,7 @@ private fun ColorConfigItem(
                         controller = colorController,
                     )
                 }
-                XyButtonNotPadding(onClick = {
+                XyButton(onClick = {
                     onSetColor(
                         "#%08X".format(onDefaultColor().toArgb()),
                         onDefaultColor()

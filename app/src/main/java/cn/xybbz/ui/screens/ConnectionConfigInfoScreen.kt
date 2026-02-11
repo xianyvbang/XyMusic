@@ -34,9 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
@@ -130,12 +128,6 @@ fun ConnectionConfigInfoScreen(
 
             item {
                 RoundedSurfaceColumnPadding(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(0xFF275454),
-                            Color.Gray.copy(alpha = 0.1f)
-                        ), tileMode = TileMode.Repeated
-                    )
                 ) {
                     ConnectionInfoTextItem(
                         title = stringResource(R.string.username),
@@ -171,12 +163,6 @@ fun ConnectionConfigInfoScreen(
 
             item {
                 RoundedSurfaceColumnPadding(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(0xFF275454),
-                            Color.Gray.copy(alpha = 0.1f)
-                        ), tileMode = TileMode.Repeated
-                    )
                 ) {
                     SettingItemComponent(
                         title = stringResource(R.string.music_library),

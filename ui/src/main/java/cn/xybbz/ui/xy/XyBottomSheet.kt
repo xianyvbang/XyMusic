@@ -77,11 +77,14 @@ fun ModalBottomSheetExtendComponent(
             onDismissRequest = {
                 onClose(false)
             }, content = {
-                XyColumnNotHorizontalPadding(
+                XyColumn(
                     modifier = Modifier
                         .brashColor()
                         .navigationBarsPadding(),
-                    backgroundColor = Color.Transparent
+                    backgroundColor = Color.Transparent,
+                    paddingValues = PaddingValues(
+                        vertical = XyTheme.dimens.outerVerticalPadding
+                    )
                 ) {
                     dragHandle?.let {
                         Row(

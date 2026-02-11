@@ -69,6 +69,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -308,7 +309,9 @@ fun ItemTrailingArrowRight(
 fun XyItem(
     modifier: Modifier = Modifier,
     text: String,
-    sub: String?
+    sub: String?,
+    fontWeight: FontWeight? = FontWeight.Bold,
+    style: TextStyle = MaterialTheme.typography.bodyLarge,
 ) {
     Column(
         modifier = Modifier
@@ -319,6 +322,8 @@ fun XyItem(
     ) {
         XyText(
             text = text,
+            fontWeight = fontWeight,
+            style = style
         )
         sub?.let {
             XyTextSub(
@@ -653,6 +658,8 @@ fun XyItemRadioButton(
     modifier: Modifier = Modifier,
     text: String,
     sub: String? = null,
+    fontWeight: FontWeight? = FontWeight.Bold,
+    style: TextStyle = MaterialTheme.typography.bodyLarge,
     selected: Boolean,
     enabled: Boolean = true,
     onClick: () -> Unit
@@ -673,6 +680,8 @@ fun XyItemRadioButton(
         XyItem(
             text = text,
             sub = sub,
+            fontWeight = fontWeight,
+            style = style,
             modifier = Modifier.weight(1f)
         )
         RadioButton(

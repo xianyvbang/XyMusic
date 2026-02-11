@@ -108,6 +108,7 @@ fun XyTextSubSmall(
     text: String,
     modifier: Modifier = Modifier,
     maxLines: Int = Int.MAX_VALUE,
+    overflow: TextOverflow = TextOverflow.Ellipsis,
     color: Color = MaterialTheme.colorScheme.onSurface
 ) {
     XyTextSub(
@@ -115,7 +116,8 @@ fun XyTextSubSmall(
             .then(modifier),
         text = text,
         color = color,
-        maxLines = maxLines
+        maxLines = maxLines,
+        overflow = overflow
     )
 }
 

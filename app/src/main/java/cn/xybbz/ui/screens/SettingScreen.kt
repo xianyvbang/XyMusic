@@ -44,9 +44,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
@@ -75,8 +72,6 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
 import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyRow
-import cn.xybbz.ui.xy.XyText
 import cn.xybbz.viewmodel.SettingsViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.launch
@@ -106,6 +101,8 @@ fun SettingScreen(
     }
 
     val clipboardManager = LocalClipboard.current
+
+    val copySuccess = stringResource(R.string.copy_success)
 
     XyColumnScreen(
         modifier = Modifier.brashColor(
@@ -137,21 +134,6 @@ fun SettingScreen(
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
             contentPadding = PaddingValues()
         ) {
-            item {
-                XyRow(
-                    paddingValues = PaddingValues(
-                        start = XyTheme.dimens.outerHorizontalPadding,
-                        end = XyTheme.dimens.outerHorizontalPadding,
-                        top = XyTheme.dimens.outerVerticalPadding
-                    ),
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    XyText(
-                        text = stringResource(R.string.playback)
-                    )
-                }
-
-            }
             item {
                 SettingRoundedSurfaceColumn {
                     MusicSettingSwitchItemComponent(
@@ -207,6 +189,7 @@ fun SettingScreen(
                             )
                         }
                     }
+
                     SettingItemComponent(
                         title = stringResource(R.string.customize_lyric_settings),
                         enabled = false
@@ -229,28 +212,13 @@ fun SettingScreen(
                             coroutineScope.launch {
                                 clipboardManager.setClipEntry(ClipEntry(clipData))
                             }.invokeOnCompletion {
-                                MessageUtils.sendPopTip(context.getString(R.string.copy_success))
+                                MessageUtils.sendPopTip(copySuccess)
                             }
                         }
 
                     }
 
                 }
-            }
-            item {
-                XyRow(
-                    paddingValues = PaddingValues(
-                        start = XyTheme.dimens.outerHorizontalPadding,
-                        end = XyTheme.dimens.outerHorizontalPadding,
-                        top = XyTheme.dimens.outerVerticalPadding
-                    ),
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    XyText(
-                        text = stringResource(R.string.connection_management)
-                    )
-                }
-
             }
             item {
                 SettingRoundedSurfaceColumn {
@@ -260,21 +228,6 @@ fun SettingScreen(
                 }
             }
 
-            item {
-                XyRow(
-                    paddingValues = PaddingValues(
-                        start = XyTheme.dimens.outerHorizontalPadding,
-                        end = XyTheme.dimens.outerHorizontalPadding,
-                        top = XyTheme.dimens.outerVerticalPadding
-                    ),
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    XyText(
-                        text = stringResource(R.string.download_management)
-                    )
-                }
-
-            }
             item {
                 SettingRoundedSurfaceColumn {
                     SettingItemComponent(
@@ -376,7 +329,7 @@ fun SettingScreen(
                             coroutineScope.launch {
                                 clipboardManager.setClipEntry(ClipEntry(clipData))
                             }.invokeOnCompletion {
-                                MessageUtils.sendPopTip(context.getString(R.string.copy_success))
+                                MessageUtils.sendPopTip(copySuccess)
                             }
                         }
 
@@ -385,21 +338,6 @@ fun SettingScreen(
                 }
             }
 
-            item {
-                XyRow(
-                    paddingValues = PaddingValues(
-                        start = XyTheme.dimens.outerHorizontalPadding,
-                        end = XyTheme.dimens.outerHorizontalPadding,
-                        top = XyTheme.dimens.outerVerticalPadding
-                    ),
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    XyText(
-                        text = stringResource(R.string.more)
-                    )
-                }
-
-            }
             item {
                 SettingRoundedSurfaceColumn {
 
@@ -434,12 +372,6 @@ fun SettingScreen(
 @Composable
 fun SettingRoundedSurfaceColumn(content: @Composable ColumnScope.() -> Unit) {
     RoundedSurfaceColumnPadding(
-        brush = Brush.horizontalGradient(
-            colors = listOf(
-                Color(0x4D503803),
-                Color.Gray.copy(alpha = 0.1f)
-            ), tileMode = TileMode.Repeated
-        ),
         paddingValues = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding
         ),

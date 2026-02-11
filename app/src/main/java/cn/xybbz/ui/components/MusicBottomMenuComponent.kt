@@ -100,8 +100,7 @@ import cn.xybbz.router.ArtistInfo
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnBottomSheetComponent
 import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
-import cn.xybbz.ui.xy.XyButtonHorizontalPadding
-import cn.xybbz.ui.xy.XyColumnNotHorizontalPadding
+import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyItemIcon
 import cn.xybbz.ui.xy.XyItemReversal
@@ -876,6 +875,7 @@ private fun DoubleSpeedComponent(
         bottomSheetState = sheetDoubleSpeed,
         modifier = Modifier.statusBarsPadding(),
         onIfDisplay = onIfDoubleSpeed,
+        dragHandle = null,
         onClose = {
             onSetIfDoubleSpeed(false)
             mainViewModel.putIterations(1)
@@ -982,6 +982,7 @@ private fun SkipBeginningAndEndComponent(
             onSetIfShowHeadAndTail(it)
             mainViewModel.putIterations(1)
         },
+        dragHandle = null,
         titleText = stringResource(R.string.skip_head_tail),
         titleTailContent = {
             OutlinedButton(
@@ -1008,36 +1009,32 @@ private fun SkipBeginningAndEndComponent(
             }
         }
     ) {
-        XyColumnNotHorizontalPadding(backgroundColor = Color.Transparent) {
-            XyItemSlider(
-                value = startTime,
-                onValueChange = {
-                    startTime = it.toLong().toFloat()
-                },
-                valueRange = 0f..60f,
-                text = "${stringResource(R.string.skip_head_prefix)} ${startTime.toLong()}s"
-            )
-            XyRow(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                XyTextSubSmall(text = "0s")
-                XyTextSubSmall(text = "60s")
-            }
+        XyItemSlider(
+            value = startTime,
+            onValueChange = {
+                startTime = it.toLong().toFloat()
+            },
+            valueRange = 0f..60f,
+            text = "${stringResource(R.string.skip_head_prefix)} ${startTime.toLong()}s"
+        )
+        XyRow(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            XyTextSubSmall(text = "0s")
+            XyTextSubSmall(text = "60s")
         }
 
-        XyColumnNotHorizontalPadding(backgroundColor = Color.Transparent) {
-            XyItemSlider(
-                value = endTime,
-                onValueChange = {
-                    endTime = it.toLong().toFloat()
-                },
-                valueRange = 0f..60f,
-                text = "${stringResource(R.string.skip_tail_prefix)} ${endTime.toLong()}s"
-            )
-            XyRow {
-                XyTextSubSmall(text = "0s")
-                XyTextSubSmall(text = "60s")
-            }
+        XyItemSlider(
+            value = endTime,
+            onValueChange = {
+                endTime = it.toLong().toFloat()
+            },
+            valueRange = 0f..60f,
+            text = "${stringResource(R.string.skip_tail_prefix)} ${endTime.toLong()}s"
+        )
+        XyRow {
+            XyTextSubSmall(text = "0s")
+            XyTextSubSmall(text = "60s")
         }
 
         XyButtonHorizontalPadding(text = stringResource(R.string.confirm), onClick = {
@@ -1085,6 +1082,7 @@ fun MusicInfoBottomComponent(
         modifier = modifier.statusBarsPadding(),
         bottomSheetState = sheetState,
         onIfDisplay = onIfShowMusicInfo,
+        dragHandle = null,
         onClose = {
             onSetShowMusicInfo(false)
             mainViewModel.putIterations(1)
@@ -1204,6 +1202,7 @@ fun ArtistItemListBottomSheet(
         modifier = modifier.statusBarsPadding(),
         bottomSheetState = sheetState,
         onIfDisplay = onIfShowArtistList,
+        dragHandle = null,
         onClose = {
             onSetShowArtistList(false)
             mainViewModel.putIterations(1)
@@ -1255,6 +1254,7 @@ private fun FadeInOutBottomSheet(
         onClose = {
             onSetShowFadeInOut(it)
         },
+        dragHandle = null,
         titleText = stringResource(R.string.play_settings),
         titleTailContent = {
             OutlinedButton(
@@ -1272,21 +1272,19 @@ private fun FadeInOutBottomSheet(
             }
         }
     ) {
-        XyColumnNotHorizontalPadding(backgroundColor = Color.Transparent) {
-            XyItemSlider(
-                value = fadeDurationMs.toFloat(),
-                onValueChange = {
-                    fadeDurationMs = it.toLong()
-                },
-                valueRange = 0f..15000f,
-                text = "${stringResource(R.string.play_settings_time)}: ${fadeDurationMs.toSecondMsString()}"
-            )
-            XyRow(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                XyTextSubSmall(text = "0s")
-                XyTextSubSmall(text = "15s")
-            }
+        XyItemSlider(
+            value = fadeDurationMs.toFloat(),
+            onValueChange = {
+                fadeDurationMs = it.toLong()
+            },
+            valueRange = 0f..15000f,
+            text = "${stringResource(R.string.play_settings_time)}: ${fadeDurationMs.toSecondMsString()}"
+        )
+        XyRow(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            XyTextSubSmall(text = "0s")
+            XyTextSubSmall(text = "15s")
         }
 
         XyButtonHorizontalPadding(text = stringResource(R.string.confirm), onClick = {
@@ -1301,6 +1299,24 @@ private fun FadeInOutBottomSheet(
 
         })
     }
+}
+
+
+@Composable
+fun XyButtonHorizontalPadding(
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    text: String,
+) {
+    XyButton(
+        modifier = Modifier.fillMaxWidth(),
+        enabled = enabled,
+        onClick = onClick,
+        text = text,
+        paddingValues = PaddingValues(
+            horizontal = XyTheme.dimens.outerHorizontalPadding
+        )
+    )
 }
 
 fun XyMusic.show() = apply {

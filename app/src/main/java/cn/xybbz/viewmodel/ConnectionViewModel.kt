@@ -264,6 +264,7 @@ class ConnectionViewModel @Inject constructor(
     }
 
     suspend fun getResources() {
+        Log.i("ConnectionScreen", "读取资源")
         clearLoginStatus()
         tmpDataSourceParentServer = dataSourceManager
         val dataSourceTypeTmp = dataSourceType
@@ -287,7 +288,8 @@ class ConnectionViewModel @Inject constructor(
             val resources = tmpDataSourceParentServer?.getResources(clientLoginInfoReq)
             if (!resources.isNullOrEmpty())
                 tmpPlexInfo = resources
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.e("ConnectionScreen","获取资源失败",e)
             isLoginError = true
             errorHint = R.string.plex_resource_error
             errorMessage = ""

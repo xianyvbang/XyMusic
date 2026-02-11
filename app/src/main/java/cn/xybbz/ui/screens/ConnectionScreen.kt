@@ -18,6 +18,7 @@
 
 package cn.xybbz.ui.screens
 
+import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
@@ -31,6 +32,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -95,12 +97,10 @@ import cn.xybbz.ui.xy.LazyColumnComponent
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.LazyColumnNotHorizontalComponent
 import cn.xybbz.ui.xy.XyColumn
-import cn.xybbz.ui.xy.XyColumnNotHorizontalPadding
 import cn.xybbz.ui.xy.XyItemOutSpacer
 import cn.xybbz.ui.xy.XyItemRadioButton
 import cn.xybbz.ui.xy.XyLoadingItem
 import cn.xybbz.ui.xy.XyRow
-import cn.xybbz.ui.xy.XyRowHeightSmall
 import cn.xybbz.ui.xy.XySmallImage
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
@@ -407,6 +407,7 @@ fun ConnectionScreen(
                                     onClick = {
                                         isLoad = true
                                         if (connectionViewModel.dataSourceType?.ifInputUrl == false) {
+                                            Log.i("ConnectionScreen", "noifInputUrl")
                                             coroutineScope.launch {
                                                 ifSelectDataSource = ScreenType.SELECT_ADDRESS
                                                 connectionViewModel.updateLoading(true)
@@ -415,6 +416,7 @@ fun ConnectionScreen(
                                                 connectionViewModel.updateLoading(false)
                                             }
                                         } else if (!connectionViewModel.isInputError()) {
+                                            Log.i("ConnectionScreen", "ifInputUrl")
                                             if (!connectionViewModel.isHttpStartAndPortEnd()) {
                                                 connectionViewModel.createTmpAddress()
                                                 connectionViewModel.clearLoginStatus()
@@ -455,7 +457,10 @@ fun ConnectionScreen(
 
                     LazyColumnComponent {
                         item {
-                            XyColumnNotHorizontalPadding(backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest) {
+                            XyColumn(
+                                backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                                paddingValues = PaddingValues()
+                            ) {
                                 connectionViewModel.dataSourceType?.let {
                                     if (connectionViewModel.tmpAddressList.isNotEmpty())
                                         LazyColumnNotComponent(
@@ -467,6 +472,7 @@ fun ConnectionScreen(
                                                 XyItemRadioButton(
                                                     text = item,
                                                     selected = index == connectionViewModel.selectUrlIndex,
+                                                    fontWeight = null,
                                                     onClick = {
                                                         connectionViewModel.setSelectUrlIndexData(
                                                             index
@@ -479,7 +485,8 @@ fun ConnectionScreen(
                                         LazyColumnNotComponent(
                                             modifier = Modifier.height(
                                                 200.dp
-                                            )
+                                            ),
+                                            bottomItem = null
                                         ) {
                                             itemsIndexed(connectionViewModel.tmpPlexInfo) { index, item ->
                                                 PlexResourceItem(
@@ -541,7 +548,10 @@ fun ConnectionScreen(
                         LazyColumnComponent {
                             if (connectionViewModel.isLoginError) {
                                 item {
-                                    XyColumnNotHorizontalPadding(modifier = Modifier.height(200.dp)) {
+                                    XyColumn(
+                                        modifier = Modifier.height(200.dp),
+                                        paddingValues = PaddingValues()
+                                    ) {
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.Center,
@@ -627,7 +637,7 @@ fun PlexResourceItem(
     select: Boolean,
     onClick: (() -> Unit)? = null
 ) {
-    XyRowHeightSmall(
+    XyRow(
         modifier = modifier
             .clip(RoundedCornerShape(XyTheme.dimens.corner))
             .debounceClickable { onClick?.invoke() },

@@ -23,7 +23,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
@@ -32,7 +33,6 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -40,14 +40,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cn.xybbz.R
 import cn.xybbz.ui.ext.composeClick
+import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.XyColumnButton
+import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyItemSwitcher
 import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSubSmall
 import kotlinx.coroutines.launch
 
@@ -166,28 +168,32 @@ fun SettingParentItemComponent(
     trailingContent: @Composable (() -> Unit)? = null,
     onClick: (() -> Unit)? = null
 ) {
-    XyColumnButton(
-        modifier = modifier.height(XyTheme.dimens.itemHeight),
-        enabled = enabled,
-        onClick = {
-            onClick?.invoke()
-        }
+    XyColumn(
+        modifier = modifier
+            .heightIn(min = XyTheme.dimens.itemHeight)
+            .fillMaxWidth()
+            .debounceClickable(enabled = enabled) {
+                onClick?.invoke()
+            },
+        paddingValues = PaddingValues(
+            horizontal = XyTheme.dimens.outerHorizontalPadding,
+        ),
+        backgroundColor = Color.Transparent,
+        horizontalAlignment= Alignment.Start,
     ) {
-        XyRow(paddingValues = PaddingValues(),modifier = Modifier.weight(1f),) {
-            XyTextSubSmall(
+        XyRow(paddingValues = PaddingValues(), modifier = Modifier) {
+            XyText(
                 text = title,
-                color = if (enabled) textColor else MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (enabled) textColor else MaterialTheme.colorScheme.onSurfaceVariant,
             )
             trailingContent?.invoke()
-
         }
         bottomInfo?.let {
-            Text(
-                modifier = Modifier.weight(1f),
+            XyTextSubSmall(
+                modifier = Modifier,
                 text = bottomInfo,
-                style = MaterialTheme.typography.bodySmall,
-                fontSize = 10.sp,
-                color = if (enabled) textColor else MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (enabled) textColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                overflow = TextOverflow.Visible
             )
         }
     }

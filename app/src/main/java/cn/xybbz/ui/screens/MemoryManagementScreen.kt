@@ -47,7 +47,7 @@ import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnHorizontalComponent
 import cn.xybbz.ui.xy.RoundedSurfaceColumn
-import cn.xybbz.ui.xy.XyButtonNotPadding
+import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
@@ -187,7 +187,7 @@ fun MemoryManagementItem(
                 )
             }
             if (ifShowButton)
-                XyButtonNotPadding(
+                XyButton(
                     modifier = Modifier,
                     enabled = cacheSize != "0B",
                     onClick = { onClick?.invoke() },

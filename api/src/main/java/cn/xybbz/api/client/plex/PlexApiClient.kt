@@ -374,7 +374,7 @@ class PlexApiClient : DefaultParentApiClient() {
             )
         Log.i("=====", "返回响应值: $responseData")
         loginAfter(
-            responseData.authToken, responseData.id,
+            responseData.authToken, responseData.id.toString(),
             clientLoginInfoReq = clientLoginInfoReq
         )
         return LoginSuccessData(

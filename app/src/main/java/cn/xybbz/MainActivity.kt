@@ -78,7 +78,6 @@ class MainActivity : ComponentActivity() {
                 ThemeTypeEnum.SYSTEM -> isSystemInDarkTheme()
                 ThemeTypeEnum.DARK -> true
                 ThemeTypeEnum.LIGHT -> false
-                ThemeTypeEnum.FLOWER -> true
             }
 
             XyTheme(

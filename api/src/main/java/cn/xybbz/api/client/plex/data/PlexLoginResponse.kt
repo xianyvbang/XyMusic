@@ -22,7 +22,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class PlexLoginResponse(
-    val id: String,
+    val id: Long,
     val username: String,
     val authToken: String,
     val email: String,

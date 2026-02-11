@@ -32,7 +32,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import cn.xybbz.ui.theme.XyTheme
 
@@ -84,7 +83,6 @@ fun RoundedSurfaceColumnPadding(
 @Composable
 fun RoundedSurfaceColumnPadding(
     modifier: Modifier = Modifier,
-    brush: Brush,
     paddingValues: PaddingValues = PaddingValues(
         horizontal = XyTheme.dimens.outerHorizontalPadding,
         vertical = XyTheme.dimens.outerVerticalPadding),
@@ -100,7 +98,7 @@ fun RoundedSurfaceColumnPadding(
                 paddingValues
             )
             .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .background(brush),
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = horizontalAlignment,
         content = content
