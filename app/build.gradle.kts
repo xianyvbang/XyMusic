@@ -202,6 +202,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.service)
     //弹窗
     implementation(libs.dialogx)
+    //弹窗主体
+    implementation(libs.dialogx.style)
 
     //hilt
     implementation(libs.google.hilt)

@@ -77,9 +77,10 @@ fun XyEdit(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = false,
-    textStyle: TextStyle = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurface),
+    textStyle: TextStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    actionContent: (@Composable () -> Unit)? = null
+    actionContent: (@Composable () -> Unit)? = null,
+    leadingContent: (@Composable () -> Unit)? = null,
 ) {
     BasicTextField(
         value = text,
@@ -102,6 +103,8 @@ fun XyEdit(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
+                leadingContent?.invoke()
+                Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -109,17 +112,17 @@ fun XyEdit(
                 ) {
                     innerTextField()
                     if (hint != null && text.isEmpty()) {
-                        Text(
+                        XyTextSub(
                             text = hint,
-                            color = hintColor
+                            color = hintColor,
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
                 if (actionContent != null) {
                     actionContent()
-                } else {
-                    Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
                 }
+                Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
             }
         }
     )

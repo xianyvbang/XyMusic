@@ -21,7 +21,7 @@ object MessageUtils {
 
     fun sendPopTip(value: String, delay: Long = 2000) {
         popTip?.dismiss()
-        val newPopTip = PopTip.show(value).setRadius(RADIUS_PX).autoDismiss(delay)
+        val newPopTip = PopTip.show(value).setRadius(RADIUS_PX).autoDismiss(delay).bringToFront()
         popTip = newPopTip
     }
 
@@ -30,6 +30,7 @@ object MessageUtils {
         val newPopTip = PopTip.show(PopTip.getApplicationContext().getString(resId))
             .setRadius(RADIUS_PX)
             .autoDismiss(delay)
+            .bringToFront()
         popTip = newPopTip
     }
 
@@ -41,6 +42,7 @@ object MessageUtils {
         })
             .setRadius(RADIUS_PX)
             .autoDismiss(delay)
+            .bringToFront()
         popTip = newPopTip
     }
 
@@ -52,15 +54,15 @@ object MessageUtils {
         popTip?.dismiss()
         val newPopTip = PopTip.show(PopTip.getApplicationContext().getString(resId)).setRadius(RADIUS_PX)
             .autoDismiss(delay)
-            .setBackgroundColor(backgroundColor)
+            .setBackgroundColor(backgroundColor).bringToFront()
         popTip = newPopTip
     }
 
 
     fun sendPopTipError(value: String, delay: Long = 2000): PopTip {
         popTip?.dismiss()
-        return PopTip.show(value).setRadius(RADIUS_PX).autoDismiss(delay)
-            .setBackgroundColor(errorColor)
+        return PopTip.show(value).iconError()/*.setRadius(RADIUS_PX)*/.autoDismiss(delay)
+            /*.setBackgroundColor(errorColor)*/.bringToFront()
     }
 
     fun sendPopTipError(@StringRes resId: Int, delay: Long = 2000): PopTip {
@@ -68,21 +70,21 @@ object MessageUtils {
         return PopTip.show(PopTip.getApplicationContext().getString(resId))
             .setRadius(RADIUS_PX)
             .autoDismiss(delay)
-            .setBackgroundColor(errorColor)
+            .setBackgroundColor(errorColor).bringToFront()
     }
 
     fun sendPopTipSuccess(@StringRes resId: Int, delay: Long = 2000): PopTip {
         popTip?.dismiss()
         return PopTip.show(PopTip.getApplicationContext().getString(resId))
             .setRadius(RADIUS_PX).autoDismiss(delay)
-            .setBackgroundColor(successColor)
+            .setBackgroundColor(successColor).bringToFront()
     }
 
     fun sendPopTipSuccess(message: String, delay: Long = 2000): PopTip {
         popTip?.dismiss()
         return PopTip.show(message)
             .setRadius(RADIUS_PX).autoDismiss(delay)
-            .setBackgroundColor(successColor)
+            .setBackgroundColor(successColor).bringToFront()
     }
 
     fun sendPopTipHint(@StringRes resId: Int, delay: Long = 2000) {
@@ -90,7 +92,7 @@ object MessageUtils {
         val newPopTip = PopTip.show(PopTip.getApplicationContext().getString(resId))
             .setRadius(RADIUS_PX)
             .autoDismiss(delay)
-            .setBackgroundColor("#E6A23C".toColorInt())
+            .setBackgroundColor("#E6A23C".toColorInt()).bringToFront()
         popTip = newPopTip
     }
 
@@ -102,7 +104,7 @@ object MessageUtils {
         popTip?.dismiss()
         PopTip.show(icon, PopTip.getApplicationContext().getString(resId))
             .setRadius(RADIUS_PX).autoDismiss(delay)
-            .setBackgroundColor(errorColor)
+            .setBackgroundColor(errorColor).bringToFront()
     }
 
     fun sendDismiss() {

@@ -59,9 +59,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -97,6 +95,7 @@ import cn.xybbz.ui.xy.LazyColumnComponent
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.LazyColumnNotHorizontalComponent
 import cn.xybbz.ui.xy.XyColumn
+import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyItemOutSpacer
 import cn.xybbz.ui.xy.XyItemRadioButton
 import cn.xybbz.ui.xy.XyLoadingItem
@@ -273,99 +272,63 @@ fun ConnectionScreen(
                     LazyColumnComponent {
                         item {
                             if (connectionViewModel.dataSourceType?.ifInputUrl == true)
-                                OutlinedTextField(
-                                    value = connectionViewModel.address,
+                                XyEdit(
+                                    text = connectionViewModel.address,
                                     modifier = Modifier
-                                        .background(Color.Transparent)
                                         .fillMaxWidth(),
-                                    onValueChange = {
+                                    paddingValues = PaddingValues(
+                                        vertical = XyTheme.dimens.outerVerticalPadding
+                                    ),
+                                    onChange = {
                                         connectionViewModel.setAddressData(it)
                                     },
                                     singleLine = true,
-                                    shape = RoundedCornerShape(5.dp),
-                                    colors = TextFieldDefaults.colors(
-                                        unfocusedContainerColor = Color.Transparent,
-                                        focusedContainerColor = Color.Transparent,
-                                        unfocusedIndicatorColor = Color.LightGray,
-                                        focusedIndicatorColor = Color.LightGray,
-                                        focusedLabelColor = Color.LightGray,
-                                        unfocusedLabelColor = Color.LightGray,
-                                        cursorColor = Color.White,
-                                        disabledContainerColor = Color.Transparent
-                                    ),
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                                    enabled = true,
-                                    label = { Text(stringResource(R.string.server)) },
-                                    leadingIcon = {
+                                    leadingContent = {
                                         Icon(
                                             imageVector = Icons.Default.Http,
                                             contentDescription = stringResource(R.string.httpInput)
                                         )
                                     },
-                                    placeholder = {
-                                        Text(text = "http://")
-                                    },
-                                    isError = connectionViewModel.address.isBlank() && isLoad,
-                                    supportingText = {
-                                        if (connectionViewModel.address.isBlank() && isLoad)
-                                            Text(text = stringResource(R.string.server_cannot_be_empty))
-                                    },
+                                    hint = "连接地址:http://192.168.3.12:8096",
                                 )
                         }
                         item {
-                            OutlinedTextField(
-                                value = connectionViewModel.username,
+                            XyEdit(
+                                text = connectionViewModel.username,
                                 modifier = Modifier
-                                    .background(Color.Transparent)
                                     .fillMaxWidth(),
-                                onValueChange = {
+                                paddingValues = PaddingValues(
+                                    vertical = XyTheme.dimens.outerVerticalPadding
+                                ),
+                                onChange = {
                                     connectionViewModel.setUserNameData(it)
                                 },
                                 singleLine = true,
-                                shape = RoundedCornerShape(5.dp),
-                                colors = TextFieldDefaults.colors(
-                                    unfocusedContainerColor = Color.Transparent,
-                                    focusedContainerColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.LightGray,
-                                    focusedIndicatorColor = Color.LightGray,
-                                    focusedLabelColor = Color.LightGray,
-                                    unfocusedLabelColor = Color.LightGray,
-                                    cursorColor = Color.White,
-                                    disabledContainerColor = Color.Transparent
-                                ),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                                enabled = true,
-                                label = { Text(stringResource(R.string.username)) },
-                                placeholder = {
-                                    Text(text = stringResource(R.string.username))
-                                },
-                                leadingIcon = {
+                                hint = stringResource(R.string.username),
+                                leadingContent = {
                                     Icon(
                                         imageVector = Icons.Default.Person,
                                         contentDescription = stringResource(R.string.username)
                                     )
-                                },
-                                isError = connectionViewModel.username.isBlank() && isLoad,
-                                supportingText = {
-                                    if (connectionViewModel.username.isBlank() && isLoad)
-                                        Text(text = stringResource(R.string.username_cannot_be_empty))
-                                },
+                                }
                             )
                         }
 
                         item {
-                            OutlinedTextField(
-                                value = connectionViewModel.password,
+                            XyEdit(
+                                text = connectionViewModel.password,
                                 modifier = Modifier
-                                    .background(Color.Transparent)
                                     .fillMaxWidth(),
-                                onValueChange = {
+                                paddingValues = PaddingValues(
+                                    vertical = XyTheme.dimens.outerVerticalPadding
+                                ),
+                                onChange = {
                                     connectionViewModel.setPasswordData(it)
                                 },
                                 singleLine = true,
-                                shape = RoundedCornerShape(5.dp),
-                                trailingIcon = {
-
+                                actionContent = {
                                     Icon(
                                         imageVector = if (showPassword) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
                                         contentDescription = null,
@@ -376,22 +339,8 @@ fun ConnectionScreen(
                                 },
                                 visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                                colors = TextFieldDefaults.colors(
-                                    unfocusedContainerColor = Color.Transparent,
-                                    focusedContainerColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.LightGray,
-                                    focusedIndicatorColor = Color.LightGray,
-                                    focusedLabelColor = Color.LightGray,
-                                    unfocusedLabelColor = Color.LightGray,
-                                    cursorColor = Color.White,
-                                    disabledContainerColor = Color.Transparent
-                                ),
-                                enabled = true,
-                                label = { Text(stringResource(R.string.password)) },
-                                placeholder = {
-                                    Text(text = stringResource(R.string.password))
-                                },
-                                leadingIcon = {
+                                hint = stringResource(R.string.password),
+                                leadingContent = {
                                     Icon(
                                         imageVector = Icons.Default.Lock,
                                         contentDescription = stringResource(R.string.password)
@@ -405,6 +354,10 @@ fun ConnectionScreen(
                                 Button(
                                     modifier = Modifier.width(width = 150.dp),
                                     onClick = {
+                                        if (connectionViewModel.isInputError()){
+                                            MessageUtils.sendPopTipError("账号或密码不能为空")
+                                            return@Button
+                                        }
                                         isLoad = true
                                         if (connectionViewModel.dataSourceType?.ifInputUrl == false) {
                                             Log.i("ConnectionScreen", "noifInputUrl")
