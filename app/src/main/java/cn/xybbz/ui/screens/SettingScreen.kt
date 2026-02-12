@@ -70,7 +70,7 @@ import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
-import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
+import cn.xybbz.ui.xy.RoundedSurfaceColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.SettingsViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -371,8 +371,8 @@ fun SettingScreen(
 
 @Composable
 fun SettingRoundedSurfaceColumn(content: @Composable ColumnScope.() -> Unit) {
-    RoundedSurfaceColumnPadding(
-        paddingValues = PaddingValues(
+    RoundedSurfaceColumn(
+        contentPaddingValues = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding
         ),
         content = content

@@ -428,6 +428,7 @@ fun XyItemIconSelect(
     text: String,
     imageVector: ImageVector? = null,
     enabled: Boolean = true,
+    enableLeading: Boolean = true,
     onIfSelected: () -> Boolean = { false },
     onClick: () -> Unit,
 ) {
@@ -447,15 +448,18 @@ fun XyItemIconSelect(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start
         ) {
-            imageVector?.let {
-                Icon(
-                    imageVector = imageVector,
-                    contentDescription = text,
-                    tint = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            } ?: Spacer(modifier = Modifier.width(24.dp))
+            if (enableLeading) {
+                imageVector?.let {
+                    Icon(
+                        imageVector = imageVector,
+                        contentDescription = text,
+                        tint = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } ?: Spacer(modifier = Modifier.width(24.dp))
 
-            Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
+                Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
+            }
+
             XyText(
                 text = text,
                 fontWeight = null,
@@ -662,6 +666,10 @@ fun XyItemRadioButton(
     style: TextStyle = MaterialTheme.typography.bodyLarge,
     selected: Boolean,
     enabled: Boolean = true,
+    paddingValue: PaddingValues = PaddingValues(
+        start = XyTheme.dimens.innerHorizontalPadding,
+        end = XyTheme.dimens.innerHorizontalPadding / 2
+    ),
     onClick: () -> Unit
 ) {
     Row(
@@ -673,8 +681,7 @@ fun XyItemRadioButton(
                 onClick()
             }
             .padding(
-                start = XyTheme.dimens.innerHorizontalPadding,
-                end = XyTheme.dimens.innerHorizontalPadding / 2
+                paddingValue
             )
     ) {
         XyItem(

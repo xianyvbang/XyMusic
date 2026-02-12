@@ -45,7 +45,7 @@ import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.LazyColumnHorizontalComponent
+import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.RoundedSurfaceColumn
 import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyColumnScreen
@@ -96,7 +96,7 @@ fun MemoryManagementScreen(
             }
         )
 
-        LazyColumnHorizontalComponent {
+        LazyColumnNotComponent {
             item {
                 MemoryManagementItem(
                     cacheSize = memoryManagementViewModel.musicCacheSize,
@@ -164,7 +164,9 @@ fun MemoryManagementItem(
     ifShowButton: Boolean = true,
     onClick: (() -> Unit)? = null,
 ) {
-    RoundedSurfaceColumn {
+    RoundedSurfaceColumn(
+        horizontalAlignment = Alignment.Start
+    ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -172,7 +174,7 @@ fun MemoryManagementItem(
                 .then(modifier)
                 .fillMaxWidth()
                 .padding(
-                    horizontal = XyTheme.dimens.innerVerticalPadding
+                    horizontal = XyTheme.dimens.innerHorizontalPadding
                 )
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -181,7 +183,7 @@ fun MemoryManagementItem(
                         top = XyTheme.dimens.innerVerticalPadding
                     ), text = text
                 )
-                XyTextSub(
+                XyTextSubSmall(
                     modifier = Modifier,
                     text = cacheSize
                 )
@@ -194,13 +196,22 @@ fun MemoryManagementItem(
                     text = stringResource(R.string.clear)
                 )
         }
-        XyTextSub(
-            modifier = Modifier.padding(
-                horizontal = XyTheme.dimens.innerHorizontalPadding,
-                vertical = XyTheme.dimens.innerVerticalPadding
-            ),
-            text = describe,
-            overflow = TextOverflow.Visible
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = XyTheme.dimens.innerHorizontalPadding,
+                    end = XyTheme.dimens.innerHorizontalPadding,
+                    bottom = XyTheme.dimens.innerVerticalPadding,
+                ),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            XyTextSub(
+                text = describe,
+                overflow = TextOverflow.Visible
+            )
+        }
+
     }
 }

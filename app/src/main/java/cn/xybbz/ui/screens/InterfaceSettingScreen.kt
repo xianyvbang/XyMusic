@@ -67,7 +67,7 @@ import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
-import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
+import cn.xybbz.ui.xy.RoundedSurfaceColumn
 import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
@@ -189,7 +189,7 @@ fun InterfaceSettingScreen(
             }
             if (false)
                 item {
-                    RoundedSurfaceColumnPadding(color = Color.Black.copy(alpha = 0.3f)) {
+                    RoundedSurfaceColumn(color = Color.Black.copy(alpha = 0.3f)) {
                         XyItemSwitcher(
                             state = interfaceSettingViewModel.backgroundConfig.ifChangeOneColor,
                             text = stringResource(R.string.single_color_setting),

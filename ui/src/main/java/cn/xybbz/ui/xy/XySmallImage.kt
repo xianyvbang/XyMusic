@@ -131,36 +131,3 @@ fun XySmallImage(
     }
 
 }
-
-
-@Composable
-fun XyImage(
-    modifier: Modifier = Modifier,
-    model: Painter? = null,
-    placeholder: Painter,
-    shape: Shape,
-    contentDescription: String? = null
-) {
-    if (model != null)
-        Image(
-            modifier = Modifier
-                .then(modifier)
-                .aspectRatio(1F)
-                .clip(shape),
-            painter = model,
-            contentDescription = contentDescription,
-            contentScale = ContentScale.Crop
-        )
-    else {
-        Image(
-            modifier = Modifier
-                .then(modifier)
-                .aspectRatio(1F)
-                .clip(shape),
-            painter = placeholder,
-            contentDescription = contentDescription,
-            contentScale = ContentScale.Crop
-        )
-    }
-
-}

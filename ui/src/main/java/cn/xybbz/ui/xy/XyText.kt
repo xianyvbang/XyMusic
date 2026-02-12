@@ -39,7 +39,7 @@ fun XyText(
     text: String,
     fontWeight: FontWeight? = FontWeight.Bold,
     maxLines: Int = 1,
-    style: TextStyle = MaterialTheme.typography.bodyLarge,
+    style: TextStyle = MaterialTheme.typography.bodyMedium,
     overflow: TextOverflow = TextOverflow.Ellipsis,
     color: Color = MaterialTheme.colorScheme.onSurface
 ) {

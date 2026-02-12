@@ -9,7 +9,7 @@ class XyPopTipSettings: PopTipSettings() {
     }
 
     override fun align(): ALIGN {
-        return ALIGN.TOP
+        return ALIGN.BOTTOM
     }
 
     override fun enterAnimResId(light: Boolean): Int {

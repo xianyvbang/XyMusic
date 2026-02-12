@@ -20,6 +20,7 @@ package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -49,10 +50,10 @@ import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.LazyColumnHorizontalComponent
+import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.RoundedSurfaceColumn
 import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyItemRadioButton
 import cn.xybbz.viewmodel.LanguageConfigViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -98,38 +99,27 @@ fun LanguageConfigScreen(
                 }
             )
 
-            LazyColumnHorizontalComponent {
-                item {
-                    XyText(
-                        text = stringResource(R.string.selected_language)
-                    )
-                }
+            LazyColumnNotComponent {
                 item {
                     RoundedSurfaceColumn {
-                        LanguageTextItem(
-                            languageType = languageConfigViewModel.settingsConfig.languageType,
-                            enabled = false,
-                            onClick = {})
-                    }
-                }
-                item {
-                    XyText(
-                        text = stringResource(R.string.available_languages)
-                    )
-                }
-                item {
-                    RoundedSurfaceColumn {
-                        LanguageType.entries.filter { it != languageConfigViewModel.settingsConfig.languageType }
+                        LanguageType.entries
                             .forEach {
-                                LanguageTextItem(
-                                    languageType = it,
+                                XyItemRadioButton(
+                                    text = it.languageName,
+                                    sub = it.languageCode,
+                                    selected = it == languageConfigViewModel.settingsConfig.languageType,
                                     enabled = it.enabled,
+                                    paddingValue = PaddingValues(
+                                        horizontal = XyTheme.dimens.innerHorizontalPadding,
+                                        vertical = XyTheme.dimens.outerVerticalPadding
+                                    ),
                                     onClick = {
                                         languageConfigViewModel.updateLanguageType(
                                             it,
                                             context = context
                                         )
-                                    })
+                                    }
+                                )
                             }
 
                     }

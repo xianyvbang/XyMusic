@@ -69,16 +69,22 @@ abstract class PageListViewModel<T : Any>(
      * 设置年代筛选
      */
     suspend fun setFilterEraType(
-        eraItem: XyEraItem,
+        eraItem: XyEraItem?,
         refreshPage: suspend () -> Unit
     ) {
-        val yearList = eraItem.years
         val sort = this._sortType.value
-        if (sort.yearList == yearList) {
+
+        if (eraItem == null){
             sort.yearList = null
-        } else {
-            sort.yearList = yearList
+        }else {
+            val yearList = eraItem.years
+            if (sort.yearList == yearList) {
+                sort.yearList = null
+            } else {
+                sort.yearList = yearList
+            }
         }
+
         updateSort(sort.copy(), refreshPage = refreshPage)
     }
 

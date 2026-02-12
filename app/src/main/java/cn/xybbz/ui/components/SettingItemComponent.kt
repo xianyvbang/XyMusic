@@ -111,7 +111,8 @@ fun SettingItemComponent(
                 info?.let {
                     XyTextSubSmall(
                         text = info,
-                        maxLines = maxLines
+                        maxLines = maxLines,
+                        color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 trailingContent?.invoke()
@@ -136,7 +137,7 @@ fun SettingItemComponent(
                                 }, onDismissRequest = {
                                     onDismissRequest?.invoke()
                                 }).show()
-                    }) {
+                    }, enabled = enabled) {
                         BadgedBox(
                             badge = {
                                 if (ifOpenBadge)
@@ -179,7 +180,7 @@ fun SettingParentItemComponent(
             horizontal = XyTheme.dimens.outerHorizontalPadding,
         ),
         backgroundColor = Color.Transparent,
-        horizontalAlignment= Alignment.Start,
+        horizontalAlignment = Alignment.Start,
     ) {
         XyRow(paddingValues = PaddingValues(), modifier = Modifier) {
             XyText(
@@ -190,7 +191,6 @@ fun SettingParentItemComponent(
         }
         bottomInfo?.let {
             XyTextSubSmall(
-                modifier = Modifier,
                 text = bottomInfo,
                 color = if (enabled) textColor else MaterialTheme.colorScheme.onSurfaceVariant,
                 overflow = TextOverflow.Visible

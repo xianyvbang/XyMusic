@@ -55,7 +55,7 @@ import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
-import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
+import cn.xybbz.ui.xy.RoundedSurfaceColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyTextSubSmall
@@ -127,7 +127,7 @@ fun ConnectionConfigInfoScreen(
             }
 
             item {
-                RoundedSurfaceColumnPadding(
+                RoundedSurfaceColumn(
                 ) {
                     ConnectionInfoTextItem(
                         title = stringResource(R.string.username),
@@ -162,7 +162,7 @@ fun ConnectionConfigInfoScreen(
             }
 
             item {
-                RoundedSurfaceColumnPadding(
+                RoundedSurfaceColumn(
                 ) {
                     SettingItemComponent(
                         title = stringResource(R.string.music_library),

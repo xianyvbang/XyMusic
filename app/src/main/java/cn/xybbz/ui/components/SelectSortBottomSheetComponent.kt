@@ -58,7 +58,6 @@ import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.xy.LazyColumnBottomSheetComponent
 import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
-import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
 import cn.xybbz.ui.xy.XyItemIconSelect
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
@@ -117,7 +116,7 @@ fun SelectSortBottomSheetComponent(
     onSortTypeClick: suspend (SortTypeEnum?) -> Unit,
     onSortType: () -> SortTypeEnum?,
     onFilterEraTypeList: () -> List<XyEraItem>,
-    onFilterEraTypeClick: suspend (XyEraItem) -> Unit,
+    onFilterEraTypeClick: suspend (XyEraItem?) -> Unit,
     onIfFavorite: () -> Boolean,
     setFavorite: suspend (Boolean) -> Unit,
     sortTypeList: List<SortTypeEnum> = SortTypeEnum.entries,
@@ -210,6 +209,20 @@ fun SelectSortBottomSheetComponent(
                             setFavorite(!onIfFavorite())
                         }
                     }, ifItemShow = { onIfFavoriteFilter() == true }),
+                MenuItemDefaultData(
+                    title = stringResource(R.string.era_filter),
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Rounded.CalendarToday,
+                            contentDescription = stringResource(R.string.era_filter),
+                        )
+
+                    },
+                    onClick = composeClick {
+                        ifShowSortOrFilterMenu = false
+                        ifOpenAgeFilterBottom = true
+                    },
+                    ifItemShow = { onIfYearFilter() == true && onIfSelectOneYear.invoke() == false }),
                 //单年筛选
                 MenuItemDefaultData(
                     title = stringResource(R.string.year_filter),
@@ -283,7 +296,7 @@ fun SelectSortBottomSheetComponent(
         },
         onFilterEraTypeList = onFilterEraTypeList,
         onFilterEraTypeClick = {
-            selectEraId = it.id
+            selectEraId = it?.id
             coroutineScope.launch {
                 onFilterEraTypeClick(it)
             }
@@ -350,7 +363,7 @@ private fun AgeFilterComponent(
     ifDisplay: () -> Boolean,
     onSetDisplay: (Boolean) -> Unit,
     onFilterEraTypeList: () -> List<XyEraItem>,
-    onFilterEraTypeClick: (XyEraItem) -> Unit,
+    onFilterEraTypeClick: (XyEraItem?) -> Unit,
     onFilterEraType: () -> Int,
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -359,27 +372,29 @@ private fun AgeFilterComponent(
         modifier = modifier,
         onIfDisplay = ifDisplay,
         onClose = onSetDisplay,
+        dragHandle = null,
         titleText = stringResource(R.string.era_filter)
     ) {
-        RoundedSurfaceColumnPadding(
-            color = Color.Transparent
-        ) {
-            onFilterEraTypeList().forEach {
-                XyItemIconSelect(
-                    onClick = {
-                        coroutineScope
-                            .launch {
+        onFilterEraTypeList().forEach {
+            XyItemIconSelect(
+                onClick = {
+                    coroutineScope
+                        .launch {
+                            if (onFilterEraType() == it.id){
+                                onFilterEraTypeClick(null)
+                            }else{
                                 onFilterEraTypeClick(it)
-                                bottomSheetState.hide()
                             }
-                            .invokeOnCompletion {
-                                onSetDisplay(false)
-                            }
-                    },
-                    text = it.title + stringResource(R.string.decade_suffix),
-                    onIfSelected = { onFilterEraType() == it.id }
-                )
-            }
+                            bottomSheetState.hide()
+                        }
+                        .invokeOnCompletion {
+                            onSetDisplay(false)
+                        }
+                },
+                enableLeading = false,
+                text = it.title + stringResource(R.string.decade_suffix),
+                onIfSelected = { onFilterEraType() == it.id }
+            )
         }
 
     }
