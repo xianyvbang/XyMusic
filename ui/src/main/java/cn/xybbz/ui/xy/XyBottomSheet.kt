@@ -37,7 +37,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -108,13 +107,15 @@ fun ModalBottomSheetExtendComponent(
                                 verticalArrangement = Arrangement.Top,
                                 horizontalAlignment = Alignment.Start
                             ) {
-                                XyText(text = titleText)
+                                XyText(
+                                    text = titleText,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
                                 Spacer(modifier = Modifier.width(XyTheme.dimens.innerHorizontalPadding))
                                 titleSub?.let {
-                                    Text(
+                                    XyTextSub(
                                         text = titleSub,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        style = MaterialTheme.typography.titleSmall
+                                        style = MaterialTheme.typography.bodyMedium
                                     )
                                 }
                             }

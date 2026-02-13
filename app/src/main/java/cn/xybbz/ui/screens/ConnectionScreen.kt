@@ -29,7 +29,6 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,11 +48,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Http
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.rounded.Cancel
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.DriveFileRenameOutline
+import androidx.compose.material.icons.rounded.Http
+import androidx.compose.material.icons.rounded.Password
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
@@ -71,7 +71,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -94,7 +94,6 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.ItemTrailingArrowRight
 import cn.xybbz.ui.xy.LazyColumnComponent
 import cn.xybbz.ui.xy.LazyColumnNotComponent
-import cn.xybbz.ui.xy.LazyColumnNotHorizontalComponent
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyItemOutSpacer
@@ -228,9 +227,12 @@ fun ConnectionScreen(
             when (screen) {
                 ScreenType.SELECT_DATA_SOURCE -> {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        LazyColumnNotHorizontalComponent(
+                        LazyColumnNotComponent(
                             modifier = Modifier,
-                            horizontalAlignment = Alignment.Start
+                            horizontalAlignment = Alignment.Start,
+                            contentPadding = PaddingValues(
+                                vertical = XyTheme.dimens.outerVerticalPadding
+                            )
                         ) {
 
                             item {
@@ -269,105 +271,27 @@ fun ConnectionScreen(
                     LazyColumnComponent {
                         if (connectionViewModel.dataSourceType?.ifInputUrl == true)
                             item {
-                                XyEdit(
-                                    text = connectionViewModel.address,
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    paddingValues = PaddingValues(
-                                        vertical = XyTheme.dimens.outerVerticalPadding
-                                    ),
-                                    onChange = {
+                                AddressInputEdit(
+                                    address = connectionViewModel.address,
+                                    updateAddress = {
                                         connectionViewModel.setAddressData(it)
-                                    },
-                                    singleLine = true,
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                                    hint = "连接地址:http://192.168.3.12:8096",
-                                    leadingContent = {
-                                        Icon(
-                                            imageVector = Icons.Default.Http,
-                                            contentDescription = stringResource(R.string.httpInput)
-                                        )
-                                    },
-                                    actionContent = if (connectionViewModel.address.isNotBlank()) {
-                                        {
-                                            Icon(
-                                                modifier = Modifier
-                                                    .clickable {
-                                                        connectionViewModel.setAddressData("")
-                                                    },
-                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                imageVector = Icons.Rounded.Cancel,
-                                                contentDescription = "清空"
-                                            )
-                                        }
-                                    } else null
+                                    }
                                 )
                             }
                         item {
-                            XyEdit(
-                                text = connectionViewModel.username,
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                paddingValues = PaddingValues(
-                                    vertical = XyTheme.dimens.outerVerticalPadding
-                                ),
-                                onChange = {
+                            UsernameInputEdit(
+                                username = connectionViewModel.username,
+                                updateUsername = {
                                     connectionViewModel.setUserNameData(it)
-                                },
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                                hint = stringResource(R.string.username),
-                                leadingContent = {
-                                    Icon(
-                                        imageVector = Icons.Default.Person,
-                                        contentDescription = stringResource(R.string.username)
-                                    )
-                                },
-                                actionContent = if (connectionViewModel.username.isNotBlank()) {
-                                    {
-                                        Icon(
-                                            modifier = Modifier
-                                                .clickable {
-                                                    connectionViewModel.setUserNameData("")
-                                                },
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            imageVector = Icons.Rounded.Cancel,
-                                            contentDescription = "清空"
-                                        )
-                                    }
-                                } else null
+                                }
                             )
                         }
 
                         item {
-                            XyEdit(
-                                text = connectionViewModel.password,
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                paddingValues = PaddingValues(
-                                    vertical = XyTheme.dimens.outerVerticalPadding
-                                ),
-                                onChange = {
+                            PasswordInputEdit(
+                                password = connectionViewModel.password,
+                                updatePassword = {
                                     connectionViewModel.setPasswordData(it)
-                                },
-                                singleLine = true,
-                                actionContent = {
-                                    Icon(
-                                        imageVector = if (showPassword) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
-                                        contentDescription = null,
-                                        modifier = Modifier.debounceClickable {
-                                            showPassword = !showPassword
-                                        }, tint = Color.White
-                                    )
-                                },
-                                visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                                hint = stringResource(R.string.password),
-                                leadingContent = {
-                                    Icon(
-                                        imageVector = Icons.Default.Lock,
-                                        contentDescription = stringResource(R.string.password)
-                                    )
                                 }
                             )
                         }
@@ -673,4 +597,167 @@ private fun LoginError(
         if (errorMessage.isNotBlank())
             XyTextSub(text = errorMessage)
     }
+}
+
+/**
+ * 地址输入框
+ */
+@Composable
+fun AddressInputEdit(
+    address: String,
+    updateAddress: (String) -> Unit
+) {
+    ConnectionDataInfoInputEdit(
+        text = address,
+        onChange = {
+            updateAddress(it)
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+        hint = "连接地址:http://192.168.3.12:8096",
+        icon = Icons.Rounded.Http,
+        iconContentDescription = stringResource(R.string.httpInput),
+        actionContent = if (address.isNotBlank()) {
+            {
+                IconButton(onClick = composeClick {
+                    updateAddress("")
+                }) {
+                    Icon(
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        imageVector = Icons.Rounded.Cancel,
+                        contentDescription = "清空"
+                    )
+                }
+            }
+        } else null
+    )
+}
+
+@Composable
+fun UsernameInputEdit(
+    modifier: Modifier = Modifier,
+    username: String,
+    updateUsername: (String) -> Unit
+) {
+    ConnectionDataInfoInputEdit(
+        text = username,
+        modifier = modifier,
+        onChange = {
+            updateUsername(it)
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+        hint = stringResource(R.string.username),
+        icon = Icons.Rounded.Person,
+        iconContentDescription = stringResource(R.string.username),
+        actionContent = if (username.isNotBlank()) {
+            {
+                IconButton(onClick = composeClick {
+                    updateUsername("")
+                }) {
+                    Icon(
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        imageVector = Icons.Rounded.Cancel,
+                        contentDescription = "清空"
+                    )
+                }
+            }
+        } else null
+    )
+}
+
+@Composable
+fun PasswordInputEdit(
+    modifier: Modifier = Modifier,
+    password: String,
+    updatePassword: (String) -> Unit
+) {
+    var showPassword by remember { mutableStateOf(false) }
+    ConnectionDataInfoInputEdit(
+        text = password,
+        modifier = modifier,
+        onChange = {
+            updatePassword(it)
+        },
+        actionContent = {
+            IconButton(onClick = composeClick() {
+                showPassword = !showPassword
+            }) {
+                Icon(
+                    imageVector = if (showPassword) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
+                    contentDescription = null
+                )
+            }
+        },
+        visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        hint = stringResource(R.string.password),
+        icon = Icons.Rounded.Password,
+        iconContentDescription = stringResource(R.string.password)
+    )
+}
+
+@Composable
+fun ConnectionNameInputEdit(
+    modifier: Modifier = Modifier,
+    connectionName: String,
+    updateConnectionName: (String) -> Unit
+) {
+    ConnectionDataInfoInputEdit(
+        text = connectionName,
+        modifier = modifier,
+        onChange = {
+            updateConnectionName(it)
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+        hint = stringResource(R.string.set_alias),
+        icon = Icons.Rounded.DriveFileRenameOutline,
+        iconContentDescription = stringResource(R.string.set_alias),
+        actionContent = if (connectionName.isNotBlank()) {
+            {
+                IconButton(onClick = composeClick {
+                    updateConnectionName("")
+                }) {
+                    Icon(
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        imageVector = Icons.Rounded.Cancel,
+                        contentDescription = "清空"
+                    )
+                }
+            }
+        } else null
+    )
+}
+
+
+@Composable
+private fun ConnectionDataInfoInputEdit(
+    modifier: Modifier = Modifier,
+    text: String,
+    onChange: (String) -> Unit,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    hint: String? = null,
+    icon: ImageVector,
+    iconContentDescription: String,
+    actionContent: (@Composable () -> Unit)? = null,
+) {
+    XyEdit(
+        text = text,
+        modifier = modifier
+            .fillMaxWidth(),
+        paddingValues = PaddingValues(
+            vertical = XyTheme.dimens.outerVerticalPadding
+        ),
+        onChange = onChange,
+        singleLine = true,
+        keyboardOptions = keyboardOptions,
+        visualTransformation = visualTransformation,
+        hint = hint,
+        leadingContent = {
+            Icon(
+                imageVector = icon,
+                contentDescription = iconContentDescription
+            )
+        },
+        actionContent = actionContent
+    )
 }

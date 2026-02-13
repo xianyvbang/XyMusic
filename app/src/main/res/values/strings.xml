@@ -109,7 +109,6 @@
     <string name="connection_address">链接地址</string>
     <string name="set_alias">设置别名</string>
     <string name="delete_connection">删除连接</string>
-    <string name="cannot_delete_current_connection">当前连接无法删除</string>
     <string name="warning">注意</string>
     <string name="confirm_delete_connection">确定要删除当前连接信息吗?</string>
 

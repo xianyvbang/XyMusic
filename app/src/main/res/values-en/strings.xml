@@ -114,7 +114,6 @@ Automatic calculation rules for the upper limit of cache:
     <string name="connection_address">Link address</string>
     <string name="set_alias">Set alias</string>
     <string name="delete_connection">Delete connection</string>
-    <string name="cannot_delete_current_connection">The current connection cannot be deleted</string>
     <string name="warning">Notice</string>
     <string name="confirm_delete_connection">Are you sure you want to delete the current connection information?</string>
 

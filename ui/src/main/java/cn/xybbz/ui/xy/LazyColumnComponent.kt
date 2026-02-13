@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
@@ -98,69 +97,6 @@ fun LazyColumnNotComponent(
     )
 }
 
-
-@Composable
-fun LazyColumnHorizontalComponent(
-    modifier: Modifier = Modifier,
-    state: LazyListState = rememberLazyListState(),
-    contentPadding: PaddingValues = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
-    verticalArrangement: Arrangement.Vertical = Arrangement.Top,
-    horizontalAlignment: Alignment.Horizontal = Alignment.Start,
-    bottomItem: (LazyListScope.() -> Unit)? = {
-        item {
-            Spacer(
-                modifier = Modifier.height(
-                    XyTheme.dimens.snackBarPlayerHeight + WindowInsets.navigationBars.asPaddingValues()
-                        .calculateBottomPadding()
-                )
-            )
-        }
-    },
-    items: LazyListScope.() -> Unit
-) {
-    LazyColumnParentComponent(
-        modifier = modifier
-            .fillMaxWidth(),
-        lazyListState = state,
-        contentPadding = contentPadding,
-        verticalArrangement = verticalArrangement,
-        horizontalAlignment = horizontalAlignment,
-        content = {
-            items()
-            bottomItem?.invoke(this)
-        }
-    )
-}
-
-@Composable
-fun LazyColumnNotHorizontalComponent(
-    modifier: Modifier = Modifier,
-    state: LazyListState = rememberLazyListState(),
-    horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
-    items: LazyListScope.() -> Unit
-) {
-    LazyColumnParentComponent(
-        modifier = modifier
-            .fillMaxSize(),
-        lazyListState = state,
-        contentPadding = PaddingValues(
-            vertical = XyTheme.dimens.outerVerticalPadding
-        ),
-        horizontalAlignment = horizontalAlignment,
-        content = {
-            items()
-            item {
-                Spacer(
-                    modifier = Modifier.height(
-                        XyTheme.dimens.snackBarPlayerHeight + WindowInsets.navigationBars.asPaddingValues()
-                            .calculateBottomPadding()
-                    )
-                )
-            }
-        }
-    )
-}
-
 /**
  * 通用LazyColumn
  * @param [modifier] 样式
@@ -199,7 +135,7 @@ fun LazyColumnBottomSheetComponent(
     LazyColumnParentComponent(
         modifier = modifier,
         horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Top,
         contentPadding = PaddingValues(
             horizontal = horizontal,
             vertical = vertical

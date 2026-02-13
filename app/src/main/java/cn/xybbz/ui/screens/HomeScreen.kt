@@ -22,10 +22,8 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -58,12 +56,10 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -122,7 +118,7 @@ import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.LazyColumnComponent
+import cn.xybbz.ui.xy.LazyColumnBottomSheetComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyItemLabel
@@ -152,7 +148,7 @@ fun HomeScreen(
     val dataCount by homeViewModel.homeDataRepository.dataCount.collectAsStateWithLifecycle()
     val navigator = LocalNavigator.current
     val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = false
+        skipPartiallyExpanded = true
     )
 
     val deletePlaylist = stringResource(R.string.delete_playlist)
@@ -314,26 +310,24 @@ fun HomeScreen(
                                 sheetState = sheetState,
                                 state = true,
                                 titleText = loginExceptionInfo,
+                                dragHandle = null,
                                 content = {
-                                    Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                                    HorizontalDivider()
-                                    LazyColumnComponent(
+                                    LazyColumnBottomSheetComponent(
                                         modifier = Modifier
-                                            .height(400.dp)
+                                            .height(400.dp),
+                                        horizontal = XyTheme.dimens.outerHorizontalPadding
                                     ) {
                                         item {
-                                            Column {
-                                                Text(
-                                                    text = stringResource(homeViewModel.dataSourceManager.errorHint),
-                                                    overflow = TextOverflow.Visible,
-                                                    style = MaterialTheme.typography.titleSmall
-                                                )
-                                                if (homeViewModel.dataSourceManager.errorMessage.isNotBlank()) {
-                                                    HorizontalDivider()
-                                                    XyTextSubSmall(text = homeViewModel.dataSourceManager.errorMessage)
-                                                }
-                                            }
+                                            XyText(
+                                                text = stringResource(homeViewModel.dataSourceManager.errorHint),
+                                                overflow = TextOverflow.Visible,
+                                                maxLines = Int.MAX_VALUE
+                                            )
                                         }
+                                        if (homeViewModel.dataSourceManager.errorMessage.isNotBlank())
+                                            item {
+                                                XyTextSubSmall(text = homeViewModel.dataSourceManager.errorMessage)
+                                            }
                                     }
                                 }
                             ).show()

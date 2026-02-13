@@ -30,15 +30,18 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.AddCard
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,15 +55,25 @@ import cn.xybbz.common.enums.img
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.router.Connection
 import cn.xybbz.router.ConnectionInfo
+import cn.xybbz.router.SelectLibrary
+import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.BottomSheetObject
 import cn.xybbz.ui.components.ScreenLazyColumn
+import cn.xybbz.ui.components.SettingItemComponent
+import cn.xybbz.ui.components.SettingParentItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
+import cn.xybbz.ui.components.dismiss
+import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.ItemTrailingArrowRight
+import cn.xybbz.ui.xy.RoundedSurfaceColumn
 import cn.xybbz.ui.xy.XyColumnScreen
+import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.ConnectionManagementViewModel
+import kotlinx.coroutines.launch
 
 /**
  * 连接设置列表
@@ -72,6 +85,12 @@ fun ConnectionManagement(
 ) {
     val navigator = LocalNavigator.current
     val lazyListState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
+    val warning = stringResource(R.string.warning)
 
     XyColumnScreen(
         modifier =
@@ -113,7 +132,7 @@ fun ConnectionManagement(
         ) {
             items(
                 connectionManagementViewModel.connectionList,
-                key = { it.id }) { connectionConfig ->
+                key = { it.connectionConfig.id }) { connectionConfigExt ->
                 ItemTrailingArrowRight(
                     modifier = Modifier
                         .border(
@@ -122,11 +141,15 @@ fun ConnectionManagement(
                             shape = RoundedCornerShape(XyTheme.dimens.corner)
                         ),
                     backgroundColor = Color.Transparent,
-                    name = connectionConfig.type.title + "-" + connectionConfig.username,
-                    subordination = connectionConfig.address,
-                    img = connectionConfig.type.img.let { img -> painterResource(img) },
+                    name = connectionConfigExt.connectionConfig.type.title + "-" + connectionConfigExt.connectionConfig.username,
+                    subordination = connectionConfigExt.connectionConfig.address,
+                    img = connectionConfigExt.connectionConfig.type.img.let { img ->
+                        painterResource(
+                            img
+                        )
+                    },
                     onClick = {
-                        navigator.navigate(ConnectionInfo(connectionConfig.id))
+                        navigator.navigate(ConnectionInfo(connectionConfigExt.connectionConfig.id))
                     },
                     trailingContent = {
                         Row(
@@ -134,11 +157,11 @@ fun ConnectionManagement(
                             horizontalArrangement = Arrangement.End
                         ) {
                             Switch(
-                                checked = connectionManagementViewModel.connectionId == connectionConfig.id,
+                                checked = connectionManagementViewModel.connectionId == connectionConfigExt.connectionConfig.id,
                                 onCheckedChange = {
                                     if (it)
                                         connectionManagementViewModel.changeDataSource(
-                                            connectionConfig
+                                            connectionConfigExt.connectionConfig
                                         )
                                 },
                                 enabled = true,
@@ -148,19 +171,83 @@ fun ConnectionManagement(
                                 )
                             )
                             IconButton(
+                                colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Red),
                                 onClick = composeClick {
-                                    navigator.navigate(
-                                        ConnectionInfo(
-                                            connectionConfig.id
-                                        )
-                                    )
+                                    BottomSheetObject(
+                                        sheetState = sheetState,
+                                        state = true,
+                                        titleText = connectionConfigExt.connectionConfig.name,
+                                        dragHandle = null,
+                                        content = { sheetObject ->
+                                            RoundedSurfaceColumn {
+                                                SettingItemComponent(
+                                                    title = "修改连接"
+                                                ) {
+                                                    coroutineScope.launch {
+                                                        sheetState.hide()
+                                                    }.invokeOnCompletion {
+                                                        sheetObject.dismiss()
+                                                        navigator.navigate(
+                                                            ConnectionInfo(connectionConfigExt.connectionConfig.id)
+                                                        )
+                                                    }
+
+                                                }
+                                                SettingItemComponent(
+                                                    title = stringResource(R.string.music_library),
+                                                    info = if (connectionConfigExt.connectionConfig.libraryId.isNullOrBlank())
+                                                        stringResource(R.string.all_media_libraries)
+                                                    else connectionConfigExt.libraryName,
+                                                    onRouter = {
+                                                        coroutineScope.launch {
+                                                            sheetState.hide()
+                                                        }.invokeOnCompletion {
+                                                            sheetObject.dismiss()
+                                                            navigator.navigate(
+                                                                SelectLibrary(
+                                                                    connectionConfigExt.connectionConfig.id,
+                                                                    connectionConfigExt.connectionConfig.libraryId
+                                                                )
+                                                            )
+                                                        }
+                                                    }
+                                                )
+
+                                                SettingParentItemComponent(
+                                                    title = stringResource(R.string.delete_connection),
+                                                    onClick = {
+                                                        AlertDialogObject(
+                                                            title = warning,
+                                                            content = {
+                                                                XyTextSubSmall(
+                                                                    text = stringResource(R.string.confirm_delete_connection)
+                                                                )
+                                                            },
+                                                            ifWarning = true,
+                                                            onConfirmation = {
+                                                                coroutineScope.launch {
+                                                                    connectionManagementViewModel.removeConnection(
+                                                                        connectionConfigExt.connectionConfig.id
+                                                                    )
+                                                                    sheetState.hide()
+                                                                }.invokeOnCompletion {
+                                                                    sheetObject.dismiss()
+                                                                }
+                                                            }
+                                                        ).show()
+
+                                                    }, textColor = Color.Red
+                                                )
+                                            }
+                                        },
+                                    ).show()
                                 }) {
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                                    imageVector = Icons.Rounded.MoreVert,
                                     contentDescription =
                                         stringResource(
                                             R.string.view_connection_info,
-                                            connectionConfig.type.title + "-" + connectionConfig.username
+                                            connectionConfigExt.connectionConfig.type.title + "-" + connectionConfigExt.connectionConfig.username
                                         )
                                 )
                             }
