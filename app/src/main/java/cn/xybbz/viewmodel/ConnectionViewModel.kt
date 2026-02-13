@@ -85,9 +85,16 @@ class ConnectionViewModel @Inject constructor(
     //加载状态
     var loading by mutableStateOf(false)
         private set
+    //资源加载状态
+    var resourceLoading by mutableStateOf(false)
+        private set
 
     //是否登陆报错
     var isLoginError by mutableStateOf(false)
+        private set
+
+    //是否资源加载报错
+    var isResourceLoginError by mutableStateOf(false)
         private set
 
     //是否登陆成功
@@ -141,7 +148,7 @@ class ConnectionViewModel @Inject constructor(
                 serverName = plexInfo?.serverName,
                 serverId = plexInfo?.serverId
             )
-        tmpDataSourceParentServer?.addClientAndLogin(clientLoginInfoReq,)?.onEach {
+        tmpDataSourceParentServer?.addClientAndLogin(clientLoginInfoReq)?.onEach {
             Log.i("=====", "数据获取${it}")
 
             val loginSateInfo = dataSourceManager.getLoginSateInfo(it, ifTemp)
@@ -180,8 +187,17 @@ class ConnectionViewModel @Inject constructor(
         return (address.isBlank() || username.isBlank()) && dataSourceType?.ifInputUrl == true
     }
 
+    /**
+     * 判断账号密码是否输入
+     */
+    fun ifInputAccount(): Boolean {
+        return username.isBlank()
+    }
+
+
     fun createTmpAddress() {
-        tmpAddressList.clear()
+        clearLoginStatus()
+        updateSelectUrlIndexZero()
         if (!URLUtil.isNetworkUrl(address)) {
             dataSourceType?.options?.forEach {
                 val url = "${it}$address"
@@ -213,7 +229,7 @@ class ConnectionViewModel @Inject constructor(
      * 判断输入的链接是否是以http://或者http://开头,结尾是否有端口号
      */
     fun isHttpStartAndPortEnd(): Boolean {
-        return (URLUtil.isNetworkUrl(address) && isEndPort(address)) || dataSourceType?.ifInputUrl == false
+        return (URLUtil.isNetworkUrl(address) && isEndPort(address)) && dataSourceType?.ifInputUrl == true
     }
 
     /**
@@ -243,7 +259,17 @@ class ConnectionViewModel @Inject constructor(
             plexInfo = tmpPlexInfo[selectInfoIndex]
             tmpAddress = tmpPlexInfo[selectInfoIndex].addressUrl
         }
+    }
 
+    /**
+     * 设置选择地址的index为0
+     */
+    private fun updateSelectUrlIndexZero() {
+        this.selectUrlIndex = 0
+        plexInfo = null
+        tmpAddress = ""
+        tmpPlexInfo = emptyList()
+        tmpAddressList.clear()
     }
 
     /**
@@ -256,16 +282,28 @@ class ConnectionViewModel @Inject constructor(
     /**
      * 清空登陆状态
      */
-    fun clearLoginStatus() {
+    private fun clearLoginStatus() {
         errorHint = R.string.empty_info
         errorMessage = ""
         isLoginSuccess = false
         isLoginError = false
     }
 
+    /**
+     * 清空资源获取状态
+     */
+    private fun clearResourceLoginStatus() {
+        errorHint = R.string.empty_info
+        errorMessage = ""
+        isResourceLoginError = false
+        resourceLoading = false
+    }
+
     suspend fun getResources() {
         Log.i("ConnectionScreen", "读取资源")
-        clearLoginStatus()
+        clearResourceLoginStatus()
+        updateResourceLoading(true)
+        updateSelectUrlIndexZero()
         tmpDataSourceParentServer = dataSourceManager
         val dataSourceTypeTmp = dataSourceType
         if (dataSourceTypeTmp != null)
@@ -289,8 +327,8 @@ class ConnectionViewModel @Inject constructor(
             if (!resources.isNullOrEmpty())
                 tmpPlexInfo = resources
         } catch (e: Exception) {
-            Log.e("ConnectionScreen","获取资源失败",e)
-            isLoginError = true
+            Log.e("ConnectionScreen", "获取资源失败", e)
+            isResourceLoginError = true
             errorHint = R.string.plex_resource_error
             errorMessage = ""
         }
@@ -301,6 +339,13 @@ class ConnectionViewModel @Inject constructor(
      */
     fun updateLoading(loading: Boolean) {
         this.loading = loading
+    }
+
+    /**
+     * 更新资源加载状态
+     */
+    fun updateResourceLoading(loading: Boolean) {
+        resourceLoading = loading
     }
 
     fun updateIfConnectionConfig() {

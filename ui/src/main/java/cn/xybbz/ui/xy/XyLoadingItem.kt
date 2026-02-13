@@ -26,13 +26,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 @Composable
 fun XyLoadingItem(modifier: Modifier = Modifier, text: String) {
@@ -45,10 +43,10 @@ fun XyLoadingItem(modifier: Modifier = Modifier, text: String) {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
+            XyText(
                 text = text,
-                modifier = Modifier,
-                fontSize = 28.sp,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier
             )
 
             CircularProgressIndicator(

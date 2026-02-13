@@ -140,7 +140,6 @@ fun SelectLibraryScreen(
                                 }
                         )
                     }
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = XyTheme.dimens.outerHorizontalPadding))
                 }
             }
         }

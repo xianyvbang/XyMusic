@@ -37,7 +37,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -76,7 +75,6 @@ fun ConnectionConfigInfoScreen(
 ) {
     val clipboardManager = LocalClipboard.current
     val navigator = LocalNavigator.current
-    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val copySuccess = stringResource(R.string.copy_success)
     val cannotDeleteCurrentConnection = stringResource(R.string.cannot_delete_current_connection)
@@ -127,8 +125,7 @@ fun ConnectionConfigInfoScreen(
             }
 
             item {
-                RoundedSurfaceColumn(
-                ) {
+                RoundedSurfaceColumn {
                     ConnectionInfoTextItem(
                         title = stringResource(R.string.username),
                         info = connectionConfigInfoViewModel.username
@@ -162,8 +159,7 @@ fun ConnectionConfigInfoScreen(
             }
 
             item {
-                RoundedSurfaceColumn(
-                ) {
+                RoundedSurfaceColumn {
                     SettingItemComponent(
                         title = stringResource(R.string.music_library),
                         info = if (connectionConfigInfoViewModel.library.id == Constants.MINUS_ONE_INT.toString())

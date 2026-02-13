@@ -223,12 +223,13 @@ class NavidromeApiClient : DefaultParentApiClient() {
         val user = userApi().getUser(username)
         Log.i("=====", "服务器信息 $systemInfo 用户信息 $user")
         TokenServer.updateLoginRetry(false)
+        val serverVersion = systemInfo.subsonicResponse.serverVersion
         return LoginSuccessData(
             userId = responseData.id,
             accessToken = responseData.token,
             serverId = "",
             serverName = systemInfo.subsonicResponse.type,
-            version = systemInfo.subsonicResponse.serverVersion,
+            version = serverVersion.ifBlank { systemInfo.subsonicResponse.version },
             navidromeExtendToken = responseData.subsonicToken,
             navidromeExtendSalt = responseData.subsonicSalt,
             ifEnabledDownload = user.subsonicResponse.user?.downloadRole ?: false,

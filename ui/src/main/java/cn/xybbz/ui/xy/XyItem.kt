@@ -289,7 +289,6 @@ fun ItemTrailingArrowRight(
                 }
                 subordination?.let {
                     XyTextSub(
-                        modifier = Modifier.padding(start = 5.dp),
                         text = subordination,
                         textAlign = TextAlign.Center,
                     )
