@@ -29,6 +29,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,6 +52,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Http
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.rounded.Cancel
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
@@ -279,13 +281,26 @@ fun ConnectionScreen(
                                     },
                                     singleLine = true,
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                                    hint = "连接地址:http://192.168.3.12:8096",
                                     leadingContent = {
                                         Icon(
                                             imageVector = Icons.Default.Http,
                                             contentDescription = stringResource(R.string.httpInput)
                                         )
                                     },
-                                    hint = "连接地址:http://192.168.3.12:8096",
+                                    actionContent = if (connectionViewModel.address.isNotBlank()) {
+                                        {
+                                            Icon(
+                                                modifier = Modifier
+                                                    .clickable {
+                                                        connectionViewModel.setAddressData("")
+                                                    },
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                imageVector = Icons.Rounded.Cancel,
+                                                contentDescription = "清空"
+                                            )
+                                        }
+                                    } else null
                                 )
                             }
                         item {
@@ -307,7 +322,20 @@ fun ConnectionScreen(
                                         imageVector = Icons.Default.Person,
                                         contentDescription = stringResource(R.string.username)
                                     )
-                                }
+                                },
+                                actionContent = if (connectionViewModel.username.isNotBlank()) {
+                                    {
+                                        Icon(
+                                            modifier = Modifier
+                                                .clickable {
+                                                    connectionViewModel.setUserNameData("")
+                                                },
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            imageVector = Icons.Rounded.Cancel,
+                                            contentDescription = "清空"
+                                        )
+                                    }
+                                } else null
                             )
                         }
 
