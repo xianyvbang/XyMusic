@@ -189,6 +189,17 @@ open class DataSourceManager(
             errorMessage = loginSateInfo.errorMessage ?: ""
             ifLoginError = loginSateInfo.isError
             loading = loginSateInfo.loading
+            if (loginSateInfo.isError){
+                MessageUtils.sendPopTipError(
+                    R.string.login_failed,
+                    delay = 5000
+                )
+            }else if (loginSateInfo.isLoginSuccess){
+                MessageUtils.sendPopTipSuccess(
+                    R.string.connection_successful,
+                    delay = 5000
+                )
+            }
         }
     }
 

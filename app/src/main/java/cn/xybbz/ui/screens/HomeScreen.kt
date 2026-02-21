@@ -251,7 +251,8 @@ fun HomeScreen(
                                 }),
                             *homeViewModel.connectionList.map { connection ->
                                 MenuItemDefaultData(
-                                    title = connection.name, leadingIcon = {
+                                    title = connection.name,
+                                    leadingIcon = {
                                         if (homeViewModel.dataSourceManager.getConnectionId() == connection.id)
                                             Icon(
                                                 Icons.Rounded.Check,

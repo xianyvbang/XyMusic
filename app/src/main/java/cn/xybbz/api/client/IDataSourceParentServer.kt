@@ -218,7 +218,8 @@ abstract class IDataSourceParentServer(
                 navidromeExtendSalt = responseData.navidromeExtendSalt,
                 machineIdentifier = responseData.machineIdentifier,
                 ifEnabledDownload = responseData.ifEnabledDownload,
-                ifEnabledDelete = responseData.ifEnabledDelete
+                ifEnabledDelete = responseData.ifEnabledDelete,
+                ifForceLogin = false
             )
             this@IDataSourceParentServer.connectionConfig = tmpConfig
             emitAll(loginAfter(tmpConfig))
@@ -309,6 +310,7 @@ abstract class IDataSourceParentServer(
             )
 
         this.connectionConfig = connectionConfig
+        settingsManager.saveConnectionId(connectionId = connectionConfig.id, connectionConfig.type)
 
         val address = connectionConfig.address
 
@@ -340,7 +342,7 @@ abstract class IDataSourceParentServer(
                 serverName = connectionConfig.serverName,
                 serverId = connectionConfig.serverId,
             )
-            if (loginType == LoginType.API || connectionConfig.accessToken.isNullOrBlank()) {
+            if (loginType == LoginType.API || connectionConfig.accessToken.isNullOrBlank() || connectionConfig.ifForceLogin) {
 
                 MessageUtils.sendPopTipHint(
                     R.string.logging_in,

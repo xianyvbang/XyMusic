@@ -27,6 +27,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.config.BackgroundConfig
@@ -72,6 +73,16 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
     var connectionName by mutableStateOf("")
         private set
 
+    //用户名是否变更
+    private var ifUsernameChange = false
+
+    //密码是否变更
+    private var ifPasswordChange = false
+
+    //地址是否变更
+    private var ifAddressChange = false
+
+
     init {
         getConnectionConfig()
 
@@ -106,14 +117,17 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
     }
 
     fun updatePassword(data: String) {
+        ifPasswordChange = data != password
         password = data
     }
 
     fun updateUsername(data: String) {
+        ifUsernameChange = data != username
         username = data
     }
 
     fun updateAddress(data: String) {
+        ifAddressChange = data != address
         address = data
     }
 
@@ -134,15 +148,18 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
             viewModelScope.launch {
                 //更新密码
                 val encryptAES = PasswordUtils.encryptAES(password)
+                val config = config.copy(
+                    currentPassword = encryptAES.aesData,
+                    iv = encryptAES.aesIv,
+                    key = encryptAES.aesKey,
+                    name = connectionName,
+                    username = username,
+                    address = address,
+                    ifForceLogin = (ifPasswordChange || ifUsernameChange || ifAddressChange) && getConnectionId() != connectionId
+                )
+                connectionConfig = config
                 dataSourceManager.updateConnectionConfig(
-                    config.copy(
-                        currentPassword = encryptAES.aesData,
-                        iv = encryptAES.aesIv,
-                        key = encryptAES.aesKey,
-                        name = connectionName,
-                        username = username,
-                        address = address
-                    )
+                    config
                 )
             }
         }
@@ -151,10 +168,15 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
     fun restartLogin() {
         //如果是当前连接就重新登陆,否则就不重新登陆了,等待下次开启连接的时候登陆
         //判断是否修改了数据,如果修改了的话,点击保存的时候重新登陆
-        if (getConnectionId() == connectionId)
+        if ((ifPasswordChange || ifUsernameChange || ifAddressChange) && getConnectionId() == connectionId)
             viewModelScope.launch {
-                dataSourceManager.restartLogin()
+                dataSourceManager.serverLogin(
+                    loginType = LoginType.API,
+                    connectionConfig = connectionConfig
+                )
             }
+
+        MessageUtils.sendPopTipSuccess("修改成功")
     }
 
     /**

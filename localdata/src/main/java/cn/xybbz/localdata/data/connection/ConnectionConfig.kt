@@ -128,5 +128,9 @@ data class ConnectionConfig(
     /**
      * 是否开启删除功能
      */
-    val ifEnabledDelete: Boolean
+    val ifEnabledDelete: Boolean,
+    /**
+     * 是否下次登录的时候强制登录
+     */
+    val ifForceLogin: Boolean,
 )

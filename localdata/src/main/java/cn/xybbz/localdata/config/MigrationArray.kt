@@ -677,3 +677,13 @@ val MIGRATION_24_25 = object : Migration(24, 25) {
         """)
     }
 }
+
+val MIGRATION_25_26 = object : Migration(25, 26) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+
+        db.execSQL("""
+    ALTER TABLE xy_connection_config
+    ADD COLUMN ifForceLogin INTEGER NOT NULL DEFAULT 0
+""")
+    }
+}
