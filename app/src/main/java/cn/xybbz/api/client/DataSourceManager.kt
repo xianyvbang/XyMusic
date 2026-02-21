@@ -47,6 +47,8 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.alarm.AlarmConfig
+import cn.xybbz.config.image.BaseUrlMapper
+import cn.xybbz.config.module.ApiModule_ImageApiClientFactory.imageApiClient
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.entity.data.LoginStateData
 import cn.xybbz.entity.data.LrcEntryData
@@ -68,6 +70,8 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import coil.Coil
+import coil.ImageLoader
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -85,12 +89,13 @@ import javax.inject.Provider
  * @author xybbz
  * @date 2024/06/12
  */
-class DataSourceManager(
+open class DataSourceManager(
     private val application: Context,
     private val db: DatabaseClient,
     private val dataSources: Map<DataSourceType, @JvmSuppressWildcards Provider<IDataSourceParentServer>>,
     private val alarmConfig: AlarmConfig,
-    private val versionApiClient: VersionApiClient
+    private val versionApiClient: VersionApiClient,
+    private val imageApiClient: ImageApiClient
 ) : IDataSourceServer, IoScoped() {
 
 
@@ -148,6 +153,7 @@ class DataSourceManager(
             switchDataSource(dataSourceType)
             serverLogin(LoginType.TOKEN, null)
         }
+        setCoilImageOkHttpClient()
 
     }
 
@@ -1256,6 +1262,21 @@ class DataSourceManager(
      */
     fun restartLogin() {
         dataSourceServer.getApiClient().eventBus.notify(ReLoginEvent.Unauthorized)
+    }
+
+
+    /**
+     * 设置okhttp到数据源
+     */
+    @OptIn(UnstableApi::class)
+    open suspend fun setCoilImageOkHttpClient() {
+        val imageLoader = ImageLoader.Builder(application)
+            .okHttpClient(imageApiClient.okhttpClientFunction())
+            .components {
+                add(BaseUrlMapper())
+            }
+            .build()
+        Coil.setImageLoader(imageLoader)
     }
 
     fun dataSourceScope() = scope

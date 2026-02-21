@@ -20,6 +20,7 @@ package cn.xybbz.api.client.emby
 
 import android.util.Log
 import cn.xybbz.api.TokenServer
+import cn.xybbz.api.TokenServer.baseUrl
 import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
@@ -334,7 +335,6 @@ class EmbyApiClient : DefaultParentApiClient() {
         tag: String? = null
     ): String {
         return getItemImageUrl(
-            baseUrl = baseUrl,
             itemId = itemId,
             imageType = imageType,
             fillWidth = fillWidth,
@@ -365,7 +365,6 @@ class EmbyApiClient : DefaultParentApiClient() {
         fillHeight: Int? = null,
     ): String {
         return getArtistImageUrl(
-            baseUrl = baseUrl,
             name = name,
             imageType = imageType,
             fillWidth = fillWidth,
@@ -380,7 +379,6 @@ class EmbyApiClient : DefaultParentApiClient() {
     /**
      * 创建音频URL
      * @param [itemId] 项目编号
-     * @param [container] 容器
      * @param [audioCodec] 音频编解码器
      * @param [static] 是否是静态不转码的
      * @return [String]
@@ -412,7 +410,6 @@ class EmbyApiClient : DefaultParentApiClient() {
      * @return [String]
      */
     fun getItemImageUrl(
-        baseUrl: String,
         itemId: String,
         imageType: ImageType,
         fillWidth: Int? = null,
@@ -420,7 +417,7 @@ class EmbyApiClient : DefaultParentApiClient() {
         quality: Int? = null,
         tag: String? = null,
     ): String {
-        return baseUrl + "/emby/Items/${itemId}/Images/${imageType}?fillHeight=${fillHeight}&fillWidth=${fillWidth}&quality=${quality}&tag=${tag}"
+        return "/emby/Items/${itemId}/Images/${imageType}?fillHeight=${fillHeight}&fillWidth=${fillWidth}&quality=${quality}&tag=${tag}"
     }
 
     /**
@@ -436,7 +433,6 @@ class EmbyApiClient : DefaultParentApiClient() {
      * @return [String]
      */
     fun getArtistImageUrl(
-        baseUrl: String,
         name: String,
         imageType: ImageType,
         imageIndex: Int,
@@ -445,13 +441,12 @@ class EmbyApiClient : DefaultParentApiClient() {
         fillWidth: Int? = null,
         fillHeight: Int? = null,
     ): String {
-        return "$baseUrl/emby/Artists/${name}/Images/${imageType}/${imageIndex}?fillHeight=${fillHeight}&fillWidth=${fillWidth}&quality=${quality}&tag=${tag}"
+        return "/emby/Artists/${name}/Images/${imageType}/${imageIndex}?fillHeight=${fillHeight}&fillWidth=${fillWidth}&quality=${quality}&tag=${tag}"
     }
 
     /**
      * 创建音频URL
      * @param [itemId] 项目编号
-     * @param [container] 容器
      * @param [audioCodec] 音频编解码器
      * @param [static] 是否是静态不转码的
      * @return [String]

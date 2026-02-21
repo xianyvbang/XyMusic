@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit
 
 abstract class DefaultApiClient : ApiConfig {
 
-    protected lateinit var baseUrl: String
+//    protected lateinit var baseUrl: String
 
 
     private lateinit var retrofit: Retrofit
@@ -68,7 +68,7 @@ abstract class DefaultApiClient : ApiConfig {
     private lateinit var defaultDownloadApi: IDownLoadApi
 
     override fun setRetrofitData(baseUrl: String, ifTmp: Boolean) {
-        this.baseUrl = baseUrl
+        TokenServer.updateBaseUrl(baseUrl)
         retrofit = Retrofit.Builder()
             .baseUrl(baseUrl).client(getOkHttpClient(ifTmp))
 //            .addConverterFactory(MyGsonConverterFactory.create()).build()

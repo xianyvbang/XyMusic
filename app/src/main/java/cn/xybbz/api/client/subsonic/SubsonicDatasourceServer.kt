@@ -24,6 +24,7 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import cn.xybbz.api.client.IDataSourceParentServer
+import cn.xybbz.api.client.ImageApiClient
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.client.subsonic.data.AlbumID3

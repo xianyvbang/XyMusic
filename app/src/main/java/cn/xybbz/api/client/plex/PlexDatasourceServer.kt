@@ -24,6 +24,7 @@ import android.util.Log
 import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.client.IDataSourceParentServer
+import cn.xybbz.api.client.ImageApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
 import cn.xybbz.api.client.data.XyResponse

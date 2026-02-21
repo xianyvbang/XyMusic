@@ -25,6 +25,7 @@ import android.util.Log
 import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.client.IDataSourceParentServer
+import cn.xybbz.api.client.ImageApiClient
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.jellyfin.data.CreatePlaylistRequest
 import cn.xybbz.api.client.jellyfin.data.ItemRequest

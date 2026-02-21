@@ -20,6 +20,7 @@ package cn.xybbz.api.client.subsonic
 
 import android.util.Log
 import cn.xybbz.api.TokenServer
+import cn.xybbz.api.TokenServer.baseUrl
 import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
@@ -213,9 +214,9 @@ class SubsonicApiClient : DefaultParentApiClient() {
      */
     fun getImageUrl(imageId: String, size: Int? = null): String {
         return if (size == null) {
-            "${baseUrl}/rest/getCoverArt?id=${imageId}"
+            "/rest/getCoverArt?id=${imageId}"
         } else {
-            "${baseUrl}/rest/getCoverArt?id=${imageId}&size=${size}"
+            "/rest/getCoverArt?id=${imageId}&size=${size}"
         }
     }
 

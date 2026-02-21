@@ -23,7 +23,6 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.media3.common.util.UnstableApi
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.PagingData
 import androidx.paging.RemoteMediator
@@ -73,8 +72,6 @@ import cn.xybbz.page.parent.FavoriteMusicRemoteMediator
 import cn.xybbz.page.parent.GenreAlbumListRemoteMediator
 import cn.xybbz.page.parent.GenresRemoteMediator
 import cn.xybbz.page.parent.MusicRemoteMediator
-import coil.Coil
-import coil.ImageLoader
 import com.github.promeg.pinyinhelper.Pinyin
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -97,7 +94,7 @@ abstract class IDataSourceParentServer(
     private val application: Context,
     private val defaultParentApiClient: DefaultParentApiClient,
     private val mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
-    private val downloadManager: DownLoadManager
+    private val downloadManager: DownLoadManager,
 ) : IDataSourceServer {
 
     private var connectionConfig: ConnectionConfig? = null
@@ -264,7 +261,6 @@ abstract class IDataSourceParentServer(
                 }
 
                 if (!ifTmpObject()) {
-                    setCoilImageOkHttpClient()
                     downloadManager.initData(connectionId)
                     connection(connectionConfig.copy(id = connectionId), connectionConfig.id != 0L)
                     mediaLibraryAndFavoriteSyncScheduler.cancel()
@@ -295,17 +291,6 @@ abstract class IDataSourceParentServer(
         username: String,
         password: String
     )
-
-    /**
-     * 设置okhttp到数据源
-     */
-    @androidx.annotation.OptIn(UnstableApi::class)
-    open suspend fun setCoilImageOkHttpClient() {
-        val imageLoader = ImageLoader.Builder(application)
-            .okHttpClient(getOkhttpClient())
-            .build()
-        Coil.setImageLoader(imageLoader)
-    }
 
     /**
      * 自动登录

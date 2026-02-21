@@ -20,6 +20,7 @@ package cn.xybbz.api.client.plex
 
 import android.util.Log
 import cn.xybbz.api.TokenServer
+import cn.xybbz.api.TokenServer.baseUrl
 import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
@@ -405,7 +406,7 @@ class PlexApiClient : DefaultParentApiClient() {
     //todo 修改图片获取方式
     fun getImageUrl(plexFileUrl: String, width: Int = 297, height: Int = 297): String {
         val tmpPlexFileUrl = "${plexFileUrl}?X-Plex-Token=${accessToken}".encodeUrlParameter()
-        return "${baseUrl}/photo/:/transcode?width=${width}&height=${height}&url=${tmpPlexFileUrl}&minSize=1&upscale=1&X-Plex-Token=${accessToken}"
+        return "/photo/:/transcode?width=${width}&height=${height}&url=${tmpPlexFileUrl}&minSize=1&upscale=1&X-Plex-Token=${accessToken}"
     }
 
     fun createAudioUrl(

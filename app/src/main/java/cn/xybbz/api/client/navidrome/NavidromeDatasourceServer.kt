@@ -22,6 +22,7 @@ import android.content.Context
 import android.util.Log
 import androidx.room.withTransaction
 import cn.xybbz.api.client.IDataSourceParentServer
+import cn.xybbz.api.client.ImageApiClient
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.navidrome.data.AlbumItem
 import cn.xybbz.api.client.navidrome.data.ArtistItem

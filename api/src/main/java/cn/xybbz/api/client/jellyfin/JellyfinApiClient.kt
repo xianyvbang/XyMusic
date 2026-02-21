@@ -20,6 +20,7 @@ package cn.xybbz.api.client.jellyfin
 
 import android.util.Log
 import cn.xybbz.api.TokenServer
+import cn.xybbz.api.TokenServer.baseUrl
 import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
@@ -305,7 +306,6 @@ class JellyfinApiClient : DefaultParentApiClient() {
         tag: String? = null
     ): String {
         return getItemImageUrl(
-            baseUrl = baseUrl,
             itemId = itemId,
             imageType = imageType,
             fillWidth = fillWidth,
@@ -336,7 +336,6 @@ class JellyfinApiClient : DefaultParentApiClient() {
         fillHeight: Int? = null,
     ): String {
         return getArtistImageUrl(
-            baseUrl = baseUrl,
             name = name,
             imageType = imageType,
             fillWidth = fillWidth,
@@ -372,7 +371,6 @@ class JellyfinApiClient : DefaultParentApiClient() {
 
     /**
      * 获取项目图像URL
-     * @param [baseUrl] 基础网址
      * @param [itemId] 项目ID
      * @param [imageType] 图像类型
      * @param [fillWidth] 填充宽度
@@ -382,7 +380,6 @@ class JellyfinApiClient : DefaultParentApiClient() {
      * @return [String]
      */
     fun getItemImageUrl(
-        baseUrl: String,
         itemId: String,
         imageType: ImageType,
         fillWidth: Int? = null,
@@ -390,12 +387,11 @@ class JellyfinApiClient : DefaultParentApiClient() {
         quality: Int? = null,
         tag: String? = null,
     ): String {
-        return baseUrl + "/Items/${itemId}/Images/${imageType}?fillHeight=${fillHeight}&fillWidth=${fillWidth}&quality=${quality}&tag=${tag}"
+        return "/Items/${itemId}/Images/${imageType}?fillHeight=${fillHeight}&fillWidth=${fillWidth}&quality=${quality}&tag=${tag}"
     }
 
     /**
      * 获取艺术家图像URL
-     * @param [baseUrl] 基础网址
      * @param [name] 姓名
      * @param [imageType] 图像类型
      * @param [imageIndex] 图像索引
@@ -406,7 +402,6 @@ class JellyfinApiClient : DefaultParentApiClient() {
      * @return [String]
      */
     fun getArtistImageUrl(
-        baseUrl: String,
         name: String,
         imageType: ImageType,
         imageIndex: Int,
@@ -415,7 +410,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
         fillWidth: Int? = null,
         fillHeight: Int? = null,
     ): String {
-        return "$baseUrl/Artists/${name}/Images/${imageType}/${imageIndex}?fillHeight=${fillHeight}&fillWidth=${fillWidth}&quality=${quality}&tag=${tag}"
+        return "/Artists/${name}/Images/${imageType}/${imageIndex}?fillHeight=${fillHeight}&fillWidth=${fillWidth}&quality=${quality}&tag=${tag}"
     }
 
     private fun getAudioStreamUrl(
