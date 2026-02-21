@@ -26,6 +26,7 @@ import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.database.StandaloneDatabaseProvider
+import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSink
@@ -67,7 +68,7 @@ class DownloadCacheController(
     var cacheDataSourceFactory: CacheDataSource.Factory
     var downloadCacheDataSourceFactory: CacheDataSource.Factory
     private var cacheDataSource: CacheDataSource
-    private var upstreamDataSourceFactory: DefaultDataSource.Factory
+    private var upstreamDataSourceFactory: DataSource.Factory
     var downloadManager: DownloadManager
         private set
     private val downloadCacheProgressTicker: DownloadCacheProgressTicker
@@ -118,10 +119,11 @@ class DownloadCacheController(
         )
 
         // 根据缓存目录创建缓存数据源
-        upstreamDataSourceFactory = DefaultDataSource.Factory(
+        val factory = DefaultDataSource.Factory(
             context,
             OkHttpDataSource.Factory(cacheApiClient.okhttpClientFunction())
         )
+        upstreamDataSourceFactory = XyDefaultDataSourceFactory(factory)
         cacheDataSourceFactory = CacheDataSource.Factory()
             .setCache(cache)
             .setUpstreamDataSourceFactory(

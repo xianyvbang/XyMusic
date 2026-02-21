@@ -313,10 +313,13 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
                         )
                     )
                     .setDataSourceFactory(
-                        DefaultDataSource.Factory(
-                            this,
-                            OkHttpDataSource.Factory(imageApiClient.okhttpClientFunction())
+                        XyDefaultDataSourceFactory(
+                            DefaultDataSource.Factory(
+                                this,
+                                OkHttpDataSource.Factory(imageApiClient.okhttpClientFunction())
+                            )
                         )
+
                     ).build()
             )
         )

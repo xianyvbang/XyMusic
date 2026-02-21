@@ -20,7 +20,6 @@ package cn.xybbz.api.client.plex
 
 import android.util.Log
 import cn.xybbz.api.TokenServer
-import cn.xybbz.api.TokenServer.baseUrl
 import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
@@ -312,7 +311,7 @@ class PlexApiClient : DefaultParentApiClient() {
      * 创建下载链接
      */
     override fun createDownloadUrl(itemId: String): String {
-        return "$baseUrl$itemId?download=1"
+        return "/$itemId?download=1"
     }
 
     /**
@@ -438,7 +437,7 @@ class PlexApiClient : DefaultParentApiClient() {
     private fun getAudioStreamUrl(
         trackMediaPartKey: String,
     ): String {
-        return "${baseUrl}${trackMediaPartKey}?X-Plex-Platform=Android&X-Plex-Token=${accessToken}"
+        return "${trackMediaPartKey}?X-Plex-Platform=Android&X-Plex-Token=${accessToken}"
     }
 
     private fun getUniversalAudioUrl(
@@ -446,7 +445,7 @@ class PlexApiClient : DefaultParentApiClient() {
         musicBitrate: Int,
         session: String
     ): String {
-        return "${baseUrl}/music/:/transcode/universal/start?path=/library/metadata/${musicId}" +
+        return "/music/:/transcode/universal/start?path=/library/metadata/${musicId}" +
                 "&directPlay=0&musicBitrate=${musicBitrate}&session=${session}" +
                 "&X-Plex-Platform=Android&X-Plex-Token=${accessToken}"
     }

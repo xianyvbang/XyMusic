@@ -263,4 +263,11 @@ abstract class DefaultApiClient : ApiConfig {
     open fun updateIfSubsonic() {
         TokenServer.updateIfSubsonic(ifSubsonic)
     }
+
+    /**
+     * 获得前缀地址
+     */
+    override fun getBaseUrl(): String {
+        return TokenServer.baseUrl
+    }
 }

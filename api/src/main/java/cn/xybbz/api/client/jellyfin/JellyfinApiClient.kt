@@ -20,7 +20,6 @@ package cn.xybbz.api.client.jellyfin
 
 import android.util.Log
 import cn.xybbz.api.TokenServer
-import cn.xybbz.api.TokenServer.baseUrl
 import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
@@ -238,7 +237,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
      * 创建下载链接
      */
     override fun createDownloadUrl(itemId: String): String {
-        return baseUrl + "/Items/${itemId}/Download"
+        return "/Items/${itemId}/Download"
     }
 
     /**
@@ -420,10 +419,10 @@ class JellyfinApiClient : DefaultParentApiClient() {
         audioBitRate: Int? = null
     ): String {
         return if (static){
-            "${baseUrl}/Audio/${itemId}/stream?" +
+            "/Audio/${itemId}/stream?" +
                     "deviceId=${deviceId}&static=${static}"
         }else {
-            "${baseUrl}/Audio/${itemId}/universal?" +
+            "/Audio/${itemId}/universal?" +
                     "deviceId=${deviceId}" +
                     "&AudioCodec=${audioCodec}&MaxStreamingBitrate=${audioBitRate}" +
                     "&Container=opus%2Cwebm%7Copus%2Cts%7Cmp3%2Cmp3%2Caac%2Cm4a%7Caac%2Cm4b%7Caac%2Cflac%2Cwebma%2Cwebm%7Cwebma%2Cwav%2Cogg" +

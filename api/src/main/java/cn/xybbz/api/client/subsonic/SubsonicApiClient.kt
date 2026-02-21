@@ -20,7 +20,6 @@ package cn.xybbz.api.client.subsonic
 
 import android.util.Log
 import cn.xybbz.api.TokenServer
-import cn.xybbz.api.TokenServer.baseUrl
 import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
@@ -228,7 +227,7 @@ class SubsonicApiClient : DefaultParentApiClient() {
         format: AudioCodecEnum? = AudioCodecEnum.ROW,
         maxBitRate: Int? = null
     ): String {
-        return "${baseUrl}/rest/stream?id=${musicId}&maxBitRate=${maxBitRate}&format=${format}${if (format != AudioCodecEnum.ROW) "&estimateContentLength=true" else ""}"
+        return "/rest/stream?id=${musicId}&maxBitRate=${maxBitRate}&format=${format}${if (format != AudioCodecEnum.ROW) "&estimateContentLength=true" else ""}"
     }
 
     /**
@@ -242,7 +241,7 @@ class SubsonicApiClient : DefaultParentApiClient() {
      * 创建下载链接
      */
     override fun createDownloadUrl(itemId: String): String {
-        return baseUrl + "/rest/download?id=${itemId}"
+        return "/rest/download?id=${itemId}"
     }
 
     /**

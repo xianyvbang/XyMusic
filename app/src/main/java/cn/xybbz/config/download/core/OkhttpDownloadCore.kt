@@ -41,7 +41,7 @@ class OkhttpDownloadCore(
         val downloadedBytes = if (tempFile.exists()) tempFile.length() else 0L
         val call = client.downloadApi()
             .downloadFile(
-                fileUrl = xyDownload.url,
+                fileUrl = client.getBaseUrl() + xyDownload.url,
                 range = "bytes=${downloadedBytes}-"
             )
 

@@ -20,7 +20,6 @@ package cn.xybbz.api.client.emby
 
 import android.util.Log
 import cn.xybbz.api.TokenServer
-import cn.xybbz.api.TokenServer.baseUrl
 import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
@@ -218,7 +217,7 @@ class EmbyApiClient : DefaultParentApiClient() {
      * 创建下载链接
      */
     override fun createDownloadUrl(itemId: String): String {
-        return baseUrl + "/Items/${itemId}/Download"
+        return "/Items/${itemId}/Download"
     }
 
     /**
@@ -400,7 +399,6 @@ class EmbyApiClient : DefaultParentApiClient() {
 
     /**
      * 获取项目图像URL
-     * @param [baseUrl] 基础网址
      * @param [itemId] 项目ID
      * @param [imageType] 图像类型
      * @param [fillWidth] 填充宽度
@@ -422,7 +420,6 @@ class EmbyApiClient : DefaultParentApiClient() {
 
     /**
      * 获取艺术家图像URL
-     * @param [baseUrl] 基础网址
      * @param [name] 姓名
      * @param [imageType] 图像类型
      * @param [imageIndex] 图像索引
@@ -458,10 +455,10 @@ class EmbyApiClient : DefaultParentApiClient() {
         audioBitRate: Int? = null
     ): String {
         return if (static) {
-            "${baseUrl}/emby/Audio/${itemId}/stream?" +
+            "/emby/Audio/${itemId}/stream?" +
                     "deviceId=${deviceId}&userId=${userId}&static=${static}"
         } else {
-            "${baseUrl}/emby/Audio/${itemId}/universal?" +
+            "/emby/Audio/${itemId}/universal?" +
                     "deviceId=${deviceId}" +
                     "&AudioCodec=${audioCodec}&MaxStreamingBitrate=${audioBitRate}" +
                     "&Container=opus%2Cwebm%7Copus%2Cts%7Cmp3%2Cmp3%2Caac%2Cm4a%7Caac%2Cm4b%7Caac%2Cflac%2Cwebma%2Cwebm%7Cwebma%2Cwav%2Cogg" +

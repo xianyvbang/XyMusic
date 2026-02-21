@@ -25,7 +25,9 @@ import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.enums.DownloadStatus
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.CopyOnWriteArrayList
@@ -99,7 +101,9 @@ class DownloadImpl(
                 }
 
                 // 3. 在这个稳定目录中创建临时文件
-                tempFile = File.createTempFile("download_", ".tmp", tempDir)
+                tempFile = withContext(Dispatchers.IO) {
+                    File.createTempFile("download_", ".tmp", tempDir)
+                }
 
                 if (!request.uid.isNullOrBlank()) {
                     val downloadTask = db.downloadDao.getMusicTaskByUid(uid = request.uid)

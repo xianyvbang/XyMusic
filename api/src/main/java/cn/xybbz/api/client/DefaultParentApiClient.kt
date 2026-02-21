@@ -9,6 +9,8 @@ abstract class DefaultParentApiClient:DefaultApiClient() {
      */
     abstract fun createDownloadUrl(itemId: String): String
 
+
+
     /**
      * 登陆接口
      */
