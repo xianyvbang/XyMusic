@@ -412,18 +412,21 @@ fun AlbumInfoScreen(
                     else
                         IconButton(onClick = composeClick {
                             coroutineScope.launch {
-                                val ifFavoriteData = albumInfoViewModel.dataSourceManager.setFavoriteData(
-                                    type = MusicTypeEnum.ALBUM,
-                                    itemId = albumInfoViewModel.xyAlbumInfoData?.itemId ?: "",
-                                    musicController = albumInfoViewModel.musicController,
-                                    ifFavorite = albumInfoViewModel.ifFavorite
-                                )
+                                val ifFavoriteData =
+                                    albumInfoViewModel.dataSourceManager.setFavoriteData(
+                                        type = MusicTypeEnum.ALBUM,
+                                        itemId = albumInfoViewModel.xyAlbumInfoData?.itemId ?: "",
+                                        musicController = albumInfoViewModel.musicController,
+                                        ifFavorite = albumInfoViewModel.ifFavorite
+                                    )
                                 albumInfoViewModel.updateIfFavorite(ifFavoriteData)
                             }
                         }) {
                             Icon(
                                 imageVector = if (albumInfoViewModel.ifFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                                contentDescription = if (albumInfoViewModel.ifFavorite) stringResource(R.string.favorite_added) else stringResource(
+                                contentDescription = if (albumInfoViewModel.ifFavorite) stringResource(
+                                    R.string.favorite_added
+                                ) else stringResource(
                                     R.string.favorite_removed
                                 ),
                                 tint = if (albumInfoViewModel.ifFavorite) Color.Red else LocalContentColor.current
@@ -808,6 +811,7 @@ private fun StickyHeaderOperationParent(
                     albumInfoViewModel.setSortedData(it) { musicListPage.refresh() }
                 },
                 onSortType = { sortBy.sortType },
+                onDefaultSortType = { albumInfoViewModel.defaultSortType },
                 onFilterEraTypeList = { mainViewModel.eraItemList },
                 onFilterEraTypeClick = {
                     albumInfoViewModel.setFilterEraType(
@@ -841,6 +845,7 @@ private fun StickyHeaderOperationParent(
                         years.mapNotNull { it }
                     ) { musicListPage.refresh() }
                 },
+                onEnabledClearClick = { albumInfoViewModel.isSortChange() },
                 onClearFilterOrShort = {
                     albumInfoViewModel.clearFilterOrSort { musicListPage.refresh() }
                 }

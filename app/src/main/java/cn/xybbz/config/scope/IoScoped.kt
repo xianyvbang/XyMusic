@@ -35,6 +35,7 @@ abstract class IoScoped() : AutoCloseable {
     }
 
     override fun close() {
-        scope.close()
+        if (::scope.isInitialized)
+            scope.close()
     }
 }

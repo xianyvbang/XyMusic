@@ -97,6 +97,7 @@ fun AlbumScreen(
                         albumViewModel.setSortedData(it, { albumPageListItems.refresh() })
                     },
                     onSortType = { sortBy.sortType },
+                    onDefaultSortType = { albumViewModel.defaultSortType },
                     onFilterEraTypeList = { mainViewModel.eraItemList },
                     onFilterEraTypeClick = {
                         albumViewModel.setFilterEraType(
@@ -138,6 +139,7 @@ fun AlbumScreen(
                         albumViewModel.setFilterYear(years.mapNotNull { it },
                             { albumPageListItems.refresh() })
                     },
+                    onEnabledClearClick = { albumViewModel.isSortChange() },
                     onClearFilterOrShort = {
                         albumViewModel.clearFilterOrSort { albumPageListItems.refresh() }
                     }

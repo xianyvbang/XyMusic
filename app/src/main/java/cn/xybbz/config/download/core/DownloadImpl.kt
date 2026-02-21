@@ -39,15 +39,18 @@ class DownloadImpl(
 ) : IDownloader, IoScoped() {
 
     private val listeners = CopyOnWriteArrayList<DownloadListener>()
+    init {
+        createScope()
+    }
 
     override suspend fun initData(connectionId: Long) {
-        createScope()
+
         scope.launch {
             downloadDispatcher.taskUpdateEventFlow.collect { updatedTask ->
                 notifyListeners(updatedTask)
             }
         }
-        downloadDispatcher.rehydrate(connectionId,scope.coroutineContext)
+        downloadDispatcher.rehydrate(connectionId)
 
     }
 

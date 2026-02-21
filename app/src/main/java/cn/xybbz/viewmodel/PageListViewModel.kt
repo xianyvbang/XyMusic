@@ -36,7 +36,7 @@ import kotlinx.coroutines.flow.update
 
 abstract class PageListViewModel<T : Any>(
     dataSourceManager: DataSourceManager,
-    defaultSortType: SortTypeEnum
+    val defaultSortType: SortTypeEnum
 ) : ViewModel() {
 
     private val _sortType = MutableStateFlow(Sort(defaultSortType))
@@ -120,8 +120,12 @@ abstract class PageListViewModel<T : Any>(
     }
 
     suspend fun clearFilterOrSort(refreshPage: suspend () -> Unit) {
-        val sort = Sort()
+        val sort = Sort(defaultSortType)
         updateSort(sort, refreshPage = refreshPage)
+    }
+
+    fun isSortChange(): Boolean{
+        return _sortType.value.sortType != defaultSortType || _sortType.value.isFavorite != null || _sortType.value.yearList != null
     }
 
     /**

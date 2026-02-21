@@ -41,7 +41,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.DownloadDone
 import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -421,6 +423,7 @@ fun XyItemIcon(
 /**
  * 带图标可选择的文本的Item
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun XyItemIconSelect(
     modifier: Modifier = Modifier,
@@ -450,11 +453,12 @@ fun XyItemIconSelect(
             if (enableLeading) {
                 imageVector?.let {
                     Icon(
+                        modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize),
                         imageVector = imageVector,
                         contentDescription = text,
                         tint = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                } ?: Spacer(modifier = Modifier.width(24.dp))
+                } ?: Spacer(modifier = Modifier.width(IconButtonDefaults.extraSmallIconSize))
 
                 Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
             }
@@ -470,9 +474,9 @@ fun XyItemIconSelect(
         if (onIfSelected()) {
             Row {
                 Icon(
+                    modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize),
                     imageVector = Icons.Rounded.Check,
                     contentDescription = "已选择",
-                    modifier = Modifier
                 )
                 Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
             }

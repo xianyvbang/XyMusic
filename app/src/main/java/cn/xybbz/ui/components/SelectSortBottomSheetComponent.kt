@@ -69,8 +69,6 @@ import kotlinx.coroutines.launch
  * @param [modifier] 修饰语
  * @param [ifDisplay] if 显示
  * @param [onSetDisplay] 在设置显示时
- * @param [onSortTypeClick] 在排序类型上单击
- * @param [onRefresh] 刷新时
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -99,10 +97,7 @@ fun SelectSortBottomSheet(
 /**
  * 选择排序类型组件
  * @param [modifier] 修饰语
- * @param [ifDisplay] if 显示
- * @param [onSetDisplay] 在设置显示时
  * @param [onSortTypeClick] 在排序类型上单击
- * @param [onRefresh] 刷新时
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -115,6 +110,7 @@ fun SelectSortBottomSheetComponent(
     onIfFavoriteFilter: () -> Boolean?,
     onSortTypeClick: suspend (SortTypeEnum?) -> Unit,
     onSortType: () -> SortTypeEnum?,
+    onDefaultSortType: () -> SortTypeEnum,
     onFilterEraTypeList: () -> List<XyEraItem>,
     onFilterEraTypeClick: suspend (XyEraItem?) -> Unit,
     onIfFavorite: () -> Boolean,
@@ -125,6 +121,7 @@ fun SelectSortBottomSheetComponent(
     onSetSelectYear: suspend (Int?) -> Unit,
     onSelectRangeYear: () -> List<Int>?,
     onSetSelectRangeYear: suspend (List<Int?>) -> Unit,
+    onEnabledClearClick: () -> Boolean,
     onClearFilterOrShort: suspend () -> Unit,
 ) {
 
@@ -270,6 +267,7 @@ fun SelectSortBottomSheetComponent(
                     ifItemShow = { onIfSort() == true }),
                 MenuItemDefaultData(
                     title = "清除筛选",
+                    enabled = onEnabledClearClick(),
                     trailingIcon = {
                         Icon(
                             imageVector = Icons.Rounded.Close,
@@ -277,7 +275,7 @@ fun SelectSortBottomSheetComponent(
                         )
 
                     },
-                    onClick = composeClick {
+                    onClick = composeClick (){
                         ifShowSortOrFilterMenu = false
                         coroutineScope.launch {
                             onClearFilterOrShort()
@@ -335,7 +333,7 @@ fun SelectSortBottomSheetComponent(
                         onIfSelected = { onSortType() == item }) {
                         coroutineScope.launch {
                             if (onSortType() == item) {
-                                onSortTypeClick(null)
+                                onSortTypeClick(onDefaultSortType())
                             } else {
                                 onSortTypeClick(item)
                             }

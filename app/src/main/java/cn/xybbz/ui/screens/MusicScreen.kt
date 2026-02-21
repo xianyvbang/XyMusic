@@ -113,6 +113,7 @@ fun MusicScreen(
                         musicViewModel.setSortedData(it) { homeMusicPager.refresh() }
                     },
                     onSortType = { sortBy.sortType },
+                    onDefaultSortType = { musicViewModel.defaultSortType },
                     onFilterEraTypeList = { mainViewModel.eraItemList },
                     onFilterEraTypeClick = {
                         musicViewModel.setFilterEraType(
@@ -136,6 +137,7 @@ fun MusicScreen(
                             years.mapNotNull { it }
                         ) { homeMusicPager.refresh() }
                     },
+                    onEnabledClearClick = { musicViewModel.isSortChange() },
                     onClearFilterOrShort = {
                         musicViewModel.clearFilterOrSort { homeMusicPager.refresh() }
                     }
