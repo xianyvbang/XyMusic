@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -319,15 +320,28 @@ fun HomeScreen(
                                         horizontal = XyTheme.dimens.outerHorizontalPadding
                                     ) {
                                         item {
-                                            XyText(
-                                                text = stringResource(homeViewModel.dataSourceManager.errorHint),
-                                                overflow = TextOverflow.Visible,
-                                                maxLines = Int.MAX_VALUE
-                                            )
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.Center,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                XyText(
+                                                    text = stringResource(homeViewModel.dataSourceManager.errorHint),
+                                                    overflow = TextOverflow.Visible,
+                                                    maxLines = Int.MAX_VALUE
+                                                )
+                                            }
+
                                         }
                                         if (homeViewModel.dataSourceManager.errorMessage.isNotBlank())
                                             item {
-                                                XyTextSubSmall(text = homeViewModel.dataSourceManager.errorMessage)
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.Center,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ){
+                                                    XyTextSubSmall(text = homeViewModel.dataSourceManager.errorMessage)
+                                                }
                                             }
                                     }
                                 }
