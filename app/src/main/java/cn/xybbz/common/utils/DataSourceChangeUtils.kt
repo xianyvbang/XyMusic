@@ -31,8 +31,8 @@ object DataSourceChangeUtils {
         dataSourceManager: DataSourceManager,
         settingsManager: SettingsManager
     ) {
+        settingsManager.saveConnectionId(null, null)
         musicController.clearPlayerList()
         dataSourceManager.release()
-        settingsManager.setSettingsData()
     }
 }

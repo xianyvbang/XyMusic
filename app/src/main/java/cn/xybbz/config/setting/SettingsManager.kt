@@ -216,21 +216,20 @@ class SettingsManager(
      * 存储数据源类型
      */
     suspend fun saveConnectionId(connectionId: Long?, dataSourceType: DataSourceType?) {
-        if (connectionId != null) {
-            settings = get().copy(connectionId = connectionId, dataSourceType = dataSourceType)
-            if (get().id != AllDataEnum.All.code) {
-                db.settingsDao.updateConnectionId(connectionId, dataSourceType, get().id)
-            } else {
-                val settingId =
-                    db.settingsDao.save(
-                        XySettings(
-                            connectionId = connectionId,
-                            dataSourceType = dataSourceType
-                        )
+        settings = get().copy(connectionId = connectionId, dataSourceType = dataSourceType)
+        if (get().id != AllDataEnum.All.code) {
+            db.settingsDao.updateConnectionId(connectionId, dataSourceType, get().id)
+        } else {
+            val settingId =
+                db.settingsDao.save(
+                    XySettings(
+                        connectionId = connectionId,
+                        dataSourceType = dataSourceType
                     )
-                settings = get().copy(id = settingId)
-            }
+                )
+            settings = get().copy(id = settingId)
         }
+        updateIfConnectionConfig(connectionId != null)
     }
 
 
