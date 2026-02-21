@@ -100,7 +100,6 @@ fun LazyColumnNotComponent(
 /**
  * 通用LazyColumn
  * @param [modifier] 样式
- * @param [items] Lazy的item
  */
 @Composable
 fun LazyColumnParentComponent(
