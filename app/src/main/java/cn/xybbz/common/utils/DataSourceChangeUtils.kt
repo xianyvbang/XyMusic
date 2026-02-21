@@ -32,6 +32,7 @@ object DataSourceChangeUtils {
         settingsManager: SettingsManager
     ) {
         settingsManager.saveConnectionId(null, null)
+        settingsManager.updateIfConnectionConfig(false)
         musicController.clearPlayerList()
         dataSourceManager.release()
     }

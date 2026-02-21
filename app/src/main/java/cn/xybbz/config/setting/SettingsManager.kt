@@ -229,7 +229,6 @@ class SettingsManager(
                 )
             settings = get().copy(id = settingId)
         }
-        updateIfConnectionConfig(connectionId != null)
     }
 
 
