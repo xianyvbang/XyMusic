@@ -58,8 +58,10 @@ import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -602,6 +604,7 @@ private fun LoginError(
 /**
  * 地址输入框
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AddressInputEdit(
     address: String,
@@ -618,9 +621,12 @@ fun AddressInputEdit(
         iconContentDescription = stringResource(R.string.httpInput),
         actionContent = if (address.isNotBlank()) {
             {
-                IconButton(onClick = composeClick {
-                    updateAddress("")
-                }) {
+                IconButton(
+                    onClick = composeClick {
+                        updateAddress("")
+                    },
+                    modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize)
+                ) {
                     Icon(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         imageVector = Icons.Rounded.Cancel,
@@ -632,6 +638,7 @@ fun AddressInputEdit(
     )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun UsernameInputEdit(
     modifier: Modifier = Modifier,
@@ -650,9 +657,12 @@ fun UsernameInputEdit(
         iconContentDescription = stringResource(R.string.username),
         actionContent = if (username.isNotBlank()) {
             {
-                IconButton(onClick = composeClick {
-                    updateUsername("")
-                }) {
+                IconButton(
+                    onClick = composeClick {
+                        updateUsername("")
+                    },
+                    modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize)
+                ) {
                     Icon(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         imageVector = Icons.Rounded.Cancel,
@@ -664,6 +674,7 @@ fun UsernameInputEdit(
     )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun PasswordInputEdit(
     modifier: Modifier = Modifier,
@@ -678,9 +689,12 @@ fun PasswordInputEdit(
             updatePassword(it)
         },
         actionContent = {
-            IconButton(onClick = composeClick() {
-                showPassword = !showPassword
-            }) {
+            IconButton(
+                onClick = composeClick {
+                    showPassword = !showPassword
+                },
+                modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize)
+            ) {
                 Icon(
                     imageVector = if (showPassword) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
                     contentDescription = null
@@ -695,6 +709,7 @@ fun PasswordInputEdit(
     )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ConnectionNameInputEdit(
     modifier: Modifier = Modifier,
@@ -715,7 +730,7 @@ fun ConnectionNameInputEdit(
             {
                 IconButton(onClick = composeClick {
                     updateConnectionName("")
-                }) {
+                }, modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize)) {
                     Icon(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         imageVector = Icons.Rounded.Cancel,
