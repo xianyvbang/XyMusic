@@ -687,3 +687,64 @@ val MIGRATION_25_26 = object : Migration(25, 26) {
 """)
     }
 }
+
+val MIGRATION_26_27 = object : Migration(26, 27) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+
+        // 创建新表（所有 Int? 不再 NOT NULL）
+        db.execSQL("""
+            CREATE TABLE xy_data_count_new (
+                connectionId INTEGER NOT NULL PRIMARY KEY,
+                musicCount INTEGER,
+                albumCount INTEGER,
+                artistCount INTEGER,
+                playlistCount INTEGER,
+                genreCount INTEGER,
+                favoriteCount INTEGER,
+                createTime INTEGER NOT NULL,
+                FOREIGN KEY(connectionId)
+                REFERENCES xy_connection_config(id)
+                ON DELETE CASCADE
+            )
+        """)
+
+        // 拷贝数据
+        db.execSQL("""
+            INSERT INTO xy_data_count_new (
+                connectionId,
+                musicCount,
+                albumCount,
+                artistCount,
+                playlistCount,
+                genreCount,
+                favoriteCount,
+                createTime
+            )
+            SELECT
+                connectionId,
+                musicCount,
+                albumCount,
+                artistCount,
+                playlistCount,
+                genreCount,
+                favoriteCount,
+                createTime
+            FROM xy_data_count
+        """)
+
+        // 删除旧表
+        db.execSQL("DROP TABLE xy_data_count")
+
+        // 重命名
+        db.execSQL("""
+            ALTER TABLE xy_data_count_new
+            RENAME TO xy_data_count
+        """)
+
+        // 重建索引（非常重要）
+        db.execSQL("""
+            CREATE INDEX index_xy_data_count_connectionId
+            ON xy_data_count(connectionId)
+        """)
+    }
+}

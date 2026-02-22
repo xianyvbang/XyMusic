@@ -23,6 +23,7 @@ import cn.xybbz.api.client.subsonic.data.SubsonicAlbumListResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicAlbumResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicRandomResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
+import cn.xybbz.api.client.subsonic.data.SubsonicScanStatusResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicSearchResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicSimilarSongsResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicSongResponse
@@ -100,4 +101,7 @@ interface SubsonicItemApi : BaseApi {
         @Query("id") songId: String,
         @Query("count") count: Int = 20
     ): SubsonicResponse<SubsonicSimilarSongsResponse>
+
+    @GET("/rest/getScanStatus")
+    suspend fun getScanStatus(): SubsonicResponse<SubsonicScanStatusResponse>
 }

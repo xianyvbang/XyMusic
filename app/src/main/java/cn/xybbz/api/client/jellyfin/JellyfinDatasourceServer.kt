@@ -282,7 +282,7 @@ class JellyfinDatasourceServer(
 
             val playlist = async {
                 playlist = try {
-                    getPlaylistsServer(0, 0).totalRecordCount
+                    getPlaylistsServer(0, 1).totalRecordCount
                 } catch (e: SocketTimeoutException) {
                     Log.e(Constants.LOG_ERROR_PREFIX, "加载歌单数量超时", e)
                     null

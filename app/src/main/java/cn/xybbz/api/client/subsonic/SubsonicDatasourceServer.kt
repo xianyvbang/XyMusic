@@ -24,7 +24,6 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import cn.xybbz.api.client.IDataSourceParentServer
-import cn.xybbz.api.client.ImageApiClient
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.client.subsonic.data.AlbumID3
@@ -176,7 +175,20 @@ class SubsonicDatasourceServer(
      * 获得专辑,艺术家,音频,歌单数量
      */
     override suspend fun getDataInfoCount(connectionId: Long) {
-
+        try {
+            val scanStatus = subsonicApiClient.itemApi().getScanStatus()
+            updateOrSaveDataInfoCount(
+                scanStatus.subsonicResponse.scanStatus?.count ?: 0,
+                null,
+                null,
+                null,
+                null,
+                null,
+                connectionId
+            )
+        }catch (e: Exception){
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载数量报错", e)
+        }
     }
 
     /**
@@ -953,7 +965,7 @@ class SubsonicDatasourceServer(
         return if (response.subsonicResponse.status == Status.Ok) {
             response.subsonicResponse.artists?.index?.flatMap { index ->
                 convertToArtistList(index.artist, index.name)
-            }?: emptyList()
+            } ?: emptyList()
         } else {
             emptyList()
         }

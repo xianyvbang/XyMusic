@@ -871,12 +871,12 @@ abstract class IDataSourceParentServer(
             db.dataCountDao.save(
                 XyDataCount(
                     connectionId = connectionId,
-                    musicCount = music ?: 0,
-                    albumCount = album ?: 0,
-                    artistCount = artist ?: 0,
-                    playlistCount = playlist ?: 0,
-                    genreCount = genres ?: 0,
-                    favoriteCount = favorite ?: 0
+                    musicCount = music,
+                    albumCount = album,
+                    artistCount = artist,
+                    playlistCount = playlist,
+                    genreCount = genres,
+                    favoriteCount = favorite
                 )
             )
         }
