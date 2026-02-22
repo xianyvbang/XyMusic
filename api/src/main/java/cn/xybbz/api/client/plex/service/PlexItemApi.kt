@@ -33,6 +33,8 @@ interface PlexItemApi : BaseApi {
         @Query("artist.collection") artistCollection: Int? = null,
         @Query("decade", encoded = false) decade: String? = null,
         @Query("album.decade", encoded = false) albumDecade: String? = null,
+        @Query("album.year>>=", encoded = false) albumStartYear: Int? = null,
+        @Query("album.year<<=", encoded = false) albumEndYear: Int? = null,
         @Query("artist.title", encoded = false) artistTitle: String? = null,
         @QueryMap(encoded = false) params: Map<String, String>? = null
     ): PlexResponse<PlexLibraryItemResponse>

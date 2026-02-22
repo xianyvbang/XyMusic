@@ -379,7 +379,7 @@ fun ConnectionScreen(
                                         if (connectionViewModel.tmpAddressList.isNotEmpty())
                                             LazyColumnNotComponent(
                                                 modifier = Modifier.height(
-                                                    350.dp
+                                                    200.dp
                                                 )
                                             ) {
                                                 itemsIndexed(connectionViewModel.tmpAddressList) { index, item ->
@@ -399,7 +399,7 @@ fun ConnectionScreen(
                                         if (connectionViewModel.tmpPlexInfo.isNotEmpty())
                                             LazyColumnNotComponent(
                                                 modifier = Modifier.height(
-                                                    200.dp
+                                                    350.dp
                                                 ),
                                                 bottomItem = null
                                             ) {

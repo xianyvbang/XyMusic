@@ -93,17 +93,15 @@ fun AlbumScreen(
                 }
             }, actions = {
                 SelectSortBottomSheetComponent(
+                    onIfSelectOneYear = { albumViewModel.dataSourceManager.dataSourceType?.ifAlbumSelectOneYear },
+                    onIfStartEndYear = { albumViewModel.dataSourceManager.dataSourceType?.ifAlbumSelectStartEndYear },
+                    onIfSort = { albumViewModel.dataSourceManager.dataSourceType?.ifAlbumSort },
+                    onIfFavoriteFilter = { albumViewModel.dataSourceManager.dataSourceType?.ifAlbumFavoriteFilter },
                     onSortTypeClick = {
                         albumViewModel.setSortedData(it, { albumPageListItems.refresh() })
                     },
                     onSortType = { sortBy.sortType },
                     onDefaultSortType = { albumViewModel.defaultSortType },
-                    onFilterEraTypeList = { mainViewModel.eraItemList },
-                    onFilterEraTypeClick = {
-                        albumViewModel.setFilterEraType(
-                            it,
-                            { albumPageListItems.refresh() })
-                    },
                     onIfFavorite = { sortBy.isFavorite == true },
                     setFavorite = {
                         albumViewModel.setFavorite(
@@ -120,10 +118,6 @@ fun AlbumScreen(
                         SortTypeEnum.PREMIERE_DATE_ASC,
                         SortTypeEnum.PREMIERE_DATE_DESC
                     ),
-                    onIfSelectOneYear = { albumViewModel.dataSourceManager.dataSourceType?.ifAlbumSelectOneYear },
-                    onIfStartEndYear = { albumViewModel.dataSourceManager.dataSourceType?.ifStartEndYear },
-                    onIfSort = { albumViewModel.dataSourceManager.dataSourceType?.ifAlbumSort },
-                    onIfFavoriteFilter = { albumViewModel.dataSourceManager.dataSourceType?.ifAlbumFavoriteFilter },
                     onYearSet = { mainViewModel.yearSet },
                     onSelectYear = { sortBy.yearList?.get(0) },
                     onSetSelectYear = { year ->
@@ -134,16 +128,14 @@ fun AlbumScreen(
                         }
                     },
                     onSelectRangeYear = { sortBy.yearList },
-                    onIfYearFilter = { albumViewModel.dataSourceManager.dataSourceType?.ifYearFilter },
                     onSetSelectRangeYear = { years ->
                         albumViewModel.setFilterYear(years.mapNotNull { it },
                             { albumPageListItems.refresh() })
                     },
-                    onEnabledClearClick = { albumViewModel.isSortChange() },
-                    onClearFilterOrShort = {
-                        albumViewModel.clearFilterOrSort { albumPageListItems.refresh() }
-                    }
-                )
+                    onEnabledClearClick = { albumViewModel.isSortChange() }
+                ) {
+                    albumViewModel.clearFilterOrSort { albumPageListItems.refresh() }
+                }
             })
         SwipeRefreshVerticalGridListComponent(
             modifier = Modifier.fillMaxSize(),

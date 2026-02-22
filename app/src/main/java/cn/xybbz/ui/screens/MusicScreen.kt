@@ -104,9 +104,8 @@ fun MusicScreen(
             ifOpenSelect = ifOpenSelect,
             sortOrFilterContent = {
                 SelectSortBottomSheetComponent(
-                    onIfYearFilter = { musicViewModel.dataSourceManager.dataSourceType?.ifYearFilter },
                     onIfSelectOneYear = { musicViewModel.dataSourceManager.dataSourceType?.ifMusicSelectOneYear },
-                    onIfStartEndYear = { musicViewModel.dataSourceManager.dataSourceType?.ifStartEndYear },
+                    onIfStartEndYear = { musicViewModel.dataSourceManager.dataSourceType?.ifMusicSelectStartEndYear },
                     onIfSort = { musicViewModel.dataSourceManager.dataSourceType?.ifMusicSort },
                     onIfFavoriteFilter = { musicViewModel.dataSourceManager.dataSourceType?.ifMusicFavoriteFilter },
                     onSortTypeClick = {
@@ -114,12 +113,6 @@ fun MusicScreen(
                     },
                     onSortType = { sortBy.sortType },
                     onDefaultSortType = { musicViewModel.defaultSortType },
-                    onFilterEraTypeList = { mainViewModel.eraItemList },
-                    onFilterEraTypeClick = {
-                        musicViewModel.setFilterEraType(
-                            it
-                        ) { homeMusicPager.refresh() }
-                    },
                     onIfFavorite = { sortBy.isFavorite == true },
                     setFavorite = { musicViewModel.setFavorite(it) { homeMusicPager.refresh() } },
                     onYearSet = { mainViewModel.yearSet },
@@ -137,11 +130,10 @@ fun MusicScreen(
                             years.mapNotNull { it }
                         ) { homeMusicPager.refresh() }
                     },
-                    onEnabledClearClick = { musicViewModel.isSortChange() },
-                    onClearFilterOrShort = {
-                        musicViewModel.clearFilterOrSort { homeMusicPager.refresh() }
-                    }
-                )
+                    onEnabledClearClick = { musicViewModel.isSortChange() }
+                ) {
+                    musicViewModel.clearFilterOrSort { homeMusicPager.refresh() }
+                }
             }
         )
 

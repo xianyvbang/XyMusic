@@ -335,29 +335,26 @@ fun ArtistInfoScreen(
                                     .height(TopAppBarDefaults.TopAppBarExpandedHeight),
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (artistInfoViewModel.dataSourceManager.dataSourceType?.ifArtistFavorite == true)
-                                    IconButton(onClick = {
-                                        coroutineScope.launch {
-                                            val ifFavorite =
-                                                artistInfoViewModel.dataSourceManager.setFavoriteData(
-                                                    type = MusicTypeEnum.ARTIST,
-                                                    itemId = artistId(),
-                                                    ifFavorite = artistInfoViewModel.ifFavorite
-                                                )
-                                            artistInfoViewModel.updateFavorite(ifFavorite)
-                                        }
-                                    }) {
-                                        Icon(
-                                            imageVector = if (artistInfoViewModel.ifFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                                            contentDescription = if (artistInfoViewModel.ifFavorite) stringResource(
-                                                R.string.favorite_added
-                                            ) else stringResource(R.string.favorite_removed),
-                                            tint = Color.Red
-                                        )
+                                IconButton(onClick = {
+                                    coroutineScope.launch {
+                                        val ifFavorite =
+                                            artistInfoViewModel.dataSourceManager.setFavoriteData(
+                                                type = MusicTypeEnum.ARTIST,
+                                                itemId = artistId(),
+                                                ifFavorite = artistInfoViewModel.ifFavorite
+                                            )
+                                        artistInfoViewModel.updateFavorite(ifFavorite)
                                     }
-
+                                }) {
+                                    Icon(
+                                        imageVector = if (artistInfoViewModel.ifFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                                        contentDescription = if (artistInfoViewModel.ifFavorite) stringResource(
+                                            R.string.favorite_added
+                                        ) else stringResource(R.string.favorite_removed),
+                                        tint = Color.Red
+                                    )
+                                }
                             }
-
                         },
                         navigationIcon = {
                             Box(

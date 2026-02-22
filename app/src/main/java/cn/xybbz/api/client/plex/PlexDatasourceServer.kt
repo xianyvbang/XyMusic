@@ -24,7 +24,6 @@ import android.util.Log
 import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.client.IDataSourceParentServer
-import cn.xybbz.api.client.ImageApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
 import cn.xybbz.api.client.data.XyResponse
@@ -1395,7 +1394,8 @@ class PlexDatasourceServer(
             ifFavorite = isFavorite,
             sortBy = sortType.sortType,
             sortOrder = sortType.order,
-            albumDecade = if (years.isNullOrEmpty()) null else (years[0] / 10 * 10).toString(),
+            albumStartYear = if (years.isNullOrEmpty()) null else years[0],
+            albumEndYear = if (years.isNullOrEmpty()) null else years[years.size - 1],
             itemId = parentId,
             dataType = dataType
         )
@@ -1511,7 +1511,8 @@ class PlexDatasourceServer(
             sortBy = sortType.sortType,
             sortOrder = sortType.order,
             ifFavorite = isFavorite,
-            albumDecade = if (years.isNullOrEmpty()) null else (years[0] / 10 * 10).toString()
+            albumStartYear = if (years.isNullOrEmpty()) null else years[0],
+            albumEndYear = if (years.isNullOrEmpty()) null else years[years.size - 1]
         )
         return response
     }
@@ -1562,7 +1563,8 @@ class PlexDatasourceServer(
         albumId: String? = null,
         genreIds: List<String>? = null,
         ifFavorite: Boolean? = null,
-        albumDecade: String? = null,
+        albumStartYear: Int? = null,
+        albumEndYear: Int? = null,
         artistTitle: String? = null,
         params: Map<String, String>? = null
     ): XyResponse<XyMusic> {
@@ -1578,7 +1580,8 @@ class PlexDatasourceServer(
                 artistId = artistId,
                 albumId = albumId,
                 trackCollection = if (ifFavorite == true) plexApiClient.musicFavoriteCollectionIndex else null,
-                albumDecade = albumDecade,
+                albumStartYear = albumStartYear,
+                albumEndYear = albumEndYear,
                 artistTitle = artistTitle,
                 genreIds = genreIds?.joinToString(),
                 params = params ?: mapOf(Pair("1", "1"))
@@ -1715,7 +1718,8 @@ class PlexDatasourceServer(
         sortBy: PlexSortType? = PlexSortType.ARTIST_TITLE_SORT,
         sortOrder: PlexSortOrder? = PlexSortOrder.ASCENDING,
         params: Map<String, String>? = null,
-        albumDecade: String? = null,
+        albumStartYear: Int? = null,
+        albumEndYear: Int? = null,
         artistId: String? = null
     ): XyResponse<XyMusic> {
         if (dataType == MusicDataTypeEnum.ALBUM) {
@@ -1729,7 +1733,8 @@ class PlexDatasourceServer(
                 sortOrder = sortOrder,
                 params = params,
                 artistId = artistId,
-                albumDecade = albumDecade
+                albumStartYear = albumStartYear,
+                albumEndYear = albumEndYear
             )
         } else {
             //存储歌曲数据
@@ -1741,7 +1746,8 @@ class PlexDatasourceServer(
                     sort = "$sortBy:$sortOrder",
                     trackCollection = if (ifFavorite == true) plexApiClient.musicFavoriteCollectionIndex else null,
                     params = params ?: mapOf(Pair("1", "1")),
-                    albumDecade = albumDecade,
+                    albumStartYear = albumStartYear,
+                    albumEndYear = albumEndYear,
                     artistId = artistId
                 )
 

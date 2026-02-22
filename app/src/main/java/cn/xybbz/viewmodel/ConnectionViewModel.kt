@@ -32,6 +32,7 @@ import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.IDataSourceServer
 import cn.xybbz.api.client.data.ClientLoginInfoReq
+import cn.xybbz.common.constants.Constants
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.localdata.enums.DataSourceType
@@ -50,6 +51,8 @@ class ConnectionViewModel @Inject constructor(
     val settingsManager: SettingsManager
 ) : ViewModel() {
 
+
+    val options = listOf(Constants.HTTP, Constants.HTTPS)
 
     var dataSourceType by mutableStateOf<DataSourceType?>(null)
         private set
@@ -129,7 +132,7 @@ class ConnectionViewModel @Inject constructor(
             tmpDataSourceParentServer = dataSourceManager
         } else {
             tmpDataSourceParentServer =
-                dataSourceManager.getDataSourceServerByType(tmpDatasource, ifTemp)
+                dataSourceManager.getDataSourceServerByType(tmpDatasource, true)
         }
 
         val packageManager = application.packageManager
@@ -199,7 +202,7 @@ class ConnectionViewModel @Inject constructor(
         clearLoginStatus()
         updateSelectUrlIndexZero()
         if (!URLUtil.isNetworkUrl(address)) {
-            dataSourceType?.options?.forEach {
+            options.forEach {
                 val url = "${it}$address"
                 tmpAddressList.add(url)
                 val ipAndPort = isEndPort(url)
@@ -332,13 +335,6 @@ class ConnectionViewModel @Inject constructor(
             errorHint = R.string.plex_resource_error
             errorMessage = ""
         }
-    }
-
-    /**
-     * 更新登陆loading状态
-     */
-    fun updateLoading(loading: Boolean) {
-        this.loading = loading
     }
 
     /**

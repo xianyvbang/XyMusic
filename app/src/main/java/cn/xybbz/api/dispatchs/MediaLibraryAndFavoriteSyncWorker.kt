@@ -42,10 +42,13 @@ class MediaLibraryAndFavoriteSyncWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
+            Log.i(
+                Constants.LOG_ERROR_PREFIX,
+                "开始启动获取音乐/专辑/艺术家/收藏/流派数量"
+            )
             db.withTransaction {
                 val connectionId = inputData.getLong(Constants.CONNECTION_ID,0L)
                 val remoteId = RemoteIdConstants.MEDIA_LIBRARY_AND_FAVORITE + connectionId
-                dataSourceManager.selectMediaLibrary(connectionId = connectionId)
                 dataSourceManager.initFavoriteData(connectionId = connectionId)
                 try {
                     dataSourceManager.getDataInfoCount(connectionId)

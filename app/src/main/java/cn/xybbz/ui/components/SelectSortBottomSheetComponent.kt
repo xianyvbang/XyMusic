@@ -52,7 +52,6 @@ import androidx.compose.ui.unit.dp
 import cn.xybbz.R
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.DateUtil
-import cn.xybbz.localdata.data.era.XyEraItem
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
@@ -103,7 +102,6 @@ fun SelectSortBottomSheet(
 @Composable
 fun SelectSortBottomSheetComponent(
     modifier: Modifier = Modifier,
-    onIfYearFilter: () -> Boolean?,
     onIfSelectOneYear: () -> Boolean?,
     onIfStartEndYear: () -> Boolean?,
     onIfSort: () -> Boolean?,
@@ -111,8 +109,6 @@ fun SelectSortBottomSheetComponent(
     onSortTypeClick: suspend (SortTypeEnum?) -> Unit,
     onSortType: () -> SortTypeEnum?,
     onDefaultSortType: () -> SortTypeEnum,
-    onFilterEraTypeList: () -> List<XyEraItem>,
-    onFilterEraTypeClick: suspend (XyEraItem?) -> Unit,
     onIfFavorite: () -> Boolean,
     setFavorite: suspend (Boolean) -> Unit,
     sortTypeList: List<SortTypeEnum> = SortTypeEnum.entries,
@@ -138,13 +134,6 @@ fun SelectSortBottomSheetComponent(
      * 打开菜单页面
      */
     var ifShowSortOrFilterMenu by remember {
-        mutableStateOf(false)
-    }
-
-    /**
-     * 打开年代筛选bottom
-     */
-    var ifOpenAgeFilterBottom by remember {
         mutableStateOf(false)
     }
 
@@ -206,20 +195,6 @@ fun SelectSortBottomSheetComponent(
                             setFavorite(!onIfFavorite())
                         }
                     }, ifItemShow = { onIfFavoriteFilter() == true }),
-                MenuItemDefaultData(
-                    title = stringResource(R.string.era_filter),
-                    trailingIcon = {
-                        Icon(
-                            imageVector = Icons.Rounded.CalendarToday,
-                            contentDescription = stringResource(R.string.era_filter),
-                        )
-
-                    },
-                    onClick = composeClick {
-                        ifShowSortOrFilterMenu = false
-                        ifOpenAgeFilterBottom = true
-                    },
-                    ifItemShow = { onIfYearFilter() == true && onIfSelectOneYear.invoke() == false }),
                 //单年筛选
                 MenuItemDefaultData(
                     title = stringResource(R.string.year_filter),
@@ -234,7 +209,7 @@ fun SelectSortBottomSheetComponent(
                         ifShowSortOrFilterMenu = false
                         ifOpenYearFilterBottom = true
                     },
-                    ifItemShow = { onIfYearFilter() == true && onIfSelectOneYear.invoke() == true }),
+                    ifItemShow = { onIfSelectOneYear.invoke() == true }),
                 //年范围筛选
                 MenuItemDefaultData(
                     title = stringResource(R.string.year_filter),
@@ -249,7 +224,7 @@ fun SelectSortBottomSheetComponent(
                         ifShowSortOrFilterMenu = false
                         ifOpenYearRangeFilterBottom = true
                     },
-                    ifItemShow = { onIfYearFilter() == true && onIfStartEndYear.invoke() == true }),
+                    ifItemShow = { onIfStartEndYear.invoke() == true }),
                 //排序功能
                 MenuItemDefaultData(
                     title = stringResource(R.string.sort_method),
@@ -275,32 +250,17 @@ fun SelectSortBottomSheetComponent(
                         )
 
                     },
-                    onClick = composeClick (){
+                    onClick = composeClick() {
                         ifShowSortOrFilterMenu = false
                         coroutineScope.launch {
                             onClearFilterOrShort()
                         }
                     },
-                    ifItemShow = { onIfYearFilter() == true && onIfSelectOneYear.invoke() == false })
+                    ifItemShow = { true })
 
             )
         )
     }
-
-    AgeFilterComponent(
-        ifDisplay = { ifOpenAgeFilterBottom },
-        onSetDisplay = {
-            ifOpenAgeFilterBottom = it
-        },
-        onFilterEraTypeList = onFilterEraTypeList,
-        onFilterEraTypeClick = {
-            selectEraId = it?.id
-            coroutineScope.launch {
-                onFilterEraTypeClick(it)
-            }
-        },
-        onFilterEraType = { selectEraId ?: 0 }
-    )
 
     YearFilterComponent(
         ifDisplay = { ifOpenYearFilterBottom },
@@ -346,56 +306,6 @@ fun SelectSortBottomSheetComponent(
                 }
             }
         })
-}
-
-/**
- * 使用年代过滤
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AgeFilterComponent(
-    modifier: Modifier = Modifier,
-    bottomSheetState: SheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = false
-    ),
-    ifDisplay: () -> Boolean,
-    onSetDisplay: (Boolean) -> Unit,
-    onFilterEraTypeList: () -> List<XyEraItem>,
-    onFilterEraTypeClick: (XyEraItem?) -> Unit,
-    onFilterEraType: () -> Int,
-) {
-    val coroutineScope = rememberCoroutineScope()
-    ModalBottomSheetExtendComponent(
-        bottomSheetState = bottomSheetState,
-        modifier = modifier,
-        onIfDisplay = ifDisplay,
-        onClose = onSetDisplay,
-        dragHandle = null,
-        titleText = stringResource(R.string.era_filter)
-    ) {
-        onFilterEraTypeList().forEach {
-            XyItemIconSelect(
-                onClick = {
-                    coroutineScope
-                        .launch {
-                            if (onFilterEraType() == it.id){
-                                onFilterEraTypeClick(null)
-                            }else{
-                                onFilterEraTypeClick(it)
-                            }
-                            bottomSheetState.hide()
-                        }
-                        .invokeOnCompletion {
-                            onSetDisplay(false)
-                        }
-                },
-                enableLeading = false,
-                text = it.title + stringResource(R.string.decade_suffix),
-                onIfSelected = { onFilterEraType() == it.id }
-            )
-        }
-
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -262,6 +262,7 @@ abstract class IDataSourceParentServer(
                 }
 
                 if (!ifTmpObject()) {
+                    selectMediaLibrary(connectionId = connectionId)
                     downloadManager.initData(connectionId)
                     connection(connectionConfig.copy(id = connectionId), connectionConfig.id != 0L)
                     mediaLibraryAndFavoriteSyncScheduler.cancel()

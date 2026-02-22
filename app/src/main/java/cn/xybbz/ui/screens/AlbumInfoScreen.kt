@@ -802,9 +802,8 @@ private fun StickyHeaderOperationParent(
         ifOpenSelect = ifOpenSelect,
         sortContent = {
             SelectSortBottomSheetComponent(
-                onIfYearFilter = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifYearFilter },
                 onIfSelectOneYear = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifAlbumInfoSelectOneYear },
-                onIfStartEndYear = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifStartEndYear },
+                onIfStartEndYear = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifAlbumInfoSelectStartEndYear },
                 onIfSort = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifAlbumInfoSort },
                 onIfFavoriteFilter = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifAlbumInfoFavoriteFilter },
                 onSortTypeClick = {
@@ -812,12 +811,6 @@ private fun StickyHeaderOperationParent(
                 },
                 onSortType = { sortBy.sortType },
                 onDefaultSortType = { albumInfoViewModel.defaultSortType },
-                onFilterEraTypeList = { mainViewModel.eraItemList },
-                onFilterEraTypeClick = {
-                    albumInfoViewModel.setFilterEraType(
-                        it
-                    ) { musicListPage.refresh() }
-                },
                 onIfFavorite = { sortBy.isFavorite == true },
                 setFavorite = {
                     albumInfoViewModel.setFavorite(
@@ -845,11 +838,10 @@ private fun StickyHeaderOperationParent(
                         years.mapNotNull { it }
                     ) { musicListPage.refresh() }
                 },
-                onEnabledClearClick = { albumInfoViewModel.isSortChange() },
-                onClearFilterOrShort = {
-                    albumInfoViewModel.clearFilterOrSort { musicListPage.refresh() }
-                }
-            )
+                onEnabledClearClick = { albumInfoViewModel.isSortChange() }
+            ) {
+                albumInfoViewModel.clearFilterOrSort { musicListPage.refresh() }
+            }
         }
     )
 

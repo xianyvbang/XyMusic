@@ -46,7 +46,7 @@ class MediaLibraryAndFavoriteSyncScheduler @Inject constructor(
         )
         if (!shouldSync) return
         val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
             .build()
 
         val request = OneTimeWorkRequestBuilder<MediaLibraryAndFavoriteSyncWorker>()
