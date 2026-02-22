@@ -42,6 +42,7 @@ import cn.xybbz.ui.theme.XyConfigs
 import cn.xybbz.ui.theme.XyTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.hjq.language.MultiLanguages
+import com.kongzue.dialogx.DialogX
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -79,6 +80,7 @@ class MainActivity : ComponentActivity() {
                 ThemeTypeEnum.DARK -> true
                 ThemeTypeEnum.LIGHT -> false
             }
+            DialogX.globalTheme = if (isDark) DialogX.THEME.DARK else DialogX.THEME.LIGHT
 
             XyTheme(
                 brash = backgroundConfig.xyBackgroundBrash,

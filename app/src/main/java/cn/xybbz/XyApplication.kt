@@ -79,10 +79,6 @@ class XyApplication : Application(), Configuration.Provider {
         DialogX.init(this)
         DialogX.globalStyle = XyMaterialYouStyle()
         DialogX.DEBUGMODE = true
-        DialogX.onlyOnePopTip = false
-        //是否默认可以关闭
-        DialogX.cancelableTipDialog = false
-        DialogX.globalTheme = DialogX.THEME.DARK
 
         val scope = CoroutineScopeUtils.getDefault("XyApplication")
         scope.launch {
