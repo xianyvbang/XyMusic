@@ -99,8 +99,6 @@ fun AboutScreen(
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
 
-    val context = LocalContext.current
-
     val apkDownloadInfo by aboutViewModel.apkDownloadInfo.collectAsStateWithLifecycle()
     val primary = MaterialTheme.colorScheme.primary
     val permissionState = downloadPermission(ifDownloadApk = true) {
@@ -108,10 +106,8 @@ fun AboutScreen(
     }
 
     val newVersionDownload = stringResource(R.string.new_version_download)
-
-    LaunchedEffect(apkDownloadInfo) {
-        Log.i("=====", "数据变化 ${apkDownloadInfo}")
-    }
+    val functionNotImplemented = stringResource(R.string.function_not_implemented)
+    val noOfficialWebsiteYet = stringResource(R.string.no_official_website_yet)
 
     XyColumnScreen(
         modifier = Modifier.brashColor(
@@ -280,13 +276,13 @@ fun AboutScreen(
             }
             item {
                 SettingItemComponent(title = stringResource(R.string.problem_feedback)) {
-                    MessageUtils.sendPopTip(context.getString(R.string.function_not_implemented))
+                    MessageUtils.sendPopTip(functionNotImplemented)
                 }
             }
 
             item {
                 SettingItemComponent(title = stringResource(R.string.official_website)) {
-                    MessageUtils.sendPopTip(context.getString(R.string.no_official_website_yet))
+                    MessageUtils.sendPopTip(noOfficialWebsiteYet)
                 }
             }
         }

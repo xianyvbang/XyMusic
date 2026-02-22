@@ -99,6 +99,8 @@ fun DownloadScreen(
 ) {
     val context = LocalContext.current
 
+   val removeDownloadTitle = stringResource(R.string.remove_download_title)
+
     val tasks by downloadViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
     XyColumnScreen(
         modifier = Modifier
@@ -117,18 +119,21 @@ fun DownloadScreen(
             onCancel = { downloadViewModel.performBatchCancel() },
             onDelete = {
                 if (downloadViewModel.selectedTaskIds.isNotEmpty())
-                    AlertDialogObject(title = context.getString(R.string.remove_download_title), content = {
-                        XyTextSubSmall(
-                            text = stringResource(
-                                R.string.confirm_delete_download,
-                                downloadViewModel.selectedTaskIds.size
+                    AlertDialogObject(
+                        title = removeDownloadTitle,
+                        content = {
+                            XyTextSubSmall(
+                                text = stringResource(
+                                    R.string.confirm_delete_download,
+                                    downloadViewModel.selectedTaskIds.size
+                                )
                             )
-                        )
-                    }, onConfirmation = {
-                        downloadViewModel.performBatchDelete()
-                    }, onDismissRequest = {
-                        downloadViewModel.enterMultiSelectMode()
-                    }, ifWarning = true).show()
+                        }, onConfirmation = {
+                            downloadViewModel.performBatchDelete()
+                        }, onDismissRequest = {
+                            downloadViewModel.enterMultiSelectMode()
+                        }, ifWarning = true
+                    ).show()
             },
             onSelectAll = {
                 downloadViewModel.toggleSelectionAll()

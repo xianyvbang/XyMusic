@@ -28,7 +28,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.RadioButton
@@ -69,10 +68,9 @@ fun SelectLibraryScreen(
         }
     )
 ) {
-    val context = LocalContext.current
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
-
+    val allLibraryName = stringResource(R.string.all_media_libraries)
 
     XyColumnScreen(
         modifier = Modifier.brashColor(
@@ -117,6 +115,7 @@ fun SelectLibraryScreen(
                                 end = XyTheme.dimens.outerHorizontalPadding / 2
                             )
                     ) {
+
                         XyTextSubSmall(
                             text = if (library.id == Constants.MINUS_ONE_INT.toString())
                                 stringResource(library.name.toInt())
@@ -135,7 +134,7 @@ fun SelectLibraryScreen(
                                 .semantics {
                                     contentDescription =
                                         if (library.id == Constants.MINUS_ONE_INT.toString())
-                                            context.getString(library.name.toInt())
+                                            allLibraryName
                                         else library.name
                                 }
                         )
