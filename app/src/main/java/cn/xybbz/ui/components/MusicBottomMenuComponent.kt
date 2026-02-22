@@ -156,6 +156,7 @@ fun MusicBottomMenuComponent(
     val exactAlarmPermissionNotGranted = stringResource(R.string.exact_alarm_permission_not_granted)
     val addToNextPlaySuccess = stringResource(R.string.add_to_next_play_success)
     val deletePermanently = stringResource(R.string.delete_permanently)
+    val timerClose = stringResource(R.string.timer_close)
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -604,7 +605,7 @@ fun MusicBottomMenuComponent(
                             if (musicBottomMenuViewModel.sliderTimerEndData == 0f || musicBottomMenuViewModel.timerInfo == 0L) {
                                 musicBottomMenuViewModel.cancelAlarm()
                             } else {
-                                musicBottomMenuViewModel.createMusicStop()
+                                musicBottomMenuViewModel.createMusicStop(timerClose)
                             }
                         }
                         .invokeOnCompletion {
@@ -692,6 +693,7 @@ fun TimerComponent(
         number = sdf.format(calendar.time)
     }
 
+    val timerClose = stringResource(R.string.timer_close)
     ModalBottomSheetExtendComponent(
         bottomSheetState = sheetTimer,
         modifier = Modifier.statusBarsPadding(),
@@ -703,7 +705,7 @@ fun TimerComponent(
             mainViewModel.putIterations(1)
             onSetIfTimer(it)
         },
-        titleText = stringResource(R.string.timer_close),
+        titleText = timerClose,
         titleSub = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !ifCanScheduleExactAlarms) stringResource(
             R.string.timer_close_subtitle
         ) else null,
@@ -797,13 +799,9 @@ fun TimerComponent(
                         stringResource(
                             R.string.custom_timer_suffix
                         )
-                    } $number ${stringResource(R.string.timer_close)}"
+                    } $number $timerClose"
 
-                    else -> "${onSliderTimerEndData().toInt()}${stringResource(R.string.custom_timer_suffix)} $number ${
-                        stringResource(
-                            R.string.timer_close
-                        )
-                    }"
+                    else -> "${onSliderTimerEndData().toInt()}${stringResource(R.string.custom_timer_suffix)} $number $timerClose"
                 }
             }"
         )

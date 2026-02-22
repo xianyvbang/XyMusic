@@ -48,7 +48,6 @@ import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.image.BaseUrlMapper
-import cn.xybbz.config.module.ApiModule_ImageApiClientFactory.imageApiClient
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.entity.data.LoginStateData
 import cn.xybbz.entity.data.LrcEntryData
@@ -123,7 +122,6 @@ open class DataSourceManager(
             }.filter { it != LoginStateType.UNKNOWN }
 
 
-
     //加载状态
     var loading by mutableStateOf(false)
         private set
@@ -189,15 +187,15 @@ open class DataSourceManager(
             errorMessage = loginSateInfo.errorMessage ?: ""
             ifLoginError = loginSateInfo.isError
             loading = loginSateInfo.loading
-            if (loginSateInfo.isError){
+            if (loginSateInfo.isError) {
                 MessageUtils.sendPopTipError(
                     R.string.login_failed,
-                    delay = 5000
+                    delay = 2000
                 )
-            }else if (loginSateInfo.isLoginSuccess){
+            } else if (loginSateInfo.isLoginSuccess) {
                 MessageUtils.sendPopTipSuccess(
                     R.string.connection_successful,
-                    delay = 5000
+                    delay = 2000
                 )
             }
         }
@@ -214,7 +212,6 @@ open class DataSourceManager(
             }
 
             is ClientLoginInfoState.ConnectError -> {
-                MessageUtils.sendPopTipDismiss()
                 Log.i(Constants.LOG_ERROR_PREFIX, "服务端连接错误")
                 LoginStateData(
                     loading = false,
@@ -224,7 +221,6 @@ open class DataSourceManager(
             }
 
             ClientLoginInfoState.ServiceTimeOutState -> {
-                MessageUtils.sendPopTipDismiss()
                 Log.i(Constants.LOG_ERROR_PREFIX, "服务端连接超时")
                 LoginStateData(
                     loading = false,
@@ -234,7 +230,6 @@ open class DataSourceManager(
             }
 
             is ClientLoginInfoState.ErrorState -> {
-                MessageUtils.sendPopTipDismiss()
                 Log.i(Constants.LOG_ERROR_PREFIX, loginState.error.message.toString())
                 LoginStateData(
                     loading = false,
@@ -245,7 +240,6 @@ open class DataSourceManager(
             }
 
             ClientLoginInfoState.SelectServer -> {
-                MessageUtils.sendPopTipDismiss()
                 Log.i(Constants.LOG_ERROR_PREFIX, "未选择连接")
                 LoginStateData(
                     loading = false,
@@ -255,7 +249,6 @@ open class DataSourceManager(
             }
 
             ClientLoginInfoState.UnauthorizedErrorState -> {
-                MessageUtils.sendPopTipDismiss()
                 Log.i(Constants.LOG_ERROR_PREFIX, "登录失败,账号或密码错误")
                 LoginStateData(
                     loading = false,
@@ -697,7 +690,7 @@ open class DataSourceManager(
             errorMessage = R.string.add_music_to_playlist_failed
         ) {
             try {
-                dataSourceServer.saveMusicPlaylist(playlistId, musicIds,)
+                dataSourceServer.saveMusicPlaylist(playlistId, musicIds)
             } catch (e: Exception) {
                 Log.e(Constants.LOG_ERROR_PREFIX, "保存自建歌单中的音乐失败", e)
                 false
@@ -1248,7 +1241,7 @@ open class DataSourceManager(
      */
     @Transaction
     suspend fun removeMusicById(musicId: String) {
-        OperationTipUtils.operationTipNotToBlock {
+        OperationTipUtils.operationTipNotToBlock() {
             val bool = removeById(musicId)
             db.musicDao.removeByItemId(musicId)
             bool
@@ -1261,7 +1254,7 @@ open class DataSourceManager(
      */
     @Transaction
     suspend fun removeMusicByIds(musicIds: List<String>): Boolean {
-        return OperationTipUtils.operationTipNotToBlock {
+        return OperationTipUtils.operationTipNotToBlock() {
             val bool = removeByIds(musicIds)
             db.musicDao.removeByItemIds(musicIds)
             bool

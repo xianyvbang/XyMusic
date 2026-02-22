@@ -136,7 +136,9 @@ abstract class IDataSourceParentServer(
         clientLoginInfoReq: ClientLoginInfoReq,
         connectionConfig: ConnectionConfig?
     ): Flow<ClientLoginInfoState> {
-
+        val popTipHint = MessageUtils.sendPopTipHint(
+            R.string.logging_in
+        )
         return flow {
             Log.i("=====", "输入的地址: ${clientLoginInfoReq.address}")
             emit(ClientLoginInfoState.Connected(clientLoginInfoReq.address))
@@ -222,9 +224,11 @@ abstract class IDataSourceParentServer(
                 ifForceLogin = false
             )
             this@IDataSourceParentServer.connectionConfig = tmpConfig
+            popTipHint.dismiss()
             emitAll(loginAfter(tmpConfig))
         }.flowOn(Dispatchers.IO).catch {
             it.printStackTrace()
+            popTipHint.dismiss()
             sendLoginCompleted(LoginStateType.FAILURE)
             when (it) {
                 is SocketTimeoutException -> {
@@ -344,11 +348,6 @@ abstract class IDataSourceParentServer(
                 serverId = connectionConfig.serverId,
             )
             if (loginType == LoginType.API || connectionConfig.accessToken.isNullOrBlank() || connectionConfig.ifForceLogin) {
-
-                MessageUtils.sendPopTipHint(
-                    R.string.logging_in,
-                    delay = 5000
-                )
                 emitAll(
                     addClientAndLogin(
                         clientLoginInfoReq = clientLoginInfoReq,

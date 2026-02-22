@@ -32,6 +32,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.MusicController
+import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.download.DownLoadManager
@@ -184,7 +185,7 @@ class MusicBottomMenuViewModel @Inject constructor(
     /**
      * 音乐app定时关闭
      */
-    fun createMusicStop() {
+    fun createMusicStop(timerClose: String) {
         alarmConfig.cancelAllAlarm()
         val calendar = android.icu.util.Calendar.getInstance()
             .apply { time = Date() } // 创建Calendar对象并设置为当前时间
@@ -192,7 +193,7 @@ class MusicBottomMenuViewModel @Inject constructor(
         alarmConfig.getUpAlarmManagerStartWork(calendar, ifPlayEndClose)
         Log.i("=====", "触发时间${SimpleDateFormat.getTimeInstance().format(calendar.time)}")
         MessageUtils.sendPopTip(
-            SimpleDateFormat.getTimeInstance().format(calendar.time), R.string.timer_close
+            SimpleDateFormat.getTimeInstance().format(calendar.time) + timerClose
         )
 
     }

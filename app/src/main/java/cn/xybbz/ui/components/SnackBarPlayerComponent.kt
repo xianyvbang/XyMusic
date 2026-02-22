@@ -137,6 +137,8 @@ fun SnackBarPlayerComponent(
         skipPartiallyExpanded = true
     )
 
+    val pleaseSelect = stringResource(R.string.please_select)
+
     MusicBottomMenuComponent(
         onAlbumRouter = { albumId ->
             navigator.navigate(AlbumInfo(albumId, MusicDataTypeEnum.ALBUM))
@@ -235,7 +237,7 @@ fun SnackBarPlayerComponent(
                         IconButton(onClick = {
 
                             if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
-                                MessageUtils.sendPopTip(R.string.please_select)
+                                MessageUtils.sendPopTip(pleaseSelect)
                             } else {
                                 snackBarPlayerViewModel.selectControl.onRemoveSelectListResource.invoke(
                                     snackBarPlayerViewModel.dataSourceManager,
@@ -253,7 +255,7 @@ fun SnackBarPlayerComponent(
 
                     IconButton(onClick = {
                         if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
-                            MessageUtils.sendPopTip(R.string.please_select)
+                            MessageUtils.sendPopTip(pleaseSelect)
                         } else {
                             coroutineScope.launch {
                                 snackBarPlayerViewModel.selectControl.onAddPlaySelect(
@@ -271,7 +273,7 @@ fun SnackBarPlayerComponent(
 
                     IconButton(onClick = {
                         if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
-                            MessageUtils.sendPopTip(R.string.please_select)
+                            MessageUtils.sendPopTip(pleaseSelect)
                         } else {
                             snackBarPlayerViewModel.selectControl.onAddPlaylistSelect()
                         }
@@ -285,7 +287,7 @@ fun SnackBarPlayerComponent(
                     if (snackBarPlayerViewModel.selectControl.ifPlaylist)
                         IconButton(onClick = {
                             if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
-                                MessageUtils.sendPopTip(R.string.please_select)
+                                MessageUtils.sendPopTip(pleaseSelect)
                             } else
                                 snackBarPlayerViewModel.selectControl.onRemovePlaylistMusic(
                                     snackBarPlayerViewModel.dataSourceManager,
@@ -300,7 +302,7 @@ fun SnackBarPlayerComponent(
 
                     IconButton(onClick = {
                         if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
-                            MessageUtils.sendPopTip(R.string.please_select)
+                            MessageUtils.sendPopTip(pleaseSelect)
                         } else
                             snackBarPlayerViewModel.selectControl.onRemoveFavorite(
                                 snackBarPlayerViewModel.dataSourceManager,
@@ -317,7 +319,7 @@ fun SnackBarPlayerComponent(
                     if (!snackBarPlayerViewModel.selectControl.ifLocal && snackBarPlayerViewModel.dataSourceManager.getCanDownload())
                         IconButton(onClick = {
                             if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
-                                MessageUtils.sendPopTip(R.string.please_select)
+                                MessageUtils.sendPopTip(pleaseSelect)
                             } else {
                                 permissionState?.launchMultiplePermissionRequest()
                             }
