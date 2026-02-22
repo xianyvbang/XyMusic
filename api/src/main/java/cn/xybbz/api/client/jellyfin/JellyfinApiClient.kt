@@ -246,7 +246,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
     override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
 
         try {
-            val pingData = userApi().postPingSystem()
+            val pingData = ping()
             Log.i("=====", "ping数据返回: $pingData")
         } catch (e: Exception) {
             e.printStackTrace()
@@ -254,6 +254,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
                 !is UnauthorizedException -> {
                     throw ConnectionException()
                 }
+                else -> throw e
             }
         }
 
@@ -284,6 +285,10 @@ class JellyfinApiClient : DefaultParentApiClient() {
     ) {
         updateAccessToken(accessToken)
         updateTokenOrHeadersOrQuery()
+    }
+
+    override suspend fun ping(): String {
+        return userApi().postPingSystem()
     }
 
     /**

@@ -154,7 +154,7 @@ class ConnectionViewModel @Inject constructor(
         tmpDataSourceParentServer?.addClientAndLogin(clientLoginInfoReq)?.onEach {
             Log.i("=====", "数据获取${it}")
 
-            val loginSateInfo = dataSourceManager.getLoginSateInfo(it, ifTemp)
+            val loginSateInfo = dataSourceManager.getLoginSateInfo(it)
             loading = loginSateInfo.loading
             errorHint = loginSateInfo.errorHint ?: R.string.empty_info
             errorMessage = loginSateInfo.errorMessage ?: ""

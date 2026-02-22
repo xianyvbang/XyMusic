@@ -31,7 +31,6 @@ inline fun <reified T> T.toStringMap(
     isConvertList: Boolean = true
 ): Map<String, String> {
     val currentTimeMillis = System.currentTimeMillis()
-    Log.i("=======", "转换开始时间: $currentTimeMillis")
     val jsonElement = json.encodeToJsonElement(this)
 
     if (jsonElement !is JsonObject) return emptyMap()

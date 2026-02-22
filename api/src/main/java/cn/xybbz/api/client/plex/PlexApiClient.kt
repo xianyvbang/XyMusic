@@ -24,6 +24,7 @@ import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
 import cn.xybbz.api.client.jellyfin.encodeUrlParameter
+import cn.xybbz.api.client.plex.data.PlexPingSystemResponse
 import cn.xybbz.api.client.plex.data.toPlexLogin
 import cn.xybbz.api.client.plex.service.PlexItemApi
 import cn.xybbz.api.client.plex.service.PlexLibraryApi
@@ -33,7 +34,8 @@ import cn.xybbz.api.client.plex.service.PlexUserApi
 import cn.xybbz.api.client.plex.service.PlexUserLibraryApi
 import cn.xybbz.api.client.plex.service.PlexUserViewsApi
 import cn.xybbz.api.constants.ApiConstants
-import cn.xybbz.api.exception.ServiceException
+import cn.xybbz.api.exception.ConnectionException
+import cn.xybbz.api.exception.UnauthorizedException
 
 class PlexApiClient : DefaultParentApiClient() {
 
@@ -330,24 +332,27 @@ class PlexApiClient : DefaultParentApiClient() {
         if (createToken().isBlank()) {
             loginSuccessData = plexLogin(clientLoginInfoReq)
         }
-
-        try {
-            val postPingSystem = userApi().postPingSystem()
-            Log.i("=====", postPingSystem.toString())
+        val postPingSystem = try {
+            val pingInfo = ping()
+            Log.i("=====", pingInfo.toString())
             //获得machineIdentifier
-            pingAfter(postPingSystem.mediaContainer?.machineIdentifier)
-            loginSuccessData =
-                loginSuccessData.copy(
-                    machineIdentifier = postPingSystem.mediaContainer?.machineIdentifier,
-                    ifEnabledDownload = postPingSystem.mediaContainer?.allowSync ?: false,
-                    ifEnabledDelete = postPingSystem.mediaContainer?.allowSync ?: false
-                )
+            pingAfter(pingInfo.mediaContainer?.machineIdentifier)
+            pingInfo
         } catch (e: Exception) {
             Log.i("error", "ping服务器失败", e)
-            throw ServiceException("ping服务器失败")
+            when (e) {
+                !is UnauthorizedException -> {
+                    throw ConnectionException()
+                }
+                else -> throw e
+            }
         }
         TokenServer.updateLoginRetry(false)
-        return loginSuccessData
+        return loginSuccessData.copy(
+            machineIdentifier = postPingSystem.mediaContainer?.machineIdentifier,
+            ifEnabledDownload = postPingSystem.mediaContainer?.allowSync ?: false,
+            ifEnabledDelete = postPingSystem.mediaContainer?.allowSync ?: false
+        )
     }
 
     override suspend fun loginAfter(
@@ -364,6 +369,10 @@ class PlexApiClient : DefaultParentApiClient() {
 
     override suspend fun pingAfter(machineIdentifier: String?) {
         updateMachineIdentifier(machineIdentifier)
+    }
+
+    override suspend fun ping(): PlexPingSystemResponse {
+        return userApi().postPingSystem()
     }
 
     suspend fun plexLogin(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {

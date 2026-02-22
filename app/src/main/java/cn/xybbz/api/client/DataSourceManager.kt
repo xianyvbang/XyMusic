@@ -181,7 +181,7 @@ open class DataSourceManager(
         autoLogin(loginType, connectionConfig).collect { loginState ->
             loginStatus = loginState
             //                ifLoginError = false
-            val loginSateInfo = getLoginSateInfo(loginState, false)
+            val loginSateInfo = getLoginSateInfo(loginState)
             Log.i("error", "$loginSateInfo")
             errorHint = loginSateInfo.errorHint ?: R.string.empty_info
             errorMessage = loginSateInfo.errorMessage ?: ""
@@ -204,7 +204,7 @@ open class DataSourceManager(
     /**
      * 根据登录状态返回不同登录信息
      */
-    fun getLoginSateInfo(loginState: ClientLoginInfoState, ifTmp: Boolean): LoginStateData {
+    fun getLoginSateInfo(loginState: ClientLoginInfoState): LoginStateData {
         return when (loginState) {
             is ClientLoginInfoState.Connected -> {
                 Log.i("=====", "连接中")

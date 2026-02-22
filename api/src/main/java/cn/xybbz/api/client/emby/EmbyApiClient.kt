@@ -39,6 +39,8 @@ import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.ImageType
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.UnauthorizedException
+import okhttp3.ResponseBody
+import retrofit2.Response
 
 /**
  * EMBY API 客户端
@@ -226,7 +228,7 @@ class EmbyApiClient : DefaultParentApiClient() {
     override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
 
         try {
-            val pingData = userApi().postPingSystem()
+            val pingData = ping()
             Log.i("=====", "是否连通: $pingData")
             if (pingData.isSuccessful) {
                 val raw = pingData.body()?.string()
@@ -240,6 +242,7 @@ class EmbyApiClient : DefaultParentApiClient() {
                 !is UnauthorizedException -> {
                     throw ConnectionException()
                 }
+                else -> throw e
             }
         }
         val responseData =
@@ -273,6 +276,10 @@ class EmbyApiClient : DefaultParentApiClient() {
     ) {
         updateAccessTokenAndUserId(accessToken, userId)
         updateTokenOrHeadersOrQuery()
+    }
+
+    override suspend fun ping(): Response<ResponseBody> {
+        return userApi().postPingSystem()
     }
 
     /**

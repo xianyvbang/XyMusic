@@ -25,7 +25,6 @@ import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.constants.ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
 import cn.xybbz.api.converter.kotlinxJsonConverter
 import cn.xybbz.api.events.ReLoginEventBus
-import cn.xybbz.api.okhttp.DefaultAuthenticator
 import cn.xybbz.api.okhttp.LoggingInterceptor
 import cn.xybbz.api.okhttp.NetWorkInterceptor
 import cn.xybbz.api.okhttp.plex.PlexQueryInterceptor
@@ -116,12 +115,6 @@ abstract class DefaultApiClient : ApiConfig {
             .writeTimeout(DEFAULT_TIMEOUT_MILLISECONDS, TimeUnit.MILLISECONDS)
             .addNetworkInterceptor(PlexQueryInterceptor())
             .addNetworkInterceptor(LoggingInterceptor())
-            .authenticator(
-                DefaultAuthenticator(
-                    eventBus,
-                    onLoginRetry = { TokenServer.loginRetry },
-                    onSetLoginRetry = { TokenServer.updateLoginRetry(it) })
-            )
             .followRedirects(true)
             .followSslRedirects(true)
             .retryOnConnectionFailure(true)

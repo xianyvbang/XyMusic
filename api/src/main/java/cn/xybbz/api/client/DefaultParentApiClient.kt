@@ -9,8 +9,6 @@ abstract class DefaultParentApiClient:DefaultApiClient() {
      */
     abstract fun createDownloadUrl(itemId: String): String
 
-
-
     /**
      * 登陆接口
      */
@@ -26,5 +24,5 @@ abstract class DefaultParentApiClient:DefaultApiClient() {
 
     open suspend fun pingAfter(machineIdentifier:String? = null){}
 
-
+    abstract suspend fun ping(): Any
 }

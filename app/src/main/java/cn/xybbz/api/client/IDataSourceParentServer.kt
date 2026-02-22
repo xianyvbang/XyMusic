@@ -33,6 +33,7 @@ import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
+import cn.xybbz.api.events.ReLoginEvent
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.exception.UnauthorizedException
@@ -356,6 +357,8 @@ abstract class IDataSourceParentServer(
                 )
             } else {
                 emit(ClientLoginInfoState.Connected(clientLoginInfoReq.address))
+
+
                 //保存客户端数据
                 createApiClient(
                     address,
@@ -370,6 +373,17 @@ abstract class IDataSourceParentServer(
                     connectionConfig.navidromeExtendSalt,
                     clientLoginInfoReq = clientLoginInfoReq
                 )
+
+                try {
+                    defaultParentApiClient.ping()
+                }catch (e: Exception){
+                    if (!TokenServer.loginRetry){
+                        TokenServer.updateLoginRetry(true)
+                        defaultParentApiClient.eventBus.notify(ReLoginEvent.Unauthorized)
+                    }
+
+                    throw e
+                }
                 defaultParentApiClient.pingAfter(connectionConfig.machineIdentifier)
                 emitAll(loginAfter(connectionConfig))
             }
