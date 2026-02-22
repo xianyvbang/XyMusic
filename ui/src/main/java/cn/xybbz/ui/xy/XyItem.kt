@@ -192,13 +192,7 @@ fun ItemTrailingContent(
                         if (ifDownload)
                             appendInlineContent(inlineIfDownloadId, "[icon]")
                         media?.let {
-                            withStyle(
-                                style = SpanStyle(
-                                    fontSize = 10.sp,
-                                    color = Color(0xFFCADBFF)
-                                ), block = {
-                                    append(media)
-                                })
+                            append(media)
                             append(" ")
                         }
                         subordination?.let {
