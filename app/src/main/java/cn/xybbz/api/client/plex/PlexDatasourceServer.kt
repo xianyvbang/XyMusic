@@ -115,26 +115,12 @@ class PlexDatasourceServer(
                         libraryIdTmp,
                         title = application.getString(Constants.PLEX_MUSIC_COLLECTION_TITLE)
                     )
-                if (musicCollection.mediaContainer?.metadata.isNullOrEmpty()) {
-                    val collectionResponse = plexApiClient.userLibraryApi().addCollection(
-                        title = application.getString(Constants.PLEX_MUSIC_COLLECTION_TITLE),
-                        sectionId = libraryIdTmp
-                    )
-                    val musicCollectionInfo = collectionResponse.mediaContainer?.metadata?.get(
-                        0
-                    )
-                    plexApiClient.updateMusicFavoriteCollectionId(
-                        musicCollectionInfo?.ratingKey,
-                        musicCollectionInfo?.index
-                    )
-
-                } else {
+                if (!musicCollection.mediaContainer?.metadata.isNullOrEmpty()) {
                     val musicCollectionInfo = musicCollection.mediaContainer?.metadata?.get(0)
                     plexApiClient.updateMusicFavoriteCollectionId(
                         musicCollectionInfo?.ratingKey,
                         musicCollectionInfo?.index
                     )
-
                 }
             }
 
@@ -146,19 +132,7 @@ class PlexDatasourceServer(
                         subtype = 9,
                         title = application.getString(Constants.PLEX_ALBUM_COLLECTION_TITLE)
                     )
-                if (albumCollection.mediaContainer?.metadata.isNullOrEmpty()) {
-                    val collectionResponse = plexApiClient.userLibraryApi().addCollection(
-                        type = 9,
-                        title = application.getString(Constants.PLEX_ALBUM_COLLECTION_TITLE),
-                        sectionId = libraryIdTmp
-                    )
-                    val albumCollectionInfo = collectionResponse.mediaContainer?.metadata?.get(0)
-                    plexApiClient.updateAlbumFavoriteCollectionId(
-                        albumCollectionInfo?.ratingKey,
-                        albumCollectionInfo?.index
-                    )
-
-                } else {
+                if (!albumCollection.mediaContainer?.metadata.isNullOrEmpty()) {
                     val albumCollectionInfo = albumCollection.mediaContainer?.metadata?.get(
                         0
                     )
@@ -166,7 +140,6 @@ class PlexDatasourceServer(
                         albumCollectionInfo?.ratingKey,
                         albumCollectionInfo?.index
                     )
-
                 }
             }
             if (plexApiClient.artistFavoriteCollectionId == null) {
@@ -177,21 +150,7 @@ class PlexDatasourceServer(
                         subtype = 8,
                         title = application.getString(Constants.PLEX_ARTIST_COLLECTION_TITLE)
                     )
-                if (albumCollection.mediaContainer?.metadata.isNullOrEmpty()) {
-                    val collectionResponse = plexApiClient.userLibraryApi().addCollection(
-                        type = 8,
-                        title = application.getString(Constants.PLEX_ARTIST_COLLECTION_TITLE),
-                        sectionId = libraryIdTmp
-                    )
-                    val artistCollectionInfo = collectionResponse.mediaContainer?.metadata?.get(
-                        0
-                    )
-                    plexApiClient.updateArtistFavoriteCollectionId(
-                        artistCollectionInfo?.ratingKey,
-                        artistCollectionInfo?.index
-                    )
-
-                } else {
+                if (!albumCollection.mediaContainer?.metadata.isNullOrEmpty()) {
                     val artistCollectionInfo = albumCollection.mediaContainer?.metadata?.get(
                         0
                     )
@@ -199,7 +158,6 @@ class PlexDatasourceServer(
                         artistCollectionInfo?.ratingKey,
                         artistCollectionInfo?.index
                     )
-
                 }
             }
         }
@@ -434,7 +392,7 @@ class PlexDatasourceServer(
         dataType: MusicTypeEnum
     ): Boolean {
         //查询收藏合集是否存在,如果不存在则查询
-        var collectionId: String?
+        var collectionId: String? = null
         when (dataType) {
             MusicTypeEnum.MUSIC -> {
                 if (plexApiClient.musicFavoriteCollectionId == null) {
@@ -447,7 +405,8 @@ class PlexDatasourceServer(
                     if (musicCollection.mediaContainer?.metadata.isNullOrEmpty()) {
                         val collectionResponse = plexApiClient.userLibraryApi().addCollection(
                             title = application.getString(Constants.PLEX_MUSIC_COLLECTION_TITLE),
-                            sectionId = libraryId!!
+                            sectionId = libraryId!!,
+                            uri = plexApiClient.createMusicUri(itemId)
                         )
                         val musicCollectionInfo = collectionResponse.mediaContainer?.metadata?.get(
                             0
@@ -469,8 +428,9 @@ class PlexDatasourceServer(
                     if (plexApiClient.musicFavoriteCollectionId == null) {
                         return false
                     }
+                } else {
+                    collectionId = plexApiClient.musicFavoriteCollectionId
                 }
-                collectionId = plexApiClient.musicFavoriteCollectionId
             }
 
             MusicTypeEnum.ALBUM -> {
@@ -486,7 +446,8 @@ class PlexDatasourceServer(
                         val collectionResponse = plexApiClient.userLibraryApi().addCollection(
                             type = 9,
                             title = application.getString(Constants.PLEX_ALBUM_COLLECTION_TITLE),
-                            sectionId = libraryId!!
+                            sectionId = libraryId!!,
+                            uri = plexApiClient.createMusicUri(itemId)
                         )
                         val albumCollectionInfo =
                             collectionResponse.mediaContainer?.metadata?.get(0)
@@ -508,8 +469,9 @@ class PlexDatasourceServer(
                     if (plexApiClient.albumFavoriteCollectionId == null) {
                         return false
                     }
+                } else {
+                    collectionId = plexApiClient.albumFavoriteCollectionId
                 }
-                collectionId = plexApiClient.albumFavoriteCollectionId
             }
 
             MusicTypeEnum.ARTIST -> {
@@ -525,7 +487,8 @@ class PlexDatasourceServer(
                         val collectionResponse = plexApiClient.userLibraryApi().addCollection(
                             type = 8,
                             title = application.getString(Constants.PLEX_ARTIST_COLLECTION_TITLE),
-                            sectionId = libraryId!!
+                            sectionId = libraryId!!,
+                            uri = plexApiClient.createMusicUri(itemId)
                         )
                         val artistCollectionInfo = collectionResponse.mediaContainer?.metadata?.get(
                             0
@@ -548,14 +511,14 @@ class PlexDatasourceServer(
                     if (plexApiClient.artistFavoriteCollectionId == null) {
                         return false
                     }
+                } else {
+                    collectionId = plexApiClient.artistFavoriteCollectionId
                 }
-
-                collectionId = plexApiClient.artistFavoriteCollectionId
             }
         }
 
         if (collectionId == null) {
-            return false
+            return true
         }
 
         plexApiClient.userLibraryApi()

@@ -24,7 +24,8 @@ interface PlexUserLibraryApi : BaseApi {
         @Query("title") title: String,
         @Query("type") type: Int? = 10,
         @Query("smart") smart: String? = "0",
-        @Query("sectionId") sectionId: String? = null
+        @Query("sectionId") sectionId: String? = null,
+        @Query("uri") uri: String
     ): PlexResponse<ItemInfoResponse>
 
     /**
