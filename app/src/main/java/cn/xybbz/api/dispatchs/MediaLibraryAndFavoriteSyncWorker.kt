@@ -65,7 +65,8 @@ class MediaLibraryAndFavoriteSyncWorker @AssistedInject constructor(
                         id = remoteId,
                         nextKey = 0,
                         total = 0,
-                        connectionId = connectionId
+                        connectionId = connectionId,
+                        refresh = false
                     )
                 )
             }

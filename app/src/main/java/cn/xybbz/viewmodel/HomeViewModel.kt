@@ -49,6 +49,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -200,13 +201,22 @@ class HomeViewModel @OptIn(UnstableApi::class)
      */
     private fun observeLoginSuccess() {
         viewModelScope.launch {
-            dataSourceManager.loginStateFlow.collect {
+
+            dataSourceManager.combinedFlow.collect {
+                Log.i("home", "登录数据变化22222${it}")
+                tryRefreshHome(
+                    isRefresh = true,
+                    reason = HomeRefreshReason.Manual
+                )
+            }
+
+            /*dataSourceManager.loginStateFlow.collect {
                 Log.i("home", "登录数据变化${it}")
                 tryRefreshHome(
                     isRefresh = true,
-                    reason = HomeRefreshReason.Login
+                    reason = HomeRefreshReason.Manual
                 )
-            }
+            }*/
         }
     }
 

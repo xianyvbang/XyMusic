@@ -820,3 +820,13 @@ val MIGRATION_27_28 = object : Migration(27, 28) {
         """)
     }
 }
+
+val MIGRATION_28_29 = object : Migration(28, 29) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+
+        db.execSQL("""
+    ALTER TABLE remote_current 
+    ADD COLUMN refresh INTEGER NOT NULL DEFAULT 0
+""")
+    }
+}

@@ -95,7 +95,8 @@ class ArtistRemoteMediator(
                         id = remoteId,
                         nextKey = loadKey,
                         total = response.totalRecordCount,
-                        connectionId = connectionId
+                        connectionId = connectionId,
+                        refresh = false
                     )
                 )
                 response.items?.let {

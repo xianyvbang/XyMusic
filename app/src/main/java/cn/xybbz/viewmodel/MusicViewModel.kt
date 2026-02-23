@@ -33,7 +33,6 @@ import cn.xybbz.localdata.data.music.XyMusic
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
@@ -41,13 +40,13 @@ import javax.inject.Inject
 @HiltViewModel
 class MusicViewModel @Inject constructor(
     val dataSourceManager: DataSourceManager,
-    private val db: DatabaseClient,
+    val db: DatabaseClient,
     val settingsManager: SettingsManager,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicController,
     val selectControl: SelectControl,
     val backgroundConfig: BackgroundConfig
-) : PageListViewModel<HomeMusic>(dataSourceManager,SortTypeEnum.MUSIC_NAME_ASC) {
+) : PageListViewModel<HomeMusic>(dataSourceManager, SortTypeEnum.MUSIC_NAME_ASC) {
 
     val downloadMusicIdsFlow =
         db.downloadDao.getAllMusicTaskUidsFlow()
@@ -59,7 +58,10 @@ class MusicViewModel @Inject constructor(
      * 获得数据结构
      */
     override fun getFlowPageData(sortFlow: StateFlow<Sort>): Flow<PagingData<HomeMusic>> {
-       return dataSourceManager.selectMusicFlowList(sortFlow)
+        return dataSourceManager.selectMusicFlowList(sortFlow)
     }
 
+    override suspend fun updateDataSourceRemoteKey() {
+        dataSourceManager.updateDataSourceRemoteKey()
+    }
 }

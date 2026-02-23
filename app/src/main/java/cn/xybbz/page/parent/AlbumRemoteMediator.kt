@@ -34,7 +34,6 @@ import kotlinx.coroutines.flow.StateFlow
  * @author xybbz
  * @date 2024/06/14
  * @constructor 创建[AlbumRemoteMediator]
- * @param [userId] 用户id
  * @param [database] 本地缓存管理类
  * @param [dataSource] 数据源来兴
  */
@@ -87,5 +86,10 @@ class AlbumRemoteMediator(
             items,
             MusicDataTypeEnum.HOME
         )
+    }
+
+    override suspend fun initialize(): InitializeAction {
+        //判断是否
+        return super.initialize()
     }
 }

@@ -77,7 +77,8 @@ abstract class DefaultRemoteMediator<T : Any, K : Any>(
                         id = remoteId,
                         nextKey = loadKey,
                         total = response.totalRecordCount,
-                        connectionId = connectionId
+                        connectionId = connectionId,
+                        refresh = false
                     )
                 )
                 response.items?.let {
@@ -100,9 +101,13 @@ abstract class DefaultRemoteMediator<T : Any, K : Any>(
     }
 
     open suspend fun getInitializeAction(): InitializeAction {
+        val remoteCurrent = remoteKeyDao.remoteKeyById(remoteId)
+        if (remoteCurrent?.refresh == true){
+            return InitializeAction.LAUNCH_INITIAL_REFRESH
+        }
         val cacheTimeout =
             TimeUnit.MILLISECONDS.convert(Constants.PAGE_TIME_FAILURE, TimeUnit.MINUTES)
-        return if (System.currentTimeMillis() - (remoteKeyDao.remoteKeyById(remoteId)?.createTime
+        return if (System.currentTimeMillis() - (remoteCurrent?.createTime
                 ?: 0) <= cacheTimeout
         ) {
             InitializeAction.SKIP_INITIAL_REFRESH

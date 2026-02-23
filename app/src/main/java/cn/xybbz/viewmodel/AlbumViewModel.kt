@@ -23,6 +23,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.entity.data.Sort
+import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -49,6 +50,10 @@ class AlbumViewModel @Inject constructor(
      */
     override fun getFlowPageData(sortFlow: StateFlow<Sort>): Flow<PagingData<XyAlbum>> {
         return dataSourceManager.selectAlbumFlowList(sortFlow)
+    }
+
+    override suspend fun updateDataSourceRemoteKey() {
+        dataSourceManager.updateDataSourceRemoteKey()
     }
 
 }

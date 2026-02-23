@@ -55,7 +55,7 @@ class AlbumInfoViewModel @AssistedInject constructor(
     @Assisted private val itemId: String,
     @Assisted private val dataType: MusicDataTypeEnum,
     val dataSourceManager: DataSourceManager,
-    private val db: DatabaseClient,
+    val db: DatabaseClient,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicController,
     val selectControl: SelectControl,
@@ -260,6 +260,10 @@ class AlbumInfoViewModel @AssistedInject constructor(
             dataType = dataType,
             sortFlow = sortFlow
         )
+    }
+
+    override suspend fun updateDataSourceRemoteKey() {
+        dataSourceManager.updateDataSourceRemoteKey()
     }
 
 }

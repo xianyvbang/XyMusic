@@ -63,7 +63,8 @@ object DataRefreshEstimateUtils {
             RemoteCurrent(
                 id = key,
                 connectionId = connectionId ?: Constants.MINUS_ONE_INT.toLong(),
-                createTime = System.currentTimeMillis()
+                createTime = System.currentTimeMillis(),
+                refresh = false
             )
         )
     }

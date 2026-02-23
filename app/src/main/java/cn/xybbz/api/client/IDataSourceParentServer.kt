@@ -78,11 +78,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.update
 import java.net.SocketTimeoutException
 import java.util.UUID
 
@@ -100,6 +102,9 @@ abstract class IDataSourceParentServer(
 
     var libraryIds: List<String>? = null
         private set
+
+    private val _mediaLibraryIdFlow = MutableStateFlow<List<String>?>(null)
+    val mediaLibraryIdFlow: StateFlow<List<String>?> = _mediaLibraryIdFlow.asStateFlow()
 
     /**
      * 登录状态
@@ -1202,7 +1207,7 @@ abstract class IDataSourceParentServer(
         if (!ifAutoLogin)
             this.connectionConfig = connectionConfig
         settingsManager.saveConnectionId(connectionId = connectionConfig.id, connectionConfig.type)
-        this.libraryIds = connectionConfig.libraryIds
+        updateLibraryIds(connectionConfig.libraryIds)
         sendLoginCompleted(LoginStateType.SUCCESS)
     }
 
@@ -1215,20 +1220,29 @@ abstract class IDataSourceParentServer(
      * 设置媒体库id
      */
     protected open suspend fun setUpLibraryId(libraryIds: List<String>?) {
-        this.libraryIds = libraryIds
+        updateLibraryIds(libraryIds)
         db.connectionConfigDao.updateLibraryId(
             libraryIds = libraryIds?.joinToString(LocalConstants.ARTIST_DELIMITER),
             connectionId = getConnectionId()
         )
     }
 
+    suspend fun updateLibraryIds(libraryIds: List<String>?) {
+        this.libraryIds = libraryIds
+        updateDataSourceRemoteKey()
+        _mediaLibraryIdFlow.update { libraryIds }
+    }
+
     /**
      * 发送登录动作完成通知(不管失败或成功)
      */
-    private suspend fun sendLoginCompleted(loginState: LoginStateType) {
-        _loginSuccessEvent.emit(loginState)
+    private fun sendLoginCompleted(loginState: LoginStateType) {
+        _loginSuccessEvent.tryEmit(loginState)
     }
 
+    suspend fun updateDataSourceRemoteKey(){
+        db.remoteCurrentDao.updateByConnectionId(getConnectionId())
+    }
 
     override fun close() {
         downloadManager.close()
@@ -1236,6 +1250,10 @@ abstract class IDataSourceParentServer(
         mediaLibraryAndFavoriteSyncScheduler.cancel()
         TokenServer.clearAllData()
         unConnection()
-        libraryIds = emptyList()
+        sendLoginCompleted(LoginStateType.UNKNOWN)
+        //这里这样置空是为了防止触发DataSourceManager.mediaLibraryIdFlow的流变化
+        this.libraryIds = null
     }
+
+
 }

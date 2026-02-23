@@ -34,7 +34,6 @@ import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.client.version.VersionApiClient
 import cn.xybbz.api.enums.AudioCodecEnum
-import cn.xybbz.api.events.ReLoginEvent
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.constants.Constants
@@ -76,6 +75,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
@@ -119,7 +119,24 @@ open class DataSourceManager(
             .filterNotNull()
             .flatMapLatest { server ->
                 server.loginSuccessEvent
-            }.filter { it != LoginStateType.UNKNOWN }
+            }/*.filter { it != LoginStateType.UNKNOWN }*/
+
+    @kotlin.OptIn(ExperimentalCoroutinesApi::class)
+    private val mediaLibraryIdFlow: Flow<List<String>?> =
+        dataSourceServerFlow
+            .filterNotNull()
+            .flatMapLatest { server ->
+                server.mediaLibraryIdFlow
+            }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val combinedFlow: Flow<Pair<LoginStateType, List<String>?>> =
+        combine(
+            loginStateFlow,
+            mediaLibraryIdFlow
+        ) { loginState, mediaIds ->
+            loginState to mediaIds
+        }.filter { it.first != LoginStateType.UNKNOWN}
 
 
     //加载状态
@@ -1262,10 +1279,10 @@ open class DataSourceManager(
     }
 
     /**
-     * 触发重新登陆
+     * 更新数据源远程键数据管理
      */
-    fun restartLogin() {
-        dataSourceServer.getApiClient().eventBus.notify(ReLoginEvent.Unauthorized)
+    suspend fun updateDataSourceRemoteKey() {
+        dataSourceServer.updateDataSourceRemoteKey()
     }
 
 
