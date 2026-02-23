@@ -24,7 +24,6 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import cn.xybbz.localdata.data.connection.ConnectionConfig
-import cn.xybbz.localdata.data.connection.ConnectionConfigExt
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -59,11 +58,10 @@ interface ConnectionConfigDao {
 
     @Query(
         """
-        select xcc.*,xl.name as libraryName from xy_connection_config xcc
-        left join xy_library xl on xl.connectionId = xcc.id and xcc.libraryId = xl.id
+        select xcc.* from xy_connection_config xcc
     """
     )
-    fun selectAllDataExtFlow(): Flow<List<ConnectionConfigExt>>
+    fun selectAllDataExtFlow(): Flow<List<ConnectionConfig>>
 
     @Query(
         """
@@ -81,8 +79,8 @@ interface ConnectionConfigDao {
     @Query("select count(id) from xy_connection_config")
     suspend fun selectCount(): Int
 
-    @Query("update xy_connection_config set libraryId = :libraryId where id = :connectionId")
-    suspend fun updateLibraryId(libraryId: String?, connectionId: Long)
+    @Query("update xy_connection_config set libraryIds = :libraryIds where id = :connectionId")
+    suspend fun updateLibraryId(libraryIds: String?, connectionId: Long)
 
     @Query("update xy_connection_config set address = :address where id = :connectionId")
     suspend fun updateAddress(address: String, connectionId: Long)

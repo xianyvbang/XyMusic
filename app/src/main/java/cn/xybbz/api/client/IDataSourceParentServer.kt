@@ -20,9 +20,6 @@ package cn.xybbz.api.client
 
 import android.content.Context
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.PagingData
 import androidx.paging.RemoteMediator
@@ -48,6 +45,7 @@ import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.EncryptAesData
 import cn.xybbz.entity.data.Sort
+import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -100,7 +98,7 @@ abstract class IDataSourceParentServer(
 
     private var connectionConfig: ConnectionConfig? = null
 
-    var libraryId by mutableStateOf<String?>(null)
+    var libraryIds: List<String>? = null
         private set
 
     /**
@@ -376,8 +374,8 @@ abstract class IDataSourceParentServer(
 
                 try {
                     defaultParentApiClient.ping()
-                }catch (e: Exception){
-                    if (!TokenServer.loginRetry){
+                } catch (e: Exception) {
+                    if (!TokenServer.loginRetry) {
                         TokenServer.updateLoginRetry(true)
                         defaultParentApiClient.eventBus.notify(ReLoginEvent.Unauthorized)
                     }
@@ -1165,12 +1163,12 @@ abstract class IDataSourceParentServer(
     /**
      * 更新媒体库设置
      */
-    override suspend fun updateLibraryId(libraryId: String?, connectionId: Long) {
+    override suspend fun updateLibraryId(libraryIds: List<String>?, connectionId: Long) {
         if (connectionId == getConnectionId()) {
-            setUpLibraryId(libraryId)
+            setUpLibraryId(libraryIds)
         } else {
             db.connectionConfigDao.updateLibraryId(
-                libraryId = libraryId,
+                libraryIds = libraryIds?.joinToString(LocalConstants.ARTIST_DELIMITER),
                 connectionId = connectionId
             )
         }
@@ -1204,7 +1202,7 @@ abstract class IDataSourceParentServer(
         if (!ifAutoLogin)
             this.connectionConfig = connectionConfig
         settingsManager.saveConnectionId(connectionId = connectionConfig.id, connectionConfig.type)
-        setUpLibraryId(connectionConfig.libraryId)
+        this.libraryIds = connectionConfig.libraryIds
         sendLoginCompleted(LoginStateType.SUCCESS)
     }
 
@@ -1216,10 +1214,10 @@ abstract class IDataSourceParentServer(
     /**
      * 设置媒体库id
      */
-    protected open suspend fun setUpLibraryId(libraryId: String?) {
-        this.libraryId = libraryId
+    protected open suspend fun setUpLibraryId(libraryIds: List<String>?) {
+        this.libraryIds = libraryIds
         db.connectionConfigDao.updateLibraryId(
-            libraryId = libraryId,
+            libraryIds = libraryIds?.joinToString(LocalConstants.ARTIST_DELIMITER),
             connectionId = getConnectionId()
         )
     }
@@ -1238,6 +1236,6 @@ abstract class IDataSourceParentServer(
         mediaLibraryAndFavoriteSyncScheduler.cancel()
         TokenServer.clearAllData()
         unConnection()
-        libraryId = null
+        libraryIds = emptyList()
     }
 }

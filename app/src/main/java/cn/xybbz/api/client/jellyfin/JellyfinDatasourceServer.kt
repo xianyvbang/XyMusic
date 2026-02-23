@@ -25,7 +25,6 @@ import android.util.Log
 import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.client.IDataSourceParentServer
-import cn.xybbz.api.client.ImageApiClient
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.jellyfin.data.CreatePlaylistRequest
 import cn.xybbz.api.client.jellyfin.data.ItemRequest
@@ -705,7 +704,7 @@ class JellyfinDatasourceServer(
     override suspend fun selectArtistsByIds(artistIds: List<String>): List<XyArtist> {
         val items = jellyfinApiClient.itemApi().getItems(
             ItemRequest(
-                ids = artistIds, parentId = libraryId
+                ids = artistIds, parentId = libraryIds?.get(0)
             ).toStringMap()
         ).items
         return convertToArtistList(items)
@@ -750,7 +749,7 @@ class JellyfinDatasourceServer(
                     ImageType.PRIMARY, ImageType.BACKDROP, ImageType.BANNER, ImageType.THUMB
                 ),
                 limit = Constants.MIN_PAGE,
-                parentId = libraryId
+                parentId = libraryIds?.get(0)
             ).toStringMap()
         )
         if (albumList.isNotEmpty())
@@ -1103,7 +1102,7 @@ class JellyfinDatasourceServer(
                 ids = albumIds,
                 years = years,
                 genreIds = genreIds,
-                parentId = libraryId
+                parentId = libraryIds?.get(0)
             ).toStringMap()
         )
 
@@ -1165,7 +1164,7 @@ class JellyfinDatasourceServer(
                 genreIds = genreIds,
                 years = years,
                 albumIds = albumId?.let { listOf(albumId) },
-                parentId = if (parentId.isNullOrBlank()) libraryId else parentId,
+                parentId = if (parentId.isNullOrBlank()) libraryIds?.get(0) else parentId,
                 path = path
             ).toStringMap()
         )
@@ -1204,7 +1203,7 @@ class JellyfinDatasourceServer(
                 ),
                 searchTerm = search,
                 isFavorite = isFavorite,
-                parentId = libraryId
+                parentId = libraryIds?.get(0)
             ).toStringMap()
         )
         val artistList = convertToArtistList(response.items)
@@ -1248,7 +1247,7 @@ class JellyfinDatasourceServer(
                 ),
                 searchTerm = search,
                 imageTypeLimit = 1,
-                parentId = libraryId
+                parentId = libraryIds?.get(0)
             ).toStringMap()
         )
         return XyResponse(

@@ -748,3 +748,75 @@ val MIGRATION_26_27 = object : Migration(26, 27) {
         """)
     }
 }
+
+
+val MIGRATION_27_28 = object : Migration(27, 28) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+
+        // 创建新表
+        db.execSQL("""
+            CREATE TABLE xy_connection_config_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                serverId TEXT NOT NULL,
+                serverName TEXT NOT NULL,
+                serverVersion TEXT NOT NULL,
+                deviceId TEXT NOT NULL,
+                name TEXT NOT NULL,
+                address TEXT NOT NULL,
+                type TEXT NOT NULL,
+                userId TEXT NOT NULL,
+                username TEXT NOT NULL,
+                accessToken TEXT,
+                currentPassword TEXT NOT NULL,
+                iv TEXT NOT NULL,
+                key TEXT NOT NULL,
+                libraryIds TEXT,
+                extendInfo TEXT,
+                lastLoginTime INTEGER NOT NULL,
+                updateTime INTEGER NOT NULL,
+                createTime INTEGER NOT NULL,
+                navidromeExtendToken TEXT,
+                navidromeExtendSalt TEXT,
+                machineIdentifier TEXT,
+                ifEnabledDownload INTEGER NOT NULL,
+                ifEnabledDelete INTEGER NOT NULL,
+                ifForceLogin INTEGER NOT NULL
+            )
+        """)
+
+        // 迁移数据
+        db.execSQL("""
+            INSERT INTO xy_connection_config_new (
+                id, serverId, serverName, serverVersion,
+                deviceId, name, address, type, userId,
+                username, accessToken, currentPassword,
+                iv, key, libraryIds, extendInfo,
+                lastLoginTime, updateTime, createTime,
+                navidromeExtendToken, navidromeExtendSalt,
+                machineIdentifier, ifEnabledDownload,
+                ifEnabledDelete, ifForceLogin
+            )
+            SELECT
+                id, serverId, serverName, serverVersion,
+                deviceId, name, address, type, userId,
+                username, accessToken, currentPassword,
+                iv, key,
+                libraryId,
+                extendInfo,
+                lastLoginTime, updateTime, createTime,
+                navidromeExtendToken, navidromeExtendSalt,
+                machineIdentifier, ifEnabledDownload,
+                ifEnabledDelete, ifForceLogin
+            FROM xy_connection_config
+        """)
+
+        // 删除旧表
+        db.execSQL("DROP TABLE xy_connection_config")
+
+        // 重命名
+        db.execSQL("""
+            ALTER TABLE xy_connection_config_new
+            RENAME TO xy_connection_config
+        """)
+    }
+}

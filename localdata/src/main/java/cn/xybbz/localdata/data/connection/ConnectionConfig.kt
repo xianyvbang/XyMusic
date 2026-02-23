@@ -20,6 +20,8 @@ package cn.xybbz.localdata.data.connection
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.TypeConverters
+import cn.xybbz.localdata.converter.StringListTypeConverter
 import cn.xybbz.localdata.enums.DataSourceType
 import java.time.Instant
 
@@ -88,7 +90,8 @@ data class ConnectionConfig(
     /**
      * 媒体库Id
      */
-    val libraryId: String? = null,
+    @field:TypeConverters(StringListTypeConverter::class)
+    val libraryIds: List<String>? = null,
 
     /**
      * 扩展信息

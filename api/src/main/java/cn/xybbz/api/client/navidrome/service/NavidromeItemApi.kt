@@ -22,9 +22,7 @@ import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.navidrome.data.AlbumItem
 import cn.xybbz.api.client.navidrome.data.SongItem
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
-import cn.xybbz.api.client.subsonic.data.SubsonicSearchResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicSimilarSongsResponse
-import cn.xybbz.api.client.subsonic.data.SubsonicStarred2Response
 import cn.xybbz.api.client.subsonic.data.SubsonicTopSongsResponse
 import cn.xybbz.api.enums.navidrome.OrderType
 import cn.xybbz.api.enums.navidrome.SortType
@@ -51,6 +49,7 @@ interface NavidromeItemApi : BaseApi {
         @Query("artist_id") artistId: String? = null,
         //是否最近播放
         @Query("recently_played") recentlyPlayed: Boolean? = null,
+        @Query("library_id") libraryIds: List<String>? = null
     ): Response<List<AlbumItem>>
 
     @GET("/api/album")
@@ -68,18 +67,21 @@ interface NavidromeItemApi : BaseApi {
         @Query("genre_id") genreIds: List<String>? = null,
         @Query("album_id") albumId: String? = null,
         @Query("artist_id") artistIds: List<String>? = null,
-        @Query("year") year: Int? = null
+        @Query("year") year: Int? = null,
+        @Query("library_id") libraryIds: List<String>? = null
     ): Response<List<SongItem>>
 
     @GET("/rest/getTopSongs")
     suspend fun getTopSongs(
         @Query("artist") artistName: String,
-        @Query("count") count: Int = 20
+        @Query("count") count: Int = 20,
+        @Query("library_id") libraryIds: List<String>? = null
     ): SubsonicResponse<SubsonicTopSongsResponse>
 
     @GET("/rest/getSimilarSongs")
     suspend fun getSimilarSongs(
         @Query("id") songId: String,
-        @Query("count") count: Int = 20
+        @Query("count") count: Int = 20,
+        @Query("library_id") libraryIds: List<String>? = null
     ): SubsonicResponse<SubsonicSimilarSongsResponse>
 }

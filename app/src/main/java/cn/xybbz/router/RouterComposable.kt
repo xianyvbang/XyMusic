@@ -166,7 +166,7 @@ val entryProvider = entryProvider {
     nodeComposable<SelectLibrary> { selectLibrary ->
         SelectLibraryScreen(
             connectionId = selectLibrary.connectionId,
-            thisLibraryId = selectLibrary.libraryId
+            thisLibraryId = selectLibrary.libraryIds
         )
     }
 

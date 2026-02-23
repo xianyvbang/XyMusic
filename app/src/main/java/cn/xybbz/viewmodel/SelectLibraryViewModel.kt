@@ -18,10 +18,8 @@
 
 package cn.xybbz.viewmodel
 
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateSetOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
@@ -39,17 +37,16 @@ import kotlinx.coroutines.launch
 @HiltViewModel(assistedFactory = SelectLibraryViewModel.Factory::class)
 class SelectLibraryViewModel @AssistedInject constructor(
     @Assisted private val connectionId: Long,
-    @Assisted private val thisLibraryId: String?,
+    @Assisted private val thisLibraryId: List<String>?,
     private val db: DatabaseClient,
     private val dataSourceManager: DataSourceManager,
-    private val _backgroundConfig: BackgroundConfig
+    val backgroundConfig: BackgroundConfig
 ) : ViewModel() {
 
-    val backgroundConfig = _backgroundConfig
 
     @AssistedFactory
     interface Factory {
-        fun create(connectionId: Long, thisLibraryId: String?): SelectLibraryViewModel
+        fun create(connectionId: Long, thisLibraryId: List<String>?): SelectLibraryViewModel
     }
 
     //媒体库
@@ -57,8 +54,7 @@ class SelectLibraryViewModel @AssistedInject constructor(
 
 
     //当前媒体库id
-    var libraryId by mutableStateOf<String?>(null)
-        private set
+    val libraryIds = mutableStateSetOf<String>()
 
     init {
         getLibraryList()
@@ -69,11 +65,14 @@ class SelectLibraryViewModel @AssistedInject constructor(
      */
     private fun getLibraryList() {
         viewModelScope.launch {
-            libraryId = thisLibraryId ?: Constants.MINUS_ONE_INT.toString()
+            libraryIds.addAll(thisLibraryId?.toSet() ?: setOf(Constants.MINUS_ONE_INT.toString()))
             val libraryData = db.libraryDao.selectListByDataSourceType()
-            libraryList.add(
-                DefaultObjectUtils.getDefaultXyLibrary(connectionId)
-            )
+            if (dataSourceManager.dataSourceType?.ifAllMediaLibrary == true) {
+                libraryList.add(
+                    DefaultObjectUtils.getDefaultXyLibrary(connectionId)
+                )
+            }
+
             if (libraryData.isNotEmpty()) {
                 libraryList.addAll(libraryData)
             }
@@ -85,16 +84,41 @@ class SelectLibraryViewModel @AssistedInject constructor(
      * 设置媒体库id
      */
     fun updateLibraryId(data: String) {
-        libraryId = data
-        //更新媒体库
-        viewModelScope.launch {
-            var tmpData: String? = data
-            if (data == Constants.MINUS_ONE_INT.toString()) {
-                tmpData = null
+        if (dataSourceManager.dataSourceType?.ifMultiMediaLibrary == true){
+            if (libraryIds.contains(data)) {
+                libraryIds.remove(data)
+                if (libraryIds.isEmpty()) {
+                    libraryIds.add(Constants.MINUS_ONE_INT.toString())
+                }
+            } else {
+                libraryIds.add(data)
+                if (data == Constants.MINUS_ONE_INT.toString()) {
+                    libraryIds.clear()
+                    libraryIds.add(Constants.MINUS_ONE_INT.toString())
+                }else {
+                    libraryIds.remove(Constants.MINUS_ONE_INT.toString())
+                }
             }
+        }else {
+            if (libraryIds.contains(data)) {
+                libraryIds.clear()
+                libraryIds.add(Constants.MINUS_ONE_INT.toString())
+            } else {
+                libraryIds.clear()
+                libraryIds.add(data)
+            }
+        }
+
+        var libraryIds: Set<String>? = this.libraryIds
+        viewModelScope.launch {
+            if (libraryIds?.contains(Constants.MINUS_ONE_INT.toString()) == true) {
+                libraryIds = null
+            }
+            //更新媒体库
             dataSourceManager.updateLibraryId(
-                libraryId = tmpData,
-                connectionId = connectionId)
+                libraryIds = libraryIds?.toList(),
+                connectionId = connectionId
+            )
         }
     }
 

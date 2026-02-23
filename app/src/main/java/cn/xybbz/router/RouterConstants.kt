@@ -31,7 +31,7 @@ import kotlinx.serialization.Serializable
  * @constructor 创建[RouterConstants]
  */
 @Serializable
-sealed class RouterConstants() : NavKey
+sealed class RouterConstants : NavKey
 
 /**
  * 首页
@@ -191,7 +191,7 @@ data object CacheLimit : RouterConstants()
 @SerialName("SelectLibrary")
 data class SelectLibrary(
     val connectionId: Long,
-    val libraryId: String?
+    val libraryIds: List<String>?
 ) : RouterConstants()
 
 /**

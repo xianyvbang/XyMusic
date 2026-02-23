@@ -1134,8 +1134,8 @@ open class DataSourceManager(
     /**
      * 更新媒体库id
      */
-    override suspend fun updateLibraryId(libraryId: String?, connectionId: Long) {
-        return dataSourceServer.updateLibraryId(libraryId, connectionId)
+    override suspend fun updateLibraryId(libraryIds: List<String>?, connectionId: Long) {
+        return dataSourceServer.updateLibraryId(libraryIds, connectionId)
     }
 
     /**

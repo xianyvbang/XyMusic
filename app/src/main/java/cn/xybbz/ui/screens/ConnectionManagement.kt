@@ -35,7 +35,6 @@ import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -132,7 +131,7 @@ fun ConnectionManagement(
         ) {
             items(
                 connectionManagementViewModel.connectionList,
-                key = { it.connectionConfig.id }) { connectionConfigExt ->
+                key = { it.id }) { connectionConfig ->
                 ItemTrailingArrowRight(
                     modifier = Modifier
                         .border(
@@ -141,15 +140,15 @@ fun ConnectionManagement(
                             shape = RoundedCornerShape(XyTheme.dimens.corner)
                         ),
                     backgroundColor = Color.Transparent,
-                    name = connectionConfigExt.connectionConfig.type.title + "-" + connectionConfigExt.connectionConfig.username,
-                    subordination = connectionConfigExt.connectionConfig.address,
-                    img = connectionConfigExt.connectionConfig.type.img.let { img ->
+                    name = connectionConfig.type.title + "-" + connectionConfig.username,
+                    subordination = connectionConfig.address,
+                    img = connectionConfig.type.img.let { img ->
                         painterResource(
                             img
                         )
                     },
                     onClick = {
-                        navigator.navigate(ConnectionInfo(connectionConfigExt.connectionConfig.id))
+                        navigator.navigate(ConnectionInfo(connectionConfig.id))
                     },
                     trailingContent = {
                         Row(
@@ -157,11 +156,11 @@ fun ConnectionManagement(
                             horizontalArrangement = Arrangement.End
                         ) {
                             Switch(
-                                checked = connectionManagementViewModel.connectionId == connectionConfigExt.connectionConfig.id,
+                                checked = connectionManagementViewModel.connectionId == connectionConfig.id,
                                 onCheckedChange = {
                                     if (it)
                                         connectionManagementViewModel.changeDataSource(
-                                            connectionConfigExt.connectionConfig
+                                            connectionConfig
                                         )
                                 },
                                 enabled = true,
@@ -176,7 +175,7 @@ fun ConnectionManagement(
                                     BottomSheetObject(
                                         sheetState = sheetState,
                                         state = true,
-                                        titleText = connectionConfigExt.connectionConfig.name,
+                                        titleText = connectionConfig.name,
                                         dragHandle = null,
                                         content = { sheetObject ->
                                             RoundedSurfaceColumn {
@@ -188,16 +187,13 @@ fun ConnectionManagement(
                                                     }.invokeOnCompletion {
                                                         sheetObject.dismiss()
                                                         navigator.navigate(
-                                                            ConnectionInfo(connectionConfigExt.connectionConfig.id)
+                                                            ConnectionInfo(connectionConfig.id)
                                                         )
                                                     }
 
                                                 }
                                                 SettingItemComponent(
                                                     title = stringResource(R.string.music_library),
-                                                    info = if (connectionConfigExt.connectionConfig.libraryId.isNullOrBlank())
-                                                        stringResource(R.string.all_media_libraries)
-                                                    else connectionConfigExt.libraryName,
                                                     onRouter = {
                                                         coroutineScope.launch {
                                                             sheetState.hide()
@@ -205,8 +201,8 @@ fun ConnectionManagement(
                                                             sheetObject.dismiss()
                                                             navigator.navigate(
                                                                 SelectLibrary(
-                                                                    connectionConfigExt.connectionConfig.id,
-                                                                    connectionConfigExt.connectionConfig.libraryId
+                                                                    connectionConfig.id,
+                                                                    connectionConfig.libraryIds
                                                                 )
                                                             )
                                                         }
@@ -227,7 +223,7 @@ fun ConnectionManagement(
                                                             onConfirmation = {
                                                                 coroutineScope.launch {
                                                                     connectionManagementViewModel.removeConnection(
-                                                                        connectionConfigExt.connectionConfig.id
+                                                                        connectionConfig.id
                                                                     )
                                                                     sheetState.hide()
                                                                 }.invokeOnCompletion {
@@ -247,7 +243,7 @@ fun ConnectionManagement(
                                     contentDescription =
                                         stringResource(
                                             R.string.view_connection_info,
-                                            connectionConfigExt.connectionConfig.type.title + "-" + connectionConfigExt.connectionConfig.username
+                                            connectionConfig.type.title + "-" + connectionConfig.username
                                         )
                                 )
                             }

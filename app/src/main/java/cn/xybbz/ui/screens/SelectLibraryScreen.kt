@@ -58,7 +58,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SelectLibraryScreen(
     connectionId: Long,
-    thisLibraryId: String?,
+    thisLibraryId: List<String>?,
     selectLibraryViewModel: SelectLibraryViewModel = hiltViewModel<SelectLibraryViewModel, SelectLibraryViewModel.Factory>(
         creationCallback = { factory ->
             factory.create(
@@ -123,11 +123,10 @@ fun SelectLibraryScreen(
                             modifier = Modifier.weight(1f)
                         )
                         RadioButton(
-                            selected = selectLibraryViewModel.libraryId == library.id,
+                            selected = selectLibraryViewModel.libraryIds.contains(library.id),
                             onClick = {
                                 coroutineScope.launch {
                                     selectLibraryViewModel.updateLibraryId(library.id)
-
                                 }
                             },
                             modifier = Modifier

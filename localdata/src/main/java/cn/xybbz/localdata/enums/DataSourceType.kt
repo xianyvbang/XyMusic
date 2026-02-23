@@ -72,7 +72,11 @@ enum class DataSourceType(
     //是否需要输入需要服务端地址
     val ifInputUrl: Boolean = true,
     //是否转码的时候使用hls
-    val ifHls: Boolean = false
+    val ifHls: Boolean = false,
+    //是否可以不选择任意媒体库选项
+    val ifAllMediaLibrary: Boolean = true,
+    //是否可以多选媒体库选项
+    val ifMultiMediaLibrary: Boolean = false,
 ) {
 
     JELLYFIN(
@@ -134,7 +138,8 @@ enum class DataSourceType(
         ifAlbumInfoSelectOneYear = true,
         ifAlbumInfoSelectStartEndYear = false,
         ifAlbumInfoSort = true,
-        ifAlbumInfoFavoriteFilter = true
+        ifAlbumInfoFavoriteFilter = true,
+        ifMultiMediaLibrary = true
     ),
 
     EMBY(
@@ -175,7 +180,8 @@ enum class DataSourceType(
         ifAlbumFavoriteFilter = true,
         ifAlbumInfoSelectOneYear = false,
         ifAlbumInfoSort = true,
-        ifAlbumInfoFavoriteFilter = true
+        ifAlbumInfoFavoriteFilter = true,
+        ifAllMediaLibrary = false
     );
 
 

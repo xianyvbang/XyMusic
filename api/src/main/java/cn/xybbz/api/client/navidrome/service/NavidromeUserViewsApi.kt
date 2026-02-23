@@ -28,8 +28,7 @@ interface NavidromeUserViewsApi : BaseApi {
     /**
      * 获得媒体库列表
      * @param [userId] 用户ID
-     * @param [viewRequest] 请求
-     * @return [Response<ItemResponse>]
+     * @return [NavidromeUser]
      */
     @GET("/api/user/{userId}")
     suspend fun getUserViews(

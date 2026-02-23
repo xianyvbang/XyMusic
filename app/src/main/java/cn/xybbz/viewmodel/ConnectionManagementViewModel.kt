@@ -34,7 +34,6 @@ import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
-import cn.xybbz.localdata.data.connection.ConnectionConfigExt
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -50,7 +49,7 @@ class ConnectionManagementViewModel @Inject constructor(
 ) : ViewModel() {
 
     //获得所有链接信息
-    var connectionList by mutableStateOf<List<ConnectionConfigExt>>(emptyList())
+    var connectionList by mutableStateOf<List<ConnectionConfig>>(emptyList())
 
     var connectionId by mutableLongStateOf(0L)
         private set
