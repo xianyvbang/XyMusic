@@ -105,8 +105,8 @@ abstract class IDataSourceParentServer(
     var libraryIds: List<String>? = null
         private set
 
-    private val _mediaLibraryIdFlow = MutableStateFlow<String?>(null)
-    val mediaLibraryIdFlow: StateFlow<String?> = _mediaLibraryIdFlow.asStateFlow()
+    private val _mediaLibraryIdFlow = MutableStateFlow<String>(UUID.randomUUID().toString())
+    val mediaLibraryIdFlow: StateFlow<String> = _mediaLibraryIdFlow.asStateFlow()
 
     /**
      * 登录状态

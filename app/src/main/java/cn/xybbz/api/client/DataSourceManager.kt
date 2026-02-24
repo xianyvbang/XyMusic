@@ -36,6 +36,7 @@ import cn.xybbz.api.client.version.VersionApiClient
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.state.ClientLoginInfoState
+import cn.xybbz.api.state.Source
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.LoginStateType
 import cn.xybbz.common.enums.LoginType
@@ -78,8 +79,12 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.scan
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
+import java.util.UUID
 import javax.inject.Provider
 
 /**
@@ -120,13 +125,20 @@ open class DataSourceManager(
                 server.loginSuccessEvent
             }/*.filter { it != LoginStateType.UNKNOWN }*/
 
+
+
     @kotlin.OptIn(ExperimentalCoroutinesApi::class)
-    private val mediaLibraryIdFlow: Flow<String?> =
+    private val mediaLibraryIdFlow: Flow<String> =
         dataSourceServerFlow
             .filterNotNull()
             .flatMapLatest { server ->
                 server.mediaLibraryIdFlow
             }
+
+    val taggedLoginFlow = loginStateFlow.map { Source.Login(it) }
+    val taggedMediaFlow = mediaLibraryIdFlow.map { Source.Library(it) }
+
+    val mergeFlow =  merge(taggedLoginFlow, taggedMediaFlow).filter { it is Source.Login && it.value != LoginStateType.UNKNOWN || it is Source.Library }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val combinedFlow: Flow<Pair<LoginStateType, String?>> =

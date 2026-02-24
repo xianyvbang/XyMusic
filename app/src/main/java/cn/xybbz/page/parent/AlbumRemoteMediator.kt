@@ -58,7 +58,6 @@ class AlbumRemoteMediator(
         loadKey: Int,
         pageSize: Int
     ): XyResponse<XyAlbum> {
-        val sort = sort.value
         return datasourceServer.getRemoteServerAlbumList(
             startIndex = loadKey * pageSize,
             pageSize = pageSize,

@@ -52,7 +52,6 @@ class MusicRemoteMediator(
         pageSize: Int
     ): XyResponse<XyMusic> {
         Log.i("music数据变化","music数据变化1")
-        val sort = sort.value
         return datasourceServer.getRemoteServerMusicList(
             startIndex = loadKey * pageSize,
             pageSize = pageSize,

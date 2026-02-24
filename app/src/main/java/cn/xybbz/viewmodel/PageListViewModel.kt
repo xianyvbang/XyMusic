@@ -42,13 +42,11 @@ abstract class PageListViewModel<T : Any>(
     private val _sortType = MutableStateFlow(Sort(defaultSortType))
     val sortBy: StateFlow<Sort> = _sortType.asStateFlow()
 
-    private var oldCombined: Pair<LoginStateType, String?>? = null
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val listPage: Flow<PagingData<T>> =
-        dataSourceManager.combinedFlow
-            .flatMapLatest { it->
-                oldCombined = it
+        dataSourceManager.mergeFlow
+            .flatMapLatest {
                 getFlowPageData(
                     sortBy.value
                 )

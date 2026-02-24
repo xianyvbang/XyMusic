@@ -50,7 +50,6 @@ class AlbumOrPlaylistMusicListRemoteMediator(
         loadKey: Int,
         pageSize: Int
     ): XyResponse<XyMusic> {
-        val sort = sort.value
         return datasourceServer.getRemoteServerMusicListByAlbumOrPlaylist(
             startIndex = loadKey * pageSize,
             pageSize = pageSize,
