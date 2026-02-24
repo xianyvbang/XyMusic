@@ -33,7 +33,6 @@ import cn.xybbz.localdata.data.music.XyMusic
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -57,8 +56,8 @@ class MusicViewModel @Inject constructor(
     /**
      * 获得数据结构
      */
-    override fun getFlowPageData(sortFlow: StateFlow<Sort>): Flow<PagingData<HomeMusic>> {
-        return dataSourceManager.selectMusicFlowList(sortFlow)
+    override fun getFlowPageData(sort: Sort): Flow<PagingData<HomeMusic>> {
+        return dataSourceManager.selectMusicFlowList(sort)
     }
 
     override suspend fun updateDataSourceRemoteKey() {

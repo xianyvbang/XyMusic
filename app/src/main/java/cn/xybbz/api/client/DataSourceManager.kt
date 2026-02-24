@@ -74,7 +74,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
@@ -366,18 +365,18 @@ open class DataSourceManager(
      * 获得专辑数据
      */
     override fun selectAlbumFlowList(
-        sortFlow: StateFlow<Sort>
+        sort: Sort
     ): Flow<PagingData<XyAlbum>> {
-        return dataSourceServer.selectAlbumFlowList(sortFlow)
+        return dataSourceServer.selectAlbumFlowList(sort)
     }
 
     /**
      * 获得音乐数据
      */
     override fun selectMusicFlowList(
-        sortFlow: StateFlow<Sort>
+        sort: Sort
     ): Flow<PagingData<HomeMusic>> {
-        return dataSourceServer.selectMusicFlowList(sortFlow)
+        return dataSourceServer.selectMusicFlowList(sort)
     }
 
     /**
@@ -401,12 +400,12 @@ open class DataSourceManager(
     override fun selectMusicListByParentId(
         itemId: String,
         dataType: MusicDataTypeEnum,
-        sortFlow: StateFlow<Sort>
+        sort: Sort
     ): Flow<PagingData<XyMusic>> {
         return dataSourceServer.selectMusicListByParentId(
             itemId = itemId,
             dataType = dataType,
-            sortFlow = sortFlow
+            sort = sort
         )
     }
 

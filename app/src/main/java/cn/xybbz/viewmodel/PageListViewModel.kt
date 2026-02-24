@@ -18,16 +18,13 @@
 
 package cn.xybbz.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.SortTypeEnum
-import cn.xybbz.config.module.DataSourceModule_DataSourceManagerFactory.dataSourceManager
 import cn.xybbz.entity.data.Sort
-import cn.xybbz.localdata.config.DatabaseClient
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,9 +45,8 @@ abstract class PageListViewModel<T : Any>(
     val listPage: Flow<PagingData<T>> =
         dataSourceManager.combinedFlow
             .flatMapLatest {
-                Log.i("music数据变化", "${sortBy}")
                 getFlowPageData(
-                    sortBy
+                    sortBy.value
                 )
             }
             .cachedIn(viewModelScope)
@@ -121,7 +117,7 @@ abstract class PageListViewModel<T : Any>(
     /**
      * 获得数据结构
      */
-    abstract fun getFlowPageData(sortFlow: StateFlow<Sort>): Flow<PagingData<T>>
+    abstract fun getFlowPageData(sort: Sort): Flow<PagingData<T>>
 
     abstract suspend fun updateDataSourceRemoteKey()
 }

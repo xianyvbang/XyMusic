@@ -46,7 +46,6 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
@@ -254,11 +253,11 @@ class AlbumInfoViewModel @AssistedInject constructor(
     /**
      * 获得数据结构
      */
-    override fun getFlowPageData(sortFlow: StateFlow<Sort>): Flow<PagingData<XyMusic>> {
+    override fun getFlowPageData(sort: Sort): Flow<PagingData<XyMusic>> {
         return dataSourceManager.selectMusicListByParentId(
             itemId = itemId,
             dataType = dataType,
-            sortFlow = sortFlow
+            sort = sort
         )
     }
 
