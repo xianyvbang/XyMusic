@@ -27,7 +27,6 @@ import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import kotlinx.coroutines.flow.StateFlow
 import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalPagingApi::class)
@@ -37,7 +36,7 @@ class AlbumOrPlaylistMusicListRemoteMediator(
     private val db: DatabaseClient,
     private val dataType: MusicDataTypeEnum,
     private val connectionId: Long,
-    private val sortFlow: StateFlow<Sort>
+    private val sort: Sort
 ) : DefaultRemoteMediator<XyMusic, XyMusic>(
     db,
     RemoteIdConstants.ALBUM_MUSIC + itemId + connectionId,
@@ -51,7 +50,7 @@ class AlbumOrPlaylistMusicListRemoteMediator(
         loadKey: Int,
         pageSize: Int
     ): XyResponse<XyMusic> {
-        val sort = sortFlow.value
+        val sort = sort.value
         return datasourceServer.getRemoteServerMusicListByAlbumOrPlaylist(
             startIndex = loadKey * pageSize,
             pageSize = pageSize,

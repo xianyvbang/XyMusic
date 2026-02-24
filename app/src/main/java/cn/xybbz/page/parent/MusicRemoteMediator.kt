@@ -28,7 +28,6 @@ import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import kotlinx.coroutines.flow.StateFlow
 
 
 @OptIn(ExperimentalPagingApi::class)
@@ -36,7 +35,7 @@ class MusicRemoteMediator(
     private val db: DatabaseClient,
     private val datasourceServer: IDataSourceParentServer,
     private val connectionId: Long,
-    private val sort: StateFlow<Sort>
+    private val sort: Sort
 ) : DefaultRemoteMediator<HomeMusic,XyMusic>(
     db,
     RemoteIdConstants.MUSIC + connectionId,

@@ -477,7 +477,7 @@ abstract class IDataSourceParentServer(
                 db = db,
                 dataType = dataType,
                 connectionId = getConnectionId(),
-                sortFlow = sort
+                sort = sort
             )
         ) {
             if (dataType == MusicDataTypeEnum.ALBUM)
@@ -536,7 +536,7 @@ abstract class IDataSourceParentServer(
                 db = db,
                 datasourceServer = this,
                 connectionId = getConnectionId(),
-                sortFlow = sort
+                sort = sort
             )
         ) {
             db.albumDao.selectHomeAlbumListPage()
