@@ -23,6 +23,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.enums.LoginStateType
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.entity.data.Sort
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -41,10 +42,13 @@ abstract class PageListViewModel<T : Any>(
     private val _sortType = MutableStateFlow(Sort(defaultSortType))
     val sortBy: StateFlow<Sort> = _sortType.asStateFlow()
 
+    private var oldCombined: Pair<LoginStateType, String?>? = null
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val listPage: Flow<PagingData<T>> =
         dataSourceManager.combinedFlow
-            .flatMapLatest {
+            .flatMapLatest { it->
+                oldCombined = it
                 getFlowPageData(
                     sortBy.value
                 )

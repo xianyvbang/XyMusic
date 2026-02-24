@@ -87,6 +87,8 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.update
 import java.net.SocketTimeoutException
 import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 
 abstract class IDataSourceParentServer(
@@ -103,8 +105,8 @@ abstract class IDataSourceParentServer(
     var libraryIds: List<String>? = null
         private set
 
-    private val _mediaLibraryIdFlow = MutableStateFlow<List<String>?>(null)
-    val mediaLibraryIdFlow: StateFlow<List<String>?> = _mediaLibraryIdFlow.asStateFlow()
+    private val _mediaLibraryIdFlow = MutableStateFlow<String?>(null)
+    val mediaLibraryIdFlow: StateFlow<String?> = _mediaLibraryIdFlow.asStateFlow()
 
     /**
      * 登录状态
@@ -1227,10 +1229,11 @@ abstract class IDataSourceParentServer(
         )
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     suspend fun updateLibraryIds(libraryIds: List<String>?) {
         this.libraryIds = libraryIds
         updateDataSourceRemoteKey()
-        _mediaLibraryIdFlow.update { libraryIds }
+        _mediaLibraryIdFlow.update { Uuid.random().toString() }
     }
 
     /**

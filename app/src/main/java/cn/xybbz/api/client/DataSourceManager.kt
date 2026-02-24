@@ -121,7 +121,7 @@ open class DataSourceManager(
             }/*.filter { it != LoginStateType.UNKNOWN }*/
 
     @kotlin.OptIn(ExperimentalCoroutinesApi::class)
-    private val mediaLibraryIdFlow: Flow<List<String>?> =
+    private val mediaLibraryIdFlow: Flow<String?> =
         dataSourceServerFlow
             .filterNotNull()
             .flatMapLatest { server ->
@@ -129,7 +129,7 @@ open class DataSourceManager(
             }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val combinedFlow: Flow<Pair<LoginStateType, List<String>?>> =
+    val combinedFlow: Flow<Pair<LoginStateType, String?>> =
         combine(
             loginStateFlow,
             mediaLibraryIdFlow

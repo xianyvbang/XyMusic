@@ -31,6 +31,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.common.enums.HomeRefreshReason
+import cn.xybbz.common.enums.LoginStateType
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.DataRefreshEstimateUtils
@@ -49,7 +50,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -65,6 +65,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
     val homeDataRepository: HomeDataRepository
 ) : ViewModel() {
 
+    private var oldCombined: Pair<LoginStateType, String?>? = null
 
     var isRefreshing by mutableStateOf(false)
         private set
@@ -203,6 +204,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
         viewModelScope.launch {
 
             dataSourceManager.combinedFlow.collect {
+                oldCombined = it
                 Log.i("home", "登录数据变化22222${it}")
                 tryRefreshHome(
                     isRefresh = true,
