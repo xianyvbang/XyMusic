@@ -81,10 +81,8 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.flow.scan
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
-import java.util.UUID
 import javax.inject.Provider
 
 /**
@@ -123,7 +121,7 @@ open class DataSourceManager(
             .filterNotNull()
             .flatMapLatest { server ->
                 server.loginSuccessEvent
-            }/*.filter { it != LoginStateType.UNKNOWN }*/
+            }.filter { it != LoginStateType.UNKNOWN }
 
 
 

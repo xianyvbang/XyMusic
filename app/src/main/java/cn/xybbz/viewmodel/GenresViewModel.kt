@@ -40,7 +40,7 @@ class GenresViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val genresPage: Flow<PagingData<XyGenre>> =
-        dataSourceManager.loginStateFlow
+        dataSourceManager.mergeFlow
             .flatMapLatest {
                 dataSourceManager.selectGenresPage()
             }
