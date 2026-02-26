@@ -23,9 +23,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.enums.LoginStateType
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.entity.data.Sort
-import cn.xybbz.localdata.data.era.XyEraItem
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,20 +34,33 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 
-abstract class PageListViewModel<T: Any>(dataSourceManager: DataSourceManager) : ViewModel() {
+abstract class PageListViewModel<T : Any>(
+    dataSourceManager: DataSourceManager,
+    val defaultSortType: SortTypeEnum
+) : ViewModel() {
 
-    private val _sortType = MutableStateFlow(Sort())
-
+    private val _sortType = MutableStateFlow(Sort(defaultSortType))
     val sortBy: StateFlow<Sort> = _sortType.asStateFlow()
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val listPage: Flow<PagingData<T>> =
+        dataSourceManager.mergeFlow
+            .flatMapLatest {
+                getFlowPageData(
+                    sortBy.value
+                )
+            }
+            .cachedIn(viewModelScope)
+
+    /*@OptIn(ExperimentalCoroutinesApi::class)
+    val listPage: Flow<PagingData<T>> =
         dataSourceManager.loginStateFlow
             .flatMapLatest {
+                Log.i("music数据变化","${sortBy.value.sortType}")
                 getFlowPageData(sortBy)
             }
-            .cachedIn(viewModelScope) // 只调用一次
+            .cachedIn(viewModelScope)*/ // 只调用一次
 
 
     /**
@@ -59,23 +72,6 @@ abstract class PageListViewModel<T: Any>(dataSourceManager: DataSourceManager) :
     ) {
         val sort = this._sortType.value
         sort.sortType = sortType
-        updateSort(sort.copy(), refreshPage = refreshPage)
-    }
-
-    /**
-     * 设置年代筛选
-     */
-    suspend fun setFilterEraType(
-        eraItem: XyEraItem,
-        refreshPage: suspend () -> Unit
-    ) {
-        val yearList = eraItem.years
-        val sort = this._sortType.value
-        if (sort.yearList == yearList) {
-            sort.yearList = null
-        } else {
-            sort.yearList = yearList
-        }
         updateSort(sort.copy(), refreshPage = refreshPage)
     }
 
@@ -104,19 +100,26 @@ abstract class PageListViewModel<T: Any>(dataSourceManager: DataSourceManager) :
         sort: Sort,
         refreshPage: suspend () -> Unit
     ) {
+        updateDataSourceRemoteKey()
         this._sortType.update {
             sort
         }
-        refreshPage()
+//        refreshPage()
     }
 
-    suspend fun clearFilterOrSort(refreshPage: suspend () -> Unit){
-        val sort = Sort()
+    suspend fun clearFilterOrSort(refreshPage: suspend () -> Unit) {
+        val sort = Sort(defaultSortType)
         updateSort(sort, refreshPage = refreshPage)
+    }
+
+    fun isSortChange(): Boolean {
+        return _sortType.value.sortType != defaultSortType || _sortType.value.isFavorite != null || _sortType.value.yearList != null
     }
 
     /**
      * 获得数据结构
      */
-    abstract fun getFlowPageData(sortFlow: StateFlow<Sort>): Flow<PagingData<T>>
+    abstract fun getFlowPageData(sort: Sort): Flow<PagingData<T>>
+
+    abstract suspend fun updateDataSourceRemoteKey()
 }

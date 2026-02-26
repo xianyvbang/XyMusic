@@ -39,6 +39,8 @@ import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.ImageType
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.UnauthorizedException
+import okhttp3.ResponseBody
+import retrofit2.Response
 
 /**
  * EMBY API 客户端
@@ -217,7 +219,7 @@ class EmbyApiClient : DefaultParentApiClient() {
      * 创建下载链接
      */
     override fun createDownloadUrl(itemId: String): String {
-        return baseUrl + "/Items/${itemId}/Download"
+        return "/Items/${itemId}/Download"
     }
 
     /**
@@ -226,7 +228,7 @@ class EmbyApiClient : DefaultParentApiClient() {
     override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
 
         try {
-            val pingData = userApi().postPingSystem()
+            val pingData = ping()
             Log.i("=====", "是否连通: $pingData")
             if (pingData.isSuccessful) {
                 val raw = pingData.body()?.string()
@@ -240,6 +242,7 @@ class EmbyApiClient : DefaultParentApiClient() {
                 !is UnauthorizedException -> {
                     throw ConnectionException()
                 }
+                else -> throw e
             }
         }
         val responseData =
@@ -273,6 +276,10 @@ class EmbyApiClient : DefaultParentApiClient() {
     ) {
         updateAccessTokenAndUserId(accessToken, userId)
         updateTokenOrHeadersOrQuery()
+    }
+
+    override suspend fun ping(): Response<ResponseBody> {
+        return userApi().postPingSystem()
     }
 
     /**
@@ -334,7 +341,6 @@ class EmbyApiClient : DefaultParentApiClient() {
         tag: String? = null
     ): String {
         return getItemImageUrl(
-            baseUrl = baseUrl,
             itemId = itemId,
             imageType = imageType,
             fillWidth = fillWidth,
@@ -365,7 +371,6 @@ class EmbyApiClient : DefaultParentApiClient() {
         fillHeight: Int? = null,
     ): String {
         return getArtistImageUrl(
-            baseUrl = baseUrl,
             name = name,
             imageType = imageType,
             fillWidth = fillWidth,
@@ -380,7 +385,6 @@ class EmbyApiClient : DefaultParentApiClient() {
     /**
      * 创建音频URL
      * @param [itemId] 项目编号
-     * @param [container] 容器
      * @param [audioCodec] 音频编解码器
      * @param [static] 是否是静态不转码的
      * @return [String]
@@ -402,7 +406,6 @@ class EmbyApiClient : DefaultParentApiClient() {
 
     /**
      * 获取项目图像URL
-     * @param [baseUrl] 基础网址
      * @param [itemId] 项目ID
      * @param [imageType] 图像类型
      * @param [fillWidth] 填充宽度
@@ -412,7 +415,6 @@ class EmbyApiClient : DefaultParentApiClient() {
      * @return [String]
      */
     fun getItemImageUrl(
-        baseUrl: String,
         itemId: String,
         imageType: ImageType,
         fillWidth: Int? = null,
@@ -420,12 +422,11 @@ class EmbyApiClient : DefaultParentApiClient() {
         quality: Int? = null,
         tag: String? = null,
     ): String {
-        return baseUrl + "/emby/Items/${itemId}/Images/${imageType}?fillHeight=${fillHeight}&fillWidth=${fillWidth}&quality=${quality}&tag=${tag}"
+        return "/emby/Items/${itemId}/Images/${imageType}?fillHeight=${fillHeight}&fillWidth=${fillWidth}&quality=${quality}&tag=${tag}"
     }
 
     /**
      * 获取艺术家图像URL
-     * @param [baseUrl] 基础网址
      * @param [name] 姓名
      * @param [imageType] 图像类型
      * @param [imageIndex] 图像索引
@@ -436,7 +437,6 @@ class EmbyApiClient : DefaultParentApiClient() {
      * @return [String]
      */
     fun getArtistImageUrl(
-        baseUrl: String,
         name: String,
         imageType: ImageType,
         imageIndex: Int,
@@ -445,13 +445,12 @@ class EmbyApiClient : DefaultParentApiClient() {
         fillWidth: Int? = null,
         fillHeight: Int? = null,
     ): String {
-        return "$baseUrl/emby/Artists/${name}/Images/${imageType}/${imageIndex}?fillHeight=${fillHeight}&fillWidth=${fillWidth}&quality=${quality}&tag=${tag}"
+        return "/emby/Artists/${name}/Images/${imageType}/${imageIndex}?fillHeight=${fillHeight}&fillWidth=${fillWidth}&quality=${quality}&tag=${tag}"
     }
 
     /**
      * 创建音频URL
      * @param [itemId] 项目编号
-     * @param [container] 容器
      * @param [audioCodec] 音频编解码器
      * @param [static] 是否是静态不转码的
      * @return [String]
@@ -463,10 +462,10 @@ class EmbyApiClient : DefaultParentApiClient() {
         audioBitRate: Int? = null
     ): String {
         return if (static) {
-            "${baseUrl}/emby/Audio/${itemId}/stream?" +
+            "/emby/Audio/${itemId}/stream?" +
                     "deviceId=${deviceId}&userId=${userId}&static=${static}"
         } else {
-            "${baseUrl}/emby/Audio/${itemId}/universal?" +
+            "/emby/Audio/${itemId}/universal?" +
                     "deviceId=${deviceId}" +
                     "&AudioCodec=${audioCodec}&MaxStreamingBitrate=${audioBitRate}" +
                     "&Container=opus%2Cwebm%7Copus%2Cts%7Cmp3%2Cmp3%2Caac%2Cm4a%7Caac%2Cm4b%7Caac%2Cflac%2Cwebma%2Cwebm%7Cwebma%2Cwav%2Cogg" +

@@ -26,7 +26,7 @@ data class BottomSheetObject(
     val titleTailContent: (@Composable RowScope.() -> Unit)? = null,
     val onClose: (suspend (Boolean) -> Unit)? = null,
     val dragHandle: @Composable (() -> Unit)? = { BottomSheetDefaults.DragHandle() },
-    val content: @Composable ColumnScope.() -> Unit,
+    val content: @Composable ColumnScope.(BottomSheetObject) -> Unit,
     val containerColor: @Composable () -> Color = { MaterialTheme.colorScheme.background },
 )
 
@@ -51,7 +51,9 @@ fun BottomSheetCompose(modifier: Modifier = Modifier) {
             titleText = bottomSheet.titleText,
             titleTailContent = bottomSheet.titleTailContent,
             dragHandle = bottomSheet.dragHandle,
-            content = bottomSheet.content
+            content = {
+                bottomSheet.content(this,bottomSheet)
+            }
         )
     }
 }

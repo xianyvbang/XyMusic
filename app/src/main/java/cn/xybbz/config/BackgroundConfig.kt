@@ -46,10 +46,8 @@ class BackgroundConfig(
 
     val defaultBackgroundConfig: XyBackgroundConfig = XyBackgroundConfig()
 
-
-
-
-
+    var ifEnabled  by mutableStateOf(false, structuralEqualityPolicy())
+        private set
 
     /**
      * 图片地址
@@ -250,6 +248,7 @@ class BackgroundConfig(
 
     suspend fun load() {
         backgroundConfig = db.backgroundConfigDao.selectOne()
+        ifEnabled = get().ifEnabled
         imageFilePath = get().imageFilePath?.toUri()
         ifChangeOneColor = get().ifChangeOneColor
         ifGlobalBrash = get().ifGlobalBrash
@@ -294,6 +293,7 @@ class BackgroundConfig(
 
     fun updateXyBackgroundBrash() {
         xyBackgroundBrash = xyBackgroundBrash(
+            ifEnabled = ifEnabled,
             ifChangeOneColor = ifChangeOneColor,
             ifGlobalBrash = ifGlobalBrash,
             backgroundImageUri = imageFilePath,
@@ -635,6 +635,13 @@ class BackgroundConfig(
         backgroundConfig =
             get().copy(localMusicBrash = brashStr)
         saveOrUpdate()
+    }
+
+    suspend fun updateIfEnabled(ifEnabled: Boolean){
+        this.ifEnabled = ifEnabled
+        backgroundConfig = get().copy(ifEnabled = ifEnabled)
+        saveOrUpdate()
+        updateXyBackgroundBrash()
     }
 
 

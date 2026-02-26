@@ -37,22 +37,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.DownloadDone
 import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -78,10 +75,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.ui.R
@@ -107,13 +102,13 @@ fun ItemTrailingContent(
     subordination: String?,
     favoriteState: Boolean,
     imgUrl: String? = null,
-    index: Int? = null,
     media: String? = null,
     enabledPic: Boolean = true,
     ifDownload: Boolean,
     ifPlay: Boolean,
     enabled: Boolean = true,
     backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
+    picSize: Dp = 50.dp,
     brush: Brush? = null,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
@@ -183,31 +178,21 @@ fun ItemTrailingContent(
                 onClick?.invoke()
             }, onLongClick = { onLongClick?.invoke() }),
         headlineContent = {
-            Text(
+            XyText(
                 text = name,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                style = MaterialTheme.typography.bodySmall,
-                overflow = TextOverflow.Ellipsis,
                 color = if (ifPlay) Color(0xFFABE2FF) else MaterialTheme.colorScheme.onSurface
             )
         },
         supportingContent = if (!media.isNullOrBlank() || !subordination.isNullOrBlank()) {
             {
-                Text(
+                XyTextSub(
                     text = buildAnnotatedString {
                         if (favoriteState)
                             appendInlineContent(inlineContentId, "[icon]")
                         if (ifDownload)
                             appendInlineContent(inlineIfDownloadId, "[icon]")
                         media?.let {
-                            withStyle(
-                                style = SpanStyle(
-                                    fontSize = 10.sp,
-                                    color = Color(0xFFCADBFF)
-                                ), block = {
-                                    append(media)
-                                })
+                            append(media)
                             append(" ")
                         }
                         subordination?.let {
@@ -224,19 +209,16 @@ fun ItemTrailingContent(
 
                     },
                     inlineContent = inlineContent,
-                    fontStyle = MaterialTheme.typography.titleSmall.fontStyle
                 )
             }
         } else null,
         leadingContent = if (enabledPic) {
             {
-                if (index == null)
-                    XySmallImage(
-                        model = imgUrl,
-                        contentDescription = "${name}${stringResource(R.string.image_suffix)}"
-                    )
-                else
-                    Text(text = index.toString(), style = MaterialTheme.typography.bodySmall)
+                XySmallImage(
+                    model = imgUrl,
+                    size = picSize,
+                    contentDescription = "${name}${stringResource(R.string.image_suffix)}"
+                )
             }
         } else null, trailingContent = {
             trailingContent?.invoke()
@@ -277,12 +259,8 @@ fun ItemTrailingArrowRight(
             },
         shadowElevation = shadowElevation,
         headlineContent = {
-            Text(
+            XyText(
                 text = name,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onSurface
             )
         },
         supportingContent = {
@@ -306,14 +284,9 @@ fun ItemTrailingArrowRight(
                         })
                 }
                 subordination?.let {
-                    Text(
-                        modifier = Modifier.padding(start = 5.dp),
+                    XyTextSub(
                         text = subordination,
-                        style = MaterialTheme.typography.titleSmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -328,142 +301,41 @@ fun ItemTrailingArrowRight(
 }
 
 @Composable
-fun XyItemBig(
+fun XyItem(
     modifier: Modifier = Modifier,
     text: String,
-    color: Color = MaterialTheme.colorScheme.onSurface
-) {
-    Text(
-        modifier = modifier,
-        text = text,
-        fontWeight = FontWeight.Bold,
-        color = color,
-        style = MaterialTheme.typography.titleLarge,
-    )
-}
-
-@Composable
-fun XyItemTitle(
-    text: String,
-    modifier: Modifier = Modifier,
-    color: Color = MaterialTheme.colorScheme.onSurface,
+    sub: String?,
     fontWeight: FontWeight? = FontWeight.Bold,
-    fontSize: TextUnit = TextUnit.Unspecified,
-    style: TextStyle = MaterialTheme.typography.labelSmall
+    style: TextStyle = MaterialTheme.typography.bodyLarge,
 ) {
-    Text(
-        modifier = modifier,
-        text = text,
-        fontWeight = fontWeight,
-        fontSize = fontSize,
-        color = color,
-        style = style
-    )
-}
-
-@Composable
-fun XyItemMedium(
-    modifier: Modifier = Modifier,
-    text: String,
-    color: Color = MaterialTheme.colorScheme.onSurface
-) {
-    Text(
-        modifier = modifier,
-        text = text,
-        fontWeight = FontWeight.Bold,
-        color = color,
-        style = MaterialTheme.typography.titleMedium
-    )
-}
-
-@Composable
-fun XyItemTitlePadding(
-    modifier: Modifier = Modifier,
-    text: String,
-    paddingValues: PaddingValues = PaddingValues(
-        horizontal = XyTheme.dimens.innerHorizontalPadding,
-        vertical = XyTheme.dimens.innerVerticalPadding
-    )
-) {
-    Text(
-        modifier = modifier
-            .padding(
-                paddingValues
-            ),
-        text = text,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.onSurface,
-        style = MaterialTheme.typography.titleSmall
-    )
-}
-
-@Composable
-fun XyItemText(
-    text: String,
-    modifier: Modifier = Modifier,
-    style: TextStyle = MaterialTheme.typography.titleSmall,
-    maxLines: Int = Int.MAX_VALUE,
-    color: Color = MaterialTheme.colorScheme.onSurface
-) {
-    Text(
-        modifier = Modifier
-            .then(modifier),
-        text = text,
-        style = style,
-        color = color,
-        maxLines = maxLines
-    )
-}
-
-@Composable
-fun XyItemTextPadding(
-    modifier: Modifier = Modifier,
-    text: String,
-    maxLines: Int = Int.MAX_VALUE,
-    horizontal: Dp = XyTheme.dimens.innerVerticalPadding,
-    vertical: Dp = XyTheme.dimens.innerVerticalPadding,
-    overflow: TextOverflow = TextOverflow.Clip,
-    color: Color = MaterialTheme.colorScheme.onSurface
-) {
-    Text(
+    Column(
         modifier = Modifier
             .then(modifier)
-            .padding(
-                horizontal = horizontal,
-                vertical = vertical
-            ),
-        text = text,
-        maxLines = maxLines,
-        overflow = overflow,
-        color = color,
-        style = MaterialTheme.typography.titleSmall,
-    )
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.Start
+    ) {
+        XyText(
+            text = text,
+            fontWeight = fontWeight,
+            style = style
+        )
+        sub?.let {
+            XyTextSub(
+                text = sub,
+                maxLines = 1,
+            )
+        }
+    }
 }
 
-
+/**
+ * 将次要信息和主要信息样式反转
+ */
 @Composable
-fun XyItemTextLarge(
+fun XyItemReversal(
     modifier: Modifier = Modifier,
     text: String,
-    color: Color = MaterialTheme.colorScheme.onSurface,
-    fontWeight: FontWeight? = null,
-    style: TextStyle = MaterialTheme.typography.bodySmall,
-) {
-    Text(
-        modifier = Modifier
-            .then(modifier),
-        text = text,
-        style = style,
-        color = color,
-        fontWeight = fontWeight
-    )
-}
-
-@Composable
-fun XyItemText(
-    modifier: Modifier = Modifier,
-    text: String,
-    style: TextStyle = LocalTextStyle.current,
     sub: String?
 ) {
     Column(
@@ -473,185 +345,170 @@ fun XyItemText(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
-        Text(
+        XyTextSub(
             text = text,
-            maxLines = 1,
-            style = style,
-            color = MaterialTheme.colorScheme.onSurface,
-            overflow = TextOverflow.Ellipsis,
         )
         sub?.let {
-            Text(
+            XyText(
                 text = sub,
                 maxLines = 1,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.titleSmall
             )
         }
-
-
     }
 }
 
 
+/**
+ * 横向带图标的文本Item
+ */
 @Composable
-fun XyItemTextPadding(modifier: Modifier = Modifier, text: String, sub: String) {
-    Column(
-        modifier = Modifier
-            .then(modifier)
-            .fillMaxWidth()
-            .padding(
-                horizontal = XyTheme.dimens.innerHorizontalPadding,
-                vertical = XyTheme.dimens.innerVerticalPadding / 2
+fun XyItemIcon(
+    modifier: Modifier = Modifier,
+    imageVector: ImageVector,
+    text: String,
+    sub: String? = null,
+    enabled: Boolean = true,
+    middleContent: @Composable (() -> Unit)? = null,
+    onClick: (() -> Unit)? = null,
+) {
+    XyRow(
+        modifier = modifier
+            .clip(RoundedCornerShape(XyTheme.dimens.corner))
+            .debounceClickable(enabled = enabled) { onClick?.invoke() },
+        horizontalArrangement = Arrangement.Start,
+        paddingValues = PaddingValues(
+            vertical = XyTheme.dimens.innerVerticalPadding
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(
+                horizontal = XyTheme.dimens.outerHorizontalPadding,
             ),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.Start
-    ) {
-        Text(
-            text = text,
-            maxLines = 1,
-            color = MaterialTheme.colorScheme.onSurface,
-            overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.bodySmall
-        )
-
-        SelectionContainer {
-            Text(
-                text = sub,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.titleSmall
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            Icon(
+                imageVector = imageVector,
+                contentDescription = text,
+                tint = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
+            XyText(
+                text = text,
+                fontWeight = null,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            middleContent?.invoke()
+            sub?.let {
+                Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
+                XyText(
+                    text = sub,
+                    modifier = Modifier.weight(2f),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
 
+
+/**
+ * 带图标可选择的文本的Item
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun XyItemTextCheckSelectHeightSmall(
+fun XyItemIconSelect(
     modifier: Modifier = Modifier,
     text: String,
-    selected: Boolean,
-    onClick: (() -> Unit)? = null
+    imageVector: ImageVector? = null,
+    enabled: Boolean = true,
+    enableLeading: Boolean = true,
+    onIfSelected: () -> Boolean = { false },
+    onClick: () -> Unit,
 ) {
+
     XyRow(
         modifier = modifier
-            .height(XyTheme.dimens.itemHeight)
             .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .debounceClickable { onClick?.invoke() }
-            .background(if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Unspecified),
-    ) {
-        XyItemText(
-            modifier = Modifier
-                .weight(1f),
-            text = text,
+            .debounceClickable(enabled = enabled) { onClick.invoke() },
+        paddingValues = PaddingValues(
+            vertical = XyTheme.dimens.innerVerticalPadding
         )
-        if (selected)
-            Icon(imageVector = Icons.Rounded.Check, contentDescription = "选中${text}")
+    ) {
+        Row(
+            modifier = Modifier.padding(
+                horizontal = XyTheme.dimens.outerHorizontalPadding,
+            ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            if (enableLeading) {
+                imageVector?.let {
+                    Icon(
+                        modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize),
+                        imageVector = imageVector,
+                        contentDescription = text,
+                        tint = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } ?: Spacer(modifier = Modifier.width(IconButtonDefaults.extraSmallIconSize))
+
+                Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
+            }
+
+            XyText(
+                text = text,
+                fontWeight = null,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (enabled) if (!onIfSelected()) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+        }
+        if (onIfSelected()) {
+            Row {
+                Icon(
+                    modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize),
+                    imageVector = Icons.Rounded.Check,
+                    contentDescription = "已选择",
+                )
+                Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
+            }
+        }
     }
 }
 
 /**
- * 列表item 增加尾部选中显示对号Icon
- * 高度为正常二分之一
- */
-
-@Composable
-fun XyItemTextIconCheckSelectHeightSmall(
-    modifier: Modifier = Modifier,
-    text: String,
-    icon: ImageVector? = null,
-    onIfSelected: () -> Boolean = { false },
-    onClick: () -> Unit,
-) {
-    XyRowHeightSmall(
-        modifier = modifier
-            .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .debounceClickable { onClick.invoke() },
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            if (icon == null) {
-                Spacer(modifier = Modifier.width(24.dp))
-            }
-            icon?.let { Icon(imageVector = icon, contentDescription = text) }
-            XyItemText(text = text)
-        }
-        if (onIfSelected())
-            Icon(
-                imageVector = Icons.Default.Check,
-                contentDescription = "",
-                modifier = Modifier
-            )
-    }
-}
-
-/**
- * 列表item 增加尾部选中显示对号Icon
- * 高度正常
+ * 带切换按钮的 item
  */
 @Composable
-fun XyItemTextIconCheckSelect(
-    modifier: Modifier = Modifier,
-    text: String,
-    icon: ImageVector? = null,
-    onIfSelected: () -> Boolean = { false },
-    onClick: () -> Unit,
-) {
-    XyRow(
-        modifier = modifier.debounceClickable(
-            interactionSource = remember { MutableInteractionSource() },
-            indication = null
-        ) {
-            onClick()
-        },
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            if (icon == null) {
-                Spacer(modifier = Modifier.width(24.dp))
-            }
-            icon?.let { Icon(imageVector = icon, contentDescription = text) }
-            XyItemText(text = text)
-        }
-        if (onIfSelected())
-            Icon(
-                imageVector = Icons.Default.Check,
-                contentDescription = "",
-                modifier = Modifier
-            )
-    }
-}
-
-@Composable
-fun XyItemSwitcherNotTextColor(
+fun XyItemSwitcher(
     modifier: Modifier = Modifier,
     state: Boolean,
     onChange: (Boolean) -> Unit,
     enabled: Boolean = true,
     text: String,
+    paddingValue: PaddingValues = PaddingValues(
+        horizontal = XyTheme.dimens.outerHorizontalPadding,
+        vertical = XyTheme.dimens.outerVerticalPadding
+    )
 ) {
     Row(
         modifier = Modifier
             .then(modifier)
             .fillMaxWidth()
-            .heightIn(min = 56.dp)
+            .heightIn(min = XyTheme.dimens.itemHeight)
             .alpha(if (enabled) 1f else 0.5f)
             .debounceClickable(enabled = enabled) {
                 onChange(!state)
             }
             .padding(
-                horizontal = XyTheme.dimens.outerHorizontalPadding,
-                vertical = XyTheme.dimens.outerVerticalPadding
+                paddingValue
             ),
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        XyItemText(
+        XyText(
             modifier = Modifier.weight(1f),
             text = text
         )
@@ -665,100 +522,22 @@ fun XyItemSwitcherNotTextColor(
     }
 }
 
+/**
+ * 竖向排列的item
+ */
 @Composable
-fun XyItemSwitcherNotPadding(
-    modifier: Modifier = Modifier,
-    state: Boolean,
-    onChange: (Boolean) -> Unit,
-    enabled: Boolean = true,
-    text: String
-) {
-    Row(
-        modifier = Modifier
-            .then(modifier)
-            .heightIn(min = 28.dp)
-            .alpha(if (enabled) 1f else 0.5f)
-            .debounceClickable(enabled = enabled) {
-                onChange(!state)
-            },
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-
-        XyItemText(
-            modifier = Modifier,
-            text = text,
-        )
-        Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
-        Switch(
-            checked = state, onCheckedChange = onChange, enabled = enabled,
-            colors = SwitchDefaults.colors(
-                uncheckedBorderColor = Color.Transparent,
-                checkedThumbColor = MaterialTheme.colorScheme.surface
-            )
-        )
-    }
-
-}
-
-@Composable
-fun XyItemTabButton(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-    text: String,
-    imageVector: ImageVector,
-    enabled: Boolean = true,
-    iconColor: Color? = null,
-    color: Color = MaterialTheme.colorScheme.surfaceContainerLowest
-) {
-    Surface(
-        enabled = enabled,
-        modifier = modifier.padding(vertical = XyTheme.dimens.contentPadding),
-        onClick = onClick,
-        color = color
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            XyRoundedSurface(color = color) {
-                Icon(
-                    imageVector = imageVector,
-                    contentDescription = text,
-                    tint = iconColor
-                        ?: if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                            alpha = 0.3f
-                        ),
-                    modifier = Modifier.padding(
-                        XyTheme.dimens.contentPadding
-                    )
-                )
-            }
-            Spacer(modifier = Modifier.height(2.dp))
-            XyItemText(
-                text = text,
-                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                    alpha = 0.3f
-                )
-            )
-        }
-
-    }
-}
-
-@Composable
-fun XyItemTabBigButton(
+fun XyItemLabel(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     text: String,
     sub: String? = null,
     imageVector: ImageVector,
     enabled: Boolean = true,
-    iconColor: Color? = null,
-    brush: Brush
+    iconColor: Color? = null
 ) {
     Column(
         modifier = modifier
-            .background(brush, RoundedCornerShape(XyTheme.dimens.corner))
+            .clip(RoundedCornerShape(XyTheme.dimens.corner))
             .debounceClickable(enabled = enabled) {
                 onClick.invoke()
             },
@@ -779,13 +558,13 @@ fun XyItemTabBigButton(
                     bottom = XyTheme.dimens.outerVerticalPadding / 2
                 )
         )
-        XyItemText(
+        XyTextSubSmall(
             text = text,
             color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding / 2))
         sub?.let {
-            XyItemText(
+            XyTextSubSmall(
                 text = sub,
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -793,18 +572,6 @@ fun XyItemTabBigButton(
         }
 
     }
-}
-
-@Composable
-fun XyItemTextHorizontal(text: String, modifier: Modifier = Modifier) {
-    XyItemText(
-        modifier = Modifier
-            .then(modifier)
-            .padding(
-                horizontal = XyTheme.dimens.innerHorizontalPadding
-            ),
-        text = text
-    )
 }
 
 @Composable
@@ -857,7 +624,7 @@ fun XyItemSlider(
                 )
                 Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
             }
-            XyItemText(
+            XyTextSubSmall(
                 text = text,
                 modifier = Modifier
                     .weight(1f)
@@ -866,7 +633,7 @@ fun XyItemSlider(
             )
             Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
             sub?.let {
-                XyItemText(
+                XyTextSubSmall(
                     text = sub,
                     color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -888,62 +655,18 @@ fun XyItemSlider(
 }
 
 @Composable
-fun XyItemHorizontalSlider(
-    value: Float,
-    onValueChange: (Float) -> Unit,
-    iconVector: ImageVector? = null,
-    iconPaddingValues: PaddingValues = PaddingValues(0.dp),
-    iconColor: Color? = null,
-    text: String,
-    sub: String? = null
-) {
-    XyRowHeightSmall(
-        modifier = Modifier
-            .clip(RoundedCornerShape(XyTheme.dimens.corner))
-    ) {
-        Row(
-            modifier = Modifier,
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            iconVector?.let {
-                Icon(
-                    imageVector = iconVector,
-                    modifier = Modifier.padding(iconPaddingValues),
-                    contentDescription = text,
-                    tint = iconColor ?: LocalContentColor.current,
-                )
-            }
-
-            XyItemText(text = text)
-        }
-        Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
-        XySmallSlider(
-            modifier = Modifier.weight(7f),
-            progress = value,
-            onProgressChanged = onValueChange,
-            cacheProgressBarColor = Color.Transparent,
-        )
-        sub?.let {
-            Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
-            XyItemText(
-                text = sub,
-                modifier = Modifier.weight(2f),
-                color = Color(0xFFCBCBCB)
-            )
-        }
-    }
-}
-
-
-@Composable
 fun XyItemRadioButton(
     modifier: Modifier = Modifier,
     text: String,
-    style: TextStyle = LocalTextStyle.current/* MaterialTheme.typography.titleSmall*/,
     sub: String? = null,
+    fontWeight: FontWeight? = FontWeight.Bold,
+    style: TextStyle = MaterialTheme.typography.bodyLarge,
     selected: Boolean,
     enabled: Boolean = true,
+    paddingValue: PaddingValues = PaddingValues(
+        start = XyTheme.dimens.innerHorizontalPadding,
+        end = XyTheme.dimens.innerHorizontalPadding / 2
+    ),
     onClick: () -> Unit
 ) {
     Row(
@@ -955,14 +678,14 @@ fun XyItemRadioButton(
                 onClick()
             }
             .padding(
-                start = XyTheme.dimens.outerHorizontalPadding,
-                end = XyTheme.dimens.outerHorizontalPadding / 2
+                paddingValue
             )
     ) {
-        XyItemText(
+        XyItem(
             text = text,
-            style = style,
             sub = sub,
+            fontWeight = fontWeight,
+            style = style,
             modifier = Modifier.weight(1f)
         )
         RadioButton(

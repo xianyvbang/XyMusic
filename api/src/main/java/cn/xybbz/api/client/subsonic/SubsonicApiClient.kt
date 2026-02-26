@@ -23,6 +23,8 @@ import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
+import cn.xybbz.api.client.subsonic.data.SubsonicDefaultResponse
+import cn.xybbz.api.client.subsonic.data.SubsonicResponse
 import cn.xybbz.api.client.subsonic.service.SubsonicArtistsApi
 import cn.xybbz.api.client.subsonic.service.SubsonicGenreApi
 import cn.xybbz.api.client.subsonic.service.SubsonicItemApi
@@ -33,6 +35,8 @@ import cn.xybbz.api.client.subsonic.service.SubsonicUserLibraryApi
 import cn.xybbz.api.client.subsonic.service.SubsonicUserViewsApi
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.subsonic.ResponseFormatType
+import cn.xybbz.api.exception.ConnectionException
+import cn.xybbz.api.exception.UnauthorizedException
 
 class SubsonicApiClient : DefaultParentApiClient() {
 
@@ -213,9 +217,9 @@ class SubsonicApiClient : DefaultParentApiClient() {
      */
     fun getImageUrl(imageId: String, size: Int? = null): String {
         return if (size == null) {
-            "${baseUrl}/rest/getCoverArt?id=${imageId}"
+            "/rest/getCoverArt?id=${imageId}"
         } else {
-            "${baseUrl}/rest/getCoverArt?id=${imageId}&size=${size}"
+            "/rest/getCoverArt?id=${imageId}&size=${size}"
         }
     }
 
@@ -227,7 +231,7 @@ class SubsonicApiClient : DefaultParentApiClient() {
         format: AudioCodecEnum? = AudioCodecEnum.ROW,
         maxBitRate: Int? = null
     ): String {
-        return "${baseUrl}/rest/stream?id=${musicId}&maxBitRate=${maxBitRate}&format=${format}${if (format != AudioCodecEnum.ROW) "&estimateContentLength=true" else ""}"
+        return "/rest/stream?id=${musicId}&maxBitRate=${maxBitRate}&format=${format}${if (format != AudioCodecEnum.ROW) "&estimateContentLength=true" else ""}"
     }
 
     /**
@@ -241,14 +245,24 @@ class SubsonicApiClient : DefaultParentApiClient() {
      * 创建下载链接
      */
     override fun createDownloadUrl(itemId: String): String {
-        return baseUrl + "/rest/download?id=${itemId}"
+        return "/rest/download?id=${itemId}"
     }
 
     /**
      * 登陆接口
      */
     override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
-        val systemInfo = userApi().postPingSystem()
+        val systemInfo = try {
+            ping()
+        }catch (e: Exception){
+            e.printStackTrace()
+            when (e) {
+                !is UnauthorizedException -> {
+                    throw ConnectionException()
+                }
+                else -> throw e
+            }
+        }
         val user = userApi().getUser(username)
         Log.i("=====", "服务器信息 $systemInfo 用户信息 $user")
         TokenServer.updateLoginRetry(false)
@@ -271,5 +285,9 @@ class SubsonicApiClient : DefaultParentApiClient() {
         clientLoginInfoReq: ClientLoginInfoReq
     ) {
 
+    }
+
+    override suspend fun ping(): SubsonicResponse<SubsonicDefaultResponse> {
+        return userApi().postPingSystem()
     }
 }

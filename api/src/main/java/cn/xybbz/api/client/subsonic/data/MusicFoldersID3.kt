@@ -25,5 +25,5 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class MusicFoldersID3(
-    val musicFolders: List<MusicFolderID3>? = null
+    val musicFolder: List<MusicFolderID3>? = null
 )

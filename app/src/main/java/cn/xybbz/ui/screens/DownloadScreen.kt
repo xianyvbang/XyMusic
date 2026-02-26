@@ -86,7 +86,7 @@ import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyItemTextHorizontal
+import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.DownloadViewModel
 import kotlinx.coroutines.launch
 import kotlin.math.log10
@@ -98,6 +98,8 @@ fun DownloadScreen(
     downloadViewModel: DownloadViewModel = hiltViewModel<DownloadViewModel>()
 ) {
     val context = LocalContext.current
+
+   val removeDownloadTitle = stringResource(R.string.remove_download_title)
 
     val tasks by downloadViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
     XyColumnScreen(
@@ -117,18 +119,21 @@ fun DownloadScreen(
             onCancel = { downloadViewModel.performBatchCancel() },
             onDelete = {
                 if (downloadViewModel.selectedTaskIds.isNotEmpty())
-                    AlertDialogObject(title = context.getString(R.string.remove_download_title), content = {
-                        XyItemTextHorizontal(
-                            text = stringResource(
-                                R.string.confirm_delete_download,
-                                downloadViewModel.selectedTaskIds.size
+                    AlertDialogObject(
+                        title = removeDownloadTitle,
+                        content = {
+                            XyTextSubSmall(
+                                text = stringResource(
+                                    R.string.confirm_delete_download,
+                                    downloadViewModel.selectedTaskIds.size
+                                )
                             )
-                        )
-                    }, onConfirmation = {
-                        downloadViewModel.performBatchDelete()
-                    }, onDismissRequest = {
-                        downloadViewModel.enterMultiSelectMode()
-                    }, ifWarning = true).show()
+                        }, onConfirmation = {
+                            downloadViewModel.performBatchDelete()
+                        }, onDismissRequest = {
+                            downloadViewModel.enterMultiSelectMode()
+                        }, ifWarning = true
+                    ).show()
             },
             onSelectAll = {
                 downloadViewModel.toggleSelectionAll()

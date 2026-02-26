@@ -237,7 +237,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
      * 创建下载链接
      */
     override fun createDownloadUrl(itemId: String): String {
-        return baseUrl + "/Items/${itemId}/Download"
+        return "/Items/${itemId}/Download"
     }
 
     /**
@@ -246,7 +246,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
     override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
 
         try {
-            val pingData = userApi().postPingSystem()
+            val pingData = ping()
             Log.i("=====", "ping数据返回: $pingData")
         } catch (e: Exception) {
             e.printStackTrace()
@@ -254,6 +254,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
                 !is UnauthorizedException -> {
                     throw ConnectionException()
                 }
+                else -> throw e
             }
         }
 
@@ -286,6 +287,10 @@ class JellyfinApiClient : DefaultParentApiClient() {
         updateTokenOrHeadersOrQuery()
     }
 
+    override suspend fun ping(): String {
+        return userApi().postPingSystem()
+    }
+
     /**
      * 创建图像URL
      * @param [itemId] 项目ID
@@ -305,7 +310,6 @@ class JellyfinApiClient : DefaultParentApiClient() {
         tag: String? = null
     ): String {
         return getItemImageUrl(
-            baseUrl = baseUrl,
             itemId = itemId,
             imageType = imageType,
             fillWidth = fillWidth,
@@ -336,7 +340,6 @@ class JellyfinApiClient : DefaultParentApiClient() {
         fillHeight: Int? = null,
     ): String {
         return getArtistImageUrl(
-            baseUrl = baseUrl,
             name = name,
             imageType = imageType,
             fillWidth = fillWidth,
@@ -372,7 +375,6 @@ class JellyfinApiClient : DefaultParentApiClient() {
 
     /**
      * 获取项目图像URL
-     * @param [baseUrl] 基础网址
      * @param [itemId] 项目ID
      * @param [imageType] 图像类型
      * @param [fillWidth] 填充宽度
@@ -382,7 +384,6 @@ class JellyfinApiClient : DefaultParentApiClient() {
      * @return [String]
      */
     fun getItemImageUrl(
-        baseUrl: String,
         itemId: String,
         imageType: ImageType,
         fillWidth: Int? = null,
@@ -390,12 +391,11 @@ class JellyfinApiClient : DefaultParentApiClient() {
         quality: Int? = null,
         tag: String? = null,
     ): String {
-        return baseUrl + "/Items/${itemId}/Images/${imageType}?fillHeight=${fillHeight}&fillWidth=${fillWidth}&quality=${quality}&tag=${tag}"
+        return "/Items/${itemId}/Images/${imageType}?fillHeight=${fillHeight}&fillWidth=${fillWidth}&quality=${quality}&tag=${tag}"
     }
 
     /**
      * 获取艺术家图像URL
-     * @param [baseUrl] 基础网址
      * @param [name] 姓名
      * @param [imageType] 图像类型
      * @param [imageIndex] 图像索引
@@ -406,7 +406,6 @@ class JellyfinApiClient : DefaultParentApiClient() {
      * @return [String]
      */
     fun getArtistImageUrl(
-        baseUrl: String,
         name: String,
         imageType: ImageType,
         imageIndex: Int,
@@ -415,7 +414,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
         fillWidth: Int? = null,
         fillHeight: Int? = null,
     ): String {
-        return "$baseUrl/Artists/${name}/Images/${imageType}/${imageIndex}?fillHeight=${fillHeight}&fillWidth=${fillWidth}&quality=${quality}&tag=${tag}"
+        return "/Artists/${name}/Images/${imageType}/${imageIndex}?fillHeight=${fillHeight}&fillWidth=${fillWidth}&quality=${quality}&tag=${tag}"
     }
 
     private fun getAudioStreamUrl(
@@ -425,10 +424,10 @@ class JellyfinApiClient : DefaultParentApiClient() {
         audioBitRate: Int? = null
     ): String {
         return if (static){
-            "${baseUrl}/Audio/${itemId}/stream?" +
+            "/Audio/${itemId}/stream?" +
                     "deviceId=${deviceId}&static=${static}"
         }else {
-            "${baseUrl}/Audio/${itemId}/universal?" +
+            "/Audio/${itemId}/universal?" +
                     "deviceId=${deviceId}" +
                     "&AudioCodec=${audioCodec}&MaxStreamingBitrate=${audioBitRate}" +
                     "&Container=opus%2Cwebm%7Copus%2Cts%7Cmp3%2Cmp3%2Caac%2Cm4a%7Caac%2Cm4b%7Caac%2Cflac%2Cwebma%2Cwebm%7Cwebma%2Cwav%2Cogg" +

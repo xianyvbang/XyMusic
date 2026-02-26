@@ -150,7 +150,7 @@ class EmbyDatasourceServer(
             ),
             searchTerm = search,
             isFavorite = isFavorite,
-            parentId = libraryId
+            parentId = libraryIds?.get(0)
         )
         val response = embyApiClient.artistsApi().getArtists(
             itemRequest.toStringMap()
@@ -171,7 +171,7 @@ class EmbyDatasourceServer(
             userId = getUserId(),
             ItemRequest(
                 ids = artistIds,
-                parentId = libraryId,
+                parentId = libraryIds?.get(0),
                 userId = getUserId()
             ).toStringMap()
         ).items
@@ -671,7 +671,7 @@ class EmbyDatasourceServer(
                     ImageType.PRIMARY, ImageType.BACKDROP, ImageType.BANNER, ImageType.THUMB
                 ),
                 limit = Constants.MIN_PAGE,
-                parentId = libraryId,
+                parentId = libraryIds?.get(0),
                 userId = getUserId()
             ).toStringMap()
         )
@@ -1127,7 +1127,7 @@ class EmbyDatasourceServer(
                 genreIds = genreIds,
                 years = years,
                 albumIds = albumId?.let { listOf(albumId) },
-                parentId = if (parentId.isNullOrBlank()) libraryId else parentId,
+                parentId = if (parentId.isNullOrBlank()) libraryIds?.get(0) else parentId,
                 userId = getUserId(),
                 path = path
             ).toStringMap()
@@ -1183,7 +1183,7 @@ class EmbyDatasourceServer(
                 ids = albumIds,
                 years = years,
                 genreIds = genreIds,
-                parentId = libraryId,
+                parentId = libraryIds?.get(0),
                 userId = getUserId()
             ).toStringMap()
         )
@@ -1221,7 +1221,7 @@ class EmbyDatasourceServer(
                         ),
                         startIndex = 0,
                         limit = pageSize,
-                        parentId = libraryId,
+                        parentId = libraryIds?.get(0),
                         userId = getUserId()
                     ).toStringMap()
                 )
@@ -1270,7 +1270,7 @@ class EmbyDatasourceServer(
                 ),
                 searchTerm = search,
                 imageTypeLimit = 1,
-                parentId = libraryId
+                parentId = libraryIds?.get(0)
             ).toStringMap()
         )
 

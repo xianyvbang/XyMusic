@@ -27,6 +27,7 @@ import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.HomeDataRepository
+import cn.xybbz.config.dialog.XyMaterialYouStyle
 import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.proxy.ProxyConfigServer
 import cn.xybbz.config.setting.SettingsManager
@@ -76,11 +77,8 @@ class XyApplication : Application(), Configuration.Provider {
         super.onCreate()
         MultiLanguages.init(this)
         DialogX.init(this)
+        DialogX.globalStyle = XyMaterialYouStyle()
         DialogX.DEBUGMODE = true
-        DialogX.onlyOnePopTip = false
-        //是否默认可以关闭
-        DialogX.cancelableTipDialog = false
-        DialogX.globalTheme = DialogX.THEME.DARK
 
         val scope = CoroutineScopeUtils.getDefault("XyApplication")
         scope.launch {

@@ -96,5 +96,10 @@ class VersionApiClient : ApiConfig {
         return gitHubVersionApi
     }
 
-
+    /**
+     * 获得前缀地址
+     */
+    override fun getBaseUrl(): String {
+        return ""
+    }
 }

@@ -33,7 +33,7 @@ import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyColumn
-import cn.xybbz.ui.xy.XyItemTextHorizontal
+import cn.xybbz.ui.xy.XyTextSubSmall
 import kotlinx.coroutines.launch
 
 /**
@@ -45,6 +45,7 @@ inline fun getExportPlaylistsAlertDialogObject(
     crossinline onClick: () -> Unit
 ): () -> Unit {
     val context = LocalContext.current
+    val exportPlaylist = stringResource(R.string.export_playlist)
     val coroutineScope = rememberCoroutineScope()
     var playlist by remember {
         mutableStateOf<PlaylistParser.Playlist?>(null)
@@ -92,16 +93,18 @@ inline fun getExportPlaylistsAlertDialogObject(
     )
     return {
         onClick()
-        AlertDialogObject(title = context.getString(R.string.export_playlist), content = {
-            ExportPlaylistsCompose(
-                onPlayTrackList = {
-                    playlist = onPlayTrackList()
-                    playlist
-                },
-                onClose = { it.dismiss() },
-                directoryLauncher = directoryLauncher
-            )
-        }).show()
+        AlertDialogObject(
+            title = exportPlaylist,
+            content = {
+                ExportPlaylistsCompose(
+                    onPlayTrackList = {
+                        playlist = onPlayTrackList()
+                        playlist
+                    },
+                    onClose = { it.dismiss() },
+                    directoryLauncher = directoryLauncher
+                )
+            }).show()
     }
 
 }
@@ -134,7 +137,7 @@ fun ExportPlaylistsCompose(
         backgroundColor = Color.Transparent,
         paddingValues = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding)
     ) {
-        XyItemTextHorizontal(
+        XyTextSubSmall(
             text = stringResource(R.string.please_select_export_format)
         )
         Row(
@@ -179,6 +182,7 @@ inline fun importPlaylistsCompose(
     crossinline onClick: () -> Unit
 ): () -> Unit {
     val context = LocalContext.current
+   val unknownPlaylist = stringResource(Constants.UNKNOWN_PLAYLIST)
     //导入
     val openSelectPhotoLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
@@ -203,7 +207,7 @@ inline fun importPlaylistsCompose(
                         onCreatePlaylist(
                             PlaylistParser.Playlist(
                                 tracks,
-                                fileName ?: context.getString(Constants.UNKNOWN_PLAYLIST)
+                                fileName ?: unknownPlaylist
                             )
                         )
                     }

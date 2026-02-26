@@ -27,6 +27,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.room.Transaction
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.PlaylistFileUtils
 import cn.xybbz.common.utils.PlaylistParser
@@ -45,7 +46,6 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
@@ -54,12 +54,12 @@ class AlbumInfoViewModel @AssistedInject constructor(
     @Assisted private val itemId: String,
     @Assisted private val dataType: MusicDataTypeEnum,
     val dataSourceManager: DataSourceManager,
-    private val db: DatabaseClient,
+    val db: DatabaseClient,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicController,
     val selectControl: SelectControl,
     val backgroundConfig: BackgroundConfig
-) : PageListViewModel<XyMusic>(dataSourceManager) {
+) : PageListViewModel<XyMusic>(dataSourceManager, SortTypeEnum.MUSIC_NAME_ASC) {
 
     /**
      * 创建方法
@@ -69,7 +69,6 @@ class AlbumInfoViewModel @AssistedInject constructor(
     interface Factory {
         fun create(itemId: String, dataType: MusicDataTypeEnum): AlbumInfoViewModel
     }
-
 
     val downloadMusicIdsFlow =
         db.downloadDao.getAllMusicTaskUidsFlow()
@@ -254,12 +253,16 @@ class AlbumInfoViewModel @AssistedInject constructor(
     /**
      * 获得数据结构
      */
-    override fun getFlowPageData(sortFlow: StateFlow<Sort>): Flow<PagingData<XyMusic>> {
+    override fun getFlowPageData(sort: Sort): Flow<PagingData<XyMusic>> {
         return dataSourceManager.selectMusicListByParentId(
             itemId = itemId,
             dataType = dataType,
-            sortFlow = sortFlow
+            sort = sort
         )
+    }
+
+    override suspend fun updateDataSourceRemoteKey() {
+        dataSourceManager.updateDataSourceRemoteKey()
     }
 
 }

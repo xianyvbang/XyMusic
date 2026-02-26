@@ -28,4 +28,7 @@ interface RemoteCurrentDao {
 
     @Query("delete from remote_current")
     suspend fun removeAll()
+
+    @Query("update remote_current set refresh = 1  where connectionId = :connectionId")
+    suspend fun updateByConnectionId(connectionId: Long)
 }

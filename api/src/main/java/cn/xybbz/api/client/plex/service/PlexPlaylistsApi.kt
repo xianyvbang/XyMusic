@@ -89,6 +89,8 @@ interface PlexPlaylistsApi : BaseApi {
         @Query("sort") sort: String? = null,
         @Query("track.collection") trackCollection: Int? = null,
         @Query("album.decade", encoded = false) albumDecade: String? = null,
+        @Query("album.year>>=", encoded = false) albumStartYear: Int? = null,
+        @Query("album.year<<=", encoded = false) albumEndYear: Int? = null,
         @QueryMap params: Map<String, String>? = null
     ): PlexResponse<PlexLibraryItemResponse>
 }

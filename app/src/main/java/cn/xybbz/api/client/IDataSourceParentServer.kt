@@ -20,10 +20,6 @@ package cn.xybbz.api.client
 
 import android.content.Context
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.media3.common.util.UnstableApi
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.PagingData
 import androidx.paging.RemoteMediator
@@ -34,6 +30,7 @@ import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
+import cn.xybbz.api.events.ReLoginEvent
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.exception.UnauthorizedException
@@ -48,6 +45,7 @@ import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.EncryptAesData
 import cn.xybbz.entity.data.Sort
+import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -73,8 +71,6 @@ import cn.xybbz.page.parent.FavoriteMusicRemoteMediator
 import cn.xybbz.page.parent.GenreAlbumListRemoteMediator
 import cn.xybbz.page.parent.GenresRemoteMediator
 import cn.xybbz.page.parent.MusicRemoteMediator
-import coil.Coil
-import coil.ImageLoader
 import com.github.promeg.pinyinhelper.Pinyin
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -82,13 +78,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.update
 import java.net.SocketTimeoutException
 import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 
 abstract class IDataSourceParentServer(
@@ -97,13 +97,16 @@ abstract class IDataSourceParentServer(
     private val application: Context,
     private val defaultParentApiClient: DefaultParentApiClient,
     private val mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
-    private val downloadManager: DownLoadManager
+    private val downloadManager: DownLoadManager,
 ) : IDataSourceServer {
 
     private var connectionConfig: ConnectionConfig? = null
 
-    var libraryId by mutableStateOf<String?>(null)
+    var libraryIds: List<String>? = null
         private set
+
+    private val _mediaLibraryIdFlow = MutableStateFlow<String>(UUID.randomUUID().toString())
+    val mediaLibraryIdFlow: StateFlow<String> = _mediaLibraryIdFlow.asStateFlow()
 
     /**
      * 登录状态
@@ -139,7 +142,9 @@ abstract class IDataSourceParentServer(
         clientLoginInfoReq: ClientLoginInfoReq,
         connectionConfig: ConnectionConfig?
     ): Flow<ClientLoginInfoState> {
-
+        val popTipHint = MessageUtils.sendPopTipHint(
+            R.string.logging_in
+        )
         return flow {
             Log.i("=====", "输入的地址: ${clientLoginInfoReq.address}")
             emit(ClientLoginInfoState.Connected(clientLoginInfoReq.address))
@@ -221,12 +226,15 @@ abstract class IDataSourceParentServer(
                 navidromeExtendSalt = responseData.navidromeExtendSalt,
                 machineIdentifier = responseData.machineIdentifier,
                 ifEnabledDownload = responseData.ifEnabledDownload,
-                ifEnabledDelete = responseData.ifEnabledDelete
+                ifEnabledDelete = responseData.ifEnabledDelete,
+                ifForceLogin = false
             )
             this@IDataSourceParentServer.connectionConfig = tmpConfig
+            popTipHint.dismiss()
             emitAll(loginAfter(tmpConfig))
         }.flowOn(Dispatchers.IO).catch {
             it.printStackTrace()
+            popTipHint.dismiss()
             sendLoginCompleted(LoginStateType.FAILURE)
             when (it) {
                 is SocketTimeoutException -> {
@@ -264,7 +272,7 @@ abstract class IDataSourceParentServer(
                 }
 
                 if (!ifTmpObject()) {
-                    setCoilImageOkHttpClient()
+                    selectMediaLibrary(connectionId = connectionId)
                     downloadManager.initData(connectionId)
                     connection(connectionConfig.copy(id = connectionId), connectionConfig.id != 0L)
                     mediaLibraryAndFavoriteSyncScheduler.cancel()
@@ -297,17 +305,6 @@ abstract class IDataSourceParentServer(
     )
 
     /**
-     * 设置okhttp到数据源
-     */
-    @androidx.annotation.OptIn(UnstableApi::class)
-    open suspend fun setCoilImageOkHttpClient() {
-        val imageLoader = ImageLoader.Builder(application)
-            .okHttpClient(getOkhttpClient())
-            .build()
-        Coil.setImageLoader(imageLoader)
-    }
-
-    /**
      * 自动登录
      */
     override suspend fun autoLogin(
@@ -324,6 +321,7 @@ abstract class IDataSourceParentServer(
             )
 
         this.connectionConfig = connectionConfig
+        settingsManager.saveConnectionId(connectionId = connectionConfig.id, connectionConfig.type)
 
         val address = connectionConfig.address
 
@@ -355,12 +353,7 @@ abstract class IDataSourceParentServer(
                 serverName = connectionConfig.serverName,
                 serverId = connectionConfig.serverId,
             )
-            if (loginType == LoginType.API || connectionConfig.accessToken.isNullOrBlank()) {
-
-                MessageUtils.sendPopTipHint(
-                    R.string.logging_in,
-                    delay = 5000
-                )
+            if (loginType == LoginType.API || connectionConfig.accessToken.isNullOrBlank() || connectionConfig.ifForceLogin) {
                 emitAll(
                     addClientAndLogin(
                         clientLoginInfoReq = clientLoginInfoReq,
@@ -369,6 +362,8 @@ abstract class IDataSourceParentServer(
                 )
             } else {
                 emit(ClientLoginInfoState.Connected(clientLoginInfoReq.address))
+
+
                 //保存客户端数据
                 createApiClient(
                     address,
@@ -383,6 +378,17 @@ abstract class IDataSourceParentServer(
                     connectionConfig.navidromeExtendSalt,
                     clientLoginInfoReq = clientLoginInfoReq
                 )
+
+                try {
+                    defaultParentApiClient.ping()
+                } catch (e: Exception) {
+                    if (!TokenServer.loginRetry) {
+                        TokenServer.updateLoginRetry(true)
+                        defaultParentApiClient.eventBus.notify(ReLoginEvent.Unauthorized)
+                    }
+
+                    throw e
+                }
                 defaultParentApiClient.pingAfter(connectionConfig.machineIdentifier)
                 emitAll(loginAfter(connectionConfig))
             }
@@ -464,7 +470,7 @@ abstract class IDataSourceParentServer(
     override fun selectMusicListByParentId(
         itemId: String,
         dataType: MusicDataTypeEnum,
-        sortFlow: StateFlow<Sort>
+        sort: Sort
     ): Flow<PagingData<XyMusic>> {
         return defaultPager(
             remoteMediator = AlbumOrPlaylistMusicListRemoteMediator(
@@ -473,7 +479,7 @@ abstract class IDataSourceParentServer(
                 db = db,
                 dataType = dataType,
                 connectionId = getConnectionId(),
-                sortFlow = sortFlow
+                sort = sort
             )
         ) {
             if (dataType == MusicDataTypeEnum.ALBUM)
@@ -523,7 +529,7 @@ abstract class IDataSourceParentServer(
      */
     @OptIn(ExperimentalPagingApi::class)
     override fun selectAlbumFlowList(
-        sortFlow: StateFlow<Sort>
+        sort: Sort
     ): Flow<PagingData<XyAlbum>> {
         return defaultPager(
             pageSize = Constants.UI_LIST_PAGE,
@@ -532,7 +538,7 @@ abstract class IDataSourceParentServer(
                 db = db,
                 datasourceServer = this,
                 connectionId = getConnectionId(),
-                sortFlow = sortFlow
+                sort = sort
             )
         ) {
             db.albumDao.selectHomeAlbumListPage()
@@ -614,14 +620,14 @@ abstract class IDataSourceParentServer(
      */
     @OptIn(ExperimentalPagingApi::class)
     override fun selectMusicFlowList(
-        sortFlow: StateFlow<Sort>
+        sort: Sort
     ): Flow<PagingData<HomeMusic>> {
         return defaultPager(
             remoteMediator = MusicRemoteMediator(
                 db = db,
                 datasourceServer = this,
                 connectionId = getConnectionId(),
-                sort = sortFlow
+                sort = sort
             )
         ) {
             db.musicDao.selectHomeMusicListPage()
@@ -883,12 +889,12 @@ abstract class IDataSourceParentServer(
             db.dataCountDao.save(
                 XyDataCount(
                     connectionId = connectionId,
-                    musicCount = music ?: 0,
-                    albumCount = album ?: 0,
-                    artistCount = artist ?: 0,
-                    playlistCount = playlist ?: 0,
-                    genreCount = genres ?: 0,
-                    favoriteCount = favorite ?: 0
+                    musicCount = music,
+                    albumCount = album,
+                    artistCount = artist,
+                    playlistCount = playlist,
+                    genreCount = genres,
+                    favoriteCount = favorite
                 )
             )
         }
@@ -1164,12 +1170,12 @@ abstract class IDataSourceParentServer(
     /**
      * 更新媒体库设置
      */
-    override suspend fun updateLibraryId(libraryId: String?, connectionId: Long) {
+    override suspend fun updateLibraryId(libraryIds: List<String>?, connectionId: Long) {
         if (connectionId == getConnectionId()) {
-            setUpLibraryId(libraryId)
+            setUpLibraryId(libraryIds)
         } else {
             db.connectionConfigDao.updateLibraryId(
-                libraryId = libraryId,
+                libraryIds = libraryIds?.joinToString(LocalConstants.ARTIST_DELIMITER),
                 connectionId = connectionId
             )
         }
@@ -1203,7 +1209,7 @@ abstract class IDataSourceParentServer(
         if (!ifAutoLogin)
             this.connectionConfig = connectionConfig
         settingsManager.saveConnectionId(connectionId = connectionConfig.id, connectionConfig.type)
-        setUpLibraryId(connectionConfig.libraryId)
+        updateLibraryIds(connectionConfig.libraryIds)
         sendLoginCompleted(LoginStateType.SUCCESS)
     }
 
@@ -1215,21 +1221,31 @@ abstract class IDataSourceParentServer(
     /**
      * 设置媒体库id
      */
-    protected open suspend fun setUpLibraryId(libraryId: String?) {
-        this.libraryId = libraryId
+    protected open suspend fun setUpLibraryId(libraryIds: List<String>?) {
+        updateLibraryIds(libraryIds)
         db.connectionConfigDao.updateLibraryId(
-            libraryId = libraryId,
+            libraryIds = libraryIds?.joinToString(LocalConstants.ARTIST_DELIMITER),
             connectionId = getConnectionId()
         )
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    suspend fun updateLibraryIds(libraryIds: List<String>?) {
+        this.libraryIds = libraryIds
+        updateDataSourceRemoteKey()
+        _mediaLibraryIdFlow.update { Uuid.random().toString() }
     }
 
     /**
      * 发送登录动作完成通知(不管失败或成功)
      */
-    private suspend fun sendLoginCompleted(loginState: LoginStateType) {
-        _loginSuccessEvent.emit(loginState)
+    private fun sendLoginCompleted(loginState: LoginStateType) {
+        _loginSuccessEvent.tryEmit(loginState)
     }
 
+    suspend fun updateDataSourceRemoteKey(){
+        db.remoteCurrentDao.updateByConnectionId(getConnectionId())
+    }
 
     override fun close() {
         downloadManager.close()
@@ -1237,6 +1253,10 @@ abstract class IDataSourceParentServer(
         mediaLibraryAndFavoriteSyncScheduler.cancel()
         TokenServer.clearAllData()
         unConnection()
-        libraryId = null
+        sendLoginCompleted(LoginStateType.UNKNOWN)
+        //这里这样置空是为了防止触发DataSourceManager.mediaLibraryIdFlow的流变化
+        this.libraryIds = null
     }
+
+
 }

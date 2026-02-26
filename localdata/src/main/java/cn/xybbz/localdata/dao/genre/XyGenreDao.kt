@@ -36,11 +36,4 @@ interface XyGenreDao {
 
     @Query("select count(itemId) from xy_genre where connectionId = (select xs.connectionId from xy_settings xs)")
     suspend fun selectCount():Int
-
-
-    @Query("""
-        update xy_genre set pic = REPLACE(pic,:oldAddress,:newAddress)
-        where pic like :oldAddress || '%'
-    """)
-    suspend fun updateUrlByConnectionId(oldAddress: String, newAddress: String)
 }

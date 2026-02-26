@@ -44,6 +44,7 @@ fun XyDropdownMenu(
                 HorizontalDivider(modifier = Modifier.fillMaxWidth())
             XyDropdownMenuItem(
                 text = data.title,
+                enabled = data.enabled,
                 leadingIcon = data.leadingIcon,
                 trailingIcon = data.trailingIcon,
                 onClick = data.onClick,
@@ -56,6 +57,7 @@ fun XyDropdownMenu(
 @Immutable
 data class MenuItemDefaultData(
     val title: String,
+    val enabled: Boolean = true,
     val leadingIcon: @Composable (() -> Unit)? = null,
     val trailingIcon: @Composable (() -> Unit)? = null,
     val onClick: () -> Unit,

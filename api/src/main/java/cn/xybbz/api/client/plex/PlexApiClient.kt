@@ -24,6 +24,7 @@ import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
 import cn.xybbz.api.client.jellyfin.encodeUrlParameter
+import cn.xybbz.api.client.plex.data.PlexPingSystemResponse
 import cn.xybbz.api.client.plex.data.toPlexLogin
 import cn.xybbz.api.client.plex.service.PlexItemApi
 import cn.xybbz.api.client.plex.service.PlexLibraryApi
@@ -33,7 +34,8 @@ import cn.xybbz.api.client.plex.service.PlexUserApi
 import cn.xybbz.api.client.plex.service.PlexUserLibraryApi
 import cn.xybbz.api.client.plex.service.PlexUserViewsApi
 import cn.xybbz.api.constants.ApiConstants
-import cn.xybbz.api.exception.ServiceException
+import cn.xybbz.api.exception.ConnectionException
+import cn.xybbz.api.exception.UnauthorizedException
 
 class PlexApiClient : DefaultParentApiClient() {
 
@@ -311,7 +313,7 @@ class PlexApiClient : DefaultParentApiClient() {
      * 创建下载链接
      */
     override fun createDownloadUrl(itemId: String): String {
-        return "$baseUrl$itemId?download=1"
+        return "/$itemId?download=1"
     }
 
     /**
@@ -330,24 +332,27 @@ class PlexApiClient : DefaultParentApiClient() {
         if (createToken().isBlank()) {
             loginSuccessData = plexLogin(clientLoginInfoReq)
         }
-
-        try {
-            val postPingSystem = userApi().postPingSystem()
-            Log.i("=====", postPingSystem.toString())
+        val postPingSystem = try {
+            val pingInfo = ping()
+            Log.i("=====", pingInfo.toString())
             //获得machineIdentifier
-            pingAfter(postPingSystem.mediaContainer?.machineIdentifier)
-            loginSuccessData =
-                loginSuccessData.copy(
-                    machineIdentifier = postPingSystem.mediaContainer?.machineIdentifier,
-                    ifEnabledDownload = postPingSystem.mediaContainer?.allowSync ?: false,
-                    ifEnabledDelete = postPingSystem.mediaContainer?.allowSync ?: false
-                )
+            pingAfter(pingInfo.mediaContainer?.machineIdentifier)
+            pingInfo
         } catch (e: Exception) {
             Log.i("error", "ping服务器失败", e)
-            throw ServiceException("ping服务器失败")
+            when (e) {
+                !is UnauthorizedException -> {
+                    throw ConnectionException()
+                }
+                else -> throw e
+            }
         }
         TokenServer.updateLoginRetry(false)
-        return loginSuccessData
+        return loginSuccessData.copy(
+            machineIdentifier = postPingSystem.mediaContainer?.machineIdentifier,
+            ifEnabledDownload = postPingSystem.mediaContainer?.allowSync ?: false,
+            ifEnabledDelete = postPingSystem.mediaContainer?.allowSync ?: false
+        )
     }
 
     override suspend fun loginAfter(
@@ -366,6 +371,10 @@ class PlexApiClient : DefaultParentApiClient() {
         updateMachineIdentifier(machineIdentifier)
     }
 
+    override suspend fun ping(): PlexPingSystemResponse {
+        return userApi().postPingSystem()
+    }
+
     suspend fun plexLogin(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
         val responseData =
             userApi().authenticateByName(
@@ -374,7 +383,7 @@ class PlexApiClient : DefaultParentApiClient() {
             )
         Log.i("=====", "返回响应值: $responseData")
         loginAfter(
-            responseData.authToken, responseData.id,
+            responseData.authToken, responseData.id.toString(),
             clientLoginInfoReq = clientLoginInfoReq
         )
         return LoginSuccessData(
@@ -405,7 +414,7 @@ class PlexApiClient : DefaultParentApiClient() {
     //todo 修改图片获取方式
     fun getImageUrl(plexFileUrl: String, width: Int = 297, height: Int = 297): String {
         val tmpPlexFileUrl = "${plexFileUrl}?X-Plex-Token=${accessToken}".encodeUrlParameter()
-        return "${baseUrl}/photo/:/transcode?width=${width}&height=${height}&url=${tmpPlexFileUrl}&minSize=1&upscale=1&X-Plex-Token=${accessToken}"
+        return "/photo/:/transcode?width=${width}&height=${height}&url=${tmpPlexFileUrl}&minSize=1&upscale=1&X-Plex-Token=${accessToken}"
     }
 
     fun createAudioUrl(
@@ -437,7 +446,7 @@ class PlexApiClient : DefaultParentApiClient() {
     private fun getAudioStreamUrl(
         trackMediaPartKey: String,
     ): String {
-        return "${baseUrl}${trackMediaPartKey}?X-Plex-Platform=Android&X-Plex-Token=${accessToken}"
+        return "${trackMediaPartKey}?X-Plex-Platform=Android&X-Plex-Token=${accessToken}"
     }
 
     private fun getUniversalAudioUrl(
@@ -445,7 +454,7 @@ class PlexApiClient : DefaultParentApiClient() {
         musicBitrate: Int,
         session: String
     ): String {
-        return "${baseUrl}/music/:/transcode/universal/start?path=/library/metadata/${musicId}" +
+        return "/music/:/transcode/universal/start?path=/library/metadata/${musicId}" +
                 "&directPlay=0&musicBitrate=${musicBitrate}&session=${session}" +
                 "&X-Plex-Platform=Android&X-Plex-Token=${accessToken}"
     }

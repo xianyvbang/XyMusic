@@ -34,9 +34,9 @@ import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.client.version.VersionApiClient
 import cn.xybbz.api.enums.AudioCodecEnum
-import cn.xybbz.api.events.ReLoginEvent
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.state.ClientLoginInfoState
+import cn.xybbz.api.state.Source
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.LoginStateType
 import cn.xybbz.common.enums.LoginType
@@ -47,6 +47,7 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.alarm.AlarmConfig
+import cn.xybbz.config.image.BaseUrlMapper
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.entity.data.LoginStateData
 import cn.xybbz.entity.data.LrcEntryData
@@ -68,14 +69,18 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import coil.Coil
+import coil.ImageLoader
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import okhttp3.OkHttpClient
 import java.net.SocketTimeoutException
 import javax.inject.Provider
@@ -85,12 +90,13 @@ import javax.inject.Provider
  * @author xybbz
  * @date 2024/06/12
  */
-class DataSourceManager(
+open class DataSourceManager(
     private val application: Context,
     private val db: DatabaseClient,
     private val dataSources: Map<DataSourceType, @JvmSuppressWildcards Provider<IDataSourceParentServer>>,
     private val alarmConfig: AlarmConfig,
-    private val versionApiClient: VersionApiClient
+    private val versionApiClient: VersionApiClient,
+    private val imageApiClient: ImageApiClient
 ) : IDataSourceServer, IoScoped() {
 
 
@@ -117,6 +123,29 @@ class DataSourceManager(
                 server.loginSuccessEvent
             }.filter { it != LoginStateType.UNKNOWN }
 
+
+
+    @kotlin.OptIn(ExperimentalCoroutinesApi::class)
+    private val mediaLibraryIdFlow: Flow<String> =
+        dataSourceServerFlow
+            .filterNotNull()
+            .flatMapLatest { server ->
+                server.mediaLibraryIdFlow
+            }
+
+    val taggedLoginFlow = loginStateFlow.map { Source.Login(it) }
+    val taggedMediaFlow = mediaLibraryIdFlow.map { Source.Library(it) }
+
+    val mergeFlow =  merge(taggedLoginFlow, taggedMediaFlow).filter { it is Source.Login && it.value != LoginStateType.UNKNOWN || it is Source.Library }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val combinedFlow: Flow<Pair<LoginStateType, String?>> =
+        combine(
+            loginStateFlow,
+            mediaLibraryIdFlow
+        ) { loginState, mediaIds ->
+            loginState to mediaIds
+        }.filter { it.first != LoginStateType.UNKNOWN}
 
 
     //加载状态
@@ -148,6 +177,7 @@ class DataSourceManager(
             switchDataSource(dataSourceType)
             serverLogin(LoginType.TOKEN, null)
         }
+        setCoilImageOkHttpClient()
 
     }
 
@@ -177,19 +207,30 @@ class DataSourceManager(
         autoLogin(loginType, connectionConfig).collect { loginState ->
             loginStatus = loginState
             //                ifLoginError = false
-            val loginSateInfo = getLoginSateInfo(loginState, false)
+            val loginSateInfo = getLoginSateInfo(loginState)
             Log.i("error", "$loginSateInfo")
             errorHint = loginSateInfo.errorHint ?: R.string.empty_info
             errorMessage = loginSateInfo.errorMessage ?: ""
             ifLoginError = loginSateInfo.isError
             loading = loginSateInfo.loading
+            if (loginSateInfo.isError) {
+                MessageUtils.sendPopTipError(
+                    R.string.login_failed,
+                    delay = 2000
+                )
+            } else if (loginSateInfo.isLoginSuccess) {
+                MessageUtils.sendPopTipSuccess(
+                    R.string.connection_successful,
+                    delay = 2000
+                )
+            }
         }
     }
 
     /**
      * 根据登录状态返回不同登录信息
      */
-    fun getLoginSateInfo(loginState: ClientLoginInfoState, ifTmp: Boolean): LoginStateData {
+    fun getLoginSateInfo(loginState: ClientLoginInfoState): LoginStateData {
         return when (loginState) {
             is ClientLoginInfoState.Connected -> {
                 Log.i("=====", "连接中")
@@ -197,7 +238,6 @@ class DataSourceManager(
             }
 
             is ClientLoginInfoState.ConnectError -> {
-                MessageUtils.sendPopTipDismiss()
                 Log.i(Constants.LOG_ERROR_PREFIX, "服务端连接错误")
                 LoginStateData(
                     loading = false,
@@ -207,7 +247,6 @@ class DataSourceManager(
             }
 
             ClientLoginInfoState.ServiceTimeOutState -> {
-                MessageUtils.sendPopTipDismiss()
                 Log.i(Constants.LOG_ERROR_PREFIX, "服务端连接超时")
                 LoginStateData(
                     loading = false,
@@ -217,7 +256,6 @@ class DataSourceManager(
             }
 
             is ClientLoginInfoState.ErrorState -> {
-                MessageUtils.sendPopTipDismiss()
                 Log.i(Constants.LOG_ERROR_PREFIX, loginState.error.message.toString())
                 LoginStateData(
                     loading = false,
@@ -228,7 +266,6 @@ class DataSourceManager(
             }
 
             ClientLoginInfoState.SelectServer -> {
-                MessageUtils.sendPopTipDismiss()
                 Log.i(Constants.LOG_ERROR_PREFIX, "未选择连接")
                 LoginStateData(
                     loading = false,
@@ -238,7 +275,6 @@ class DataSourceManager(
             }
 
             ClientLoginInfoState.UnauthorizedErrorState -> {
-                MessageUtils.sendPopTipDismiss()
                 Log.i(Constants.LOG_ERROR_PREFIX, "登录失败,账号或密码错误")
                 LoginStateData(
                     loading = false,
@@ -339,18 +375,18 @@ class DataSourceManager(
      * 获得专辑数据
      */
     override fun selectAlbumFlowList(
-        sortFlow: StateFlow<Sort>
+        sort: Sort
     ): Flow<PagingData<XyAlbum>> {
-        return dataSourceServer.selectAlbumFlowList(sortFlow)
+        return dataSourceServer.selectAlbumFlowList(sort)
     }
 
     /**
      * 获得音乐数据
      */
     override fun selectMusicFlowList(
-        sortFlow: StateFlow<Sort>
+        sort: Sort
     ): Flow<PagingData<HomeMusic>> {
-        return dataSourceServer.selectMusicFlowList(sortFlow)
+        return dataSourceServer.selectMusicFlowList(sort)
     }
 
     /**
@@ -374,12 +410,12 @@ class DataSourceManager(
     override fun selectMusicListByParentId(
         itemId: String,
         dataType: MusicDataTypeEnum,
-        sortFlow: StateFlow<Sort>
+        sort: Sort
     ): Flow<PagingData<XyMusic>> {
         return dataSourceServer.selectMusicListByParentId(
             itemId = itemId,
             dataType = dataType,
-            sortFlow = sortFlow
+            sort = sort
         )
     }
 
@@ -680,7 +716,7 @@ class DataSourceManager(
             errorMessage = R.string.add_music_to_playlist_failed
         ) {
             try {
-                dataSourceServer.saveMusicPlaylist(playlistId, musicIds,)
+                dataSourceServer.saveMusicPlaylist(playlistId, musicIds)
             } catch (e: Exception) {
                 Log.e(Constants.LOG_ERROR_PREFIX, "保存自建歌单中的音乐失败", e)
                 false
@@ -1124,8 +1160,8 @@ class DataSourceManager(
     /**
      * 更新媒体库id
      */
-    override suspend fun updateLibraryId(libraryId: String?, connectionId: Long) {
-        return dataSourceServer.updateLibraryId(libraryId, connectionId)
+    override suspend fun updateLibraryId(libraryIds: List<String>?, connectionId: Long) {
+        return dataSourceServer.updateLibraryId(libraryIds, connectionId)
     }
 
     /**
@@ -1231,7 +1267,7 @@ class DataSourceManager(
      */
     @Transaction
     suspend fun removeMusicById(musicId: String) {
-        OperationTipUtils.operationTipNotToBlock {
+        OperationTipUtils.operationTipNotToBlock() {
             val bool = removeById(musicId)
             db.musicDao.removeByItemId(musicId)
             bool
@@ -1244,7 +1280,7 @@ class DataSourceManager(
      */
     @Transaction
     suspend fun removeMusicByIds(musicIds: List<String>): Boolean {
-        return OperationTipUtils.operationTipNotToBlock {
+        return OperationTipUtils.operationTipNotToBlock() {
             val bool = removeByIds(musicIds)
             db.musicDao.removeByItemIds(musicIds)
             bool
@@ -1252,10 +1288,25 @@ class DataSourceManager(
     }
 
     /**
-     * 触发重新登陆
+     * 更新数据源远程键数据管理
      */
-    fun restartLogin() {
-        dataSourceServer.getApiClient().eventBus.notify(ReLoginEvent.Unauthorized)
+    suspend fun updateDataSourceRemoteKey() {
+        dataSourceServer.updateDataSourceRemoteKey()
+    }
+
+
+    /**
+     * 设置okhttp到数据源
+     */
+    @OptIn(UnstableApi::class)
+    open suspend fun setCoilImageOkHttpClient() {
+        val imageLoader = ImageLoader.Builder(application)
+            .okHttpClient(imageApiClient.okhttpClientFunction())
+            .components {
+                add(BaseUrlMapper())
+            }
+            .build()
+        Coil.setImageLoader(imageLoader)
     }
 
     fun dataSourceScope() = scope

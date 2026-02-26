@@ -28,9 +28,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.api.state.Source
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.common.enums.HomeRefreshReason
+import cn.xybbz.common.enums.LoginStateType
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.DataRefreshEstimateUtils
@@ -63,7 +65,6 @@ class HomeViewModel @OptIn(UnstableApi::class)
     private val dailyRecommender: DailyRecommender,
     val homeDataRepository: HomeDataRepository
 ) : ViewModel() {
-
 
     var isRefreshing by mutableStateOf(false)
         private set
@@ -200,13 +201,45 @@ class HomeViewModel @OptIn(UnstableApi::class)
      */
     private fun observeLoginSuccess() {
         viewModelScope.launch {
-            dataSourceManager.loginStateFlow.collect {
+
+            /*dataSourceManager.combinedFlow.collect {
+                val reason =
+                    if (oldCombined?.second != it.second) {
+                        HomeRefreshReason.Manual
+                    } else {
+                        HomeRefreshReason.Login
+                    }
+                oldCombined = it
+                Log.i("home", "登录数据变化22222${it}--- ${reason}")
+                tryRefreshHome(
+                    isRefresh = true,
+                    reason = reason
+                )
+            }*/
+
+            dataSourceManager.mergeFlow.collect {
+                val reason =  when (it) {
+                    is Source.Login ->
+                        HomeRefreshReason.Login
+
+                    is Source.Library ->
+                        HomeRefreshReason.Manual
+                }
+
+                Log.i("home", "登录数据变化22222${it}--- ${reason}")
+                tryRefreshHome(
+                    isRefresh = true,
+                    reason = reason
+                )
+            }
+
+            /*dataSourceManager.loginStateFlow.collect {
                 Log.i("home", "登录数据变化${it}")
                 tryRefreshHome(
                     isRefresh = true,
-                    reason = HomeRefreshReason.Login
+                    reason = HomeRefreshReason.Manual
                 )
-            }
+            }*/
         }
     }
 

@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
@@ -31,10 +30,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.OutlinedTextFieldDefaults.contentPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.theme.XyTheme
 
@@ -98,39 +97,9 @@ fun LazyColumnNotComponent(
     )
 }
 
-@Composable
-fun LazyColumnNotHorizontalComponent(
-    modifier: Modifier = Modifier,
-    state: LazyListState = rememberLazyListState(),
-    horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
-    items: LazyListScope.() -> Unit
-) {
-    LazyColumnParentComponent(
-        modifier = modifier
-            .fillMaxSize(),
-        lazyListState = state,
-        contentPadding = PaddingValues(
-            vertical = XyTheme.dimens.outerVerticalPadding
-        ),
-        horizontalAlignment = horizontalAlignment,
-        content = {
-            items()
-            item {
-                Spacer(
-                    modifier = Modifier.height(
-                        XyTheme.dimens.snackBarPlayerHeight + WindowInsets.navigationBars.asPaddingValues()
-                            .calculateBottomPadding()
-                    )
-                )
-            }
-        }
-    )
-}
-
 /**
  * 通用LazyColumn
  * @param [modifier] 样式
- * @param [items] Lazy的item
  */
 @Composable
 fun LazyColumnParentComponent(
@@ -158,13 +127,17 @@ fun LazyColumnParentComponent(
 @Composable
 fun LazyColumnBottomSheetComponent(
     modifier: Modifier = Modifier,
+    horizontal: Dp = 0.dp,
+    vertical: Dp = XyTheme.dimens.outerVerticalPadding,
     content: LazyListScope.() -> Unit
 ) {
     LazyColumnParentComponent(
         modifier = modifier,
         horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.Top,
         contentPadding = PaddingValues(
-            vertical = XyTheme.dimens.outerVerticalPadding
+            horizontal = horizontal,
+            vertical = vertical
         ),
         content = content
     )

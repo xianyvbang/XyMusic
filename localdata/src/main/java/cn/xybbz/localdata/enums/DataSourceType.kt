@@ -26,30 +26,26 @@ package cn.xybbz.localdata.enums
  * @constructor 创建[DataSourceType]
  * @param [describe] 描述
  * @param [title] 标题
- * @param [img] 图片网址
- * @param [port] 端口号
- * @param [ifScan] 是否需要扫描
- * @param [ifUpdatePassword] 是否可以更改密码
- * @param [ifSelectProtocolType] 是否可以选择协议类型
- * @param [options] 协议列表
  */
 enum class DataSourceType(
     val describe: String,
     val title: String,
     val httpPort: Int,
     val httpsPort: Int? = null,
-    val ifSelectProtocolType: Boolean = false,
+    //是否显示
     val ifShow: Boolean = true,
-    val options: List<String> = emptyList(),
+    //编码
     val code: String,
+    //最低支持版本
     val version: String,
     //是否显示数量
-    val ifShowCount: Boolean,
-
+    val ifShowCount: Boolean = true,
     //是否在音乐页面显示筛选和排序菜单
     val ifShowMusicDropdownMenu: Boolean = true,
     //是否音乐页面只能选单年
     val ifMusicSelectOneYear: Boolean,
+    //音乐页面是否开始和结束年份筛选
+    val ifMusicSelectStartEndYear: Boolean,
     //是否音乐页面能进行排序功能
     val ifMusicSort: Boolean,
     //是否音乐页面能进行收藏筛选
@@ -57,6 +53,8 @@ enum class DataSourceType(
 
     //是否专辑页面只能选单年
     val ifAlbumSelectOneYear: Boolean,
+    //专辑页面是否开始和结束年份筛选
+    val ifAlbumSelectStartEndYear: Boolean = true,
     //是否专辑页面能进行排序功能
     val ifAlbumSort: Boolean,
     //是否专辑页面能进行收藏筛选
@@ -64,21 +62,21 @@ enum class DataSourceType(
 
     //是否专辑详情页面只能选单年
     val ifAlbumInfoSelectOneYear: Boolean,
+    //专辑详情页面是否开始和结束年份筛选
+    val ifAlbumInfoSelectStartEndYear: Boolean = true,
     //是否专辑详情页面能进行排序功能
     val ifAlbumInfoSort: Boolean,
     //是否专辑详情页面能进行收藏筛选
     val ifAlbumInfoFavoriteFilter: Boolean,
 
-    //是否需要选择开始和结束年进行筛选
-    val ifStartEndYear: Boolean,
-    //是否能进行年筛选
-    val ifYearFilter: Boolean = true,
-    //是否艺术家可以进行收藏筛选
-    val ifArtistFavorite: Boolean,
     //是否需要输入需要服务端地址
     val ifInputUrl: Boolean = true,
     //是否转码的时候使用hls
-    val ifHls: Boolean = false
+    val ifHls: Boolean = false,
+    //是否可以不选择任意媒体库选项
+    val ifAllMediaLibrary: Boolean = true,
+    //是否可以多选媒体库选项
+    val ifMultiMediaLibrary: Boolean = false,
 ) {
 
     JELLYFIN(
@@ -86,13 +84,10 @@ enum class DataSourceType(
         title = "Jellyfin",
         httpPort = 8096,
         httpsPort = 8920,
-        ifSelectProtocolType = true,
-        options = listOf("http://", "https://"),
         code = "1",
         version = "10.10.7",
-        ifShowCount = true,
-
         ifMusicSelectOneYear = false,
+        ifMusicSelectStartEndYear = true,
         ifMusicSort = true,
         ifMusicFavoriteFilter = true,
         ifAlbumSelectOneYear = false,
@@ -101,8 +96,6 @@ enum class DataSourceType(
         ifAlbumInfoSelectOneYear = false,
         ifAlbumInfoSort = true,
         ifAlbumInfoFavoriteFilter = true,
-        ifStartEndYear = false,
-        ifArtistFavorite = true,
         ifHls = true
     ),
 
@@ -111,23 +104,20 @@ enum class DataSourceType(
         title = "Subsonic",
         httpPort = 4040,
         httpsPort = 4040,
-        ifSelectProtocolType = true,
-        options = listOf("http://", "https://"),
         code = "2",
         version = "1.16.0",
-        ifShowCount = true,
         ifShowMusicDropdownMenu = false,
         ifMusicSelectOneYear = false,
+        ifMusicSelectStartEndYear = false,
         ifMusicSort = false,
         ifMusicFavoriteFilter = false,
-        ifAlbumSelectOneYear = true,
+        ifAlbumSelectOneYear = false,
         ifAlbumSort = false,
         ifAlbumFavoriteFilter = true,
         ifAlbumInfoSelectOneYear = false,
+        ifAlbumInfoSelectStartEndYear = false,
         ifAlbumInfoSort = false,
         ifAlbumInfoFavoriteFilter = false,
-        ifStartEndYear = true,
-        ifArtistFavorite = true
     ),
 
     NAVIDROME(
@@ -135,22 +125,21 @@ enum class DataSourceType(
         title = "Navidrome",
         httpPort = 4533,
         httpsPort = 4533,
-        ifSelectProtocolType = true,
-        options = listOf("http://", "https://"),
         code = "3",
         version = "0.56.0",
-        ifShowCount = true,
         ifMusicSelectOneYear = true,
+        ifMusicSelectStartEndYear = false,
         ifMusicSort = true,
         ifMusicFavoriteFilter = true,
         ifAlbumSelectOneYear = true,
+        ifAlbumSelectStartEndYear = false,
         ifAlbumSort = true,
         ifAlbumFavoriteFilter = true,
         ifAlbumInfoSelectOneYear = true,
+        ifAlbumInfoSelectStartEndYear = false,
         ifAlbumInfoSort = true,
         ifAlbumInfoFavoriteFilter = true,
-        ifStartEndYear = false,
-        ifArtistFavorite = true,
+        ifMultiMediaLibrary = true
     ),
 
     EMBY(
@@ -158,12 +147,10 @@ enum class DataSourceType(
         title = "Emby",
         httpPort = 8096,
         httpsPort = 8920,
-        ifSelectProtocolType = true,
-        options = listOf("http://", "https://"),
         code = "4",
         version = "4.1.1.0",
-        ifShowCount = true,
         ifMusicSelectOneYear = false,
+        ifMusicSelectStartEndYear = true,
         ifMusicSort = true,
         ifMusicFavoriteFilter = true,
         ifAlbumSelectOneYear = false,
@@ -172,9 +159,6 @@ enum class DataSourceType(
         ifAlbumInfoSelectOneYear = false,
         ifAlbumInfoSort = true,
         ifAlbumInfoFavoriteFilter = true,
-        ifStartEndYear = false,
-        ifYearFilter = false,
-        ifArtistFavorite = true,
         ifHls = true
     ),
 
@@ -184,23 +168,20 @@ enum class DataSourceType(
         title = "Plex",
         httpPort = 32400,
         httpsPort = 32400,
-        ifSelectProtocolType = true,
-        options = listOf("http://", "https://"),
         code = "4",
         version = "4.1.1.0",
-        ifShowCount = true,
         ifInputUrl = false,
-        ifMusicSelectOneYear = true,
+        ifMusicSelectOneYear = false,
+        ifMusicSelectStartEndYear = true,
         ifMusicSort = true,
         ifMusicFavoriteFilter = true,
-        ifAlbumSelectOneYear = true,
+        ifAlbumSelectOneYear = false,
         ifAlbumSort = true,
         ifAlbumFavoriteFilter = true,
-        ifAlbumInfoSelectOneYear = true,
+        ifAlbumInfoSelectOneYear = false,
         ifAlbumInfoSort = true,
         ifAlbumInfoFavoriteFilter = true,
-        ifStartEndYear = true,
-        ifArtistFavorite = true,
+        ifAllMediaLibrary = false
     );
 
 

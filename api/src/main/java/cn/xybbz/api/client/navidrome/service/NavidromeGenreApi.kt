@@ -17,5 +17,6 @@ interface NavidromeGenreApi : BaseApi {
         @Query("_order") order: OrderType = OrderType.ASC,
         @Query("_sort") sort: SortType = SortType.NAME,
         @Query("name") name: String? = null,
+        @Query("library_id") libraryIds: List<String>? = null
     ): Response<List<Genre>>
 }

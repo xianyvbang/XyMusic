@@ -29,7 +29,7 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-interface NavidromeArtistsApi : BaseApi{
+interface NavidromeArtistsApi : BaseApi {
     @GET("/api/artist")
     suspend fun getArtists(
         @Query("_start") start: Int,
@@ -38,7 +38,8 @@ interface NavidromeArtistsApi : BaseApi{
         @Query("_sort") sort: SortType = SortType.NAME,
         @Query("name") name: String? = null,
         @Query("missing") missing: Boolean? = null,
-        @Query("starred") starred: Boolean? = null
+        @Query("starred") starred: Boolean? = null,
+        @Query("library_id") libraryIds: List<String>? = null
     ): Response<List<ArtistItem>?>
 
     @GET("/api/artist/{artistId}")

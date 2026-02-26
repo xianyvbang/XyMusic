@@ -18,6 +18,7 @@
 
 package cn.xybbz.ui.screens
 
+import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
@@ -31,6 +32,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -46,20 +48,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Http
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.rounded.Cancel
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.DriveFileRenameOutline
+import androidx.compose.material.icons.rounded.Http
+import androidx.compose.material.icons.rounded.Password
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -69,14 +73,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
@@ -93,17 +96,16 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.ItemTrailingArrowRight
 import cn.xybbz.ui.xy.LazyColumnComponent
 import cn.xybbz.ui.xy.LazyColumnNotComponent
-import cn.xybbz.ui.xy.LazyColumnNotHorizontalComponent
 import cn.xybbz.ui.xy.XyColumn
-import cn.xybbz.ui.xy.XyColumnNotHorizontalPadding
+import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyItemOutSpacer
-import cn.xybbz.ui.xy.XyItemTextCheckSelectHeightSmall
-import cn.xybbz.ui.xy.XyItemTextLarge
-import cn.xybbz.ui.xy.XyItemTextPadding
+import cn.xybbz.ui.xy.XyItemRadioButton
 import cn.xybbz.ui.xy.XyLoadingItem
 import cn.xybbz.ui.xy.XyRow
-import cn.xybbz.ui.xy.XyRowHeightSmall
 import cn.xybbz.ui.xy.XySmallImage
+import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyTextSub
+import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.ConnectionViewModel
 import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
@@ -147,10 +149,6 @@ fun ConnectionScreen(
     val coroutineScope = rememberCoroutineScope()
     var ifSelectDataSource by remember {
         mutableStateOf(ScreenType.SELECT_DATA_SOURCE)
-    }
-
-    var isLoad by remember {
-        mutableStateOf(false)
     }
 
     var showPassword by remember {
@@ -231,9 +229,12 @@ fun ConnectionScreen(
             when (screen) {
                 ScreenType.SELECT_DATA_SOURCE -> {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        LazyColumnNotHorizontalComponent(
+                        LazyColumnNotComponent(
                             modifier = Modifier,
-                            horizontalAlignment = Alignment.Start
+                            horizontalAlignment = Alignment.Start,
+                            contentPadding = PaddingValues(
+                                vertical = XyTheme.dimens.outerVerticalPadding
+                            )
                         ) {
 
                             item {
@@ -270,131 +271,29 @@ fun ConnectionScreen(
 
                 ScreenType.INPUT_DATA -> {
                     LazyColumnComponent {
-                        item {
-                            if (connectionViewModel.dataSourceType?.ifInputUrl == true)
-                                OutlinedTextField(
-                                    value = connectionViewModel.address,
-                                    modifier = Modifier
-                                        .background(Color.Transparent)
-                                        .fillMaxWidth(),
-                                    onValueChange = {
+                        if (connectionViewModel.dataSourceType?.ifInputUrl == true)
+                            item {
+                                AddressInputEdit(
+                                    address = connectionViewModel.address,
+                                    updateAddress = {
                                         connectionViewModel.setAddressData(it)
-                                    },
-                                    singleLine = true,
-                                    shape = RoundedCornerShape(5.dp),
-                                    colors = TextFieldDefaults.colors(
-                                        unfocusedContainerColor = Color.Transparent,
-                                        focusedContainerColor = Color.Transparent,
-                                        unfocusedIndicatorColor = Color.LightGray,
-                                        focusedIndicatorColor = Color.LightGray,
-                                        focusedLabelColor = Color.LightGray,
-                                        unfocusedLabelColor = Color.LightGray,
-                                        cursorColor = Color.White,
-                                        disabledContainerColor = Color.Transparent
-                                    ),
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                                    enabled = true,
-                                    label = { Text(stringResource(R.string.server)) },
-                                    leadingIcon = {
-                                        Icon(
-                                            imageVector = Icons.Default.Http,
-                                            contentDescription = stringResource(R.string.httpInput)
-                                        )
-                                    },
-                                    placeholder = {
-                                        Text(text = "http://")
-                                    },
-                                    isError = connectionViewModel.address.isBlank() && isLoad,
-                                    supportingText = {
-                                        if (connectionViewModel.address.isBlank() && isLoad)
-                                            Text(text = stringResource(R.string.server_cannot_be_empty))
-                                    },
+                                    }
                                 )
-                        }
+                            }
                         item {
-                            OutlinedTextField(
-                                value = connectionViewModel.username,
-                                modifier = Modifier
-                                    .background(Color.Transparent)
-                                    .fillMaxWidth(),
-                                onValueChange = {
+                            UsernameInputEdit(
+                                username = connectionViewModel.username,
+                                updateUsername = {
                                     connectionViewModel.setUserNameData(it)
-                                },
-                                singleLine = true,
-                                shape = RoundedCornerShape(5.dp),
-                                colors = TextFieldDefaults.colors(
-                                    unfocusedContainerColor = Color.Transparent,
-                                    focusedContainerColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.LightGray,
-                                    focusedIndicatorColor = Color.LightGray,
-                                    focusedLabelColor = Color.LightGray,
-                                    unfocusedLabelColor = Color.LightGray,
-                                    cursorColor = Color.White,
-                                    disabledContainerColor = Color.Transparent
-                                ),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                                enabled = true,
-                                label = { Text(stringResource(R.string.username)) },
-                                placeholder = {
-                                    Text(text = stringResource(R.string.username))
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Person,
-                                        contentDescription = stringResource(R.string.username)
-                                    )
-                                },
-                                isError = connectionViewModel.username.isBlank() && isLoad,
-                                supportingText = {
-                                    if (connectionViewModel.username.isBlank() && isLoad)
-                                        Text(text = stringResource(R.string.username_cannot_be_empty))
-                                },
+                                }
                             )
                         }
 
                         item {
-                            OutlinedTextField(
-                                value = connectionViewModel.password,
-                                modifier = Modifier
-                                    .background(Color.Transparent)
-                                    .fillMaxWidth(),
-                                onValueChange = {
+                            PasswordInputEdit(
+                                password = connectionViewModel.password,
+                                updatePassword = {
                                     connectionViewModel.setPasswordData(it)
-                                },
-                                singleLine = true,
-                                shape = RoundedCornerShape(5.dp),
-                                trailingIcon = {
-
-                                    Icon(
-                                        imageVector = if (showPassword) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
-                                        contentDescription = null,
-                                        modifier = Modifier.debounceClickable {
-                                            showPassword = !showPassword
-                                        }, tint = Color.White
-                                    )
-                                },
-                                visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                                colors = TextFieldDefaults.colors(
-                                    unfocusedContainerColor = Color.Transparent,
-                                    focusedContainerColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.LightGray,
-                                    focusedIndicatorColor = Color.LightGray,
-                                    focusedLabelColor = Color.LightGray,
-                                    unfocusedLabelColor = Color.LightGray,
-                                    cursorColor = Color.White,
-                                    disabledContainerColor = Color.Transparent
-                                ),
-                                enabled = true,
-                                label = { Text(stringResource(R.string.password)) },
-                                placeholder = {
-                                    Text(text = stringResource(R.string.password))
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Lock,
-                                        contentDescription = stringResource(R.string.password)
-                                    )
                                 }
                             )
                         }
@@ -404,19 +303,22 @@ fun ConnectionScreen(
                                 Button(
                                     modifier = Modifier.width(width = 150.dp),
                                     onClick = {
-                                        isLoad = true
                                         if (connectionViewModel.dataSourceType?.ifInputUrl == false) {
+                                            if (connectionViewModel.ifInputAccount()) {
+                                                MessageUtils.sendPopTipError("用户名不能为空")
+                                                return@Button
+                                            }
+                                            Log.i("ConnectionScreen", "noifInputUrl")
                                             coroutineScope.launch {
                                                 ifSelectDataSource = ScreenType.SELECT_ADDRESS
-                                                connectionViewModel.updateLoading(true)
                                                 connectionViewModel.getResources()
                                             }.invokeOnCompletion {
-                                                connectionViewModel.updateLoading(false)
+                                                connectionViewModel.updateResourceLoading(false)
                                             }
                                         } else if (!connectionViewModel.isInputError()) {
+                                            Log.i("ConnectionScreen", "ifInputUrl")
                                             if (!connectionViewModel.isHttpStartAndPortEnd()) {
                                                 connectionViewModel.createTmpAddress()
-                                                connectionViewModel.clearLoginStatus()
                                                 ifSelectDataSource = ScreenType.SELECT_ADDRESS
                                             } else {
                                                 ifSelectDataSource = ScreenType.LOGIN
@@ -428,7 +330,7 @@ fun ConnectionScreen(
                                                 }
                                             }
                                         } else {
-                                            MessageUtils.sendPopTipError(pleaseEnterRequiredContent)
+                                            MessageUtils.sendPopTipError("连接地址或用户名不能为空")
                                         }
                                     }
                                 ) {
@@ -437,9 +339,7 @@ fun ConnectionScreen(
                                 Button(
                                     modifier = Modifier.width(width = 150.dp),
                                     onClick = {
-                                        isLoad = false
                                         ifSelectDataSource = ScreenType.SELECT_DATA_SOURCE
-//                                        connectionViewModel.setDataSourceTypeData(null)
                                     }
                                 ) {
                                     Text(text = stringResource(R.string.reselect))
@@ -451,75 +351,100 @@ fun ConnectionScreen(
                 }
 
                 ScreenType.SELECT_ADDRESS -> {
-
                     LazyColumnComponent {
-                        item {
-                            XyColumnNotHorizontalPadding(backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest) {
-                                connectionViewModel.dataSourceType?.let {
-                                    if (connectionViewModel.tmpAddressList.isNotEmpty())
-                                        LazyColumnNotComponent(
-                                            modifier = Modifier.height(
-                                                200.dp
-                                            )
-                                        ) {
-                                            itemsIndexed(connectionViewModel.tmpAddressList) { index, item ->
-                                                XyItemTextCheckSelectHeightSmall(
-                                                    text = item,
-                                                    selected = index == connectionViewModel.selectUrlIndex,
-                                                    onClick = {
-                                                        connectionViewModel.setSelectUrlIndexData(
-                                                            index
-                                                        )
-                                                    })
-                                            }
-                                        }
+                        if (connectionViewModel.resourceLoading) {
+                            item {
+                                XyLoadingItem(
+                                    modifier = Modifier.height(200.dp),
+                                    text = "正在获取资源"
+                                )
+                            }
 
-                                    if (connectionViewModel.tmpPlexInfo.isNotEmpty())
-                                        LazyColumnNotComponent(
-                                            modifier = Modifier.height(
-                                                200.dp
-                                            )
-                                        ) {
-                                            itemsIndexed(connectionViewModel.tmpPlexInfo) { index, item ->
-                                                PlexResourceItem(
-                                                    text = item.name,
-                                                    serverName = item.product,
-                                                    address = item.addressUrl,
-                                                    select = index == connectionViewModel.selectUrlIndex,
-                                                    onClick = {
-                                                        connectionViewModel.setSelectInfoIndexData(
-                                                            index
-                                                        )
-                                                    })
+                        } else if (connectionViewModel.isResourceLoginError) {
+                            item {
+                                LoginError(
+                                    modifier = Modifier.height(200.dp),
+                                    errorMessage = connectionViewModel.errorMessage,
+                                    errorHint = stringResource(connectionViewModel.errorHint)
+                                )
+                            }
+
+                        } else {
+                            item {
+                                XyColumn(
+                                    backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                                    paddingValues = PaddingValues()
+                                ) {
+                                    connectionViewModel.dataSourceType?.let {
+                                        if (connectionViewModel.tmpAddressList.isNotEmpty())
+                                            LazyColumnNotComponent(
+                                                modifier = Modifier.height(
+                                                    200.dp
+                                                )
+                                            ) {
+                                                itemsIndexed(connectionViewModel.tmpAddressList) { index, item ->
+                                                    XyItemRadioButton(
+                                                        text = item,
+                                                        selected = index == connectionViewModel.selectUrlIndex,
+                                                        fontWeight = null,
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        onClick = {
+                                                            connectionViewModel.setSelectUrlIndexData(
+                                                                index
+                                                            )
+                                                        })
+                                                }
                                             }
-                                        }
+
+                                        if (connectionViewModel.tmpPlexInfo.isNotEmpty())
+                                            LazyColumnNotComponent(
+                                                modifier = Modifier.height(
+                                                    350.dp
+                                                ),
+                                                bottomItem = null
+                                            ) {
+                                                itemsIndexed(connectionViewModel.tmpPlexInfo) { index, item ->
+                                                    PlexResourceItem(
+                                                        text = item.name,
+                                                        serverName = item.product,
+                                                        address = item.addressUrl,
+                                                        select = index == connectionViewModel.selectUrlIndex,
+                                                        onClick = {
+                                                            connectionViewModel.setSelectInfoIndexData(
+                                                                index
+                                                            )
+                                                        })
+                                                }
+                                            }
+                                    }
                                 }
                             }
                         }
                         item {
                             Column {
-                                Button(
-                                    modifier = Modifier.width(width = 150.dp),
-                                    onClick = {
-                                        coroutineScope.launch {
+                                if (!connectionViewModel.isResourceLoginError && !connectionViewModel.resourceLoading) {
+                                    Button(
+                                        modifier = Modifier.width(width = 150.dp),
+                                        onClick = {
+                                            coroutineScope.launch {
 
-                                            connectionViewModel.setSelectInfoIndexData(
-                                                connectionViewModel.selectUrlIndex
-                                            )
-                                            connectionViewModel.setSelectUrlIndexData(
-                                                connectionViewModel.selectUrlIndex
-                                            )
-                                            ifSelectDataSource = ScreenType.LOGIN
-                                            connectionViewModel.inputAddress(context)
-                                        }
-                                    }) {
-                                    Text(text = stringResource(R.string.connect))
+                                                connectionViewModel.setSelectInfoIndexData(
+                                                    connectionViewModel.selectUrlIndex
+                                                )
+                                                connectionViewModel.setSelectUrlIndexData(
+                                                    connectionViewModel.selectUrlIndex
+                                                )
+                                                ifSelectDataSource = ScreenType.LOGIN
+                                                connectionViewModel.inputAddress(context)
+                                            }
+                                        }) {
+                                        Text(text = stringResource(R.string.connect))
+                                    }
                                 }
+
                                 Button(
                                     modifier = Modifier.width(width = 150.dp),
                                     onClick = {
-                                        isLoad = false
-                                        connectionViewModel.setSelectUrlIndexData(0)
                                         ifSelectDataSource = ScreenType.INPUT_DATA
                                     }) {
                                     Text(stringResource(R.string.back_to_input_credentials))
@@ -540,31 +465,20 @@ fun ConnectionScreen(
                         LazyColumnComponent {
                             if (connectionViewModel.isLoginError) {
                                 item {
-                                    XyColumnNotHorizontalPadding(modifier = Modifier.height(200.dp)) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.Center,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            XyItemTextLarge(text = stringResource(R.string.login_failed))
-                                        }
-                                        XyItemTextPadding(text = stringResource(connectionViewModel.errorHint))
-                                        XyItemOutSpacer()
-                                        if (connectionViewModel.errorMessage.isNotBlank())
-                                            XyItemTextPadding(text = connectionViewModel.errorMessage)
-                                    }
+                                    LoginError(
+                                        modifier = Modifier.height(200.dp),
+                                        errorMessage = connectionViewModel.errorMessage,
+                                        errorHint = stringResource(connectionViewModel.errorHint)
+                                    )
                                 }
                                 item {
                                     Button(
                                         modifier = Modifier.width(width = 150.dp),
                                         onClick = {
-                                            isLoad = false
-                                            connectionViewModel.clearLoginStatus()
-                                            connectionViewModel.setSelectUrlIndexData(0)
                                             ifSelectDataSource =
-                                                if (connectionViewModel.isHttpStartAndPortEnd())
+                                                if (connectionViewModel.isHttpStartAndPortEnd()) {
                                                     ScreenType.INPUT_DATA
-                                                else
+                                                } else
                                                     ScreenType.SELECT_ADDRESS
                                         }) {
                                         Text(text = stringResource(R.string.reconnect))
@@ -574,9 +488,11 @@ fun ConnectionScreen(
 
                             if (connectionViewModel.isLoginSuccess) {
                                 item {
-
                                     XyColumn {
-                                        XyItemTextLarge(text = stringResource(R.string.connection_successful))
+                                        XyText(
+                                            text = stringResource(R.string.connection_successful),
+                                            style = MaterialTheme.typography.titleLarge,
+                                        )
                                         XySmallImage(
                                             modifier = Modifier.size(150.dp),
                                             shape = RoundedCornerShape(XyTheme.dimens.corner),
@@ -626,7 +542,7 @@ fun PlexResourceItem(
     select: Boolean,
     onClick: (() -> Unit)? = null
 ) {
-    XyRowHeightSmall(
+    XyRow(
         modifier = modifier
             .clip(RoundedCornerShape(XyTheme.dimens.corner))
             .debounceClickable { onClick?.invoke() },
@@ -638,25 +554,18 @@ fun PlexResourceItem(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-            Text(
+            XyText(
                 text = text,
                 maxLines = 1,
-                color = MaterialTheme.colorScheme.onSurface,
-                overflow = TextOverflow.Ellipsis,
             )
-            Text(
+            XyTextSub(
                 text = serverName,
                 maxLines = 1,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.titleSmall
             )
-            Text(
+            XyTextSubSmall(
                 text = address,
-                maxLines = 1,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.titleSmall
+                maxLines = 3,
             )
         }
         if (select)
@@ -665,4 +574,205 @@ fun PlexResourceItem(
                 contentDescription = stringResource(R.string.selected_item, text)
             )
     }
+}
+
+@Composable
+private fun LoginError(
+    modifier: Modifier = Modifier,
+    title: String = stringResource(R.string.login_failed),
+    errorMessage: String,
+    errorHint: String
+) {
+    XyColumn(
+        modifier = modifier.height(200.dp),
+        paddingValues = PaddingValues()
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            XyText(text = title, style = MaterialTheme.typography.titleLarge)
+        }
+        XyText(text = errorHint)
+        XyItemOutSpacer()
+        if (errorMessage.isNotBlank())
+            XyTextSub(text = errorMessage)
+    }
+}
+
+/**
+ * 地址输入框
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun AddressInputEdit(
+    address: String,
+    updateAddress: (String) -> Unit
+) {
+    ConnectionDataInfoInputEdit(
+        text = address,
+        onChange = {
+            updateAddress(it)
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+        hint = "连接地址:http://192.168.3.12:8096",
+        icon = Icons.Rounded.Http,
+        iconContentDescription = stringResource(R.string.httpInput),
+        actionContent = if (address.isNotBlank()) {
+            {
+                IconButton(
+                    onClick = composeClick {
+                        updateAddress("")
+                    },
+                    modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize)
+                ) {
+                    Icon(
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        imageVector = Icons.Rounded.Cancel,
+                        contentDescription = "清空"
+                    )
+                }
+            }
+        } else null
+    )
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun UsernameInputEdit(
+    modifier: Modifier = Modifier,
+    username: String,
+    updateUsername: (String) -> Unit
+) {
+    ConnectionDataInfoInputEdit(
+        text = username,
+        modifier = modifier,
+        onChange = {
+            updateUsername(it)
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+        hint = stringResource(R.string.username),
+        icon = Icons.Rounded.Person,
+        iconContentDescription = stringResource(R.string.username),
+        actionContent = if (username.isNotBlank()) {
+            {
+                IconButton(
+                    onClick = composeClick {
+                        updateUsername("")
+                    },
+                    modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize)
+                ) {
+                    Icon(
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        imageVector = Icons.Rounded.Cancel,
+                        contentDescription = "清空"
+                    )
+                }
+            }
+        } else null
+    )
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun PasswordInputEdit(
+    modifier: Modifier = Modifier,
+    password: String,
+    updatePassword: (String) -> Unit
+) {
+    var showPassword by remember { mutableStateOf(false) }
+    ConnectionDataInfoInputEdit(
+        text = password,
+        modifier = modifier,
+        onChange = {
+            updatePassword(it)
+        },
+        actionContent = {
+            IconButton(
+                onClick = composeClick {
+                    showPassword = !showPassword
+                },
+                modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize)
+            ) {
+                Icon(
+                    imageVector = if (showPassword) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
+                    contentDescription = null
+                )
+            }
+        },
+        visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        hint = stringResource(R.string.password),
+        icon = Icons.Rounded.Password,
+        iconContentDescription = stringResource(R.string.password)
+    )
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun ConnectionNameInputEdit(
+    modifier: Modifier = Modifier,
+    connectionName: String,
+    updateConnectionName: (String) -> Unit
+) {
+    ConnectionDataInfoInputEdit(
+        text = connectionName,
+        modifier = modifier,
+        onChange = {
+            updateConnectionName(it)
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+        hint = stringResource(R.string.set_alias),
+        icon = Icons.Rounded.DriveFileRenameOutline,
+        iconContentDescription = stringResource(R.string.set_alias),
+        actionContent = if (connectionName.isNotBlank()) {
+            {
+                IconButton(onClick = composeClick {
+                    updateConnectionName("")
+                }, modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize)) {
+                    Icon(
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        imageVector = Icons.Rounded.Cancel,
+                        contentDescription = "清空"
+                    )
+                }
+            }
+        } else null
+    )
+}
+
+
+@Composable
+private fun ConnectionDataInfoInputEdit(
+    modifier: Modifier = Modifier,
+    text: String,
+    onChange: (String) -> Unit,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    hint: String? = null,
+    icon: ImageVector,
+    iconContentDescription: String,
+    actionContent: (@Composable () -> Unit)? = null,
+) {
+    XyEdit(
+        text = text,
+        modifier = modifier
+            .fillMaxWidth(),
+        paddingValues = PaddingValues(
+            vertical = XyTheme.dimens.outerVerticalPadding
+        ),
+        onChange = onChange,
+        singleLine = true,
+        keyboardOptions = keyboardOptions,
+        visualTransformation = visualTransformation,
+        hint = hint,
+        leadingContent = {
+            Icon(
+                imageVector = icon,
+                contentDescription = iconContentDescription
+            )
+        },
+        actionContent = actionContent
+    )
 }

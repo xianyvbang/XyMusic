@@ -30,31 +30,31 @@ import android.webkit.URLUtil
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
-import androidx.compose.material.icons.automirrored.outlined.VolumeUp
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Album
-import androidx.compose.material.icons.outlined.AvTimer
-import androidx.compose.material.icons.outlined.DeleteForever
-import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.KeyboardDoubleArrowRight
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
+import androidx.compose.material.icons.automirrored.rounded.VolumeUp
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Album
+import androidx.compose.material.icons.rounded.AvTimer
+import androidx.compose.material.icons.rounded.DeleteForever
+import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.KeyboardDoubleArrowRight
+import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.SettingsVoice
+import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -73,10 +73,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TileMode
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -94,7 +91,6 @@ import cn.xybbz.common.utils.DateUtil.toSecondMsString
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
-import cn.xybbz.entity.data.MusicItemMenuData
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
@@ -104,20 +100,16 @@ import cn.xybbz.router.ArtistInfo
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnBottomSheetComponent
 import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
-import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
-import cn.xybbz.ui.xy.XyButtonHorizontalPadding
-import cn.xybbz.ui.xy.XyColumn
-import cn.xybbz.ui.xy.XyColumnNotHorizontalPadding
+import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyEdit
-import cn.xybbz.ui.xy.XyItemHorizontalSlider
+import cn.xybbz.ui.xy.XyItemIcon
+import cn.xybbz.ui.xy.XyItemReversal
 import cn.xybbz.ui.xy.XyItemSlider
-import cn.xybbz.ui.xy.XyItemSwitcherNotTextColor
-import cn.xybbz.ui.xy.XyItemTabButton
-import cn.xybbz.ui.xy.XyItemText
-import cn.xybbz.ui.xy.XyItemTextHorizontal
-import cn.xybbz.ui.xy.XyItemTextIconCheckSelectHeightSmall
-import cn.xybbz.ui.xy.XyItemTextPadding
+import cn.xybbz.ui.xy.XyItemSwitcher
 import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.xy.XySmallSlider
+import cn.xybbz.ui.xy.XyTextSub
+import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.launch
@@ -135,13 +127,13 @@ var bottomMenuMusicInfo = mutableStateListOf<XyMusic>()
 fun MusicBottomMenuComponent(
     musicBottomMenuViewModel: MusicBottomMenuViewModel = hiltViewModel<MusicBottomMenuViewModel>(),
     onAlbumRouter: (String) -> Unit,
-    onPlayerSheetClose:()->Unit
+    onPlayerSheetClose: () -> Unit
 ) {
     val mainViewModel = LocalMainViewModel.current
 
     val navigator = LocalNavigator.current
     val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
+        skipPartiallyExpanded = false
     )
 
 
@@ -164,6 +156,7 @@ fun MusicBottomMenuComponent(
     val exactAlarmPermissionNotGranted = stringResource(R.string.exact_alarm_permission_not_granted)
     val addToNextPlaySuccess = stringResource(R.string.add_to_next_play_success)
     val deletePermanently = stringResource(R.string.delete_permanently)
+    val timerClose = stringResource(R.string.timer_close)
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -270,6 +263,7 @@ fun MusicBottomMenuComponent(
                 .statusBarsPadding(),
             bottomSheetState = sheetState,
             onIfDisplay = { ifShowBottom },
+            dragHandle = null,
             onClose = {
                 coroutineScope.launch {
                     ifShowBottom = false
@@ -280,36 +274,17 @@ fun MusicBottomMenuComponent(
             }
         ) {
 
-            XyColumn(
-                verticalArrangement = Arrangement.Top,
-                paddingValues = PaddingValues(
-                    vertical = XyTheme.dimens.outerVerticalPadding
-                ),
-                backgroundColor = Color.Transparent,
-            ) {
-                MusicItemNotClickComponent(
-                    modifier = Modifier.padding(
-                        horizontal = XyTheme.dimens.outerHorizontalPadding
-                    ),
-                    music = music,
-                    ifDownload = music.itemId in downloadMusicIds,
-                    backgroundColor = Color.Transparent,
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(Color(0xFF5A524C), Color(0xFF726B66)),
-                        tileMode = TileMode.Repeated
-                    )
-                )
-                XyRow(paddingValues = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding)) {
-                    IconButtonComponent(
-                        MusicItemMenuData(
-                            imageVector = if (favoriteState)
-                                Icons.Rounded.Favorite
-                            else
-                                Icons.Rounded.FavoriteBorder,
-                            name = stringResource(R.string.favorite)
-                        ),
-                        iconColor = if (favoriteState) Color.Red else MaterialTheme.colorScheme.onSurface,
-                        onClick = {
+            LazyColumnBottomSheetComponent {
+                item {
+                    MusicItemNotClickComponent(
+                        music = music,
+                        ifDownload = music.itemId in downloadMusicIds,
+                        backgroundColor = Color.Transparent,
+                        trailingIcon = if (favoriteState)
+                            Icons.Rounded.Favorite
+                        else
+                            Icons.Rounded.FavoriteBorder,
+                        trailingOnClick = {
                             coroutineScope.launch {
                                 sheetState.hide()
                                 musicBottomMenuViewModel.setFavoriteMusic(
@@ -320,141 +295,25 @@ fun MusicBottomMenuComponent(
                                 ifShowBottom = false
 
                             }
-
-                        }
-                    )
-
-
-                    IconButtonComponent(
-                        MusicItemMenuData(
-                            imageVector = Icons.Outlined.Add,
-                            name = stringResource(R.string.add_to_playlist)
-                        ),
-                        onClick = {
-                            coroutineScope.launch {
-                                sheetState.hide()
-                                AddPlaylistBottomData(
-                                    ifShow = true,
-                                    musicInfoList = listOf(music.itemId)
-                                ).show()
-                            }.invokeOnCompletion {
-                                ifShowBottom = false
-
-                            }
-                        }
-                    )
-                    IconButtonComponent(
-                        MusicItemMenuData(
-                            imageVector = Icons.Outlined.KeyboardDoubleArrowRight,
-                            name = stringResource(R.string.skip_head_tail)
-                        ),
-                        onClick = {
-                            coroutineScope.launch {
-                                sheetState.hide()
-                                ifShowHeadAndTail = true
-                            }.invokeOnCompletion {
-                                ifShowBottom = false
-
-                            }
-                        }
-                    )
-
-                    IconButtonComponent(
-                        MusicItemMenuData(
-                            imageVector = Icons.Outlined.AvTimer,
-                            name = stringResource(R.string.timer_close)
-                        ),
-                        onClick = {
-                            coroutineScope.launch {
-                                sheetState.hide()
-                                ifTimer = true
-                            }.invokeOnCompletion {
-                                ifShowBottom = false
-                            }
-                        }
-                    )
-                    IconButtonComponent(
-                        MusicItemMenuData(
-                            imageVector = Icons.Outlined.Speed,
-                            name = stringResource(R.string.double_speed)
-                        ),
-                        onClick = {
-                            coroutineScope.launch {
-                                sheetState.hide()
-                                ifDoubleSpeed = true
-                            }.invokeOnCompletion {
-                                ifShowBottom = false
-                            }
-                        }
-                    )
-
-                    IconButtonComponent(
-                        MusicItemMenuData(
-                            imageVector = Icons.Outlined.Download,
-                            enabled = musicBottomMenuViewModel.dataSourceManager.getCanDownload(),
-                            name = "下载"
-                        ),
-                        onClick = {
-                            permissionState?.launchMultiplePermissionRequest()
-
-                        }
+                        },
+                        trailingColor = if (favoriteState) Color.Red else MaterialTheme.colorScheme.onSurface,
                     )
                 }
 
-                RoundedSurfaceColumnPadding(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(0xFF275454),
-                            Color.Gray.copy(alpha = 0.1f)
-                        ), tileMode = TileMode.Repeated
-                    )
-                ) {
-
-
-                    XyItemHorizontalSlider(
-                        value = musicBottomMenuViewModel.volumeValue,
-                        onValueChange = {
-                            musicBottomMenuViewModel.updateVolume(it)
-                        },
-                        iconVector = Icons.AutoMirrored.Outlined.VolumeUp,
-                        text = stringResource(R.string.volume_value_setting),
-                        sub = (musicBottomMenuViewModel.volumeValue * 100).toInt().toString(),
-                    )
-
-                    IconBottomMenuHor(
-                        imageVector = Icons.AutoMirrored.Outlined.VolumeUp,
-                        text = "${stringResource(R.string.play_settings)}: ${
-                            musicBottomMenuViewModel.getFadeDurationMs().toSecondMsString()
-                        }",
+                item {
+                    XyItemIcon(
+                        imageVector = Icons.Rounded.Download,
+//                        enabled = musicBottomMenuViewModel.dataSourceManager.getCanDownload(),
+                        text = stringResource(R.string.download),
                         onClick = {
-                            coroutineScope.launch {
-                                sheetState.hide()
-                                ifShowFadeInOut = true
-                            }.invokeOnCompletion {
-                                ifShowBottom = false
-                            }
-                        },
-                    )
-
-                    IconBottomMenuHor(
-                        imageVector = Icons.AutoMirrored.Outlined.PlaylistAdd,
-                        text = stringResource(R.string.play_next),
-                        onClick = {
-                            coroutineScope.launch {
-                                sheetState.hide()
-                                musicBottomMenuViewModel.addNextPlayer(
-                                    music.itemId
-                                )
-                                MessageUtils.sendPopTip(addToNextPlaySuccess)
-                            }.invokeOnCompletion {
-                                ifShowBottom = false
-                                music.dismiss()
-                            }
-
+//                            permissionState?.launchMultiplePermissionRequest()
                         })
+                }
 
-                    IconBottomMenuHor(
-                        imageVector = Icons.Outlined.Person,
+
+                item {
+                    XyItemIcon(
+                        imageVector = Icons.Rounded.Person,
                         text = "${stringResource(R.string.artist)}: ${music.artists}",
                         onClick = {
                             //获得歌手信息
@@ -479,14 +338,13 @@ fun MusicBottomMenuComponent(
                                         music.dismiss()
                                     }
                                 }
-
                             }
-
-
                         })
+                }
 
-                    IconBottomMenuHor(
-                        imageVector = Icons.Outlined.Album,
+                item {
+                    XyItemIcon(
+                        imageVector = Icons.Rounded.Album,
                         text = "${stringResource(R.string.album)}: ${music.albumName ?: ""}",
                         onClick = {
                             coroutineScope.launch {
@@ -500,9 +358,131 @@ fun MusicBottomMenuComponent(
                                 music.dismiss()
                             }
                         })
+                }
 
-                    IconBottomMenuHor(
-                        imageVector = Icons.Outlined.Share,
+                item {
+                    XyItemIcon(
+                        imageVector = Icons.Rounded.KeyboardDoubleArrowRight,
+                        text = stringResource(R.string.skip_head_tail),
+                        onClick = {
+                            coroutineScope.launch {
+                                sheetState.hide()
+                                ifShowHeadAndTail = true
+                            }.invokeOnCompletion {
+                                ifShowBottom = false
+
+                            }
+                        }
+                    )
+                }
+
+
+                item {
+                    XyItemIcon(
+                        imageVector = Icons.Rounded.AvTimer,
+                        text = stringResource(R.string.timer_close),
+                        onClick = {
+                            coroutineScope.launch {
+                                sheetState.hide()
+                                ifTimer = true
+                            }.invokeOnCompletion {
+                                ifShowBottom = false
+                            }
+                        }
+                    )
+                }
+
+                item {
+                    XyItemIcon(
+                        imageVector = Icons.Rounded.Speed,
+                        text = stringResource(R.string.double_speed),
+                        onClick = {
+                            coroutineScope.launch {
+                                sheetState.hide()
+                                ifDoubleSpeed = true
+                            }.invokeOnCompletion {
+                                ifShowBottom = false
+                            }
+                        }
+                    )
+                }
+
+
+                item {
+                    XyItemIcon(
+                        imageVector = Icons.Rounded.Add,
+                        text = stringResource(R.string.add_to_playlist),
+                        onClick = {
+                            coroutineScope.launch {
+                                sheetState.hide()
+                                AddPlaylistBottomData(
+                                    ifShow = true,
+                                    musicInfoList = listOf(music.itemId)
+                                ).show()
+                            }.invokeOnCompletion {
+                                ifShowBottom = false
+
+                            }
+                        }
+                    )
+                }
+
+                item {
+                    XyItemIcon(
+                        text = stringResource(R.string.volume_value_setting),
+                        sub = (musicBottomMenuViewModel.volumeValue * 100).toInt().toString(),
+                        imageVector = Icons.AutoMirrored.Rounded.VolumeUp,
+                        middleContent = {
+                            Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
+                            XySmallSlider(
+                                modifier = Modifier.weight(7f),
+                                progress = musicBottomMenuViewModel.volumeValue,
+                                onProgressChanged = { musicBottomMenuViewModel.updateVolume(it) },
+                                cacheProgressBarColor = Color.Transparent,
+                            )
+                        }
+                    )
+                }
+
+                item {
+                    XyItemIcon(
+                        imageVector = Icons.Rounded.SettingsVoice,
+                        text = "${stringResource(R.string.play_settings)}: ${
+                            musicBottomMenuViewModel.getFadeDurationMs().toSecondMsString()
+                        }",
+                        onClick = {
+                            coroutineScope.launch {
+                                sheetState.hide()
+                                ifShowFadeInOut = true
+                            }.invokeOnCompletion {
+                                ifShowBottom = false
+                            }
+                        },
+                    )
+                }
+
+                item {
+                    XyItemIcon(
+                        imageVector = Icons.AutoMirrored.Rounded.PlaylistAdd,
+                        text = stringResource(R.string.play_next),
+                        onClick = {
+                            coroutineScope.launch {
+                                sheetState.hide()
+                                musicBottomMenuViewModel.addNextPlayer(
+                                    music.itemId
+                                )
+                                MessageUtils.sendPopTip(addToNextPlaySuccess)
+                            }.invokeOnCompletion {
+                                ifShowBottom = false
+                                music.dismiss()
+                            }
+
+                        })
+                }
+
+                item {
+                    XyItemIcon(
+                        imageVector = Icons.Rounded.Share,
                         text = stringResource(R.string.share_song),
                         onClick = {
                             if (URLUtil.isNetworkUrl(music.downloadUrl)) {
@@ -541,9 +521,11 @@ fun MusicBottomMenuComponent(
                             }
 
                         })
+                }
 
-                    IconBottomMenuHor(
-                        imageVector = Icons.Outlined.Info,
+                item {
+                    XyItemIcon(
+                        imageVector = Icons.Rounded.Info,
                         text = stringResource(R.string.song_info),
                         onClick = {
                             coroutineScope.launch {
@@ -554,15 +536,17 @@ fun MusicBottomMenuComponent(
                             }
                         }
                     )
-                    if (ifDelete) {
-                        IconBottomMenuHor(
-                            imageVector = Icons.Outlined.DeleteForever,
+                }
+                if (ifDelete) {
+                    item {
+                        XyItemIcon(
+                            imageVector = Icons.Rounded.DeleteForever,
                             text = deletePermanently,
                             onClick = {
                                 AlertDialogObject(
                                     title = deletePermanently,
                                     content = {
-                                        XyItemTextHorizontal(
+                                        XyTextSubSmall(
                                             text = stringResource(R.string.delete_warning)
                                         )
                                     },
@@ -580,8 +564,9 @@ fun MusicBottomMenuComponent(
                                     onDismissRequest = {}).show()
                             })
                     }
-
                 }
+
+
             }
 
         }
@@ -620,7 +605,7 @@ fun MusicBottomMenuComponent(
                             if (musicBottomMenuViewModel.sliderTimerEndData == 0f || musicBottomMenuViewModel.timerInfo == 0L) {
                                 musicBottomMenuViewModel.cancelAlarm()
                             } else {
-                                musicBottomMenuViewModel.createMusicStop()
+                                musicBottomMenuViewModel.createMusicStop(timerClose)
                             }
                         }
                         .invokeOnCompletion {
@@ -708,9 +693,11 @@ fun TimerComponent(
         number = sdf.format(calendar.time)
     }
 
+    val timerClose = stringResource(R.string.timer_close)
     ModalBottomSheetExtendComponent(
         bottomSheetState = sheetTimer,
         modifier = Modifier.statusBarsPadding(),
+        dragHandle = null,
         onIfDisplay = onIfTimer,
         onClose = {
             onSetTimerInfo(0, false)
@@ -718,23 +705,24 @@ fun TimerComponent(
             mainViewModel.putIterations(1)
             onSetIfTimer(it)
         },
-        titleText = stringResource(R.string.timer_close),
-        titleSub = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) stringResource(R.string.timer_close_subtitle) else null,
+        titleText = timerClose,
+        titleSub = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !ifCanScheduleExactAlarms) stringResource(
+            R.string.timer_close_subtitle
+        ) else null,
         titleTailContent = if (!ifCanScheduleExactAlarms) {
             {
                 OutlinedButton(
-                    modifier = Modifier.size(height = 25.dp, width = 50.dp),
+                    modifier = Modifier/*size(height = 25.dp, width = 50.dp)*/.height(25.dp),
                     contentPadding = PaddingValues(horizontal = 2.dp),
                     onClick = {
                         onApplyPermission()
                     }
                 ) {
-                    Text(
+                    XyTextSub(
                         text = stringResource(R.string.apply_permission),
-                        fontSize = 10.sp,
                     )
                 }
-                Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
+                Spacer(modifier = Modifier.width(XyTheme.dimens.innerHorizontalPadding))
 
                 OutlinedButton(
                     modifier = Modifier.size(height = 25.dp, width = 50.dp),
@@ -749,9 +737,8 @@ fun TimerComponent(
                             }
                     },
                 ) {
-                    Text(
-                        text = stringResource(R.string.reset),
-                        fontSize = 10.sp,
+                    XyTextSubSmall(
+                        text = stringResource(R.string.reset)
                     )
                 }
             }
@@ -812,27 +799,41 @@ fun TimerComponent(
                         stringResource(
                             R.string.custom_timer_suffix
                         )
-                    } $number ${stringResource(R.string.timer_close)}"
+                    } $number $timerClose"
 
-                    else -> "${onSliderTimerEndData().toInt()}${stringResource(R.string.custom_timer_suffix)} $number ${
-                        stringResource(
-                            R.string.timer_close
-                        )
-                    }"
+                    else -> "${onSliderTimerEndData().toInt()}${stringResource(R.string.custom_timer_suffix)} $number $timerClose"
                 }
             }"
         )
 
         XyRow {
-            XyItemText(text = stringResource(R.string.timer_close_disabled))
-            XyItemText(text = "15${stringResource(R.string.minutes)}")
-            XyItemText(text = "30${stringResource(R.string.minutes)}")
-            XyItemText(text = "45${stringResource(R.string.minutes)}")
-            XyItemText(text = "60${stringResource(R.string.minutes)}")
-            XyItemText(text = stringResource(R.string.timer_close_custom))
+            XyTextSubSmall(
+                text = stringResource(R.string.timer_close_disabled),
+                color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            XyTextSubSmall(
+                text = "15${stringResource(R.string.minutes)}",
+                color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            XyTextSubSmall(
+                text = "30${stringResource(R.string.minutes)}",
+                color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            XyTextSubSmall(
+                text = "45${stringResource(R.string.minutes)}",
+                color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            XyTextSubSmall(
+                text = "60${stringResource(R.string.minutes)}",
+                color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            XyTextSubSmall(
+                text = stringResource(R.string.timer_close_custom),
+                color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
-        XyItemSwitcherNotTextColor(
+        XyItemSwitcher(
             state = onIfPlayEndClose(),
             enabled = ifCanScheduleExactAlarms,
             onChange = {
@@ -872,6 +873,7 @@ private fun DoubleSpeedComponent(
         bottomSheetState = sheetDoubleSpeed,
         modifier = Modifier.statusBarsPadding(),
         onIfDisplay = onIfDoubleSpeed,
+        dragHandle = null,
         onClose = {
             onSetIfDoubleSpeed(false)
             mainViewModel.putIterations(1)
@@ -912,10 +914,10 @@ private fun DoubleSpeedComponent(
             }"
         )
         XyRow {
-            XyItemText(text = "0.5")
-            XyItemText(text = "0")
-            XyItemText(text = "1.5")
-            XyItemText(text = "2.0")
+            XyTextSubSmall(text = "0.5")
+            XyTextSubSmall(text = "0")
+            XyTextSubSmall(text = "1.5")
+            XyTextSubSmall(text = "2.0")
         }
 
         XyButtonHorizontalPadding(text = stringResource(R.string.confirm), onClick = {
@@ -978,6 +980,7 @@ private fun SkipBeginningAndEndComponent(
             onSetIfShowHeadAndTail(it)
             mainViewModel.putIterations(1)
         },
+        dragHandle = null,
         titleText = stringResource(R.string.skip_head_tail),
         titleTailContent = {
             OutlinedButton(
@@ -1004,36 +1007,32 @@ private fun SkipBeginningAndEndComponent(
             }
         }
     ) {
-        XyColumnNotHorizontalPadding(backgroundColor = Color.Transparent) {
-            XyItemSlider(
-                value = startTime,
-                onValueChange = {
-                    startTime = it.toLong().toFloat()
-                },
-                valueRange = 0f..60f,
-                text = "${stringResource(R.string.skip_head_prefix)} ${startTime.toLong()}s"
-            )
-            XyRow(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                XyItemText(text = "0s")
-                XyItemText(text = "60s")
-            }
+        XyItemSlider(
+            value = startTime,
+            onValueChange = {
+                startTime = it.toLong().toFloat()
+            },
+            valueRange = 0f..60f,
+            text = "${stringResource(R.string.skip_head_prefix)} ${startTime.toLong()}s"
+        )
+        XyRow(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            XyTextSubSmall(text = "0s")
+            XyTextSubSmall(text = "60s")
         }
 
-        XyColumnNotHorizontalPadding(backgroundColor = Color.Transparent) {
-            XyItemSlider(
-                value = endTime,
-                onValueChange = {
-                    endTime = it.toLong().toFloat()
-                },
-                valueRange = 0f..60f,
-                text = "${stringResource(R.string.skip_tail_prefix)} ${endTime.toLong()}s"
-            )
-            XyRow {
-                XyItemText(text = "0s")
-                XyItemText(text = "60s")
-            }
+        XyItemSlider(
+            value = endTime,
+            onValueChange = {
+                endTime = it.toLong().toFloat()
+            },
+            valueRange = 0f..60f,
+            text = "${stringResource(R.string.skip_tail_prefix)} ${endTime.toLong()}s"
+        )
+        XyRow {
+            XyTextSubSmall(text = "0s")
+            XyTextSubSmall(text = "60s")
         }
 
         XyButtonHorizontalPadding(text = stringResource(R.string.confirm), onClick = {
@@ -1053,45 +1052,6 @@ private fun SkipBeginningAndEndComponent(
 
         })
     }
-}
-
-
-/**
- * 设置的单个按钮
- */
-@Composable
-private fun IconButtonComponent(
-    musicItemMenuData: MusicItemMenuData,
-    iconColor: Color = MaterialTheme.colorScheme.onSurface,
-    onClick: () -> Unit,
-) {
-    XyItemTabButton(
-        onClick = onClick,
-        imageVector = musicItemMenuData.imageVector,
-        enabled = musicItemMenuData.enabled,
-        text = musicItemMenuData.name,
-        iconColor = iconColor,
-        color = Color.Transparent
-    )
-}
-
-/**
- * bottom的hor按钮
- */
-@Composable
-fun IconBottomMenuHor(
-    modifier: Modifier = Modifier,
-    imageVector: ImageVector,
-    text: String,
-    onClick: () -> Unit,
-) {
-    XyItemTextIconCheckSelectHeightSmall(
-        modifier = modifier,
-        text = text,
-        icon = imageVector,
-        onClick = onClick
-    )
-
 }
 
 /**
@@ -1120,6 +1080,7 @@ fun MusicInfoBottomComponent(
         modifier = modifier.statusBarsPadding(),
         bottomSheetState = sheetState,
         onIfDisplay = onIfShowMusicInfo,
+        dragHandle = null,
         onClose = {
             onSetShowMusicInfo(false)
             mainViewModel.putIterations(1)
@@ -1127,79 +1088,92 @@ fun MusicInfoBottomComponent(
         titleText = stringResource(R.string.song_info)
     ) {
 
-        LazyColumnBottomSheetComponent {
+        LazyColumnBottomSheetComponent(horizontal = XyTheme.dimens.outerHorizontalPadding) {
+            item { XyItemReversal(text = stringResource(R.string.title), sub = musicInfo.name) }
             item {
-                RoundedSurfaceColumnPadding(
-                    color = Color.Transparent,
-                    contentPaddingValues = PaddingValues(vertical = XyTheme.dimens.outerVerticalPadding)
-                ) {
-                    XyItemTextPadding(text = stringResource(R.string.title), sub = musicInfo.name)
-                    XyItemTextPadding(
-                        text = stringResource(R.string.artist),
-                        sub = musicInfo.artists?.joinToString() ?: ""
+                XyItemReversal(
+                    text = stringResource(R.string.artist),
+                    sub = musicInfo.artists?.joinToString() ?: ""
+                )
+            }
+            item {
+                XyItemReversal(
+                    text = stringResource(R.string.album),
+                    sub = musicInfo.albumName ?: ""
+                )
+            }
+            item {
+                XyItemReversal(
+                    text = stringResource(R.string.album_artist),
+                    sub = musicInfo.albumArtist?.joinToString() ?: ""
+                )
+            }
+            item {
+                XyItemReversal(
+                    text = stringResource(R.string.media_source),
+                    sub = dataSourceType?.title ?: ""
+                )
+            }
+            item {
+                XyItemReversal(
+                    text = stringResource(R.string.duration),
+                    sub = millisecondsToTime(
+                        BigDecimal(
+                            musicInfo.runTimeTicks
+                        ).toLong()
                     )
-                    XyItemTextPadding(
-                        text = stringResource(R.string.album),
-                        sub = musicInfo.albumName ?: ""
+                )
+            }
+            item {
+                XyItemReversal(
+                    text = stringResource(R.string.bitrate),
+                    sub = "${(musicInfo.bitRate ?: 0) / 1000}kbps"
+                )
+            }
+            item {
+                XyItemReversal(
+                    text = stringResource(R.string.sample_rate),
+                    sub = "${musicInfo.sampleRate ?: 0}Hz"
+                )
+            }
+            item {
+                XyItemReversal(
+                    text = stringResource(R.string.bit_depth),
+                    sub = "${musicInfo.bitDepth ?: 0}bit"
+                )
+            }
+            item {
+                XyItemReversal(
+                    text = stringResource(R.string.size),
+                    sub = "${
+                        BigDecimal(musicInfo.size ?: 0).divide(BigDecimal(1024))
+                            .divide(
+                                BigDecimal(1024), BigDecimal.ROUND_UP
+                            ).toInt()
+                    }MB"
+                )
+            }
+            item {
+                XyItemReversal(
+                    text = stringResource(R.string.format),
+                    sub = musicInfo.container ?: ""
+                )
+            }
+            item {
+                XyItemReversal(
+                    text = stringResource(R.string.actual_path),
+                    sub = musicInfo.path
+                )
+            }
+            item {
+                XyItemReversal(
+                    text = stringResource(R.string.add_time),
+                    sub = musicInfo.createTime.toDateStr(
+                        "yyyy/MM/dd HH:mm"
                     )
-                    XyItemTextPadding(
-                        text = stringResource(R.string.album_artist),
-                        sub = musicInfo.albumArtist?.joinToString() ?: ""
-                    )
-
-
-                    XyItemTextPadding(
-                        text = stringResource(R.string.media_source),
-                        sub = dataSourceType?.title ?: ""
-                    )
-                    XyItemTextPadding(
-                        text = stringResource(R.string.duration),
-                        sub = millisecondsToTime(
-                            BigDecimal(
-                                musicInfo.runTimeTicks
-                            ).toLong()
-                        )
-                    )
-                    XyItemTextPadding(
-                        text = stringResource(R.string.bitrate),
-                        sub = "${(musicInfo.bitRate ?: 0) / 1000}kbps"
-                    )
-                    XyItemTextPadding(
-                        text = stringResource(R.string.sample_rate),
-                        sub = "${musicInfo.sampleRate ?: 0}Hz"
-                    )
-                    XyItemTextPadding(
-                        text = stringResource(R.string.bit_depth),
-                        sub = "${musicInfo.bitDepth ?: 0}bit"
-                    )
-                    XyItemTextPadding(
-                        text = stringResource(R.string.size),
-                        sub = "${
-                            BigDecimal(musicInfo.size ?: 0).divide(BigDecimal(1024))
-                                .divide(
-                                    BigDecimal(1024), BigDecimal.ROUND_UP
-                                ).toInt()
-                        }MB"
-                    )
-                    XyItemTextPadding(
-                        text = stringResource(R.string.format),
-                        sub = musicInfo.container ?: ""
-                    )
-                    XyItemTextPadding(
-                        text = stringResource(R.string.actual_path),
-                        sub = musicInfo.path
-                    )
-                    XyItemTextPadding(
-                        text = stringResource(R.string.add_time),
-                        sub = musicInfo.createTime.toDateStr(
-                            "yyyy/MM/dd HH:mm"
-                        )
-                    )
-
-                }
+                )
             }
         }
-
     }
 }
 
@@ -1226,6 +1200,7 @@ fun ArtistItemListBottomSheet(
         modifier = modifier.statusBarsPadding(),
         bottomSheetState = sheetState,
         onIfDisplay = onIfShowArtistList,
+        dragHandle = null,
         onClose = {
             onSetShowArtistList(false)
             mainViewModel.putIterations(1)
@@ -1277,6 +1252,7 @@ private fun FadeInOutBottomSheet(
         onClose = {
             onSetShowFadeInOut(it)
         },
+        dragHandle = null,
         titleText = stringResource(R.string.play_settings),
         titleTailContent = {
             OutlinedButton(
@@ -1294,21 +1270,19 @@ private fun FadeInOutBottomSheet(
             }
         }
     ) {
-        XyColumnNotHorizontalPadding(backgroundColor = Color.Transparent) {
-            XyItemSlider(
-                value = fadeDurationMs.toFloat(),
-                onValueChange = {
-                    fadeDurationMs = it.toLong()
-                },
-                valueRange = 0f..15000f,
-                text = "${stringResource(R.string.play_settings_time)}: ${fadeDurationMs.toSecondMsString()}"
-            )
-            XyRow(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                XyItemText(text = "0s")
-                XyItemText(text = "15s")
-            }
+        XyItemSlider(
+            value = fadeDurationMs.toFloat(),
+            onValueChange = {
+                fadeDurationMs = it.toLong()
+            },
+            valueRange = 0f..15000f,
+            text = "${stringResource(R.string.play_settings_time)}: ${fadeDurationMs.toSecondMsString()}"
+        )
+        XyRow(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            XyTextSubSmall(text = "0s")
+            XyTextSubSmall(text = "15s")
         }
 
         XyButtonHorizontalPadding(text = stringResource(R.string.confirm), onClick = {
@@ -1323,6 +1297,24 @@ private fun FadeInOutBottomSheet(
 
         })
     }
+}
+
+
+@Composable
+fun XyButtonHorizontalPadding(
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    text: String,
+) {
+    XyButton(
+        modifier = Modifier.fillMaxWidth(),
+        enabled = enabled,
+        onClick = onClick,
+        text = text,
+        paddingValues = PaddingValues(
+            horizontal = XyTheme.dimens.outerHorizontalPadding
+        )
+    )
 }
 
 fun XyMusic.show() = apply {

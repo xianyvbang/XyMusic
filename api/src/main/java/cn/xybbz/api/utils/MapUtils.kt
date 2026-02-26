@@ -18,7 +18,6 @@
 
 package cn.xybbz.api.utils
 
-import android.util.Log
 import cn.xybbz.api.converter.json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -30,10 +29,7 @@ import kotlinx.serialization.json.jsonPrimitive
 inline fun <reified T> T.toStringMap(
     isConvertList: Boolean = true
 ): Map<String, String> {
-    val currentTimeMillis = System.currentTimeMillis()
-    Log.i("=======", "转换开始时间: $currentTimeMillis")
     val jsonElement = json.encodeToJsonElement(this)
-
     if (jsonElement !is JsonObject) return emptyMap()
     return jsonElement.toStringMap(isConvertList)
 }

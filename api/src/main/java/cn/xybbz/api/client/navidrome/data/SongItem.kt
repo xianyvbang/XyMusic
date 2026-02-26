@@ -157,7 +157,7 @@ data class SongItem(
     /**
      * 排序标题
      */
-    val orderTitle: String,
+    val orderTitle: String? = null,
     /**
      * 排序专辑名称
      */

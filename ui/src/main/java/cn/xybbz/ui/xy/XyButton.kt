@@ -18,7 +18,7 @@
 
 package cn.xybbz.ui.xy
 
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -37,9 +37,10 @@ fun XyButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     text: String,
-    color: Color = Color.White,
+    color: Color = Color.Unspecified,
     backgroundColor: Color = MaterialTheme.colorScheme.primary,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    paddingValues: PaddingValues = PaddingValues()
 ) {
 
     Button(
@@ -47,86 +48,13 @@ fun XyButton(
         enabled = enabled,
         shape = RoundedCornerShape(XyTheme.dimens.corner),
         modifier = Modifier
-            .then(modifier),
+            .then(modifier).padding(paddingValues),
         colors = ButtonDefaults.buttonColors(containerColor = backgroundColor)
     ) {
         Text(
             text = text,
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier,
             color = color,
-            textAlign = TextAlign.Center,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1
-        )
-    }
-}
-
-@Composable
-fun XyButtonNotPadding(
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    onClick: () -> Unit,
-    text: String,
-    backgroundColor: Color = MaterialTheme.colorScheme.primary
-) {
-
-    Button(
-        onClick = onClick,
-        enabled = enabled,
-        shape = RoundedCornerShape(XyTheme.dimens.corner),
-        modifier = Modifier,
-        colors = ButtonDefaults.buttonColors(containerColor = backgroundColor)
-    ) {
-        Text(
-            text = text,
-            modifier = modifier,
-            color = Color.White,
-            textAlign = TextAlign.Center,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1
-        )
-    }
-}
-
-@Composable
-fun XyButtonHorizontalPadding(
-    onClick: () -> Unit,
-    enabled: Boolean = true,
-    text: String,
-    backgroundColor: Color = MaterialTheme.colorScheme.primary
-) {
-    XyButtonHorizontalPadding(
-        modifier = Modifier.fillMaxWidth(),
-        enabled = enabled,
-        onClick = onClick,
-        text = text,
-        backgroundColor = backgroundColor
-    )
-}
-
-@Composable
-fun XyButtonHorizontalPadding(
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    onClick: () -> Unit,
-    text: String,
-    backgroundColor: Color = MaterialTheme.colorScheme.primary
-) {
-
-    Button(
-        onClick = onClick,
-        enabled = enabled,
-        shape = RoundedCornerShape(XyTheme.dimens.corner),
-        modifier = Modifier
-            .then(modifier)
-            .padding(horizontal = XyTheme.dimens.outerHorizontalPadding),
-        colors = ButtonDefaults.buttonColors(containerColor = backgroundColor)
-    ) {
-        Text(
-            text = text,
-            modifier = modifier,
-            color = Color.White,
             textAlign = TextAlign.Center,
             overflow = TextOverflow.Ellipsis,
             maxLines = 1

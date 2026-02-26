@@ -32,9 +32,13 @@ import cn.xybbz.api.client.navidrome.service.NavidromeUserApi
 import cn.xybbz.api.client.navidrome.service.NavidromeUserLibraryApi
 import cn.xybbz.api.client.navidrome.service.NavidromeUserViewsApi
 import cn.xybbz.api.client.subsonic.SubsonicApiClient
+import cn.xybbz.api.client.subsonic.data.SubsonicDefaultResponse
+import cn.xybbz.api.client.subsonic.data.SubsonicResponse
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.subsonic.ResponseFormatType
+import cn.xybbz.api.exception.ConnectionException
+import cn.xybbz.api.exception.UnauthorizedException
 
 class NavidromeApiClient : DefaultParentApiClient() {
 
@@ -203,7 +207,7 @@ class NavidromeApiClient : DefaultParentApiClient() {
      * 创建下载链接
      */
     override fun createDownloadUrl(itemId: String): String {
-        return baseUrl + "/rest/download?id=${itemId}&format=raw&bitrate=0"
+        return "/rest/download?id=${itemId}&format=raw&bitrate=0"
     }
 
     /**
@@ -219,16 +223,27 @@ class NavidromeApiClient : DefaultParentApiClient() {
             subsonicSalt = responseData.subsonicSalt,
             clientLoginInfoReq = clientLoginInfoReq
         )
-        val systemInfo = userApi().postPingSystem()
+        val systemInfo = try {
+            ping()
+        }catch (e: Exception){
+            e.printStackTrace()
+            when (e) {
+                !is UnauthorizedException -> {
+                    throw ConnectionException()
+                }
+                else -> throw e
+            }
+        }
         val user = userApi().getUser(username)
         Log.i("=====", "服务器信息 $systemInfo 用户信息 $user")
         TokenServer.updateLoginRetry(false)
+        val serverVersion = systemInfo.subsonicResponse.serverVersion
         return LoginSuccessData(
             userId = responseData.id,
             accessToken = responseData.token,
             serverId = "",
             serverName = systemInfo.subsonicResponse.type,
-            version = systemInfo.subsonicResponse.serverVersion,
+            version = serverVersion.ifBlank { systemInfo.subsonicResponse.version },
             navidromeExtendToken = responseData.subsonicToken,
             navidromeExtendSalt = responseData.subsonicSalt,
             ifEnabledDownload = user.subsonicResponse.user?.downloadRole ?: false,
@@ -258,6 +273,10 @@ class NavidromeApiClient : DefaultParentApiClient() {
         updateTokenOrHeadersOrQuery()
     }
 
+    override suspend fun ping(): SubsonicResponse<SubsonicDefaultResponse> {
+        return userApi().postPingSystem()
+    }
+
     /**
      *用户资源接口服务
      */
@@ -285,9 +304,9 @@ class NavidromeApiClient : DefaultParentApiClient() {
      */
     fun getImageUrl(imageId: String, size: Int? = null): String {
         return if (size == null) {
-            "${baseUrl}/rest/getCoverArt?id=${imageId}"
+            "/rest/getCoverArt?id=${imageId}"
         } else {
-            "${baseUrl}/rest/getCoverArt?id=${imageId}&size=${size}"
+            "/rest/getCoverArt?id=${imageId}&size=${size}"
         }
     }
 
@@ -299,7 +318,7 @@ class NavidromeApiClient : DefaultParentApiClient() {
         format: AudioCodecEnum? = AudioCodecEnum.ROW,
         maxBitRate: Int? = null
     ): String {
-        return "${baseUrl}/rest/stream?id=${musicId}&maxBitRate=${maxBitRate}&format=${format}${if (format != AudioCodecEnum.ROW) "&estimateContentLength=true" else ""}"
+        return "/rest/stream?id=${musicId}&maxBitRate=${maxBitRate}&format=${format}${if (format != AudioCodecEnum.ROW) "&estimateContentLength=true" else ""}"
     }
 
 

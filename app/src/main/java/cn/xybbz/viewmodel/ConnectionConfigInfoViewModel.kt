@@ -18,8 +18,6 @@
 
 package cn.xybbz.viewmodel
 
-import android.graphics.Color
-import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,13 +27,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.common.music.MusicController
-import cn.xybbz.common.utils.DatabaseUtils
-import cn.xybbz.common.utils.DefaultObjectUtils
+import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.entity.data.EncryptAesData
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import dagger.assisted.Assisted
@@ -50,8 +46,6 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
     @Assisted private val connectionId: Long,
     private val dataSourceManager: DataSourceManager,
     private val db: DatabaseClient,
-    private val musicController: MusicController,
-    private val settingsManager: SettingsManager,
     val backgroundConfig: BackgroundConfig
 ) : ViewModel() {
 
@@ -68,24 +62,26 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
         private set
 
     //密码
-    var password by mutableStateOf<String?>("")
+    var password by mutableStateOf("")
         private set
 
     //连接地址
     var address by mutableStateOf("")
         private set
 
-    //临时链接地址
-    var tmpAddress by mutableStateOf("")
-        private set
-
     //名称
     var connectionName by mutableStateOf("")
         private set
 
-    //当前媒体库
-    var library by mutableStateOf(DefaultObjectUtils.getDefaultXyLibrary(connectionId))
-        private set
+    //用户名是否变更
+    private var ifUsernameChange = false
+
+    //密码是否变更
+    private var ifPasswordChange = false
+
+    //地址是否变更
+    private var ifAddressChange = false
+
 
     init {
         getConnectionConfig()
@@ -100,151 +96,97 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
                     this@ConnectionConfigInfoViewModel.password = ""
                     this@ConnectionConfigInfoViewModel.username = thisConnectionConfig.username
                     this@ConnectionConfigInfoViewModel.address = thisConnectionConfig.address
+
+                    //此处还原密码
+                    if (thisConnectionConfig.currentPassword.isNotBlank()) {
+                        val decryptPassword = PasswordUtils.decryptAES(
+                            EncryptAesData(
+                                aesKey = thisConnectionConfig.key,
+                                aesIv = thisConnectionConfig.iv,
+                                aesData = thisConnectionConfig.currentPassword
+                            )
+                        )
+                        if (decryptPassword.isNotBlank()) {
+                            this@ConnectionConfigInfoViewModel.password = decryptPassword
+                        }
+                    }
                     this@ConnectionConfigInfoViewModel.connectionName = thisConnectionConfig.name
-                    getLibrary(thisConnectionConfig.libraryId)
                 }
             }
-
-
         }
     }
 
-    //查询媒体库数据
-    private suspend fun getLibrary(libraryId: String?) {
-        if (libraryId.isNullOrBlank()) {
-            library = DefaultObjectUtils.getDefaultXyLibrary(connectionId)
-        } else {
-            val libraryList = db.libraryDao.selectListByConnectionId(connectionId)
-            if (libraryList.isNotEmpty()) {
-                val xyLibrary = libraryList.findLast { library -> library.id == libraryId }
-                if (xyLibrary != null)
-                    library = xyLibrary
-            }
-        }
-
-    }
-
-    fun updatePassword(data: String?) {
+    fun updatePassword(data: String) {
+        ifPasswordChange = data != password
         password = data
+    }
+
+    fun updateUsername(data: String) {
+        ifUsernameChange = data != username
+        username = data
+    }
+
+    fun updateAddress(data: String) {
+        ifAddressChange = data != address
+        address = data
+    }
+
+    /**
+     * 设置名称
+     */
+    fun updateConnectionName(data: String) {
+        this.connectionName = data
     }
 
     /**
      * 更新用户密码,并且判断是否需要重新登录
      */
-    fun savePasswordAndLogin() {
+    fun updateConnectionConfig() {
         this.connectionConfig?.let { config ->
+            saveAddress()
+            saveName()
             viewModelScope.launch {
                 //更新密码
-                val encryptAES = PasswordUtils.encryptAES(password ?: "")
-
+                val encryptAES = PasswordUtils.encryptAES(password)
+                val config = config.copy(
+                    currentPassword = encryptAES.aesData,
+                    iv = encryptAES.aesIv,
+                    key = encryptAES.aesKey,
+                    name = connectionName,
+                    username = username,
+                    address = address,
+                    ifForceLogin = (ifPasswordChange || ifUsernameChange || ifAddressChange) && getConnectionId() != connectionId
+                )
+                connectionConfig = config
                 dataSourceManager.updateConnectionConfig(
-                    config.copy(
-                        currentPassword = encryptAES.aesData,
-                        iv = encryptAES.aesIv,
-                        key = encryptAES.aesKey
-                    )
-                )
-                if (getConnectionId() == connectionId) {
-                    viewModelScope.launch {
-                        dataSourceManager.restartLogin()
-                    }
-                }
-
-                password = ""
-            }
-        }
-
-
-    }
-
-    /**
-     * 删除当前连接
-     */
-    @OptIn(UnstableApi::class)
-    suspend fun removeThisConnection() {
-
-        if (getConnectionId() == connectionId) {
-            //如果当前链接是最后链接,则直接删除数据里的数据
-            val connectionCount = db.connectionConfigDao.selectCount()
-            if (connectionCount == 0) {
-                DatabaseUtils.clearDatabaseByConnectionConfig(
-                    db,
-                    connectionId
-                )
-                musicController.clearPlayerList()
-                dataSourceManager.release()
-                settingsManager.setSettingsData()
-            } else {
-                MessageUtils.sendPopTip(
-                    R.string.cannot_delete_current_connection,
-                    backgroundColor = Color.RED
+                    config
                 )
             }
-        } else {
-            DatabaseUtils.clearDatabaseByConnectionConfig(
-                db,
-                connectionId
-            )
         }
-
     }
 
+    fun restartLogin() {
+        //如果是当前连接就重新登陆,否则就不重新登陆了,等待下次开启连接的时候登陆
+        //判断是否修改了数据,如果修改了的话,点击保存的时候重新登陆
+        if ((ifPasswordChange || ifUsernameChange || ifAddressChange) && getConnectionId() == connectionId)
+            viewModelScope.launch {
+                dataSourceManager.serverLogin(
+                    loginType = LoginType.API,
+                    connectionConfig = connectionConfig
+                )
+            }
 
-    /**
-     * 更新临时地址数据
-     */
-    fun updateTmpAddress(data: String) {
-        this.tmpAddress = data
+        MessageUtils.sendPopTipSuccess("修改成功")
     }
 
     /**
      * 更新地址信息
      */
     fun saveAddress() {
-        if (tmpAddress.isBlank()) {
+        if (address.isBlank()) {
             MessageUtils.sendPopTip(R.string.connection_address_cannot_be_empty)
             return
         }
-        //更新链接地址
-        viewModelScope.launch {
-            //更新所有数据使得列表失效
-            db.albumDao.updateUrlByConnectionId(address, tmpAddress)
-            db.artistDao.updateUrlByConnectionId(address, tmpAddress)
-            db.genreDao.updateUrlByConnectionId(address, tmpAddress)
-
-            address = tmpAddress
-            db.connectionConfigDao.updateAddress(
-                address = address,
-                connectionId = connectionId
-            )
-            //判断是否需要重新登录
-            if (getConnectionId() == connectionId) {
-                Log.i("connection", "数据加载3")
-                dataSourceManager.restartLogin()
-            }
-
-        }
-    }
-
-    /**
-     * 还原地址
-     */
-    fun reductionAddress() {
-        address = connectionConfig?.address ?: ""
-    }
-
-    /**
-     * 设置名称
-     */
-    fun updateTmpName(data: String) {
-        this.connectionName = data
-    }
-
-    /**
-     * 还原名称
-     */
-    fun reductionName() {
-        connectionName = connectionConfig?.name ?: ""
     }
 
     /**
@@ -255,16 +197,9 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
             MessageUtils.sendPopTip(R.string.alias_cannot_be_empty)
             return
         }
-        //更新链接地址
-        viewModelScope.launch {
-            db.connectionConfigDao.updateName(
-                name = connectionName,
-                connectionId = connectionId
-            )
-        }
     }
 
-    fun getConnectionId():Long{
+    fun getConnectionId(): Long {
         return dataSourceManager.getConnectionId()
     }
 }

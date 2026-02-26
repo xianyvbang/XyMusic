@@ -38,9 +38,8 @@ fun XyNoData(modifier: Modifier = Modifier) {
             .height(MusicCardImageSize + 50.dp),
         contentAlignment = Alignment.Center
     ) {
-        XyItemBig(
+        XyText(
             text = stringResource(R.string.no_data),
-            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

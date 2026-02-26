@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cn.xybbz.R
 import cn.xybbz.entity.data.ext.joinToString
@@ -43,7 +44,6 @@ import com.google.common.collect.Multimaps.index
 /**
  * 音乐列表item
  * @param [modifier] 修饰符
- * @param [onMusicData] 关于音乐信息数据
  * @param [index] 索引
  * @param [onMusicPlay] 播放方法
  */
@@ -52,7 +52,6 @@ import com.google.common.collect.Multimaps.index
 fun MusicItemComponent(
     modifier: Modifier = Modifier,
     music: XyMusic,
-    index: Int? = null,
     enabledPic: Boolean = true,
     onIfFavorite: () -> Boolean,
     ifDownload: Boolean,
@@ -69,7 +68,6 @@ fun MusicItemComponent(
 ) {
     MusicItemComponent(
         modifier = modifier,
-        index = index,
         enabledPic = enabledPic,
         itemId = music.itemId,
         name = music.name,
@@ -103,7 +101,6 @@ fun MusicItemComponent(
     pic: String? = "",
     codec: String? = "",
     bitRate: Int? = 0,
-    index: Int? = null,
     enabledPic: Boolean = true,
     onIfFavorite: () -> Boolean,
     ifDownload: Boolean,
@@ -126,7 +123,6 @@ fun MusicItemComponent(
         subordination = subordination ?: (artists ?: ""),
         favoriteState = onIfFavorite(),
         imgUrl = pic,
-        index = index,
         media = getMusicMedia(codec, bitRate),
         enabledPic = enabledPic,
         ifDownload = ifDownload,
@@ -190,78 +186,41 @@ fun MusicItemNotClickComponent(
     music: XyMusic,
     ifDownload: Boolean,
     ifPlay: Boolean = false,
-    subordination: String? = null,
     backgroundColor: Color = MaterialTheme.colorScheme.background,
-    brush: Brush? = null
+    picSize: Dp = 62.dp,
+    brush: Brush? = null,
+    trailingIcon: ImageVector,
+    trailingOnClick: () -> Unit,
+    trailingColor: Color
 ) {
 
-    MusicItemComponent(
-        itemId = music.itemId,
+    ItemTrailingContent(
         name = music.name,
-        album = music.album,
-        artists = music.artists?.joinToString(),
-        pic = music.pic,
-        codec = music.codec,
-        bitRate = music.bitRate,
-        subordination = subordination,
+        subordination = music.artists?.joinToString(),
+        imgUrl = music.pic,
+        media = getMusicMedia(music.codec, music.bitRate),
         backgroundColor = backgroundColor,
+        picSize = picSize,
         brush = brush,
         modifier = modifier,
-        onIfFavorite = { false },
+        favoriteState = false,
         ifDownload = ifDownload,
         ifPlay = ifPlay,
-        ifShowTrailingContent = false,
-        trailingOnClick = {},
-        onMusicPlay = {},
-    )
+        trailingContent = {
+            IconButton(
+                modifier = Modifier.offset(x = (10).dp),
+                onClick = {
+                    trailingOnClick.invoke()
+                },
+            ) {
+                Icon(
+                    imageVector = trailingIcon,
+                    contentDescription = stringResource(R.string.favorite_button),
+                    tint = trailingColor
+                )
+            }
 
-}
-
-
-/**
- * 音乐列表的index item
- * @param [modifier] 修饰符
- * @param [onMusicData] 关于音乐信息数据
- * @param [index] 索引
- * @param [onMusicPlay] 播放方法
- */
-@Composable
-fun MusicItemIndexComponent(
-    modifier: Modifier = Modifier,
-    music: XyMusic,
-    onIfFavorite: () -> Boolean,
-    ifDownload: Boolean,
-    subordination: String? = null,
-    index: Int,
-    backgroundColor: Color = MaterialTheme.colorScheme.background,
-    onMusicPlay: (OnMusicPlayParameter) -> Unit,
-    ifSelect: Boolean = false,
-    ifPlay: Boolean,
-    trailingOnSelectClick: (Boolean) -> Unit,
-    trailingOnClick: () -> Unit,
-    ifSelectCheckBox: (() -> Boolean)? = null
-) {
-
-    MusicItemComponent(
-        itemId = music.itemId,
-        name = music.name,
-        album = music.album,
-        artists = music.artists?.joinToString(),
-        pic = music.pic,
-        codec = music.codec,
-        bitRate = music.bitRate,
-        index = index,
-        subordination = subordination,
-        onIfFavorite = onIfFavorite,
-        ifDownload = ifDownload,
-        ifPlay = ifPlay,
-        modifier = modifier,
-        backgroundColor = backgroundColor,
-        ifSelect = ifSelect,
-        trailingOnSelectClick = trailingOnSelectClick,
-        trailingOnClick = trailingOnClick,
-        ifSelectCheckBox = ifSelectCheckBox,
-        onMusicPlay = onMusicPlay,
+        }
     )
 }
 

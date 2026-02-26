@@ -696,7 +696,7 @@ class MainViewModel @Inject constructor(
                 .onEach { event ->
                     if (event is ReLoginEvent.Unauthorized) dataSourceManager.serverLogin(
                         loginType = LoginType.API,
-                        null
+                        db.connectionConfigDao.selectConnectionConfig()
                     )
                 }
                 .launchIn(viewModelScope)

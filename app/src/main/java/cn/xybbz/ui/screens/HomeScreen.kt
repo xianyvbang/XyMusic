@@ -22,10 +22,9 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -58,12 +57,10 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -81,8 +78,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -124,16 +119,14 @@ import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.LazyColumnComponent
+import cn.xybbz.ui.xy.LazyColumnBottomSheetComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
-import cn.xybbz.ui.xy.XyItemBig
-import cn.xybbz.ui.xy.XyItemMedium
-import cn.xybbz.ui.xy.XyItemTabBigButton
-import cn.xybbz.ui.xy.XyItemText
-import cn.xybbz.ui.xy.XyItemTextHorizontal
-import cn.xybbz.ui.xy.XyItemTextLarge
+import cn.xybbz.ui.xy.XyItemLabel
 import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.xy.XyScreenTitle
+import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.HomeViewModel
 import kotlinx.coroutines.launch
 
@@ -156,7 +149,7 @@ fun HomeScreen(
     val dataCount by homeViewModel.homeDataRepository.dataCount.collectAsStateWithLifecycle()
     val navigator = LocalNavigator.current
     val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = false
+        skipPartiallyExpanded = true
     )
 
     val deletePlaylist = stringResource(R.string.delete_playlist)
@@ -259,7 +252,8 @@ fun HomeScreen(
                                 }),
                             *homeViewModel.connectionList.map { connection ->
                                 MenuItemDefaultData(
-                                    title = connection.name, leadingIcon = {
+                                    title = connection.name,
+                                    leadingIcon = {
                                         if (homeViewModel.dataSourceManager.getConnectionId() == connection.id)
                                             Icon(
                                                 Icons.Rounded.Check,
@@ -301,9 +295,8 @@ fun HomeScreen(
                 }
 
             }, title = {
-                XyItemBig(
-                    text = stringResource(R.string.home),
-                    color = MaterialTheme.colorScheme.onSurface
+                XyScreenTitle(
+                    text = stringResource(R.string.home)
                 )
             }, actions = {
                 Row(
@@ -319,26 +312,37 @@ fun HomeScreen(
                                 sheetState = sheetState,
                                 state = true,
                                 titleText = loginExceptionInfo,
+                                dragHandle = null,
                                 content = {
-                                    Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                                    HorizontalDivider()
-                                    LazyColumnComponent(
+                                    LazyColumnBottomSheetComponent(
                                         modifier = Modifier
-                                            .height(400.dp)
+                                            .height(400.dp),
+                                        horizontal = XyTheme.dimens.outerHorizontalPadding
                                     ) {
                                         item {
-                                            Column {
-                                                Text(
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.Center,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                XyText(
                                                     text = stringResource(homeViewModel.dataSourceManager.errorHint),
                                                     overflow = TextOverflow.Visible,
-                                                    style = MaterialTheme.typography.titleSmall
+                                                    maxLines = Int.MAX_VALUE
                                                 )
-                                                if (homeViewModel.dataSourceManager.errorMessage.isNotBlank()) {
-                                                    HorizontalDivider()
-                                                    XyItemText(text = homeViewModel.dataSourceManager.errorMessage)
+                                            }
+
+                                        }
+                                        if (homeViewModel.dataSourceManager.errorMessage.isNotBlank())
+                                            item {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.Center,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ){
+                                                    XyTextSubSmall(text = homeViewModel.dataSourceManager.errorMessage)
                                                 }
                                             }
-                                        }
                                     }
                                 }
                             ).show()
@@ -414,7 +418,7 @@ fun HomeScreen(
                     XyRow(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        XyItemTabBigButton(
+                        XyItemLabel(
                             modifier = Modifier
                                 .weight(1f),
                             text = stringResource(R.string.all_music),
@@ -426,15 +430,10 @@ fun HomeScreen(
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
                                 navigator.navigate(Music)
-                            },
-                            brush = Brush.linearGradient(
-                                colors = listOf(Color(0xff3b82f6), Color(0xff8b5cf6)),
-                                start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
-                                end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
-                            )
+                            }
                         )
 
-                        XyItemTabBigButton(
+                        XyItemLabel(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.local),
                             sub = if (ifShowCount) homeViewModel.localCount ?: stringResource(
@@ -444,15 +443,10 @@ fun HomeScreen(
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
                                 navigator.navigate(Local)
-                            },
-                            brush = Brush.linearGradient(
-                                colors = listOf(Color(0xFF0A7B88), Color(0xFFFFBA6C)),
-                                start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
-                                end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
-                            )
+                            }
                         )
 
-                        XyItemTabBigButton(
+                        XyItemLabel(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.album),
                             sub = if (ifShowCount) dataCount?.albumCount?.toString()
@@ -463,14 +457,9 @@ fun HomeScreen(
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
                                 navigator.navigate(Album)
-                            },
-                            brush = Brush.linearGradient(
-                                colors = listOf(Color(0xffec4899), Color(0xffa855f7)),
-                                start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
-                                end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
-                            )
+                            }
                         )
-                        XyItemTabBigButton(
+                        XyItemLabel(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.artist),
                             sub = if (ifShowCount) dataCount?.artistCount?.toString()
@@ -481,14 +470,9 @@ fun HomeScreen(
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
                                 navigator.navigate(Artist)
-                            },
-                            brush = Brush.linearGradient(
-                                colors = listOf(Color(0xff10b981), Color(0xff06b6d4)),
-                                start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
-                                end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
-                            )
+                            }
                         )
-                        XyItemTabBigButton(
+                        XyItemLabel(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.favorite),
                             sub = if (ifShowCount) dataCount?.favoriteCount?.toString()
@@ -499,15 +483,10 @@ fun HomeScreen(
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
                                 navigator.navigate(FavoriteList)
-                            },
-                            brush = Brush.linearGradient(
-                                colors = listOf(Color(0xfff97316), Color(0xfffb7185)),
-                                start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
-                                end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
-                            )
+                            }
                         )
 
-                        XyItemTabBigButton(
+                        XyItemLabel(
                             modifier = Modifier.weight(1f),
                             text = stringResource(R.string.genres),
                             sub = if (ifShowCount) dataCount?.genreCount?.toString()
@@ -518,39 +497,17 @@ fun HomeScreen(
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
                                 navigator.navigate(Genres)
-                            },
-                            brush = Brush.linearGradient(
-                                colors = listOf(Color(0xffc026d3), Color(0xff7e22ce)),
-                                start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
-                                end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
-                            )
+                            }
                         )
                     }
                 }
 
-                /*if (ifShowNotData) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(MusicCardImageSize + 50.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            XyItemBig(
-                                text = stringResource(R.string.no_data),
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                }*/
-
                 if (mostPlayerAlbumList.isNotEmpty()) {
                     item {
                         XyRow {
-                            XyItemMedium(
+                            XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
                                 text = stringResource(R.string.most_played),
-                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -584,10 +541,9 @@ fun HomeScreen(
                 if (mostPlayerMusicList.isNotEmpty()) {
                     item {
                         XyRow {
-                            XyItemMedium(
+                            XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(R.string.most_played),
-                                color = MaterialTheme.colorScheme.onSurface
+                                text = stringResource(R.string.most_played)
                             )
 
                             Row(
@@ -661,10 +617,9 @@ fun HomeScreen(
                 if (recommendedMusicList.isNotEmpty()) {
                     item {
                         XyRow {
-                            XyItemMedium(
+                            XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(R.string.daily_recommendations),
-                                color = MaterialTheme.colorScheme.onSurface
+                                text = stringResource(R.string.daily_recommendations)
                             )
 
                             Row(
@@ -705,9 +660,8 @@ fun HomeScreen(
                                 TextButton(onClick = composeClick {
                                     navigator.navigate(DailyRecommend)
                                 }, contentPadding = PaddingValues()) {
-                                    XyItemTextLarge(
-                                        text = stringResource(R.string.view_more),
-                                        color = Color(0xFFC6E5F5)
+                                    XyText(
+                                        text = stringResource(R.string.view_more)
                                     )
                                 }
 
@@ -746,10 +700,9 @@ fun HomeScreen(
                 if (newAlbumList.isNotEmpty()) {
                     item {
                         XyRow {
-                            XyItemMedium(
+                            XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(R.string.latest_albums),
-                                color = MaterialTheme.colorScheme.onSurface
+                                text = stringResource(R.string.latest_albums)
                             )
                         }
                     }
@@ -782,10 +735,9 @@ fun HomeScreen(
                 if (albumRecentlyList.isNotEmpty()) {
                     item {
                         XyRow {
-                            XyItemMedium(
+                            XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(R.string.recently_played_albums),
-                                color = MaterialTheme.colorScheme.onSurface
+                                text = stringResource(R.string.recently_played_albums)
                             )
                         }
                     }
@@ -819,10 +771,9 @@ fun HomeScreen(
                 if (musicRecentlyList.isNotEmpty()) {
                     item {
                         XyRow {
-                            XyItemMedium(
+                            XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(R.string.recently_played_music),
-                                color = MaterialTheme.colorScheme.onSurface
+                                text = stringResource(R.string.recently_played_music)
                             )
 
                             Row(
@@ -896,10 +847,9 @@ fun HomeScreen(
 
                 item {
                     XyRow {
-                        XyItemMedium(
+                        XyText(
                             modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                            text = stringResource(R.string.playlist),
-                            color = MaterialTheme.colorScheme.onSurface
+                            text = stringResource(R.string.playlist)
                         )
                         Box(contentAlignment = Alignment.CenterEnd) {
                             XyDropdownMenu(
@@ -1007,7 +957,7 @@ fun HomeScreen(
                                     AlertDialogObject(
                                         title = deletePlaylist,
                                         content = {
-                                            XyItemTextHorizontal(
+                                            XyTextSubSmall(
                                                 text = stringResource(
                                                     R.string.confirm_delete_playlist,
                                                     item.name
@@ -1054,7 +1004,7 @@ fun HomeScreen(
                             modifier = Modifier.height(40.dp),
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            XyItemText(text = stringResource(R.string.no_playlists))
+                            XyTextSubSmall(text = stringResource(R.string.no_playlists))
                         }
                     }
                 }

@@ -36,7 +36,7 @@ object OperationTipUtils {
         if (operationStatus) {
             MessageUtils.sendPopTipSuccess(successMessage)
         } else {
-            MessageUtils.sendPopTipIconError(errorMessage)
+            MessageUtils.sendPopTipError(errorMessage)
         }
         return operationStatus
     }
@@ -58,7 +58,7 @@ object OperationTipUtils {
             false
         }
         if (isError){
-            MessageUtils.sendPopTipIconError(errorMessage)
+            MessageUtils.sendPopTipError(errorMessage)
         }else {
             if (operationStatus) {
                 MessageUtils.sendPopTipSuccess(successMessage)

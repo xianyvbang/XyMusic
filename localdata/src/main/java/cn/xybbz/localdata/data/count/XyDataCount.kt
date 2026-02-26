@@ -29,29 +29,29 @@ data class XyDataCount(
     /**
      * 音乐数量
      */
-    val musicCount: Int = 0,
+    val musicCount: Int? = null,
     /**
      * 专辑数量
      */
-    val albumCount: Int = 0,
+    val albumCount: Int? = null,
     /**
      * 艺术家数量
      */
-    val artistCount: Int = 0,
+    val artistCount: Int? = null,
     /**
      * 歌单数量
      */
-    val playlistCount: Int = 0,
+    val playlistCount: Int? = null,
     /**
      * 流派数量
      */
-    val genreCount: Int = 0,
+    val genreCount: Int? = null,
     /**
      * 收藏数量
      */
-    val favoriteCount: Int = 0,
+    val favoriteCount: Int? = null,
     /**
-     * 更新时间
+     * 创建时间
      */
     val createTime: Long = System.currentTimeMillis()
 

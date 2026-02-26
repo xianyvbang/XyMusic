@@ -281,7 +281,7 @@ class JellyfinDatasourceServer(
 
             val playlist = async {
                 playlist = try {
-                    getPlaylistsServer(0, 0).totalRecordCount
+                    getPlaylistsServer(0, 1).totalRecordCount
                 } catch (e: SocketTimeoutException) {
                     Log.e(Constants.LOG_ERROR_PREFIX, "加载歌单数量超时", e)
                     null
@@ -704,7 +704,7 @@ class JellyfinDatasourceServer(
     override suspend fun selectArtistsByIds(artistIds: List<String>): List<XyArtist> {
         val items = jellyfinApiClient.itemApi().getItems(
             ItemRequest(
-                ids = artistIds, parentId = libraryId
+                ids = artistIds, parentId = libraryIds?.get(0)
             ).toStringMap()
         ).items
         return convertToArtistList(items)
@@ -749,7 +749,7 @@ class JellyfinDatasourceServer(
                     ImageType.PRIMARY, ImageType.BACKDROP, ImageType.BANNER, ImageType.THUMB
                 ),
                 limit = Constants.MIN_PAGE,
-                parentId = libraryId
+                parentId = libraryIds?.get(0)
             ).toStringMap()
         )
         if (albumList.isNotEmpty())
@@ -1102,7 +1102,7 @@ class JellyfinDatasourceServer(
                 ids = albumIds,
                 years = years,
                 genreIds = genreIds,
-                parentId = libraryId
+                parentId = libraryIds?.get(0)
             ).toStringMap()
         )
 
@@ -1164,7 +1164,7 @@ class JellyfinDatasourceServer(
                 genreIds = genreIds,
                 years = years,
                 albumIds = albumId?.let { listOf(albumId) },
-                parentId = if (parentId.isNullOrBlank()) libraryId else parentId,
+                parentId = if (parentId.isNullOrBlank()) libraryIds?.get(0) else parentId,
                 path = path
             ).toStringMap()
         )
@@ -1203,7 +1203,7 @@ class JellyfinDatasourceServer(
                 ),
                 searchTerm = search,
                 isFavorite = isFavorite,
-                parentId = libraryId
+                parentId = libraryIds?.get(0)
             ).toStringMap()
         )
         val artistList = convertToArtistList(response.items)
@@ -1247,7 +1247,7 @@ class JellyfinDatasourceServer(
                 ),
                 searchTerm = search,
                 imageTypeLimit = 1,
-                parentId = libraryId
+                parentId = libraryIds?.get(0)
             ).toStringMap()
         )
         return XyResponse(

@@ -25,7 +25,6 @@ import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.constants.ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
 import cn.xybbz.api.converter.kotlinxJsonConverter
 import cn.xybbz.api.events.ReLoginEventBus
-import cn.xybbz.api.okhttp.DefaultAuthenticator
 import cn.xybbz.api.okhttp.LoggingInterceptor
 import cn.xybbz.api.okhttp.NetWorkInterceptor
 import cn.xybbz.api.okhttp.plex.PlexQueryInterceptor
@@ -36,7 +35,7 @@ import java.util.concurrent.TimeUnit
 
 abstract class DefaultApiClient : ApiConfig {
 
-    protected lateinit var baseUrl: String
+//    protected lateinit var baseUrl: String
 
 
     private lateinit var retrofit: Retrofit
@@ -68,7 +67,7 @@ abstract class DefaultApiClient : ApiConfig {
     private lateinit var defaultDownloadApi: IDownLoadApi
 
     override fun setRetrofitData(baseUrl: String, ifTmp: Boolean) {
-        this.baseUrl = baseUrl
+        TokenServer.updateBaseUrl(baseUrl)
         retrofit = Retrofit.Builder()
             .baseUrl(baseUrl).client(getOkHttpClient(ifTmp))
 //            .addConverterFactory(MyGsonConverterFactory.create()).build()
@@ -116,12 +115,6 @@ abstract class DefaultApiClient : ApiConfig {
             .writeTimeout(DEFAULT_TIMEOUT_MILLISECONDS, TimeUnit.MILLISECONDS)
             .addNetworkInterceptor(PlexQueryInterceptor())
             .addNetworkInterceptor(LoggingInterceptor())
-            .authenticator(
-                DefaultAuthenticator(
-                    eventBus,
-                    onLoginRetry = { TokenServer.loginRetry },
-                    onSetLoginRetry = { TokenServer.updateLoginRetry(it) })
-            )
             .followRedirects(true)
             .followSslRedirects(true)
             .retryOnConnectionFailure(true)
@@ -262,5 +255,12 @@ abstract class DefaultApiClient : ApiConfig {
 
     open fun updateIfSubsonic() {
         TokenServer.updateIfSubsonic(ifSubsonic)
+    }
+
+    /**
+     * 获得前缀地址
+     */
+    override fun getBaseUrl(): String {
+        return TokenServer.baseUrl
     }
 }

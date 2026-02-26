@@ -51,6 +51,11 @@ class DatasourceConfig {
         Migration_21_22,
         Migration_22_23,
         MIGRATION_23_24,
+        MIGRATION_24_25,
+        MIGRATION_25_26,
+        MIGRATION_26_27,
+        MIGRATION_27_28,
+        MIGRATION_28_29,
     )
 
     fun createDatabaseClient(context: Context): DatabaseClient {

@@ -21,7 +21,6 @@ package cn.xybbz.api.client.navidrome.service
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.jellyfin.data.FavoriteResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicDefaultResponse
-import cn.xybbz.api.client.subsonic.data.SubsonicParentResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
 import retrofit2.http.GET
 import retrofit2.http.Query

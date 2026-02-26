@@ -19,8 +19,10 @@
 package cn.xybbz.ui.components
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.MenuOpen
 import androidx.compose.material.icons.automirrored.rounded.Sort
@@ -47,19 +49,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cn.xybbz.R
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.DateUtil
-import cn.xybbz.localdata.data.era.XyEraItem
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
+import cn.xybbz.ui.xy.LazyColumnBottomSheetComponent
 import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
-import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
-import cn.xybbz.ui.xy.XyItemTextIconCheckSelect
-import cn.xybbz.ui.xy.XyItemTitle
+import cn.xybbz.ui.xy.XyItemIconSelect
 import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.xy.XyText
 import kotlinx.coroutines.launch
 
 
@@ -68,8 +68,6 @@ import kotlinx.coroutines.launch
  * @param [modifier] 修饰语
  * @param [ifDisplay] if 显示
  * @param [onSetDisplay] 在设置显示时
- * @param [onSortTypeClick] 在排序类型上单击
- * @param [onRefresh] 刷新时
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -80,13 +78,14 @@ fun SelectSortBottomSheet(
     ),
     ifDisplay: () -> Boolean,
     onSetDisplay: (Boolean) -> Unit,
-    filterContent: @Composable () -> Unit
+    filterContent: @Composable ColumnScope.() -> Unit
 ) {
     ModalBottomSheetExtendComponent(
         bottomSheetState = bottomSheetState,
         modifier = modifier,
         onIfDisplay = ifDisplay,
         onClose = onSetDisplay,
+        dragHandle = null,
         titleText = stringResource(R.string.select_sort_method)
     ) {
         filterContent()
@@ -97,24 +96,19 @@ fun SelectSortBottomSheet(
 /**
  * 选择排序类型组件
  * @param [modifier] 修饰语
- * @param [ifDisplay] if 显示
- * @param [onSetDisplay] 在设置显示时
  * @param [onSortTypeClick] 在排序类型上单击
- * @param [onRefresh] 刷新时
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectSortBottomSheetComponent(
     modifier: Modifier = Modifier,
-    onIfYearFilter: () -> Boolean?,
     onIfSelectOneYear: () -> Boolean?,
     onIfStartEndYear: () -> Boolean?,
     onIfSort: () -> Boolean?,
     onIfFavoriteFilter: () -> Boolean?,
     onSortTypeClick: suspend (SortTypeEnum?) -> Unit,
     onSortType: () -> SortTypeEnum?,
-    onFilterEraTypeList: () -> List<XyEraItem>,
-    onFilterEraTypeClick: suspend (XyEraItem) -> Unit,
+    onDefaultSortType: () -> SortTypeEnum,
     onIfFavorite: () -> Boolean,
     setFavorite: suspend (Boolean) -> Unit,
     sortTypeList: List<SortTypeEnum> = SortTypeEnum.entries,
@@ -123,6 +117,7 @@ fun SelectSortBottomSheetComponent(
     onSetSelectYear: suspend (Int?) -> Unit,
     onSelectRangeYear: () -> List<Int>?,
     onSetSelectRangeYear: suspend (List<Int?>) -> Unit,
+    onEnabledClearClick: () -> Boolean,
     onClearFilterOrShort: suspend () -> Unit,
 ) {
 
@@ -139,13 +134,6 @@ fun SelectSortBottomSheetComponent(
      * 打开菜单页面
      */
     var ifShowSortOrFilterMenu by remember {
-        mutableStateOf(false)
-    }
-
-    /**
-     * 打开年代筛选bottom
-     */
-    var ifOpenAgeFilterBottom by remember {
         mutableStateOf(false)
     }
 
@@ -221,7 +209,7 @@ fun SelectSortBottomSheetComponent(
                         ifShowSortOrFilterMenu = false
                         ifOpenYearFilterBottom = true
                     },
-                    ifItemShow = { onIfYearFilter() == true && onIfSelectOneYear.invoke() == true }),
+                    ifItemShow = { onIfSelectOneYear.invoke() == true }),
                 //年范围筛选
                 MenuItemDefaultData(
                     title = stringResource(R.string.year_filter),
@@ -236,7 +224,7 @@ fun SelectSortBottomSheetComponent(
                         ifShowSortOrFilterMenu = false
                         ifOpenYearRangeFilterBottom = true
                     },
-                    ifItemShow = { onIfYearFilter() == true && onIfStartEndYear.invoke() == true }),
+                    ifItemShow = { onIfStartEndYear.invoke() == true }),
                 //排序功能
                 MenuItemDefaultData(
                     title = stringResource(R.string.sort_method),
@@ -254,6 +242,7 @@ fun SelectSortBottomSheetComponent(
                     ifItemShow = { onIfSort() == true }),
                 MenuItemDefaultData(
                     title = "清除筛选",
+                    enabled = onEnabledClearClick(),
                     trailingIcon = {
                         Icon(
                             imageVector = Icons.Rounded.Close,
@@ -261,32 +250,17 @@ fun SelectSortBottomSheetComponent(
                         )
 
                     },
-                    onClick = composeClick {
+                    onClick = composeClick() {
                         ifShowSortOrFilterMenu = false
                         coroutineScope.launch {
                             onClearFilterOrShort()
                         }
                     },
-                    ifItemShow = { onIfYearFilter() == true && onIfSelectOneYear.invoke() == false })
+                    ifItemShow = { true })
 
             )
         )
     }
-
-    AgeFilterComponent(
-        ifDisplay = { ifOpenAgeFilterBottom },
-        onSetDisplay = {
-            ifOpenAgeFilterBottom = it
-        },
-        onFilterEraTypeList = onFilterEraTypeList,
-        onFilterEraTypeClick = {
-            selectEraId = it.id
-            coroutineScope.launch {
-                onFilterEraTypeClick(it)
-            }
-        },
-        onFilterEraType = { selectEraId ?: 0 }
-    )
 
     YearFilterComponent(
         ifDisplay = { ifOpenYearFilterBottom },
@@ -311,17 +285,15 @@ fun SelectSortBottomSheetComponent(
         ifDisplay = { ifOpenSortBottom },
         onSetDisplay = { ifOpenSortBottom = it },
         filterContent = {
-            RoundedSurfaceColumnPadding(
-                color = Color.Transparent
-            ) {
-                sortTypeList.forEach { item ->
-                    XyItemTextIconCheckSelect(
+            LazyColumnBottomSheetComponent(vertical = 0.dp) {
+                items(sortTypeList) { item ->
+                    XyItemIconSelect(
                         text = stringResource(item.title),
-                        icon = item.imageVector,
+                        imageVector = item.imageVector,
                         onIfSelected = { onSortType() == item }) {
                         coroutineScope.launch {
                             if (onSortType() == item) {
-                                onSortTypeClick(null)
+                                onSortTypeClick(onDefaultSortType())
                             } else {
                                 onSortTypeClick(item)
                             }
@@ -334,54 +306,6 @@ fun SelectSortBottomSheetComponent(
                 }
             }
         })
-}
-
-/**
- * 使用年代过滤
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AgeFilterComponent(
-    modifier: Modifier = Modifier,
-    bottomSheetState: SheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = false
-    ),
-    ifDisplay: () -> Boolean,
-    onSetDisplay: (Boolean) -> Unit,
-    onFilterEraTypeList: () -> List<XyEraItem>,
-    onFilterEraTypeClick: (XyEraItem) -> Unit,
-    onFilterEraType: () -> Int,
-) {
-    val coroutineScope = rememberCoroutineScope()
-    ModalBottomSheetExtendComponent(
-        bottomSheetState = bottomSheetState,
-        modifier = modifier,
-        onIfDisplay = ifDisplay,
-        onClose = onSetDisplay,
-        titleText = stringResource(R.string.era_filter)
-    ) {
-        RoundedSurfaceColumnPadding(
-            color = Color.Transparent
-        ) {
-            onFilterEraTypeList().forEach {
-                XyItemTextIconCheckSelect(
-                    onClick = {
-                        coroutineScope
-                            .launch {
-                                onFilterEraTypeClick(it)
-                                bottomSheetState.hide()
-                            }
-                            .invokeOnCompletion {
-                                onSetDisplay(false)
-                            }
-                    },
-                    text = it.title + stringResource(R.string.decade_suffix),
-                    onIfSelected = { onFilterEraType() == it.id }
-                )
-            }
-        }
-
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -422,7 +346,7 @@ private fun YearFilterComponent(
                 Text(stringResource(R.string.cancel))
             }
 
-            XyItemTitle(text = stringResource(R.string.year_selection), fontSize = 18.sp)
+            XyText(text = stringResource(R.string.year_selection))
 
             TextButton(onClick = {
                 coroutineScope.launch {
@@ -483,7 +407,7 @@ private fun YearRangeFilterComponent(
             }) {
                 Text(stringResource(R.string.cancel))
             }
-            XyItemTitle(text = stringResource(R.string.year_selection), fontSize = 18.sp)
+            XyText(text = stringResource(R.string.year_selection))
 
             TextButton(onClick = {
                 coroutineScope.launch {

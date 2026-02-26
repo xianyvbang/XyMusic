@@ -49,8 +49,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cn.xybbz.R
-import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.UiConstants.MusicCardImageSize
+import cn.xybbz.common.constants.Constants
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -59,7 +59,7 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.xy.XyImage
-import cn.xybbz.ui.xy.XyItemText
+import cn.xybbz.ui.xy.XyItem
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 /**
@@ -119,7 +119,7 @@ fun MusicCardComponent(
         Spacer(modifier = Modifier.height(3.dp))
 
 
-        XyItemText(
+        XyItem(
             modifier = Modifier
                 .then(modifier)
                 .fillMaxWidth()

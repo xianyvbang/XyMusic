@@ -541,14 +541,6 @@ interface AlbumDao {
         limit: Int
     ): List<XyAlbum>
 
-    @Query(
-        """
-        update xy_album set pic = REPLACE(pic,:oldAddress,:newAddress)
-        where pic like :oldAddress || '%'
-    """
-    )
-    suspend fun updateUrlByConnectionId(oldAddress: String, newAddress: String)
-
 
     @Query(
         """

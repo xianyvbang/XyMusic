@@ -20,6 +20,7 @@ package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -37,9 +38,6 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -53,9 +51,9 @@ import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
-import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
+import cn.xybbz.ui.xy.RoundedSurfaceColumn
 import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyItemTextPadding
+import cn.xybbz.ui.xy.XyItemRadioButton
 import cn.xybbz.viewmodel.LanguageConfigViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -103,48 +101,25 @@ fun LanguageConfigScreen(
 
             LazyColumnNotComponent {
                 item {
-                    XyItemTextPadding(
-                        text = stringResource(R.string.selected_language),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                item {
-                    RoundedSurfaceColumnPadding(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(Color(0xFF5A524C), Color(0xFF726B66)),
-                            tileMode = TileMode.Repeated
-                        )
-                    ) {
-                        LanguageTextItem(
-                            languageType = languageConfigViewModel.settingsConfig.languageType,
-                            enabled = false,
-                            onClick = {})
-                    }
-                }
-                item {
-                    XyItemTextPadding(
-                        text = stringResource(R.string.available_languages),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                item {
-                    RoundedSurfaceColumnPadding(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(Color(0xFF5A524C), Color(0xFF726B66)),
-                            tileMode = TileMode.Repeated
-                        )
-                    ) {
-                        LanguageType.entries.filter { it != languageConfigViewModel.settingsConfig.languageType }
+                    RoundedSurfaceColumn {
+                        LanguageType.entries
                             .forEach {
-                                LanguageTextItem(
-                                    languageType = it,
+                                XyItemRadioButton(
+                                    text = it.languageName,
+                                    sub = it.languageCode,
+                                    selected = it == languageConfigViewModel.settingsConfig.languageType,
                                     enabled = it.enabled,
+                                    paddingValue = PaddingValues(
+                                        horizontal = XyTheme.dimens.innerHorizontalPadding,
+                                        vertical = XyTheme.dimens.outerVerticalPadding
+                                    ),
                                     onClick = {
                                         languageConfigViewModel.updateLanguageType(
                                             it,
                                             context = context
                                         )
-                                    })
+                                    }
+                                )
                             }
 
                     }

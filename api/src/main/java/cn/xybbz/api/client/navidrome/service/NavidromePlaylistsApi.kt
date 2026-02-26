@@ -64,6 +64,7 @@ interface NavidromePlaylistsApi : BaseApi {
         @Query("_start") start: Int = 0,
         @Query("_end") end: Int = 0,
         @Query("_sort") sort: SortType = SortType.ID,
+        @Query("library_id") libraryIds: List<String>? = null
     ): Response<List<PlaylistItemData>>
 
     @POST("/api/playlist/{playlistId}/tracks")

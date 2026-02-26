@@ -24,24 +24,24 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.sp
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.theme.XyTheme
 
@@ -49,7 +49,7 @@ import cn.xybbz.ui.theme.XyTheme
 @Composable
 fun ModalBottomSheetExtendComponent(
     modifier: Modifier = Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.background,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
     contentWindowInsets: @Composable () -> WindowInsets = {
         WindowInsets.Companion.systemBars.only(
             WindowInsetsSides.Top
@@ -76,11 +76,14 @@ fun ModalBottomSheetExtendComponent(
             onDismissRequest = {
                 onClose(false)
             }, content = {
-                XyColumnNotHorizontalPadding(
+                XyColumn(
                     modifier = Modifier
                         .brashColor()
                         .navigationBarsPadding(),
-                    backgroundColor = Color.Transparent
+                    backgroundColor = Color.Transparent,
+                    paddingValues = PaddingValues(
+                        vertical = XyTheme.dimens.outerVerticalPadding
+                    )
                 ) {
                     dragHandle?.let {
                         Row(
@@ -93,9 +96,10 @@ fun ModalBottomSheetExtendComponent(
                     titleText?.let {
                         XyRow(
                             paddingValues = PaddingValues(
-                                start = XyTheme.dimens.outerHorizontalPadding,
-                                end = XyTheme.dimens.outerHorizontalPadding,
-                                bottom = XyTheme.dimens.outerVerticalPadding
+                                top = XyTheme.dimens.innerVerticalPadding,
+                                start = XyTheme.dimens.innerHorizontalPadding,
+                                end = XyTheme.dimens.innerHorizontalPadding,
+                                bottom = XyTheme.dimens.innerVerticalPadding
                             )
                         ) {
                             Column(
@@ -103,12 +107,15 @@ fun ModalBottomSheetExtendComponent(
                                 verticalArrangement = Arrangement.Top,
                                 horizontalAlignment = Alignment.Start
                             ) {
-                                XyItemTitle(text = titleText, fontSize = 18.sp)
+                                XyText(
+                                    text = titleText,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                                Spacer(modifier = Modifier.width(XyTheme.dimens.innerHorizontalPadding))
                                 titleSub?.let {
-                                    Text(
+                                    XyTextSub(
                                         text = titleSub,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        style = MaterialTheme.typography.titleSmall
+                                        style = MaterialTheme.typography.bodyMedium
                                     )
                                 }
                             }

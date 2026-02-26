@@ -129,15 +129,6 @@ interface ArtistDao {
     @Query("select * from xy_artist where artistId in (:artistIds) and connectionId = (select connectionId from xy_settings) ")
     suspend fun selectByIds(artistIds: List<String>): List<XyArtist>
 
-
-    @Query(
-        """
-        update xy_artist set pic = REPLACE(pic,:oldAddress,:newAddress)
-        where pic like :oldAddress || '%'
-    """
-    )
-    suspend fun updateUrlByConnectionId(oldAddress: String, newAddress: String)
-
     /**
      * 根据selectChat获得所属位置索引
      */

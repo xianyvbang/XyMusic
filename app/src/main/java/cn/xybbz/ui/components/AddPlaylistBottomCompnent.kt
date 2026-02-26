@@ -104,11 +104,12 @@ class AddPlaylistBottomData() {
 fun AddPlaylistBottomComponent(
     playlistBottomViewModel: PlaylistBottomViewModel = hiltViewModel<PlaylistBottomViewModel>()
 ) {
-    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = false
     )
+
+    val newPlaylist = stringResource(R.string.new_playlist)
 
     ModalBottomSheetExtendComponent(
         modifier = Modifier.statusBarsPadding(),
@@ -125,10 +126,10 @@ fun AddPlaylistBottomComponent(
         titleTailContent = {
             IconButton(onClick = {
                 var playlistName by mutableStateOf(
-                    "${context.getString(R.string.new_playlist)}${playlistBottomViewModel.playlists.size}"
+                    "${newPlaylist}${playlistBottomViewModel.playlists.size}"
                 )
                 AlertDialogObject(
-                    title = context.getString(R.string.new_playlist),
+                    title = newPlaylist,
                     content = {
                         XyEdit(text = playlistName, onChange = {
                             playlistName = it

@@ -7,7 +7,7 @@ import androidx.compose.ui.unit.sp
 // Set of Material typography styles to start with
 val Typography = Typography(
 //    paragraph
-    bodySmall = TextStyle(
+   /* bodySmall = TextStyle(
         fontSize = 14.sp,
         lineHeight = (1.5f * 15).sp,
     ),
@@ -21,5 +21,5 @@ val Typography = Typography(
     labelSmall = TextStyle(
         fontSize = 14.sp,
         lineHeight = 15.sp,
-    )
+    )*/
 )

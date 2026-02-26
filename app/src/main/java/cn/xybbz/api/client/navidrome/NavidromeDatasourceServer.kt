@@ -132,7 +132,8 @@ class NavidromeDatasourceServer(
                     start = startIndex,
                     end = startIndex + pageSize,
                     name = search,
-                    starred = isFavorite
+                    starred = isFavorite,
+                    libraryIds = libraryIds
                 )
             }
         val artists = response.data?.let { convertToArtistList(it) } ?: emptyList()
@@ -276,10 +277,10 @@ class NavidromeDatasourceServer(
                 albumId = if (dataType == MusicTypeEnum.ALBUM) listOf(itemId) else null,
                 artistId = if (dataType == MusicTypeEnum.ARTIST) listOf(itemId) else null
             )
-            true
+            false
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "取消收藏失败", e)
-            false
+            true
         }
         return favorite
     }
@@ -382,6 +383,7 @@ class NavidromeDatasourceServer(
             genres.await()
             favorite.await()
         }
+        Log.w("数量","数量信息,$music $album $artist $playlist $genres $favorite")
         updateOrSaveDataInfoCount(music, album, artist, playlist, genres, favorite, connectionId)
 
     }
@@ -889,7 +891,8 @@ class NavidromeDatasourceServer(
         val items =
             navidromeApiClient.itemApi().getSimilarSongs(
                 songId = musicId,
-                count = Constants.SIMILAR_MUSIC_LIST_PAGE
+                count = Constants.SIMILAR_MUSIC_LIST_PAGE,
+                libraryIds = libraryIds
             ).subsonicResponse.songs.toXyMusic(
                 getConnectionId(),
                 createDownloadUrl = { createDownloadUrl(it) },
@@ -912,7 +915,8 @@ class NavidromeDatasourceServer(
         val items =
             navidromeApiClient.itemApi().getTopSongs(
                 artistName = artistName ?: "",
-                count = Constants.ARTIST_HOT_MUSIC_LIST_PAGE
+                count = Constants.ARTIST_HOT_MUSIC_LIST_PAGE,
+                libraryIds = libraryIds
             ).subsonicResponse.topSongs.toXyMusic(
                 getConnectionId(),
                 createDownloadUrl = { createDownloadUrl(it) },
@@ -1109,7 +1113,8 @@ class NavidromeDatasourceServer(
                     year = year,
                     genreId = genreId,
                     artistId = artistId,
-                    recentlyPlayed = recentlyPlayed
+                    recentlyPlayed = recentlyPlayed,
+                    libraryIds = libraryIds
                 )
             }
 
@@ -1153,6 +1158,7 @@ class NavidromeDatasourceServer(
                     albumId = albumId,
                     artistIds = artistIds,
                     year = year,
+                    libraryIds = libraryIds
                 )
             }
         return XyResponse(
@@ -1214,7 +1220,11 @@ class NavidromeDatasourceServer(
             val playlists =
                 getWithTotalCount {
                     navidromeApiClient.playlistsApi()
-                        .getPlaylists(start = startIndex, end = startIndex + pageSize)
+                        .getPlaylists(
+                            start = startIndex,
+                            end = startIndex + pageSize,
+                            libraryIds = libraryIds
+                        )
                 }
             val xyResponse = XyResponse(
                 items = playlists.data?.let { convertToPlaylists(it) },
@@ -1251,7 +1261,8 @@ class NavidromeDatasourceServer(
                 end = startIndex + pageSize,
                 name = search,
                 order = sortOrder,
-                sort = sortBy
+                sort = sortBy,
+                libraryIds = libraryIds
             )
         }
 

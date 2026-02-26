@@ -12,6 +12,10 @@ data class XyBackgroundConfig(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     /**
+     * 是否启用
+     */
+    val ifEnabled:Boolean = false,
+    /**
      * 图片地址
      */
     val imageFilePath: String? = null,

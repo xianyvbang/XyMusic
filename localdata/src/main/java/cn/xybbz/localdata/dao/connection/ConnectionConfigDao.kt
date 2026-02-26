@@ -37,11 +37,15 @@ interface ConnectionConfigDao {
 
     @Update
     suspend fun update(data: ConnectionConfig)
+
     @Update
-    suspend fun updateBatch(datas : List<ConnectionConfig>)
+    suspend fun updateBatch(datas: List<ConnectionConfig>)
 
     @Query("select * from xy_connection_config where id = (select connectionId from xy_settings) ")
     suspend fun selectConnectionConfig(): ConnectionConfig?
+
+    @Query("select * from xy_connection_config order by createTime desc limit 1 ")
+    suspend fun selectConnectionConfigOrderByCreateTime(): ConnectionConfig?
 
     @Query("select * from xy_connection_config where id = (select connectionId from xy_settings) ")
     fun selectConnectionConfigFlow(): Flow<ConnectionConfig?>
@@ -52,21 +56,31 @@ interface ConnectionConfigDao {
     @Query("delete from xy_connection_config")
     suspend fun removeAll()
 
-    @Query("select * from xy_connection_config")
+    @Query(
+        """
+        select xcc.* from xy_connection_config xcc
+    """
+    )
+    fun selectAllDataExtFlow(): Flow<List<ConnectionConfig>>
+
+    @Query(
+        """
+        select xcc.* from xy_connection_config xcc
+    """
+    )
     fun selectAllDataFlow(): Flow<List<ConnectionConfig>>
 
     @Query("select * from xy_connection_config where id = :id")
-    suspend fun selectById(id:Long): ConnectionConfig?
+    suspend fun selectById(id: Long): ConnectionConfig?
 
     @Query("select * from xy_connection_config where id = :id")
-    fun selectByIdFlow(id:Long): Flow<ConnectionConfig?>
-
+    fun selectByIdFlow(id: Long): Flow<ConnectionConfig?>
 
     @Query("select count(id) from xy_connection_config")
-    suspend fun selectCount():Int
+    suspend fun selectCount(): Int
 
-    @Query("update xy_connection_config set libraryId = :libraryId where id = :connectionId")
-    suspend fun updateLibraryId(libraryId: String?, connectionId: Long)
+    @Query("update xy_connection_config set libraryIds = :libraryIds where id = :connectionId")
+    suspend fun updateLibraryId(libraryIds: String?, connectionId: Long)
 
     @Query("update xy_connection_config set address = :address where id = :connectionId")
     suspend fun updateAddress(address: String, connectionId: Long)

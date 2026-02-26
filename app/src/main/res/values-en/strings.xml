@@ -114,7 +114,6 @@ Automatic calculation rules for the upper limit of cache:
     <string name="connection_address">Link address</string>
     <string name="set_alias">Set alias</string>
     <string name="delete_connection">Delete connection</string>
-    <string name="cannot_delete_current_connection">The current connection cannot be deleted</string>
     <string name="warning">Notice</string>
     <string name="confirm_delete_connection">Are you sure you want to delete the current connection information?</string>
 
@@ -289,7 +288,6 @@ Automatic calculation rules for the upper limit of cache:
     <string name="delete_warning">Note!! Files on the server will be deleted simultaneously.</string>
     <string name="exact_alarm_permission_granted">Precise alarm clock permission has been enabled</string>
     <string name="exact_alarm_permission_not_granted">Precise alarm clock permission not enabled</string>
-    <string name="timer_close_subtitle">To use the timed shutdown function, you need to apply for precise alarm clock permissions.</string>
     <string name="apply_permission">Request permission</string>
     <string name="custom_timer_close">Custom timed shutdown event</string>
     <string name="max_24_hours">Maximum setting 24 hours</string>

@@ -1,6 +1,6 @@
 [versions]
 accompanistVersion = "0.37.3"
-agp = "9.0.0"
+agp = "9.0.1"
 coilComposeVersion = "2.7.0"
 coreSplashscreenVersion = "1.2.0"
 dialogxVersion = "0.0.50"
@@ -53,6 +53,7 @@ androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtxVersion" }
 dialogx = { module = "com.github.kongzue.DialogX:DialogX", version.ref = "dialogxVersion" }
+dialogx-style = { module = "com.github.kongzue.DialogX:DialogXMaterialYou", version.ref = "dialogxVersion" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJsonVersion" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDateTime" }
 squareup-retrofit2 = { module = "com.squareup.retrofit2:retrofit", version.ref = "squareup" }

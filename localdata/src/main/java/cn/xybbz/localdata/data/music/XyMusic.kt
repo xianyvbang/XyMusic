@@ -38,7 +38,6 @@ import kotlinx.serialization.Serializable
     )],
     indices = [Index("connectionId")]
 )
-@TypeConverters(StringListTypeConverter::class)
 @Serializable
 data class XyMusic(
     /**
@@ -69,6 +68,7 @@ data class XyMusic(
     /**
      * 流派id
      */
+    @field:TypeConverters(StringListTypeConverter::class)
     val genreIds: List<String>? = null,
     /**
      * 连接地址
@@ -77,19 +77,23 @@ data class XyMusic(
     /**
      * 音乐艺术家名称
      */
+    @field:TypeConverters(StringListTypeConverter::class)
     val artists: List<String>? = emptyList(),
 
     /**
      * 音乐艺术家id
      */
+    @field:TypeConverters(StringListTypeConverter::class)
     val artistIds: List<String>? = null,
     /**
      * 专辑艺术家
      */
+    @field:TypeConverters(StringListTypeConverter::class)
     val albumArtist: List<String>? = null,
     /**
      * 专辑音乐艺术家id
      */
+    @field:TypeConverters(StringListTypeConverter::class)
     val albumArtistIds: List<String>? = null,
     /**
      * 年份

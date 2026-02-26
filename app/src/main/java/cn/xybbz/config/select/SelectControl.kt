@@ -33,7 +33,7 @@ import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.ui.components.AddPlaylistBottomData
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.show
-import cn.xybbz.ui.xy.XyItemTextHorizontal
+import cn.xybbz.ui.xy.XyTextSubSmall
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -89,7 +89,7 @@ class SelectControl(val application: Context) {
             AlertDialogObject(
                 title = application.getString(R.string.delete_permanently),
                 content = {
-                    XyItemTextHorizontal(
+                    XyTextSubSmall(
                         text = stringResource(R.string.delete_warning)
                     )
                 },

@@ -7,6 +7,9 @@ object TokenServer {
     var token: String = ""
         private set
 
+    var baseUrl: String = ""
+        private set
+
     var queryMap: Map<String, String> = emptyMap()
         private set
 
@@ -68,5 +71,9 @@ object TokenServer {
 
     fun updateLoginRetry(loginRetry: Boolean) {
         this.loginRetry = loginRetry
+    }
+
+    fun updateBaseUrl(baseUrl: String) {
+        this.baseUrl = baseUrl
     }
 }

@@ -1,19 +1,21 @@
 /*
- *   XyMusic
- *   Copyright (C) 2023 xianyvbang
+ * SaltUI
+ * Copyright (C) 2023 Moriafly
  *
- *   Licensed under the Apache License, Version 2.0 (the "License");
- *   you may not use this file except in compliance with the License.
- *   You may obtain a copy of the License at
+ * Modifications Copyright (C) 2026 xianyvbang
+ * Modified by xybbz on 2026-02-12.
  *
- *        http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package cn.xybbz.ui.xy
@@ -75,9 +77,10 @@ fun XyEdit(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = false,
-    textStyle: TextStyle = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurface),
+    textStyle: TextStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    actionContent: (@Composable () -> Unit)? = null
+    actionContent: (@Composable () -> Unit)? = null,
+    leadingContent: (@Composable () -> Unit)? = null,
 ) {
     BasicTextField(
         value = text,
@@ -100,6 +103,8 @@ fun XyEdit(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
+                leadingContent?.invoke()
+                Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -107,17 +112,17 @@ fun XyEdit(
                 ) {
                     innerTextField()
                     if (hint != null && text.isEmpty()) {
-                        Text(
+                        XyTextSub(
                             text = hint,
-                            color = hintColor
+                            color = hintColor,
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
                 if (actionContent != null) {
                     actionContent()
-                } else {
-                    Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
                 }
+                Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
             }
         }
     )

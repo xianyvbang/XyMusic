@@ -59,7 +59,6 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
@@ -85,9 +84,9 @@ import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumn
-import cn.xybbz.ui.xy.XyItemTextLarge
-import cn.xybbz.ui.xy.XyItemTitle
 import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.SearchViewModel
 
 
@@ -133,7 +132,7 @@ fun SearchScreen(
                         }
                     },
                     textStyle = MaterialTheme.typography.bodySmall,
-                    placeholder = { XyItemTextLarge(text = stringResource(R.string.search_music_album_artist)) },
+                    placeholder = { XyTextSub(text = stringResource(R.string.search_music_album_artist)) },
                     leadingIcon = {
                         Icon(
                             Icons.Rounded.Search,
@@ -296,9 +295,8 @@ fun SearchResultScreen(
             if (artistList.isNotEmpty()) {
                 item {
                     XyRow {
-                        XyItemTitle(
+                        XyText(
                             text = stringResource(R.string.artist),
-                            fontSize = 18.sp,
                         )
                     }
 
@@ -320,7 +318,7 @@ fun SearchResultScreen(
             if (albumList.isNotEmpty()) {
                 item {
                     XyRow {
-                        XyItemTitle(text = stringResource(R.string.album), fontSize = 18.sp)
+                        XyText(text = stringResource(R.string.album))
                     }
                 }
                 item {
@@ -345,7 +343,7 @@ fun SearchResultScreen(
             if (musicList.isNotEmpty()) {
                 item {
                     XyRow {
-                        XyItemTitle(text = stringResource(R.string.music), fontSize = 18.sp)
+                        XyText(text = stringResource(R.string.music))
                     }
                 }
                 items(musicList, key = { music -> music.itemId }) { music ->

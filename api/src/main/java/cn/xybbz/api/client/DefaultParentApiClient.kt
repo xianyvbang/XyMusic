@@ -24,5 +24,5 @@ abstract class DefaultParentApiClient:DefaultApiClient() {
 
     open suspend fun pingAfter(machineIdentifier:String? = null){}
 
-
+    abstract suspend fun ping(): Any
 }

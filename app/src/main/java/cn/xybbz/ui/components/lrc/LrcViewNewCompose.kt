@@ -92,11 +92,10 @@ import cn.xybbz.common.utils.LrcUtils.formatTime
 import cn.xybbz.common.utils.LrcUtils.getIndex
 import cn.xybbz.entity.data.LrcConfigData
 import cn.xybbz.entity.data.LrcEntryData
-import cn.xybbz.localdata.data.lrc.XyLrcConfig
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumn
-import cn.xybbz.ui.xy.XyItemText
+import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.LrcViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -510,7 +509,7 @@ private fun LrcConfigComponent(
         modifier = modifier.padding(end = XyTheme.dimens.outerHorizontalPadding)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            XyItemText(text = "${stringResource(R.string.offset)}: ${offsetMillis.toSecondMs()}s")
+            XyTextSubSmall(text = "${stringResource(R.string.offset)}: ${offsetMillis.toSecondMs()}s")
             items.forEachIndexed { index, item ->
                 AssistChip(
                     modifier = Modifier.semantics {
@@ -523,7 +522,7 @@ private fun LrcConfigComponent(
                     onClick = {
                         item.onClick()
                     }, label = {
-                        XyItemText(text = item.title)
+                        XyTextSubSmall(text = item.title)
                     }, leadingIcon = {
                         Icon(item.icon, contentDescription = null)
                     })

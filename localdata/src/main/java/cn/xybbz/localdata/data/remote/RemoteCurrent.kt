@@ -36,6 +36,8 @@ data class RemoteCurrent(
     val nextKey: Int = 0,
     val prevKey: Int = 1,
     val total: Int = 0,
+    //是否刷新数据
+    val refresh: Boolean,
     /**
      * 连接id
      */

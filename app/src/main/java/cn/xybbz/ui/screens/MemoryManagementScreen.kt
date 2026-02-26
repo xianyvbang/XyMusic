@@ -1,8 +1,25 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
 package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,15 +29,12 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
@@ -32,13 +46,12 @@ import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
-import cn.xybbz.ui.xy.RoundedSurfaceColumnPadding
-import cn.xybbz.ui.xy.XyButtonNotPadding
+import cn.xybbz.ui.xy.RoundedSurfaceColumn
+import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyItemTextHorizontal
-import cn.xybbz.ui.xy.XyItemTextLarge
-import cn.xybbz.ui.xy.XyItemTextPadding
-import cn.xybbz.ui.xy.XyItemTitlePadding
+import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyTextSub
+import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.MemoryManagementViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,6 +62,8 @@ fun MemoryManagementScreen(
 
     val context = LocalContext.current
     val navigator = LocalNavigator.current
+
+    val warning = stringResource(R.string.warning)
 
 
     LaunchedEffect(Unit) {
@@ -104,9 +119,9 @@ fun MemoryManagementScreen(
                     cacheSize = memoryManagementViewModel.databaseSize,
                     onClick = {
                         AlertDialogObject(
-                            title = context.getString(R.string.warning),
+                            title = warning,
                             content = {
-                                XyItemTextHorizontal(
+                                XyTextSubSmall(
                                     text = stringResource(R.string.confirm_delete_database)
                                 )
                             },
@@ -149,9 +164,8 @@ fun MemoryManagementItem(
     ifShowButton: Boolean = true,
     onClick: (() -> Unit)? = null,
 ) {
-    RoundedSurfaceColumnPadding(
-        horizontalAlignment = Alignment.Start,
-        color = Color.Black.copy(alpha = 0.3f)
+    RoundedSurfaceColumn(
+        horizontalAlignment = Alignment.Start
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -160,34 +174,44 @@ fun MemoryManagementItem(
                 .then(modifier)
                 .fillMaxWidth()
                 .padding(
-                    horizontal = XyTheme.dimens.outerHorizontalPadding
+                    horizontal = XyTheme.dimens.innerHorizontalPadding
                 )
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                XyItemTitlePadding(
-                    modifier = modifier, text = text, paddingValues = PaddingValues(
-                        vertical = XyTheme.dimens.innerVerticalPadding
-                    )
+                XyText(
+                    modifier = Modifier.padding(
+                        top = XyTheme.dimens.innerVerticalPadding
+                    ), text = text
                 )
-
-                XyItemTextLarge(
+                XyTextSubSmall(
                     modifier = Modifier,
-                    text = cacheSize,
-                    fontWeight = FontWeight.Bold
+                    text = cacheSize
                 )
             }
             if (ifShowButton)
-                XyButtonNotPadding(
+                XyButton(
                     modifier = Modifier,
                     enabled = cacheSize != "0B",
                     onClick = { onClick?.invoke() },
                     text = stringResource(R.string.clear)
                 )
         }
-        XyItemTextPadding(
-            text = describe,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            overflow = TextOverflow.Visible
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = XyTheme.dimens.innerHorizontalPadding,
+                    end = XyTheme.dimens.innerHorizontalPadding,
+                    bottom = XyTheme.dimens.innerVerticalPadding,
+                ),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            XyTextSub(
+                text = describe,
+                overflow = TextOverflow.Visible
+            )
+        }
+
     }
 }

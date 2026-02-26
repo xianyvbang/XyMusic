@@ -27,14 +27,12 @@ import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import kotlinx.coroutines.flow.StateFlow
 
 /**
  * 专辑的网络数据加载
  * @author xybbz
  * @date 2024/06/14
  * @constructor 创建[AlbumRemoteMediator]
- * @param [userId] 用户id
  * @param [database] 本地缓存管理类
  * @param [dataSource] 数据源来兴
  */
@@ -44,7 +42,7 @@ class AlbumRemoteMediator(
     private val db: DatabaseClient,
     private val datasourceServer: IDataSourceParentServer,
     private val connectionId: Long,
-    private val sortFlow: StateFlow<Sort>
+    private val sort: Sort
 ) : DefaultRemoteMediator<XyAlbum,XyAlbum>(
     db,
     RemoteIdConstants.ALBUM + dataSource + connectionId,
@@ -60,7 +58,6 @@ class AlbumRemoteMediator(
         loadKey: Int,
         pageSize: Int
     ): XyResponse<XyAlbum> {
-        val sort = sortFlow.value
         return datasourceServer.getRemoteServerAlbumList(
             startIndex = loadKey * pageSize,
             pageSize = pageSize,
@@ -87,5 +84,10 @@ class AlbumRemoteMediator(
             items,
             MusicDataTypeEnum.HOME
         )
+    }
+
+    override suspend fun initialize(): InitializeAction {
+        //判断是否
+        return super.initialize()
     }
 }

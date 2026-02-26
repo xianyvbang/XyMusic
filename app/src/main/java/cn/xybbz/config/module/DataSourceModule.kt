@@ -21,6 +21,7 @@ package cn.xybbz.config.module
 import android.content.Context
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.IDataSourceParentServer
+import cn.xybbz.api.client.ImageApiClient
 import cn.xybbz.api.client.emby.EmbyApiClient
 import cn.xybbz.api.client.emby.EmbyDatasourceServer
 import cn.xybbz.api.client.jellyfin.JellyfinApiClient
@@ -134,7 +135,7 @@ class DataSourceModule {
         plexApiClient: PlexApiClient,
         @ApplicationContext application: Context,
         mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
-        downloadManager: DownLoadManager
+        downloadManager: DownLoadManager,
     ): PlexDatasourceServer {
         return PlexDatasourceServer(
             db,
@@ -154,14 +155,16 @@ class DataSourceModule {
         db: DatabaseClient,
         dataSources: Map<DataSourceType, @JvmSuppressWildcards Provider<IDataSourceParentServer>>,
         alarmConfig: AlarmConfig,
-        versionApiClient: VersionApiClient
+        versionApiClient: VersionApiClient,
+        imageApiClient: ImageApiClient
     ): DataSourceManager {
         val dataSourceManager = DataSourceManager(
             application = application,
             db,
             dataSources,
             alarmConfig,
-            versionApiClient
+            versionApiClient,
+            imageApiClient
         )
         return dataSourceManager
     }
