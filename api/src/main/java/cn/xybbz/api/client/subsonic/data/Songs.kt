@@ -22,5 +22,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Songs(
-    val song: List<SongID3>
+    val song: List<SongID3>?
 )

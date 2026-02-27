@@ -81,12 +81,14 @@ class XyApplication : Application(), Configuration.Provider {
         DialogX.DEBUGMODE = true
 
         val scope = CoroutineScopeUtils.getDefault("XyApplication")
-        scope.launch {
-            homeDataRepository.initData()
-        }
+
         scope.launch {
             val settings = settingsManager.setSettingsData()
             dataSourceManager.initDataSource(settings.dataSourceType)
+        }
+
+        scope.launch {
+            homeDataRepository.initData()
         }
 
         scope.launch {

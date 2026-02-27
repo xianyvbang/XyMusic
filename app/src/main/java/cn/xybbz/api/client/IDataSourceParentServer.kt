@@ -30,7 +30,6 @@ import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
-import cn.xybbz.api.events.ReLoginEvent
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.exception.UnauthorizedException
@@ -88,7 +87,6 @@ import kotlinx.coroutines.flow.update
 import java.net.SocketTimeoutException
 import java.util.UUID
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 
 abstract class IDataSourceParentServer(
@@ -379,16 +377,6 @@ abstract class IDataSourceParentServer(
                     clientLoginInfoReq = clientLoginInfoReq
                 )
 
-                try {
-                    defaultParentApiClient.ping()
-                } catch (e: Exception) {
-                    if (!TokenServer.loginRetry) {
-                        TokenServer.updateLoginRetry(true)
-                        defaultParentApiClient.eventBus.notify(ReLoginEvent.Unauthorized)
-                    }
-
-                    throw e
-                }
                 defaultParentApiClient.pingAfter(connectionConfig.machineIdentifier)
                 emitAll(loginAfter(connectionConfig))
             }
@@ -1209,7 +1197,7 @@ abstract class IDataSourceParentServer(
         if (!ifAutoLogin)
             this.connectionConfig = connectionConfig
         settingsManager.saveConnectionId(connectionId = connectionConfig.id, connectionConfig.type)
-        updateLibraryIds(connectionConfig.libraryIds)
+        updateLibraryIds(connectionConfig.libraryIds, true)
         sendLoginCompleted(LoginStateType.SUCCESS)
     }
 
@@ -1222,7 +1210,7 @@ abstract class IDataSourceParentServer(
      * 设置媒体库id
      */
     protected open suspend fun setUpLibraryId(libraryIds: List<String>?) {
-        updateLibraryIds(libraryIds)
+        updateLibraryIds(libraryIds, false)
         db.connectionConfigDao.updateLibraryId(
             libraryIds = libraryIds?.joinToString(LocalConstants.ARTIST_DELIMITER),
             connectionId = getConnectionId()
@@ -1230,10 +1218,15 @@ abstract class IDataSourceParentServer(
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    suspend fun updateLibraryIds(libraryIds: List<String>?) {
+    suspend fun updateLibraryIds(libraryIds: List<String>?, ifLoginSet: Boolean = false) {
         this.libraryIds = libraryIds
-        updateDataSourceRemoteKey()
-        _mediaLibraryIdFlow.update { Uuid.random().toString() }
+        if (!ifLoginSet){
+            updateDataSourceRemoteKey()
+            _mediaLibraryIdFlow.update {
+                libraryIds?.sorted()?.joinToString(LocalConstants.ARTIST_DELIMITER)
+            }
+        }
+
     }
 
     /**
@@ -1243,7 +1236,7 @@ abstract class IDataSourceParentServer(
         _loginSuccessEvent.tryEmit(loginState)
     }
 
-    suspend fun updateDataSourceRemoteKey(){
+    suspend fun updateDataSourceRemoteKey() {
         db.remoteCurrentDao.updateByConnectionId(getConnectionId())
     }
 

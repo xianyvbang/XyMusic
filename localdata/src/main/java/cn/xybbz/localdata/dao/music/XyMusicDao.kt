@@ -739,9 +739,9 @@ interface XyMusicDao {
         """
         select mi.*,xd.filePath from RecommendedMusic mpm
         inner join xy_music mi on mpm.musicId = mi.itemId
+        inner join xy_settings xs on mpm.connectionId = xs.connectionId
         left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
-        where mpm.connectionId = (select connectionId from xy_settings)
-        and mi.connectionId = (select connectionId from xy_settings)
+        where mi.connectionId = (select connectionId from xy_settings)
         order by mpm.cachedAt, mpm.`index` desc 
         limit :limit
     """

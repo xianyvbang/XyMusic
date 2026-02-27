@@ -24,7 +24,9 @@ import androidx.hilt.work.HiltWorker
 import androidx.room.withTransaction
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.api.events.ReLoginEvent
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.localdata.config.DatabaseClient
@@ -47,7 +49,7 @@ class MediaLibraryAndFavoriteSyncWorker @AssistedInject constructor(
                 "开始启动获取音乐/专辑/艺术家/收藏/流派数量"
             )
             db.withTransaction {
-                val connectionId = inputData.getLong(Constants.CONNECTION_ID,0L)
+                val connectionId = inputData.getLong(Constants.CONNECTION_ID, 0L)
                 val remoteId = RemoteIdConstants.MEDIA_LIBRARY_AND_FAVORITE + connectionId
                 dataSourceManager.initFavoriteData(connectionId = connectionId)
                 try {
@@ -59,6 +61,19 @@ class MediaLibraryAndFavoriteSyncWorker @AssistedInject constructor(
                         e
                     )
                 }
+
+                try {
+                    dataSourceManager.dataSourceServerFlow.value?.getApiClient()?.ping()
+                } catch (e: Exception) {
+                    if (!TokenServer.loginRetry) {
+                        TokenServer.updateLoginRetry(true)
+                        dataSourceManager.dataSourceServerFlow.value?.getApiClient()?.eventBus?.notify(
+                            ReLoginEvent.Unauthorized
+                        )
+                    }
+                    throw e
+                }
+
                 db.remoteCurrentDao.deleteById(remoteId)
                 db.remoteCurrentDao.insertOrReplace(
                     RemoteCurrent(
