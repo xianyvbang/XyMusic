@@ -124,9 +124,8 @@ open class DataSourceManager(
             }.filter { it != LoginStateType.UNKNOWN }
 
 
-
     @kotlin.OptIn(ExperimentalCoroutinesApi::class)
-    private val mediaLibraryIdFlow: Flow<String> =
+    private val mediaLibraryIdFlow: Flow<String?> =
         dataSourceServerFlow
             .filterNotNull()
             .flatMapLatest { server ->
@@ -136,7 +135,10 @@ open class DataSourceManager(
     val taggedLoginFlow = loginStateFlow.map { Source.Login(it) }
     val taggedMediaFlow = mediaLibraryIdFlow.map { Source.Library(it) }
 
-    val mergeFlow =  merge(taggedLoginFlow, taggedMediaFlow).filter { it is Source.Login && it.value != LoginStateType.UNKNOWN || it is Source.Library }
+    val mergeFlow = merge(
+        taggedLoginFlow,
+        taggedMediaFlow
+    ).filter { (it is Source.Login && it.value != LoginStateType.UNKNOWN) || (it is Source.Library && it.value != null) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val combinedFlow: Flow<Pair<LoginStateType, String?>> =
@@ -145,7 +147,7 @@ open class DataSourceManager(
             mediaLibraryIdFlow
         ) { loginState, mediaIds ->
             loginState to mediaIds
-        }.filter { it.first != LoginStateType.UNKNOWN}
+        }.filter { it.first != LoginStateType.UNKNOWN }
 
 
     //加载状态
@@ -178,7 +180,6 @@ open class DataSourceManager(
             serverLogin(LoginType.TOKEN, null)
         }
         setCoilImageOkHttpClient()
-
     }
 
     /**
