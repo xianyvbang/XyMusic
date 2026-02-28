@@ -48,7 +48,6 @@ class DailyRecommender(
 
 
     suspend fun generate() {
-        if (true) return
         // 1) 拉取必要数据（最近播放用于画像）
         val recentPlays =
             repo.getPlayRecordMusicList(pageSize = (Constants.ALBUM_MUSIC_LIST_PAGE * 0.8).toInt())

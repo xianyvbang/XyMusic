@@ -515,29 +515,6 @@ fun HomeScreen(
 
                     item(key = "most_played_album") {
                         HomeAlbumItemLazyRow(mostPlayerAlbumList)
-
-                        /*LazyRow(
-                            modifier = Modifier.height(MusicCardImageSize + 50.dp),
-                            contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
-                            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
-                        ) {
-                            items(
-                                mostPlayerAlbumList,
-                                key = { item -> item.itemId }) { album ->
-                                MusicAlbumCardComponent(
-                                    onItem = { album },
-                                    imageSize = MusicCardImageSize,
-                                    onRouter = {
-                                        navigator.navigate(
-                                            AlbumInfo(
-                                                it,
-                                                MusicDataTypeEnum.ALBUM
-                                            )
-                                        )
-                                    }
-                                )
-                            }
-                        }*/
                     }
                 }
 
@@ -592,31 +569,6 @@ fun HomeScreen(
                             musicList = mostPlayerMusicList,
                             homeViewModel = homeViewModel
                         )
-                        /*LazyRow(
-                            modifier = Modifier.height(MusicCardImageSize + 50.dp),
-                            contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
-                            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
-                        ) {
-                            items(
-                                mostPlayerMusicList,
-                                key = { item -> item.music.itemId }) { musicExtend ->
-                                MusicMusicCardComponent(
-                                    onItem = { musicExtend.music },
-                                    imageSize = MusicCardImageSize,
-                                    onRouter = {
-                                        //点击播放
-                                        homeViewModel.musicList(
-                                            onMusicPlayParameter = OnMusicPlayParameter(
-                                                musicId = musicExtend.music.itemId,
-                                                albumId = musicExtend.music
-                                                    .album
-                                            ),
-                                            mostPlayerMusicList
-                                        )
-                                    }
-                                )
-                            }
-                        }*/
                     }
                 }
 
@@ -681,31 +633,6 @@ fun HomeScreen(
                             musicList = recommendedMusicList,
                             homeViewModel = homeViewModel
                         )
-                        /*LazyRow(
-                            modifier = Modifier.height(MusicCardImageSize + 50.dp),
-                            contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
-                            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
-                        ) {
-                            items(
-                                recommendedMusicList,
-                                key = { item -> item.music.itemId }) { musicExtend ->
-                                MusicMusicCardComponent(
-                                    onItem = { musicExtend.music },
-                                    imageSize = MusicCardImageSize,
-                                    onRouter = {
-                                        //点击播放
-                                        homeViewModel.musicList(
-                                            onMusicPlayParameter = OnMusicPlayParameter(
-                                                musicId = musicExtend.music.itemId,
-                                                albumId = musicExtend.music
-                                                    .album
-                                            ),
-                                            recommendedMusicList
-                                        )
-                                    }
-                                )
-                            }
-                        }*/
                     }
                 }
 
@@ -720,28 +647,6 @@ fun HomeScreen(
                     }
                     item(key = "new_album") {
                         HomeAlbumItemLazyRow(newAlbumList)
-                        /*LazyRow(
-                            modifier = Modifier.height(MusicCardImageSize + 50.dp),
-                            contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
-                            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
-                        ) {
-                            items(
-                                newAlbumList,
-                                key = { item -> item.itemId }) { album ->
-                                MusicAlbumCardComponent(
-                                    onItem = { album },
-                                    imageSize = MusicCardImageSize,
-                                    onRouter = {
-                                        navigator.navigate(
-                                            AlbumInfo(
-                                                it,
-                                                MusicDataTypeEnum.ALBUM
-                                            )
-                                        )
-                                    }
-                                )
-                            }
-                        }*/
                     }
                 }
 
@@ -757,28 +662,6 @@ fun HomeScreen(
 
                     item(key = "album_recently") {
                         HomeAlbumItemLazyRow(albumRecentlyList)
-                        /*LazyRow(
-                            modifier = Modifier.height(MusicCardImageSize + 50.dp),
-                            contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
-                            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
-                        ) {
-                            items(
-                                albumRecentlyList,
-                                key = { item -> item.itemId }) { album ->
-                                MusicAlbumCardComponent(
-                                    onItem = { album },
-                                    imageSize = MusicCardImageSize,
-                                    onRouter = {
-                                        navigator.navigate(
-                                            AlbumInfo(
-                                                it,
-                                                MusicDataTypeEnum.ALBUM
-                                            )
-                                        )
-                                    }
-                                )
-                            }
-                        }*/
                     }
                 }
 
@@ -835,31 +718,6 @@ fun HomeScreen(
                             musicList = musicRecentlyList,
                             homeViewModel = homeViewModel
                         )
-                        /*LazyRow(
-                            modifier = Modifier.height(MusicCardImageSize + 50.dp),
-                            contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
-                            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
-                        ) {
-                            items(
-                                musicRecentlyList,
-                                key = { item -> item.music.itemId }) { musicExtend ->
-                                MusicMusicCardComponent(
-                                    onItem = { musicExtend.music },
-                                    imageSize = MusicCardImageSize,
-                                    onRouter = {
-                                        //点击播放
-                                        homeViewModel.musicList(
-                                            onMusicPlayParameter = OnMusicPlayParameter(
-                                                musicId = musicExtend.music.itemId,
-                                                albumId = musicExtend.music
-                                                    .album
-                                            ),
-                                            musicRecentlyList
-                                        )
-                                    }
-                                )
-                            }
-                        }*/
                     }
                 }
 
