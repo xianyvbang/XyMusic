@@ -141,7 +141,7 @@ open class DataSourceManager(
     val mergeFlow = merge(
         taggedLoginFlow,
         taggedMediaFlow
-    ).filter { (it is Source.Login && it.value != LoginStateType.UNKNOWN) || (it is Source.Library && it.value != null) }
+    ).filter { (it is Source.Login && it.value != LoginStateType.UNKNOWN) || (it is Source.Library /*&& it.value != null*/) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val combinedFlow: Flow<Pair<LoginStateType, String?>> =
