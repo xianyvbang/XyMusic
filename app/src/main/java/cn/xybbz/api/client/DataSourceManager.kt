@@ -1295,8 +1295,8 @@ open class DataSourceManager(
     /**
      * 更新数据源远程键数据管理
      */
-    suspend fun updateDataSourceRemoteKey() {
-        dataSourceServer.updateDataSourceRemoteKey()
+    suspend fun updateDataSourceRemoteKey(remoteCurrentId: String) {
+        dataSourceServer.updateDataSourceRemoteKey(remoteCurrentId)
     }
 
 

@@ -1034,7 +1034,7 @@ class PlexDatasourceServer(
         if (!super.libraryIds.isNullOrEmpty()) {
             return
         }
-        setUpLibraryId(listOf(libraryId))
+        setUpLibraryId(listOf(libraryId), true)
     }
 
     /**

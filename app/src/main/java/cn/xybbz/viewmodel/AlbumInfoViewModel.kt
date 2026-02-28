@@ -27,6 +27,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.room.Transaction
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.PlaylistFileUtils
@@ -262,7 +263,7 @@ class AlbumInfoViewModel @AssistedInject constructor(
     }
 
     override suspend fun updateDataSourceRemoteKey() {
-        dataSourceManager.updateDataSourceRemoteKey()
+        dataSourceManager.updateDataSourceRemoteKey(RemoteIdConstants.ALBUM_MUSIC)
     }
 
 }

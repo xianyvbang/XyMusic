@@ -36,7 +36,6 @@ import com.kongzue.dialogx.DialogX
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.system.exitProcess
 
 @HiltAndroidApp
 class XyApplication : Application(), Configuration.Provider {
@@ -71,7 +70,7 @@ class XyApplication : Application(), Configuration.Provider {
             throwable.printStackTrace()
             Log.e("=====", "有异常" + throwable.message.toString())
             // 退出应用程序
-            exitProcess(1)
+//            exitProcess(1)
         }
         // 初始化语种切换框架
         super.onCreate()

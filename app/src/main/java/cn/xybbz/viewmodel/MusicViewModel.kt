@@ -20,6 +20,7 @@ package cn.xybbz.viewmodel
 
 import androidx.paging.PagingData
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.BackgroundConfig
@@ -61,6 +62,6 @@ class MusicViewModel @Inject constructor(
     }
 
     override suspend fun updateDataSourceRemoteKey() {
-        dataSourceManager.updateDataSourceRemoteKey()
+        dataSourceManager.updateDataSourceRemoteKey(RemoteIdConstants.MUSIC)
     }
 }

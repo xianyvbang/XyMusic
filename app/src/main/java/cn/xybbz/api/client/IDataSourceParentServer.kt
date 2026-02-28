@@ -1209,8 +1209,11 @@ abstract class IDataSourceParentServer(
     /**
      * 设置媒体库id
      */
-    protected open suspend fun setUpLibraryId(libraryIds: List<String>?) {
-        updateLibraryIds(libraryIds, false)
+    protected open suspend fun setUpLibraryId(
+        libraryIds: List<String>?,
+        ifLoginSet: Boolean = false
+    ) {
+        updateLibraryIds(libraryIds, ifLoginSet)
         db.connectionConfigDao.updateLibraryId(
             libraryIds = libraryIds?.joinToString(LocalConstants.ARTIST_DELIMITER),
             connectionId = getConnectionId()
@@ -1220,7 +1223,7 @@ abstract class IDataSourceParentServer(
     @OptIn(ExperimentalUuidApi::class)
     suspend fun updateLibraryIds(libraryIds: List<String>?, ifLoginSet: Boolean = false) {
         this.libraryIds = libraryIds
-        if (!ifLoginSet){
+        if (!ifLoginSet) {
             updateDataSourceRemoteKey()
             _mediaLibraryIdFlow.update {
                 libraryIds?.sorted()?.joinToString(LocalConstants.ARTIST_DELIMITER)
@@ -1236,8 +1239,12 @@ abstract class IDataSourceParentServer(
         _loginSuccessEvent.tryEmit(loginState)
     }
 
-    suspend fun updateDataSourceRemoteKey() {
-        db.remoteCurrentDao.updateByConnectionId(getConnectionId())
+    suspend fun updateDataSourceRemoteKey(remoteCurrentId: String? = null) {
+        if (!remoteCurrentId.isNullOrBlank()) {
+            db.remoteCurrentDao.updateByIdAndConnectionId(getConnectionId(), remoteCurrentId + getConnectionId())
+        } else {
+            db.remoteCurrentDao.updateByConnectionId(getConnectionId())
+        }
     }
 
     override fun close() {
