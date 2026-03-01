@@ -264,7 +264,6 @@ class JellyfinApiClient : DefaultParentApiClient() {
         loginAfter(responseData.accessToken, clientLoginInfoReq = clientLoginInfoReq)
         val systemInfo = userApi().getSystemInfo()
         Log.i("=====", "服务器信息 $systemInfo")
-        TokenServer.updateLoginRetry(false)
         return LoginSuccessData(
             userId = responseData.user?.id,
             accessToken = responseData.accessToken,

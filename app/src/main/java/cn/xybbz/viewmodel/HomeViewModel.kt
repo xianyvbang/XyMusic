@@ -272,6 +272,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
                     autoLogin()
                 }
             } else {
+                Log.i("home", "开始刷新数据")
                 val mostPlayerMusicAsync = async {
                     dataSourceManager.getMostPlayerMusicList()
                 }

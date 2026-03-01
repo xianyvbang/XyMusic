@@ -88,6 +88,7 @@ class ConnectionViewModel @Inject constructor(
     //加载状态
     var loading by mutableStateOf(false)
         private set
+
     //资源加载状态
     var resourceLoading by mutableStateOf(false)
         private set
@@ -200,6 +201,7 @@ class ConnectionViewModel @Inject constructor(
 
     fun createTmpAddress() {
         clearLoginStatus()
+        clearResourceLoginStatus()
         updateSelectUrlIndexZero()
         if (!URLUtil.isNetworkUrl(address)) {
             options.forEach {
@@ -307,34 +309,35 @@ class ConnectionViewModel @Inject constructor(
         clearResourceLoginStatus()
         updateResourceLoading(true)
         updateSelectUrlIndexZero()
-        tmpDataSourceParentServer = dataSourceManager
         val dataSourceTypeTmp = dataSourceType
-        if (dataSourceTypeTmp != null)
-            if (dataSourceManager.dataSourceType == null) {
-                dataSourceManager.switchDataSource(dataSourceTypeTmp)
-            } else {
-                tmpDataSourceParentServer =
-                    dataSourceManager.getDataSourceServerByType(dataSourceTypeTmp, true)
+        if (dataSourceTypeTmp != null) {
+            val tmpDataSourceParentServer =
+                dataSourceManager.getDataSourceServerByType(dataSourceTypeTmp, true)
+            val clientLoginInfoReq =
+                ClientLoginInfoReq(
+                    username = username,
+                    password = password,
+                    address = tmpAddress,
+                    appName = "",
+                    clientVersion = ""
+                )
+            try {
+                val resources = tmpDataSourceParentServer?.getResources(clientLoginInfoReq)
+                if (!resources.isNullOrEmpty())
+                    tmpPlexInfo = resources
+            } catch (e: Exception) {
+                Log.e("ConnectionScreen", "获取资源失败", e)
+                isResourceLoginError = true
+                errorHint = R.string.plex_resource_error
+                errorMessage = ""
             }
-
-        val clientLoginInfoReq =
-            ClientLoginInfoReq(
-                username = username,
-                password = password,
-                address = tmpAddress,
-                appName = "",
-                clientVersion = ""
-            )
-        try {
-            val resources = tmpDataSourceParentServer?.getResources(clientLoginInfoReq)
-            if (!resources.isNullOrEmpty())
-                tmpPlexInfo = resources
-        } catch (e: Exception) {
-            Log.e("ConnectionScreen", "获取资源失败", e)
+        } else {
             isResourceLoginError = true
             errorHint = R.string.plex_resource_error
             errorMessage = ""
         }
+
+
     }
 
     /**

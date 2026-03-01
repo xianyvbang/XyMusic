@@ -236,7 +236,6 @@ class NavidromeApiClient : DefaultParentApiClient() {
         }
         val user = userApi().getUser(username)
         Log.i("=====", "服务器信息 $systemInfo 用户信息 $user")
-        TokenServer.updateLoginRetry(false)
         val serverVersion = systemInfo.subsonicResponse.serverVersion
         return LoginSuccessData(
             userId = responseData.id,

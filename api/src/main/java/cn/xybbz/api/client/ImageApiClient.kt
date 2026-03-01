@@ -17,10 +17,6 @@ class ImageApiClient : DefaultApiClient() {
         getOkHttpClient()
     }
 
-    override fun updateIfSubsonic() {
-
-    }
-
     override fun updateTokenHeaderName() {
     }
 }

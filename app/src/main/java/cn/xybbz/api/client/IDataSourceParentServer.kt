@@ -86,6 +86,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.update
 import java.net.SocketTimeoutException
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.uuid.ExperimentalUuidApi
 
 
@@ -114,6 +115,7 @@ abstract class IDataSourceParentServer(
 
 
     private var ifTmpObject = false
+    private val loginRetryGate = AtomicBoolean(false)
 
     fun ifTmpObject(): Boolean {
         return ifTmpObject
@@ -125,6 +127,14 @@ abstract class IDataSourceParentServer(
 
     fun getApiClient(): DefaultParentApiClient {
         return defaultParentApiClient
+    }
+
+    fun resetLoginRetry() {
+        loginRetryGate.set(false)
+    }
+
+    fun tryMarkLoginRetry(): Boolean {
+        return loginRetryGate.compareAndSet(false, true)
     }
 
     /**
@@ -143,6 +153,7 @@ abstract class IDataSourceParentServer(
         val popTipHint = MessageUtils.sendPopTipHint(
             R.string.logging_in
         )
+        resetLoginRetry()
         return flow {
             Log.i("=====", "输入的地址: ${clientLoginInfoReq.address}")
             emit(ClientLoginInfoState.Connected(clientLoginInfoReq.address))
@@ -270,7 +281,7 @@ abstract class IDataSourceParentServer(
                 }
 
                 if (!ifTmpObject()) {
-                    selectMediaLibrary(connectionId = connectionId)
+
                     downloadManager.initData(connectionId)
                     connection(connectionConfig.copy(id = connectionId), connectionConfig.id != 0L)
                     mediaLibraryAndFavoriteSyncScheduler.cancel()
@@ -359,9 +370,8 @@ abstract class IDataSourceParentServer(
                     )
                 )
             } else {
+                resetLoginRetry()
                 emit(ClientLoginInfoState.Connected(clientLoginInfoReq.address))
-
-
                 //保存客户端数据
                 createApiClient(
                     address,
@@ -1197,6 +1207,7 @@ abstract class IDataSourceParentServer(
         if (!ifAutoLogin)
             this.connectionConfig = connectionConfig
         settingsManager.saveConnectionId(connectionId = connectionConfig.id, connectionConfig.type)
+        selectMediaLibrary(connectionId = connectionConfig.id)
         updateLibraryIds(connectionConfig.libraryIds, true)
         sendLoginCompleted(LoginStateType.SUCCESS)
     }

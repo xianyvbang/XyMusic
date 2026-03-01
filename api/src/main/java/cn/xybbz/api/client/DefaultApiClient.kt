@@ -60,7 +60,6 @@ abstract class DefaultApiClient : ApiConfig {
     /**
      * 是否为Subsonic
      */
-    protected open val ifSubsonic = false
 
     lateinit var apiOkHttpClient: OkHttpClient
 
@@ -98,7 +97,6 @@ abstract class DefaultApiClient : ApiConfig {
     protected open fun getOkHttpClient(ifTmp: Boolean = false): OkHttpClient {
         if (!ifTmp) {
             updateTokenHeaderName()
-            updateIfSubsonic()
         }
         val okHttpClientBuilder = OkHttpClient.Builder()
             .proxySelector(ProxyManager.proxySelector())
@@ -251,10 +249,6 @@ abstract class DefaultApiClient : ApiConfig {
     open fun updateTokenHeaderName() {
         if (TokenServer.tokenHeaderName != tokenHeaderName)
             TokenServer.updateTokenHeaderName(tokenHeaderName)
-    }
-
-    open fun updateIfSubsonic() {
-        TokenServer.updateIfSubsonic(ifSubsonic)
     }
 
     /**
