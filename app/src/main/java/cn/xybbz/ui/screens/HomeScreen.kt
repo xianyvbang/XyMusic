@@ -284,9 +284,7 @@ fun HomeScreen(
                                         coroutineScope.launch {
                                             ifShowConnectionMenu = false
                                             homeViewModel.changeDataSource(connection)
-//                                            homeViewModel.tryRefreshHome()
                                         }.invokeOnCompletion {
-
                                         }
 
                                     })

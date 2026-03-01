@@ -18,9 +18,11 @@ object DataSourceChangeUtils {
         dataSourceManager: DataSourceManager,
         musicController: MusicController
     ) {
-        //清空所有下载
-        musicController.clearPlayerList()
-        dataSourceManager.changeDataSource(connectionConfig)
+        if (connectionConfig.id != dataSourceManager.getConnectionId()){
+            //清空所有下载
+            musicController.clearPlayerList()
+            dataSourceManager.changeDataSource(connectionConfig)
+        }
     }
 
     /**
