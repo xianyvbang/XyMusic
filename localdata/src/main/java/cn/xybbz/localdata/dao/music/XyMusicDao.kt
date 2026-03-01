@@ -34,10 +34,10 @@ import cn.xybbz.localdata.data.music.NewestMusic
 import cn.xybbz.localdata.data.music.PlayHistoryMusic
 import cn.xybbz.localdata.data.music.PlayQueueMusic
 import cn.xybbz.localdata.data.music.PlaylistMusic
-import cn.xybbz.localdata.data.music.RecommendedMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
+import cn.xybbz.localdata.data.recommend.XyDailyRecommendHistory
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -198,11 +198,13 @@ interface XyMusicDao {
             }
 
             MusicDataTypeEnum.RECOMMEND -> {
+                val now = System.currentTimeMillis()
                 saveRecommendedMusic(data.mapIndexed { index, item ->
-                    RecommendedMusic(
-                        item.itemId,
-                        connectionId,
-                        index
+                    XyDailyRecommendHistory(
+                        songId = item.itemId,
+                        connectionId = connectionId,
+                        recommendIndex = index,
+                        timestamp = now
                     )
                 })
             }
@@ -238,7 +240,7 @@ interface XyMusicDao {
 
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun saveRecommendedMusic(data: List<RecommendedMusic>)
+    suspend fun saveRecommendedMusic(data: List<XyDailyRecommendHistory>)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun save(data: XyMusic): Long
@@ -382,14 +384,14 @@ interface XyMusicDao {
 
     @Query(
         """
-        delete from RecommendedMusic where connectionId = (select connectionId from xy_settings)
+        delete from xy_daily_recommend_history where connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removeRecommendedMusic()
 
     @Query(
         """
-        delete from RecommendedMusic where musicId in (:itemIds) and connectionId = (select connectionId from xy_settings)
+        delete from xy_daily_recommend_history where songId in (:itemIds) and connectionId = (select connectionId from xy_settings)
     """
     )
     suspend fun removeRecommendedMusicByItems(itemIds: List<String>)
@@ -410,7 +412,7 @@ interface XyMusicDao {
           AND itemId NOT IN (SELECT musicId FROM newestmusic)
           AND itemId NOT IN (SELECT musicId FROM playhistorymusic)
           AND itemId NOT IN (SELECT musicId FROM playqueuemusic)
-          AND itemId NOT IN (SELECT musicId FROM recommendedmusic)
+          AND itemId NOT IN (SELECT songId FROM xy_daily_recommend_history)
     """
     )
     suspend fun removeByNotQuote()
@@ -737,12 +739,12 @@ interface XyMusicDao {
 
     @Query(
         """
-        select mi.*,xd.filePath from RecommendedMusic mpm
-        inner join xy_music mi on mpm.musicId = mi.itemId
+        select mi.*,xd.filePath from xy_daily_recommend_history mpm
+        inner join xy_music mi on mpm.songId = mi.itemId
         inner join xy_settings xs on mpm.connectionId = xs.connectionId
         left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
-        where mi.connectionId = (select connectionId from xy_settings)
-        order by mpm.cachedAt, mpm.`index` desc 
+        where mi.connectionId = xs.connectionId
+        order by mpm.timestamp, mpm.recommendIndex desc 
         limit :limit
     """
     )
@@ -752,12 +754,12 @@ interface XyMusicDao {
 
     @Query(
         """
-        select mi.*,xd.filePath from RecommendedMusic mpm
-        inner join xy_music mi on mpm.musicId = mi.itemId
+        select mi.*,xd.filePath from xy_daily_recommend_history mpm
+        inner join xy_music mi on mpm.songId = mi.itemId
         left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
         where mpm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
-        order by mpm.cachedAt, mpm.`index` desc 
+        order by mpm.timestamp, mpm.recommendIndex desc 
         limit :limit
     """
     )

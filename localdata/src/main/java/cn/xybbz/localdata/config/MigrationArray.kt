@@ -830,3 +830,73 @@ val MIGRATION_28_29 = object : Migration(28, 29) {
 """)
     }
 }
+
+val MIGRATION_29_30 = object : Migration(29, 30) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS xy_recent_recommend_history_new (
+                songId TEXT NOT NULL,
+                connectionId INTEGER NOT NULL,
+                recommendIndex INTEGER NOT NULL,
+                timestamp INTEGER NOT NULL,
+                PRIMARY KEY(songId, connectionId),
+                FOREIGN KEY(connectionId)
+                REFERENCES xy_connection_config(id)
+                ON DELETE CASCADE
+            )
+        """.trimIndent()
+        )
+
+        db.execSQL(
+            """
+            INSERT INTO xy_recent_recommend_history_new (
+                songId,
+                connectionId,
+                recommendIndex,
+                timestamp
+            )
+            SELECT
+                songId,
+                connectionId,
+                0,
+                timestamp
+            FROM xy_recent_recommend_history
+        """.trimIndent()
+        )
+
+        db.execSQL(
+            """
+            INSERT OR REPLACE INTO xy_recent_recommend_history_new (
+                songId,
+                connectionId,
+                recommendIndex,
+                timestamp
+            )
+            SELECT
+                musicId,
+                connectionId,
+                `index`,
+                cachedAt
+            FROM RecommendedMusic
+        """.trimIndent()
+        )
+
+        db.execSQL("DROP TABLE xy_recent_recommend_history")
+        db.execSQL("ALTER TABLE xy_recent_recommend_history_new RENAME TO xy_recent_recommend_history")
+        db.execSQL("DROP TABLE RecommendedMusic")
+
+        db.execSQL(
+            """
+            CREATE INDEX IF NOT EXISTS index_xy_recent_recommend_history_connectionId
+            ON xy_recent_recommend_history(connectionId)
+        """.trimIndent()
+        )
+        db.execSQL(
+            """
+            CREATE INDEX IF NOT EXISTS index_xy_recent_recommend_history_connectionId_timestamp
+            ON xy_recent_recommend_history(connectionId, timestamp)
+        """.trimIndent()
+        )
+    }
+}

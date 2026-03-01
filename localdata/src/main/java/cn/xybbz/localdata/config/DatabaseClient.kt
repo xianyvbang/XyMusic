@@ -19,7 +19,10 @@
 package cn.xybbz.localdata.config
 
 import androidx.room.Database
+import androidx.room.AutoMigration
+import androidx.room.RenameTable
 import androidx.room.RoomDatabase
+import androidx.room.migration.AutoMigrationSpec
 import cn.xybbz.localdata.dao.album.AlbumDao
 import cn.xybbz.localdata.dao.connection.ConnectionConfigDao
 import cn.xybbz.localdata.dao.count.XyDataCountDao
@@ -66,13 +69,12 @@ import cn.xybbz.localdata.data.music.NewestMusic
 import cn.xybbz.localdata.data.music.PlayHistoryMusic
 import cn.xybbz.localdata.data.music.PlayQueueMusic
 import cn.xybbz.localdata.data.music.PlaylistMusic
-import cn.xybbz.localdata.data.music.RecommendedMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.player.XyPlayer
 import cn.xybbz.localdata.data.progress.EnableProgress
 import cn.xybbz.localdata.data.progress.Progress
 import cn.xybbz.localdata.data.proxy.XyProxyConfig
-import cn.xybbz.localdata.data.recommend.XyRecentHistory
+import cn.xybbz.localdata.data.recommend.XyDailyRecommendHistory
 import cn.xybbz.localdata.data.remote.RemoteCurrent
 import cn.xybbz.localdata.data.search.SearchHistory
 import cn.xybbz.localdata.data.setting.SkipTime
@@ -80,7 +82,14 @@ import cn.xybbz.localdata.data.setting.XyBackgroundConfig
 import cn.xybbz.localdata.data.setting.XySettings
 
 @Database(
-    version = 29,
+    version = 31,
+    autoMigrations = [
+        AutoMigration(
+            from = 30,
+            to = 31,
+            spec = DatabaseClient.Migration_30_31::class
+        )
+    ],
     entities = [XyMusic::class, XyAlbum::class, XySettings::class, SkipTime::class,
         RemoteCurrent::class, SearchHistory::class, Progress::class, XyArtist::class,
         EnableProgress::class, XyLibrary::class, XyPlayer::class, ConnectionConfig::class,
@@ -89,11 +98,17 @@ import cn.xybbz.localdata.data.setting.XySettings
         MaximumPlayMusic::class, NewestAlbum::class, NewestMusic::class, PlayHistoryMusic::class,
         PlaylistMusic::class, PlayQueueMusic::class, XyDataCount::class, PlayHistoryAlbum::class,
         MaximumPlayAlbum::class, FavoriteAlbum::class, FavoriteArtist::class, XyBackgroundConfig::class,
-        XyRecentHistory::class, RecommendedMusic::class, XyDownload::class, XyProxyConfig::class,
+        XyDailyRecommendHistory::class, XyDownload::class, XyProxyConfig::class,
         XyLrcConfig::class],
     exportSchema = true
 )
 abstract class DatabaseClient : RoomDatabase() {
+
+    @RenameTable(
+        fromTableName = "xy_recent_recommend_history",
+        toTableName = "xy_daily_recommend_history"
+    )
+    class Migration_30_31 : AutoMigrationSpec
 
     val musicDao: XyMusicDao by lazy { createMusicDao() }
 
