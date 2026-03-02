@@ -51,6 +51,9 @@ class ConnectionViewModel @Inject constructor(
     val settingsManager: SettingsManager
 ) : ViewModel() {
 
+    init {
+        clearConnectionInputData()
+    }
 
     val options = listOf(Constants.HTTP, Constants.HTTPS)
 
@@ -181,7 +184,20 @@ class ConnectionViewModel @Inject constructor(
 
 
     fun setDataSourceTypeData(data: DataSourceType?) {
+        val oldDataSourceType = dataSourceType
         this.dataSourceType = data
+        if (oldDataSourceType != null && data != null && oldDataSourceType != data) {
+            clearConnectionInputData()
+        }
+    }
+
+    fun clearConnectionInputData() {
+        address = ""
+        username = ""
+        password = ""
+        updateSelectUrlIndexZero()
+        clearLoginStatus()
+        clearResourceLoginStatus()
     }
 
     /**
