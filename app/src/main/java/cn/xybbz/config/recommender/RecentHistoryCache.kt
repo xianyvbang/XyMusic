@@ -8,7 +8,7 @@ import kotlinx.coroutines.withContext
 
 class RecentHistoryCache(
     private val db: DatabaseClient,
-    private val maxSize: Int = 300
+    private val maxSize: Int = 100
 ) {
 
     suspend fun addAll(songs: List<XyMusic>, connectionId: Long) = withContext(Dispatchers.IO) {
