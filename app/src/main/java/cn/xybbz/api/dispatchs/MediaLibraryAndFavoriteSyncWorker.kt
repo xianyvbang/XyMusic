@@ -25,6 +25,8 @@ import androidx.room.withTransaction
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.api.events.ReLoginEvent
+import cn.xybbz.api.exception.UnauthorizedException
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.localdata.config.DatabaseClient
@@ -41,24 +43,51 @@ class MediaLibraryAndFavoriteSyncWorker @AssistedInject constructor(
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
-        return try {
+        val connectionId = inputData.getLong(Constants.CONNECTION_ID, 0L)
+        val server = dataSourceManager.dataSourceServerFlow.value
+
+        if (connectionId == 0L || server == null) {
+            Log.i(Constants.LOG_ERROR_PREFIX, "media sync skipped: invalid connection or server missing")
+            return Result.success()
+        }
+
+        if (server.getConnectionId() != connectionId) {
             Log.i(
                 Constants.LOG_ERROR_PREFIX,
-                "开始启动获取音乐/专辑/艺术家/收藏/流派数量"
+                "media sync skipped: stale worker, expected=$connectionId current=${server.getConnectionId()}"
             )
+            return Result.success()
+        }
+
+        return try {
+            Log.i(Constants.LOG_ERROR_PREFIX, "start syncing media library/favorites/counts")
             db.withTransaction {
-                val connectionId = inputData.getLong(Constants.CONNECTION_ID,0L)
                 val remoteId = RemoteIdConstants.MEDIA_LIBRARY_AND_FAVORITE + connectionId
-                dataSourceManager.initFavoriteData(connectionId = connectionId)
+
+                server.initFavoriteData(connectionId = connectionId)
                 try {
-                    dataSourceManager.getDataInfoCount(connectionId)
+                    server.getDataInfoCount(connectionId)
                 } catch (e: Exception) {
                     Log.e(
                         Constants.LOG_ERROR_PREFIX,
-                        "获取音乐/专辑/艺术家/收藏/流派数量异常",
+                        "failed to fetch media/album/artist/favorite/genre counts",
                         e
                     )
                 }
+
+                try {
+                    server.getApiClient().ping()
+                } catch (e: Exception) {
+                    val activeConnectionId = server.getConnectionId()
+                    if (e is UnauthorizedException &&
+                        activeConnectionId == connectionId &&
+                        server.tryMarkLoginRetry()
+                    ) {
+                        server.getApiClient().eventBus.notify(ReLoginEvent.Unauthorized)
+                    }
+                    throw e
+                }
+
                 db.remoteCurrentDao.deleteById(remoteId)
                 db.remoteCurrentDao.insertOrReplace(
                     RemoteCurrent(
@@ -72,7 +101,12 @@ class MediaLibraryAndFavoriteSyncWorker @AssistedInject constructor(
             }
             Result.success()
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "同步媒体库,收藏和数量异常", e)
+            val activeConnectionId = dataSourceManager.dataSourceServerFlow.value?.getConnectionId()
+            if (activeConnectionId != connectionId) {
+                Log.i(Constants.LOG_ERROR_PREFIX, "media sync ignored after data source switched")
+                return Result.success()
+            }
+            Log.e(Constants.LOG_ERROR_PREFIX, "sync media/favorite/count failed", e)
             Result.failure()
         }
     }

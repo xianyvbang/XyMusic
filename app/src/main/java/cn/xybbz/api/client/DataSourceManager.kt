@@ -76,6 +76,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
@@ -124,19 +126,22 @@ open class DataSourceManager(
             }.filter { it != LoginStateType.UNKNOWN }
 
 
-
     @kotlin.OptIn(ExperimentalCoroutinesApi::class)
-    private val mediaLibraryIdFlow: Flow<String> =
+    private val mediaLibraryIdFlow: Flow<String?> =
         dataSourceServerFlow
             .filterNotNull()
             .flatMapLatest { server ->
-                server.mediaLibraryIdFlow
-            }
+                Log.i("home","数据变化 ${server.mediaLibraryIdFlow.value}")
+                server.mediaLibraryIdFlow.drop(1)
+            }.distinctUntilChanged()
 
     val taggedLoginFlow = loginStateFlow.map { Source.Login(it) }
     val taggedMediaFlow = mediaLibraryIdFlow.map { Source.Library(it) }
 
-    val mergeFlow =  merge(taggedLoginFlow, taggedMediaFlow).filter { it is Source.Login && it.value != LoginStateType.UNKNOWN || it is Source.Library }
+    val mergeFlow = merge(
+        taggedLoginFlow,
+        taggedMediaFlow
+    ).filter { (it is Source.Login && it.value != LoginStateType.UNKNOWN) || (it is Source.Library /*&& it.value != null*/) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val combinedFlow: Flow<Pair<LoginStateType, String?>> =
@@ -145,7 +150,7 @@ open class DataSourceManager(
             mediaLibraryIdFlow
         ) { loginState, mediaIds ->
             loginState to mediaIds
-        }.filter { it.first != LoginStateType.UNKNOWN}
+        }.filter { it.first != LoginStateType.UNKNOWN }
 
 
     //加载状态
@@ -171,14 +176,14 @@ open class DataSourceManager(
      * 初始化对象信息
      */
     suspend fun initDataSource(dataSourceType: DataSourceType?) {
+        setCoilImageOkHttpClient()
+
         Log.i("=====", "开始自动登录")
         if (dataSourceType != null) {
             Log.i("=====", "开始自动登录中")
             switchDataSource(dataSourceType)
             serverLogin(LoginType.TOKEN, null)
         }
-        setCoilImageOkHttpClient()
-
     }
 
     /**
@@ -1290,8 +1295,8 @@ open class DataSourceManager(
     /**
      * 更新数据源远程键数据管理
      */
-    suspend fun updateDataSourceRemoteKey() {
-        dataSourceServer.updateDataSourceRemoteKey()
+    suspend fun updateDataSourceRemoteKey(remoteCurrentId: String) {
+        dataSourceServer.updateDataSourceRemoteKey(remoteCurrentId)
     }
 
 

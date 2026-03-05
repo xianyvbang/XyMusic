@@ -31,4 +31,7 @@ interface RemoteCurrentDao {
 
     @Query("update remote_current set refresh = 1  where connectionId = :connectionId")
     suspend fun updateByConnectionId(connectionId: Long)
+
+    @Query("update remote_current set refresh = 1  where connectionId = :connectionId and id = :id")
+    suspend fun updateByIdAndConnectionId(connectionId: Long,id: String)
 }

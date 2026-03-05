@@ -30,7 +30,6 @@ import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
-import cn.xybbz.api.events.ReLoginEvent
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.exception.UnauthorizedException
@@ -87,8 +86,8 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.update
 import java.net.SocketTimeoutException
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 
 abstract class IDataSourceParentServer(
@@ -105,8 +104,8 @@ abstract class IDataSourceParentServer(
     var libraryIds: List<String>? = null
         private set
 
-    private val _mediaLibraryIdFlow = MutableStateFlow<String>(UUID.randomUUID().toString())
-    val mediaLibraryIdFlow: StateFlow<String> = _mediaLibraryIdFlow.asStateFlow()
+    private val _mediaLibraryIdFlow = MutableStateFlow<String?>(Constants.MINUS_ONE_INT.toString())
+    val mediaLibraryIdFlow: StateFlow<String?> = _mediaLibraryIdFlow.asStateFlow()
 
     /**
      * 登录状态
@@ -116,6 +115,7 @@ abstract class IDataSourceParentServer(
 
 
     private var ifTmpObject = false
+    private val loginRetryGate = AtomicBoolean(false)
 
     fun ifTmpObject(): Boolean {
         return ifTmpObject
@@ -127,6 +127,14 @@ abstract class IDataSourceParentServer(
 
     fun getApiClient(): DefaultParentApiClient {
         return defaultParentApiClient
+    }
+
+    fun resetLoginRetry() {
+        loginRetryGate.set(false)
+    }
+
+    fun tryMarkLoginRetry(): Boolean {
+        return loginRetryGate.compareAndSet(false, true)
     }
 
     /**
@@ -145,6 +153,7 @@ abstract class IDataSourceParentServer(
         val popTipHint = MessageUtils.sendPopTipHint(
             R.string.logging_in
         )
+        resetLoginRetry()
         return flow {
             Log.i("=====", "输入的地址: ${clientLoginInfoReq.address}")
             emit(ClientLoginInfoState.Connected(clientLoginInfoReq.address))
@@ -272,7 +281,7 @@ abstract class IDataSourceParentServer(
                 }
 
                 if (!ifTmpObject()) {
-                    selectMediaLibrary(connectionId = connectionId)
+
                     downloadManager.initData(connectionId)
                     connection(connectionConfig.copy(id = connectionId), connectionConfig.id != 0L)
                     mediaLibraryAndFavoriteSyncScheduler.cancel()
@@ -361,9 +370,8 @@ abstract class IDataSourceParentServer(
                     )
                 )
             } else {
+                resetLoginRetry()
                 emit(ClientLoginInfoState.Connected(clientLoginInfoReq.address))
-
-
                 //保存客户端数据
                 createApiClient(
                     address,
@@ -379,16 +387,6 @@ abstract class IDataSourceParentServer(
                     clientLoginInfoReq = clientLoginInfoReq
                 )
 
-                try {
-                    defaultParentApiClient.ping()
-                } catch (e: Exception) {
-                    if (!TokenServer.loginRetry) {
-                        TokenServer.updateLoginRetry(true)
-                        defaultParentApiClient.eventBus.notify(ReLoginEvent.Unauthorized)
-                    }
-
-                    throw e
-                }
                 defaultParentApiClient.pingAfter(connectionConfig.machineIdentifier)
                 emitAll(loginAfter(connectionConfig))
             }
@@ -1209,7 +1207,8 @@ abstract class IDataSourceParentServer(
         if (!ifAutoLogin)
             this.connectionConfig = connectionConfig
         settingsManager.saveConnectionId(connectionId = connectionConfig.id, connectionConfig.type)
-        updateLibraryIds(connectionConfig.libraryIds)
+        selectMediaLibrary(connectionId = connectionConfig.id)
+        updateLibraryIds(connectionConfig.libraryIds, true)
         sendLoginCompleted(LoginStateType.SUCCESS)
     }
 
@@ -1221,8 +1220,11 @@ abstract class IDataSourceParentServer(
     /**
      * 设置媒体库id
      */
-    protected open suspend fun setUpLibraryId(libraryIds: List<String>?) {
-        updateLibraryIds(libraryIds)
+    protected open suspend fun setUpLibraryId(
+        libraryIds: List<String>?,
+        ifLoginSet: Boolean = false
+    ) {
+        updateLibraryIds(libraryIds, ifLoginSet)
         db.connectionConfigDao.updateLibraryId(
             libraryIds = libraryIds?.joinToString(LocalConstants.ARTIST_DELIMITER),
             connectionId = getConnectionId()
@@ -1230,10 +1232,15 @@ abstract class IDataSourceParentServer(
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    suspend fun updateLibraryIds(libraryIds: List<String>?) {
+    suspend fun updateLibraryIds(libraryIds: List<String>?, ifLoginSet: Boolean = false) {
         this.libraryIds = libraryIds
-        updateDataSourceRemoteKey()
-        _mediaLibraryIdFlow.update { Uuid.random().toString() }
+        if (!ifLoginSet) {
+            updateDataSourceRemoteKey()
+            _mediaLibraryIdFlow.update {
+                libraryIds?.sorted()?.joinToString(LocalConstants.ARTIST_DELIMITER)
+            }
+        }
+
     }
 
     /**
@@ -1243,8 +1250,12 @@ abstract class IDataSourceParentServer(
         _loginSuccessEvent.tryEmit(loginState)
     }
 
-    suspend fun updateDataSourceRemoteKey(){
-        db.remoteCurrentDao.updateByConnectionId(getConnectionId())
+    suspend fun updateDataSourceRemoteKey(remoteCurrentId: String? = null) {
+        if (!remoteCurrentId.isNullOrBlank()) {
+            db.remoteCurrentDao.updateByIdAndConnectionId(getConnectionId(), remoteCurrentId + getConnectionId())
+        } else {
+            db.remoteCurrentDao.updateByConnectionId(getConnectionId())
+        }
     }
 
     override fun close() {

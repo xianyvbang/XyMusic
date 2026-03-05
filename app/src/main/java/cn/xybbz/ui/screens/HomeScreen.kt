@@ -32,7 +32,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Label
@@ -92,6 +91,8 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.img
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
+import cn.xybbz.localdata.data.album.XyAlbum
+import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import cn.xybbz.router.Album
@@ -283,9 +284,7 @@ fun HomeScreen(
                                         coroutineScope.launch {
                                             ifShowConnectionMenu = false
                                             homeViewModel.changeDataSource(connection)
-//                                            homeViewModel.tryRefreshHome()
                                         }.invokeOnCompletion {
-
                                         }
 
                                     })
@@ -339,7 +338,7 @@ fun HomeScreen(
                                                     modifier = Modifier.fillMaxWidth(),
                                                     horizontalArrangement = Arrangement.Center,
                                                     verticalAlignment = Alignment.CenterVertically
-                                                ){
+                                                ) {
                                                     XyTextSubSmall(text = homeViewModel.dataSourceManager.errorMessage)
                                                 }
                                             }
@@ -414,7 +413,7 @@ fun HomeScreen(
             }
         ) {
             ScreenLazyColumn {
-                item {
+                item(key = "top") {
                     XyRow(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
@@ -503,7 +502,7 @@ fun HomeScreen(
                 }
 
                 if (mostPlayerAlbumList.isNotEmpty()) {
-                    item {
+                    item(key = "most_played_album_title") {
                         XyRow {
                             XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
@@ -512,34 +511,13 @@ fun HomeScreen(
                         }
                     }
 
-                    item {
-                        LazyRow(
-                            modifier = Modifier.height(MusicCardImageSize + 50.dp),
-                            contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
-                            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
-                        ) {
-                            items(
-                                mostPlayerAlbumList,
-                                key = { item -> item.itemId }) { album ->
-                                MusicAlbumCardComponent(
-                                    onItem = { album },
-                                    imageSize = MusicCardImageSize,
-                                    onRouter = {
-                                        navigator.navigate(
-                                            AlbumInfo(
-                                                it,
-                                                MusicDataTypeEnum.ALBUM
-                                            )
-                                        )
-                                    }
-                                )
-                            }
-                        }
+                    item(key = "most_played_album") {
+                        HomeAlbumItemLazyRow(mostPlayerAlbumList)
                     }
                 }
 
                 if (mostPlayerMusicList.isNotEmpty()) {
-                    item {
+                    item(key = "most_played_music_title") {
                         XyRow {
                             XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
@@ -584,38 +562,17 @@ fun HomeScreen(
                             }
                         }
                     }
-                    item {
-                        LazyRow(
-                            modifier = Modifier.height(MusicCardImageSize + 50.dp),
-                            contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
-                            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
-                        ) {
-                            items(
-                                mostPlayerMusicList,
-                                key = { item -> item.music.itemId }) { musicExtend ->
-                                MusicMusicCardComponent(
-                                    onItem = { musicExtend.music },
-                                    imageSize = MusicCardImageSize,
-                                    onRouter = {
-                                        //点击播放
-                                        homeViewModel.musicList(
-                                            onMusicPlayParameter = OnMusicPlayParameter(
-                                                musicId = musicExtend.music.itemId,
-                                                albumId = musicExtend.music
-                                                    .album
-                                            ),
-                                            mostPlayerMusicList
-                                        )
-                                    }
-                                )
-                            }
-                        }
+                    item(key = "most_played_music") {
+                        HomeMusicItemLazyRow(
+                            musicList = mostPlayerMusicList,
+                            homeViewModel = homeViewModel
+                        )
                     }
                 }
 
 
                 if (recommendedMusicList.isNotEmpty()) {
-                    item {
+                    item(key = "daily_recommendations_title") {
                         XyRow {
                             XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
@@ -668,37 +625,17 @@ fun HomeScreen(
                             }
                         }
                     }
-                    item {
-                        LazyRow(
-                            modifier = Modifier.height(MusicCardImageSize + 50.dp),
-                            contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
-                            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
-                        ) {
-                            items(
-                                recommendedMusicList.take(5),
-                                key = { item -> item.music.itemId }) { musicExtend ->
-                                MusicMusicCardComponent(
-                                    onItem = { musicExtend.music },
-                                    imageSize = MusicCardImageSize,
-                                    onRouter = {
-                                        //点击播放
-                                        homeViewModel.musicList(
-                                            onMusicPlayParameter = OnMusicPlayParameter(
-                                                musicId = musicExtend.music.itemId,
-                                                albumId = musicExtend.music
-                                                    .album
-                                            ),
-                                            recommendedMusicList
-                                        )
-                                    }
-                                )
-                            }
-                        }
+                    item(key = "daily_recommendations") {
+
+                        HomeMusicItemLazyRow(
+                            musicList = recommendedMusicList,
+                            homeViewModel = homeViewModel
+                        )
                     }
                 }
 
                 if (newAlbumList.isNotEmpty()) {
-                    item {
+                    item(key = "new_album_title") {
                         XyRow {
                             XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
@@ -706,34 +643,13 @@ fun HomeScreen(
                             )
                         }
                     }
-                    item {
-                        LazyRow(
-                            modifier = Modifier.height(MusicCardImageSize + 50.dp),
-                            contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
-                            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
-                        ) {
-                            items(
-                                newAlbumList,
-                                key = { item -> item.itemId }) { album ->
-                                MusicAlbumCardComponent(
-                                    onItem = { album },
-                                    imageSize = MusicCardImageSize,
-                                    onRouter = {
-                                        navigator.navigate(
-                                            AlbumInfo(
-                                                it,
-                                                MusicDataTypeEnum.ALBUM
-                                            )
-                                        )
-                                    }
-                                )
-                            }
-                        }
+                    item(key = "new_album") {
+                        HomeAlbumItemLazyRow(newAlbumList)
                     }
                 }
 
                 if (albumRecentlyList.isNotEmpty()) {
-                    item {
+                    item(key = "album_recently_title") {
                         XyRow {
                             XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
@@ -742,34 +658,13 @@ fun HomeScreen(
                         }
                     }
 
-                    item {
-                        LazyRow(
-                            modifier = Modifier.height(MusicCardImageSize + 50.dp),
-                            contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
-                            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
-                        ) {
-                            items(
-                                albumRecentlyList,
-                                key = { item -> item.itemId }) { album ->
-                                MusicAlbumCardComponent(
-                                    onItem = { album },
-                                    imageSize = MusicCardImageSize,
-                                    onRouter = {
-                                        navigator.navigate(
-                                            AlbumInfo(
-                                                it,
-                                                MusicDataTypeEnum.ALBUM
-                                            )
-                                        )
-                                    }
-                                )
-                            }
-                        }
+                    item(key = "album_recently") {
+                        HomeAlbumItemLazyRow(albumRecentlyList)
                     }
                 }
 
                 if (musicRecentlyList.isNotEmpty()) {
-                    item {
+                    item(key = "music_recently_title") {
                         XyRow {
                             XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
@@ -816,36 +711,15 @@ fun HomeScreen(
                         }
                     }
 
-                    item {
-                        LazyRow(
-                            modifier = Modifier.height(MusicCardImageSize + 50.dp),
-                            contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
-                            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
-                        ) {
-                            items(
-                                musicRecentlyList,
-                                key = { item -> item.music.itemId }) { musicExtend ->
-                                MusicMusicCardComponent(
-                                    onItem = { musicExtend.music },
-                                    imageSize = MusicCardImageSize,
-                                    onRouter = {
-                                        //点击播放
-                                        homeViewModel.musicList(
-                                            onMusicPlayParameter = OnMusicPlayParameter(
-                                                musicId = musicExtend.music.itemId,
-                                                albumId = musicExtend.music
-                                                    .album
-                                            ),
-                                            musicRecentlyList
-                                        )
-                                    }
-                                )
-                            }
-                        }
+                    item(key = "music_recently") {
+                        HomeMusicItemLazyRow(
+                            musicList = musicRecentlyList,
+                            homeViewModel = homeViewModel
+                        )
                     }
                 }
 
-                item {
+                item(key = "playlist_title") {
                     XyRow {
                         XyText(
                             modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
@@ -926,7 +800,7 @@ fun HomeScreen(
                 }
 
                 if (ifRefreshingPlaylist) {
-                    item {
+                    item(key = "refresh_playlist") {
                         XyRow(horizontalArrangement = Arrangement.Center) {
                             CircularProgressIndicator(
                                 modifier = Modifier
@@ -939,7 +813,7 @@ fun HomeScreen(
 
                     }
                 } else
-                    itemsIndexed(playlists) { _, item ->
+                    items(playlists, key = { item -> item.itemId }) { item ->
                         //歌单信息
                         XyRow {
                             MusicPlaylistItemComponent(
@@ -999,7 +873,7 @@ fun HomeScreen(
                         }
                     }
                 if (!ifShowPlaylist) {
-                    item {
+                    item(key = "no_playlist") {
                         XyRow(
                             modifier = Modifier.height(40.dp),
                             horizontalArrangement = Arrangement.Center
@@ -1009,6 +883,67 @@ fun HomeScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun HomeMusicItemLazyRow(
+    musicList: List<XyMusicExtend>,
+    homeViewModel: HomeViewModel
+) {
+    LazyRow(
+        modifier = Modifier.height(MusicCardImageSize + 50.dp),
+        contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
+    ) {
+        items(
+            musicList,
+            key = { item -> item.music.itemId }) { musicExtend ->
+            MusicMusicCardComponent(
+                onItem = { musicExtend.music },
+                imageSize = MusicCardImageSize,
+                onRouter = {
+                    //点击播放
+                    homeViewModel.musicList(
+                        onMusicPlayParameter = OnMusicPlayParameter(
+                            musicId = musicExtend.music.itemId,
+                            albumId = musicExtend.music
+                                .album
+                        ),
+                        musicList
+                    )
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun HomeAlbumItemLazyRow(
+    albumList: List<XyAlbum>
+) {
+    val navigator = LocalNavigator.current
+    LazyRow(
+        modifier = Modifier.height(MusicCardImageSize + 50.dp),
+        contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
+    ) {
+        items(
+            albumList,
+            key = { item -> item.itemId }) { album ->
+            MusicAlbumCardComponent(
+                onItem = { album },
+                imageSize = MusicCardImageSize,
+                onRouter = {
+                    navigator.navigate(
+                        AlbumInfo(
+                            it,
+                            MusicDataTypeEnum.ALBUM
+                        )
+                    )
+                }
+            )
         }
     }
 }

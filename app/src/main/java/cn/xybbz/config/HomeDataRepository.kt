@@ -19,13 +19,13 @@
 package cn.xybbz.config
 
 import android.util.Log
+import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.count.XyDataCount
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -69,6 +69,7 @@ class HomeDataRepository(
 
 
     private suspend fun loadOnce() = coroutineScope {
+        Log.d("HomeDataRepository", "loadOnce1 ${TokenServer.baseUrl}")
         launch {
             _mostPlayedMusic.value =
                 db.musicDao.selectMaximumPlayMusicExtendList(20)
@@ -108,7 +109,9 @@ class HomeDataRepository(
             db.musicDao
                 .selectLimitMusicListFlow(MusicDataTypeEnum.MAXIMUM_PLAY, 20)
                 .distinctUntilChanged()
-                .collect { _mostPlayedMusic.value = it }
+                .collect {
+                    _mostPlayedMusic.value = it
+                }
         }
 
         launch {
@@ -136,14 +139,18 @@ class HomeDataRepository(
             db.albumDao
                 .selectMaximumPlayAlbumListFlow(20)
                 .distinctUntilChanged()
-                .collect { _mostPlayedAlbums.value = it }
+                .collect {
+                    _mostPlayedAlbums.value = it
+                }
         }
 
         launch {
             db.musicDao
                 .selectRecommendedMusicExtendListFlow(20)
                 .distinctUntilChanged()
-                .collect { _recommendedMusic.value = it }
+                .collect {
+                    _recommendedMusic.value = it
+                }
         }
 
         launch {

@@ -1015,10 +1015,8 @@ class PlexDatasourceServer(
                     }
             if (!libraries.isNullOrEmpty()) {
                 db.libraryDao.saveBatch(libraries)
-                //将id写入到lib中
-                val librariesList = db.libraryDao.selectListByDataSourceType()
-                if (librariesList.isNotEmpty()) {
-                    val library = librariesList[0]
+                if (libraries.isNotEmpty()) {
+                    val library = libraries[0]
                     plexUpdateLibrary(
                         libraryId = library.id,
                     )
@@ -1034,7 +1032,7 @@ class PlexDatasourceServer(
         if (!super.libraryIds.isNullOrEmpty()) {
             return
         }
-        setUpLibraryId(listOf(libraryId))
+        setUpLibraryId(listOf(libraryId), true)
     }
 
     /**

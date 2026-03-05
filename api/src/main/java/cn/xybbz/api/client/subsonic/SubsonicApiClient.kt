@@ -19,7 +19,6 @@
 package cn.xybbz.api.client.subsonic
 
 import android.util.Log
-import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
@@ -72,11 +71,6 @@ class SubsonicApiClient : DefaultParentApiClient() {
      */
     private var responseFormat: String = ResponseFormatType.JSON.serialName
 
-    /**
-     * 是否为Subsonic
-     */
-    override val ifSubsonic: Boolean
-        get() = true
     private lateinit var subsonicArtistsApi: SubsonicArtistsApi
     private lateinit var subsonicUserApi: SubsonicUserApi
     private lateinit var subsonicItemApi: SubsonicItemApi
@@ -265,7 +259,6 @@ class SubsonicApiClient : DefaultParentApiClient() {
         }
         val user = userApi().getUser(username)
         Log.i("=====", "服务器信息 $systemInfo 用户信息 $user")
-        TokenServer.updateLoginRetry(false)
         return LoginSuccessData(
             userId = clientLoginInfoReq.username,
             accessToken = clientLoginInfoReq.username,

@@ -21,6 +21,4 @@ class CacheApiClient : DefaultApiClient() {
     override fun updateTokenHeaderName() {
     }
 
-    override fun updateIfSubsonic() {
-    }
 }

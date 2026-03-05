@@ -347,7 +347,6 @@ class PlexApiClient : DefaultParentApiClient() {
                 else -> throw e
             }
         }
-        TokenServer.updateLoginRetry(false)
         return loginSuccessData.copy(
             machineIdentifier = postPingSystem.mediaContainer?.machineIdentifier,
             ifEnabledDownload = postPingSystem.mediaContainer?.allowSync ?: false,
