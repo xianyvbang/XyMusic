@@ -55,7 +55,8 @@ interface XyMusicDao {
         dataType: MusicDataTypeEnum,
         connectionId: Long,
         artistId: String? = null,
-        playlistId: String? = null
+        playlistId: String? = null,
+        mediaLibraryId: String? = null
     ) {
         saveDataBatch(data)
 
@@ -203,6 +204,7 @@ interface XyMusicDao {
                     XyDailyRecommendHistory(
                         songId = item.itemId,
                         connectionId = connectionId,
+                        mediaLibraryId = mediaLibraryId,
                         recommendIndex = index,
                         timestamp = now
                     )
@@ -391,7 +393,13 @@ interface XyMusicDao {
 
     @Query(
         """
-        delete from xy_daily_recommend_history where songId in (:itemIds) and connectionId = (select connectionId from xy_settings)
+        delete from xy_daily_recommend_history
+        where songId in (:itemIds)
+        and connectionId = (select connectionId from xy_settings)
+        and (
+            (mediaLibraryId is null and (select libraryIds from xy_connection_config where id = (select connectionId from xy_settings)) is null)
+            or mediaLibraryId = (select libraryIds from xy_connection_config where id = (select connectionId from xy_settings))
+        )
     """
     )
     suspend fun removeRecommendedMusicByItems(itemIds: List<String>)
@@ -742,8 +750,13 @@ interface XyMusicDao {
         select mi.*,xd.filePath from xy_daily_recommend_history mpm
         inner join xy_music mi on mpm.songId = mi.itemId
         inner join xy_settings xs on mpm.connectionId = xs.connectionId
+        inner join xy_connection_config xcc on xcc.id = xs.connectionId
         left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
         where mi.connectionId = xs.connectionId
+        and (
+            (mpm.mediaLibraryId is null and xcc.libraryIds is null)
+            or mpm.mediaLibraryId = xcc.libraryIds
+        )
         order by mpm.timestamp, mpm.recommendIndex desc 
         limit :limit
     """
@@ -759,6 +772,10 @@ interface XyMusicDao {
         left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
         where mpm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
+        and (
+            (mpm.mediaLibraryId is null and (select libraryIds from xy_connection_config where id = (select connectionId from xy_settings)) is null)
+            or mpm.mediaLibraryId = (select libraryIds from xy_connection_config where id = (select connectionId from xy_settings))
+        )
         order by mpm.timestamp, mpm.recommendIndex desc 
         limit :limit
     """

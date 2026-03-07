@@ -890,7 +890,7 @@ open class DataSourceManager(
         pageSize: Int
     ): List<XyMusic>? {
         return try {
-            dataSourceServer.getPlayRecordMusicList(pageSize)
+            dataSourceServer.selectMusicListByGenreIds(genreIds, pageSize)
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得流派内音乐列表失败", e)
             null

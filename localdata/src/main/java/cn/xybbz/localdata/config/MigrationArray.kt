@@ -900,3 +900,20 @@ val MIGRATION_29_30 = object : Migration(29, 30) {
         )
     }
 }
+
+val MIGRATION_31_32 = object : Migration(31, 32) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            ALTER TABLE xy_daily_recommend_history
+            ADD COLUMN mediaLibraryId TEXT
+        """.trimIndent()
+        )
+        db.execSQL(
+            """
+            CREATE INDEX IF NOT EXISTS index_xy_daily_recommend_history_connectionId_mediaLibraryId_timestamp
+            ON xy_daily_recommend_history(connectionId, mediaLibraryId, timestamp)
+        """.trimIndent()
+        )
+    }
+}
