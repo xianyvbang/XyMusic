@@ -160,7 +160,7 @@ fun ProxyConfigComponent(
 ) {
 
     SettingRoundedSurfaceColumn {
-        SettingParentItemComponent(title = "代理地址", trailingContent = {
+        SettingParentItemComponent(title = stringResource(R.string.proxy_address), trailingContent = {
             Row(
                 modifier = Modifier.width(200.dp),
                 horizontalArrangement = Arrangement.End,

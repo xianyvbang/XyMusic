@@ -3,6 +3,7 @@ package cn.xybbz.config.download.core
 import android.content.Context
 import android.icu.math.BigDecimal
 import android.util.Log
+import cn.xybbz.R
 import cn.xybbz.api.client.ApiConfig
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.exception.CancelDownloadException
@@ -48,12 +49,20 @@ class OkhttpDownloadCore(
         val response = try {
             call.awaitResponse()
         } catch (e: Exception) {
-            emit(DownloadState.Error("下载失败: ${e.message}", e))
+            emit(
+                DownloadState.Error(
+                    context.getString(
+                        R.string.download_failed_with_reason,
+                        e.message ?: context.getString(R.string.unknown_error)
+                    ),
+                    e
+                )
+            )
             return@flow
         }
 
         if (!response.isSuccessful && response.code() != 206) {
-            emit(DownloadState.Error("响应码错误: ${response.code()}"))
+            emit(DownloadState.Error(context.getString(R.string.response_code_error, response.code())))
             return@flow
         }
 
@@ -108,7 +117,7 @@ class OkhttpDownloadCore(
                     if (currentStatus == DownloadStatus.CANCEL) {
                         // 感知到取消指令，抛出异常以终止流程
                         call.cancel()
-                        throw CancelDownloadException("取消下载")
+                        throw CancelDownloadException(context.getString(R.string.download_cancelled))
                     }
                 }
             }

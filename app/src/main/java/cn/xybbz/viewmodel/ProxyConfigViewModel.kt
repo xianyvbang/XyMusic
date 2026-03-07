@@ -7,6 +7,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.common.utils.MessageUtils
@@ -84,9 +85,9 @@ class ProxyConfigViewModel @Inject constructor(
         viewModelScope.launch {
             val testSate = testProxy() && testUrlProxy()
             if (testSate) {
-                MessageUtils.sendPopTipSuccess("测试连接成功")
+                MessageUtils.sendPopTipSuccess(R.string.test_connection_success)
             } else {
-                MessageUtils.sendPopTipError("测试连接失败")
+                MessageUtils.sendPopTipError(R.string.test_connection_failed)
             }
 
         }

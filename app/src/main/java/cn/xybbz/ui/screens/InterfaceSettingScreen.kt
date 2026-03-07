@@ -139,7 +139,7 @@ fun InterfaceSettingScreen(
         LazyColumnNotComponent {
             item {
                 SettingRoundedSurfaceColumn {
-                    SettingItemComponent(title = "设置背景图片", trailingContent = {
+                    SettingItemComponent(title = stringResource(R.string.background_image_setting), trailingContent = {
 
                     }) {
                         navigator.navigate(SetBackgroundImage)
@@ -147,7 +147,7 @@ fun InterfaceSettingScreen(
 
 
                     SettingItemComponent(
-                        title = "主题模式",
+                        title = stringResource(R.string.theme_mode),
                         info = stringResource(interfaceSettingViewModel.settingsManager.themeType.toResStringInt()),
                         imageVector = Icons.Rounded.KeyboardArrowDown,
                         trailingContent = {
@@ -767,7 +767,7 @@ fun InterfaceSettingScreen(
                 }
             /*item {
                 XyItemTextPadding(
-                    text = "背景图片选择",
+                    text = stringResource(R.string.background_image_selection),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }*/

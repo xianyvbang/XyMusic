@@ -118,7 +118,7 @@ fun ConnectionConfigInfoScreen(
                     }.invokeOnCompletion {
                         connectionConfigInfoViewModel.restartLogin()
                     }
-                }, text = "保存修改")
+                }, text = stringResource(R.string.save))
             }
         }
     }

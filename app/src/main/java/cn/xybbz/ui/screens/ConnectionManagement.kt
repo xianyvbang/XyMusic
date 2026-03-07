@@ -180,7 +180,7 @@ fun ConnectionManagement(
                                         content = { sheetObject ->
                                             RoundedSurfaceColumn {
                                                 SettingItemComponent(
-                                                    title = "修改连接"
+                                                    title = stringResource(R.string.modify_connection)
                                                 ) {
                                                     coroutineScope.launch {
                                                         sheetState.hide()

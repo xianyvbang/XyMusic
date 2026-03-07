@@ -67,7 +67,7 @@ fun StreamingQualityScreen(
             modifier = Modifier.statusBarsPadding(),
             title = {
                 TopAppBarTitle(
-                    title = "在线音乐品质"
+                    title = stringResource(R.string.online_music_quality)
                 )
             }, navigationIcon = {
                 IconButton(

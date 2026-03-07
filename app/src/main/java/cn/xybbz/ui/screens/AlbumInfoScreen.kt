@@ -162,7 +162,7 @@ fun AlbumInfoScreen(
 ) {
 
     SideEffect {
-        Log.d("=====", "MusicAudiobookInfoScreen重组一次")
+        Log.d("=====", "MusicAudiobookInfoScreen recomposed")
     }
 
     val coroutineScope = rememberCoroutineScope()
@@ -495,7 +495,10 @@ fun AlbumInfoScreen(
                                         if (albumInfoViewModel.albumPlayerHistoryProgressMap.containsKey(
                                                 music.itemId
                                             )
-                                        ) "已播: ${albumInfoViewModel.albumPlayerHistoryProgressMap[music.itemId]}%" else music.artists?.joinToString()
+                                        ) stringResource(
+                                            R.string.played_progress_percent,
+                                            albumInfoViewModel.albumPlayerHistoryProgressMap[music.itemId] ?: 0
+                                        ) else music.artists?.joinToString()
                                             ?: "",
                                     onMusicPlay = { parameter ->
                                         coroutineScope.launch {

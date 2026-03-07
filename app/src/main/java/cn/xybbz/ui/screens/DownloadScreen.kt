@@ -245,7 +245,7 @@ fun DownloadItemTrailingContent(
                     when (task.status) {
                         DownloadStatus.QUEUED -> {
                             DownloadPrompt(
-                                text = "排队中",
+                                text = stringResource(R.string.download_status_queued),
                                 fontSize = 14.sp
                             )
                         }
@@ -274,28 +274,28 @@ fun DownloadItemTrailingContent(
 
                         DownloadStatus.PAUSED -> {
                             DownloadPrompt(
-                                text = "点击继续下载",
+                                text = stringResource(R.string.tap_to_resume_download),
                                 fontSize = 14.sp,
                             )
                         }
 
                         DownloadStatus.COMPLETED -> {
                             DownloadPrompt(
-                                text = "下载完成",
+                                text = stringResource(R.string.download_completed),
                                 fontSize = 14.sp,
                             )
                         }
 
                         DownloadStatus.FAILED -> {
                             DownloadPrompt(
-                                text = "下载失败: ${task.error}",
+                                text = stringResource(R.string.download_failed_with_reason, task.error),
                                 fontSize = 14.sp,
                             )
                         }
 
                         DownloadStatus.CANCEL -> {
                             DownloadPrompt(
-                                text = "取消下载",
+                                text = stringResource(R.string.cancel_download),
                                 fontSize = 14.sp,
                             )
                         }

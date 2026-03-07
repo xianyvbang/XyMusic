@@ -241,12 +241,12 @@ fun SelectSortBottomSheetComponent(
                     },
                     ifItemShow = { onIfSort() == true }),
                 MenuItemDefaultData(
-                    title = "清除筛选",
+                    title = stringResource(R.string.clear_filters),
                     enabled = onEnabledClearClick(),
                     trailingIcon = {
                         Icon(
                             imageVector = Icons.Rounded.Close,
-                            contentDescription = "清除筛选",
+                            contentDescription = stringResource(R.string.clear_filters),
                         )
 
                     },
