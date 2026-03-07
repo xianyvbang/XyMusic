@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.MaterialTheme
@@ -49,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import cn.xybbz.R
 import cn.xybbz.localdata.data.search.SearchHistory
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 import cn.xybbz.ui.xy.XyTextSubSmall
 
 @OptIn(ExperimentalLayoutApi::class)

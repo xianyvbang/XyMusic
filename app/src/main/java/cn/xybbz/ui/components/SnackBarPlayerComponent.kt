@@ -56,7 +56,6 @@ import androidx.compose.material.icons.rounded.PlaylistRemove
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -101,6 +100,7 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.viewmodel.SnackBarPlayerViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi

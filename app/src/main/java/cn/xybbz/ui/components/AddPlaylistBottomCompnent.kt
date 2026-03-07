@@ -27,7 +27,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -49,6 +48,7 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
 import cn.xybbz.ui.xy.XyEdit
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 import cn.xybbz.viewmodel.PlaylistBottomViewModel
 import kotlinx.coroutines.launch
 
