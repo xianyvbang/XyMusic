@@ -4,7 +4,8 @@ import android.content.Context
 import android.icu.math.BigDecimal
 import android.util.Log
 import cn.xybbz.R
-import cn.xybbz.api.client.ApiConfig
+import cn.xybbz.api.client.ApiFactory
+import cn.xybbz.api.client.DownloadFactory
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.exception.CancelDownloadException
 import cn.xybbz.common.utils.FileUtil
@@ -34,7 +35,7 @@ class OkhttpDownloadCore(
      * @param [statusChange] 状态变更信息
      */
     override suspend fun download(
-        client: ApiConfig,
+        client: DownloadFactory,
         statusChange: suspend () -> DownloadStatus?,
         xyDownload: XyDownload
     ): Flow<DownloadState> = flow {

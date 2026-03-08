@@ -29,6 +29,9 @@ import androidx.media3.common.util.UnstableApi
 import androidx.paging.PagingData
 import androidx.room.Transaction
 import cn.xybbz.R
+import cn.xybbz.api.client.custom.CustomMediaApiClient
+import cn.xybbz.api.client.custom.data.CustomCoverQuery
+import cn.xybbz.api.client.custom.data.CustomLyricsQuery
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.navidrome.data.TranscodingInfo
@@ -49,6 +52,7 @@ import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.image.BaseUrlMapper
 import cn.xybbz.config.scope.IoScoped
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LoginStateData
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.ResourceData
@@ -97,6 +101,8 @@ open class DataSourceManager(
     private val db: DatabaseClient,
     private val dataSources: Map<DataSourceType, @JvmSuppressWildcards Provider<IDataSourceParentServer>>,
     private val alarmConfig: AlarmConfig,
+    private val settingsManager: SettingsManager,
+    private val customMediaApiClient: CustomMediaApiClient,
     private val versionApiClient: VersionApiClient,
     private val imageApiClient: ImageApiClient
 ) : IDataSourceServer, IoScoped() {
@@ -189,7 +195,7 @@ open class DataSourceManager(
     /**
      * 根据下载类型获得数据源
      */
-    fun getApiClient(downloadTypes: DownloadTypes): ApiConfig {
+    fun getApiClient(downloadTypes: DownloadTypes): ApiFactory {
         return when (downloadTypes) {
             DownloadTypes.APK -> {
                 versionApiClient
@@ -518,25 +524,36 @@ open class DataSourceManager(
 
     }
 
-    /**
-     * 按 ID 选择音乐信息
-     * @param [itemId] 音乐唯一标识
-     * @return [MusicArtistExtend?]
-     */
+    //todo 这里需要修改不应该在这里设置图片地址
     override suspend fun selectMusicInfoById(itemId: String): XyMusic? {
         return try {
             dataSourceServer.selectMusicInfoById(itemId)
         } catch (e: SocketTimeoutException) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获取歌曲信息超时", e)
-            return null
+            null
         } catch (e: ServiceException) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获取歌曲信息失败", e)
-            return null
+            null
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获取歌曲信息未知异常失败", e)
-            return null
+            null
         }
+    }
 
+    /**
+     * 从自定义封面 API 获取封面地址
+     */
+    private suspend fun getMusicCoverUrlByCustomApi(musicInfo: XyMusic): String? {
+        val settings = settingsManager.get()
+        val query = CustomCoverQuery(
+            coverApi = settings.customCoverApi,
+            authKey = settings.customLrcApiAuth,
+            title = musicInfo.name,
+            artist = musicInfo.artists?.firstOrNull().orEmpty(),
+            album = musicInfo.albumName.orEmpty(),
+            path = musicInfo.path
+        )
+        return customMediaApiClient.getCoverUrl(query)
     }
 
     /**
@@ -545,18 +562,51 @@ open class DataSourceManager(
      * @return 返回歌词列表
      */
     override suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>? {
+        return if (settingsManager.get().ifPriorityMusicApi) {
+            // 优先音乐服务接口，失败后回退自定义接口
+            getMusicLyricListByMusicService(itemId) ?: getMusicLyricListByCustomApi(itemId)
+        } else {
+            // 优先自定义接口，失败后回退音乐服务接口
+            getMusicLyricListByCustomApi(itemId) ?: getMusicLyricListByMusicService(itemId)
+        }
+    }
+
+    /**
+     * 从当前音乐服务（Jellyfin/Emby/Navidrome/Plex/Subsonic）获取歌词
+     */
+    private suspend fun getMusicLyricListByMusicService(itemId: String): List<LrcEntryData>? {
         return try {
-            dataSourceServer.getMusicLyricList(itemId)
+            dataSourceServer.getMusicLyricList(itemId)?.takeIf { it.isNotEmpty() }
         } catch (e: SocketTimeoutException) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得歌词超时", e)
-            return null
+            null
         } catch (e: ServiceException) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得歌词失败", e)
-            return null
+            null
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得歌词未知异常失败", e)
-            return null
+            null
         }
+    }
+
+    private suspend fun getMusicLyricListByCustomApi(itemId: String): List<LrcEntryData>? {
+        // 歌词查询只依赖歌曲元数据，不需要触发封面优先级逻辑。
+        val musicInfo = selectMusicInfoByIdByMusicService(itemId) ?: return null
+        val settings = settingsManager.get()
+
+        // API 模块负责网络请求，App 模块负责业务数据组装与 LRC 解析。
+        val query = CustomLyricsQuery(
+            singleApi = settings.customLrcSingleApi,
+            authKey = settings.customLrcApiAuth,
+            title = musicInfo.name,
+            artist = musicInfo.artists?.firstOrNull().orEmpty(),
+            album = musicInfo.albumName.orEmpty(),
+            path = musicInfo.path
+        )
+
+        val lyricsText = customMediaApiClient.getLyricsText(query) ?: return null
+        val lyricsList = cn.xybbz.common.utils.LrcUtils.parseLrc(lyricsText)
+        return lyricsList.takeIf { it.isNotEmpty() }
     }
 
     /**

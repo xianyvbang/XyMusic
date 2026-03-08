@@ -33,7 +33,7 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import java.util.concurrent.TimeUnit
 
-abstract class DefaultApiClient : ApiConfig {
+abstract class DefaultApiClient : ApiFactory,DownloadFactory {
 
 //    protected lateinit var baseUrl: String
 
@@ -55,11 +55,6 @@ abstract class DefaultApiClient : ApiConfig {
         private set
 
     val eventBus = ReLoginEventBus()
-
-
-    /**
-     * 是否为Subsonic
-     */
 
     lateinit var apiOkHttpClient: OkHttpClient
 

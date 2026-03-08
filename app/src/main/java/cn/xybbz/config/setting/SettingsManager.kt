@@ -428,6 +428,74 @@ class SettingsManager(
     }
 
     /**
+     * 更新歌词优先使用音乐服务接口
+     */
+    suspend fun setIfPriorityMusicApi(ifPriorityMusicApi: Boolean) {
+        settings = get().copy(ifPriorityMusicApi = ifPriorityMusicApi)
+        if (get().id != AllDataEnum.All.code) {
+            db.settingsDao.updateIfPriorityMusicApi(
+                ifPriorityMusicApi = ifPriorityMusicApi,
+                id = get().id
+            )
+        } else {
+            val settingId =
+                db.settingsDao.save(XySettings(ifPriorityMusicApi = ifPriorityMusicApi))
+            settings = get().copy(id = settingId)
+        }
+    }
+
+    /**
+     * 更新自定义歌词单曲接口地址
+     */
+    suspend fun setCustomLrcSingleApi(customLrcSingleApi: String) {
+        settings = get().copy(customLrcSingleApi = customLrcSingleApi)
+        if (get().id != AllDataEnum.All.code) {
+            db.settingsDao.updateCustomLrcSingleApi(
+                customLrcSingleApi = customLrcSingleApi,
+                id = get().id
+            )
+        } else {
+            val settingId =
+                db.settingsDao.save(XySettings(customLrcSingleApi = customLrcSingleApi))
+            settings = get().copy(id = settingId)
+        }
+    }
+
+    /**
+     * 更新自定义歌词接口鉴权
+     */
+    suspend fun setCustomLrcApiAuth(customLrcApiAuth: String) {
+        settings = get().copy(customLrcApiAuth = customLrcApiAuth)
+        if (get().id != AllDataEnum.All.code) {
+            db.settingsDao.updateCustomLrcApiAuth(
+                customLrcApiAuth = customLrcApiAuth,
+                id = get().id
+            )
+        } else {
+            val settingId =
+                db.settingsDao.save(XySettings(customLrcApiAuth = customLrcApiAuth))
+            settings = get().copy(id = settingId)
+        }
+    }
+
+    /**
+     * 更新自定义封面接口地址
+     */
+    suspend fun setCustomCoverApi(customCoverApi: String) {
+        settings = get().copy(customCoverApi = customCoverApi)
+        if (get().id != AllDataEnum.All.code) {
+            db.settingsDao.updateCustomCoverApi(
+                customCoverApi = customCoverApi,
+                id = get().id
+            )
+        } else {
+            val settingId =
+                db.settingsDao.save(XySettings(customCoverApi = customCoverApi))
+            settings = get().copy(id = settingId)
+        }
+    }
+
+    /**
      * 更新移动网络转码比特率
      */
     suspend fun setMobileNetworkAudioBitRate(mobileNetworkAudioBitRate: Int) {

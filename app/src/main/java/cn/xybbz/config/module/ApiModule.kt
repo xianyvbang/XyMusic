@@ -1,6 +1,7 @@
 package cn.xybbz.config.module
 
 import cn.xybbz.api.client.CacheApiClient
+import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.ImageApiClient
 import cn.xybbz.api.client.emby.EmbyApiClient
 import cn.xybbz.api.client.jellyfin.JellyfinApiClient
@@ -67,5 +68,11 @@ class ApiModule {
     fun versionApiClient(): VersionApiClient {
         val versionApiClient = VersionApiClient()
         return versionApiClient
+    }
+
+    @Singleton
+    @Provides
+    fun customMediaApiClient(): CustomMediaApiClient {
+        return CustomMediaApiClient()
     }
 }

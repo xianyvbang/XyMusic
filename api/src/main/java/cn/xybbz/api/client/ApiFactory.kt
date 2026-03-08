@@ -6,7 +6,7 @@ import retrofit2.Retrofit
 /**
  * 接口类基类
  */
-interface ApiConfig {
+interface ApiFactory {
 
     /**
      * 通过Retrofit创建Api接口
@@ -18,16 +18,6 @@ interface ApiConfig {
      */
     fun setRetrofitData(baseUrl: String, ifTmp: Boolean)
 
-    /**
-     * 下载相关接口
-     */
-    fun downloadApi(restart: Boolean = false): IDownLoadApi
-
-
-    /**
-     * 获得前缀地址
-     */
-    fun getBaseUrl(): String
 
     /**
      * 获得Retrofit

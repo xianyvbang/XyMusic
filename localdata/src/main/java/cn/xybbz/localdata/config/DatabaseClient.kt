@@ -82,7 +82,7 @@ import cn.xybbz.localdata.data.setting.XyBackgroundConfig
 import cn.xybbz.localdata.data.setting.XySettings
 
 @Database(
-    version = 32,
+    version = 33,
     autoMigrations = [
         AutoMigration(
             from = 30,

@@ -1,0 +1,165 @@
+package cn.xybbz.api.client.custom
+
+import android.util.Log
+import cn.xybbz.api.client.custom.data.CustomCoverQuery
+import cn.xybbz.api.client.custom.data.CustomCoverResponseData
+import cn.xybbz.api.client.custom.data.CustomLyricsQuery
+import cn.xybbz.api.client.custom.data.CustomLyricsRequestData
+import cn.xybbz.api.client.custom.data.CustomLyricsResponseData
+import cn.xybbz.api.constants.ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
+import cn.xybbz.api.converter.json
+import cn.xybbz.api.okhttp.proxy.ProxyManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.util.concurrent.TimeUnit
+
+/**
+ * 自定义媒体 API 客户端
+ * 作用：
+ * 1. 提供自定义歌词接口调用
+ * 2. 提供自定义封面接口调用
+ */
+class CustomMediaApiClient {
+
+    /**
+     * 自定义接口请求客户端
+     * 说明：只使用 OkHttp 发起请求，复用全局代理配置。
+     */
+    private val apiClient: OkHttpClient by lazy {
+        getOkHttpClient()
+    }
+
+    /**
+     * 从自定义歌词 API 获取歌词文本
+     * 策略：只使用单曲接口获取歌词文本。
+     */
+    suspend fun getLyricsText(query: CustomLyricsQuery): String? = withContext(Dispatchers.IO) {
+        try {
+            if (query.singleApi.trim().isBlank() || query.title.trim().isBlank()) {
+                return@withContext null
+            }
+            val requestData = CustomLyricsRequestData.from(apiUrl = query.singleApi, query = query)
+            requestCustomApiText(requestData, "请求自定义歌词接口失败")
+        } catch (e: Exception) {
+            Log.e(TAG, "自定义歌词接口调用失败", e)
+            null
+        }
+    }
+
+    /**
+     * 从自定义封面 API 获取封面地址
+     * 说明：兼容文本直返地址和 JSON 结构返回。
+     */
+    //todo 封面地址是如果成功，服务器可能直接返回图片文件，Content-Type: image/jpeg（或者PNG等其他图片格式）。
+    //todo 或者，Location标头重定向到图片文件,所以返回的是数据流,应该和coil的直接调用显示图片内容的相互配合
+    //todo 所以这里返回图片地址比较好,header的设置可以配合在coil里设置
+    suspend fun getCoverUrl(query: CustomCoverQuery): String? = withContext(Dispatchers.IO) {
+        try {
+            if (query.coverApi.trim().isBlank() || query.title.trim().isBlank()) {
+                return@withContext null
+            }
+            val requestData = CustomLyricsRequestData.from(apiUrl = query.coverApi, query = query)
+            parseCoverUrl(requestData)
+        } catch (e: Exception) {
+            Log.e(TAG, "自定义封面接口调用失败", e)
+            null
+        }
+    }
+
+    /**
+     * 发起自定义接口请求
+     * 说明：请求字段统一从 data class 中读取，避免硬编码字段名。
+     */
+    private fun requestCustomApiText(
+        requestData: CustomLyricsRequestData,
+        errorMessage: String
+    ): String? {
+        if (requestData.apiUrl.isBlank()) {
+            return null
+        }
+
+        val httpUrl = requestData.apiUrl.toHttpUrlOrNull()?.newBuilder()?.apply {
+            requestData.queryParams.forEach { queryParam ->
+                addQueryParameter(queryParam.fieldName, queryParam.fieldValue)
+            }
+        }?.build() ?: return null
+
+        val requestBuilder = Request.Builder()
+            .url(httpUrl)
+            .get()
+
+        requestData.headers.forEach { header ->
+            requestBuilder.addHeader(header.fieldName, header.fieldValue)
+        }
+
+        return try {
+            apiClient.newCall(requestBuilder.build()).execute().use { response ->
+                if (!response.isSuccessful) {
+                    return@use null
+                }
+                val takeIf = response.body.string().trim().takeIf { it.isNotBlank() }
+                if (!takeIf.isNullOrEmpty())
+                    json.decodeFromString<List<CustomLyricsResponseData>>(takeIf)[0].lyrics
+                else null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "$errorMessage: ${requestData.apiUrl}", e)
+            null
+        }
+    }
+
+    /**
+     * 解析封面接口返回
+     * 兼容：
+     * 1. 直接返回 URL 文本
+     * 2. JSON 对象
+     * 3. JSON 数组
+     */
+    private fun parseCoverUrl(requestData: CustomLyricsRequestData): String? {
+        //这里拼接成一个完整连接
+        val bodyText = responseText.trim()
+        if (bodyText.isBlank()) {
+            return null
+        }
+        return try {
+            when {
+                bodyText.startsWith("{") -> {
+                    json.decodeFromString<CustomCoverResponseData>(bodyText).pickCoverUrl()
+                }
+
+                bodyText.startsWith("[") -> {
+                    json.decodeFromString<List<CustomCoverResponseData>>(bodyText)
+                        .firstOrNull()
+                        ?.pickCoverUrl()
+                }
+
+                else -> bodyText
+            }
+        } catch (e: Exception) {
+            // 如果不是 JSON，按纯文本 URL 处理。
+            bodyText
+        }
+    }
+
+    /**
+     * 获得okhttp客户端
+     */
+    private fun getOkHttpClient(): OkHttpClient {
+        return OkHttpClient.Builder()
+            .proxySelector(ProxyManager.proxySelector())
+            .connectTimeout(DEFAULT_TIMEOUT_MILLISECONDS, TimeUnit.MILLISECONDS)
+            .readTimeout(DEFAULT_TIMEOUT_MILLISECONDS, TimeUnit.MILLISECONDS)
+            .writeTimeout(DEFAULT_TIMEOUT_MILLISECONDS, TimeUnit.MILLISECONDS)
+            .followRedirects(true)
+            .followSslRedirects(true)
+            .retryOnConnectionFailure(true)
+            .build()
+    }
+
+    companion object {
+        private const val TAG = "CustomMediaApiClient"
+    }
+}

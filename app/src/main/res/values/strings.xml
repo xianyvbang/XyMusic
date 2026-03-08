@@ -234,6 +234,16 @@
     <string name="allow_simultaneous_playback">允许与其他应用同时播放</string>
     <string name="enabled_sync_play_progress">开启播放进度同步</string>
     <string name="customize_lyric_settings">自定义歌词设置</string>
+    <string name="prioritize_music_service_api">优先使用音乐服务接口</string>
+    <string name="lyrics_single_api">歌词单曲接口</string>
+    <string name="lyrics_single_api_desc">参考 /lyrics：按 title/artist/album 查询，返回 LRC 文本</string>
+    <string name="lyrics_api_auth_key">歌词接口鉴权 Key</string>
+    <string name="lyrics_api_auth_key_desc">可选，按接口文档使用请求头 auth</string>
+    <string name="lyrics_single_api_hint">https://api.lrc.cx/lyrics</string>
+    <string name="lyrics_api_auth_key_hint">可留空</string>
+    <string name="custom_cover_api">自定义封面接口</string>
+    <string name="custom_cover_api_desc">参考 /cover：按 title/artist/album 查询，返回封面地址</string>
+    <string name="custom_cover_api_hint">https://api.lrc.cx/cover</string>
     <string name="cache_location">缓存位置</string>
     <string name="song_cache_location">歌曲存储位置</string>
     <string name="connection_management">连接管理</string>

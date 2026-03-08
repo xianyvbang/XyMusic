@@ -19,6 +19,7 @@
 package cn.xybbz.config.module
 
 import android.content.Context
+import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.ImageApiClient
@@ -155,6 +156,8 @@ class DataSourceModule {
         db: DatabaseClient,
         dataSources: Map<DataSourceType, @JvmSuppressWildcards Provider<IDataSourceParentServer>>,
         alarmConfig: AlarmConfig,
+        settingsManager: SettingsManager,
+        customMediaApiClient: CustomMediaApiClient,
         versionApiClient: VersionApiClient,
         imageApiClient: ImageApiClient
     ): DataSourceManager {
@@ -163,6 +166,8 @@ class DataSourceModule {
             db,
             dataSources,
             alarmConfig,
+            settingsManager,
+            customMediaApiClient,
             versionApiClient,
             imageApiClient
         )
