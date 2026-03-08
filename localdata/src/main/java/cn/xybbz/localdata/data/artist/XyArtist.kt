@@ -32,10 +32,9 @@ import cn.xybbz.localdata.data.connection.ConnectionConfig
  * @constructor 创建[XyArtist]
  * @param [artistId] 艺术家编号
  * @param [pic] 图片
- * @param [backdropImage] 背景图片
+ * @param [backdrop] 背景图片
  * @param [name] 姓名
  * @param [sortName] 排序名称-汉语拼音,其他语言暂时未知
- * @param [dataSource] 数据来源
  */
 @Entity(
     tableName = "xy_artist",

@@ -121,6 +121,7 @@ abstract class DefaultApiClient : ApiFactory,DownloadFactory {
      * 更新token和请求头和请求参数
      */
     open fun updateTokenOrHeadersOrQuery() {
+        TokenServer.clearAllData()
         token = createToken()
         TokenServer.setTokenData(token)
         queryMap = getQueryMapData()

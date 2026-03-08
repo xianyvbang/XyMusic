@@ -68,6 +68,5 @@ object ApiConstants {
      */
     const val DEFAULT_TIMEOUT_MILLISECONDS = 10000L
 
-    //请求是否为下载请求的标识
-    const val HEADER_DOWNLOAD = "X-Download"
+    const val CUSTOM_IMAGE_HEADER_NAME = "X-Custom-Image-Url"
 }

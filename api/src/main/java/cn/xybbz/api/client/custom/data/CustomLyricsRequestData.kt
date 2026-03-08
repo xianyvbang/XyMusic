@@ -28,7 +28,6 @@ data class CustomLyricsRequestData(
         private const val QUERY_ARTIST = "artist"
         private const val QUERY_ALBUM = "album"
         private const val QUERY_PATH = "path"
-        private const val HEADER_AUTH = "auth"
 
         /**
          * 由歌词查询对象构造 HTTP 请求对象
@@ -84,7 +83,12 @@ data class CustomLyricsRequestData(
 
             val headers = mutableListOf<CustomLyricsRequestHeader>()
             authKey.trim().takeIf { it.isNotBlank() }?.let { key ->
-                headers.add(CustomLyricsRequestHeader(fieldName = HEADER_AUTH, fieldValue = key))
+                queryParams.add(
+                    CustomLyricsRequestParam(
+                        fieldName = ApiConstants.CUSTOM_IMAGE_HEADER_NAME,
+                        fieldValue = key
+                    )
+                )
                 headers.add(
                     CustomLyricsRequestHeader(
                         fieldName = ApiConstants.AUTHORIZATION,

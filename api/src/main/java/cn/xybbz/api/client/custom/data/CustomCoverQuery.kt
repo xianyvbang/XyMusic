@@ -7,8 +7,8 @@ package cn.xybbz.api.client.custom.data
 data class CustomCoverQuery(
     val coverApi: String,
     val authKey: String,
-    val title: String,
-    val artist: String = "",
-    val album: String = "",
-    val path: String = ""
+    val title: String? = null,
+    val artist: String? = null,
+    val album: String? = null,
+    val path: String? = null
 )

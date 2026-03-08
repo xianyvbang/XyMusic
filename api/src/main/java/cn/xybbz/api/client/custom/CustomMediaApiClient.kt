@@ -53,22 +53,13 @@ class CustomMediaApiClient {
      * 从自定义封面 API 获取封面地址
      * 说明：兼容文本直返地址和 JSON 结构返回。
      */
-    //todo 封面地址是如果成功，服务器可能直接返回图片文件，Content-Type: image/jpeg（或者PNG等其他图片格式）。
-    //todo 或者，Location标头重定向到图片文件,所以返回的是数据流,应该和coil的直接调用显示图片内容的相互配合
-    //todo 所以这里返回图片地址比较好,header的设置可以配合在coil里设置
-    suspend fun getCoverUrl(query: CustomCoverQuery): String? = withContext(Dispatchers.IO) {
-        try {
-            if (query.coverApi.trim().isBlank() || query.title.trim().isBlank()) {
-                return@withContext null
-            }
-            val requestData = CustomLyricsRequestData.from(apiUrl = query.coverApi, query = query)
-            parseCoverUrl(requestData)
-        } catch (e: Exception) {
-            Log.e(TAG, "自定义封面接口调用失败", e)
-            null
+    fun getCoverUrl(query: CustomCoverQuery): String? {
+        if (query.coverApi.trim().isBlank() || query.title.isNullOrBlank()) {
+            return null
         }
+        val requestData = CustomLyricsRequestData.from(apiUrl = query.coverApi, query = query)
+        return parseCoverUrl(requestData)
     }
-
     /**
      * 发起自定义接口请求
      * 说明：请求字段统一从 data class 中读取，避免硬编码字段名。
@@ -119,29 +110,11 @@ class CustomMediaApiClient {
      * 3. JSON 数组
      */
     private fun parseCoverUrl(requestData: CustomLyricsRequestData): String? {
-        //这里拼接成一个完整连接
-        val bodyText = responseText.trim()
-        if (bodyText.isBlank()) {
-            return null
-        }
-        return try {
-            when {
-                bodyText.startsWith("{") -> {
-                    json.decodeFromString<CustomCoverResponseData>(bodyText).pickCoverUrl()
-                }
-
-                bodyText.startsWith("[") -> {
-                    json.decodeFromString<List<CustomCoverResponseData>>(bodyText)
-                        .firstOrNull()
-                        ?.pickCoverUrl()
-                }
-
-                else -> bodyText
-            }
-        } catch (e: Exception) {
-            // 如果不是 JSON，按纯文本 URL 处理。
-            bodyText
-        }
+       return requestData.apiUrl.toHttpUrlOrNull()?.newBuilder()?.apply {
+           requestData.queryParams.forEach { queryParam ->
+               addQueryParameter(queryParam.fieldName, queryParam.fieldValue)
+           }
+       }?.build().toString()
     }
 
     /**

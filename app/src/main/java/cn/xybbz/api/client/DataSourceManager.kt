@@ -541,22 +541,6 @@ open class DataSourceManager(
     }
 
     /**
-     * 从自定义封面 API 获取封面地址
-     */
-    private suspend fun getMusicCoverUrlByCustomApi(musicInfo: XyMusic): String? {
-        val settings = settingsManager.get()
-        val query = CustomCoverQuery(
-            coverApi = settings.customCoverApi,
-            authKey = settings.customLrcApiAuth,
-            title = musicInfo.name,
-            artist = musicInfo.artists?.firstOrNull().orEmpty(),
-            album = musicInfo.albumName.orEmpty(),
-            path = musicInfo.path
-        )
-        return customMediaApiClient.getCoverUrl(query)
-    }
-
-    /**
      * 根据音乐获得歌词信息
      * @param [itemId] 音乐id
      * @return 返回歌词列表
@@ -591,7 +575,7 @@ open class DataSourceManager(
 
     private suspend fun getMusicLyricListByCustomApi(itemId: String): List<LrcEntryData>? {
         // 歌词查询只依赖歌曲元数据，不需要触发封面优先级逻辑。
-        val musicInfo = selectMusicInfoByIdByMusicService(itemId) ?: return null
+        val musicInfo = selectMusicInfoById(itemId) ?: return null
         val settings = settingsManager.get()
 
         // API 模块负责网络请求，App 模块负责业务数据组装与 LRC 解析。

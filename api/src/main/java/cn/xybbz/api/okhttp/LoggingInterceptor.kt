@@ -22,9 +22,7 @@ import android.util.Log
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.exception.ServiceException
 import okhttp3.Interceptor
-import okhttp3.RequestBody
 import okhttp3.Response
-import okio.Buffer
 
 class NetWorkInterceptor(
     private val tokenHeaderName: () -> String,
@@ -38,12 +36,20 @@ class NetWorkInterceptor(
         try {
             val token = token()
             val requestNewBuilder = request.newBuilder()
-            if (token != null) {
-                requestNewBuilder
-                    .addHeader(tokenHeaderName(), token)
+            val customImageHeaderValue =
+                request.url.queryParameter(ApiConstants.CUSTOM_IMAGE_HEADER_NAME)
 
+            if (customImageHeaderValue != null) {
+                requestNewBuilder
+                    .addHeader(ApiConstants.AUTHORIZATION, customImageHeaderValue)
+            } else {
+                if (token != null) {
+                    requestNewBuilder
+                        .addHeader(tokenHeaderName(), token)
+
+                }
             }
-            if (!request.url.encodedPath.contains("/stream") && !request.url.encodedPath.contains("/download")){
+            if (!request.url.encodedPath.contains("/stream") && !request.url.encodedPath.contains("/download")) {
                 requestNewBuilder.addHeader(
                     name = ApiConstants.ACCEPT,
                     value = ApiConstants.HEADER_ACCEPT,
@@ -78,7 +84,7 @@ class NetWorkInterceptor(
 
             return chain.proceed(request)
         } catch (e: Exception) {
-            Log.e("api", "请求接口报错: ${request.url.encodedPath}",e)
+            Log.e("api", "请求接口报错: ${request.url.encodedPath}", e)
             throw e
         }
 
@@ -90,21 +96,11 @@ class LoggingInterceptor : Interceptor {
     @Throws(Exception::class)
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
-
-        val requestBody = request.body
         Log.i("api", "发起请求 ${request.method} ${request.url}")
-        requestBody?.let {
-            Log.i("api", "请求体: ${bodyToString(it)}")
-        }
         val originalResponse = chain.proceed(request)
 
-        if (!originalResponse.isSuccessful && !originalResponse.isRedirect ) {
+        if (!originalResponse.isSuccessful && !originalResponse.isRedirect) {
             if (originalResponse.code != ApiConstants.UNAUTHORIZED) {
-                /*throw UnauthorizedException(
-                    msg = "请求接口---> ${request.url.encodedPath} ${originalResponse.message}",
-                    statusCode = originalResponse.code,
-                    responsePhrase = "登陆失败"
-                )*/
                 throw ServiceException(
                     message = originalResponse.message,
                     code = originalResponse.code
@@ -113,14 +109,15 @@ class LoggingInterceptor : Interceptor {
         }
         return originalResponse
     }
+}
 
-
-    private fun bodyToString(request: RequestBody): String {
-        val buffer = Buffer()
-        request.writeTo(buffer)
-        return buffer.readUtf8()
+class ImageLoggingInterceptor : Interceptor {
+    @Throws(Exception::class)
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val request = chain.request()
+        Log.i("api", "发起请求 ${request.method} ${request.url}")
+        return chain.proceed(request)
     }
-
 }
 
 

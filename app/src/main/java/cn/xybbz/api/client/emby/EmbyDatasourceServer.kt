@@ -24,6 +24,7 @@ import android.os.Build
 import android.util.Log
 import androidx.room.withTransaction
 import cn.xybbz.api.client.IDataSourceParentServer
+import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.jellyfin.data.CreatePlaylistRequest
 import cn.xybbz.api.client.jellyfin.data.ItemRequest
@@ -78,6 +79,7 @@ class EmbyDatasourceServer(
     private val application: Context,
     settingsManager: SettingsManager,
     private val embyApiClient: EmbyApiClient,
+    customMediaApiClient: CustomMediaApiClient,
     mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     downloadManager: DownLoadManager
 ) : IDataSourceParentServer(
@@ -85,6 +87,7 @@ class EmbyDatasourceServer(
     settingsManager,
     application,
     embyApiClient,
+    customMediaApiClient,
     mediaLibraryAndFavoriteSyncScheduler,
     downloadManager
 ) {
@@ -1314,7 +1317,7 @@ class EmbyDatasourceServer(
                     tag = artist.imageTags?.get(ImageType.PRIMARY)
                 )
             }
-            else null
+            else if (!artist.name.isNullOrBlank()) getMusicCoverUrlByCustomApi(artist = artist.name) else null
 
         val backdropImageUrl =
             if (!artist.backdropImageTags.isNullOrEmpty()) artist.name?.let {
@@ -1328,7 +1331,7 @@ class EmbyDatasourceServer(
                     tag = artist.backdropImageTags?.get(0)
                 )
             }
-            else null
+            else if (!artist.name.isNullOrBlank()) getMusicCoverUrlByCustomApi(artist = artist.name) else null
 
         val sortName = artist.sortName
         val shortNameStart = if (!sortName.isNullOrBlank()) sortName[0] else '#'
@@ -1364,8 +1367,9 @@ class EmbyDatasourceServer(
     //ItemResponse转换XyMusic
     fun convertToMusic(item: ItemResponse): XyMusic {
 
-        val itemImageUrl = item.albumPrimaryImageTag?.let {
-            item.albumId?.let { albumId ->
+        val albumId = item.albumId
+        val itemImageUrl =
+            if (item.albumPrimaryImageTag != null && !albumId.isNullOrBlank()) {
                 embyApiClient.createImageUrl(
                     albumId,
                     ImageType.PRIMARY,
@@ -1374,8 +1378,7 @@ class EmbyDatasourceServer(
                     quality = 96,
                     tag = item.albumPrimaryImageTag
                 )
-            }
-        }
+            } else if (!item.name.isNullOrBlank()) getMusicCoverUrlByCustomApi(musicTitle = item.name) else null
 
 
         //获得音乐信息
@@ -1390,7 +1393,7 @@ class EmbyDatasourceServer(
             pic = itemImageUrl,
             name = item.name ?: application.getString(Constants.UNKNOWN_MUSIC),
             downloadUrl = createDownloadUrl(item.id),
-            album = item.albumId ?: "",
+            album = albumId ?: "",
             albumName = item.album,
             connectionId = getConnectionId(),
             artists = item.artistItems?.mapNotNull { artist -> artist.name },
@@ -1442,7 +1445,7 @@ class EmbyDatasourceServer(
                 quality = 96,
                 tag = album.imageTags?.get(ImageType.PRIMARY)
             )
-            else null
+            else if (!album.name.isNullOrBlank()) getMusicCoverUrlByCustomApi(album = album.name) else null
         return XyAlbum(
             itemId = album.id,
             pic = itemImageUrl,
