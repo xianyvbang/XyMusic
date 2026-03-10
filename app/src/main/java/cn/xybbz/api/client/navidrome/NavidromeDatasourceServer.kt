@@ -383,7 +383,7 @@ class NavidromeDatasourceServer(
             genres.await()
             favorite.await()
         }
-        Log.w("数量","数量信息,$music $album $artist $playlist $genres $favorite")
+        Log.w("数量", "数量信息,$music $album $artist $playlist $genres $favorite")
         updateOrSaveDataInfoCount(music, album, artist, playlist, genres, favorite, connectionId)
 
     }
@@ -896,10 +896,13 @@ class NavidromeDatasourceServer(
             ).subsonicResponse.songs.toXyMusic(
                 getConnectionId(),
                 createDownloadUrl = { createDownloadUrl(it) },
-                getImageUrl = {
-                    navidromeApiClient.getImageUrl(
-                        it
-                    )
+                getImageUrl = { coverArt, title ->
+                    if (coverArt.isNullOrBlank())
+                        getMusicCoverUrlByCustomApi(musicTitle = title) ?: ""
+                    else
+                        navidromeApiClient.getImageUrl(
+                            coverArt
+                        )
                 }
             )
         return transitionMusicExtend(items)
@@ -920,7 +923,14 @@ class NavidromeDatasourceServer(
             ).subsonicResponse.topSongs.toXyMusic(
                 getConnectionId(),
                 createDownloadUrl = { createDownloadUrl(it) },
-                getImageUrl = { navidromeApiClient.getImageUrl(it) }
+                getImageUrl = { coverArt, title ->
+                    if (coverArt.isNullOrBlank())
+                        getMusicCoverUrlByCustomApi(musicTitle = title) ?: ""
+                    else
+                        navidromeApiClient.getImageUrl(
+                            coverArt
+                        )
+                }
             )
         return transitionMusicExtend(items)
     }
@@ -1347,12 +1357,16 @@ class NavidromeDatasourceServer(
     ): XyArtist {
 
         return artistId3.convertToArtist(
-            pic = if (artistId3.coverArt.isNullOrBlank()) null else artistId3.coverArt?.let { coverArt ->
+            pic = if (artistId3.coverArt.isNullOrBlank())
+                getMusicCoverUrlByCustomApi(artist = artistId3.name) ?: ""
+            else artistId3.coverArt?.let { coverArt ->
                 navidromeApiClient.getImageUrl(
                     coverArt
                 )
             },
-            backdrop = if (artistId3.coverArt.isNullOrBlank()) null else artistId3.coverArt?.let { coverArt ->
+            backdrop = if (artistId3.coverArt.isNullOrBlank())
+                getMusicCoverUrlByCustomApi(artist = artistId3.name) ?: ""
+            else artistId3.coverArt?.let { coverArt ->
                 navidromeApiClient.getImageUrl(
                     coverArt
                 )
