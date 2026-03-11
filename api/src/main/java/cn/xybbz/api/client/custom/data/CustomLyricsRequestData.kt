@@ -63,21 +63,24 @@ data class CustomLyricsRequestData(
         private fun createRequestData(
             apiUrl: String,
             authKey: String,
-            title: String,
-            artist: String,
-            album: String,
-            path: String
+            title: String?,
+            artist: String?,
+            album: String?,
+            path: String?
         ): CustomLyricsRequestData {
-            val queryParams = mutableListOf(
-                CustomLyricsRequestParam(fieldName = QUERY_TITLE, fieldValue = title.trim())
-            )
-            artist.trim().takeIf { it.isNotBlank() }?.let {
+            val queryParams = mutableListOf<CustomLyricsRequestParam>()
+            title?.trim()?.takeIf { it.isNotBlank() }?.let {
+                queryParams.add(CustomLyricsRequestParam(fieldName = QUERY_TITLE, fieldValue = it))
+            }
+
+
+            artist?.trim()?.takeIf { it.isNotBlank() }?.let {
                 queryParams.add(CustomLyricsRequestParam(fieldName = QUERY_ARTIST, fieldValue = it))
             }
-            album.trim().takeIf { it.isNotBlank() }?.let {
+            album?.trim()?.takeIf { it.isNotBlank() }?.let {
                 queryParams.add(CustomLyricsRequestParam(fieldName = QUERY_ALBUM, fieldValue = it))
             }
-            path.trim().takeIf { it.isNotBlank() }?.let {
+            path?.trim()?.takeIf { it.isNotBlank() }?.let {
                 queryParams.add(CustomLyricsRequestParam(fieldName = QUERY_PATH, fieldValue = it))
             }
 
