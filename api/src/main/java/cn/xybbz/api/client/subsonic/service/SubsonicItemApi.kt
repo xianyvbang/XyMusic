@@ -19,6 +19,7 @@
 package cn.xybbz.api.client.subsonic.service
 
 import cn.xybbz.api.base.BaseApi
+import cn.xybbz.api.client.subsonic.data.SubsonicAlbumInfo2Response
 import cn.xybbz.api.client.subsonic.data.SubsonicAlbumListResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicAlbumResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicRandomResponse
@@ -52,6 +53,11 @@ interface SubsonicItemApi : BaseApi {
 
     @GET("/rest/getAlbum")
     suspend fun getAlbum(@Query("id") id: String): SubsonicResponse<SubsonicAlbumResponse>
+
+    @GET("/rest/getAlbumInfo2")
+    suspend fun getAlbumInfo2(
+        @Query("id") id: String
+    ): SubsonicResponse<SubsonicAlbumInfo2Response>
 
     @GET("/rest/getSong")
     suspend fun getSong(@Query("id") id: String): SubsonicResponse<SubsonicSongResponse>

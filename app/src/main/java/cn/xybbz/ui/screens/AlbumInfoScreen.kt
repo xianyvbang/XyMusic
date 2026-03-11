@@ -63,7 +63,7 @@ import androidx.compose.material.icons.rounded.PauseCircle
 import androidx.compose.material.icons.rounded.PlayCircle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
@@ -162,7 +162,7 @@ fun AlbumInfoScreen(
 ) {
 
     SideEffect {
-        Log.d("=====", "MusicAudiobookInfoScreen重组一次")
+        Log.d("=====", "MusicAudiobookInfoScreen recomposed")
     }
 
     val coroutineScope = rememberCoroutineScope()
@@ -495,7 +495,10 @@ fun AlbumInfoScreen(
                                         if (albumInfoViewModel.albumPlayerHistoryProgressMap.containsKey(
                                                 music.itemId
                                             )
-                                        ) "已播: ${albumInfoViewModel.albumPlayerHistoryProgressMap[music.itemId]}%" else music.artists?.joinToString()
+                                        ) stringResource(
+                                            R.string.played_progress_percent,
+                                            albumInfoViewModel.albumPlayerHistoryProgressMap[music.itemId] ?: 0
+                                        ) else music.artists?.joinToString()
                                             ?: "",
                                     onMusicPlay = { parameter ->
                                         coroutineScope.launch {

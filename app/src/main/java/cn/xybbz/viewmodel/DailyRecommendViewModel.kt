@@ -60,9 +60,9 @@ class DailyRecommendViewModel @Inject constructor(
     var recommendedMusicList by mutableStateOf<List<XyMusicExtend>>(emptyList())
         private set
 
-    private var recommendedMusicJob: Job? = null
 
     init {
+        startRecommendedMusicObserver()
         observeLoginSuccessForRecommendedMusic()
     }
 
@@ -72,16 +72,13 @@ class DailyRecommendViewModel @Inject constructor(
     private fun observeLoginSuccessForRecommendedMusic() {
         viewModelScope.launch {
             dataSourceManager.mergeFlow.collect {
-                startRecommendedMusicObserver()
+                generateRecommendedMusicList()
             }
         }
     }
 
     private fun startRecommendedMusicObserver() {
-        // 取消旧 Job 避免重复订阅
-        recommendedMusicJob?.cancel()
-
-        recommendedMusicJob = viewModelScope.launch {
+        viewModelScope.launch {
             db.musicDao
                 .selectRecommendedMusicExtendListFlow(50)
                 .distinctUntilChanged()

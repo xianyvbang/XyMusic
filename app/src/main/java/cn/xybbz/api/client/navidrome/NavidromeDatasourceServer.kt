@@ -22,6 +22,7 @@ import android.content.Context
 import android.util.Log
 import androidx.room.withTransaction
 import cn.xybbz.api.client.IDataSourceParentServer
+import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.navidrome.data.AlbumItem
 import cn.xybbz.api.client.navidrome.data.ArtistItem
@@ -78,6 +79,7 @@ class NavidromeDatasourceServer(
     application: Context,
     settingsManager: SettingsManager,
     private val navidromeApiClient: NavidromeApiClient,
+    customMediaApiClient: CustomMediaApiClient,
     mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     downloadManager: DownLoadManager
 ) : IDataSourceParentServer(
@@ -85,6 +87,7 @@ class NavidromeDatasourceServer(
     settingsManager,
     application,
     navidromeApiClient,
+    customMediaApiClient,
     mediaLibraryAndFavoriteSyncScheduler,
     downloadManager
 ) {
@@ -383,7 +386,7 @@ class NavidromeDatasourceServer(
             genres.await()
             favorite.await()
         }
-        Log.w("数量","数量信息,$music $album $artist $playlist $genres $favorite")
+        Log.w("数量", "数量信息,$music $album $artist $playlist $genres $favorite")
         updateOrSaveDataInfoCount(music, album, artist, playlist, genres, favorite, connectionId)
 
     }
@@ -417,7 +420,14 @@ class NavidromeDatasourceServer(
         dataType: MusicDataTypeEnum
     ): XyAlbum {
         val queryResult = navidromeApiClient.itemApi().getAlbum(albumId)
-        return convertToAlbum(queryResult)
+        val albumInfo = navidromeApiClient.itemApi().getAlbumInfo2(albumId)
+        val albumInfo2ID3 = albumInfo.subsonicResponse.albumInfo
+        var album = convertToAlbum(queryResult)
+        album = album.copy(
+            pic = albumInfo2ID3?.smallImageUrl ?: albumInfo2ID3?.largeImageUrl
+            ?: getMusicCoverUrlByCustomApi(album = album.name) ?: ""
+        )
+        return album
     }
 
     /**
@@ -896,10 +906,13 @@ class NavidromeDatasourceServer(
             ).subsonicResponse.songs.toXyMusic(
                 getConnectionId(),
                 createDownloadUrl = { createDownloadUrl(it) },
-                getImageUrl = {
-                    navidromeApiClient.getImageUrl(
-                        it
-                    )
+                getImageUrl = { coverArt, title ->
+                    if (coverArt.isNullOrBlank())
+                        getMusicCoverUrlByCustomApi(musicTitle = title) ?: ""
+                    else
+                        navidromeApiClient.getImageUrl(
+                            coverArt
+                        )
                 }
             )
         return transitionMusicExtend(items)
@@ -920,7 +933,14 @@ class NavidromeDatasourceServer(
             ).subsonicResponse.topSongs.toXyMusic(
                 getConnectionId(),
                 createDownloadUrl = { createDownloadUrl(it) },
-                getImageUrl = { navidromeApiClient.getImageUrl(it) }
+                getImageUrl = { coverArt, title ->
+                    if (coverArt.isNullOrBlank())
+                        getMusicCoverUrlByCustomApi(musicTitle = title) ?: ""
+                    else
+                        navidromeApiClient.getImageUrl(
+                            coverArt
+                        )
+                }
             )
         return transitionMusicExtend(items)
     }
@@ -1327,8 +1347,11 @@ class NavidromeDatasourceServer(
                 .lowercase()
         return XyArtist(
             artistId = artist.id,
-            pic = artist.smallImageUrl ?: artist.largeImageUrl,
-            backdrop = artist.largeImageUrl ?: artist.smallImageUrl,
+            pic = artist.smallImageUrl ?: artist.largeImageUrl
+            ?: getMusicCoverUrlByCustomApi(artist = artist.name),
+            backdrop = artist.largeImageUrl ?: artist.smallImageUrl ?: getMusicCoverUrlByCustomApi(
+                artist = artist.name
+            ),
             name = artist.name,
             describe = artist.biography,
             connectionId = getConnectionId(),
@@ -1347,12 +1370,16 @@ class NavidromeDatasourceServer(
     ): XyArtist {
 
         return artistId3.convertToArtist(
-            pic = if (artistId3.coverArt.isNullOrBlank()) null else artistId3.coverArt?.let { coverArt ->
+            pic = if (artistId3.coverArt.isNullOrBlank())
+                getMusicCoverUrlByCustomApi(artist = artistId3.name) ?: ""
+            else artistId3.coverArt?.let { coverArt ->
                 navidromeApiClient.getImageUrl(
                     coverArt
                 )
             },
-            backdrop = if (artistId3.coverArt.isNullOrBlank()) null else artistId3.coverArt?.let { coverArt ->
+            backdrop = if (artistId3.coverArt.isNullOrBlank())
+                getMusicCoverUrlByCustomApi(artist = artistId3.name) ?: ""
+            else artistId3.coverArt?.let { coverArt ->
                 navidromeApiClient.getImageUrl(
                     coverArt
                 )

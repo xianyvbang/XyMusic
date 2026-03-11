@@ -24,6 +24,7 @@ import android.util.Log
 import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.client.IDataSourceParentServer
+import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
 import cn.xybbz.api.client.data.XyResponse
@@ -78,6 +79,7 @@ class PlexDatasourceServer(
     private val application: Context,
     settingsManager: SettingsManager,
     private val plexApiClient: PlexApiClient,
+    customMediaApiClient: CustomMediaApiClient,
     mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     downloadManager: DownLoadManager
 ) : IDataSourceParentServer(
@@ -85,6 +87,7 @@ class PlexDatasourceServer(
     settingsManager,
     application,
     plexApiClient,
+    customMediaApiClient,
     mediaLibraryAndFavoriteSyncScheduler,
     downloadManager
 ) {
@@ -1787,14 +1790,15 @@ class PlexDatasourceServer(
      * 将ItemResponse转换成XyAlbum
      */
     fun convertToAlbum(album: Metadatum): XyAlbum {
+        val images = album.image
+        val image = images?.findLast { it.type == ImageType.CoverPoster }
         val itemImageUrl =
-            album.image?.let { images ->
-                val image = images.findLast { it.type == ImageType.CoverPoster }
-                image?.let {
-                    plexApiClient.getImageUrl(
-                        image.url,
-                    )
-                }
+            if (!images.isNullOrEmpty() && image != null) {
+                plexApiClient.getImageUrl(
+                    image.url,
+                )
+            } else {
+                getMusicCoverUrlByCustomApi(album = album.title)
             }
 
         return XyAlbum(
@@ -1855,15 +1859,16 @@ class PlexDatasourceServer(
 
     //ItemResponse转换XyMusic
     fun convertToMusic(item: Metadatum): XyMusic {
-        val itemImageUrl = item.image?.let { images ->
-            val image = images.findLast { it.type == ImageType.CoverPoster }
-            image?.let {
+        val images = item.image
+        val image = images?.findLast { it.type == ImageType.CoverPoster }
+        val itemImageUrl =
+            if (!images.isNullOrEmpty() && image != null) {
                 plexApiClient.getImageUrl(
                     image.url,
                 )
+            } else {
+                getMusicCoverUrlByCustomApi(musicTitle = item.title)
             }
-
-        }
 
 
         //获得音乐信息
@@ -1929,25 +1934,25 @@ class PlexDatasourceServer(
     fun convertToArtist(
         artist: Metadatum,
     ): XyArtist {
+        val images = artist.image
+        val image = images?.findLast { it.type == ImageType.CoverPoster }
         val artistImageUrl =
-            artist.image?.let { images ->
-                val image = images.findLast { it.type == ImageType.CoverPoster }
-                image?.let {
-                    plexApiClient.getImageUrl(
-                        image.url,
-                    )
-                }
+            if (!images.isNullOrEmpty() && image != null) {
+                plexApiClient.getImageUrl(
+                    image.url,
+                )
+            } else {
+                getMusicCoverUrlByCustomApi(artist = artist.title)
             }
 
+        val imageBack = images?.findLast { it.type == ImageType.Background }
         val artistBackdropImageUrl =
-            artist.image?.let { images ->
-                val image = images.findLast { it.type == ImageType.Background }
-                image?.let {
-                    plexApiClient.getImageUrl(
-                        image.url,
-                    )
-                }
-
+            if (!images.isNullOrEmpty() && imageBack != null) {
+                plexApiClient.getImageUrl(
+                    imageBack.url,
+                )
+            } else {
+                getMusicCoverUrlByCustomApi(artist = artist.title)
             }
 
         val result =

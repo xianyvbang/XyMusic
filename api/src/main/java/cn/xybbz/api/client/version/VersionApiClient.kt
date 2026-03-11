@@ -18,14 +18,15 @@
 
 package cn.xybbz.api.client.version
 
-import cn.xybbz.api.client.ApiConfig
+import cn.xybbz.api.client.ApiFactory
+import cn.xybbz.api.client.DownloadFactory
 import cn.xybbz.api.client.version.service.GitHubVersionApi
 import cn.xybbz.api.converter.kotlinxJsonConverter
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import java.util.concurrent.TimeUnit
 
-class VersionApiClient : ApiConfig {
+class VersionApiClient : ApiFactory, DownloadFactory {
 
     lateinit var apiOkHttpClient: OkHttpClient
 

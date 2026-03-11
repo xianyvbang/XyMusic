@@ -18,6 +18,7 @@
 
 package cn.xybbz.viewmodel
 
+import android.app.Application
 import android.icu.math.BigDecimal
 import android.icu.math.MathContext
 import android.util.Log
@@ -77,6 +78,7 @@ import javax.inject.Inject
 @OptIn(UnstableApi::class)
 @HiltViewModel
 class MainViewModel @Inject constructor(
+    private val application: Application,
     val db: DatabaseClient,
     private val musicController: MusicController,
     val dataSourceManager: DataSourceManager,
@@ -592,7 +594,7 @@ class MainViewModel @Inject constructor(
                     }
                     db.eraItemDao.saveBatch(
                         XyEraItem(
-                            title = "${era}年代",
+                            title = application.getString(R.string.era_title_decade, era),
                             era = era,
                             years = years
                         )

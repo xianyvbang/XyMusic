@@ -900,3 +900,53 @@ val MIGRATION_29_30 = object : Migration(29, 30) {
         )
     }
 }
+
+val MIGRATION_31_32 = object : Migration(31, 32) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            ALTER TABLE xy_daily_recommend_history
+            ADD COLUMN mediaLibraryId TEXT
+        """.trimIndent()
+        )
+        db.execSQL(
+            """
+            CREATE INDEX IF NOT EXISTS index_xy_daily_recommend_history_connectionId_mediaLibraryId_timestamp
+            ON xy_daily_recommend_history(connectionId, mediaLibraryId, timestamp)
+        """.trimIndent()
+        )
+    }
+}
+
+val MIGRATION_32_33 = object : Migration(32, 33) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // 是否优先使用音乐服务接口
+        db.execSQL(
+            """
+            ALTER TABLE xy_settings
+            ADD COLUMN ifPriorityMusicApi INTEGER NOT NULL DEFAULT 1
+        """.trimIndent()
+        )
+        // 单曲歌词接口地址
+        db.execSQL(
+            """
+            ALTER TABLE xy_settings
+            ADD COLUMN customLrcSingleApi TEXT NOT NULL DEFAULT 'https://api.lrc.cx/lyrics'
+        """.trimIndent()
+        )
+        // 自定义歌词接口鉴权字段
+        db.execSQL(
+            """
+            ALTER TABLE xy_settings
+            ADD COLUMN customLrcApiAuth TEXT NOT NULL DEFAULT ''
+        """.trimIndent()
+        )
+        // 自定义封面接口地址
+        db.execSQL(
+            """
+            ALTER TABLE xy_settings
+            ADD COLUMN customCoverApi TEXT NOT NULL DEFAULT 'https://api.lrc.cx/cover'
+        """.trimIndent()
+        )
+    }
+}

@@ -87,15 +87,14 @@ fun <T> List<T>.joinToString(transform: ((T) -> CharSequence)): String {
 fun Songs?.toXyMusic(
     connectionId: Long,
     createDownloadUrl: (String) -> String,
-    getImageUrl: (String) -> String
+    getImageUrl: (String?,String) -> String
 ): List<XyMusic>? {
     return this?.song?.map { music ->
         music.toXyMusic(
-            pic = if (music.coverArt.isNullOrBlank()) null else music.coverArt?.let {
-                getImageUrl(
-                    it
-                )
-            },
+            pic = getImageUrl(
+                music.coverArt,
+                music.title
+            ),
             downloadUrl = createDownloadUrl(music.id),
             connectionId = connectionId
         )

@@ -60,7 +60,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -212,7 +212,7 @@ fun ConnectionScreen(
 
 
         AnimatedContent(
-            targetState = ifSelectDataSource, label = "切换",
+            targetState = ifSelectDataSource, label = "switch",
             transitionSpec = {
                 if (targetState > initialState) {
                     slideInHorizontally { width -> width } + fadeIn() togetherWith
@@ -305,7 +305,7 @@ fun ConnectionScreen(
                                     onClick = {
                                         if (connectionViewModel.dataSourceType?.ifInputUrl == false) {
                                             if (connectionViewModel.ifInputAccount()) {
-                                                MessageUtils.sendPopTipError("用户名不能为空")
+                                                MessageUtils.sendPopTipError(R.string.username_cannot_be_empty)
                                                 return@Button
                                             }
                                             Log.i("ConnectionScreen", "noifInputUrl")
@@ -330,7 +330,7 @@ fun ConnectionScreen(
                                                 }
                                             }
                                         } else {
-                                            MessageUtils.sendPopTipError("连接地址或用户名不能为空")
+                                            MessageUtils.sendPopTipError(R.string.connection_address_or_username_cannot_be_empty)
                                         }
                                     }
                                 ) {
@@ -356,7 +356,7 @@ fun ConnectionScreen(
                             item {
                                 XyLoadingItem(
                                     modifier = Modifier.height(200.dp),
-                                    text = "正在获取资源"
+                                    text = stringResource(R.string.fetching_resources)
                                 )
                             }
 
@@ -616,7 +616,7 @@ fun AddressInputEdit(
             updateAddress(it)
         },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-        hint = "连接地址:http://192.168.3.12:8096",
+        hint = stringResource(R.string.connection_address_hint),
         icon = Icons.Rounded.Http,
         iconContentDescription = stringResource(R.string.httpInput),
         actionContent = if (address.isNotBlank()) {
@@ -630,7 +630,7 @@ fun AddressInputEdit(
                     Icon(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         imageVector = Icons.Rounded.Cancel,
-                        contentDescription = "清空"
+                        contentDescription = stringResource(R.string.clear)
                     )
                 }
             }
@@ -666,7 +666,7 @@ fun UsernameInputEdit(
                     Icon(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         imageVector = Icons.Rounded.Cancel,
-                        contentDescription = "清空"
+                        contentDescription = stringResource(R.string.clear)
                     )
                 }
             }
@@ -734,7 +734,7 @@ fun ConnectionNameInputEdit(
                     Icon(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         imageVector = Icons.Rounded.Cancel,
-                        contentDescription = "清空"
+                        contentDescription = stringResource(R.string.clear)
                     )
                 }
             }

@@ -25,7 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -67,7 +67,7 @@ fun StreamingQualityScreen(
             modifier = Modifier.statusBarsPadding(),
             title = {
                 TopAppBarTitle(
-                    title = "在线音乐品质"
+                    title = stringResource(R.string.online_music_quality)
                 )
             }, navigationIcon = {
                 IconButton(

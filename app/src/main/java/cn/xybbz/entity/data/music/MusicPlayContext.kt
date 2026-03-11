@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.media3.common.util.UnstableApi
+import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.music.MusicController
@@ -435,7 +436,7 @@ class MusicPlayContext @Inject constructor(
                         e.printStackTrace()
                     }
                 } else {
-                    MessageUtils.sendPopTip("获取音乐失败,无法播放")
+                    MessageUtils.sendPopTip(R.string.get_music_failed_cannot_play)
                 }
 
             } catch (e: Exception) {

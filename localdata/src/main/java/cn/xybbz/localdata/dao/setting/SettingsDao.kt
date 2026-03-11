@@ -94,4 +94,19 @@ interface SettingsDao {
 
     @Query("update xy_settings set fadeDurationMs = :fadeDurationMs where id = :id")
     suspend fun updateFadeDurationMs(fadeDurationMs: Long, id: Long)
+
+    /**
+     * 更新自定义歌词配置
+     */
+    @Query("update xy_settings set ifPriorityMusicApi = :ifPriorityMusicApi where id = :id")
+    suspend fun updateIfPriorityMusicApi(ifPriorityMusicApi: Boolean, id: Long)
+
+    @Query("update xy_settings set customLrcSingleApi = :customLrcSingleApi where id = :id")
+    suspend fun updateCustomLrcSingleApi(customLrcSingleApi: String, id: Long)
+
+    @Query("update xy_settings set customLrcApiAuth = :customLrcApiAuth where id = :id")
+    suspend fun updateCustomLrcApiAuth(customLrcApiAuth: String, id: Long)
+
+    @Query("update xy_settings set customCoverApi = :customCoverApi where id = :id")
+    suspend fun updateCustomCoverApi(customCoverApi: String, id: Long)
 }

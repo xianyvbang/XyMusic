@@ -12,10 +12,15 @@ class RecentHistoryCache(
 ) {
 
     suspend fun addAll(songs: List<XyMusic>, connectionId: Long) = withContext(Dispatchers.IO) {
+        val mediaLibraryId = db.connectionConfigDao
+            .selectConnectionConfig()
+            ?.libraryIds
+            ?.joinToString(",")
         db.musicDao.saveBatch(
             songs,
             MusicDataTypeEnum.RECOMMEND,
-            connectionId
+            connectionId,
+            mediaLibraryId = mediaLibraryId
         )
         val songIds = db.recentHistoryDao.maxSizeSongIds(maxSize)
         db.recentHistoryDao.trimToMaxSize(maxSize)

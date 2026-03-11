@@ -1,6 +1,6 @@
 package cn.xybbz.config.download.core
 
-import cn.xybbz.api.client.ApiConfig
+import cn.xybbz.api.client.DownloadFactory
 import cn.xybbz.config.download.state.DownloadState
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.enums.DownloadStatus
@@ -17,7 +17,7 @@ interface IDownloadCore {
      * @param [statusChange] 状态变更信息
      */
     suspend fun download(
-        client: ApiConfig,
+        client: DownloadFactory,
         statusChange: suspend () -> DownloadStatus?,
         xyDownload: XyDownload
     ):Flow<DownloadState>

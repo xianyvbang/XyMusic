@@ -27,6 +27,8 @@ import androidx.room.Transaction
 import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.TokenServer
+import cn.xybbz.api.client.custom.CustomMediaApiClient
+import cn.xybbz.api.client.custom.data.CustomCoverQuery
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
@@ -95,6 +97,7 @@ abstract class IDataSourceParentServer(
     private val settingsManager: SettingsManager,
     private val application: Context,
     private val defaultParentApiClient: DefaultParentApiClient,
+    private val customMediaApiClient: CustomMediaApiClient,
     private val mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     private val downloadManager: DownLoadManager,
 ) : IDataSourceServer {
@@ -721,14 +724,14 @@ abstract class IDataSourceParentServer(
         albumId: String,
         dataType: MusicDataTypeEnum
     ): XyAlbum? {
-        var xyAlbum = db.albumDao.selectById(albumId)
+        val xyAlbum = selectAlbumInfoByRemotely(albumId, dataType)
 
-        if (xyAlbum == null) {
+        /*if (xyAlbum == null) {
             xyAlbum = selectAlbumInfoByRemotely(albumId, dataType)
         } else {
             val ifFavorite = db.albumDao.selectFavoriteById(albumId) == true
             xyAlbum = xyAlbum.copy(ifFavorite = ifFavorite)
-        }
+        }*/
         return xyAlbum
     }
 
@@ -1252,10 +1255,32 @@ abstract class IDataSourceParentServer(
 
     suspend fun updateDataSourceRemoteKey(remoteCurrentId: String? = null) {
         if (!remoteCurrentId.isNullOrBlank()) {
-            db.remoteCurrentDao.updateByIdAndConnectionId(getConnectionId(), remoteCurrentId + getConnectionId())
+            db.remoteCurrentDao.updateByIdAndConnectionId(
+                getConnectionId(),
+                remoteCurrentId + getConnectionId()
+            )
         } else {
             db.remoteCurrentDao.updateByConnectionId(getConnectionId())
         }
+    }
+
+    /**
+     * 从自定义封面 API 获取封面地址
+     */
+    protected fun getMusicCoverUrlByCustomApi(
+        musicTitle: String? = null,
+        album: String? = null,
+        artist: String? = null
+    ): String? {
+        val settings = settingsManager.get()
+        val query = CustomCoverQuery(
+            coverApi = settings.customCoverApi,
+            authKey = settings.customLrcApiAuth,
+            title = musicTitle,
+            artist = artist,
+            album = album
+        )
+        return customMediaApiClient.getCoverUrl(query)
     }
 
     override fun close() {

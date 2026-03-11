@@ -31,7 +31,6 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
@@ -47,6 +46,7 @@ import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumn
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 import cn.xybbz.ui.xy.XyItemSwitcher
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText

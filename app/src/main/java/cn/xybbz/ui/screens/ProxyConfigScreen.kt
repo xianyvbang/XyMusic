@@ -10,7 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -160,7 +160,7 @@ fun ProxyConfigComponent(
 ) {
 
     SettingRoundedSurfaceColumn {
-        SettingParentItemComponent(title = "代理地址", trailingContent = {
+        SettingParentItemComponent(title = stringResource(R.string.proxy_address), trailingContent = {
             Row(
                 modifier = Modifier.width(200.dp),
                 horizontalArrangement = Arrangement.End,

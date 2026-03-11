@@ -111,6 +111,22 @@ data class XySettings(
      * wifi网络转码比特率
      */
     val wifiNetworkAudioBitRate: Int = 0,
+    /**
+     * 歌词优先使用音乐服务接口
+     */
+    val ifPriorityMusicApi: Boolean = true,
+    /**
+     * 自定义歌词单曲接口地址
+     */
+    val customLrcSingleApi: String = "https://api.lrc.cx/lyrics",
+    /**
+     * 自定义歌词接口鉴权
+     */
+    val customLrcApiAuth: String = "",
+    /**
+     * 自定义封面接口地址
+     */
+    val customCoverApi: String = "https://api.lrc.cx/cover",
 
     /**
      * 播放会话ID

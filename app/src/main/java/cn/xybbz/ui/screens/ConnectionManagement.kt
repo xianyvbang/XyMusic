@@ -34,7 +34,7 @@ import androidx.compose.material.icons.rounded.AddCard
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -180,7 +180,7 @@ fun ConnectionManagement(
                                         content = { sheetObject ->
                                             RoundedSurfaceColumn {
                                                 SettingItemComponent(
-                                                    title = "修改连接"
+                                                    title = stringResource(R.string.modify_connection)
                                                 ) {
                                                     coroutineScope.launch {
                                                         sheetState.hide()

@@ -33,7 +33,11 @@ import cn.xybbz.localdata.data.connection.ConnectionConfig
         childColumns = ["connectionId"],
         onDelete = CASCADE
     )],
-    indices = [Index("connectionId"), Index(value = ["connectionId", "timestamp"])]
+    indices = [
+        Index("connectionId"),
+        Index(value = ["connectionId", "timestamp"]),
+        Index(value = ["connectionId", "mediaLibraryId", "timestamp"])
+    ]
 )
 data class XyDailyRecommendHistory(
     /**
@@ -45,6 +49,11 @@ data class XyDailyRecommendHistory(
      * Connection id
      */
     val connectionId: Long,
+
+    /**
+     * 当前推荐生成时绑定的媒体库标识（来自 ConnectionConfig.libraryIds）
+     */
+    val mediaLibraryId: String? = null,
 
     /**
      * Recommend order in one generation batch

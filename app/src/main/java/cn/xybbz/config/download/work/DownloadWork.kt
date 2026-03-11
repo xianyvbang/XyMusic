@@ -3,6 +3,7 @@ package cn.xybbz.config.download.work
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.exception.CancelDownloadException
@@ -94,7 +95,7 @@ class DownloadWork @AssistedInject constructor(
             callback.onStateChanged(
                 downloadId,
                 DownloadStatus.FAILED,
-                error = e.message ?: "未知错误",
+                error = e.message ?: applicationContext.getString(R.string.unknown_error),
                 isSendNotice = true
             )
             return Result.failure()

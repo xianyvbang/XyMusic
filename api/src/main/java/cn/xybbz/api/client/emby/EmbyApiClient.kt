@@ -19,7 +19,6 @@
 package cn.xybbz.api.client.emby
 
 import android.util.Log
-import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
@@ -32,13 +31,13 @@ import cn.xybbz.api.client.emby.service.EmbyPlaylistsApi
 import cn.xybbz.api.client.emby.service.EmbyUserApi
 import cn.xybbz.api.client.emby.service.EmbyUserLibraryApi
 import cn.xybbz.api.client.emby.service.EmbyUserViewsApi
-import cn.xybbz.api.client.jellyfin.buildParameter
 import cn.xybbz.api.client.jellyfin.data.toLogin
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.ImageType
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.UnauthorizedException
+import cn.xybbz.api.utils.ParameterUtils.buildParameter
 import okhttp3.ResponseBody
 import retrofit2.Response
 
@@ -242,6 +241,7 @@ class EmbyApiClient : DefaultParentApiClient() {
                 !is UnauthorizedException -> {
                     throw ConnectionException()
                 }
+
                 else -> throw e
             }
         }

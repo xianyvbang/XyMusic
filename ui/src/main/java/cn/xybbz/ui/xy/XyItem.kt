@@ -134,7 +134,7 @@ fun ItemTrailingContent(
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Favorite,
-                    contentDescription = "已收藏",
+                    contentDescription = stringResource(R.string.favorited),
                     modifier = Modifier
                         .size(iconSizeDp)
                         .padding(end = 2.dp),
@@ -153,7 +153,7 @@ fun ItemTrailingContent(
             ) {
                 Icon(
                     imageVector = Icons.Rounded.DownloadDone,
-                    contentDescription = "已下载",
+                    contentDescription = stringResource(R.string.downloaded),
                     modifier = Modifier
                         .size(iconSizeDp)
                         .padding(end = 2.dp),
@@ -470,7 +470,7 @@ fun XyItemIconSelect(
                 Icon(
                     modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize),
                     imageVector = Icons.Rounded.Check,
-                    contentDescription = "已选择",
+                    contentDescription = stringResource(R.string.selected),
                 )
                 Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
             }

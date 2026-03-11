@@ -176,7 +176,7 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
                 )
             }
 
-        MessageUtils.sendPopTipSuccess("修改成功")
+        MessageUtils.sendPopTipSuccess(R.string.modify_success)
     }
 
     /**

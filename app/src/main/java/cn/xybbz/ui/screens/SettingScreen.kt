@@ -34,7 +34,7 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -56,6 +56,7 @@ import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.router.About
 import cn.xybbz.router.CacheLimit
 import cn.xybbz.router.ConnectionManagement
+import cn.xybbz.router.CustomLyrics
 import cn.xybbz.router.InterfaceSetting
 import cn.xybbz.router.LanguageConfig
 import cn.xybbz.router.MemoryManagement
@@ -191,10 +192,9 @@ fun SettingScreen(
                     }
 
                     SettingItemComponent(
-                        title = stringResource(R.string.customize_lyric_settings),
-                        enabled = false
+                        title = stringResource(R.string.customize_lyric_settings)
                     ) {
-//                        navigator.navigate(CustomLyrics)
+                        navigator.navigate(CustomLyrics)
                     }
 
                     SettingItemComponent(

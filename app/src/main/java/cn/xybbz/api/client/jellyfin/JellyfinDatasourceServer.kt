@@ -25,6 +25,7 @@ import android.util.Log
 import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.client.IDataSourceParentServer
+import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.jellyfin.data.CreatePlaylistRequest
 import cn.xybbz.api.client.jellyfin.data.ItemRequest
@@ -86,6 +87,7 @@ class JellyfinDatasourceServer(
     private val application: Context,
     settingsManager: SettingsManager,
     private val jellyfinApiClient: JellyfinApiClient,
+    customMediaApiClient: CustomMediaApiClient,
     mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     downloadManager: DownLoadManager
 ) : IDataSourceParentServer(
@@ -93,6 +95,7 @@ class JellyfinDatasourceServer(
     settingsManager,
     application,
     jellyfinApiClient,
+    customMediaApiClient,
     mediaLibraryAndFavoriteSyncScheduler,
     downloadManager
 ) {
@@ -1319,7 +1322,7 @@ class JellyfinDatasourceServer(
                 quality = 96,
                 tag = item.imageTags?.get(ImageType.PRIMARY)
             )
-            else null
+            else if (!item.name.isNullOrBlank()) getMusicCoverUrlByCustomApi(album = item.name) else null
         return XyAlbum(
             itemId = item.id,
             pic = itemImageUrl,
@@ -1353,8 +1356,9 @@ class JellyfinDatasourceServer(
     //MusicResponseVo转换XyItem
     fun convertToMusic(item: ItemResponse): XyMusic {
 
-        val itemImageUrl = item.albumPrimaryImageTag?.let {
-            item.albumId?.let { albumId ->
+        val albumId = item.albumId
+        val itemImageUrl =
+            if (item.albumPrimaryImageTag != null && !albumId.isNullOrBlank()) {
                 jellyfinApiClient.createImageUrl(
                     albumId,
                     ImageType.PRIMARY,
@@ -1363,8 +1367,7 @@ class JellyfinDatasourceServer(
                     quality = 96,
                     tag = item.albumPrimaryImageTag
                 )
-            }
-        }
+            } else if (!item.name.isNullOrBlank()) getMusicCoverUrlByCustomApi(album = item.name) else null
 
 
         //获得音乐信息
@@ -1379,7 +1382,7 @@ class JellyfinDatasourceServer(
             pic = itemImageUrl,
             name = item.name ?: application.getString(Constants.UNKNOWN_MUSIC),
             downloadUrl = createDownloadUrl(item.id),
-            album = item.albumId.toString(),
+            album = albumId.toString(),
             albumName = item.album,
             connectionId = getConnectionId(),
             artists = item.artistItems?.mapNotNull { artist -> artist.name },
@@ -1431,7 +1434,7 @@ class JellyfinDatasourceServer(
                         tag = item.imageTags?.get(ImageType.PRIMARY)
                     )
                 }
-                else null
+                else if (!item.name.isNullOrBlank()) getMusicCoverUrlByCustomApi(artist = item.name) else null
 
             val backdropImageUrl =
                 if (!item.backdropImageTags.isNullOrEmpty()) item.name?.let {
@@ -1445,7 +1448,7 @@ class JellyfinDatasourceServer(
                         tag = item.backdropImageTags?.get(0)
                     )
                 }
-                else null
+                else if (!item.name.isNullOrBlank()) getMusicCoverUrlByCustomApi(artist = item.name) else null
 
             val sortName = item.sortName
             val shortNameStart = if (!sortName.isNullOrBlank()) sortName[0] else '#'
