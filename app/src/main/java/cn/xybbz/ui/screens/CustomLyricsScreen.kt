@@ -20,7 +20,6 @@ package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -32,8 +31,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
@@ -42,7 +41,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.MusicSettingSwitchItemComponent
-import cn.xybbz.ui.components.SettingParentItemComponent
+import cn.xybbz.ui.components.SettingItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.ext.brashColor
@@ -50,9 +49,9 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import cn.xybbz.viewmodel.CustomLyricsViewModel
 import kotlinx.coroutines.launch
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -117,9 +116,16 @@ fun CustomLyricsScreen(
             }
 
             item {
+
+            }
+            item {
+                CustomLyricsSettingTitleItem(
+                    title = stringResource(R.string.lyrics_single_api)
+                )
+            }
+            item {
                 CustomLyricsSettingInput(
-                    title = stringResource(R.string.lyrics_single_api),
-                    bottomInfo = stringResource(R.string.lyrics_single_api_desc),
+                    title = "地址",
                     value = customLyricsViewModel.customLrcSingleApiValue,
                     hint = stringResource(R.string.lyrics_single_api_hint),
                     onValueChange = { customLyricsViewModel.updateCustomLrcSingleApi(it) }
@@ -127,9 +133,13 @@ fun CustomLyricsScreen(
             }
 
             item {
+                CustomLyricsSettingTitleItem(
+                    title = stringResource(R.string.lyrics_api_auth_key)
+                )
+            }
+            item {
                 CustomLyricsSettingInput(
-                    title = stringResource(R.string.lyrics_api_auth_key),
-                    bottomInfo = stringResource(R.string.lyrics_api_auth_key_desc),
+                    title = "地址",
                     value = customLyricsViewModel.customLrcApiAuthValue,
                     hint = stringResource(R.string.lyrics_api_auth_key_hint),
                     onValueChange = { customLyricsViewModel.updateCustomLrcApiAuth(it) }
@@ -137,9 +147,13 @@ fun CustomLyricsScreen(
             }
 
             item {
+                CustomLyricsSettingTitleItem(
+                    title = stringResource(R.string.custom_cover_api)
+                )
+            }
+            item {
                 CustomLyricsSettingInput(
-                    title = stringResource(R.string.custom_cover_api),
-                    bottomInfo = stringResource(R.string.custom_cover_api_desc),
+                    title = "地址",
                     value = customLyricsViewModel.customCoverApiValue,
                     hint = stringResource(R.string.custom_cover_api_hint),
                     onValueChange = { customLyricsViewModel.updateCustomCoverApi(it) }
@@ -150,37 +164,45 @@ fun CustomLyricsScreen(
 }
 
 @Composable
+private fun CustomLyricsSettingTitleItem(
+    title: String,
+) {
+    SettingRoundedSurfaceColumn {
+        SettingItemComponent(
+            title = title,
+            imageVector = null,
+            onRouter = {},
+        )
+    }
+}
+
+@Composable
 private fun CustomLyricsSettingInput(
     title: String,
-    bottomInfo: String,
     value: TextFieldValue,
     hint: String,
     onValueChange: (String) -> Unit
 ) {
-    // 通用设置输入行：左侧标题说明，右侧单行输入框
+    // 通用设置输入行：复用 SettingItem 样式，右侧单行输入框
     SettingRoundedSurfaceColumn {
-        SettingParentItemComponent(
+        SettingItemComponent(
             title = title,
-            bottomInfo = bottomInfo,
+            imageVector = null,
+            onRouter = {},
             trailingContent = {
-                Row(
+                XyEdit(
                     modifier = Modifier.width(220.dp),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    XyEdit(
-                        text = value,
-                        onChange = { newValue -> onValueChange(newValue.text) },
-                        hint = hint,
-                        paddingValues = PaddingValues(),
-                        textStyle = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.colorScheme.onSurface,
-                            textAlign = TextAlign.End
-                        ),
-                        textContentAlignment = Alignment.CenterEnd,
-                        singleLine = true,
-                    )
-                }
+                    text = value,
+                    onChange = { newValue -> onValueChange(newValue.text) },
+                    hint = hint,
+                    paddingValues = PaddingValues(),
+                    textStyle = MaterialTheme.typography.labelSmall.copy(
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.End
+                    ),
+                    textContentAlignment = Alignment.CenterEnd,
+                    singleLine = true,
+                )
             }
         )
     }
