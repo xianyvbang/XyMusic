@@ -51,9 +51,7 @@ class ConnectionViewModel @Inject constructor(
     val settingsManager: SettingsManager
 ) : ViewModel() {
 
-    init {
-        clearConnectionInputData()
-    }
+
 
     val options = listOf(Constants.HTTP, Constants.HTTPS)
 
@@ -115,6 +113,10 @@ class ConnectionViewModel @Inject constructor(
 
     var errorMessage by mutableStateOf("")
         private set
+
+    init {
+        clearConnectionInputData()
+    }
 
     suspend fun inputAddress(application: Context) {
 

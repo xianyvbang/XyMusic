@@ -83,13 +83,6 @@ import cn.xybbz.localdata.data.setting.XySettings
 
 @Database(
     version = 33,
-    autoMigrations = [
-        AutoMigration(
-            from = 30,
-            to = 31,
-            spec = DatabaseClient.Migration_30_31::class
-        )
-    ],
     entities = [XyMusic::class, XyAlbum::class, XySettings::class, SkipTime::class,
         RemoteCurrent::class, SearchHistory::class, Progress::class, XyArtist::class,
         EnableProgress::class, XyLibrary::class, XyPlayer::class, ConnectionConfig::class,
@@ -103,12 +96,6 @@ import cn.xybbz.localdata.data.setting.XySettings
     exportSchema = true
 )
 abstract class DatabaseClient : RoomDatabase() {
-
-    @RenameTable(
-        fromTableName = "xy_recent_recommend_history",
-        toTableName = "xy_daily_recommend_history"
-    )
-    class Migration_30_31 : AutoMigrationSpec
 
     val musicDao: XyMusicDao by lazy { createMusicDao() }
 

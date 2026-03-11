@@ -47,7 +47,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProgressIndicatorDefaults
@@ -91,6 +90,7 @@ import cn.xybbz.viewmodel.DownloadViewModel
 import kotlinx.coroutines.launch
 import kotlin.math.log10
 import kotlin.math.pow
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -288,7 +288,7 @@ fun DownloadItemTrailingContent(
 
                         DownloadStatus.FAILED -> {
                             DownloadPrompt(
-                                text = stringResource(R.string.download_failed_with_reason, task.error),
+                                text = stringResource(R.string.download_failed_with_reason, task.error?:""),
                                 fontSize = 14.sp,
                             )
                         }

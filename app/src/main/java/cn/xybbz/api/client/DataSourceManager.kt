@@ -30,7 +30,6 @@ import androidx.paging.PagingData
 import androidx.room.Transaction
 import cn.xybbz.R
 import cn.xybbz.api.client.custom.CustomMediaApiClient
-import cn.xybbz.api.client.custom.data.CustomCoverQuery
 import cn.xybbz.api.client.custom.data.CustomLyricsQuery
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
@@ -195,7 +194,7 @@ open class DataSourceManager(
     /**
      * 根据下载类型获得数据源
      */
-    fun getApiClient(downloadTypes: DownloadTypes): ApiFactory {
+    fun getApiClient(downloadTypes: DownloadTypes): DownloadFactory {
         return when (downloadTypes) {
             DownloadTypes.APK -> {
                 versionApiClient

@@ -19,10 +19,10 @@
 package cn.xybbz.config.module
 
 import android.content.Context
-import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.ImageApiClient
+import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.emby.EmbyApiClient
 import cn.xybbz.api.client.emby.EmbyDatasourceServer
 import cn.xybbz.api.client.jellyfin.JellyfinApiClient
@@ -57,6 +57,7 @@ class DataSourceModule {
         db: DatabaseClient,
         settingsManager: SettingsManager,
         jellyfinApiClient: JellyfinApiClient,
+        customMediaApiClient: CustomMediaApiClient,
         @ApplicationContext application: Context,
         mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
         downloadManager: DownLoadManager
@@ -66,6 +67,7 @@ class DataSourceModule {
             application,
             settingsManager,
             jellyfinApiClient,
+            customMediaApiClient,
             mediaLibraryAndFavoriteSyncScheduler,
             downloadManager
         )
@@ -76,6 +78,7 @@ class DataSourceModule {
         db: DatabaseClient,
         settingsManager: SettingsManager,
         subsonicApiClient: SubsonicApiClient,
+        customMediaApiClient: CustomMediaApiClient,
         @ApplicationContext application: Context,
         mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
         downloadManager: DownLoadManager
@@ -85,6 +88,7 @@ class DataSourceModule {
             application,
             settingsManager,
             subsonicApiClient,
+            customMediaApiClient,
             mediaLibraryAndFavoriteSyncScheduler,
             downloadManager
         )
@@ -95,6 +99,7 @@ class DataSourceModule {
         db: DatabaseClient,
         settingsManager: SettingsManager,
         navidromeApiClient: NavidromeApiClient,
+        customMediaApiClient: CustomMediaApiClient,
         @ApplicationContext application: Context,
         mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
         downloadManager: DownLoadManager
@@ -104,6 +109,7 @@ class DataSourceModule {
             application,
             settingsManager,
             navidromeApiClient,
+            customMediaApiClient,
             mediaLibraryAndFavoriteSyncScheduler,
             downloadManager
         )
@@ -114,6 +120,7 @@ class DataSourceModule {
         db: DatabaseClient,
         settingsManager: SettingsManager,
         embyApiClient: EmbyApiClient,
+        customMediaApiClient: CustomMediaApiClient,
         @ApplicationContext application: Context,
         mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
         downloadManager: DownLoadManager
@@ -123,6 +130,7 @@ class DataSourceModule {
             application,
             settingsManager,
             embyApiClient,
+            customMediaApiClient,
             mediaLibraryAndFavoriteSyncScheduler,
             downloadManager
         )
@@ -134,6 +142,7 @@ class DataSourceModule {
         db: DatabaseClient,
         settingsManager: SettingsManager,
         plexApiClient: PlexApiClient,
+        customMediaApiClient: CustomMediaApiClient,
         @ApplicationContext application: Context,
         mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
         downloadManager: DownLoadManager,
@@ -143,6 +152,7 @@ class DataSourceModule {
             application,
             settingsManager,
             plexApiClient,
+            customMediaApiClient,
             mediaLibraryAndFavoriteSyncScheduler,
             downloadManager
         )

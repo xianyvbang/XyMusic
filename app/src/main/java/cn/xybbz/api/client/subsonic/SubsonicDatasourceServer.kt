@@ -222,11 +222,10 @@ class SubsonicDatasourceServer(
         albumId: String,
         dataType: MusicDataTypeEnum
     ): XyAlbum? {
-        var album: XyAlbum?
+        var album: XyAlbum? = null
         if (dataType == MusicDataTypeEnum.ALBUM) {
             val queryResult = subsonicApiClient.itemApi().getAlbum(albumId)
-            val albumInfo = subsonicApiClient.itemApi().getAlbumInfo2(albumId)
-            val albumInfo2ID3 = albumInfo.subsonicResponse.albumInfo
+
             //存储歌曲数据
             queryResult.subsonicResponse.album?.song?.let {
 
@@ -235,12 +234,20 @@ class SubsonicDatasourceServer(
                     albumMusicList, dataType
                 )
             }
-            album = queryResult.subsonicResponse.album?.let {
-                val albumInfo = convertToAlbum(it)
-                albumInfo.copy(
-                    pic = albumInfo2ID3?.smallImageUrl ?: albumInfo2ID3?.largeImageUrl
-                    ?: getMusicCoverUrlByCustomApi(album = albumInfo.name) ?: ""
-                )
+
+            queryResult.subsonicResponse.album?.let {
+                album = convertToAlbum(it)
+                try {
+                    val albumInfo = subsonicApiClient.itemApi().getAlbumInfo2(albumId)
+                    val albumInfo2ID3 = albumInfo.subsonicResponse.albumInfo
+                    album =  album.copy(
+                        pic = albumInfo2ID3?.smallImageUrl ?: albumInfo2ID3?.largeImageUrl
+                        ?: getMusicCoverUrlByCustomApi(album = album.name) ?: ""
+                    )
+                }catch (e: Exception){
+                    Log.e(Constants.LOG_ERROR_PREFIX, "获取专辑信息失败", e)
+                }
+
             }
         } else {
             val playlist = subsonicApiClient.playlistsApi()

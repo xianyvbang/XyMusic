@@ -2,12 +2,9 @@ package cn.xybbz.api.client.custom
 
 import android.util.Log
 import cn.xybbz.api.client.custom.data.CustomCoverQuery
-import cn.xybbz.api.client.custom.data.CustomCoverResponseData
 import cn.xybbz.api.client.custom.data.CustomLyricsQuery
 import cn.xybbz.api.client.custom.data.CustomLyricsRequestData
-import cn.xybbz.api.client.custom.data.CustomLyricsResponseData
 import cn.xybbz.api.constants.ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
-import cn.xybbz.api.converter.json
 import cn.xybbz.api.okhttp.proxy.ProxyManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -92,9 +89,10 @@ class CustomMediaApiClient {
                     return@use null
                 }
                 val takeIf = response.body.string().trim().takeIf { it.isNotBlank() }
-                if (!takeIf.isNullOrEmpty())
+                /*if (!takeIf.isNullOrEmpty())
                     json.decodeFromString<List<CustomLyricsResponseData>>(takeIf)[0].lyrics
-                else null
+                else null*/
+                return takeIf
             }
         } catch (e: Exception) {
             Log.e(TAG, "$errorMessage: ${requestData.apiUrl}", e)

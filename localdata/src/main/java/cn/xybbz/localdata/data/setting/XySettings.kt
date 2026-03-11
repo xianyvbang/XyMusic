@@ -118,7 +118,7 @@ data class XySettings(
     /**
      * 自定义歌词单曲接口地址
      */
-    val customLrcSingleApi: String = "https://api.lrc.cx/lyrics",
+    val customLrcSingleApi: String = "https://api.lrc.cx/jsonapi",
     /**
      * 自定义歌词接口鉴权
      */

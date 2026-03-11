@@ -29,6 +29,7 @@ import cn.xybbz.api.enums.navidrome.OrderType
 import cn.xybbz.api.enums.navidrome.SortType
 import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 /**
@@ -53,8 +54,8 @@ interface NavidromeItemApi : BaseApi {
         @Query("library_id") libraryIds: List<String>? = null
     ): Response<List<AlbumItem>>
 
-    @GET("/api/album")
-    suspend fun getAlbum(@Query("id") id: String): AlbumItem
+    @GET("/api/album/{id}")
+    suspend fun getAlbum(@Path("id") id: String): AlbumItem
 
     @GET("/rest/getAlbumInfo2")
     suspend fun getAlbumInfo2(
