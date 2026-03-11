@@ -19,11 +19,9 @@
 package cn.xybbz.api.client.plex
 
 import android.util.Log
-import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
-import cn.xybbz.api.client.jellyfin.encodeUrlParameter
 import cn.xybbz.api.client.plex.data.PlexPingSystemResponse
 import cn.xybbz.api.client.plex.data.toPlexLogin
 import cn.xybbz.api.client.plex.service.PlexItemApi
@@ -36,6 +34,7 @@ import cn.xybbz.api.client.plex.service.PlexUserViewsApi
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.UnauthorizedException
+import cn.xybbz.api.utils.ParameterUtils.encodeUrlParameter
 
 class PlexApiClient : DefaultParentApiClient() {
 

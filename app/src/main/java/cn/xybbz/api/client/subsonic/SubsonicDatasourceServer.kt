@@ -24,6 +24,7 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import cn.xybbz.api.client.IDataSourceParentServer
+import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.client.subsonic.data.AlbumID3
@@ -70,6 +71,7 @@ class SubsonicDatasourceServer(
     private val application: Context,
     settingsManager: SettingsManager,
     private val subsonicApiClient: SubsonicApiClient,
+    customMediaApiClient: CustomMediaApiClient,
     mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
     downloadManager: DownLoadManager
 ) : IDataSourceParentServer(
@@ -77,6 +79,7 @@ class SubsonicDatasourceServer(
     settingsManager,
     application,
     subsonicApiClient,
+    customMediaApiClient,
     mediaLibraryAndFavoriteSyncScheduler,
     downloadManager
 ) {
@@ -219,18 +222,26 @@ class SubsonicDatasourceServer(
         albumId: String,
         dataType: MusicDataTypeEnum
     ): XyAlbum? {
-        var artistExtend: XyAlbum?
+        var album: XyAlbum?
         if (dataType == MusicDataTypeEnum.ALBUM) {
-            val album = subsonicApiClient.itemApi().getAlbum(albumId)
+            val queryResult = subsonicApiClient.itemApi().getAlbum(albumId)
+            val albumInfo = subsonicApiClient.itemApi().getAlbumInfo2(albumId)
+            val albumInfo2ID3 = albumInfo.subsonicResponse.albumInfo
             //存储歌曲数据
-            album.subsonicResponse.album?.song?.let {
+            queryResult.subsonicResponse.album?.song?.let {
 
                 val albumMusicList = convertToMusicList(it)
                 saveBatchMusic(
                     albumMusicList, dataType
                 )
             }
-            artistExtend = album.subsonicResponse.album?.let { convertToAlbum(it) }
+            album = queryResult.subsonicResponse.album?.let {
+                val albumInfo = convertToAlbum(it)
+                albumInfo.copy(
+                    pic = albumInfo2ID3?.smallImageUrl ?: albumInfo2ID3?.largeImageUrl
+                    ?: getMusicCoverUrlByCustomApi(album = albumInfo.name) ?: ""
+                )
+            }
         } else {
             val playlist = subsonicApiClient.playlistsApi()
                 .getPlaylistById(albumId.replace(Constants.SUBSONIC_PLAYLIST_SUFFIX, ""))
@@ -243,10 +254,10 @@ class SubsonicDatasourceServer(
                 )
             }
 
-            artistExtend =
+            album =
                 playlist.subsonicResponse.playlist?.let { convertToPlaylist(it) }
         }
-        return artistExtend
+        return album
     }
 
     /**
@@ -762,10 +773,13 @@ class SubsonicDatasourceServer(
             ).subsonicResponse.songs?.toXyMusic(
                 getConnectionId(),
                 { createDownloadUrl(it) },
-                {
-                    subsonicApiClient.getImageUrl(
-                        it
-                    )
+                { coverArt, title ->
+                    if (coverArt.isNullOrBlank())
+                        getMusicCoverUrlByCustomApi(musicTitle = title) ?: ""
+                    else
+                        subsonicApiClient.getImageUrl(
+                            coverArt
+                        )
                 }
             )
         return transitionMusicExtend(items)
@@ -785,7 +799,14 @@ class SubsonicDatasourceServer(
             ).subsonicResponse.topSongs.toXyMusic(
                 getConnectionId(),
                 createDownloadUrl = { createDownloadUrl(it) },
-                getImageUrl = { subsonicApiClient.getImageUrl(it) }
+                getImageUrl = { coverArt, title ->
+                    if (coverArt.isNullOrBlank())
+                        getMusicCoverUrlByCustomApi(musicTitle = title) ?: ""
+                    else
+                        subsonicApiClient.getImageUrl(
+                            coverArt
+                        )
+                }
             )
         return transitionMusicExtend(items)
     }
@@ -1000,12 +1021,16 @@ class SubsonicDatasourceServer(
         index: String? = null,
     ): XyArtist {
         return artistId3.convertToArtist(
-            pic = if (artistId3.coverArt.isNullOrBlank()) null else artistId3.coverArt?.let { coverArt ->
+            pic = if (artistId3.coverArt.isNullOrBlank()) getMusicCoverUrlByCustomApi(
+                artist = artistId3.name
+            ) else artistId3.coverArt?.let { coverArt ->
                 subsonicApiClient.getImageUrl(
                     coverArt
                 )
             },
-            backdrop = if (artistId3.coverArt.isNullOrBlank()) null else artistId3.coverArt?.let { coverArt ->
+            backdrop = if (artistId3.coverArt.isNullOrBlank()) getMusicCoverUrlByCustomApi(
+                artist = artistId3.name
+            ) else artistId3.coverArt?.let { coverArt ->
                 subsonicApiClient.getImageUrl(
                     coverArt
                 )
@@ -1087,7 +1112,7 @@ class SubsonicDatasourceServer(
      */
     fun convertToMusic(music: SongID3): XyMusic {
         return music.toXyMusic(
-            pic = if (music.coverArt.isNullOrBlank()) null else music.coverArt?.let {
+            pic = if (music.coverArt.isNullOrBlank()) getMusicCoverUrlByCustomApi(musicTitle = music.title) else music.coverArt?.let {
                 subsonicApiClient.getImageUrl(
                     it
                 )

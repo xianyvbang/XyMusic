@@ -21,6 +21,7 @@ package cn.xybbz.api.client.navidrome.service
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.navidrome.data.AlbumItem
 import cn.xybbz.api.client.navidrome.data.SongItem
+import cn.xybbz.api.client.subsonic.data.SubsonicAlbumInfo2Response
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicSimilarSongsResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicTopSongsResponse
@@ -54,6 +55,11 @@ interface NavidromeItemApi : BaseApi {
 
     @GET("/api/album")
     suspend fun getAlbum(@Query("id") id: String): AlbumItem
+
+    @GET("/rest/getAlbumInfo2")
+    suspend fun getAlbumInfo2(
+        @Query("id") id: String
+    ): SubsonicResponse<SubsonicAlbumInfo2Response>
 
     @GET("/api/song")
     suspend fun getSong(

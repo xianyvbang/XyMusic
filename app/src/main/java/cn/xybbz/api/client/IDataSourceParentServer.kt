@@ -724,14 +724,14 @@ abstract class IDataSourceParentServer(
         albumId: String,
         dataType: MusicDataTypeEnum
     ): XyAlbum? {
-        var xyAlbum = db.albumDao.selectById(albumId)
+        val xyAlbum = selectAlbumInfoByRemotely(albumId, dataType)
 
-        if (xyAlbum == null) {
+        /*if (xyAlbum == null) {
             xyAlbum = selectAlbumInfoByRemotely(albumId, dataType)
         } else {
             val ifFavorite = db.albumDao.selectFavoriteById(albumId) == true
             xyAlbum = xyAlbum.copy(ifFavorite = ifFavorite)
-        }
+        }*/
         return xyAlbum
     }
 
