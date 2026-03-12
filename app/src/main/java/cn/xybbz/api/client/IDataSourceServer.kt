@@ -164,7 +164,7 @@ interface IDataSourceServer : AutoCloseable {
     suspend fun selectMusicInfoById(itemId: String): XyMusic?
 
     /**
-     * 根据音乐获得歌词信息
+     * 从当前音乐服务获取歌词信息（不包含自定义歌词回退）
      * @param [itemId] 音乐id
      * @return 返回歌词列表
      */

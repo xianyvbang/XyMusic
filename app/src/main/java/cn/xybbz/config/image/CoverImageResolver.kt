@@ -119,9 +119,13 @@ class CoverImageResolver @Inject constructor(
         artist: String? = null
     ): String? {
         val settings = settingsManager.get()
+        val customCoverApi = settings.customCoverApi.trim()
+        if (customCoverApi.isBlank()) {
+            return null
+        }
         return customMediaApiClient.getCoverUrl(
             query = CustomCoverQuery(
-                coverApi = settings.customCoverApi,
+                coverApi = customCoverApi,
                 authKey = settings.customLrcApiAuth,
                 title = musicTitle,
                 artist = artist,

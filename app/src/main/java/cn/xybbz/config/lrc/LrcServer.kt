@@ -24,11 +24,14 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.api.client.custom.CustomMediaApiClient
+import cn.xybbz.api.client.custom.data.CustomLyricsQuery
 import cn.xybbz.common.enums.AllDataEnum
 import cn.xybbz.common.enums.LrcDataType
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.LrcUtils.getIndex
 import cn.xybbz.config.scope.IoScoped
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.lrc.XyLrcConfig
@@ -43,7 +46,9 @@ import kotlin.coroutines.CoroutineContext
 class LrcServer(
     private val musicController: MusicController,
     private val dataSourceManager: DataSourceManager,
-    private val db: DatabaseClient
+    private val db: DatabaseClient,
+    private val settingsManager: SettingsManager,
+    private val customMediaApiClient: CustomMediaApiClient
 ) : IoScoped(){
 
     /**
@@ -91,11 +96,49 @@ class LrcServer(
         scope.launch {
             if (_lcrEntryListFlow.value.isEmpty()) {
                 musicController.musicInfo?.itemId?.let { itemId ->
-                    val musicLyricList = dataSourceManager.getMusicLyricList(itemId)
+                    val settings = settingsManager.get()
+                    val musicLyricList = if (settings.ifPriorityMusicApi) {
+                        getMusicLyricListByMusicService(itemId) ?: getMusicLyricListByCustomApi(itemId)
+                    } else {
+                        getMusicLyricListByCustomApi(itemId) ?: getMusicLyricListByMusicService(itemId)
+                    }
                     if (!musicLyricList.isNullOrEmpty())
                         createLrcList(musicLyricList, LrcDataType.NETWORK)
                 }
             }
+        }
+    }
+
+    private suspend fun getMusicLyricListByMusicService(itemId: String): List<LrcEntryData>? {
+        return dataSourceManager.getMusicLyricList(itemId)?.takeIf { it.isNotEmpty() }
+    }
+
+    private suspend fun getMusicLyricListByCustomApi(itemId: String): List<LrcEntryData>? {
+        return try {
+            // 歌词查询只依赖歌曲元数据，不需要触发封面优先级逻辑。
+            val musicInfo = dataSourceManager.selectMusicInfoById(itemId) ?: return null
+            val settings = settingsManager.get()
+            val customLrcSingleApi = settings.customLrcSingleApi.trim()
+            if (customLrcSingleApi.isBlank()) {
+                return null
+            }
+
+            // API 模块负责网络请求，App 模块负责业务数据组装与 LRC 解析。
+            val query = CustomLyricsQuery(
+                singleApi = customLrcSingleApi,
+                authKey = settings.customLrcApiAuth,
+                title = musicInfo.name,
+                artist = musicInfo.artists?.firstOrNull().orEmpty(),
+                album = musicInfo.albumName.orEmpty(),
+                path = musicInfo.path
+            )
+
+            val lyricsText = customMediaApiClient.getLyricsText(query) ?: return null
+            val lyricsList = cn.xybbz.common.utils.LrcUtils.parseLrc(lyricsText)
+            lyricsList.takeIf { it.isNotEmpty() }
+        } catch (e: Exception) {
+            Log.e("LrcServer", "自定义歌词接口获取失败", e)
+            null
         }
     }
 

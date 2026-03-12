@@ -166,8 +166,6 @@ class DataSourceModule {
         db: DatabaseClient,
         dataSources: Map<DataSourceType, @JvmSuppressWildcards Provider<IDataSourceParentServer>>,
         alarmConfig: AlarmConfig,
-        settingsManager: SettingsManager,
-        customMediaApiClient: CustomMediaApiClient,
         versionApiClient: VersionApiClient,
         imageApiClient: ImageApiClient
     ): DataSourceManager {
@@ -176,8 +174,6 @@ class DataSourceModule {
             db,
             dataSources,
             alarmConfig,
-            settingsManager,
-            customMediaApiClient,
             versionApiClient,
             imageApiClient
         )
