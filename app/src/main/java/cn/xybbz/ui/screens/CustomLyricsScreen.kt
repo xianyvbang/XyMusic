@@ -20,6 +20,10 @@ package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -33,8 +37,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
@@ -47,10 +60,13 @@ import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
+import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
+import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.CustomLyricsViewModel
 import kotlinx.coroutines.launch
 import cn.xybbz.ui.xy.XyIconButton as IconButton
@@ -137,8 +153,37 @@ fun CustomLyricsScreen(
                 )
             }
             item {
-                CustomLyricsSettingInput(
-                    bottomInfo = "验证信息作为请求头传入,使用${ApiConstants.AUTHORIZATION}作为Key为验证信息,更多信息请参考官方(https://docs.lrc.cx/)文档",
+
+
+                val annotatedText = buildAnnotatedString {
+
+                    append("验证信息作为请求头传入,使用${ApiConstants.AUTHORIZATION}作为Key为验证信息,更多信息请参考")
+
+                    pushStringAnnotation(
+                        tag = "CLICK",
+                        annotation = "官方文档"
+                    )
+                    withLink(
+                        LinkAnnotation.Clickable(
+                            tag = "CLICK",
+                            linkInteractionListener = {
+                                println("点击了xxxxx")
+                            },
+                            styles = TextLinkStyles(
+                                style = SpanStyle(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    textDecoration = TextDecoration.None   // 去掉下划线
+                                )
+                            )
+                        )
+                    ){
+                        append("官方文档")
+                    }
+                }
+
+
+                CustomLyricsItemComponent(
+                    bottomInfo = annotatedText,
                     value = customLyricsViewModel.customLrcSingleApiValue,
                     hint = stringResource(R.string.lyrics_single_api_hint),
                     onValueChange = { customLyricsViewModel.updateCustomLrcSingleApi(it) }
@@ -212,4 +257,60 @@ private fun CustomLyricsSettingInput(
         )
     }
 
+}
+
+
+@Composable
+private fun CustomLyricsItemComponent(
+    modifier: Modifier = Modifier,
+    title: String = "地址",
+    bottomInfo: AnnotatedString? = null,
+    textColor: Color = MaterialTheme.colorScheme.onSurface,
+    enabled: Boolean = true,
+    value: String,
+    hint: String,
+    onValueChange: (String) -> Unit
+) {
+    SettingRoundedSurfaceColumn{
+        XyColumn(
+            modifier = modifier
+                .heightIn(min = XyTheme.dimens.itemHeight)
+                .fillMaxWidth(),
+            paddingValues = PaddingValues(
+                horizontal = XyTheme.dimens.outerHorizontalPadding,
+            ),
+            backgroundColor = Color.Transparent,
+            horizontalAlignment = Alignment.Start,
+        ) {
+            XyRow(paddingValues = PaddingValues(), modifier = Modifier) {
+                XyText(
+                    text = title,
+                    color = if (enabled) textColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                XyEdit(
+                    modifier = Modifier.width(220.dp),
+                    text = value,
+                    onChange = { newValue -> onValueChange(newValue) },
+                    hint = hint,
+                    paddingValues = PaddingValues(),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.End
+                    ),
+                    textContentAlignment = Alignment.CenterEnd,
+                    singleLine = true,
+                )
+            }
+            bottomInfo?.let {
+                Spacer(modifier = Modifier.height(5.dp))
+                XyTextSubSmall(
+                    text = bottomInfo,
+                    color = if (enabled) textColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                    overflow = TextOverflow.Visible
+                )
+                Spacer(modifier = Modifier.height(5.dp))
+            }
+        }
+
+    }
 }

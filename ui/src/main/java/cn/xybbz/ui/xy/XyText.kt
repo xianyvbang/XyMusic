@@ -103,6 +103,31 @@ fun XyTextSub(
     )
 }
 
+
+/**
+ * 次要信息使用的Text
+ */
+@Composable
+fun XyTextSubSmall(
+    modifier: Modifier = Modifier,
+    text: AnnotatedString,
+    style: TextStyle = MaterialTheme.typography.bodySmall,
+    overflow: TextOverflow = TextOverflow.Ellipsis,
+    textAlign: TextAlign? = null,
+    maxLines: Int = Int.MAX_VALUE,
+    color: Color = MaterialTheme.colorScheme.onSurface,
+) {
+    Text(
+        modifier = modifier,
+        text = text,
+        style = style,
+        overflow = overflow,
+        textAlign = textAlign,
+        maxLines = maxLines,
+        color = color
+    )
+}
+
 @Composable
 fun XyTextSubSmall(
     text: String,
