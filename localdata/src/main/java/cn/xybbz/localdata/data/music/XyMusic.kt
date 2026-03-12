@@ -176,6 +176,7 @@ data class XyMusic(
             pic = pic,
             name = name,
             album = album,
+            albumName = albumName,
             container = container,
             artists = artists,
             size = size,

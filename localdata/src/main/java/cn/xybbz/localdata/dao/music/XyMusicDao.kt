@@ -605,7 +605,7 @@ interface XyMusicDao {
 
     @Query(
         """
-         select itemId,mi.pic,mi.name,mi.album,mi.container,mi.artists,mi.artistIds,fm.ifFavorite as ifFavoriteStatus,
+         select itemId,mi.pic,mi.name,mi.album,mi.albumName as albumName,mi.container,mi.artists,mi.artistIds,fm.ifFavorite as ifFavoriteStatus,
                 mi.size,xd.filePath,mi.runTimeTicks,mi.plexPlayKey as plexPlayKey
         from HomeMusic hm
         inner join xy_music mi on hm.musicId = mi.itemId
@@ -676,7 +676,7 @@ interface XyMusicDao {
      */
     @Query(
         """
-        select itemId,mi.pic,mi.name,mi.album,mi.container,mi.artists,mi.artistIds,fm.ifFavorite as ifFavoriteStatus,mi.size,xd.filePath,
+        select itemId,mi.pic,mi.name,mi.album,mi.albumName as albumName,mi.container,mi.artists,mi.artistIds,fm.ifFavorite as ifFavoriteStatus,mi.size,xd.filePath,
                 mi.runTimeTicks,mi.plexPlayKey as plexPlayKey
         from playqueuemusic pqm
         inner join xy_music mi on pqm.musicId = mi.itemId
@@ -797,7 +797,7 @@ interface XyMusicDao {
 
     @Query(
         """
-        select itemId,mi.pic,mi.name,mi.album,mi.container,mi.artists,mi.artistIds,fm.ifFavorite as ifFavoriteStatus,mi.size,xd.filePath,
+        select itemId,mi.pic,mi.name,mi.album,mi.albumName as albumName,mi.container,mi.artists,mi.artistIds,fm.ifFavorite as ifFavoriteStatus,mi.size,xd.filePath,
                 mi.runTimeTicks,mi.plexPlayKey as plexPlayKey
         from xy_music mi 
         left join favoritemusic fm on mi.itemId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
@@ -818,7 +818,7 @@ interface XyMusicDao {
 
     @Query(
         """
-        select itemId,xm.pic,xm.name,xm.album,xm.container,xm.artists,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
+        select itemId,xm.pic,xm.name,xm.album,xm.albumName as albumName,xm.container,xm.artists,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
                 xm.runTimeTicks,xm.plexPlayKey as plexPlayKey
         from xy_music xm 
         left join favoritemusic fm on xm.itemId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
@@ -1059,7 +1059,7 @@ interface XyMusicDao {
 
     @Query(
         """
-        select itemId,xm.pic,xm.name,xm.album,xm.container,xm.artists,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
+        select itemId,xm.pic,xm.name,xm.album,xm.albumName as albumName,xm.container,xm.artists,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
                 xm.runTimeTicks,xm.plexPlayKey as plexPlayKey
         from albummusic am
         inner join xy_music xm on am.musicId = xm.itemId
@@ -1100,7 +1100,7 @@ interface XyMusicDao {
 
     @Query(
         """
-         select itemId,xm.pic,xm.name,xm.album,xm.container,xm.artists,xm.artistIds,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
+        select itemId,xm.pic,xm.name,xm.album,xm.albumName as albumName,xm.container,xm.artists,xm.artistIds,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
                 xm.runTimeTicks,xm.plexPlayKey as plexPlayKey
         from artistmusic am
         inner join xy_music xm on am.musicId = xm.itemId
@@ -1138,7 +1138,7 @@ interface XyMusicDao {
 
     @Query(
         """
-        select itemId,xm.pic,xm.name,xm.album,xm.container,xm.artists,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
+        select itemId,xm.pic,xm.name,xm.album,xm.albumName as albumName,xm.container,xm.artists,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
                 xm.runTimeTicks,xm.plexPlayKey as plexPlayKey
         from favoritemusic fm
         inner join xy_music xm on fm.musicId = xm.itemId

@@ -42,6 +42,10 @@ data class XyPlayMusic(
      */
     val album: String,
     /**
+     * 专辑名称
+     */
+    val albumName: String?,
+    /**
      * 格式
      */
     val container: String?,
