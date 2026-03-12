@@ -42,7 +42,7 @@ class CoverImageResolver @Inject constructor(
         return resolveMusic(
             serviceUrl = music?.pic,
             title = music?.name,
-            album = null,
+            album = music?.albumName,
             artist = music?.artists?.joinToString("/")
         )
     }
