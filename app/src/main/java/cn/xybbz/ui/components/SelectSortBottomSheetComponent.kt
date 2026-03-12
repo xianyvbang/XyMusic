@@ -108,7 +108,7 @@ fun SelectSortBottomSheetComponent(
     onIfFavoriteFilter: () -> Boolean?,
     onSortTypeClick: suspend (SortTypeEnum?) -> Unit,
     onSortType: () -> SortTypeEnum?,
-    onDefaultSortType: () -> SortTypeEnum,
+    onDefaultSortType: () -> SortTypeEnum?,
     onIfFavorite: () -> Boolean,
     setFavorite: suspend (Boolean) -> Unit,
     sortTypeList: List<SortTypeEnum> = SortTypeEnum.entries,

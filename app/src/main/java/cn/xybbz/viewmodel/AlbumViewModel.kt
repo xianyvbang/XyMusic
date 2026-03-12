@@ -35,7 +35,7 @@ import javax.inject.Inject
 class AlbumViewModel @Inject constructor(
     val dataSourceManager: DataSourceManager,
     val backgroundConfig: BackgroundConfig
-) : PageListViewModel<XyAlbum>(dataSourceManager, SortTypeEnum.ALBUM_NAME_ASC) {
+) : PageListViewModel<XyAlbum>(dataSourceManager, null) {
 
     /**
      * 首页专辑信息

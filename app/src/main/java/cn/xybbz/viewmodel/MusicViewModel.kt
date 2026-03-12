@@ -46,7 +46,7 @@ class MusicViewModel @Inject constructor(
     val musicController: MusicController,
     val selectControl: SelectControl,
     val backgroundConfig: BackgroundConfig
-) : PageListViewModel<HomeMusic>(dataSourceManager, SortTypeEnum.MUSIC_NAME_ASC) {
+) : PageListViewModel<HomeMusic>(dataSourceManager, null) {
 
     val downloadMusicIdsFlow =
         db.downloadDao.getAllMusicTaskUidsFlow()
