@@ -118,7 +118,8 @@ data class XySettings(
     /**
      * 自定义歌词单曲接口地址
      */
-    val customLrcSingleApi: String = "https://api.lrc.cx/jsonapi",
+//    val customLrcSingleApi: String = "https://api.lrc.cx/jsonapi",
+    val customLrcSingleApi: String = "",
     /**
      * 自定义歌词接口鉴权
      */
@@ -126,7 +127,8 @@ data class XySettings(
     /**
      * 自定义封面接口地址
      */
-    val customCoverApi: String = "https://api.lrc.cx/cover",
+//    val customCoverApi: String = "https://api.lrc.cx/cover",
+    val customCoverApi: String = "",
 
     /**
      * 播放会话ID
