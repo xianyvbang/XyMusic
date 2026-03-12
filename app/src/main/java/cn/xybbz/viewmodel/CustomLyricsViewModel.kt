@@ -3,8 +3,6 @@ package cn.xybbz.viewmodel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.setting.SettingsManager
@@ -27,10 +25,7 @@ class CustomLyricsViewModel @Inject constructor(
      * 单曲歌词接口地址输入值（/lyrics）
      */
     var customLrcSingleApiValue by mutableStateOf(
-        TextFieldValue(
-            text = settingsManager.get().customLrcSingleApi,
-            selection = TextRange(settingsManager.get().customLrcSingleApi.length)
-        )
+        settingsManager.get().customLrcSingleApi
     )
         private set
 
@@ -38,10 +33,7 @@ class CustomLyricsViewModel @Inject constructor(
      * 自定义歌词接口鉴权 key 输入值
      */
     var customLrcApiAuthValue by mutableStateOf(
-        TextFieldValue(
-            text = settingsManager.get().customLrcApiAuth,
-            selection = TextRange(settingsManager.get().customLrcApiAuth.length)
-        )
+        settingsManager.get().customLrcApiAuth
     )
         private set
 
@@ -49,10 +41,7 @@ class CustomLyricsViewModel @Inject constructor(
      * 自定义封面接口地址输入值（/cover）
      */
     var customCoverApiValue by mutableStateOf(
-        TextFieldValue(
-            text = settingsManager.get().customCoverApi,
-            selection = TextRange(settingsManager.get().customCoverApi.length)
-        )
+        settingsManager.get().customCoverApi
     )
         private set
 
@@ -61,24 +50,15 @@ class CustomLyricsViewModel @Inject constructor(
     }
 
     fun updateCustomLrcSingleApi(customLrcSingleApi: String) {
-        customLrcSingleApiValue = TextFieldValue(
-            text = customLrcSingleApi,
-            selection = TextRange(customLrcSingleApi.length)
-        )
+        customLrcSingleApiValue = customLrcSingleApi
     }
 
     fun updateCustomLrcApiAuth(customLrcApiAuth: String) {
-        customLrcApiAuthValue = TextFieldValue(
-            text = customLrcApiAuth,
-            selection = TextRange(customLrcApiAuth.length)
-        )
+        customLrcApiAuthValue = customLrcApiAuth
     }
 
     fun updateCustomCoverApi(customCoverApi: String) {
-        customCoverApiValue = TextFieldValue(
-            text = customCoverApi,
-            selection = TextRange(customCoverApi.length)
-        )
+        customCoverApiValue =customCoverApi
     }
 
     /**
@@ -86,8 +66,8 @@ class CustomLyricsViewModel @Inject constructor(
      */
     suspend fun saveSettings() {
         settingsManager.setIfPriorityMusicApi(ifPriorityMusicApi)
-        settingsManager.setCustomLrcSingleApi(customLrcSingleApiValue.text.trim())
-        settingsManager.setCustomLrcApiAuth(customLrcApiAuthValue.text.trim())
-        settingsManager.setCustomCoverApi(customCoverApiValue.text.trim())
+        settingsManager.setCustomLrcSingleApi(customLrcSingleApiValue.trim())
+        settingsManager.setCustomLrcApiAuth(customLrcApiAuthValue.trim())
+        settingsManager.setCustomCoverApi(customCoverApiValue.trim())
     }
 }

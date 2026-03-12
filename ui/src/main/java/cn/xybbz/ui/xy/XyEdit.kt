@@ -33,7 +33,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -77,6 +76,7 @@ fun XyEdit(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = false,
+    textContentAlignment: Alignment = Alignment.TopStart,
     textStyle: TextStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
     visualTransformation: VisualTransformation = VisualTransformation.None,
     actionContent: (@Composable () -> Unit)? = null,
@@ -108,7 +108,8 @@ fun XyEdit(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(vertical = XyTheme.dimens.contentPadding)
+                        .padding(vertical = XyTheme.dimens.contentPadding),
+                    contentAlignment = textContentAlignment
                 ) {
                     innerTextField()
                     if (hint != null && text.isEmpty()) {
@@ -179,9 +180,10 @@ fun XyEdit(
                 ) {
                     innerTextField()
                     if (hint != null && text.text.isEmpty()) {
-                        Text(
+                        XyTextSub(
                             text = hint,
-                            color = hintColor
+                            color = hintColor,
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }

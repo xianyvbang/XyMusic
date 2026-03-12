@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -46,12 +47,12 @@ import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumn
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import cn.xybbz.ui.xy.XyItemSwitcher
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSubSmall
 import kotlinx.coroutines.launch
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @Composable
 fun SettingItemComponent(
@@ -190,11 +191,13 @@ fun SettingParentItemComponent(
             trailingContent?.invoke()
         }
         bottomInfo?.let {
+            Spacer(modifier = Modifier.height(5.dp))
             XyTextSubSmall(
                 text = bottomInfo,
                 color = if (enabled) textColor else MaterialTheme.colorScheme.onSurfaceVariant,
                 overflow = TextOverflow.Visible
             )
+            Spacer(modifier = Modifier.height(5.dp))
         }
     }
 

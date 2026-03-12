@@ -34,11 +34,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
+import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.MusicSettingSwitchItemComponent
 import cn.xybbz.ui.components.SettingItemComponent
@@ -49,6 +49,8 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
+import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.CustomLyricsViewModel
 import kotlinx.coroutines.launch
 import cn.xybbz.ui.xy.XyIconButton as IconButton
@@ -116,8 +118,19 @@ fun CustomLyricsScreen(
             }
 
             item {
-
+                CustomLyricsSettingTitleItem(
+                    title = stringResource(R.string.lyrics_api_auth_key)
+                )
             }
+            item {
+                CustomLyricsSettingInput(
+                    title = "验证信息",
+                    value = customLyricsViewModel.customLrcApiAuthValue,
+                    hint = stringResource(R.string.lyrics_api_auth_key_hint),
+                    onValueChange = { customLyricsViewModel.updateCustomLrcApiAuth(it) }
+                )
+            }
+
             item {
                 CustomLyricsSettingTitleItem(
                     title = stringResource(R.string.lyrics_single_api)
@@ -125,24 +138,10 @@ fun CustomLyricsScreen(
             }
             item {
                 CustomLyricsSettingInput(
-                    title = "地址",
+                    bottomInfo = "验证信息作为请求头传入,使用${ApiConstants.AUTHORIZATION}作为Key为验证信息,更多信息请参考官方(https://docs.lrc.cx/)文档",
                     value = customLyricsViewModel.customLrcSingleApiValue,
                     hint = stringResource(R.string.lyrics_single_api_hint),
                     onValueChange = { customLyricsViewModel.updateCustomLrcSingleApi(it) }
-                )
-            }
-
-            item {
-                CustomLyricsSettingTitleItem(
-                    title = stringResource(R.string.lyrics_api_auth_key)
-                )
-            }
-            item {
-                CustomLyricsSettingInput(
-                    title = "地址",
-                    value = customLyricsViewModel.customLrcApiAuthValue,
-                    hint = stringResource(R.string.lyrics_api_auth_key_hint),
-                    onValueChange = { customLyricsViewModel.updateCustomLrcApiAuth(it) }
                 )
             }
 
@@ -153,7 +152,6 @@ fun CustomLyricsScreen(
             }
             item {
                 CustomLyricsSettingInput(
-                    title = "地址",
                     value = customLyricsViewModel.customCoverApiValue,
                     hint = stringResource(R.string.custom_cover_api_hint),
                     onValueChange = { customLyricsViewModel.updateCustomCoverApi(it) }
@@ -167,19 +165,25 @@ fun CustomLyricsScreen(
 private fun CustomLyricsSettingTitleItem(
     title: String,
 ) {
-    SettingRoundedSurfaceColumn {
-        SettingItemComponent(
-            title = title,
-            imageVector = null,
-            onRouter = {},
+    XyRow(
+        paddingValues = PaddingValues(
+            start = XyTheme.dimens.outerHorizontalPadding,
+            end = XyTheme.dimens.outerHorizontalPadding,
+            top = XyTheme.dimens.outerVerticalPadding
+        ),
+        horizontalArrangement = Arrangement.Start
+    ) {
+        XyTextSub(
+            text = title
         )
     }
 }
 
 @Composable
 private fun CustomLyricsSettingInput(
-    title: String,
-    value: TextFieldValue,
+    title: String = "地址",
+    bottomInfo: String? = null,
+    value: String,
     hint: String,
     onValueChange: (String) -> Unit
 ) {
@@ -187,16 +191,17 @@ private fun CustomLyricsSettingInput(
     SettingRoundedSurfaceColumn {
         SettingItemComponent(
             title = title,
+            bottomInfo = bottomInfo,
             imageVector = null,
             onRouter = {},
             trailingContent = {
                 XyEdit(
                     modifier = Modifier.width(220.dp),
                     text = value,
-                    onChange = { newValue -> onValueChange(newValue.text) },
+                    onChange = { newValue -> onValueChange(newValue) },
                     hint = hint,
                     paddingValues = PaddingValues(),
-                    textStyle = MaterialTheme.typography.labelSmall.copy(
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(
                         color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.End
                     ),
