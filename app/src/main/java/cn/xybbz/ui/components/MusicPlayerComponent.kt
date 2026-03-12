@@ -77,7 +77,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -102,13 +101,12 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.ModalBottomSheetExtendFillMaxSizeComponent
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.MusicPlayerViewModel
-import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -206,14 +204,13 @@ fun MusicPlayerScreen(
     val coroutineScope = rememberCoroutineScope()
 
     Box(modifier = Modifier.fillMaxSize()) {
-        AsyncImage(
-            model = if (musicDetail.pic.isNullOrBlank()) picByte else musicDetail.pic,
-            contentDescription = stringResource(R.string.album_cover),
+        XyImage(
             modifier = Modifier
                 .align(Alignment.Center)
                 .fillMaxSize(),
+            model = if (musicDetail.pic.isNullOrBlank()) picByte else musicDetail.pic,
             alpha = 0.2f,
-            contentScale = ContentScale.Crop
+            contentDescription = stringResource(R.string.album_cover),
         )
         XyColumnScreen(
             modifier = Modifier
@@ -290,8 +287,6 @@ fun MusicPlayerScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 XyImage(
-                                    model = musicDetail.pic ?: picByte,
-                                    contentDescription = stringResource(R.string.album_cover),
                                     modifier = Modifier
                                         .align(Alignment.Center)
                                         .size(300.dp)
@@ -299,11 +294,12 @@ fun MusicPlayerScreen(
                                         .clip(
                                             CircleShape
                                         ),
-                                    /*.graphicsLayer(rotationZ = rotationState)*/
+                                    model = musicDetail.pic ?: picByte,
                                     placeholder = painterResource(id = R.drawable.disc_placeholder),
+                                    /*.graphicsLayer(rotationZ = rotationState)*/
                                     error = painterResource(id = R.drawable.disc_placeholder),
                                     fallback = painterResource(id = R.drawable.disc_placeholder),
-                                    contentScale = ContentScale.Crop
+                                    contentDescription = stringResource(R.string.album_cover),
                                 )
                             }
 

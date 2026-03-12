@@ -23,6 +23,10 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.DefaultAlpha
@@ -40,8 +44,12 @@ import coil.compose.AsyncImagePainter.State
 fun XySmallImage(
     modifier: Modifier = Modifier,
     model: Any?,
+    backModel: Any?,
     size: Dp = 50.dp,
-    contentDescription: String? = null
+    contentDescription: String? = null,
+    placeholder: Painter? = painterResource(id = R.drawable.default_placeholder),
+    error: Painter? = painterResource(id = R.drawable.default_placeholder),
+    fallback: Painter? = painterResource(id = R.drawable.default_placeholder),
 ) {
     XyImage(
         modifier = Modifier
@@ -50,8 +58,11 @@ fun XySmallImage(
             .aspectRatio(1F)
             .clip(RoundedCornerShape(8.dp)),
         model = model,
+        backModel = backModel,
+        placeholder = placeholder,
+        error = error,
+        fallback = fallback,
         contentDescription = contentDescription,
-        contentScale = ContentScale.Crop
     )
 }
 
@@ -59,9 +70,10 @@ fun XySmallImage(
 fun XyImage(
     modifier: Modifier = Modifier,
     model: Any?,
-    placeholder: Painter? = painterResource(id = R.drawable.default_placeholder),
-    error: Painter? = painterResource(id = R.drawable.default_placeholder),
-    fallback: Painter? = painterResource(id = R.drawable.default_placeholder),
+    backModel: Any?,
+    placeholder: Painter? = null,
+    error: Painter? = null,
+    fallback: Painter? = null,
     contentScale: ContentScale = ContentScale.Crop,
     alpha: Float = DefaultAlpha,
     contentDescription: String? = null,
@@ -69,19 +81,30 @@ fun XyImage(
     onLoading: ((State.Loading) -> Unit)? = null,
     onError: ((State.Error) -> Unit)? = null,
 ) {
+
+    var tempModel by remember {
+        mutableStateOf(model)
+    }
+
     AsyncImage(
         modifier = Modifier
             .then(modifier),
         placeholder = placeholder,
         error = error,
         fallback = fallback,
-        model = model,
+        model = tempModel,
         contentDescription = contentDescription,
         alpha = alpha,
         contentScale = contentScale,
         onSuccess = onSuccess,
         onLoading = onLoading,
-        onError = onError
+        onError = {
+            if (tempModel != backModel) {
+                tempModel = backModel
+            } else {
+                onError?.invoke(it)
+            }
+        }
     )
 }
 

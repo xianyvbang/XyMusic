@@ -109,10 +109,10 @@ fun MusicCardComponent(
                             brush
                         ),
                     model = model,
-                    contentDescription = "${name}${stringResource(R.string.cover_suffix)}",
                     placeholder = placeholder,
                     error = error,
                     fallback = fallback,
+                    contentDescription = "${name}${stringResource(R.string.cover_suffix)}",,
                 )
             }
         }

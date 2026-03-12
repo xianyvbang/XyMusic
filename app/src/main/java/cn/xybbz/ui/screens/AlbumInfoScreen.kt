@@ -85,7 +85,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.DpOffset
@@ -704,8 +703,6 @@ private fun MusicAlbumInfoComponent(
             horizontalArrangement = Arrangement.Start
         ) {
             XyImage(
-                model = onData()?.pic,
-                contentDescription = stringResource(R.string.album_cover),
                 modifier = Modifier
                     .clip(
                         RoundedCornerShape(5.dp)
@@ -718,10 +715,11 @@ private fun MusicAlbumInfoComponent(
                             end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
                         )
                     ),
-                contentScale = ContentScale.Crop,
+                model = onData()?.pic,
                 placeholder = painterResource(id = R.drawable.music_xy_placeholder_foreground),
                 error = painterResource(id = R.drawable.music_xy_placeholder_foreground),
                 fallback = painterResource(id = R.drawable.music_xy_placeholder_foreground),
+                contentDescription = stringResource(R.string.album_cover),,
             )
             Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
             Column(

@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
@@ -56,7 +55,7 @@ import cn.xybbz.ui.screens.SetBackgroundImageScreen
 import cn.xybbz.ui.screens.SettingScreen
 import cn.xybbz.ui.screens.StreamingQualityScreen
 import cn.xybbz.ui.theme.XyTheme
-import coil.compose.AsyncImage
+import cn.xybbz.ui.xy.XyImage
 
 /**
  * 节点页面
@@ -64,11 +63,10 @@ import coil.compose.AsyncImage
 inline fun <reified T : NavKey> EntryProviderScope<NavKey>.nodeComposable(noinline content: @Composable (T) -> Unit) {
     entry<T> {
         Box {
-            AsyncImage(
+            XyImage(
+                modifier = Modifier.fillMaxSize(),
                 model = XyTheme.brash.backgroundImageUri,
                 contentDescription = stringResource(R.string.background_image),
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
             )
             content(it)
         }

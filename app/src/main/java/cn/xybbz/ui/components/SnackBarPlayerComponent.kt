@@ -75,7 +75,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -100,11 +99,11 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.viewmodel.SnackBarPlayerViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.launch
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -346,7 +345,7 @@ fun SnackBarPlayerComponent(
                     horizontalArrangement = Arrangement.Start
                 ) {
 
-                    AsyncImageCover(
+                    ImageCover(
                         musicController = snackBarPlayerViewModel.musicController,
                         onSetColor = {
                             colorPurple = it ?: Color.Transparent
@@ -587,7 +586,7 @@ private fun CircularProgressIndicatorComp(musicController: MusicController) {
 }
 
 @Composable
-fun AsyncImageCover(
+private fun ImageCover(
     musicController: MusicController,
     onSetColor: (Color?) -> Unit
 ) {
@@ -595,11 +594,10 @@ fun AsyncImageCover(
         modifier = Modifier
             .size(XyTheme.dimens.snackBarPlayerHeight),
         model = if (musicController.musicInfo?.pic.isNullOrBlank()) musicController.picByte else musicController.musicInfo?.pic,
-        contentScale = ContentScale.Crop,
-        contentDescription = stringResource(R.string.music_cover),
         placeholder = painterResource(R.drawable.music_xy_placeholder_foreground),
         error = painterResource(R.drawable.music_xy_placeholder_foreground),
         fallback = painterResource(R.drawable.music_xy_placeholder_foreground),
+        contentDescription = stringResource(R.string.music_cover),
         onSuccess = {
             val drawable = it.result.drawable
             val bitmap = drawableToBitmap(drawable)
@@ -614,7 +612,7 @@ fun AsyncImageCover(
         },
         onError = {
             onSetColor.invoke(Color.Transparent)
-        }
+        },
     )
 }
 

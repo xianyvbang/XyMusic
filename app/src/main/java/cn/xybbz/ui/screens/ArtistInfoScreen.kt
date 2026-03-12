@@ -282,10 +282,10 @@ fun ArtistInfoScreen(
                     .height(DefaultImageHeight),
                 model = artistInfoViewModel.artistInfoData?.backdrop
                     ?: artistInfoViewModel.artistInfoData?.pic,
-                contentDescription = stringResource(R.string.artist_cover),
-                fallback = painterResource(R.drawable.artrist_info),
                 placeholder = painterResource(R.drawable.artrist_info),
                 error = painterResource(R.drawable.artrist_info),
+                fallback = painterResource(R.drawable.artrist_info),
+                contentDescription = stringResource(R.string.artist_cover),,
 //                alpha = (topBarAlpha - 1) * -1
             )
 
