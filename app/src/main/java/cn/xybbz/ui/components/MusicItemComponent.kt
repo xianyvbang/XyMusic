@@ -34,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cn.xybbz.R
+import cn.xybbz.config.image.rememberMusicCoverUrls
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.data.music.XyMusic
@@ -66,6 +67,8 @@ fun MusicItemComponent(
     trailingOnClick: () -> Unit,
     ifSelectCheckBox: (() -> Boolean)? = null
 ) {
+    val coverUrls = rememberMusicCoverUrls(music)
+
     MusicItemComponent(
         modifier = modifier,
         enabledPic = enabledPic,
@@ -73,7 +76,8 @@ fun MusicItemComponent(
         name = music.name,
         album = music.album,
         artists = music.artists?.joinToString(),
-        pic = music.pic,
+        pic = coverUrls.primaryUrl,
+        backPic = coverUrls.fallbackUrl,
         codec = music.codec,
         bitRate = music.bitRate,
         subordination = subordination,
@@ -99,6 +103,7 @@ fun MusicItemComponent(
     album: String = "",
     artists: String? = "",
     pic: String? = "",
+    backPic: String? = null,
     codec: String? = "",
     bitRate: Int? = 0,
     enabledPic: Boolean = true,
@@ -123,6 +128,7 @@ fun MusicItemComponent(
         subordination = subordination ?: (artists ?: ""),
         favoriteState = onIfFavorite(),
         imgUrl = pic,
+        backImgUrl = backPic,
         media = getMusicMedia(codec, bitRate),
         enabledPic = enabledPic,
         ifDownload = ifDownload,

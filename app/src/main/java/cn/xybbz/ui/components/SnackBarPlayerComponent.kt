@@ -87,6 +87,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.palette.graphics.Palette
 import cn.xybbz.R
+import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.music.MusicController
@@ -590,10 +591,13 @@ private fun ImageCover(
     musicController: MusicController,
     onSetColor: (Color?) -> Unit
 ) {
+    val coverUrls = rememberPlayMusicCoverUrls(musicController.musicInfo)
+
     XyImage(
         modifier = Modifier
             .size(XyTheme.dimens.snackBarPlayerHeight),
-        model = if (musicController.musicInfo?.pic.isNullOrBlank()) musicController.picByte else musicController.musicInfo?.pic,
+        model = coverUrls.primaryUrl ?: musicController.picByte,
+        backModel = coverUrls.fallbackUrl ?: musicController.picByte,
         placeholder = painterResource(R.drawable.music_xy_placeholder_foreground),
         error = painterResource(R.drawable.music_xy_placeholder_foreground),
         fallback = painterResource(R.drawable.music_xy_placeholder_foreground),

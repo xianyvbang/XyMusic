@@ -112,7 +112,7 @@ data class XySettings(
      */
     val wifiNetworkAudioBitRate: Int = 0,
     /**
-     * 歌词优先使用音乐服务接口
+     * 资源优先使用音乐服务接口（歌词/封面）
      */
     val ifPriorityMusicApi: Boolean = true,
     /**

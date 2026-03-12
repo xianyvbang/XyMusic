@@ -96,6 +96,8 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import cn.xybbz.R
+import cn.xybbz.config.image.rememberArtistBackdropCoverUrls
+import cn.xybbz.config.image.rememberArtistCoverUrls
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.TabListEnum
 import cn.xybbz.compositionLocal.LocalNavigator
@@ -269,6 +271,9 @@ fun ArtistInfoScreen(
 
         }
 
+        val artistCoverUrls = rememberArtistCoverUrls(artistInfoViewModel.artistInfoData)
+        val artistBackdropUrls = rememberArtistBackdropCoverUrls(artistInfoViewModel.artistInfoData)
+
         Box(
             modifier = Modifier
                 .height(
@@ -280,12 +285,12 @@ fun ArtistInfoScreen(
                     .fillMaxWidth()
                     .align(Alignment.TopCenter)
                     .height(DefaultImageHeight),
-                model = artistInfoViewModel.artistInfoData?.backdrop
-                    ?: artistInfoViewModel.artistInfoData?.pic,
+                model = artistBackdropUrls.primaryUrl ?: artistCoverUrls.primaryUrl,
+                backModel = artistBackdropUrls.fallbackUrl ?: artistCoverUrls.fallbackUrl,
                 placeholder = painterResource(R.drawable.artrist_info),
                 error = painterResource(R.drawable.artrist_info),
                 fallback = painterResource(R.drawable.artrist_info),
-                contentDescription = stringResource(R.string.artist_cover),,
+                contentDescription = stringResource(R.string.artist_cover),
 //                alpha = (topBarAlpha - 1) * -1
             )
 

@@ -49,6 +49,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cn.xybbz.R
+import cn.xybbz.config.image.rememberAlbumCoverUrls
+import cn.xybbz.config.image.rememberArtistCoverUrls
+import cn.xybbz.config.image.rememberMusicCoverUrls
 import cn.xybbz.common.UiConstants.MusicCardImageSize
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.entity.data.ext.joinToString
@@ -73,6 +76,7 @@ fun MusicCardComponent(
     name: String,
     artistName: String? = null,
     model: Any?,
+    backModel: Any? = null,
     imageSize: Dp? = null,
     enabled: Boolean = true,
     brush: Brush = Brush.linearGradient(
@@ -109,10 +113,11 @@ fun MusicCardComponent(
                             brush
                         ),
                     model = model,
+                    backModel = backModel,
                     placeholder = placeholder,
                     error = error,
                     fallback = fallback,
-                    contentDescription = "${name}${stringResource(R.string.cover_suffix)}",,
+                    contentDescription = "${name}${stringResource(R.string.cover_suffix)}",
                 )
             }
         }
@@ -151,6 +156,7 @@ fun MusicAlbumCardComponent(
     val album by remember {
         mutableStateOf(onItem())
     }
+    val coverUrls = rememberAlbumCoverUrls(album)
 
     MusicCardComponent(
         modifier = modifier,
@@ -158,7 +164,8 @@ fun MusicAlbumCardComponent(
         name = album?.name ?: "",
         artistName = album?.artists ?: stringResource(Constants.UNKNOWN_ARTIST),
         imageSize = imageSize,
-        model = imageUrl,
+        model = coverUrls.primaryUrl ?: imageUrl,
+        backModel = coverUrls.fallbackUrl,
         enabled = enabled,
         shape = shape,
         onRouter = onRouter
@@ -179,13 +186,17 @@ fun MusicArtistCardComponent(
     val album by remember {
         mutableStateOf(onItem())
     }
+    val coverUrls = rememberArtistCoverUrls(album)
+    val name = album?.name ?: stringResource(Constants.UNKNOWN_ARTIST)
+    val textBitmapModel = textToBitmap(name)
 
     MusicCardComponent(
         modifier = modifier,
         id = album?.artistId ?: "",
-        name = album?.name ?: stringResource(Constants.UNKNOWN_ARTIST),
+        name = name,
         imageSize = imageSize,
-        model = textToBitmap(album?.name ?: stringResource(Constants.UNKNOWN_ARTIST), album?.pic),
+        model = coverUrls.primaryUrl ?: textBitmapModel,
+        backModel = coverUrls.fallbackUrl ?: textBitmapModel,
         brush = Brush.linearGradient(
             colors = listOf(Color(0xff10b981), Color(0xff06b6d4)),
             start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
@@ -210,6 +221,7 @@ fun MusicMusicCardComponent(
     val music by remember {
         mutableStateOf(onItem())
     }
+    val coverUrls = rememberMusicCoverUrls(music)
 
     MusicCardComponent(
         modifier = modifier,
@@ -218,7 +230,8 @@ fun MusicMusicCardComponent(
         artistName = music?.artists?.joinToString()
             ?: stringResource(R.string.unknown_artist),
         imageSize = imageSize,
-        model = imageUrl,
+        model = coverUrls.primaryUrl ?: imageUrl,
+        backModel = coverUrls.fallbackUrl,
         shape = shape,
         onRouter = onRouter
     )

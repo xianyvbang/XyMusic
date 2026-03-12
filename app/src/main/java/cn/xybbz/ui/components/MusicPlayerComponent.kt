@@ -88,6 +88,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.music.MusicController
@@ -200,6 +201,7 @@ fun MusicPlayerScreen(
     val cacheScheduleData by musicPlayerViewModel.downloadCacheController.cacheSchedule.collectAsStateWithLifecycle()
 
     val favoriteList by musicPlayerViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
+    val coverUrls = rememberPlayMusicCoverUrls(musicDetail)
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -208,7 +210,8 @@ fun MusicPlayerScreen(
             modifier = Modifier
                 .align(Alignment.Center)
                 .fillMaxSize(),
-            model = if (musicDetail.pic.isNullOrBlank()) picByte else musicDetail.pic,
+            model = coverUrls.primaryUrl ?: picByte,
+            backModel = coverUrls.fallbackUrl ?: picByte,
             alpha = 0.2f,
             contentDescription = stringResource(R.string.album_cover),
         )
@@ -294,7 +297,8 @@ fun MusicPlayerScreen(
                                         .clip(
                                             CircleShape
                                         ),
-                                    model = musicDetail.pic ?: picByte,
+                                    model = coverUrls.primaryUrl ?: picByte,
+                                    backModel = coverUrls.fallbackUrl ?: picByte,
                                     placeholder = painterResource(id = R.drawable.disc_placeholder),
                                     /*.graphicsLayer(rotationZ = rotationState)*/
                                     error = painterResource(id = R.drawable.disc_placeholder),

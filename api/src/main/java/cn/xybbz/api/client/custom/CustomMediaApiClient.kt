@@ -51,7 +51,12 @@ class CustomMediaApiClient {
      * 说明：兼容文本直返地址和 JSON 结构返回。
      */
     fun getCoverUrl(query: CustomCoverQuery): String? {
-        if (query.coverApi.trim().isBlank() || query.title.isNullOrBlank()) {
+        if (query.coverApi.trim().isBlank() || listOf(
+                query.title,
+                query.artist,
+                query.album,
+                query.path
+            ).all { it.isNullOrBlank() }) {
             return null
         }
         val requestData = CustomLyricsRequestData.from(apiUrl = query.coverApi, query = query)

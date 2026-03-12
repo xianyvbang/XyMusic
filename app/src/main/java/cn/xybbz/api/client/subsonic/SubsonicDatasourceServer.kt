@@ -241,8 +241,7 @@ class SubsonicDatasourceServer(
                     val albumInfo = subsonicApiClient.itemApi().getAlbumInfo2(albumId)
                     val albumInfo2ID3 = albumInfo.subsonicResponse.albumInfo
                     album =  album.copy(
-                        pic = albumInfo2ID3?.smallImageUrl ?: albumInfo2ID3?.largeImageUrl
-                        ?: getMusicCoverUrlByCustomApi(album = album.name) ?: ""
+                        pic = albumInfo2ID3?.smallImageUrl ?: albumInfo2ID3?.largeImageUrl ?: ""
                     )
                 }catch (e: Exception){
                     Log.e(Constants.LOG_ERROR_PREFIX, "获取专辑信息失败", e)
@@ -782,7 +781,7 @@ class SubsonicDatasourceServer(
                 { createDownloadUrl(it) },
                 { coverArt, title ->
                     if (coverArt.isNullOrBlank())
-                        getMusicCoverUrlByCustomApi(musicTitle = title) ?: ""
+                        ""
                     else
                         subsonicApiClient.getImageUrl(
                             coverArt
@@ -808,7 +807,7 @@ class SubsonicDatasourceServer(
                 createDownloadUrl = { createDownloadUrl(it) },
                 getImageUrl = { coverArt, title ->
                     if (coverArt.isNullOrBlank())
-                        getMusicCoverUrlByCustomApi(musicTitle = title) ?: ""
+                        ""
                     else
                         subsonicApiClient.getImageUrl(
                             coverArt
@@ -1028,16 +1027,12 @@ class SubsonicDatasourceServer(
         index: String? = null,
     ): XyArtist {
         return artistId3.convertToArtist(
-            pic = if (artistId3.coverArt.isNullOrBlank()) getMusicCoverUrlByCustomApi(
-                artist = artistId3.name
-            ) else artistId3.coverArt?.let { coverArt ->
+            pic = if (artistId3.coverArt.isNullOrBlank()) null else artistId3.coverArt?.let { coverArt ->
                 subsonicApiClient.getImageUrl(
                     coverArt
                 )
             },
-            backdrop = if (artistId3.coverArt.isNullOrBlank()) getMusicCoverUrlByCustomApi(
-                artist = artistId3.name
-            ) else artistId3.coverArt?.let { coverArt ->
+            backdrop = if (artistId3.coverArt.isNullOrBlank()) null else artistId3.coverArt?.let { coverArt ->
                 subsonicApiClient.getImageUrl(
                     coverArt
                 )
@@ -1119,7 +1114,7 @@ class SubsonicDatasourceServer(
      */
     fun convertToMusic(music: SongID3): XyMusic {
         return music.toXyMusic(
-            pic = if (music.coverArt.isNullOrBlank()) getMusicCoverUrlByCustomApi(musicTitle = music.title) else music.coverArt?.let {
+            pic = if (music.coverArt.isNullOrBlank()) null else music.coverArt?.let {
                 subsonicApiClient.getImageUrl(
                     it
                 )

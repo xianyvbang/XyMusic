@@ -96,6 +96,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import cn.xybbz.R
+import cn.xybbz.config.image.rememberAlbumCoverUrls
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.enums.SortTypeEnum
@@ -686,6 +687,8 @@ private fun MusicAlbumInfoComponent(
     onSetIfSavePlaybackHistory: (Boolean) -> Unit,
     ifShowPlaybackHistory: Boolean = true
 ) {
+    val album = onData()
+    val coverUrls = rememberAlbumCoverUrls(album)
 
     XyColumn(
         backgroundColor = Color.Transparent,
@@ -715,11 +718,12 @@ private fun MusicAlbumInfoComponent(
                             end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
                         )
                     ),
-                model = onData()?.pic,
+                model = coverUrls.primaryUrl,
+                backModel = coverUrls.fallbackUrl,
                 placeholder = painterResource(id = R.drawable.music_xy_placeholder_foreground),
                 error = painterResource(id = R.drawable.music_xy_placeholder_foreground),
                 fallback = painterResource(id = R.drawable.music_xy_placeholder_foreground),
-                contentDescription = stringResource(R.string.album_cover),,
+                contentDescription = stringResource(R.string.album_cover),
             )
             Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
             Column(
@@ -727,7 +731,7 @@ private fun MusicAlbumInfoComponent(
                     .fillMaxHeight(),
             ) {
                 XyText(
-                    text = onData()?.name ?: "",
+                    text = album?.name ?: "",
                     maxLines = 2,
                 )
                 Spacer(modifier = Modifier.height(XyTheme.dimens.contentPadding))

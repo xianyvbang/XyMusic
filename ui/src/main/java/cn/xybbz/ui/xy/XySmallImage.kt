@@ -44,7 +44,7 @@ import coil.compose.AsyncImagePainter.State
 fun XySmallImage(
     modifier: Modifier = Modifier,
     model: Any?,
-    backModel: Any?,
+    backModel: Any? = null,
     size: Dp = 50.dp,
     contentDescription: String? = null,
     placeholder: Painter? = painterResource(id = R.drawable.default_placeholder),
@@ -70,7 +70,7 @@ fun XySmallImage(
 fun XyImage(
     modifier: Modifier = Modifier,
     model: Any?,
-    backModel: Any?,
+    backModel: Any? = null,
     placeholder: Painter? = null,
     error: Painter? = null,
     fallback: Painter? = null,
@@ -81,9 +81,9 @@ fun XyImage(
     onLoading: ((State.Loading) -> Unit)? = null,
     onError: ((State.Error) -> Unit)? = null,
 ) {
-
-    var tempModel by remember {
-        mutableStateOf(model)
+    val normalizedBackModel = normalizeImageModel(backModel)
+    var tempModel by remember(model, normalizedBackModel) {
+        mutableStateOf(normalizeImageModel(model) ?: normalizedBackModel)
     }
 
     AsyncImage(
@@ -99,13 +99,20 @@ fun XyImage(
         onSuccess = onSuccess,
         onLoading = onLoading,
         onError = {
-            if (tempModel != backModel) {
-                tempModel = backModel
+            if (normalizedBackModel != null && tempModel != normalizedBackModel) {
+                tempModel = normalizedBackModel
             } else {
                 onError?.invoke(it)
             }
         }
     )
+}
+
+private fun normalizeImageModel(model: Any?): Any? {
+    return when (model) {
+        is String -> model.trim().takeIf { it.isNotBlank() }
+        else -> model
+    }
 }
 
 @Composable

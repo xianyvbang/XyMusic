@@ -428,7 +428,7 @@ class SettingsManager(
     }
 
     /**
-     * 更新歌词优先使用音乐服务接口
+     * 更新资源优先使用音乐服务接口（歌词/封面）
      */
     suspend fun setIfPriorityMusicApi(ifPriorityMusicApi: Boolean) {
         settings = get().copy(ifPriorityMusicApi = ifPriorityMusicApi)

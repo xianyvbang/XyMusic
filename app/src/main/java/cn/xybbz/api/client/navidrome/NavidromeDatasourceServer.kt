@@ -426,8 +426,7 @@ class NavidromeDatasourceServer(
             val albumInfo = navidromeApiClient.itemApi().getAlbumInfo2(albumId)
             val albumInfo2ID3 = albumInfo.subsonicResponse.albumInfo
             album = album.copy(
-                pic = albumInfo2ID3?.smallImageUrl ?: albumInfo2ID3?.largeImageUrl
-                ?: getMusicCoverUrlByCustomApi(album = album.name) ?: ""
+                pic = albumInfo2ID3?.smallImageUrl ?: albumInfo2ID3?.largeImageUrl ?: ""
             )
         }catch (e: Exception){
             Log.e(Constants.LOG_ERROR_PREFIX, "获取专辑信息失败", e)
@@ -915,7 +914,7 @@ class NavidromeDatasourceServer(
                 createDownloadUrl = { createDownloadUrl(it) },
                 getImageUrl = { coverArt, title ->
                     if (coverArt.isNullOrBlank())
-                        getMusicCoverUrlByCustomApi(musicTitle = title) ?: ""
+                        ""
                     else
                         navidromeApiClient.getImageUrl(
                             coverArt
@@ -942,7 +941,7 @@ class NavidromeDatasourceServer(
                 createDownloadUrl = { createDownloadUrl(it) },
                 getImageUrl = { coverArt, title ->
                     if (coverArt.isNullOrBlank())
-                        getMusicCoverUrlByCustomApi(musicTitle = title) ?: ""
+                        ""
                     else
                         navidromeApiClient.getImageUrl(
                             coverArt
@@ -1354,11 +1353,8 @@ class NavidromeDatasourceServer(
                 .lowercase()
         return XyArtist(
             artistId = artist.id,
-            pic = artist.smallImageUrl ?: artist.largeImageUrl
-            ?: getMusicCoverUrlByCustomApi(artist = artist.name),
-            backdrop = artist.largeImageUrl ?: artist.smallImageUrl ?: getMusicCoverUrlByCustomApi(
-                artist = artist.name
-            ),
+            pic = artist.smallImageUrl ?: artist.largeImageUrl,
+            backdrop = artist.largeImageUrl ?: artist.smallImageUrl,
             name = artist.name,
             describe = artist.biography,
             connectionId = getConnectionId(),
@@ -1378,14 +1374,14 @@ class NavidromeDatasourceServer(
 
         return artistId3.convertToArtist(
             pic = if (artistId3.coverArt.isNullOrBlank())
-                getMusicCoverUrlByCustomApi(artist = artistId3.name) ?: ""
+                ""
             else artistId3.coverArt?.let { coverArt ->
                 navidromeApiClient.getImageUrl(
                     coverArt
                 )
             },
             backdrop = if (artistId3.coverArt.isNullOrBlank())
-                getMusicCoverUrlByCustomApi(artist = artistId3.name) ?: ""
+                ""
             else artistId3.coverArt?.let { coverArt ->
                 navidromeApiClient.getImageUrl(
                     coverArt

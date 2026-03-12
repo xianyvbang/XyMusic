@@ -102,6 +102,7 @@ fun ItemTrailingContent(
     subordination: String?,
     favoriteState: Boolean,
     imgUrl: String? = null,
+    backImgUrl: String? = null,
     media: String? = null,
     enabledPic: Boolean = true,
     ifDownload: Boolean,
@@ -216,6 +217,7 @@ fun ItemTrailingContent(
             {
                 XySmallImage(
                     model = imgUrl,
+                    backModel = backImgUrl,
                     size = picSize,
                     contentDescription = "${name}${stringResource(R.string.image_suffix)}"
                 )

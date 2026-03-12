@@ -1322,7 +1322,7 @@ class JellyfinDatasourceServer(
                 quality = 96,
                 tag = item.imageTags?.get(ImageType.PRIMARY)
             )
-            else if (!item.name.isNullOrBlank()) getMusicCoverUrlByCustomApi(album = item.name) else null
+            else null
         return XyAlbum(
             itemId = item.id,
             pic = itemImageUrl,
@@ -1367,7 +1367,7 @@ class JellyfinDatasourceServer(
                     quality = 96,
                     tag = item.albumPrimaryImageTag
                 )
-            } else if (!item.name.isNullOrBlank()) getMusicCoverUrlByCustomApi(album = item.name) else null
+            } else null
 
 
         //获得音乐信息
@@ -1434,7 +1434,7 @@ class JellyfinDatasourceServer(
                         tag = item.imageTags?.get(ImageType.PRIMARY)
                     )
                 }
-                else if (!item.name.isNullOrBlank()) getMusicCoverUrlByCustomApi(artist = item.name) else null
+                else null
 
             val backdropImageUrl =
                 if (!item.backdropImageTags.isNullOrEmpty()) item.name?.let {
@@ -1448,7 +1448,7 @@ class JellyfinDatasourceServer(
                         tag = item.backdropImageTags?.get(0)
                     )
                 }
-                else if (!item.name.isNullOrBlank()) getMusicCoverUrlByCustomApi(artist = item.name) else null
+                else null
 
             val sortName = item.sortName
             val shortNameStart = if (!sortName.isNullOrBlank()) sortName[0] else '#'

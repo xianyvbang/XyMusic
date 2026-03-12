@@ -16,7 +16,7 @@ class CustomLyricsViewModel @Inject constructor(
 ) : ViewModel() {
 
     /**
-     * 是否优先走音乐服务自身歌词接口
+     * 是否优先走音乐服务自身资源接口（歌词/封面）
      */
     var ifPriorityMusicApi by mutableStateOf(settingsManager.get().ifPriorityMusicApi)
         private set

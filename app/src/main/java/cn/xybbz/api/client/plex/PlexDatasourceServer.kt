@@ -1798,7 +1798,7 @@ class PlexDatasourceServer(
                     image.url,
                 )
             } else {
-                getMusicCoverUrlByCustomApi(album = album.title)
+                null
             }
 
         return XyAlbum(
@@ -1867,7 +1867,7 @@ class PlexDatasourceServer(
                     image.url,
                 )
             } else {
-                getMusicCoverUrlByCustomApi(musicTitle = item.title)
+                null
             }
 
 
@@ -1942,7 +1942,7 @@ class PlexDatasourceServer(
                     image.url,
                 )
             } else {
-                getMusicCoverUrlByCustomApi(artist = artist.title)
+                null
             }
 
         val imageBack = images?.findLast { it.type == ImageType.Background }
@@ -1952,7 +1952,7 @@ class PlexDatasourceServer(
                     imageBack.url,
                 )
             } else {
-                getMusicCoverUrlByCustomApi(artist = artist.title)
+                null
             }
 
         val result =

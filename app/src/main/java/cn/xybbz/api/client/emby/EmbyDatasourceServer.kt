@@ -1317,7 +1317,7 @@ class EmbyDatasourceServer(
                     tag = artist.imageTags?.get(ImageType.PRIMARY)
                 )
             }
-            else if (!artist.name.isNullOrBlank()) getMusicCoverUrlByCustomApi(artist = artist.name) else null
+            else null
 
         val backdropImageUrl =
             if (!artist.backdropImageTags.isNullOrEmpty()) artist.name?.let {
@@ -1331,7 +1331,7 @@ class EmbyDatasourceServer(
                     tag = artist.backdropImageTags?.get(0)
                 )
             }
-            else if (!artist.name.isNullOrBlank()) getMusicCoverUrlByCustomApi(artist = artist.name) else null
+            else null
 
         val sortName = artist.sortName
         val shortNameStart = if (!sortName.isNullOrBlank()) sortName[0] else '#'
@@ -1378,7 +1378,7 @@ class EmbyDatasourceServer(
                     quality = 96,
                     tag = item.albumPrimaryImageTag
                 )
-            } else if (!item.name.isNullOrBlank()) getMusicCoverUrlByCustomApi(musicTitle = item.name) else null
+            } else null
 
 
         //获得音乐信息
@@ -1445,7 +1445,7 @@ class EmbyDatasourceServer(
                 quality = 96,
                 tag = album.imageTags?.get(ImageType.PRIMARY)
             )
-            else if (!album.name.isNullOrBlank()) getMusicCoverUrlByCustomApi(album = album.name) else null
+            else null
         return XyAlbum(
             itemId = album.id,
             pic = itemImageUrl,
