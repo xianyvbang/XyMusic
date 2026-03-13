@@ -233,8 +233,8 @@
     <string name="album_playback_history">专辑播放历史</string>
     <string name="allow_simultaneous_playback">允许与其他应用同时播放</string>
     <string name="enabled_sync_play_progress">开启播放进度同步</string>
-    <string name="customize_lyric_settings">自定义歌词设置</string>
-    <string name="prioritize_music_service_api">优先使用音乐服务资源接口（歌词/封面）</string>
+    <string name="customize_lyric_settings">自定义API设置</string>
+    <string name="prioritize_music_service_api">优先使用音乐服务资源接口</string>
     <string name="lyrics_single_api">歌词单曲接口</string>
     <string name="lyrics_single_api_desc">参考 /lyrics：按 title/artist/album 查询，返回 LRC 文本</string>
     <string name="lyrics_api_auth_key">歌词接口鉴权 Key</string>

@@ -15,6 +15,9 @@ class CustomLyricsViewModel @Inject constructor(
     private val settingsManager: SettingsManager
 ) : ViewModel() {
 
+    //自定义API文档地址
+    val url = "https://docs.lrc.cx/docs/QuickStart"
+
     /**
      * 是否优先走音乐服务自身资源接口（歌词/封面）
      */

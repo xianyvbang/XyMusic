@@ -18,6 +18,7 @@
 
 package cn.xybbz.ui.screens
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -38,6 +39,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
@@ -49,6 +51,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import cn.xybbz.R
 import cn.xybbz.api.constants.ApiConstants
@@ -73,11 +76,12 @@ import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CustomLyricsScreen(
+fun CustomApiScreen(
     modifier: Modifier = Modifier,
     customLyricsViewModel: CustomLyricsViewModel = hiltViewModel()
 ) {
     val navigator = LocalNavigator.current
+    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
     // 页面整体：复用设置页背景渐变
@@ -139,7 +143,35 @@ fun CustomLyricsScreen(
                 )
             }
             item {
-                CustomLyricsSettingInput(
+                val annotatedText = buildAnnotatedString {
+
+                    append("验证信息作为请求头传入,使用${ApiConstants.AUTHORIZATION}作为Key为验证信息,更多信息请参考")
+
+                    pushStringAnnotation(
+                        tag = "CLICK",
+                        annotation = "官方文档"
+                    )
+                    withLink(
+                        LinkAnnotation.Clickable(
+                            tag = "CLICK",
+                            linkInteractionListener = {
+                                val intent =
+                                    Intent(Intent.ACTION_VIEW, customLyricsViewModel.url.toUri())
+                                context.startActivity(intent)
+                            },
+                            styles = TextLinkStyles(
+                                style = SpanStyle(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    textDecoration = TextDecoration.None   // 去掉下划线
+                                )
+                            )
+                        )
+                    ) {
+                        append("官方文档")
+                    }
+                }
+                CustomLyricsItemComponent(
+                    bottomInfo = annotatedText,
                     title = "验证信息",
                     value = customLyricsViewModel.customLrcApiAuthValue,
                     hint = stringResource(R.string.lyrics_api_auth_key_hint),
@@ -153,37 +185,7 @@ fun CustomLyricsScreen(
                 )
             }
             item {
-
-
-                val annotatedText = buildAnnotatedString {
-
-                    append("验证信息作为请求头传入,使用${ApiConstants.AUTHORIZATION}作为Key为验证信息,更多信息请参考")
-
-                    pushStringAnnotation(
-                        tag = "CLICK",
-                        annotation = "官方文档"
-                    )
-                    withLink(
-                        LinkAnnotation.Clickable(
-                            tag = "CLICK",
-                            linkInteractionListener = {
-                                println("点击了xxxxx")
-                            },
-                            styles = TextLinkStyles(
-                                style = SpanStyle(
-                                    color = MaterialTheme.colorScheme.primary,
-                                    textDecoration = TextDecoration.None   // 去掉下划线
-                                )
-                            )
-                        )
-                    ){
-                        append("官方文档")
-                    }
-                }
-
-
-                CustomLyricsItemComponent(
-                    bottomInfo = annotatedText,
+                CustomLyricsSettingInput(
                     value = customLyricsViewModel.customLrcSingleApiValue,
                     hint = stringResource(R.string.lyrics_single_api_hint),
                     onValueChange = { customLyricsViewModel.updateCustomLrcSingleApi(it) }
@@ -271,7 +273,7 @@ private fun CustomLyricsItemComponent(
     hint: String,
     onValueChange: (String) -> Unit
 ) {
-    SettingRoundedSurfaceColumn{
+    SettingRoundedSurfaceColumn {
         XyColumn(
             modifier = modifier
                 .heightIn(min = XyTheme.dimens.itemHeight)
@@ -282,7 +284,7 @@ private fun CustomLyricsItemComponent(
             backgroundColor = Color.Transparent,
             horizontalAlignment = Alignment.Start,
         ) {
-            XyRow(paddingValues = PaddingValues(), modifier = Modifier) {
+            XyRow(paddingValues = PaddingValues(top = XyTheme.dimens.innerVerticalPadding), modifier = Modifier) {
                 XyText(
                     text = title,
                     color = if (enabled) textColor else MaterialTheme.colorScheme.onSurfaceVariant,

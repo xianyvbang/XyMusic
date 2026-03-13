@@ -237,8 +237,8 @@ data object ProxyConfig : RouterConstants()
 data object StreamingQuality : RouterConstants()
 
 /**
- * 自定义歌词设置
+ * 自定义Api设置
  */
 @Serializable
-@SerialName("CustomLyrics")
-data object CustomLyrics : RouterConstants()
+@SerialName("CustomApi")
+data object CustomApi : RouterConstants()

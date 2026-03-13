@@ -34,7 +34,6 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -56,7 +55,7 @@ import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.router.About
 import cn.xybbz.router.CacheLimit
 import cn.xybbz.router.ConnectionManagement
-import cn.xybbz.router.CustomLyrics
+import cn.xybbz.router.CustomApi
 import cn.xybbz.router.InterfaceSetting
 import cn.xybbz.router.LanguageConfig
 import cn.xybbz.router.MemoryManagement
@@ -76,6 +75,7 @@ import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.SettingsViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.launch
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 /**
  * 设置页面
@@ -189,12 +189,6 @@ fun SettingScreen(
                                 bol
                             )
                         }
-                    }
-
-                    SettingItemComponent(
-                        title = stringResource(R.string.customize_lyric_settings)
-                    ) {
-                        navigator.navigate(CustomLyrics)
                     }
 
                     SettingItemComponent(
@@ -343,6 +337,12 @@ fun SettingScreen(
 
                     SettingItemComponent(title = stringResource(R.string.storage_management)) {
                         navigator.navigate(MemoryManagement)
+                    }
+
+                    SettingItemComponent(
+                        title = stringResource(R.string.customize_lyric_settings)
+                    ) {
+                        navigator.navigate(CustomApi)
                     }
 
                     SettingItemComponent(title = stringResource(R.string.poxy_config)) {
