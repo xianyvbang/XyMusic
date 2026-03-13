@@ -23,6 +23,7 @@ import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -58,7 +59,6 @@ import androidx.compose.material.icons.rounded.PlayCircle
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
@@ -69,6 +69,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -81,6 +82,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -88,6 +90,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -96,11 +99,11 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import cn.xybbz.R
-import cn.xybbz.config.image.rememberArtistBackdropCoverUrls
-import cn.xybbz.config.image.rememberArtistCoverUrls
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.TabListEnum
 import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.config.image.rememberArtistBackdropCoverUrls
+import cn.xybbz.config.image.rememberArtistCoverUrls
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.music.MusicPlayContext
@@ -118,7 +121,6 @@ import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.VerticalGridListComponent
 import cn.xybbz.ui.components.XySelectAllComponent
 import cn.xybbz.ui.components.show
-import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnParentComponent
@@ -128,7 +130,9 @@ import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.ArtistInfoViewModel
 import kotlinx.coroutines.launch
+import kotlin.math.max
 import kotlin.math.min
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 internal val DefaultImageHeight = 350.dp
 
@@ -174,6 +178,9 @@ fun ArtistInfoScreen(
     val density = LocalDensity.current
 
     val tabHeightDp = XyTheme.dimens.itemHeight * 0.6f
+    val pageBackgroundColor = MaterialTheme.colorScheme.background
+
+    var pullDownOffsetPx by remember { mutableFloatStateOf(0f) }
 
     val current by remember {
         derivedStateOf {
@@ -191,9 +198,47 @@ fun ArtistInfoScreen(
     var ifOpenDescribe by remember { mutableStateOf(false) }
 
     // 使用 animateFloatAsState 实现平滑过渡
-    val topBarAlpha by animateFloatAsState(
+    val collapseProgress by animateFloatAsState(
         targetValue = current,
-        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing)
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_collapse_progress"
+    )
+    val pullDownProgress by animateFloatAsState(
+        targetValue = (pullDownOffsetPx / with(density) { (DefaultImageHeight * 0.35f).toPx() }).coerceIn(0f, 1f),
+        animationSpec = tween(durationMillis = 220, easing = LinearOutSlowInEasing),
+        label = "artist_pull_down_progress"
+    )
+    val imageTranslationY by animateFloatAsState(
+        targetValue =
+            (-with(density) { (DefaultImageHeight * 0.08f).toPx() } * collapseProgress) +
+                    (with(density) { (DefaultImageHeight * 0.06f).toPx() } * pullDownProgress),
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_image_translation"
+    )
+    val headerTitleTranslationY by animateFloatAsState(
+        targetValue = -with(density) { (DefaultImageHeight * 0.34f).toPx() } * collapseProgress,
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_header_title_translation"
+    )
+    val headerDescriptionTranslationY by animateFloatAsState(
+        targetValue = -with(density) { (DefaultImageHeight * 0.08f).toPx() } * collapseProgress,
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_header_description_translation"
+    )
+    val headerTitleAlpha by animateFloatAsState(
+        targetValue = inverseRangeProgress(collapseProgress, start = 0.72f, end = 1f),
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_header_title_alpha"
+    )
+    val headerDescriptionAlpha by animateFloatAsState(
+        targetValue = inverseRangeProgress(collapseProgress, start = 0.12f, end = 0.82f),
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_header_description_alpha"
+    )
+    val topBarAlpha by animateFloatAsState(
+        targetValue = rangeProgress(collapseProgress, start = 0.55f, end = 1f),
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_topbar_alpha"
     )
 
     val scrollConnection = remember {
@@ -202,12 +247,33 @@ fun ArtistInfoScreen(
                 available: Offset,
                 source: NestedScrollSource,
             ): Offset {
-                return if (available.y > 0) Offset.Zero else Offset(
-                    x = 0f,
-                    y = -lazyListState1.dispatchRawDelta(
-                        -available.y
+                if (available.y > 0 &&
+                    parentState.firstVisibleItemIndex == 0 &&
+                    parentState.firstVisibleItemScrollOffset == 0
+                ) {
+                    pullDownOffsetPx += available.y
+                    return Offset.Zero
+                }
+
+                if (available.y < 0 && pullDownOffsetPx > 0f) {
+                    pullDownOffsetPx = max(0f, pullDownOffsetPx + available.y)
+                }
+
+                return if (available.y > 0) {
+                    Offset.Zero
+                } else {
+                    Offset(
+                        x = 0f,
+                        y = -lazyListState1.dispatchRawDelta(
+                            -available.y
+                        )
                     )
-                )
+                }
+            }
+
+            override suspend fun onPreFling(available: Velocity): Velocity {
+                pullDownOffsetPx = 0f
+                return Velocity.Zero
             }
         }
     }
@@ -218,12 +284,25 @@ fun ArtistInfoScreen(
                 available: Offset,
                 source: NestedScrollSource,
             ): Offset {
-                return if (available.y > 0) Offset.Zero else Offset(
-                    x = 0f,
-                    y = -parentState.dispatchRawDelta(
-                        -available.y
+                if (available.y < 0 && pullDownOffsetPx > 0f) {
+                    pullDownOffsetPx = max(0f, pullDownOffsetPx + available.y)
+                }
+
+                return if (available.y > 0) {
+                    Offset.Zero
+                } else {
+                    Offset(
+                        x = 0f,
+                        y = -parentState.dispatchRawDelta(
+                            -available.y
+                        )
                     )
-                )
+                }
+            }
+
+            override suspend fun onPreFling(available: Velocity): Velocity {
+                pullDownOffsetPx = 0f
+                return Velocity.Zero
             }
         }
     }
@@ -283,6 +362,9 @@ fun ArtistInfoScreen(
             XyImage(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .graphicsLayer {
+                        translationY = imageTranslationY
+                    }
                     .align(Alignment.TopCenter)
                     .height(DefaultImageHeight),
                 model = artistBackdropUrls.primaryUrl ?: artistCoverUrls.primaryUrl,
@@ -411,7 +493,7 @@ fun ArtistInfoScreen(
                                         brush = Brush.verticalGradient(
                                             colors = listOf(
                                                 Color.Transparent,
-                                                artistInfoViewModel.backgroundConfig.artistInfoBrash[0]
+                                                pageBackgroundColor
                                             ),
                                             startY = 0f,
                                             endY = size.height
@@ -420,40 +502,52 @@ fun ArtistInfoScreen(
                                     )
 
                                 })
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(DefaultImageHeight.times(0.3f))
-                                .align(Alignment.BottomCenter)
-                                .padding(horizontal = XyTheme.dimens.outerHorizontalPadding)
-                        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(DefaultImageHeight.times(0.3f))
+                    .align(Alignment.BottomCenter)
+                    .padding(horizontal = XyTheme.dimens.outerHorizontalPadding)
+                    .graphicsLayer {
+                        translationY = headerTitleTranslationY
+                    }
+            ) {
 
-                            BasicText(
-                                text = artistName(),
-                                modifier = Modifier.basicMarquee(
-                                    iterations = Int.MAX_VALUE
-                                ),
-                                color = {
-                                    Color.White.copy(alpha = (topBarAlpha - 1) * -1)
-                                },
-                                style = LocalTextStyle.current.copy(fontSize = 30.sp)
+                BasicText(
+                    text = artistName(),
+                    modifier = Modifier
+                        .basicMarquee(
+                            iterations = Int.MAX_VALUE
+                        )
+                        .graphicsLayer {
+                            alpha = headerTitleAlpha
+                        },
+                    color = {
+                        Color.White.copy(alpha = headerTitleAlpha)
+                    },
+                    style = LocalTextStyle.current.copy(fontSize = 30.sp)
 
-                            )
-                            Spacer(modifier = Modifier.height(XyTheme.dimens.corner))
-                            BasicText(
-                                text = artistInfoViewModel.artistDescribe
-                                    ?: stringResource(R.string.no_description),
-                                modifier = Modifier.debounceClickable(enabled = isOverflow) {
-                                    ifOpenDescribe = true
-                                },
-                                color = {
-                                    Color.White.copy(alpha = (topBarAlpha - 1) * -1)
-                                },
-                                style = MaterialTheme.typography.titleSmall.copy(lineHeight = 15.sp),
-                                maxLines = 3,
-                                overflow = TextOverflow.Ellipsis,
-                                onTextLayout = { textLayoutResult ->
+                )
+                Spacer(modifier = Modifier.height(XyTheme.dimens.corner))
+                BasicText(
+                    text = artistInfoViewModel.artistDescribe
+                        ?: stringResource(R.string.no_description),
+                    modifier = Modifier
+                        .graphicsLayer {
+                            translationY = headerDescriptionTranslationY
+                            alpha = headerDescriptionAlpha
+                        }
+                        .debounceClickable(enabled = isOverflow) {
+                            ifOpenDescribe = true
+                        },
+                    color = {
+                        Color.White.copy(alpha = headerDescriptionAlpha)
+                    },
+                    style = MaterialTheme.typography.titleSmall.copy(lineHeight = 15.sp),
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                    onTextLayout = { textLayoutResult ->
                                     // 是否超过最大行数
                                     isOverflow = textLayoutResult.hasVisualOverflow
                                 }
@@ -473,14 +567,11 @@ fun ArtistInfoScreen(
                                     .calculateTopPadding()
                             )
                             .nestedScroll(scrollConnection)
-                            .brashColor(
-                                topVerticalColor = artistInfoViewModel.backgroundConfig.artistInfoBrash[0],
-                                bottomVerticalColor = artistInfoViewModel.backgroundConfig.artistInfoBrash[1]
-                            )
+                            .background(MaterialTheme.colorScheme.background)
                     ) {
                         stickyHeader {
                             PrimaryTabRow(
-                                containerColor = Color.Transparent,
+                                containerColor = MaterialTheme.colorScheme.background,
                                 selectedTabIndex = horPagerState.currentPage,
                                 divider = {},
                                 modifier = Modifier.height(tabHeightDp),
@@ -512,7 +603,7 @@ fun ArtistInfoScreen(
                         item {
                             HorizontalPager(
                                 state = horPagerState,
-                                modifier = Modifier
+                                modifier = Modifier.background(MaterialTheme.colorScheme.background)
                             ) { page: Int ->
                                 when (TabListEnum.entries[page]) {
                                     TabListEnum.Music -> {
@@ -742,4 +833,13 @@ private fun ArtistMusicListOperation(
         }
 
     }
+}
+
+private fun rangeProgress(value: Float, start: Float, end: Float): Float {
+    if (end <= start) return if (value >= end) 1f else 0f
+    return ((value - start) / (end - start)).coerceIn(0f, 1f)
+}
+
+private fun inverseRangeProgress(value: Float, start: Float, end: Float): Float {
+    return 1f - rangeProgress(value, start, end)
 }
