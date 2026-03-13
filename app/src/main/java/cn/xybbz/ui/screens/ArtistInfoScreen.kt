@@ -20,7 +20,10 @@ package cn.xybbz.ui.screens
 
 import android.util.Log
 import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -38,10 +41,12 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -66,6 +71,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -74,6 +80,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -82,6 +89,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -90,6 +98,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -132,6 +141,7 @@ import cn.xybbz.viewmodel.ArtistInfoViewModel
 import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 internal val DefaultImageHeight = 350.dp
@@ -179,8 +189,17 @@ fun ArtistInfoScreen(
 
     val tabHeightDp = XyTheme.dimens.itemHeight * 0.6f
     val pageBackgroundColor = MaterialTheme.colorScheme.background
+    val pullDownResistanceDistancePx = with(density) { (DefaultImageHeight * 0.8f).toPx() }
+    val defaultImageHeightPx = with(density) { DefaultImageHeight.toPx() }
+    val listLiftUpOffsetPx = with(density) { (DefaultImageHeight * 0.12f).toPx() }
 
     var pullDownOffsetPx by remember { mutableFloatStateOf(0f) }
+    val isParentAtTop by remember {
+        derivedStateOf { isLazyListAtTop(parentState) }
+    }
+    val isCurrentListAtTop by remember {
+        derivedStateOf { isLazyListAtTop(lazyListState1) }
+    }
 
     val current by remember {
         derivedStateOf {
@@ -203,15 +222,31 @@ fun ArtistInfoScreen(
         animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
         label = "artist_collapse_progress"
     )
-    val pullDownProgress by animateFloatAsState(
-        targetValue = (pullDownOffsetPx / with(density) { (DefaultImageHeight * 0.35f).toPx() }).coerceIn(0f, 1f),
-        animationSpec = tween(durationMillis = 220, easing = LinearOutSlowInEasing),
-        label = "artist_pull_down_progress"
+    val pullDownOffsetAnimatedPx by animateFloatAsState(
+        targetValue = pullDownOffsetPx,
+        animationSpec = if (pullDownOffsetPx == 0f) {
+            spring(
+                dampingRatio = Spring.DampingRatioLowBouncy,
+                stiffness = Spring.StiffnessHigh
+            )
+        } else {
+            snap()
+        },
+        label = "artist_pull_down_offset"
+    )
+    val imageStretchPx = (pullDownOffsetAnimatedPx - listLiftUpOffsetPx).coerceAtLeast(0f)
+    val listPullDownTranslationY by animateFloatAsState(
+        targetValue = (pullDownOffsetAnimatedPx - listLiftUpOffsetPx).coerceAtLeast(0f),
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_list_pull_down_translation"
+    )
+    val imageScale by animateFloatAsState(
+        targetValue = 1f + (imageStretchPx / defaultImageHeightPx),
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_image_scale"
     )
     val imageTranslationY by animateFloatAsState(
-        targetValue =
-            (-with(density) { (DefaultImageHeight * 0.08f).toPx() } * collapseProgress) +
-                    (with(density) { (DefaultImageHeight * 0.06f).toPx() } * pullDownProgress),
+        targetValue = -with(density) { (DefaultImageHeight * 0.10f).toPx() } * collapseProgress,
         animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
         label = "artist_image_translation"
     )
@@ -241,22 +276,39 @@ fun ArtistInfoScreen(
         label = "artist_topbar_alpha"
     )
 
+    LaunchedEffect(parentState, lazyListState1, lazyListState) {
+        snapshotFlow {
+            parentState.isScrollInProgress || lazyListState1.isScrollInProgress || lazyListState.isScrollInProgress
+        }.collect { scrolling ->
+            if (!scrolling && pullDownOffsetPx > 0f) {
+                pullDownOffsetPx = 0f
+            }
+        }
+    }
+
     val scrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(
                 available: Offset,
                 source: NestedScrollSource,
             ): Offset {
-                if (available.y > 0 &&
-                    parentState.firstVisibleItemIndex == 0 &&
-                    parentState.firstVisibleItemScrollOffset == 0
+                if (source == NestedScrollSource.UserInput &&
+                    available.y > 0 &&
+                    isParentAtTop &&
+                    isCurrentListAtTop
                 ) {
-                    pullDownOffsetPx += available.y
-                    return Offset.Zero
+                    val resistedDelta = calculatePullDownDeltaWithResistance(
+                        deltaY = available.y,
+                        currentOffsetPx = pullDownOffsetPx,
+                        resistanceDistancePx = pullDownResistanceDistancePx
+                    )
+                    pullDownOffsetPx += resistedDelta
+                    return Offset(x = 0f, y = available.y)
                 }
 
                 if (available.y < 0 && pullDownOffsetPx > 0f) {
                     pullDownOffsetPx = max(0f, pullDownOffsetPx + available.y)
+                    return Offset(x = 0f, y = available.y)
                 }
 
                 return if (available.y > 0) {
@@ -275,6 +327,11 @@ fun ArtistInfoScreen(
                 pullDownOffsetPx = 0f
                 return Velocity.Zero
             }
+
+            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
+                pullDownOffsetPx = 0f
+                return Velocity.Zero
+            }
         }
     }
 
@@ -284,8 +341,23 @@ fun ArtistInfoScreen(
                 available: Offset,
                 source: NestedScrollSource,
             ): Offset {
+                if (source == NestedScrollSource.UserInput &&
+                    available.y > 0 &&
+                    isParentAtTop &&
+                    isCurrentListAtTop
+                ) {
+                    val resistedDelta = calculatePullDownDeltaWithResistance(
+                        deltaY = available.y,
+                        currentOffsetPx = pullDownOffsetPx,
+                        resistanceDistancePx = pullDownResistanceDistancePx
+                    )
+                    pullDownOffsetPx += resistedDelta
+                    return Offset(x = 0f, y = available.y)
+                }
+
                 if (available.y < 0 && pullDownOffsetPx > 0f) {
                     pullDownOffsetPx = max(0f, pullDownOffsetPx + available.y)
+                    return Offset(x = 0f, y = available.y)
                 }
 
                 return if (available.y > 0) {
@@ -301,6 +373,11 @@ fun ArtistInfoScreen(
             }
 
             override suspend fun onPreFling(available: Velocity): Velocity {
+                pullDownOffsetPx = 0f
+                return Velocity.Zero
+            }
+
+            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
                 pullDownOffsetPx = 0f
                 return Velocity.Zero
             }
@@ -352,6 +429,7 @@ fun ArtistInfoScreen(
 
         val artistCoverUrls = rememberArtistCoverUrls(artistInfoViewModel.artistInfoData)
         val artistBackdropUrls = rememberArtistBackdropCoverUrls(artistInfoViewModel.artistInfoData)
+        val topBarContainerColor = pageBackgroundColor.copy(alpha = topBarAlpha)
 
         Box(
             modifier = Modifier
@@ -363,6 +441,9 @@ fun ArtistInfoScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .graphicsLayer {
+                        transformOrigin = TransformOrigin(0.5f, 0f)
+                        scaleX = imageScale
+                        scaleY = imageScale
                         translationY = imageTranslationY
                     }
                     .align(Alignment.TopCenter)
@@ -388,6 +469,13 @@ fun ArtistInfoScreen(
             ) {
                 stickyHeader {
                     TopAppBarComponent(
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = topBarContainerColor,
+                            scrolledContainerColor = topBarContainerColor,
+                            navigationIconContentColor = Color.White,
+                            titleContentColor = Color.White,
+                            actionIconContentColor = Color.White
+                        ),
                         title = {
                             Box(
                                 modifier = Modifier
@@ -481,7 +569,13 @@ fun ArtistInfoScreen(
                 }
 
                 item {
-                    Box(modifier = Modifier.height(DefaultImageHeight.times(gradientHeight))) {
+                    Box(
+                        modifier = Modifier
+                            .offset {
+                                IntOffset(0, listPullDownTranslationY.roundToInt())
+                            }
+                            .height(DefaultImageHeight.times(gradientHeight))
+                    ) {
 
                         Spacer(
                             modifier = Modifier
@@ -562,6 +656,9 @@ fun ArtistInfoScreen(
                         state = lazyListState1,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .offset {
+                                IntOffset(0, listPullDownTranslationY.roundToInt())
+                            }
                             .height(
                                 parentMaxHeight - TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
                                     .calculateTopPadding()
@@ -574,12 +671,10 @@ fun ArtistInfoScreen(
                                 containerColor = MaterialTheme.colorScheme.background,
                                 selectedTabIndex = horPagerState.currentPage,
                                 divider = {},
-                                modifier = Modifier.height(tabHeightDp),
                             ) {
                                 TabListEnum.entries.forEachIndexed { index, it ->
                                     Tab(
                                         modifier = Modifier
-                                            .height(tabHeightDp)
                                             .clip(RoundedCornerShape(XyTheme.dimens.corner)),
                                         selected = horPagerState.currentPage == index,
                                         onClick = {
@@ -842,4 +937,19 @@ private fun rangeProgress(value: Float, start: Float, end: Float): Float {
 
 private fun inverseRangeProgress(value: Float, start: Float, end: Float): Float {
     return 1f - rangeProgress(value, start, end)
+}
+
+private fun isLazyListAtTop(state: LazyListState): Boolean {
+    return state.firstVisibleItemIndex == 0 && state.firstVisibleItemScrollOffset == 0
+}
+
+private fun calculatePullDownDeltaWithResistance(
+    deltaY: Float,
+    currentOffsetPx: Float,
+    resistanceDistancePx: Float
+): Float {
+    if (deltaY <= 0f) return deltaY
+    val normalized = (currentOffsetPx / resistanceDistancePx).coerceAtLeast(0f)
+    val resistanceFactor = (1f / (1f + normalized)).coerceIn(0.08f, 1f)
+    return deltaY * resistanceFactor
 }
