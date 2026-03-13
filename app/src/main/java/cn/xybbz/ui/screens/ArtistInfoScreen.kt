@@ -181,8 +181,8 @@ fun ArtistInfoScreen(
     val lazyListState = rememberLazyListState()
     val parentState = rememberLazyListState()
 
-    //渐变高度占图片高度的比例
-    val gradientHeight = 0.4f
+    // 渐变高度占图片高度的比例（原 0.4f，降低为一半）
+    val gradientHeight = 0.2f
     val imageOffsetDp =
         DefaultImageHeight
     val density = LocalDensity.current
@@ -192,6 +192,13 @@ fun ArtistInfoScreen(
     val pullDownResistanceDistancePx = with(density) { (DefaultImageHeight * 0.8f).toPx() }
     val defaultImageHeightPx = with(density) { DefaultImageHeight.toPx() }
     val listLiftUpOffsetPx = with(density) { (DefaultImageHeight * 0.12f).toPx() }
+    val gradientHeightPx = with(density) { (DefaultImageHeight * gradientHeight).toPx() }
+    val topBarBottomPx = with(density) {
+        (
+                TopAppBarDefaults.TopAppBarExpandedHeight +
+                        WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+                ).toPx()
+    }
 
     var pullDownOffsetPx by remember { mutableFloatStateOf(0f) }
     val isParentAtTop by remember {
@@ -199,6 +206,17 @@ fun ArtistInfoScreen(
     }
     val isCurrentListAtTop by remember {
         derivedStateOf { isLazyListAtTop(lazyListState1) }
+    }
+    val distanceToTopBarBottomPx by remember {
+        derivedStateOf {
+            val item2OffsetPx =
+                parentState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == 2 }?.offset?.toFloat()
+            when {
+                item2OffsetPx != null -> item2OffsetPx - topBarBottomPx
+                parentState.firstVisibleItemIndex > 2 -> 0f
+                else -> gradientHeightPx + 1f
+            }
+        }
     }
 
     val current by remember {
@@ -274,6 +292,17 @@ fun ArtistInfoScreen(
         targetValue = rangeProgress(collapseProgress, start = 0.55f, end = 1f),
         animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
         label = "artist_topbar_alpha"
+    )
+    val topBarBackgroundAlpha by animateFloatAsState(
+        targetValue = ((gradientHeightPx - distanceToTopBarBottomPx) / gradientHeightPx).coerceIn(0f, 1f),
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_topbar_background_alpha"
+    )
+
+    val topGradientBoxAlpha by animateFloatAsState(
+        targetValue = (distanceToTopBarBottomPx / gradientHeightPx).coerceIn(0f, 1f),
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_top_gradient_box_alpha"
     )
 
     LaunchedEffect(parentState, lazyListState1, lazyListState) {
@@ -429,7 +458,7 @@ fun ArtistInfoScreen(
 
         val artistCoverUrls = rememberArtistCoverUrls(artistInfoViewModel.artistInfoData)
         val artistBackdropUrls = rememberArtistBackdropCoverUrls(artistInfoViewModel.artistInfoData)
-        val topBarContainerColor = pageBackgroundColor.copy(alpha = topBarAlpha)
+        val topOverlayColor = pageBackgroundColor.copy(alpha = topBarBackgroundAlpha)
 
         Box(
             modifier = Modifier
@@ -459,6 +488,13 @@ fun ArtistInfoScreen(
 
         }
 
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(DefaultImageHeight)
+                .background(topOverlayColor)
+        )
+
         XyColumnScreen {
 
             LazyColumn(
@@ -470,8 +506,8 @@ fun ArtistInfoScreen(
                 stickyHeader {
                     TopAppBarComponent(
                         colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = topBarContainerColor,
-                            scrolledContainerColor = topBarContainerColor,
+                            containerColor = Color.Transparent,
+                            scrolledContainerColor = Color.Transparent,
                             navigationIconContentColor = Color.White,
                             titleContentColor = Color.White,
                             actionIconContentColor = Color.White
@@ -575,6 +611,9 @@ fun ArtistInfoScreen(
                                 IntOffset(0, listPullDownTranslationY.roundToInt())
                             }
                             .height(DefaultImageHeight.times(gradientHeight))
+                            .graphicsLayer {
+                                alpha = topGradientBoxAlpha
+                            }
                     ) {
 
                         Spacer(
@@ -600,7 +639,7 @@ fun ArtistInfoScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(DefaultImageHeight.times(0.3f))
+                    .height(DefaultImageHeight.times(0.2f))
                     .align(Alignment.BottomCenter)
                     .padding(horizontal = XyTheme.dimens.outerHorizontalPadding)
                     .graphicsLayer {
