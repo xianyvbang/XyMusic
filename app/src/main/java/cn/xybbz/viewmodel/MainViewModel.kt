@@ -127,6 +127,8 @@ class MainViewModel @Inject constructor(
         initEraData()
         //音乐服务初始化
         musicControllerInit()
+        //初始化上次播放列表
+        initLastPlayList()
         //初始化版本信息获取
         initGetVersionInfo()
         //设置转码监听
@@ -183,15 +185,9 @@ class MainViewModel @Inject constructor(
                 }
             }
         }
+    }
 
-        /**
-         * 应用启动,加载播放列表
-         */
-        /*musicController.initController {
-            // 查询是否存在播放列表,如果存在将内容写入
-
-        }*/
-
+    private fun initLastPlayList(){
         viewModelScope.launch {
             db.settingsDao.selectConnectionId().distinctUntilChanged().collect {
                 Log.i("=====", "MainViewModel: 登录状态改变: $it")
