@@ -50,6 +50,7 @@ import cn.xybbz.common.constants.Constants.MUSIC_POSITION_UPDATE_INTERVAL
 import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
 import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
 import cn.xybbz.common.enums.PlayStateEnum
+import cn.xybbz.config.image.coverImageResolver
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
@@ -79,6 +80,8 @@ class MusicController(
     private val dataSourceManager: DataSourceManager
 ) : IoScoped() {
 
+    private val coverImageResolver by lazy { application.applicationContext.coverImageResolver() }
+
     // 原始歌曲列表
     var originMusicList by mutableStateOf(emptyList<XyPlayMusic>())
         private set
@@ -103,6 +106,9 @@ class MusicController(
         private set
 
     var picByte: ByteArray? by mutableStateOf(null)
+        private set
+
+    var coverRefreshVersion by mutableIntStateOf(0)
         private set
 
     //音频总时长
@@ -161,6 +167,12 @@ class MusicController(
                     musicInfo?.let {
                         startCache(it, settingsManager.getStatic())
                     }
+                }
+            }
+
+            override fun onMusicResourceConfigChanged() {
+                scope.launch {
+                    refreshPlaylistCoverMetadata()
                 }
             }
         })
@@ -222,6 +234,38 @@ class MusicController(
             }
 
         }
+    }
+
+    private fun refreshPlaylistCoverMetadata() {
+        if (originMusicList.isEmpty()) {
+            return
+        }
+        val controller = mediaController ?: return
+        val mediaItemList = originMusicList.map { item -> musicSetMediaItem(item) }
+        val playlistSize = mediaItemList.size
+        if (playlistSize == 0) {
+            return
+        }
+        val currentIndex = when {
+            controller.currentMediaItemIndex in 0 until playlistSize -> controller.currentMediaItemIndex
+            curOriginIndex in 0 until playlistSize -> curOriginIndex
+            else -> 0
+        }
+        val currentPosition = controller.currentPosition.coerceAtLeast(0L)
+        val shouldResumePlay = controller.isPlaying || state == PlayStateEnum.Playing
+        val shouldPause = !shouldResumePlay && state == PlayStateEnum.Pause
+
+        controller.replaceMediaItems(0, controller.mediaItemCount, mediaItemList)
+        controller.seekTo(currentIndex, currentPosition)
+
+        if (shouldResumePlay) {
+            thisPlay()
+        } else if (shouldPause) {
+            controller.prepare()
+            controller.pause()
+        }
+
+        coverRefreshVersion += 1
     }
 
     fun <T> splitListExcludeIndex(list: List<T>, index: Int): Pair<List<T>, List<T>> {
@@ -637,7 +681,7 @@ class MusicController(
         var mediaItemBuilder = MediaItem.Builder()
         val customCacheKey = downloadCacheController.getCacheKey(itemId)
         mediaItemBuilder.setCustomCacheKey(customCacheKey)
-        val pic = playMusic.pic
+        val pic = coverImageResolver.resolveMusic(playMusic).primaryUrl
 
         if (playMusic.filePath.isNullOrBlank()) {
             val transcodingAndMusicUrlInfo =
@@ -680,6 +724,7 @@ class MusicController(
         } else {
             val mediaMetadata = MediaMetadata.Builder()
                 .setTitle(playMusic.name)
+                .setArtworkUri(pic?.toUri())
                 .setArtist(playMusic.artists?.joinToString()) // 可以设置其他元数据信息，例如专辑、时长等
                 .build()
             mediaItemBuilder.setUri(playMusic.filePath?.toUri())

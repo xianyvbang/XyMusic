@@ -240,10 +240,10 @@ class SubsonicDatasourceServer(
                 try {
                     val albumInfo = subsonicApiClient.itemApi().getAlbumInfo2(albumId)
                     val albumInfo2ID3 = albumInfo.subsonicResponse.albumInfo
-                    album =  album.copy(
+                    album = album.copy(
                         pic = albumInfo2ID3?.smallImageUrl ?: albumInfo2ID3?.largeImageUrl ?: ""
                     )
-                }catch (e: Exception){
+                } catch (e: Exception) {
                     Log.e(Constants.LOG_ERROR_PREFIX, "获取专辑信息失败", e)
                 }
 
@@ -575,29 +575,19 @@ class SubsonicDatasourceServer(
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibrary(connectionId: Long) {
-        try {
-            db.withTransaction {
-                db.libraryDao.remove()
-                val musicFolders = subsonicApiClient.userViewsApi().getMusicFolders()
-                //存储历史记录
-                val libraries =
-                    musicFolders.subsonicResponse.musicFolders?.musicFolder?.map {
-                        XyLibrary(
-                            id = it.id,
-                            collectionType = CollectionType.MUSIC.serialName,
-                            name = it.name,
-                            connectionId = connectionId
-                        )
-                    }
-                if (!libraries.isNullOrEmpty()) {
-                    db.libraryDao.saveBatch(libraries)
-                }
+    override suspend fun selectMediaLibraryList(connectionId: Long): List<XyLibrary>? {
+        val musicFolders = subsonicApiClient.userViewsApi().getMusicFolders()
+        //存储历史记录
+        val libraries =
+            musicFolders.subsonicResponse.musicFolders?.musicFolder?.map {
+                XyLibrary(
+                    id = it.id,
+                    collectionType = CollectionType.MUSIC.serialName,
+                    name = it.name,
+                    connectionId = connectionId
+                )
             }
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        return libraries
     }
 
     /**

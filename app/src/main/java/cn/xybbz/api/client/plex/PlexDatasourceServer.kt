@@ -1001,41 +1001,36 @@ class PlexDatasourceServer(
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibrary(connectionId: Long) {
-        db.withTransaction {
-            db.libraryDao.remove()
-            val viewLibrary = plexApiClient.userViewsApi().getUserViews()
-            //存储历史记录
-            val libraries =
-                viewLibrary.mediaContainer?.directory?.filter { it.type == MetadatumType.Artist }
-                    ?.map {
-                        XyLibrary(
-                            id = it.key,
-                            collectionType = it.type.toString(),
-                            name = it.title,
-                            connectionId = connectionId
-                        )
-                    }
-            if (!libraries.isNullOrEmpty()) {
-                db.libraryDao.saveBatch(libraries)
-                if (libraries.isNotEmpty()) {
-                    val library = libraries[0]
-                    plexUpdateLibrary(
-                        libraryId = library.id,
+    override suspend fun selectMediaLibraryList(connectionId: Long): List<XyLibrary>? {
+        val viewLibrary = plexApiClient.userViewsApi().getUserViews()
+        //存储历史记录
+        val libraries =
+            viewLibrary.mediaContainer?.directory?.filter { it.type == MetadatumType.Artist }
+                ?.map {
+                    XyLibrary(
+                        id = it.key,
+                        collectionType = it.type.toString(),
+                        name = it.title,
+                        connectionId = connectionId
                     )
                 }
+        if (!libraries.isNullOrEmpty()) {
+            db.libraryDao.saveBatch(libraries)
+            if (libraries.isNotEmpty()) {
+                val library = libraries[0]
+                plexUpdateLibrary(
+                    libraryId = library.id,
+                )
             }
         }
+        return libraries
     }
 
     /**
      * plex初始化设置更新媒体库
      */
     private suspend fun plexUpdateLibrary(libraryId: String) {
-        if (!super.libraryIds.isNullOrEmpty()) {
-            return
-        }
-        setUpLibraryId(listOf(libraryId), true)
+        updateLocalLibraryId(listOf(libraryId))
     }
 
     /**

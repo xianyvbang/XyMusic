@@ -591,7 +591,10 @@ private fun ImageCover(
     musicController: MusicController,
     onSetColor: (Color?) -> Unit
 ) {
-    val coverUrls = rememberPlayMusicCoverUrls(musicController.musicInfo)
+    val coverUrls = rememberPlayMusicCoverUrls(
+        musicController.musicInfo,
+        musicController.coverRefreshVersion
+    )
 
     XyImage(
         modifier = Modifier

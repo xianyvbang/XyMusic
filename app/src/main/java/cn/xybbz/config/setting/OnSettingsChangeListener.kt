@@ -27,4 +27,6 @@ interface OnSettingsChangeListener {
     ){}
 
     fun onHandleAudioFocusChanged(ifHandleAudioFocus: Boolean){}
+
+    fun onMusicResourceConfigChanged(){}
 }

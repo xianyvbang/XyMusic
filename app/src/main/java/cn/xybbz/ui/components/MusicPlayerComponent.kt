@@ -201,7 +201,10 @@ fun MusicPlayerScreen(
     val cacheScheduleData by musicPlayerViewModel.downloadCacheController.cacheSchedule.collectAsStateWithLifecycle()
 
     val favoriteList by musicPlayerViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
-    val coverUrls = rememberPlayMusicCoverUrls(musicDetail)
+    val coverUrls = rememberPlayMusicCoverUrls(
+        musicDetail,
+        musicPlayerViewModel.musicController.coverRefreshVersion
+    )
 
     val coroutineScope = rememberCoroutineScope()
 

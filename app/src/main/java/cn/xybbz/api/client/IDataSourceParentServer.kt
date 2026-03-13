@@ -54,6 +54,7 @@ import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.count.XyDataCount
 import cn.xybbz.localdata.data.genre.XyGenre
+import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
@@ -937,6 +938,25 @@ abstract class IDataSourceParentServer(
         return artistInfo
     }
 
+    /**
+     * 获得媒体库列表
+     */
+    override suspend fun selectMediaLibrary(connectionId: Long) {
+        val libraryCount = db.libraryDao.selectLibraryCount(connectionId)
+        if (libraryCount <= 0)
+            db.withTransaction {
+                db.libraryDao.remove(connectionId)
+                val libraries =
+                    selectMediaLibraryList(connectionId)
+                if (!libraries.isNullOrEmpty()) {
+                    db.libraryDao.saveBatch(libraries)
+                }
+            }
+    }
+
+    //各个服务获得媒体库方法
+    abstract suspend fun selectMediaLibraryList(connectionId: Long): List<XyLibrary>?
+
 
     /**
      * 根据艺术家id获得艺术家列表
@@ -1209,9 +1229,9 @@ abstract class IDataSourceParentServer(
     suspend fun connection(connectionConfig: ConnectionConfig, ifAutoLogin: Boolean) {
         if (!ifAutoLogin)
             this.connectionConfig = connectionConfig
-        settingsManager.saveConnectionId(connectionId = connectionConfig.id, connectionConfig.type)
         selectMediaLibrary(connectionId = connectionConfig.id)
-        updateLibraryIds(connectionConfig.libraryIds, true)
+        updateLibraryIds(this.connectionConfig?.libraryIds, true)
+        settingsManager.saveConnectionId(connectionId = connectionConfig.id, connectionConfig.type)
         sendLoginCompleted(LoginStateType.SUCCESS)
     }
 
@@ -1228,6 +1248,14 @@ abstract class IDataSourceParentServer(
         ifLoginSet: Boolean = false
     ) {
         updateLibraryIds(libraryIds, ifLoginSet)
+        updateLocalLibraryId(libraryIds)
+    }
+
+    /**
+     * 更新本地媒体库数据
+     */
+    protected suspend fun updateLocalLibraryId(libraryIds: List<String>?) {
+        this.connectionConfig = this.connectionConfig?.copy(libraryIds = libraryIds)
         db.connectionConfigDao.updateLibraryId(
             libraryIds = libraryIds?.joinToString(LocalConstants.ARTIST_DELIMITER),
             connectionId = getConnectionId()

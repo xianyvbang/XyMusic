@@ -599,28 +599,22 @@ class EmbyDatasourceServer(
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibrary(connectionId: Long) {
-        db.withTransaction {
-            db.libraryDao.remove()
-            val viewLibrary = embyApiClient.userViewsApi().getUserViews(
-                userId = getUserId(),
-                ViewRequest().toStringMap()
-            )
-            //存储历史记录
-            val libraries =
-                viewLibrary.items.filter { it.collectionType == CollectionType.MUSIC }.map {
-                    XyLibrary(
-                        id = it.id,
-                        collectionType = it.collectionType.toString(),
-                        name = it.name.toString(),
-                        connectionId = connectionId
-                    )
-                }
-            if (libraries.isNotEmpty()) {
-                db.libraryDao.saveBatch(libraries)
+    override suspend fun selectMediaLibraryList(connectionId: Long): List<XyLibrary> {
+        val viewLibrary = embyApiClient.userViewsApi().getUserViews(
+            userId = getUserId(),
+            ViewRequest().toStringMap()
+        )
+        //存储历史记录
+        val libraries =
+            viewLibrary.items.filter { it.collectionType == CollectionType.MUSIC }.map {
+                XyLibrary(
+                    id = it.id,
+                    collectionType = it.collectionType.toString(),
+                    name = it.name.toString(),
+                    connectionId = connectionId
+                )
             }
-        }
-
+        return libraries
     }
 
     /**

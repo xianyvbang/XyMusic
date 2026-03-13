@@ -516,7 +516,7 @@ class JellyfinDatasourceServer(
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibrary(connectionId: Long) {
+    override suspend fun selectMediaLibraryList(connectionId: Long): List<XyLibrary>? {
         val viewLibrary = jellyfinApiClient.userViewsApi().getUserViews(
             ViewRequest(
 //                    includeExternalContent = false,
@@ -533,12 +533,7 @@ class JellyfinDatasourceServer(
                     connectionId = connectionId
                 )
             }
-        if (libraries.isNotEmpty()) {
-            db.withTransaction {
-                db.libraryDao.remove()
-                db.libraryDao.saveBatch(libraries)
-            }
-        }
+        return libraries
     }
 
     /**
