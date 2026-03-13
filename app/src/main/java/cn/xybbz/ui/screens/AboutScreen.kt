@@ -18,7 +18,6 @@
 
 package cn.xybbz.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,21 +39,18 @@ import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.ProgressIndicatorDefaults.drawStopIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -86,6 +82,7 @@ import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.AboutViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.launch
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 
 @OptIn(
@@ -176,7 +173,8 @@ fun AboutScreen(
                             R.string.new_version_detected
                         )
                     }:${aboutViewModel.apkUpdateManager.latestVersion}",
-                    ifOpenBadge = !aboutViewModel.apkUpdateManager.ifMaxVersion
+                    ifOpenBadge = !aboutViewModel.apkUpdateManager.ifMaxVersion,
+                    enabled = false
                 ) {
                     coroutineScope.launch {
                         val initLatestVersion =
