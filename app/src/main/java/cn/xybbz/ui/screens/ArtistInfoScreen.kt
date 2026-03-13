@@ -89,6 +89,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -624,12 +625,13 @@ fun ArtistInfoScreen(
                                 .drawBehind {
                                     drawRect(
                                         brush = Brush.verticalGradient(
-                                            colors = listOf(
-                                                Color.Transparent,
-                                                pageBackgroundColor
+                                            colorStops = arrayOf(
+                                                0.00f to Color.Transparent,
+                                                1.00f to pageBackgroundColor
                                             ),
                                             startY = 0f,
-                                            endY = size.height
+                                            endY = size.height,
+                                            tileMode = TileMode.Repeated
                                         ),
                                         blendMode = BlendMode.SrcOver
                                     )
