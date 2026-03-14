@@ -141,7 +141,6 @@ import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.ArtistInfoViewModel
 import kotlinx.coroutines.launch
 import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.roundToInt
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
@@ -184,8 +183,6 @@ fun ArtistInfoScreen(
 
     // 渐变高度占图片高度的比例（原 0.4f，降低为一半）
     val gradientHeight = 0.3f
-    val imageOffsetDp =
-        DefaultImageHeight
     val density = LocalDensity.current
 
     val tabHeightDp = XyTheme.dimens.itemHeight * 0.6f
@@ -222,12 +219,8 @@ fun ArtistInfoScreen(
 
     val current by remember {
         derivedStateOf {
-            val maxScrollPx = with(density) { imageOffsetDp.toPx() } // 最大滚动距离
-            val scrollOffset = min(
-                parentState.firstVisibleItemIndex * 1000 + parentState.firstVisibleItemScrollOffset.toFloat(),
-                maxScrollPx
-            )
-            (scrollOffset / maxScrollPx).coerceIn(0f, 1f)
+            val collapseRangePx = (defaultImageHeightPx - topBarBottomPx).coerceAtLeast(1f)
+            ((collapseRangePx - distanceToTopBarBottomPx) / collapseRangePx).coerceIn(0f, 1f)
         }
     }
     //是否文本描述超过最大行数
