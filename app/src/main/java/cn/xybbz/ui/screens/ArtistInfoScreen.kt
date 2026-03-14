@@ -295,7 +295,10 @@ fun ArtistInfoScreen(
         label = "artist_topbar_alpha"
     )
     val topBarBackgroundAlpha by animateFloatAsState(
-        targetValue = ((gradientHeightPx - distanceToTopBarBottomPx) / gradientHeightPx).coerceIn(0f, 1f),
+        targetValue = ((gradientHeightPx - distanceToTopBarBottomPx) / gradientHeightPx).coerceIn(
+            0f,
+            1f
+        ),
         animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
         label = "artist_topbar_background_alpha"
     )
@@ -626,10 +629,8 @@ fun ArtistInfoScreen(
                                     drawRect(
                                         brush = Brush.verticalGradient(
                                             colorStops = arrayOf(
-//                                                0.00f to topOverlayColor.copy(topBarAlpha),
                                                 0.00f to Color.Transparent,
-//                                                1.00f to pageBackgroundColor
-                                                1.00f to pageBackgroundColor.copy(1-topBarAlpha)
+                                                1.00f to pageBackgroundColor.copy(1 - topBarAlpha)
                                             ),
                                             startY = 0f,
                                             endY = size.height,
@@ -639,52 +640,52 @@ fun ArtistInfoScreen(
                                     )
 
                                 })
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(DefaultImageHeight.times(0.2f))
-                    .align(Alignment.BottomCenter)
-                    .padding(horizontal = XyTheme.dimens.outerHorizontalPadding)
-                    .graphicsLayer {
-                        translationY = headerTitleTranslationY
-                    }
-            ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(DefaultImageHeight.times(0.2f))
+                                .align(Alignment.BottomCenter)
+                                .padding(horizontal = XyTheme.dimens.outerHorizontalPadding)
+                                .graphicsLayer {
+                                    translationY = headerTitleTranslationY
+                                }
+                        ) {
 
-                BasicText(
-                    text = artistName(),
-                    modifier = Modifier
-                        .basicMarquee(
-                            iterations = Int.MAX_VALUE
-                        )
-                        .graphicsLayer {
-                            alpha = headerTitleAlpha
-                        },
-                    color = {
-                        Color.White.copy(alpha = headerTitleAlpha)
-                    },
-                    style = LocalTextStyle.current.copy(fontSize = 30.sp)
+                            BasicText(
+                                text = artistName(),
+                                modifier = Modifier
+                                    .basicMarquee(
+                                        iterations = Int.MAX_VALUE
+                                    )
+                                    .graphicsLayer {
+                                        alpha = headerTitleAlpha
+                                    },
+                                color = {
+                                    Color.White.copy(alpha = headerTitleAlpha)
+                                },
+                                style = LocalTextStyle.current.copy(fontSize = 30.sp)
 
-                )
-                Spacer(modifier = Modifier.height(XyTheme.dimens.corner))
-                BasicText(
-                    text = artistInfoViewModel.artistDescribe
-                        ?: stringResource(R.string.no_description),
-                    modifier = Modifier
-                        .graphicsLayer {
-                            translationY = headerDescriptionTranslationY
-                            alpha = headerDescriptionAlpha
-                        }
-                        .debounceClickable(enabled = isOverflow) {
-                            ifOpenDescribe = true
-                        },
-                    color = {
-                        Color.White.copy(alpha = headerDescriptionAlpha)
-                    },
-                    style = MaterialTheme.typography.titleSmall.copy(lineHeight = 15.sp),
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                    onTextLayout = { textLayoutResult ->
+                            )
+                            Spacer(modifier = Modifier.height(XyTheme.dimens.corner))
+                            BasicText(
+                                text = artistInfoViewModel.artistDescribe
+                                    ?: stringResource(R.string.no_description),
+                                modifier = Modifier
+                                    .graphicsLayer {
+                                        translationY = headerDescriptionTranslationY
+                                        alpha = headerDescriptionAlpha
+                                    }
+                                    .debounceClickable(enabled = isOverflow) {
+                                        ifOpenDescribe = true
+                                    },
+                                color = {
+                                    Color.White.copy(alpha = headerDescriptionAlpha)
+                                },
+                                style = MaterialTheme.typography.titleSmall.copy(lineHeight = 15.sp),
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis,
+                                onTextLayout = { textLayoutResult ->
                                     // 是否超过最大行数
                                     isOverflow = textLayoutResult.hasVisualOverflow
                                 }
