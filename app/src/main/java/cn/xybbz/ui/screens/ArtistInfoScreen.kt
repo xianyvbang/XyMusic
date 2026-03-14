@@ -193,10 +193,11 @@ fun ArtistInfoScreen(
     val gradientHeightPx = with(density) { (DefaultImageHeight * gradientHeight).toPx() }
     val topBarBottomPx = with(density) {
         (
-                TopAppBarDefaults.TopAppBarExpandedHeight +
-                        WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+            TopAppBarDefaults.TopAppBarExpandedHeight +
+                    WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
                 ).toPx()
     }
+    val collapseRangePx = (defaultImageHeightPx - topBarBottomPx).coerceAtLeast(1f)
 
     var pullDownOffsetPx by remember { mutableFloatStateOf(0f) }
     val isParentAtTop by remember {
@@ -212,14 +213,13 @@ fun ArtistInfoScreen(
             when {
                 item2OffsetPx != null -> item2OffsetPx - topBarBottomPx
                 parentState.firstVisibleItemIndex > 2 -> 0f
-                else -> gradientHeightPx + 1f
+                else -> collapseRangePx + 1f
             }
         }
     }
 
     val current by remember {
         derivedStateOf {
-            val collapseRangePx = (defaultImageHeightPx - topBarBottomPx).coerceAtLeast(1f)
             ((collapseRangePx - distanceToTopBarBottomPx) / collapseRangePx).coerceIn(0f, 1f)
         }
     }
