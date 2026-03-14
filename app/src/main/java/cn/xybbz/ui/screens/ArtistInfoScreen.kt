@@ -187,10 +187,23 @@ fun ArtistInfoScreen(
 
     val tabHeightDp = XyTheme.dimens.itemHeight * 0.6f
     val pageBackgroundColor = MaterialTheme.colorScheme.background
+    val headerTextLiftOffsetDp = 8.dp
     val pullDownResistanceDistancePx = with(density) { (DefaultImageHeight * 0.8f).toPx() }
     val defaultImageHeightPx = with(density) { DefaultImageHeight.toPx() }
     val listLiftUpOffsetPx = with(density) { (DefaultImageHeight * 0.12f).toPx() }
-    val gradientHeightPx = with(density) { (DefaultImageHeight * gradientHeight).toPx() }
+    val gradientVisualHeightDp = DefaultImageHeight * gradientHeight
+    val gradientVisualHeightPx = with(density) { gradientVisualHeightDp.toPx() }
+    val headerInfoMinHeightPx = with(density) {
+        val titleHeightPx = 30.sp.toPx()
+        val titleAndDescGapPx = XyTheme.dimens.corner.toPx()
+        val descriptionHeightPx = 15.sp.toPx() * 3f
+        val safetyPaddingPx = (XyTheme.dimens.corner * 2f).toPx()
+        titleHeightPx + titleAndDescGapPx + descriptionHeightPx + safetyPaddingPx
+    }
+    val headerReservedHeightPx = max(gradientVisualHeightPx, headerInfoMinHeightPx)
+    val headerReservedHeightDp = with(density) { headerReservedHeightPx.toDp() }
+    val headerReservedExtraPx = (headerReservedHeightPx - gradientVisualHeightPx).coerceAtLeast(0f)
+    val gradientHeightPx = gradientVisualHeightPx
     val topBarBottomPx = with(density) {
         (
             TopAppBarDefaults.TopAppBarExpandedHeight +
@@ -211,16 +224,25 @@ fun ArtistInfoScreen(
             val item2OffsetPx =
                 parentState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == 2 }?.offset?.toFloat()
             when {
-                item2OffsetPx != null -> item2OffsetPx - topBarBottomPx
+                item2OffsetPx != null -> item2OffsetPx - topBarBottomPx - headerReservedExtraPx
                 parentState.firstVisibleItemIndex > 2 -> 0f
                 else -> collapseRangePx + 1f
             }
         }
     }
 
-    val current by remember {
+    val rawCollapseProgress by remember {
         derivedStateOf {
             ((collapseRangePx - distanceToTopBarBottomPx) / collapseRangePx).coerceIn(0f, 1f)
+        }
+    }
+    val current by remember {
+        derivedStateOf {
+            if (isParentAtTop && !parentState.isScrollInProgress && pullDownOffsetPx == 0f) {
+                0f
+            } else {
+                rawCollapseProgress
+            }
         }
     }
     //是否文本描述超过最大行数
@@ -613,7 +635,7 @@ fun ArtistInfoScreen(
                             .offset {
                                 IntOffset(0, listPullDownTranslationY.roundToInt())
                             }
-                            .height(DefaultImageHeight.times(gradientHeight))
+                            .height(gradientVisualHeightDp)
                             .graphicsLayer {
                                 alpha = topGradientBoxAlpha
                             }
@@ -623,7 +645,7 @@ fun ArtistInfoScreen(
                             modifier = Modifier
                                 .align(alignment = Alignment.BottomCenter)
                                 .fillMaxWidth()
-                                .height(DefaultImageHeight.times(gradientHeight))
+                                .height(gradientVisualHeightDp)
                                 .drawBehind {
                                     drawRect(
                                         brush = Brush.verticalGradient(
@@ -643,7 +665,8 @@ fun ArtistInfoScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(DefaultImageHeight.times(0.2f))
+                                .height(headerReservedHeightDp)
+                                .offset(y = -headerTextLiftOffsetDp)
                                 .align(Alignment.BottomCenter)
                                 .padding(horizontal = XyTheme.dimens.outerHorizontalPadding)
                                 .graphicsLayer {
