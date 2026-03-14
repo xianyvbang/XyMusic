@@ -144,7 +144,7 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
-internal val DefaultImageHeight = 350.dp
+internal val DefaultImageHeight = 320.dp
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -288,7 +288,7 @@ fun ArtistInfoScreen(
         label = "artist_topbar_alpha"
     )
     val gradientFadeProgress by animateFloatAsState(
-        targetValue = rangeProgress(collapseProgress, start = 0.03f, end = 0.6f),
+        targetValue = ((collapseProgress * collapseRangePx) / gradientHeightPx).coerceIn(0f, 1f),
         animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
         label = "artist_gradient_fade_progress"
     )
