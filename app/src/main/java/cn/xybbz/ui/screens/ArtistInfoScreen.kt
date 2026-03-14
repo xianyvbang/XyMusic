@@ -287,8 +287,9 @@ fun ArtistInfoScreen(
         animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
         label = "artist_topbar_alpha"
     )
+    val gradientFadeDistancePx = gradientHeightPx * 2f
     val gradientFadeProgress by animateFloatAsState(
-        targetValue = ((collapseProgress * collapseRangePx) / gradientHeightPx).coerceIn(0f, 1f),
+        targetValue = ((collapseProgress * collapseRangePx) / gradientFadeDistancePx).coerceIn(0f, 1f),
         animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
         label = "artist_gradient_fade_progress"
     )
