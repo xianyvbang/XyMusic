@@ -591,13 +591,21 @@ private fun ImageCover(
     musicController: MusicController,
     onSetColor: (Color?) -> Unit
 ) {
-    val coverUrls = rememberPlayMusicCoverUrls(musicController.musicInfo)
+    val coverUrls = rememberPlayMusicCoverUrls(
+        musicController.musicInfo,
+        musicController.coverRefreshVersion
+    )
+    val primaryCoverModel = coverUrls.primaryUrl
+    val fallbackCoverModel = coverUrls.fallbackUrl
+    val byteCoverModel = musicController.picByte
+    val activeCoverModel = primaryCoverModel ?: fallbackCoverModel ?: byteCoverModel
+    val backupCoverModel = if (activeCoverModel == byteCoverModel) null else byteCoverModel
 
     XyImage(
         modifier = Modifier
             .size(XyTheme.dimens.snackBarPlayerHeight),
-        model = coverUrls.primaryUrl ?: musicController.picByte,
-        backModel = coverUrls.fallbackUrl ?: musicController.picByte,
+        model = activeCoverModel,
+        backModel = backupCoverModel,
         placeholder = painterResource(R.drawable.music_xy_placeholder_foreground),
         error = painterResource(R.drawable.music_xy_placeholder_foreground),
         fallback = painterResource(R.drawable.music_xy_placeholder_foreground),
@@ -608,9 +616,12 @@ private fun ImageCover(
             bitmap?.let {
                 val scaledBitmap = bitmap.scale(200, 200, false)
                 Palette.from(scaledBitmap).generate { palette ->
-                    val color =
-                        palette?.darkMutedSwatch?.rgb?.let { colorValue -> Color(colorValue) }
-                    onSetColor.invoke(color)
+                    val colorValue = palette?.darkMutedSwatch?.rgb
+                        ?: palette?.mutedSwatch?.rgb
+                        ?: palette?.darkVibrantSwatch?.rgb
+                        ?: palette?.vibrantSwatch?.rgb
+                        ?: palette?.dominantSwatch?.rgb
+                    onSetColor.invoke(colorValue?.let { Color(it) } ?: Color.Transparent)
                 }
             }
         },

@@ -32,7 +32,6 @@ import cn.xybbz.api.state.Source
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.common.enums.HomeRefreshReason
-import cn.xybbz.common.enums.LoginStateType
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.DataRefreshEstimateUtils
@@ -253,10 +252,11 @@ class HomeViewModel @OptIn(UnstableApi::class)
     ) {
         val connectionId = dataSourceManager.getConnectionId()
         val key = RemoteIdConstants.HOME_REFRESH + connectionId
-        if (!DataRefreshEstimateUtils.shouldRefresh(reason, db, key)) {
+        //todo 创建的有问题 所以没有刷新
+        /*if (!DataRefreshEstimateUtils.shouldRefresh(reason, db, key)) {
             onEnd?.invoke(false)
             return
-        }
+        }*/
         refreshDataAll(onEnd, isRefresh)
         DataRefreshEstimateUtils.updateHomeRefreshTime(connectionId, db, key)
     }

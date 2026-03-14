@@ -442,6 +442,9 @@ class SettingsManager(
                 db.settingsDao.save(XySettings(ifPriorityMusicApi = ifPriorityMusicApi))
             settings = get().copy(id = settingId)
         }
+        for (listener in onSettingsChangeListeners.toList()) {
+            listener.onMusicResourceConfigChanged()
+        }
     }
 
     /**
@@ -492,6 +495,9 @@ class SettingsManager(
             val settingId =
                 db.settingsDao.save(XySettings(customCoverApi = customCoverApi))
             settings = get().copy(id = settingId)
+        }
+        for (listener in onSettingsChangeListeners.toList()) {
+            listener.onMusicResourceConfigChanged()
         }
     }
 

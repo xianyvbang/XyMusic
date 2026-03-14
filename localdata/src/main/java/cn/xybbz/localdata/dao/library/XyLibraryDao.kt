@@ -13,11 +13,14 @@ interface XyLibraryDao {
     @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun saveBatch(data: List<XyLibrary>)
 
-    @Query("delete from xy_library where connectionId = (select connectionId from xy_settings)")
-    suspend fun remove()
+    @Query("delete from xy_library where connectionId = :connectionId")
+    suspend fun remove(connectionId:Long)
 
     @Query("select * from xy_library where connectionId = (select connectionId from xy_settings)")
     suspend fun selectListByDataSourceType(): List<XyLibrary>
+
+    @Query("select count(id) from xy_library where connectionId = :connectionId")
+    suspend fun selectLibraryCount(connectionId:Long): Int
 
     @Query("select * from xy_library where connectionId = :connectionId")
     suspend fun selectListByConnectionId(connectionId: Long): List<XyLibrary>

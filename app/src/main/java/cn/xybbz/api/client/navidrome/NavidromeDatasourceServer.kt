@@ -428,7 +428,7 @@ class NavidromeDatasourceServer(
             album = album.copy(
                 pic = albumInfo2ID3?.smallImageUrl ?: albumInfo2ID3?.largeImageUrl ?: ""
             )
-        }catch (e: Exception){
+        } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获取专辑信息失败", e)
         }
 
@@ -633,26 +633,21 @@ class NavidromeDatasourceServer(
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibrary(connectionId: Long) {
-        db.withTransaction {
-            db.libraryDao.remove()
-            val viewLibrary = navidromeApiClient.userViewsApi().getUserViews(
-                userId = getUserId()
-            )
-            //存储历史记录
-            val libraries =
-                viewLibrary.libraries?.map {
-                    XyLibrary(
-                        id = it.id?.toString() ?: "",
-                        collectionType = CollectionType.MUSIC.toString(),
-                        name = it.name.toString(),
-                        connectionId = connectionId
-                    )
-                } ?: emptyList()
-            if (libraries.isNotEmpty()) {
-                db.libraryDao.saveBatch(libraries)
+    override suspend fun selectMediaLibraryList(connectionId: Long): List<XyLibrary>? {
+        val viewLibrary = navidromeApiClient.userViewsApi().getUserViews(
+            userId = getUserId()
+        )
+        //存储历史记录
+        val libraries =
+            viewLibrary.libraries?.map {
+                XyLibrary(
+                    id = it.id?.toString() ?: "",
+                    collectionType = CollectionType.MUSIC.toString(),
+                    name = it.name.toString(),
+                    connectionId = connectionId
+                )
             }
-        }
+        return libraries
     }
 
     /**

@@ -151,10 +151,10 @@ fun rememberMusicCoverUrls(music: XyMusic?): CoverImageUrls {
 }
 
 @Composable
-fun rememberPlayMusicCoverUrls(music: XyPlayMusic?): CoverImageUrls {
+fun rememberPlayMusicCoverUrls(music: XyPlayMusic?, refreshKey: Any? = null): CoverImageUrls {
     val resolver = rememberCoverImageResolver()
     val artists = music?.artists?.joinToString("/")
-    return remember(music?.itemId, music?.pic, music?.name, artists) {
+    return remember(music?.itemId, music?.pic, music?.name, artists, refreshKey) {
         resolver.resolveMusic(music)
     }
 }
@@ -191,7 +191,7 @@ private fun rememberCoverImageResolver(): CoverImageResolver {
     }
 }
 
-private fun Context.coverImageResolver(): CoverImageResolver {
+fun Context.coverImageResolver(): CoverImageResolver {
     return EntryPointAccessors.fromApplication(this, CoverImageEntryPoint::class.java)
         .coverImageResolver()
 }
