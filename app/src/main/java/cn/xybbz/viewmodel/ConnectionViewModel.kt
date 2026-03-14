@@ -18,6 +18,7 @@
 
 package cn.xybbz.viewmodel
 
+import android.R.attr.port
 import android.content.Context
 import android.util.Log
 import android.webkit.URLUtil
@@ -119,6 +120,8 @@ class ConnectionViewModel @Inject constructor(
     }
 
     suspend fun inputAddress(application: Context) {
+        address = normalizeInputText(address)
+        username = normalizeInputText(username)
 
         val tmpDatasource = dataSourceType ?: return
 
@@ -173,11 +176,11 @@ class ConnectionViewModel @Inject constructor(
     }
 
     fun setAddressData(address: String) {
-        this.address = address
+        this.address = normalizeInputText(address)
     }
 
     fun setUserNameData(username: String) {
-        this.username = username
+        this.username = normalizeInputText(username)
     }
 
     fun setPasswordData(password: String) {
@@ -259,9 +262,14 @@ class ConnectionViewModel @Inject constructor(
      * 判断链接地址是否有端口号结尾
      */
     private fun isEndPort(address: String): Boolean {
-        val uri = URI(address)
-        val port = uri.port
-        return port != -1
+        try {
+            val uri = URI(address)
+            val port = uri.port
+            return port != -1
+        }catch (e: Exception){
+            Log.i(Constants.LOG_ERROR_PREFIX,"是否有结束地址端口报错",e)
+            return false
+        }
     }
 
     /**
@@ -367,5 +375,13 @@ class ConnectionViewModel @Inject constructor(
 
     fun updateIfConnectionConfig() {
         settingsManager.updateIfConnectionConfig(true)
+    }
+
+    private fun normalizeInputText(value: String): String {
+        return value.replace(INVISIBLE_CHAR_REGEX, "").trim()
+    }
+
+    private companion object {
+        val INVISIBLE_CHAR_REGEX = Regex("[\\u200B-\\u200D\\uFEFF]")
     }
 }
