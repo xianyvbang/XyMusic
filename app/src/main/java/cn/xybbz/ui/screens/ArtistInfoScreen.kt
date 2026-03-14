@@ -294,6 +294,11 @@ fun ArtistInfoScreen(
         animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
         label = "artist_topbar_alpha"
     )
+    val gradientFadeProgress by animateFloatAsState(
+        targetValue = rangeProgress(collapseProgress, start = 0.03f, end = 0.6f),
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_gradient_fade_progress"
+    )
     val topBarBackgroundAlpha by animateFloatAsState(
         targetValue = ((gradientHeightPx - distanceToTopBarBottomPx) / gradientHeightPx).coerceIn(
             0f,
@@ -630,7 +635,7 @@ fun ArtistInfoScreen(
                                         brush = Brush.verticalGradient(
                                             colorStops = arrayOf(
                                                 0.00f to Color.Transparent,
-                                                1.00f to pageBackgroundColor.copy(1 - topBarAlpha)
+                                                1.00f to pageBackgroundColor.copy(alpha = (1f - gradientFadeProgress).coerceIn(0f, 1f))
                                             ),
                                             startY = 0f,
                                             endY = size.height,
