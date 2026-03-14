@@ -183,7 +183,7 @@ fun ArtistInfoScreen(
     val parentState = rememberLazyListState()
 
     // 渐变高度占图片高度的比例（原 0.4f，降低为一半）
-    val gradientHeight = 0.2f
+    val gradientHeight = 0.3f
     val imageOffsetDp =
         DefaultImageHeight
     val density = LocalDensity.current
@@ -626,8 +626,10 @@ fun ArtistInfoScreen(
                                     drawRect(
                                         brush = Brush.verticalGradient(
                                             colorStops = arrayOf(
+//                                                0.00f to topOverlayColor.copy(topBarAlpha),
                                                 0.00f to Color.Transparent,
-                                                1.00f to pageBackgroundColor
+//                                                1.00f to pageBackgroundColor
+                                                1.00f to pageBackgroundColor.copy(1-topBarAlpha)
                                             ),
                                             startY = 0f,
                                             endY = size.height,
