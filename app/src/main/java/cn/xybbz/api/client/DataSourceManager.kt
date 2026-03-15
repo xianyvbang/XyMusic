@@ -42,7 +42,6 @@ import cn.xybbz.common.enums.LoginStateType
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
-import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.common.utils.PlaylistParser
@@ -55,9 +54,7 @@ import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.config.DatabaseClient
-import cn.xybbz.localdata.data.album.FavoriteAlbum
 import cn.xybbz.localdata.data.album.XyAlbum
-import cn.xybbz.localdata.data.artist.FavoriteArtist
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.connection.ConnectionConfig
@@ -1123,63 +1120,13 @@ open class DataSourceManager(
     suspend fun setFavoriteData(
         type: MusicTypeEnum,
         itemId: String,
-        musicController: MusicController? = null,
         ifFavorite: Boolean
     ): Boolean {
-
-        val favorite = if (ifFavorite) {
-            unmarkFavoriteItem(itemId = itemId, type)
-        } else {
-            markFavoriteItem(itemId = itemId, type)
-        }
-
-        if (favorite != ifFavorite)
-            when (type) {
-                MusicTypeEnum.MUSIC -> {
-                    if (musicController?.musicInfo?.itemId == itemId) {
-                        musicController.updateCurrentFavorite(favorite)
-                    }
-                    db.musicDao.updateFavoriteByItemId(
-                        favorite,
-                        itemId,
-                        dataSourceServer.getConnectionId()
-                    )
-                }
-
-                MusicTypeEnum.ALBUM -> {
-                    //判断数据是否存在,如果存在则更新,否则新增
-                    val favoriteCount = db.albumDao.selectFavoriteCount(itemId)
-                    if (favoriteCount <= 0) {
-                        db.albumDao.saveFavoriteAlbum(
-                            FavoriteAlbum(
-                                albumId = itemId,
-                                connectionId = dataSourceServer.getConnectionId(),
-                                ifFavorite = favorite
-                            )
-                        )
-                    } else {
-                        //更新数据
-                        db.albumDao.updateFavoriteByItemId(favorite, itemId)
-                    }
-                }
-
-                MusicTypeEnum.ARTIST -> {
-                    val favoriteCount = db.artistDao.selectFavoriteCount(itemId)
-                    if (favoriteCount <= 0) {
-                        db.artistDao.saveFavoriteArtist(
-                            FavoriteArtist(
-                                artistId = itemId,
-                                connectionId = dataSourceServer.getConnectionId(),
-                                ifFavorite = favorite
-                            )
-                        )
-                    } else {
-                        db.artistDao.updateFavoriteByItemId(favorite, itemId)
-                    }
-                }
-            }
-
-        return favorite
+        return dataSourceServer.setFavoriteData(
+            type = type,
+            itemId = itemId,
+            ifFavorite = ifFavorite
+        )
     }
 
 

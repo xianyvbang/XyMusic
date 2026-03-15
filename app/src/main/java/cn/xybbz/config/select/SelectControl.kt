@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.OperationTipUtils
@@ -129,11 +130,12 @@ class SelectControl(val application: Context) {
                     loadingObject.updateProgress(0.0f, 0)
                     selectMusicIdList
                         .forEachIndexed { index, musicId ->
-                            dataSourceManager.setFavoriteData(
-                                MusicTypeEnum.MUSIC,
-                                musicId,
-                                musicController,
-                                true
+                            FavoriteCoordinator.setFavoriteData(
+                                dataSourceManager = dataSourceManager,
+                                type = MusicTypeEnum.MUSIC,
+                                itemId = musicId,
+                                ifFavorite = true,
+                                musicController = musicController
                             )
                             loadingObject.updateProgress(
                                 (index * 1.0f + 1.0f) / selectMusicIdList.size,

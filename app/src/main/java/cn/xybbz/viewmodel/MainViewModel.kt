@@ -38,6 +38,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.api.events.ReLoginEvent
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.MusicTypeEnum
@@ -270,11 +271,12 @@ class MainViewModel @Inject constructor(
 
     fun onFavoriteMusic(musicId: String) {
         viewModelScope.launch {
-            dataSourceManager.setFavoriteData(
+            FavoriteCoordinator.setFavoriteData(
+                dataSourceManager = dataSourceManager,
                 type = MusicTypeEnum.MUSIC,
                 itemId = musicId,
-                musicController = musicController,
-                ifFavorite = db.musicDao.selectIfFavoriteByMusic(musicId)
+                ifFavorite = db.musicDao.selectIfFavoriteByMusic(musicId),
+                musicController = musicController
             )
         }
     }
