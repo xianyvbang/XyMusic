@@ -46,7 +46,7 @@ interface UserApi : BaseApi {
     /**
      * 上报播放进度
      */
-    @POST("/emby/Sessions/Playing/Progress")
+    @POST("/Sessions/Playing/Progress")
     suspend fun progress(@Body data: PlaybackStartInfo)
 
 }
