@@ -436,14 +436,6 @@ interface IDataSourceServer : AutoCloseable {
      * @return true->删除成功,false->删除失败
      */
     suspend fun removeById(musicId: String): Boolean
-
-    /**
-     * 批量删除数据
-     * 按 ID 删除
-     * @param [musicIds] 需要删除数据的
-     * @return [Boolean?]
-     */
-    suspend fun removeByIds(musicIds: List<String>): Boolean
     // endregion
 
     // region 播放与上报

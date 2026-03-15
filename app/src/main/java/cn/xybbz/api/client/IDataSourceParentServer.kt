@@ -1060,6 +1060,14 @@ abstract class IDataSourceParentServer(
         }.flow
     }
 
+    /**
+     * 批量删除数据
+     * 按 ID 删除
+     * @param [musicIds] 需要删除数据的
+     * @return [Boolean?]
+     */
+    abstract suspend fun removeByIds(musicIds: List<String>): Boolean
+
     //各个服务获得媒体库方法
     abstract suspend fun selectMediaLibraryList(connectionId: Long): List<XyLibrary>?
 
@@ -1194,13 +1202,6 @@ abstract class IDataSourceParentServer(
         if (text.isBlank()) return null
         return Pinyin.toPinyin(text[0])
 
-    }
-
-    /**
-     * 获得登录成功flow
-     */
-    fun getLoginStateFlow(): SharedFlow<LoginStateType> {
-        return loginSuccessEvent
     }
 
     /**

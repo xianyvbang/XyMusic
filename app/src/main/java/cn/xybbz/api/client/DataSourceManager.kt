@@ -74,8 +74,6 @@ import coil.ImageLoader
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
@@ -131,7 +129,7 @@ open class DataSourceManager(
         dataSourceServerFlow
             .filterNotNull()
             .flatMapLatest { server ->
-                Log.i("home","数据变化 ${server.mediaLibraryIdFlow.value}")
+                Log.i("home", "数据变化 ${server.mediaLibraryIdFlow.value}")
                 server.mediaLibraryIdFlow.drop(1)
             }.distinctUntilChanged()
 
@@ -142,15 +140,6 @@ open class DataSourceManager(
         taggedLoginFlow,
         taggedMediaFlow
     ).filter { (it is Source.Login && it.value != LoginStateType.UNKNOWN) || (it is Source.Library /*&& it.value != null*/) }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val combinedFlow: Flow<Pair<LoginStateType, String?>> =
-        combine(
-            loginStateFlow,
-            mediaLibraryIdFlow
-        ) { loginState, mediaIds ->
-            loginState to mediaIds
-        }.filter { it.first != LoginStateType.UNKNOWN }
 
 
     //加载状态
@@ -480,21 +469,6 @@ open class DataSourceManager(
     }
 
     /**
-     * 批量删除数据
-     * 按 ID 删除
-     * @param [musicIds] 需要删除数据的
-     * @return [Boolean?]
-     */
-    override suspend fun removeByIds(musicIds: List<String>): Boolean {
-        return try {
-            dataSourceServer.removeByIds(musicIds)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false
-        }
-    }
-
-    /**
      * 获得专辑信息
      * @param [albumId] 专辑id
      * @return 专辑+艺术家信息
@@ -518,7 +492,6 @@ open class DataSourceManager(
 
     }
 
-    //todo 这里需要修改不应该在这里设置图片地址
     override suspend fun selectMusicInfoById(itemId: String): XyMusic? {
         return try {
             dataSourceServer.selectMusicInfoById(itemId)
@@ -1195,13 +1168,6 @@ open class DataSourceManager(
     }
 
     /**
-     * 获得登录成功flow
-     */
-    fun getLoginStateFlow(): SharedFlow<LoginStateType> {
-        return dataSourceServer.getLoginStateFlow()
-    }
-
-    /**
      * 设置收藏音乐信息
      */
     @Transaction
@@ -1274,7 +1240,7 @@ open class DataSourceManager(
      */
     @Transaction
     suspend fun removeMusicById(musicId: String) {
-        OperationTipUtils.operationTipNotToBlock() {
+        OperationTipUtils.operationTipNotToBlock {
             val bool = removeById(musicId)
             db.musicDao.removeByItemId(musicId)
             bool
@@ -1287,8 +1253,13 @@ open class DataSourceManager(
      */
     @Transaction
     suspend fun removeMusicByIds(musicIds: List<String>): Boolean {
-        return OperationTipUtils.operationTipNotToBlock() {
-            val bool = removeByIds(musicIds)
+        return OperationTipUtils.operationTipNotToBlock {
+            val bool = try {
+                dataSourceServer.removeByIds(musicIds)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                false
+            }
             db.musicDao.removeByItemIds(musicIds)
             bool
         }
