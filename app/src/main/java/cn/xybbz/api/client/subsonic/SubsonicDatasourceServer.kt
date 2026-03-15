@@ -807,16 +807,6 @@ class SubsonicDatasourceServer(
         return transitionMusicExtend(items)
     }
 
-
-    /**
-     * 释放
-     */
-    override fun close() {
-        super.close()
-        subsonicApiClient.release()
-    }
-
-
     /**
      * 获取远程服务器的专辑和歌单音乐列表
      * @param [startIndex] 开始索引

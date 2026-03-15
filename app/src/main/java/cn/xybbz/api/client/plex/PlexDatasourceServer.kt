@@ -1331,14 +1331,6 @@ class PlexDatasourceServer(
     }
 
     /**
-     * 释放
-     */
-    override fun close() {
-        super.close()
-        plexApiClient.release()
-    }
-
-    /**
      * 获取远程服务器音乐列表
      * @param [startIndex] 开始索引
      * @param [pageSize] 页面大小

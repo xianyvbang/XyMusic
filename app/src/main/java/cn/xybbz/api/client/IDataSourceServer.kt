@@ -74,11 +74,6 @@ interface IDataSourceServer : AutoCloseable {
     ): Flow<ClientLoginInfoState>?
 
     /**
-     * 设置token
-     */
-    fun setToken()
-
-    /**
      * 获得资源地址
      */
     suspend fun getResources(clientLoginInfoReq: ClientLoginInfoReq): List<ResourceData> {
@@ -89,16 +84,6 @@ interface IDataSourceServer : AutoCloseable {
      * 获得OkHttpClient
      */
     fun getOkhttpClient(): OkHttpClient
-
-    /**
-     * 获得连接设置
-     */
-    fun getConnectionConfig(): ConnectionConfig?
-
-    /**
-     * 获得用户id
-     */
-    fun getUserId(): String
 
     /**
      * 获得连接id
@@ -122,10 +107,6 @@ interface IDataSourceServer : AutoCloseable {
     // endregion
 
     // region 媒体库初始化与统计
-    /**
-     * 获得媒体库列表
-     */
-    suspend fun selectMediaLibrary(connectionId: Long)
 
     /**
      * 获得专辑,艺术家,音频,歌单数量
@@ -429,13 +410,6 @@ interface IDataSourceServer : AutoCloseable {
      * @param [itemId] 专辑/音乐id
      */
     suspend fun unmarkFavoriteItem(itemId: String, dataType: MusicTypeEnum): Boolean
-
-    /**
-     * 删除数据
-     * @param [musicId] 需要删除数据的id
-     * @return true->删除成功,false->删除失败
-     */
-    suspend fun removeById(musicId: String): Boolean
     // endregion
 
     // region 播放与上报

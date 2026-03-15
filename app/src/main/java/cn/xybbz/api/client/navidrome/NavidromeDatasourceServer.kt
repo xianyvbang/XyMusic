@@ -947,14 +947,6 @@ class NavidromeDatasourceServer(
     }
 
     /**
-     * 释放
-     */
-    override fun close() {
-        super.close()
-        navidromeApiClient.release()
-    }
-
-    /**
      * 获取远程服务器音乐列表
      * @param [startIndex] 开始索引
      * @param [pageSize] 页面大小

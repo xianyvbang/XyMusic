@@ -77,7 +77,6 @@ import com.github.promeg.pinyinhelper.Pinyin
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -417,18 +416,11 @@ abstract class IDataSourceParentServer(
     }
 
     /**
-     * 获得连接设置
+     * 设置token
      */
-    override fun getConnectionConfig(): ConnectionConfig? {
-        return connectionConfig
-    }
+    abstract fun setToken()
 
-    /**
-     * 获得用户id
-     */
-    override fun getUserId(): String {
-        return connectionConfig?.userId ?: ""
-    }
+
 
     /**
      * 获得连接id
@@ -468,17 +460,21 @@ abstract class IDataSourceParentServer(
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibrary(connectionId: Long) {
-        val libraryCount = db.libraryDao.selectLibraryCount(connectionId)
-        if (libraryCount <= 0)
-            db.withTransaction {
-                db.libraryDao.remove(connectionId)
-                val libraries =
-                    selectMediaLibraryList(connectionId)
-                if (!libraries.isNullOrEmpty()) {
-                    db.libraryDao.saveBatch(libraries)
+    protected suspend fun selectMediaLibrary(connectionId: Long) {
+        try {
+            val libraryCount = db.libraryDao.selectLibraryCount(connectionId)
+            if (libraryCount <= 0)
+                db.withTransaction {
+                    db.libraryDao.remove(connectionId)
+                    val libraries =
+                        selectMediaLibraryList(connectionId)
+                    if (!libraries.isNullOrEmpty()) {
+                        db.libraryDao.saveBatch(libraries)
+                    }
                 }
-            }
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得媒体库列表失败", e)
+        }
     }
 
     /**
@@ -1061,6 +1057,13 @@ abstract class IDataSourceParentServer(
     }
 
     /**
+     * 删除数据
+     * @param [musicId] 需要删除数据的id
+     * @return true->删除成功,false->删除失败
+     */
+    abstract suspend fun removeById(musicId: String): Boolean
+
+    /**
      * 批量删除数据
      * 按 ID 删除
      * @param [musicIds] 需要删除数据的
@@ -1208,14 +1211,21 @@ abstract class IDataSourceParentServer(
      * 获得是否可以下载
      */
     fun getCanDownload(): Boolean {
-        return getConnectionConfig()?.ifEnabledDownload ?: false
+        return connectionConfig?.ifEnabledDownload ?: false
     }
 
     /**
      * 获取是否可以删除
      */
     fun getCanDelete(): Boolean {
-        return getConnectionConfig()?.ifEnabledDelete ?: false
+        return connectionConfig?.ifEnabledDelete ?: false
+    }
+
+    /**
+     * 获得用户id
+     */
+    protected fun getUserId(): String {
+        return connectionConfig?.userId ?: ""
     }
 
     /**
