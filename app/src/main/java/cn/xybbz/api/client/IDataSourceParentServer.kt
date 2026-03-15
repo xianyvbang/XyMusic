@@ -417,6 +417,78 @@ abstract class IDataSourceParentServer(
     }
 
     /**
+     * 获得连接设置
+     */
+    override fun getConnectionConfig(): ConnectionConfig? {
+        return connectionConfig
+    }
+
+    /**
+     * 获得用户id
+     */
+    override fun getUserId(): String {
+        return connectionConfig?.userId ?: ""
+    }
+
+    /**
+     * 获得连接id
+     */
+    override fun getConnectionId(): Long {
+        return connectionConfig?.id ?: Constants.ZERO.toLong()
+    }
+
+    /**
+     * 获得连接地址
+     */
+    override fun getConnectionAddress(): String {
+        return connectionConfig?.address ?: ""
+    }
+
+    /**
+     * 更新连接设置
+     */
+    override suspend fun updateConnectionConfig(connectionConfig: ConnectionConfig) {
+        db.connectionConfigDao.update(connectionConfig)
+    }
+
+    /**
+     * 更新媒体库设置
+     */
+    override suspend fun updateLibraryId(libraryIds: List<String>?, connectionId: Long) {
+        if (connectionId == getConnectionId()) {
+            setUpLibraryId(libraryIds)
+        } else {
+            db.connectionConfigDao.updateLibraryId(
+                libraryIds = libraryIds?.joinToString(LocalConstants.ARTIST_DELIMITER),
+                connectionId = connectionId
+            )
+        }
+    }
+
+    /**
+     * 获得媒体库列表
+     */
+    override suspend fun selectMediaLibrary(connectionId: Long) {
+        val libraryCount = db.libraryDao.selectLibraryCount(connectionId)
+        if (libraryCount <= 0)
+            db.withTransaction {
+                db.libraryDao.remove(connectionId)
+                val libraries =
+                    selectMediaLibraryList(connectionId)
+                if (!libraries.isNullOrEmpty()) {
+                    db.libraryDao.saveBatch(libraries)
+                }
+            }
+    }
+
+    /**
+     * 获得所有收藏数据
+     */
+    override suspend fun initFavoriteData(connectionId: Long) {
+
+    }
+
+    /**
      * 检验链接版本是否大于等于支持最小版本
      */
     fun isVersionAtLeast(currentVersion: String): Boolean {
@@ -445,6 +517,46 @@ abstract class IDataSourceParentServer(
 
 
     /**
+     * 获得专辑列表数据
+     */
+    @OptIn(ExperimentalPagingApi::class)
+    override fun selectAlbumFlowList(
+        sort: Sort
+    ): Flow<PagingData<XyAlbum>> {
+        return defaultPager(
+            pageSize = Constants.UI_LIST_PAGE,
+            remoteMediator = AlbumRemoteMediator(
+                dataSource = getDataSourceType(),
+                db = db,
+                datasourceServer = this,
+                connectionId = getConnectionId(),
+                sort = sort
+            )
+        ) {
+            db.albumDao.selectHomeAlbumListPage()
+        }.flow
+    }
+
+    /**
+     * 获得音乐列表数据
+     */
+    @OptIn(ExperimentalPagingApi::class)
+    override fun selectMusicFlowList(
+        sort: Sort
+    ): Flow<PagingData<HomeMusic>> {
+        return defaultPager(
+            remoteMediator = MusicRemoteMediator(
+                db = db,
+                datasourceServer = this,
+                connectionId = getConnectionId(),
+                sort = sort
+            )
+        ) {
+            db.musicDao.selectHomeMusicListPage()
+        }.flow
+    }
+
+    /**
      * 获得艺术家
      */
     @OptIn(ExperimentalPagingApi::class)
@@ -461,6 +573,32 @@ abstract class IDataSourceParentServer(
         }.flow
     }
 
+    /**
+     * 获得最近播放音乐列表
+     */
+    override suspend fun getPlayRecordMusicList(pageSize: Int): List<XyMusic> {
+        return db.musicDao.selectPlayHistoryMusicList(pageSize)
+    }
+
+    /**
+     * 获得专辑信息
+     * @param [albumId] 专辑id
+     * @return 专辑+艺术家信息
+     */
+    override suspend fun selectAlbumInfoById(
+        albumId: String,
+        dataType: MusicDataTypeEnum
+    ): XyAlbum? {
+        val xyAlbum = selectAlbumInfoByRemotely(albumId, dataType)
+
+        /*if (xyAlbum == null) {
+            xyAlbum = selectAlbumInfoByRemotely(albumId, dataType)
+        } else {
+            val ifFavorite = db.albumDao.selectFavoriteById(albumId) == true
+            xyAlbum = xyAlbum.copy(ifFavorite = ifFavorite)
+        }*/
+        return xyAlbum
+    }
 
     /**
      * 获得专辑或歌单内音乐列表
@@ -492,6 +630,20 @@ abstract class IDataSourceParentServer(
     }
 
     /**
+     * 根据艺术家获得专辑列表
+     */
+    @OptIn(ExperimentalPagingApi::class)
+    override fun selectAlbumListByArtistId(artistId: String): Flow<PagingData<XyAlbum>> {
+        return defaultPager(
+            remoteMediator = getAlbumListRemoteMediator(artistId = artistId)
+        ) {
+            db.albumDao.selectArtistAlbumListPage(
+                artistId
+            )
+        }.flow
+    }
+
+    /**
      * 根据艺术家获得音乐列表
      */
     @OptIn(ExperimentalPagingApi::class)
@@ -515,6 +667,69 @@ abstract class IDataSourceParentServer(
     }
 
     /**
+     * 获得歌曲列表
+     */
+    override suspend fun getMusicList(
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyPlayMusic>? {
+        return db.musicDao.selectMusicExtendList(pageSize, pageNum * pageSize)
+    }
+
+    /**
+     * getMusicListByAlbumId
+     */
+    override suspend fun getMusicListByAlbumId(
+        albumId: String,
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyPlayMusic>? {
+        return db.musicDao.selectMusicExtendListByAlbumId(albumId, pageSize, pageNum * pageSize)
+    }
+
+    /**
+     * 根据艺术家获得歌曲列表
+     */
+    override suspend fun getMusicListByArtistId(
+        artistId: String,
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyPlayMusic>? {
+        return db.musicDao.selectMusicExtendListByArtistId(artistId, pageSize, pageNum * pageSize)
+    }
+
+    /**
+     * 获得收藏歌曲列表
+     */
+    override suspend fun getMusicListByFavorite(
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyPlayMusic>? {
+        return db.musicDao.selectMusicExtendListByFavorite(pageSize, pageNum * pageSize)
+    }
+
+    /**
+     * 获取远程服务器的专辑和歌单音乐列表
+     * @param [startIndex] 开始索引
+     * @param [pageSize] 页面大小
+     * @param [isFavorite] 是否收藏
+     * @param [sortType] 排序类型
+     * @param [years] 年列表
+     * @param [parentId] 上级id
+     * @param [dataType] 数据类型
+     * @return [AllResponse<XyMusic>]
+     */
+    abstract override suspend fun getRemoteServerMusicListByAlbumOrPlaylist(
+        startIndex: Int,
+        pageSize: Int,
+        isFavorite: Boolean?,
+        sortType: SortTypeEnum?,
+        years: List<Int>?,
+        parentId: String,
+        dataType: MusicDataTypeEnum
+    ): XyResponse<XyMusic>
+
+    /**
      * 获得随机音乐
      */
     override suspend fun getRandomMusicExtendList(
@@ -525,117 +740,6 @@ abstract class IDataSourceParentServer(
             getRandomMusicList(pageSize, pageNum)
         )
     }
-
-    /**
-     * 获得专辑列表数据
-     */
-    @OptIn(ExperimentalPagingApi::class)
-    override fun selectAlbumFlowList(
-        sort: Sort
-    ): Flow<PagingData<XyAlbum>> {
-        return defaultPager(
-            pageSize = Constants.UI_LIST_PAGE,
-            remoteMediator = AlbumRemoteMediator(
-                dataSource = getDataSourceType(),
-                db = db,
-                datasourceServer = this,
-                connectionId = getConnectionId(),
-                sort = sort
-            )
-        ) {
-            db.albumDao.selectHomeAlbumListPage()
-        }.flow
-    }
-
-    /**
-     * 根据艺术家获得专辑列表
-     */
-    @OptIn(ExperimentalPagingApi::class)
-    override fun selectAlbumListByArtistId(artistId: String): Flow<PagingData<XyAlbum>> {
-        return defaultPager(
-            remoteMediator = getAlbumListRemoteMediator(artistId = artistId)
-        ) {
-            db.albumDao.selectArtistAlbumListPage(
-                artistId
-            )
-        }.flow
-    }
-
-    /**
-     * 获得收藏歌曲列表
-     */
-    @OptIn(ExperimentalPagingApi::class)
-    override fun selectFavoriteMusicFlowList(): Flow<PagingData<XyMusic>> {
-        return defaultPager(
-            pageSize = Constants.UI_LIST_PAGE,
-            initialLoadSize = Constants.UI_INIT_LIST_PAGE,
-            prefetchDistance = 5,
-            remoteMediator = FavoriteMusicRemoteMediator(
-                datasourceServer = this,
-                db = db,
-                connectionId = getConnectionId()
-            )
-        ) {
-            db.musicDao.selectFavoriteMusicListPage()
-        }.flow
-    }
-
-
-    /**
-     * 获得流派内音乐列表/或者专辑
-     * @param [genreId] 流派id
-     */
-    @OptIn(ExperimentalPagingApi::class)
-    override fun selectAlbumListByGenreId(genreId: String): Flow<PagingData<XyAlbum>> {
-        return defaultPager(
-            remoteMediator = GenreAlbumListRemoteMediator(
-                genreId = genreId,
-                datasourceServer = this,
-                db = db,
-                connectionId = getConnectionId()
-            )
-        ) {
-            db.albumDao.selectGenreAlbumListPage(genreId)
-        }.flow
-    }
-
-
-    /**
-     * 获得流派列表
-     */
-    @OptIn(ExperimentalPagingApi::class)
-    override suspend fun selectGenresPage(): Flow<PagingData<XyGenre>> {
-        return defaultPager(
-            remoteMediator = GenresRemoteMediator(
-                datasourceServer = this,
-                db = db,
-                connectionId = getConnectionId()
-            )
-        ) {
-            db.genreDao.selectByDataSourceType()
-        }.flow
-    }
-
-
-    /**
-     * 获得音乐列表数据
-     */
-    @OptIn(ExperimentalPagingApi::class)
-    override fun selectMusicFlowList(
-        sort: Sort
-    ): Flow<PagingData<HomeMusic>> {
-        return defaultPager(
-            remoteMediator = MusicRemoteMediator(
-                db = db,
-                datasourceServer = this,
-                connectionId = getConnectionId(),
-                sort = sort
-            )
-        ) {
-            db.musicDao.selectHomeMusicListPage()
-        }.flow
-    }
-
 
     /**
      * 增加歌单
@@ -714,33 +818,6 @@ abstract class IDataSourceParentServer(
             }
         }
         return true
-    }
-
-    /**
-     * 获得专辑信息
-     * @param [albumId] 专辑id
-     * @return 专辑+艺术家信息
-     */
-    override suspend fun selectAlbumInfoById(
-        albumId: String,
-        dataType: MusicDataTypeEnum
-    ): XyAlbum? {
-        val xyAlbum = selectAlbumInfoByRemotely(albumId, dataType)
-
-        /*if (xyAlbum == null) {
-            xyAlbum = selectAlbumInfoByRemotely(albumId, dataType)
-        } else {
-            val ifFavorite = db.albumDao.selectFavoriteById(albumId) == true
-            xyAlbum = xyAlbum.copy(ifFavorite = ifFavorite)
-        }*/
-        return xyAlbum
-    }
-
-    /**
-     * 获得最近播放音乐列表
-     */
-    override suspend fun getPlayRecordMusicList(pageSize: Int): List<XyMusic> {
-        return db.musicDao.selectPlayHistoryMusicList(pageSize)
     }
 
 
@@ -855,14 +932,6 @@ abstract class IDataSourceParentServer(
     }
 
     /**
-     * 获得所有收藏数据
-     */
-    override suspend fun initFavoriteData(connectionId: Long) {
-
-    }
-
-
-    /**
      * 获得专辑,艺术家,音频,歌单数量
      */
     suspend fun updateOrSaveDataInfoCount(
@@ -939,19 +1008,56 @@ abstract class IDataSourceParentServer(
     }
 
     /**
-     * 获得媒体库列表
+     * 获得流派列表
      */
-    override suspend fun selectMediaLibrary(connectionId: Long) {
-        val libraryCount = db.libraryDao.selectLibraryCount(connectionId)
-        if (libraryCount <= 0)
-            db.withTransaction {
-                db.libraryDao.remove(connectionId)
-                val libraries =
-                    selectMediaLibraryList(connectionId)
-                if (!libraries.isNullOrEmpty()) {
-                    db.libraryDao.saveBatch(libraries)
-                }
-            }
+    @OptIn(ExperimentalPagingApi::class)
+    override suspend fun selectGenresPage(): Flow<PagingData<XyGenre>> {
+        return defaultPager(
+            remoteMediator = GenresRemoteMediator(
+                datasourceServer = this,
+                db = db,
+                connectionId = getConnectionId()
+            )
+        ) {
+            db.genreDao.selectByDataSourceType()
+        }.flow
+    }
+
+    /**
+     * 获得流派内音乐列表/或者专辑
+     * @param [genreId] 流派id
+     */
+    @OptIn(ExperimentalPagingApi::class)
+    override fun selectAlbumListByGenreId(genreId: String): Flow<PagingData<XyAlbum>> {
+        return defaultPager(
+            remoteMediator = GenreAlbumListRemoteMediator(
+                genreId = genreId,
+                datasourceServer = this,
+                db = db,
+                connectionId = getConnectionId()
+            )
+        ) {
+            db.albumDao.selectGenreAlbumListPage(genreId)
+        }.flow
+    }
+
+    /**
+     * 获得收藏歌曲列表
+     */
+    @OptIn(ExperimentalPagingApi::class)
+    override fun selectFavoriteMusicFlowList(): Flow<PagingData<XyMusic>> {
+        return defaultPager(
+            pageSize = Constants.UI_LIST_PAGE,
+            initialLoadSize = Constants.UI_INIT_LIST_PAGE,
+            prefetchDistance = 5,
+            remoteMediator = FavoriteMusicRemoteMediator(
+                datasourceServer = this,
+                db = db,
+                connectionId = getConnectionId()
+            )
+        ) {
+            db.musicDao.selectFavoriteMusicListPage()
+        }.flow
     }
 
     //各个服务获得媒体库方法
@@ -972,27 +1078,6 @@ abstract class IDataSourceParentServer(
         artistName: String,
         pageSize: Int,
         startIndex: Int
-    ): XyResponse<XyMusic>
-
-    /**
-     * 获取远程服务器的专辑和歌单音乐列表
-     * @param [startIndex] 开始索引
-     * @param [pageSize] 页面大小
-     * @param [isFavorite] 是否收藏
-     * @param [sortType] 排序类型
-     * @param [years] 年列表
-     * @param [parentId] 上级id
-     * @param [dataType] 数据类型
-     * @return [AllResponse<XyMusic>]
-     */
-    abstract override suspend fun getRemoteServerMusicListByAlbumOrPlaylist(
-        startIndex: Int,
-        pageSize: Int,
-        isFavorite: Boolean?,
-        sortType: SortTypeEnum?,
-        years: List<Int>?,
-        parentId: String,
-        dataType: MusicDataTypeEnum
     ): XyResponse<XyMusic>
 
     /**
@@ -1070,27 +1155,6 @@ abstract class IDataSourceParentServer(
         years: List<Int>?
     ): XyResponse<XyMusic>
 
-    /**
-     * getMusicListByAlbumId
-     */
-    override suspend fun getMusicListByAlbumId(
-        albumId: String,
-        pageSize: Int,
-        pageNum: Int
-    ): List<XyPlayMusic>? {
-        return db.musicDao.selectMusicExtendListByAlbumId(albumId, pageSize, pageNum * pageSize)
-    }
-
-    /**
-     * 获得歌曲列表
-     */
-    override suspend fun getMusicList(
-        pageSize: Int,
-        pageNum: Int
-    ): List<XyPlayMusic>? {
-        return db.musicDao.selectMusicExtendList(pageSize, pageNum * pageSize)
-    }
-
     suspend fun transitionPlayMusic(musicList: List<XyMusic>?): List<XyPlayMusic>? {
         val downloads = musicList?.map { it.itemId }?.let {
             db.downloadDao.getMusicByMusicIds(it)
@@ -1118,27 +1182,6 @@ abstract class IDataSourceParentServer(
     }
 
     /**
-     * 根据艺术家获得歌曲列表
-     */
-    override suspend fun getMusicListByArtistId(
-        artistId: String,
-        pageSize: Int,
-        pageNum: Int
-    ): List<XyPlayMusic>? {
-        return db.musicDao.selectMusicExtendListByArtistId(artistId, pageSize, pageNum * pageSize)
-    }
-
-    /**
-     * 获得收藏歌曲列表
-     */
-    override suspend fun getMusicListByFavorite(
-        pageSize: Int,
-        pageNum: Int
-    ): List<XyPlayMusic>? {
-        return db.musicDao.selectMusicExtendListByFavorite(pageSize, pageNum * pageSize)
-    }
-
-    /**
      * 创建下载链接
      */
     abstract fun createDownloadUrl(musicId: String): String
@@ -1154,59 +1197,10 @@ abstract class IDataSourceParentServer(
     }
 
     /**
-     * 获得连接设置
-     */
-    override fun getConnectionConfig(): ConnectionConfig? {
-        return connectionConfig
-    }
-
-    /**
-     * 获得用户id
-     */
-    override fun getUserId(): String {
-        return connectionConfig?.userId ?: ""
-    }
-
-    /**
-     * 获得连接id
-     */
-    override fun getConnectionId(): Long {
-        return connectionConfig?.id ?: Constants.ZERO.toLong()
-    }
-
-    /**
-     * 获得连接地址
-     */
-    override fun getConnectionAddress(): String {
-        return connectionConfig?.address ?: ""
-    }
-
-    /**
      * 获得登录成功flow
      */
     fun getLoginStateFlow(): SharedFlow<LoginStateType> {
         return loginSuccessEvent
-    }
-
-    /**
-     * 更新媒体库设置
-     */
-    override suspend fun updateLibraryId(libraryIds: List<String>?, connectionId: Long) {
-        if (connectionId == getConnectionId()) {
-            setUpLibraryId(libraryIds)
-        } else {
-            db.connectionConfigDao.updateLibraryId(
-                libraryIds = libraryIds?.joinToString(LocalConstants.ARTIST_DELIMITER),
-                connectionId = connectionId
-            )
-        }
-    }
-
-    /**
-     * 更新连接设置
-     */
-    override suspend fun updateConnectionConfig(connectionConfig: ConnectionConfig) {
-        db.connectionConfigDao.update(connectionConfig)
     }
 
     /**
