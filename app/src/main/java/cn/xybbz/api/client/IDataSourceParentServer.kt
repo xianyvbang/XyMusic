@@ -600,6 +600,29 @@ abstract class IDataSourceParentServer(
     }
 
     /**
+     * 从本地缓存获得专辑信息
+     */
+    override suspend fun selectLocalAlbumInfoById(albumId: String): XyAlbum? {
+        var albumInfo = db.albumDao.selectById(albumId)
+        if (albumInfo != null) {
+            albumInfo = albumInfo.copy(
+                ifFavorite = db.albumDao.selectFavoriteById(albumId) ?: false
+            )
+        }
+        return albumInfo
+    }
+
+    /**
+     * 从远程获得专辑信息
+     */
+    override suspend fun selectServerAlbumInfoById(
+        albumId: String,
+        dataType: MusicDataTypeEnum
+    ): XyAlbum? {
+        return selectAlbumInfoByRemotely(albumId, dataType)
+    }
+
+    /**
      * 获得专辑或歌单内音乐列表
      * @param [itemId] 专辑id
      * @param [dataType] 数据类型

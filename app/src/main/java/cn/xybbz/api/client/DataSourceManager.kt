@@ -513,6 +513,45 @@ open class DataSourceManager(
 
     }
 
+    /**
+     * 从本地缓存获得专辑信息
+     */
+    override suspend fun selectLocalAlbumInfoById(albumId: String): XyAlbum? {
+        return try {
+            dataSourceServer.selectLocalAlbumInfoById(albumId)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取本地专辑信息超时", e)
+            null
+        } catch (e: ServiceException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取本地专辑信息失败", e)
+            null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取本地专辑信息未知异常失败", e)
+            null
+        }
+    }
+
+    /**
+     * 从远程获得专辑信息
+     */
+    override suspend fun selectServerAlbumInfoById(
+        albumId: String,
+        dataType: MusicDataTypeEnum
+    ): XyAlbum? {
+        return try {
+            dataSourceServer.selectServerAlbumInfoById(albumId, dataType)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取远程专辑信息超时", e)
+            null
+        } catch (e: ServiceException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取远程专辑信息失败", e)
+            null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取远程专辑信息未知异常失败", e)
+            null
+        }
+    }
+
     override suspend fun selectMusicInfoById(itemId: String): XyMusic? {
         return try {
             dataSourceServer.selectMusicInfoById(itemId)

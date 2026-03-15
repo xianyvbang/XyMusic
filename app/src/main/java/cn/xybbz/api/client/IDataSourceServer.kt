@@ -174,6 +174,24 @@ interface IDataSourceServer : AutoCloseable {
     suspend fun selectAlbumInfoById(albumId: String, dataType: MusicDataTypeEnum): XyAlbum?
 
     /**
+     * 从本地缓存获得专辑信息
+     * @param [albumId] 专辑id
+     * @return 专辑+本地收藏信息
+     */
+    suspend fun selectLocalAlbumInfoById(albumId: String): XyAlbum?
+
+    /**
+     * 从远程获得专辑信息
+     * @param [albumId] 专辑id
+     * @param [dataType] 数据类型
+     * @return 专辑+艺术家信息
+     */
+    suspend fun selectServerAlbumInfoById(
+        albumId: String,
+        dataType: MusicDataTypeEnum
+    ): XyAlbum?
+
+    /**
      * 按 ID 选择音乐信息
      * @param [itemId] 音乐唯一标识
      * @return [XyMusic?]
