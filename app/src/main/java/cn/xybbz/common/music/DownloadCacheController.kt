@@ -310,7 +310,7 @@ class DownloadCacheController(
                 context,
                 ExoPlayerDownloadService::class.java,
                 it,
-                Download.STATE_QUEUED,
+                Download.STOP_REASON_NONE,
                 /* foreground= */ false
             )
             downloadCacheProgressTicker.start(it)
