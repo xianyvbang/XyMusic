@@ -20,6 +20,7 @@ package cn.xybbz.ui.components
 
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -92,9 +93,8 @@ fun AlertDialogComponent() {
         val defaultDialogColor = if (it.ifWarning) {
             MaterialTheme.colorScheme.errorContainer
         } else {
-            MaterialTheme.colorScheme.surfaceContainerHigh
+            MaterialTheme.colorScheme.onSurface
         }
-        val dialogBrashColors = it.brashColors ?: listOf(defaultDialogColor, defaultDialogColor)
         Dialog(
             onDismissRequest = {
                 it.onCloseRequest?.invoke()
@@ -106,16 +106,17 @@ fun AlertDialogComponent() {
 //                backgroundColor = Color.Transparent,
                 modifier = Modifier
                     .clip(RoundedCornerShape(XyTheme.dimens.corner))
-                    .brashColor(
+//                    .background(defaultDialogColor)
+                    /*.brashColor(
                         dialogBrashColors[0],
                         dialogBrashColors[1]
-                    )
+                    )*/
             ) {
                 XyItemOutSpacer()
                 it.title?.let { title ->
                     XyScreenTitle(
                         text = title,
-                        color = if (it.ifWarning) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurface
+                        color = defaultDialogColor
                     )
                 }
                 XyItemOutSpacer()
