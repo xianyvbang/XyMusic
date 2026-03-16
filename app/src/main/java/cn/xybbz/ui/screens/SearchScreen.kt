@@ -39,7 +39,6 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -65,7 +64,6 @@ import androidx.media3.common.util.UnstableApi
 import cn.xybbz.R
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.compositionLocal.LocalNavigator
-import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
@@ -88,6 +86,7 @@ import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.SearchViewModel
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -348,13 +347,7 @@ fun SearchResultScreen(
                 }
                 items(musicList, key = { music -> music.itemId }) { music ->
                     MusicItemComponent(
-                        itemId = music.itemId,
-                        name = music.name,
-                        album = music.album,
-                        artists = music.artists?.joinToString(),
-                        pic = music.pic,
-                        codec = music.codec,
-                        bitRate = music.bitRate,
+                        music = music,
                         onIfFavorite = {
                             music.itemId in onFavoriteList()
                         },

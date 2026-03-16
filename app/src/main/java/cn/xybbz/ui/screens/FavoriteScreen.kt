@@ -24,7 +24,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -39,7 +38,6 @@ import androidx.paging.compose.itemKey
 import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalNavigator
-import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.SwipeRefreshListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
@@ -50,6 +48,7 @@ import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.FavoriteViewModel
 import kotlinx.coroutines.launch
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 /**
  * 收藏界面
@@ -64,7 +63,9 @@ fun FavoriteScreen(
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
     val favoriteList by favoriteViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
-    val downloadMusicIdList by favoriteViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(emptyList())
+    val downloadMusicIdList by favoriteViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
+        emptyList()
+    )
 
 
     XyColumnScreen(
@@ -98,13 +99,7 @@ fun FavoriteScreen(
                 ) { index ->
                     collectAsLazyPagingItems[index]?.let { music ->
                         MusicItemComponent(
-                            itemId = music.itemId,
-                            name = music.name,
-                            album = music.album,
-                            artists = music.artists?.joinToString(),
-                            pic = music.pic,
-                            codec = music.codec,
-                            bitRate = music.bitRate,
+                            music = music,
                             onIfFavorite = {
                                 favoriteList.contains(music.itemId)
                             },

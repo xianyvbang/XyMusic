@@ -38,7 +38,6 @@ import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.genre.XyGenre
-import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
@@ -132,7 +131,7 @@ interface IDataSourceServer : AutoCloseable {
      */
     fun selectMusicFlowList(
         sort: Sort
-    ): Flow<PagingData<HomeMusic>>
+    ): Flow<PagingData<XyMusic>>
 
     /**
      * 获得艺术家

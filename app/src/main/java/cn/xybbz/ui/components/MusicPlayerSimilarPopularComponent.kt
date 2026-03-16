@@ -32,7 +32,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import cn.xybbz.R
 import cn.xybbz.compositionLocal.LocalMainViewModel
-import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.ui.theme.XyTheme
@@ -77,13 +76,7 @@ fun MusicPlayerSimilarPopularComponent(
         items(mainViewModel.popularMusicList) { musicExt ->
 
             MusicItemComponent(
-                itemId = musicExt.music.itemId,
-                name = musicExt.music.name,
-                album = musicExt.music.album,
-                artists = musicExt.music.artists?.joinToString(),
-                pic = musicExt.music.pic,
-                codec = musicExt.music.codec,
-                bitRate = musicExt.music.bitRate,
+                music = musicExt.music,
                 onIfFavorite = {
                     musicExt.music.itemId in onFavoriteSet()
                 },
@@ -120,13 +113,7 @@ fun MusicPlayerSimilarPopularComponent(
         items(mainViewModel.similarMusicList) { musicExt ->
 
             MusicItemComponent(
-                itemId = musicExt.music.itemId,
-                name = musicExt.music.name,
-                album = musicExt.music.album,
-                artists = musicExt.music.artists?.joinToString(),
-                pic = musicExt.music.pic,
-                codec = musicExt.music.codec,
-                bitRate = musicExt.music.bitRate,
+                music = musicExt.music,
                 onIfFavorite = {
                     musicExt.music.itemId in onFavoriteSet()
                 },

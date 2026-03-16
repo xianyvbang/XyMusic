@@ -58,7 +58,6 @@ import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.count.XyDataCount
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
-import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
@@ -542,7 +541,7 @@ abstract class IDataSourceParentServer(
     @OptIn(ExperimentalPagingApi::class)
     override fun selectMusicFlowList(
         sort: Sort
-    ): Flow<PagingData<HomeMusic>> {
+    ): Flow<PagingData<XyMusic>> {
         return defaultPager(
             remoteMediator = MusicRemoteMediator(
                 db = db,

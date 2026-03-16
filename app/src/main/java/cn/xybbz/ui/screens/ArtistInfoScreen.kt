@@ -795,13 +795,7 @@ fun ArtistInfoScreen(
                                             ) { index ->
                                                 list[index]?.let { music ->
                                                     MusicItemComponent(
-                                                        itemId = music.itemId,
-                                                        name = music.name,
-                                                        album = music.album,
-                                                        artists = music.artists?.joinToString(),
-                                                        pic = music.pic,
-                                                        codec = music.codec,
-                                                        bitRate = music.bitRate,
+                                                        music = music,
                                                         onIfFavorite = {
                                                             music.itemId in favoriteSet
                                                         },

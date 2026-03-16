@@ -27,7 +27,6 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,7 +44,6 @@ import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.select.SelectControl
-import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.ui.components.MusicItemComponent
@@ -60,6 +58,7 @@ import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.MusicViewModel
 import kotlinx.coroutines.launch
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @Composable
 fun MusicScreen(
@@ -97,7 +96,7 @@ fun MusicScreen(
             },
             onSelectAll = {
                 coroutineScope.launch {
-                    musicViewModel.selectControl.toggleSelectionAll(homeMusicPager.itemSnapshotList.items.map { it.musicId })
+                    musicViewModel.selectControl.toggleSelectionAll(homeMusicPager.itemSnapshotList.items.map { it.itemId })
                 }
             },
             selectControl = musicViewModel.selectControl,
@@ -142,23 +141,17 @@ fun MusicScreen(
         ) { page ->
             items(
                 page.itemCount,
-                page.itemKey { it.musicId },
+                page.itemKey { it.itemId },
                 page.itemContentType { MusicTypeEnum.MUSIC.code }) { index ->
                 // 加上remember就可以防止重组
                 page[index]?.let { music ->
                     MusicItemComponent(
-                        itemId = music.musicId,
-                        name = music.name,
-                        album = music.album,
-                        artists = music.artists?.joinToString(),
-                        pic = music.pic,
-                        codec = music.codec,
-                        bitRate = music.bitRate,
+                        music = music,
                         onIfFavorite = {
-                            music.musicId in favoriteSet
+                            music.itemId in favoriteSet
                         },
-                        ifDownload = music.musicId in downloadMusicIds,
-                        ifPlay = musicViewModel.musicController.musicInfo?.itemId == music.musicId,
+                        ifDownload = music.itemId in downloadMusicIds,
+                        ifPlay = musicViewModel.musicController.musicInfo?.itemId == music.itemId,
                         onMusicPlay = {
                             musicViewModel.musicPlayContext.music(
                                 onMusicPlayParameter = it,
@@ -169,21 +162,21 @@ fun MusicScreen(
                         backgroundColor = Color.Transparent,
                         ifSelect = ifOpenSelect,
                         ifSelectCheckBox = {
-                            music.musicId in musicViewModel.selectControl.selectMusicIdList
+                            music.itemId in musicViewModel.selectControl.selectMusicIdList
                         },
                         trailingOnSelectClick = { select ->
                             Log.i("======", "数据是否一起变化${select}")
                             musicViewModel.selectControl.toggleSelection(
-                                music.musicId,
+                                music.itemId,
                                 onIsSelectAll = {
                                     musicViewModel.selectControl.selectMusicIdList.containsAll(
-                                        homeMusicPager.itemSnapshotList.items.map { it.musicId }
+                                        homeMusicPager.itemSnapshotList.items.map { it.itemId }
                                     )
                                 })
                         },
                         trailingOnClick = {
                             coroutineScope.launch {
-                                musicViewModel.getMusicInfoById(music.musicId)?.show()
+                                musicViewModel.getMusicInfoById(music.itemId)?.show()
                             }
                         }
                     )
