@@ -458,6 +458,11 @@ interface IDataSourceServer : AutoCloseable {
     suspend fun reportProgress(musicId: String, playSessionId: String, positionTicks: Long?)
 
     /**
+     * 取消上报播放进度
+     */
+    suspend fun cancelReportProgress(musicId:String)
+
+    /**
      * 获得相似歌曲列表
      */
     suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend>?

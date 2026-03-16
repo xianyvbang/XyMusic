@@ -67,7 +67,7 @@ data class PlaybackStartInfo(
      * A value indicating whether this instance is paused.
      */
     @SerialName(value = "IsPaused")
-    val isPaused: Boolean,
+    val isPaused: Boolean? = null,
     /**
      * A value indicating whether this instance is muted.
      */

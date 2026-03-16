@@ -894,6 +894,19 @@ class EmbyDatasourceServer(
     }
 
     /**
+     * 取消上报播放进度
+     */
+    override suspend fun cancelReportProgress(musicId: String) {
+        embyApiClient.userApi().stopped(
+            PlaybackStartInfo(
+                itemId = musicId,
+                playSessionId = musicId,
+                playMethod = PlayMethod.TRANSCODE
+            )
+        )
+    }
+
+    /**
      * 获得播放连接
      */
     override fun getMusicPlayUrl(

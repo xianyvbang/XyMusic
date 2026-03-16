@@ -48,4 +48,10 @@ interface EmbyUserApi : BaseApi {
      */
     @POST("/emby/Sessions/Playing/Progress")
     suspend fun progress(@Body data: PlaybackStartInfo)
+
+    /**
+     * 上报停止播放
+     */
+    @POST("/emby/Sessions/Playing/Stopped")
+    suspend fun stopped(@Body data: PlaybackStartInfo)
 }

@@ -1116,8 +1116,19 @@ open class DataSourceManager(
     ) {
         try {
             dataSourceServer.reportProgress(musicId, playSessionId, positionTicks)
-        }catch (e: Exception){
+        } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "播放上报失败", e)
+        }
+    }
+
+    /**
+     * 取消上报播放进度
+     */
+    override suspend fun cancelReportProgress(musicId: String) {
+        try {
+            dataSourceServer.cancelReportProgress(musicId)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "取消播放上报失败", e)
         }
     }
 

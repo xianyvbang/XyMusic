@@ -1293,6 +1293,17 @@ class PlexDatasourceServer(
     }
 
     /**
+     * 取消上报播放进度
+     */
+    override suspend fun cancelReportProgress(musicId: String) {
+        plexApiClient.userApi().playing(
+            ratingKey = musicId,
+            time = 0,
+            state = PlayState.PAUSED
+        )
+    }
+
+    /**
      * 获得播放连接
      */
     override fun getMusicPlayUrl(

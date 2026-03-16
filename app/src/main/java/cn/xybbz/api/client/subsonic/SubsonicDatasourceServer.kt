@@ -742,6 +742,13 @@ class SubsonicDatasourceServer(
     }
 
     /**
+     * 取消上报播放进度
+     */
+    override suspend fun cancelReportProgress(musicId: String) {
+        reportPlaying(musicId, "", true)
+    }
+
+    /**
      * 获得播放连接
      */
     override fun getMusicPlayUrl(

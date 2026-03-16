@@ -8,8 +8,6 @@ import cn.xybbz.api.client.jellyfin.data.SystemInfoResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
-import retrofit2.http.Path
-import retrofit2.http.QueryMap
 
 /**
  * 用户相关请求实体类
@@ -48,5 +46,11 @@ interface UserApi : BaseApi {
      */
     @POST("/Sessions/Playing/Progress")
     suspend fun progress(@Body data: PlaybackStartInfo)
+
+    /**
+     * 上报停止播放
+     */
+    @POST("/Sessions/Playing/Stopped")
+    suspend fun stopped(@Body data: PlaybackStartInfo)
 
 }

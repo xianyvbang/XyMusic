@@ -1,11 +1,17 @@
 package cn.xybbz.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.enums.PlayStateEnum
+import cn.xybbz.common.music.MusicController
+import cn.xybbz.common.music.PlaybackProgressReporter
 import cn.xybbz.config.BackgroundConfig
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.download.DownLoadManager
@@ -21,7 +27,10 @@ class SettingsViewModel @Inject constructor(
     val settingsManager: SettingsManager,
     private val db: DatabaseClient,
     val backgroundConfig: BackgroundConfig,
-    val downLoadManager: DownLoadManager
+    val downLoadManager: DownLoadManager,
+    private val musicController: MusicController,
+    private val playbackProgressReporter: PlaybackProgressReporter,
+    private val dataSourceManager: DataSourceManager
 ) : ViewModel() {
 
 
@@ -55,5 +64,24 @@ class SettingsViewModel @Inject constructor(
             DownloaderConfig.Builder(context).setMaxConcurrentDownloads(maxConcurrentDownloads)
                 .build()
         )
+    }
+
+    suspend fun setSyncPlayProgressEnabled(enabled: Boolean) {
+        val wasEnabled = settingsManager.get().ifEnableSyncPlayProgress
+        if (wasEnabled == enabled) {
+            return
+        }
+        if (!enabled) {
+            playbackProgressReporter.stop()
+            val currentMusicId = musicController.musicInfo?.itemId
+            if (musicController.state == PlayStateEnum.Playing && !currentMusicId.isNullOrBlank()) {
+                runCatching {
+                    dataSourceManager.cancelReportProgress(currentMusicId)
+                }.onFailure {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "关闭播放进度同步时通知远端停止失败", it)
+                }
+            }
+        }
+        settingsManager.setIfEnableSyncPlayProgress(enabled)
     }
 }
