@@ -801,14 +801,13 @@ class JellyfinDatasourceServer(
         isPaused: Boolean,
         positionTicks: Long?
     ) {
+        Log.i("reportPlaying","上报信息 ${isPaused}, ${positionTicks}")
         jellyfinApiClient.userApi().playing(
             PlaybackStartInfo(
                 itemId = musicId,
                 playSessionId = musicId,
-                positionTicks = positionTicks,
-                canSeek = true,
+                positionTicks = positionTicks?.times(10000),
                 isPaused = isPaused,
-                isMuted = false,
                 playMethod = PlayMethod.TRANSCODE
             )
         )
@@ -822,21 +821,15 @@ class JellyfinDatasourceServer(
         playSessionId: String,
         positionTicks: Long?
     ) {
-        try {
-            jellyfinApiClient.userApi().progress(
-                PlaybackStartInfo(
-                    itemId = musicId,
-                    playSessionId = musicId,
-                    positionTicks = positionTicks,
-                    canSeek = true,
-                    isPaused = false,
-                    isMuted = false,
-                    playMethod = PlayMethod.TRANSCODE
-                )
+        jellyfinApiClient.userApi().progress(
+            PlaybackStartInfo(
+                itemId = musicId,
+                playSessionId = musicId,
+                positionTicks = positionTicks?.times(10000),
+                isPaused = false,
+                playMethod = PlayMethod.TRANSCODE
             )
-        } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "播放上报失败", e)
-        }
+        )
     }
 
     /**

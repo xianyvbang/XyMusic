@@ -31,8 +31,8 @@ data class PlaybackStartInfo(
     /**
      * A value indicating whether this instance can seek.
      */
-    @SerialName(value = "CanSeek")
-    val canSeek: Boolean,
+//    @SerialName(value = "CanSeek")
+//    val canSeek: Boolean,
     /**
      * The item.
      */
@@ -71,8 +71,8 @@ data class PlaybackStartInfo(
     /**
      * A value indicating whether this instance is muted.
      */
-    @SerialName(value = "IsMuted")
-    val isMuted: Boolean,
+//    @SerialName(value = "IsMuted")
+//    val isMuted: Boolean,
     /**
      * The position ticks.
      */

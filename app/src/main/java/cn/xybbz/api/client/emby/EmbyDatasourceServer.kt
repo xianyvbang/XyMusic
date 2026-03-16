@@ -867,10 +867,8 @@ class EmbyDatasourceServer(
             PlaybackStartInfo(
                 itemId = musicId,
                 playSessionId = musicId,
-                positionTicks = positionTicks,
-                canSeek = true,
+                positionTicks = positionTicks?.times(10000),
                 isPaused = isPaused,
-                isMuted = false,
                 playMethod = PlayMethod.DIRECT_STREAM
             )
         )
@@ -884,7 +882,15 @@ class EmbyDatasourceServer(
         playSessionId: String,
         positionTicks: Long?
     ) {
-
+        embyApiClient.userApi().progress(
+            PlaybackStartInfo(
+                itemId = musicId,
+                playSessionId = musicId,
+                positionTicks = positionTicks?.times(10000),
+                isPaused = false,
+                playMethod = PlayMethod.TRANSCODE
+            )
+        )
     }
 
     /**

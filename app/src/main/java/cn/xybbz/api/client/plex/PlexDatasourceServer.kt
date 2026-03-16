@@ -1272,6 +1272,9 @@ class PlexDatasourceServer(
             time = positionTicks ?: 0,
             state = if (isPaused) PlayState.PLAYING else PlayState.PAUSED
         )
+        //更新播放次数
+        plexApiClient.userApi()
+            .markAsPlayed(key = musicId)
     }
 
     /**

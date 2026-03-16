@@ -6,6 +6,7 @@ import cn.xybbz.api.client.plex.data.PlexLoginRequest
 import cn.xybbz.api.client.plex.data.PlexLoginResponse
 import cn.xybbz.api.client.plex.data.PlexPingSystemResponse
 import cn.xybbz.api.client.plex.data.PlexSystemInfoResponse
+import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.enums.plex.PlayState
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -49,5 +50,14 @@ interface PlexUserApi : BaseApi {
         @Query("ratingKey") ratingKey: String,
         @Query("time") time: Long,
         @Query("state") state: PlayState
+    )
+
+    /**
+     * 标记已播放
+     */
+    @GET("/:/scrobble")
+    suspend fun markAsPlayed(
+        @Query("key") key: String,
+        @Query("identifier") identifier: String = ApiConstants.PLEX_PRODUCT_NAME
     )
 }

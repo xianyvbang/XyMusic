@@ -69,4 +69,6 @@ object ApiConstants {
     const val DEFAULT_TIMEOUT_MILLISECONDS = 10000L
 
     const val CUSTOM_IMAGE_HEADER_NAME = "X-Custom-Image-Url"
+
+    const val PLEX_PRODUCT_NAME = "com.plexapp.plugins.library"
 }

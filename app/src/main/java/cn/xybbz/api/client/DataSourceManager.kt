@@ -1114,7 +1114,11 @@ open class DataSourceManager(
         playSessionId: String,
         positionTicks: Long?
     ) {
-        dataSourceServer.reportProgress(musicId, playSessionId, positionTicks)
+        try {
+            dataSourceServer.reportProgress(musicId, playSessionId, positionTicks)
+        }catch (e: Exception){
+            Log.e(Constants.LOG_ERROR_PREFIX, "播放上报失败", e)
+        }
     }
 
     /**
