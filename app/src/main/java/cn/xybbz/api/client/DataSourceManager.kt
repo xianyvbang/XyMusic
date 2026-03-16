@@ -46,7 +46,6 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.alarm.AlarmConfig
-import cn.xybbz.config.image.BaseUrlMapper
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.entity.data.LoginStateData
 import cn.xybbz.entity.data.LrcEntryData
@@ -59,7 +58,6 @@ import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.genre.XyGenre
-import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
@@ -426,7 +424,7 @@ open class DataSourceManager(
      */
     override fun selectMusicFlowList(
         sort: Sort
-    ): Flow<PagingData<HomeMusic>> {
+    ): Flow<PagingData<XyMusic>> {
         return dataSourceServer.selectMusicFlowList(sort)
     }
 
@@ -1230,9 +1228,6 @@ open class DataSourceManager(
     open suspend fun setCoilImageOkHttpClient() {
         val imageLoader = ImageLoader.Builder(application)
             .okHttpClient(imageApiClient.okhttpClientFunction())
-            .components {
-                add(BaseUrlMapper())
-            }
             .build()
         Coil.setImageLoader(imageLoader)
     }
