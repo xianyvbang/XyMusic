@@ -74,13 +74,7 @@ data class AlertDialogObject(
     val content: @Composable ((AlertDialogObject) -> Unit)? = null,
     val modifier: Modifier = Modifier,
     val ifWarning: Boolean = false,
-    val brashColors: List<Color> = if (ifWarning) listOf(
-        Color(0xFF814937),
-        Color(0xFF8F6952)
-    ) else listOf(
-        Color(0xFF426770),
-        Color(0xFF577C83)
-    ),
+    val brashColors: List<Color>? = null,
     val onCloseRequest: (() -> Unit)? = null,
     val onDismissRequest: (() -> Unit)? = null,
     val onConfirmation: (() -> Unit)? = null,
@@ -95,6 +89,12 @@ data class AlertDialogObject(
 @Composable
 fun AlertDialogComponent() {
     alertDialogObjectList.forEach {
+        val defaultDialogColor = if (it.ifWarning) {
+            MaterialTheme.colorScheme.errorContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        }
+        val dialogBrashColors = it.brashColors ?: listOf(defaultDialogColor, defaultDialogColor)
         Dialog(
             onDismissRequest = {
                 it.onCloseRequest?.invoke()
@@ -107,8 +107,8 @@ fun AlertDialogComponent() {
                 modifier = Modifier
                     .clip(RoundedCornerShape(XyTheme.dimens.corner))
                     .brashColor(
-                        it.brashColors[0],
-                        it.brashColors[1]
+                        dialogBrashColors[0],
+                        dialogBrashColors[1]
                     )
             ) {
                 XyItemOutSpacer()
