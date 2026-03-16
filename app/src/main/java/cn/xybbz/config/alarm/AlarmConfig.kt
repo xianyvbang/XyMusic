@@ -27,7 +27,6 @@ import android.icu.util.Calendar
 import android.os.Build
 import android.util.Log
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.config.service.ReportReceiver
 import cn.xybbz.config.service.alert.AlertService
 
 /**
@@ -39,7 +38,6 @@ class AlarmConfig(
 ) {
     private lateinit var am: AlarmManager
     private lateinit var pendingIntent: PendingIntent
-    private lateinit var reportPendingIntent: PendingIntent
     private var calendar: Calendar? = null
 
     fun createGetUpAlarmManager(application: Context, requestCode: Int) {
@@ -83,22 +81,6 @@ class AlarmConfig(
         }
     }
 
-    /**
-     * 设置10秒后的定时任务
-     */
-    fun scheduleNextReport() {
-        val triggerTime = System.currentTimeMillis() + 10_000
-        reportPendingIntent = PendingIntent.getBroadcast(
-            application, 0,
-            Intent(application, ReportReceiver::class.java),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        if (canScheduleExactAlarm()) {
-            am.setExact(AlarmManager.RTC_WAKEUP, triggerTime, reportPendingIntent)
-        }
-
-    }
-
     fun canScheduleExactAlarm(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             // Android 12 (API 31) 及以上
@@ -109,12 +91,4 @@ class AlarmConfig(
         }
     }
 
-    fun cancelScheduleNextReport() {
-        try {
-            am.cancel(reportPendingIntent)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Log.e(Constants.LOG_ERROR_PREFIX, "取消定时关闭", e)
-        }
-    }
 }
