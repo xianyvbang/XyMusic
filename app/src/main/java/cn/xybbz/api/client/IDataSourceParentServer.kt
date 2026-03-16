@@ -23,6 +23,7 @@ import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.PagingData
 import androidx.paging.RemoteMediator
+import androidx.paging.map
 import androidx.room.Transaction
 import androidx.room.withTransaction
 import cn.xybbz.R
@@ -58,6 +59,7 @@ import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.count.XyDataCount
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
+import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
@@ -87,6 +89,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import java.net.SocketTimeoutException
 import java.util.UUID
@@ -542,7 +545,7 @@ abstract class IDataSourceParentServer(
     override fun selectMusicFlowList(
         sort: Sort
     ): Flow<PagingData<XyMusic>> {
-        return defaultPager(
+        return defaultPager<Int, HomeMusic>(
             remoteMediator = MusicRemoteMediator(
                 db = db,
                 datasourceServer = this,
@@ -550,8 +553,10 @@ abstract class IDataSourceParentServer(
                 sort = sort
             )
         ) {
-            db.musicDao.selectHomeMusicListPage()
-        }.flow
+            db.musicDao.selectHomeMusicListPage(getConnectionId())
+        }.flow.map { pagingData ->
+            pagingData.map { it.toPagingMusic() }
+        }
     }
 
     /**
