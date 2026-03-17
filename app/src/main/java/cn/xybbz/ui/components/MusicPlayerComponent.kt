@@ -286,7 +286,9 @@ fun MusicPlayerScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(4f),
-                    state = horPagerState
+                    state = horPagerState,
+                    // 在底部弹窗里关闭 Pager 的边缘回弹，避免翻页落位后再次左右抖动
+                    overscrollEffect = null
                 ) { page ->
                     when (page) {
                         0 -> {
