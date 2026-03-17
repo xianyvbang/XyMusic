@@ -81,9 +81,16 @@ fun XyImage(
     onLoading: ((State.Loading) -> Unit)? = null,
     onError: ((State.Error) -> Unit)? = null,
 ) {
-    val normalizedBackModel = normalizeImageModel(backModel)
-    var tempModel by remember(model, normalizedBackModel) {
-        mutableStateOf(normalizeImageModel(model) ?: normalizedBackModel)
+    val fallbackModel = when (backModel) {
+        is String -> backModel.trim().takeIf { it.isNotBlank() }
+        else -> backModel
+    }
+    val primaryModel = when (model) {
+        is String -> model.trim().takeIf { it.isNotBlank() }
+        else -> model
+    }
+    var tempModel by remember(primaryModel, fallbackModel) {
+        mutableStateOf(primaryModel ?: fallbackModel)
     }
 
     AsyncImage(
@@ -99,20 +106,13 @@ fun XyImage(
         onSuccess = onSuccess,
         onLoading = onLoading,
         onError = {
-            if (normalizedBackModel != null && tempModel != normalizedBackModel) {
-                tempModel = normalizedBackModel
+            if (fallbackModel != null && tempModel != fallbackModel) {
+                tempModel = fallbackModel
             } else {
                 onError?.invoke(it)
             }
         }
     )
-}
-
-private fun normalizeImageModel(model: Any?): Any? {
-    return when (model) {
-        is String -> model.trim().takeIf { it.isNotBlank() }
-        else -> model
-    }
 }
 
 @Composable

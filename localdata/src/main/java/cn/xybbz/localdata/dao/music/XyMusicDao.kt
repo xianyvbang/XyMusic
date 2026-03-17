@@ -432,12 +432,13 @@ interface XyMusicDao {
      */
     @Query(
         """
-        select hm.* from HomeMusic hm
-        inner join xy_settings xs on hm.connectionId = xs.connectionId and hm.connectionId = xs.connectionId
-        order by hm.`index`
+        select hm.*
+        from HomeMusic hm
+        where hm.connectionId = :connectionId
+        order by hm.`index`, hm.musicId
     """
     )
-    fun selectHomeMusicListPage(): PagingSource<Int, HomeMusic>
+    fun selectHomeMusicListPage(connectionId: Long): PagingSource<Int, HomeMusic>
 
     /**
      * 获得音乐分页信息

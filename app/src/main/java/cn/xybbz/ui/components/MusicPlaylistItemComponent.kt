@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.res.stringResource
 import cn.xybbz.R
+import cn.xybbz.config.image.rememberRawCoverUrls
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.xy.ItemTrailingContent
 import cn.xybbz.ui.xy.XyIconButton as IconButton
@@ -38,6 +39,7 @@ fun MusicPlaylistItemComponent(
     removePlaylistClick: (() -> Unit)? = null,
     editPlaylistClick: (() -> Unit)? = null
 ) {
+    val coverUrls = rememberRawCoverUrls(imgUrl)
 
     ItemTrailingContent(
         modifier = modifier,
@@ -46,7 +48,8 @@ fun MusicPlaylistItemComponent(
         favoriteState = false,
         ifDownload = false,
         ifPlay = false,
-        imgUrl = imgUrl,
+        imgUrl = coverUrls.primaryUrl,
+        backImgUrl = coverUrls.fallbackUrl,
         enabled = enabled,
         backgroundColor = backgroundColor,
         brush = brush,

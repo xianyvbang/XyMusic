@@ -20,6 +20,7 @@ package cn.xybbz.ui.components
 
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -74,13 +75,7 @@ data class AlertDialogObject(
     val content: @Composable ((AlertDialogObject) -> Unit)? = null,
     val modifier: Modifier = Modifier,
     val ifWarning: Boolean = false,
-    val brashColors: List<Color> = if (ifWarning) listOf(
-        Color(0xFF814937),
-        Color(0xFF8F6952)
-    ) else listOf(
-        Color(0xFF426770),
-        Color(0xFF577C83)
-    ),
+    val brashColors: List<Color>? = null,
     val onCloseRequest: (() -> Unit)? = null,
     val onDismissRequest: (() -> Unit)? = null,
     val onConfirmation: (() -> Unit)? = null,
@@ -95,6 +90,11 @@ data class AlertDialogObject(
 @Composable
 fun AlertDialogComponent() {
     alertDialogObjectList.forEach {
+        val defaultDialogColor = if (it.ifWarning) {
+            MaterialTheme.colorScheme.errorContainer
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        }
         Dialog(
             onDismissRequest = {
                 it.onCloseRequest?.invoke()
@@ -106,16 +106,17 @@ fun AlertDialogComponent() {
 //                backgroundColor = Color.Transparent,
                 modifier = Modifier
                     .clip(RoundedCornerShape(XyTheme.dimens.corner))
-                    .brashColor(
-                        it.brashColors[0],
-                        it.brashColors[1]
-                    )
+//                    .background(defaultDialogColor)
+                    /*.brashColor(
+                        dialogBrashColors[0],
+                        dialogBrashColors[1]
+                    )*/
             ) {
                 XyItemOutSpacer()
                 it.title?.let { title ->
                     XyScreenTitle(
                         text = title,
-                        color = if (it.ifWarning) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurface
+                        color = defaultDialogColor
                     )
                 }
                 XyItemOutSpacer()

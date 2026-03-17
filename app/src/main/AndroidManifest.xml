@@ -27,9 +27,6 @@
     <!--    悬浮窗-->
     <!--    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />-->
 
-    <!--    精准定时任务权限-->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-
     <!--    前台通知使用-->
     <uses-permission
         android:name="android.permission.POST_NOTIFICATIONS"
@@ -119,10 +116,6 @@
             android:name=".config.service.alert.AlertService"
             android:exported="false" />
 
-
-        <receiver
-            android:name=".config.service.ReportReceiver"
-            android:exported="false" />
         <!--        <service android:name=".ui.components.FloatingWindowComponent"/>-->
 
         <receiver

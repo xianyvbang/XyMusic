@@ -259,7 +259,6 @@ class JellyfinDatasourceServer(
                 try {
                     val counts = jellyfinApiClient.itemApi().getCounts(getUserId())
                     album = counts.albumCount
-                    artist = counts.artistCount
                     music = counts.songCount
                 } catch (e: SocketTimeoutException) {
                     Log.e(Constants.LOG_ERROR_PREFIX, "加载数量超时", e)
@@ -267,6 +266,23 @@ class JellyfinDatasourceServer(
                     Log.e(Constants.LOG_ERROR_PREFIX, "加载数量报错", e)
                 }
 
+            }
+
+            val artistCounts = async {
+                artist = try {
+                    getArtistList(
+                        startIndex = 0,
+                        pageSize = 0,
+                        isFavorite = null,
+                        search = null
+                    ).totalRecordCount
+                } catch (e: SocketTimeoutException) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载艺术家数量超时", e)
+                    null
+                } catch (e: Exception) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载艺术家数量报错", e)
+                    null
+                }
             }
 
             val favoriteCounts = async {
@@ -310,6 +326,7 @@ class JellyfinDatasourceServer(
             }
 
             counts.await()
+            artistCounts.await()
             favoriteCounts.await()
             playlist.await()
             genres.await()
@@ -784,14 +801,13 @@ class JellyfinDatasourceServer(
         isPaused: Boolean,
         positionTicks: Long?
     ) {
+        Log.i("reportPlaying","上报信息 ${isPaused}, ${positionTicks}")
         jellyfinApiClient.userApi().playing(
             PlaybackStartInfo(
                 itemId = musicId,
                 playSessionId = musicId,
-                positionTicks = positionTicks,
-                canSeek = true,
+                positionTicks = positionTicks?.times(10000),
                 isPaused = isPaused,
-                isMuted = false,
                 playMethod = PlayMethod.TRANSCODE
             )
         )
@@ -805,21 +821,28 @@ class JellyfinDatasourceServer(
         playSessionId: String,
         positionTicks: Long?
     ) {
-        try {
-            jellyfinApiClient.userApi().progress(
-                PlaybackStartInfo(
-                    itemId = musicId,
-                    playSessionId = musicId,
-                    positionTicks = positionTicks,
-                    canSeek = true,
-                    isPaused = false,
-                    isMuted = false,
-                    playMethod = PlayMethod.TRANSCODE
-                )
+        jellyfinApiClient.userApi().progress(
+            PlaybackStartInfo(
+                itemId = musicId,
+                playSessionId = musicId,
+                positionTicks = positionTicks?.times(10000),
+                isPaused = false,
+                playMethod = PlayMethod.TRANSCODE
             )
-        } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "播放上报失败", e)
-        }
+        )
+    }
+
+    /**
+     * 取消上报播放进度
+     */
+    override suspend fun cancelReportProgress(musicId: String) {
+        jellyfinApiClient.userApi().stopped(
+            PlaybackStartInfo(
+                itemId = musicId,
+                playSessionId = musicId,
+                playMethod = PlayMethod.TRANSCODE
+            )
+        )
     }
 
     /**

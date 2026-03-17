@@ -326,7 +326,6 @@ class EmbyDatasourceServer(
                 try {
                     val counts = embyApiClient.itemApi().getCounts(getUserId())
                     album = counts.albumCount
-                    artist = counts.artistCount
                     music = counts.songCount
                 } catch (e: SocketTimeoutException) {
                     Log.e(Constants.LOG_ERROR_PREFIX, "加载数量超时", e)
@@ -334,6 +333,23 @@ class EmbyDatasourceServer(
                     Log.e(Constants.LOG_ERROR_PREFIX, "加载数量报错", e)
                 }
 
+            }
+
+            val artistCounts = async {
+                artist = try {
+                    getArtistList(
+                        startIndex = 0,
+                        pageSize = 0,
+                        isFavorite = null,
+                        search = null
+                    ).totalRecordCount
+                } catch (e: SocketTimeoutException) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载艺术家数量超时", e)
+                    null
+                } catch (e: Exception) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "加载艺术家数量报错", e)
+                    null
+                }
             }
 
             val favoriteCounts = async {
@@ -376,6 +392,7 @@ class EmbyDatasourceServer(
             }
 
             counts.await()
+            artistCounts.await()
             favoriteCounts.await()
             playlist.await()
             genres.await()
@@ -850,10 +867,8 @@ class EmbyDatasourceServer(
             PlaybackStartInfo(
                 itemId = musicId,
                 playSessionId = musicId,
-                positionTicks = positionTicks,
-                canSeek = true,
+                positionTicks = positionTicks?.times(10000),
                 isPaused = isPaused,
-                isMuted = false,
                 playMethod = PlayMethod.DIRECT_STREAM
             )
         )
@@ -867,7 +882,28 @@ class EmbyDatasourceServer(
         playSessionId: String,
         positionTicks: Long?
     ) {
+        embyApiClient.userApi().progress(
+            PlaybackStartInfo(
+                itemId = musicId,
+                playSessionId = musicId,
+                positionTicks = positionTicks?.times(10000),
+                isPaused = false,
+                playMethod = PlayMethod.TRANSCODE
+            )
+        )
+    }
 
+    /**
+     * 取消上报播放进度
+     */
+    override suspend fun cancelReportProgress(musicId: String) {
+        embyApiClient.userApi().stopped(
+            PlaybackStartInfo(
+                itemId = musicId,
+                playSessionId = musicId,
+                playMethod = PlayMethod.TRANSCODE
+            )
+        )
     }
 
     /**

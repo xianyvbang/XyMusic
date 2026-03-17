@@ -185,7 +185,7 @@ fun SettingScreen(
                         ifChecked = settingsViewModel.settingDataNow.ifEnableSyncPlayProgress
                     ) { bol ->
                         coroutineScope.launch {
-                            settingsViewModel.settingsManager.setIfEnableSyncPlayProgress(
+                            settingsViewModel.setSyncPlayProgressEnabled(
                                 bol
                             )
                         }

@@ -24,7 +24,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -36,7 +35,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalNavigator
-import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
@@ -48,6 +46,7 @@ import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.LocalViewModel
 import kotlinx.coroutines.launch
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,13 +86,7 @@ fun LocalScreen(localViewModel: LocalViewModel = hiltViewModel<LocalViewModel>()
             ) { _, download ->
                 download.music?.let { music ->
                     MusicItemComponent(
-                        itemId = music.itemId,
-                        name = music.name,
-                        album = music.album,
-                        artists = music.artists?.joinToString(),
-                        pic = music.pic,
-                        codec = music.codec,
-                        bitRate = music.bitRate,
+                        music = music,
                         enabledPic = false,
                         onIfFavorite = {
                             music.itemId in favoriteSet

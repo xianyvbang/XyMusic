@@ -38,7 +38,6 @@ import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.genre.XyGenre
-import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
@@ -55,7 +54,7 @@ import java.lang.AutoCloseable
  */
 interface IDataSourceServer : AutoCloseable {
 
-
+    // region 鉴权与连接
     /**
      * 用户登录逻辑
      */
@@ -73,7 +72,6 @@ interface IDataSourceServer : AutoCloseable {
         connectionConfig: ConnectionConfig? = null
     ): Flow<ClientLoginInfoState>?
 
-
     /**
      * 获得资源地址
      */
@@ -81,6 +79,46 @@ interface IDataSourceServer : AutoCloseable {
         return emptyList()
     }
 
+    /**
+     * 获得OkHttpClient
+     */
+    fun getOkhttpClient(): OkHttpClient
+
+    /**
+     * 获得连接id
+     */
+    fun getConnectionId(): Long
+
+    /**
+     * 获得连接地址
+     */
+    fun getConnectionAddress(): String
+
+    /**
+     * 更新连接设置
+     */
+    suspend fun updateConnectionConfig(connectionConfig: ConnectionConfig)
+
+    /**
+     * 更新媒体库id
+     */
+    suspend fun updateLibraryId(libraryIds: List<String>?, connectionId: Long)
+    // endregion
+
+    // region 媒体库初始化与统计
+
+    /**
+     * 获得专辑,艺术家,音频,歌单数量
+     */
+    suspend fun getDataInfoCount(connectionId: Long)
+
+    /**
+     * 初始化收藏数据
+     */
+    suspend fun initFavoriteData(connectionId: Long)
+    // endregion
+
+    // region 首页与搜索
     /**
      * 获得专辑列表数据
      */
@@ -93,7 +131,7 @@ interface IDataSourceServer : AutoCloseable {
      */
     fun selectMusicFlowList(
         sort: Sort
-    ): Flow<PagingData<HomeMusic>>
+    ): Flow<PagingData<XyMusic>>
 
     /**
      * 获得艺术家
@@ -104,6 +142,60 @@ interface IDataSourceServer : AutoCloseable {
      * 搜索音乐,艺术家,专辑
      */
     suspend fun searchAll(search: String): SearchData
+
+    /**
+     * 获得最近播放音乐或专辑
+     */
+    suspend fun playRecordMusicOrAlbumList(pageSize: Int = Constants.MIN_PAGE)
+
+    /**
+     * 获得最近播放音乐列表
+     */
+    suspend fun getPlayRecordMusicList(pageSize: Int = Constants.MIN_PAGE): List<XyMusic>
+
+    /**
+     * 获得最多播放
+     */
+    suspend fun getMostPlayerMusicList()
+
+    /**
+     * 获得最新专辑
+     */
+    suspend fun getNewestAlbumList()
+    // endregion
+
+    // region 专辑与歌曲查询
+    /**
+     * 获得专辑信息
+     * @param [albumId] 专辑id
+     * @return 专辑+艺术家信息
+     */
+    suspend fun selectAlbumInfoById(albumId: String, dataType: MusicDataTypeEnum): XyAlbum?
+
+    /**
+     * 从本地缓存获得专辑信息
+     * @param [albumId] 专辑id
+     * @return 专辑+本地收藏信息
+     */
+    suspend fun selectLocalAlbumInfoById(albumId: String): XyAlbum?
+
+    /**
+     * 从远程获得专辑信息
+     * @param [albumId] 专辑id
+     * @param [dataType] 数据类型
+     * @return 专辑+艺术家信息
+     */
+    suspend fun selectServerAlbumInfoById(
+        albumId: String,
+        dataType: MusicDataTypeEnum
+    ): XyAlbum?
+
+    /**
+     * 按 ID 选择音乐信息
+     * @param [itemId] 音乐唯一标识
+     * @return [XyMusic?]
+     */
+    suspend fun selectMusicInfoById(itemId: String): XyMusic?
 
     /**
      * 获得专辑或歌单内音乐列表
@@ -118,59 +210,6 @@ interface IDataSourceServer : AutoCloseable {
     ): Flow<PagingData<XyMusic>>
 
     /**
-     * 将项目标记为收藏
-     * @param [itemId] 专辑/音乐id
-     */
-    suspend fun markFavoriteItem(itemId: String, dataType: MusicTypeEnum): Boolean
-
-    /**
-     * 取消项目收藏
-     * @param [itemId] 专辑/音乐id
-     */
-    suspend fun unmarkFavoriteItem(itemId: String, dataType: MusicTypeEnum): Boolean
-
-    /**
-     * 获得专辑,艺术家,音频,歌单数量
-     */
-    suspend fun getDataInfoCount(connectionId: Long)
-
-    /**
-     * 删除数据
-     * @param [musicId] 需要删除数据的id
-     * @return true->删除成功,false->删除失败
-     */
-    suspend fun removeById(musicId: String): Boolean
-
-    /**
-     * 批量删除数据
-     * 按 ID 删除
-     * @param [musicIds] 需要删除数据的
-     * @return [Boolean?]
-     */
-    suspend fun removeByIds(musicIds: List<String>): Boolean
-
-    /**
-     * 获得专辑信息
-     * @param [albumId] 专辑id
-     * @return 专辑+艺术家信息
-     */
-    suspend fun selectAlbumInfoById(albumId: String, dataType: MusicDataTypeEnum): XyAlbum?
-
-    /**
-     * 按 ID 选择音乐信息
-     * @param [itemId] 音乐唯一标识
-     * @return [XyMusic?]
-     */
-    suspend fun selectMusicInfoById(itemId: String): XyMusic?
-
-    /**
-     * 从当前音乐服务获取歌词信息（不包含自定义歌词回退）
-     * @param [itemId] 音乐id
-     * @return 返回歌词列表
-     */
-    suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>?
-
-    /**
      * 根据艺术家获得专辑列表
      */
     fun selectAlbumListByArtistId(artistId: String): Flow<PagingData<XyAlbum>>
@@ -180,6 +219,68 @@ interface IDataSourceServer : AutoCloseable {
      */
     fun selectMusicListByArtistId(artistId: String, artistName: String): Flow<PagingData<XyMusic>>
 
+    /**
+     * 获得歌曲列表
+     */
+    suspend fun getMusicList(
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyPlayMusic>?
+
+    /**
+     * 根据专辑获得歌曲列表
+     */
+    suspend fun getMusicListByAlbumId(
+        albumId: String,
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyPlayMusic>?
+
+    /**
+     * 根据艺术家获得歌曲列表
+     */
+    suspend fun getMusicListByArtistId(
+        artistId: String,
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyPlayMusic>?
+
+    /**
+     * 根据艺术家列表获得歌曲列表
+     */
+    suspend fun getMusicListByArtistIds(
+        artistIds: List<String>,
+        pageSize: Int
+    ): List<XyMusic>?
+
+    /**
+     * 获得收藏歌曲列表
+     */
+    suspend fun getMusicListByFavorite(
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyPlayMusic>?
+
+    /**
+     * 获取远程服务器的专辑和歌单音乐列表
+     * @param [startIndex] 开始索引
+     * @param [pageSize] 页面大小
+     * @param [isFavorite] 是否收藏
+     * @param [sortType] 排序类型
+     * @param [years] 年列表
+     * @param [parentId] 上级id
+     * @param [dataType] 数据类型
+     * @return [AllResponse<XyMusic>]
+     */
+    suspend fun getRemoteServerMusicListByAlbumOrPlaylist(
+        startIndex: Int,
+        pageSize: Int,
+        isFavorite: Boolean? = null,
+        sortType: SortTypeEnum? = null,
+        years: List<Int>? = null,
+        parentId: String,
+        dataType: MusicDataTypeEnum
+    ): XyResponse<XyMusic>
 
     /**
      * 获得随机音乐
@@ -191,6 +292,15 @@ interface IDataSourceServer : AutoCloseable {
      */
     suspend fun getRandomMusicExtendList(pageSize: Int, pageNum: Int): List<XyPlayMusic>?
 
+    /**
+     * 从当前音乐服务获取歌词信息（不包含自定义歌词回退）
+     * @param [itemId] 音乐id
+     * @return 返回歌词列表
+     */
+    suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>?
+    // endregion
+
+    // region 歌单管理
     /**
      * 获取歌单列表
      */
@@ -237,19 +347,15 @@ interface IDataSourceServer : AutoCloseable {
      * @param [musicIds] 音乐id集合
      */
     suspend fun removeMusicPlaylist(playlistId: String, musicIds: List<String>): Boolean
+    // endregion
 
-
+    // region 艺术家与流派
     /**
      * 根据id集合获得艺术家信息集合
      * @param [artistIds] 艺术家id
      * @return [List<ArtistItem>?] 艺术家信息
      */
     suspend fun selectArtistInfoByIds(artistIds: List<String>): List<XyArtist>?
-
-    /**
-     * 初始化收藏数据
-     */
-    suspend fun initFavoriteData(connectionId: Long)
 
     /**
      * 根据id获得艺术家信息
@@ -262,34 +368,21 @@ interface IDataSourceServer : AutoCloseable {
     suspend fun selectServerArtistInfo(artistId: String): XyArtist?
 
     /**
-     * 获得媒体库列表
+     * 获得歌手热门歌曲列表
      */
-    suspend fun selectMediaLibrary(connectionId: Long)
+    suspend fun getArtistPopularMusicList(
+        artistId: String?,
+        artistName: String? = null
+    ): List<XyMusicExtend>?
 
     /**
-     * 获得最近播放音乐或专辑
+     * 远程获得相似艺术家
      */
-    suspend fun playRecordMusicOrAlbumList(pageSize: Int = Constants.MIN_PAGE)
-
-    /**
-     * 获得最近播放音乐列表
-     */
-    suspend fun getPlayRecordMusicList(pageSize: Int = Constants.MIN_PAGE): List<XyMusic>
-
-    /**
-     * 获得最多播放
-     */
-    suspend fun getMostPlayerMusicList()
-
-    /**
-     * 获得最新专辑
-     */
-    suspend fun getNewestAlbumList()
-
-    /**
-     * 获得收藏歌曲列表
-     */
-    fun selectFavoriteMusicFlowList(): Flow<PagingData<XyMusic>>
+    suspend fun getSimilarArtistsRemotely(
+        artistId: String,
+        startIndex: Int,
+        pageSize: Int
+    ): List<XyArtist>?
 
     /**
      * 获得流派列表
@@ -315,80 +408,38 @@ interface IDataSourceServer : AutoCloseable {
         genreIds: List<String>,
         pageSize: Int
     ): List<XyMusic>?
+    // endregion
 
-    /**
-     * 获得歌曲列表
-     */
-    suspend fun getMusicList(
-        pageSize: Int,
-        pageNum: Int
-    ): List<XyPlayMusic>?
-
-    /**
-     * 根据专辑获得歌曲列表
-     */
-    suspend fun getMusicListByAlbumId(
-        albumId: String,
-        pageSize: Int,
-        pageNum: Int
-    ): List<XyPlayMusic>?
-
-    /**
-     * 根据艺术家获得歌曲列表
-     */
-    suspend fun getMusicListByArtistId(
-        artistId: String,
-        pageSize: Int,
-        pageNum: Int
-    ): List<XyPlayMusic>?
-
-    /**
-     * 根据艺术家列表获得歌曲列表
-     */
-    suspend fun getMusicListByArtistIds(
-        artistIds: List<String>,
-        pageSize: Int
-    ): List<XyMusic>?
-
+    // region 收藏与删除
     /**
      * 获得收藏歌曲列表
      */
-    suspend fun getMusicListByFavorite(
-        pageSize: Int,
-        pageNum: Int
-    ): List<XyPlayMusic>?
-
+    fun selectFavoriteMusicFlowList(): Flow<PagingData<XyMusic>>
 
     /**
-     * 获取远程服务器的专辑和歌单音乐列表
-     * @param [startIndex] 开始索引
-     * @param [pageSize] 页面大小
-     * @param [isFavorite] 是否收藏
-     * @param [sortType] 排序类型
-     * @param [years] 年列表
-     * @param [parentId] 上级id
-     * @param [dataType] 数据类型
-     * @return [AllResponse<XyMusic>]
+     * 将项目标记为收藏
+     * @param [itemId] 专辑/音乐id
      */
-    suspend fun getRemoteServerMusicListByAlbumOrPlaylist(
-        startIndex: Int,
-        pageSize: Int,
-        isFavorite: Boolean? = null,
-        sortType: SortTypeEnum? = null,
-        years: List<Int>? = null,
-        parentId: String,
-        dataType: MusicDataTypeEnum
-    ): XyResponse<XyMusic>
+    suspend fun markFavoriteItem(itemId: String, dataType: MusicTypeEnum): Boolean
 
     /**
-     * 获得OkHttpClient
+     * 取消项目收藏
+     * @param [itemId] 专辑/音乐id
      */
-    fun getOkhttpClient(): OkHttpClient
+    suspend fun unmarkFavoriteItem(itemId: String, dataType: MusicTypeEnum): Boolean
+    // endregion
 
+    // region 播放与上报
     /**
-     * 设置token
+     * 获得播放连接
      */
-    fun setToken()
+    fun getMusicPlayUrl(
+        musicId: String,
+        static: Boolean = true,
+        audioCodec: AudioCodecEnum? = null,
+        audioBitRate: Int? = null,
+        session: String? = null
+    ): String
 
     /**
      * 上报播放状态
@@ -405,74 +456,23 @@ interface IDataSourceServer : AutoCloseable {
      */
     suspend fun reportProgress(musicId: String, playSessionId: String, positionTicks: Long?)
 
-
     /**
-     * 获得播放连接
+     * 取消上报播放进度
      */
-    fun getMusicPlayUrl(
-        musicId: String,
-        static: Boolean = true,
-        audioCodec: AudioCodecEnum? = null,
-        audioBitRate: Int? = null,
-        session: String? = null
-    ): String
+    suspend fun cancelReportProgress(musicId:String)
 
     /**
      * 获得相似歌曲列表
      */
     suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend>?
+    // endregion
 
-    /**
-     * 获得歌手热门歌曲列表
-     */
-    suspend fun getArtistPopularMusicList(
-        artistId: String?,
-        artistName: String? = null
-    ): List<XyMusicExtend>?
-
-    /**
-     * 远程获得相似艺术家
-     */
-    suspend fun getSimilarArtistsRemotely(
-        artistId: String,
-        startIndex: Int,
-        pageSize: Int
-    ): List<XyArtist>?
-
-    /**
-     * 获得连接设置
-     */
-    fun getConnectionConfig(): ConnectionConfig?
-
-    /**
-     * 获得用户id
-     */
-    fun getUserId(): String
-
-    /**
-     * 获得连接id
-     */
-    fun getConnectionId(): Long
-
-    /**
-     * 获得连接地址
-     */
-    fun getConnectionAddress(): String
-
-    /**
-     * 更新连接设置
-     */
-    suspend fun updateConnectionConfig(connectionConfig: ConnectionConfig)
-
-    /**
-     * 更新媒体库id
-     */
-    suspend fun updateLibraryId(libraryIds: List<String>?, connectionId: Long)
-
+    // region 转码能力
     /**
      * 获得数据源支持的转码类型
      */
     suspend fun getTranscodingType(): List<TranscodingInfo>
+    // endregion
 
 
 }

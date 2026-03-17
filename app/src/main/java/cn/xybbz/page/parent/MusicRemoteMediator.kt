@@ -36,7 +36,7 @@ class MusicRemoteMediator(
     private val datasourceServer: IDataSourceParentServer,
     private val connectionId: Long,
     private val sort: Sort
-) : DefaultRemoteMediator<HomeMusic,XyMusic>(
+) : DefaultRemoteMediator<HomeMusic, XyMusic>(
     db,
     RemoteIdConstants.MUSIC + connectionId,
     connectionId

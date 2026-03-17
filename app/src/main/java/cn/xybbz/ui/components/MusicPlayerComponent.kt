@@ -88,6 +88,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
@@ -594,11 +595,12 @@ private fun FavoriteMusicIconComponent(
     IconButton(
         onClick = {
             coroutineScope.launch {
-                dataSourceManager.setFavoriteData(
-                    MusicTypeEnum.MUSIC,
+                FavoriteCoordinator.setFavoriteData(
+                    dataSourceManager = dataSourceManager,
+                    type = MusicTypeEnum.MUSIC,
                     itemId = musicDetail.itemId,
-                    musicController = musicController,
-                    ifFavorite = musicDetail.itemId in onFavoriteMusicIdSet()
+                    ifFavorite = musicDetail.itemId in onFavoriteMusicIdSet(),
+                    musicController = musicController
                 )
             }
         },

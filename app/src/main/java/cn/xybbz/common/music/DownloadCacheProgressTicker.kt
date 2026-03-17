@@ -37,7 +37,7 @@ class DownloadCacheProgressTicker(
 
     private var periodicUpdatesStarted: Boolean = true
 
-    fun start(downloadId:String) {
+    fun start(downloadId: String) {
         this.downloadId = downloadId
         periodicUpdatesStarted = true
         updateProgress()
@@ -46,13 +46,12 @@ class DownloadCacheProgressTicker(
     private fun updateProgress() {
         val downloadManager = downloadCacheController.downloadManager
         val download = downloadManager.downloadIndex.getDownload(downloadId)
-        Log.i("music","下载状态${download?.state}")
+        val getNotMetRequirements = downloadManager.notMetRequirements
+        Log.i("music", "下载状态${download?.state} ${download?.stopReason} ${getNotMetRequirements}")
         onProgress(download?.percentDownloaded ?: 0.0f)
         if (download?.state == Download.STATE_COMPLETED) {
             onProgress(100.0f)
-        } else if (download?.state == Download.STATE_QUEUED)
-            onProgress(0.0f)
-        else if (periodicUpdatesStarted) {
+        } else if (periodicUpdatesStarted) {
             downloadCacheHandler.removeCallbacksAndMessages(null)
             downloadCacheHandler.postDelayed(this::updateProgress, intervalMs)
         }

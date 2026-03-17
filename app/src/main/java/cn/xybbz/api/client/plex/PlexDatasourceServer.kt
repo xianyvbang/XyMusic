@@ -1272,6 +1272,9 @@ class PlexDatasourceServer(
             time = positionTicks ?: 0,
             state = if (isPaused) PlayState.PLAYING else PlayState.PAUSED
         )
+        //更新播放次数
+        plexApiClient.userApi()
+            .markAsPlayed(key = musicId)
     }
 
     /**
@@ -1286,6 +1289,17 @@ class PlexDatasourceServer(
             ratingKey = musicId,
             time = positionTicks ?: 0,
             state = PlayState.PLAYING
+        )
+    }
+
+    /**
+     * 取消上报播放进度
+     */
+    override suspend fun cancelReportProgress(musicId: String) {
+        plexApiClient.userApi().playing(
+            ratingKey = musicId,
+            time = 0,
+            state = PlayState.PAUSED
         )
     }
 
@@ -1328,14 +1342,6 @@ class PlexDatasourceServer(
             artistId = artistId
         )
         return transitionMusicExtend(response.items)
-    }
-
-    /**
-     * 释放
-     */
-    override fun close() {
-        super.close()
-        plexApiClient.release()
     }
 
     /**

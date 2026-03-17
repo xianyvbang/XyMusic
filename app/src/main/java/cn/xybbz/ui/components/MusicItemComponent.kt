@@ -39,8 +39,8 @@ import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.xy.ItemTrailingContent
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import com.google.common.collect.Multimaps.index
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 /**
  * 音乐列表item
@@ -61,6 +61,7 @@ fun MusicItemComponent(
     brush: Brush? = null,
     ifPlay: Boolean,
     onMusicPlay: (OnMusicPlayParameter) -> Unit,
+    trailingIcon: ImageVector = Icons.Rounded.MoreVert,
     ifShowTrailingContent: Boolean = true,
     ifSelect: Boolean = false,
     trailingOnSelectClick: ((Boolean) -> Unit)? = null,
@@ -91,12 +92,13 @@ fun MusicItemComponent(
         trailingOnClick = trailingOnClick,
         ifSelectCheckBox = ifSelectCheckBox,
         onMusicPlay = onMusicPlay,
+        trailingIcon = trailingIcon,
         ifShowTrailingContent = ifShowTrailingContent
     )
 }
 
 @Composable
-fun MusicItemComponent(
+private fun MusicItemComponent(
     modifier: Modifier = Modifier,
     itemId: String,
     name: String,
@@ -122,7 +124,6 @@ fun MusicItemComponent(
     trailingOnClick: () -> Unit,
     ifSelectCheckBox: (() -> Boolean)? = null
 ) {
-
     ItemTrailingContent(
         name = name,
         subordination = subordination ?: (artists ?: ""),
@@ -199,11 +200,13 @@ fun MusicItemNotClickComponent(
     trailingOnClick: () -> Unit,
     trailingColor: Color
 ) {
+    val coverUrls = rememberMusicCoverUrls(music)
 
     ItemTrailingContent(
         name = music.name,
         subordination = music.artists?.joinToString(),
-        imgUrl = music.pic,
+        imgUrl = coverUrls.primaryUrl,
+        backImgUrl = coverUrls.fallbackUrl,
         media = getMusicMedia(music.codec, music.bitRate),
         backgroundColor = backgroundColor,
         picSize = picSize,

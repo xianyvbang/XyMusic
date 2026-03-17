@@ -29,6 +29,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.MusicController
@@ -156,11 +157,12 @@ class MusicBottomMenuViewModel @Inject constructor(
         itemId: String,
         ifFavorite: Boolean
     ): Boolean {
-        val favoriteMusic = dataSourceManager.setFavoriteData(
+        val favoriteMusic = FavoriteCoordinator.setFavoriteData(
+            dataSourceManager = dataSourceManager,
             type = MusicTypeEnum.MUSIC,
             itemId = itemId,
-            musicController = musicController,
-            ifFavorite = ifFavorite
+            ifFavorite = ifFavorite,
+            musicController = musicController
         )
         return favoriteMusic
     }

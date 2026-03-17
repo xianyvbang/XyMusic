@@ -42,12 +42,10 @@ import cn.xybbz.common.enums.LoginStateType
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
-import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.alarm.AlarmConfig
-import cn.xybbz.config.image.BaseUrlMapper
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.entity.data.LoginStateData
 import cn.xybbz.entity.data.LrcEntryData
@@ -55,14 +53,11 @@ import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.config.DatabaseClient
-import cn.xybbz.localdata.data.album.FavoriteAlbum
 import cn.xybbz.localdata.data.album.XyAlbum
-import cn.xybbz.localdata.data.artist.FavoriteArtist
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.genre.XyGenre
-import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
@@ -74,8 +69,6 @@ import coil.ImageLoader
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
@@ -131,7 +124,7 @@ open class DataSourceManager(
         dataSourceServerFlow
             .filterNotNull()
             .flatMapLatest { server ->
-                Log.i("home","数据变化 ${server.mediaLibraryIdFlow.value}")
+                Log.i("home", "数据变化 ${server.mediaLibraryIdFlow.value}")
                 server.mediaLibraryIdFlow.drop(1)
             }.distinctUntilChanged()
 
@@ -142,15 +135,6 @@ open class DataSourceManager(
         taggedLoginFlow,
         taggedMediaFlow
     ).filter { (it is Source.Login && it.value != LoginStateType.UNKNOWN) || (it is Source.Library /*&& it.value != null*/) }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val combinedFlow: Flow<Pair<LoginStateType, String?>> =
-        combine(
-            loginStateFlow,
-            mediaLibraryIdFlow
-        ) { loginState, mediaIds ->
-            loginState to mediaIds
-        }.filter { it.first != LoginStateType.UNKNOWN }
 
 
     //加载状态
@@ -377,6 +361,56 @@ open class DataSourceManager(
     }
 
     /**
+     * 获得OkHttpClient
+     */
+    override fun getOkhttpClient(): OkHttpClient {
+        return dataSourceServer.getOkhttpClient()
+    }
+
+    /**
+     * 获得连接id
+     */
+    override fun getConnectionId(): Long {
+        return dataSourceServer.getConnectionId()
+    }
+
+    /**
+     * 获得连接地址
+     */
+    override fun getConnectionAddress(): String {
+        return dataSourceServer.getConnectionAddress()
+    }
+
+    /**
+     * 更新连接设置
+     */
+    override suspend fun updateConnectionConfig(connectionConfig: ConnectionConfig) {
+        dataSourceServer.updateConnectionConfig(connectionConfig)
+    }
+
+    /**
+     * 更新媒体库id
+     */
+    override suspend fun updateLibraryId(libraryIds: List<String>?, connectionId: Long) {
+        return dataSourceServer.updateLibraryId(libraryIds, connectionId)
+    }
+
+    /**
+     * 获得专辑,艺术家,音频,歌单数量
+     */
+    override suspend fun getDataInfoCount(connectionId: Long) {
+        dataSourceServer.getDataInfoCount(connectionId)
+    }
+
+
+    /**
+     * 初始化收藏数据
+     */
+    override suspend fun initFavoriteData(connectionId: Long) {
+        return dataSourceServer.initFavoriteData(connectionId)
+    }
+
+    /**
      * 获得专辑数据
      */
     override fun selectAlbumFlowList(
@@ -390,7 +424,7 @@ open class DataSourceManager(
      */
     override fun selectMusicFlowList(
         sort: Sort
-    ): Flow<PagingData<HomeMusic>> {
+    ): Flow<PagingData<XyMusic>> {
         return dataSourceServer.selectMusicFlowList(sort)
     }
 
@@ -409,90 +443,49 @@ open class DataSourceManager(
     }
 
     /**
-     * 获得专辑内音乐列表
-     * @param [itemId] 专辑id
+     * 获得最近播放音乐
      */
-    override fun selectMusicListByParentId(
-        itemId: String,
-        dataType: MusicDataTypeEnum,
-        sort: Sort
-    ): Flow<PagingData<XyMusic>> {
-        return dataSourceServer.selectMusicListByParentId(
-            itemId = itemId,
-            dataType = dataType,
-            sort = sort
-        )
-    }
-
-    /**
-     * 将项目标记为收藏
-     * @param [itemId] 专辑/音乐id
-     */
-    override suspend fun markFavoriteItem(itemId: String, dataType: MusicTypeEnum): Boolean {
-        return try {
-            dataSourceServer.markFavoriteItem(itemId, dataType)
+    override suspend fun playRecordMusicOrAlbumList(pageSize: Int) {
+        try {
+            dataSourceServer.playRecordMusicOrAlbumList(pageSize)
         } catch (e: SocketTimeoutException) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "收藏超时", e)
-            return false
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐更新超时", e)
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "收藏失败", e)
-            return false
-        }
-
-    }
-
-    /**
-     * 取消项目收藏
-     * @param [itemId] 专辑/音乐id
-     */
-    override suspend fun unmarkFavoriteItem(itemId: String, dataType: MusicTypeEnum): Boolean {
-        return try {
-            dataSourceServer.unmarkFavoriteItem(itemId, dataType)
-        } catch (e: SocketTimeoutException) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "取消收藏超时", e)
-            return true
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐更新失败", e)
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "取消收藏失败", e)
-            return true
-        }
-
-    }
-
-    /**
-     * 获得专辑,艺术家,音频,歌单数量
-     */
-    override suspend fun getDataInfoCount(connectionId: Long) {
-        dataSourceServer.getDataInfoCount(connectionId)
-    }
-
-    /**
-     * 删除数据
-     * @param [musicId] 需要删除数据的id
-     * @return true->删除成功,false->删除失败
-     */
-    override suspend fun removeById(musicId: String): Boolean {
-        return try {
-            dataSourceServer.removeById(musicId)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐未知错误失败", e)
         }
     }
 
     /**
-     * 批量删除数据
-     * 按 ID 删除
-     * @param [musicIds] 需要删除数据的
-     * @return [Boolean?]
+     * 获得最近播放音乐列表
      */
-    override suspend fun removeByIds(musicIds: List<String>): Boolean {
-        return try {
-            dataSourceServer.removeByIds(musicIds)
+    override suspend fun getPlayRecordMusicList(pageSize: Int): List<XyMusic> {
+        return dataSourceServer.getPlayRecordMusicList(pageSize)
+    }
+
+    /**
+     * 获得最多播放
+     */
+    override suspend fun getMostPlayerMusicList() {
+        try {
+            dataSourceServer.getMostPlayerMusicList()
         } catch (e: Exception) {
-            e.printStackTrace()
-            false
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得最多播放专辑失败", e)
         }
     }
+
+    /**
+     * 获得最新专辑
+     */
+    override suspend fun getNewestAlbumList() {
+        try {
+            dataSourceServer.getNewestAlbumList()
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得最新专辑失败", e)
+        }
+    }
+
 
     /**
      * 获得专辑信息
@@ -518,7 +511,45 @@ open class DataSourceManager(
 
     }
 
-    //todo 这里需要修改不应该在这里设置图片地址
+    /**
+     * 从本地缓存获得专辑信息
+     */
+    override suspend fun selectLocalAlbumInfoById(albumId: String): XyAlbum? {
+        return try {
+            dataSourceServer.selectLocalAlbumInfoById(albumId)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取本地专辑信息超时", e)
+            null
+        } catch (e: ServiceException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取本地专辑信息失败", e)
+            null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取本地专辑信息未知异常失败", e)
+            null
+        }
+    }
+
+    /**
+     * 从远程获得专辑信息
+     */
+    override suspend fun selectServerAlbumInfoById(
+        albumId: String,
+        dataType: MusicDataTypeEnum
+    ): XyAlbum? {
+        return try {
+            dataSourceServer.selectServerAlbumInfoById(albumId, dataType)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取远程专辑信息超时", e)
+            null
+        } catch (e: ServiceException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取远程专辑信息失败", e)
+            null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取远程专辑信息未知异常失败", e)
+            null
+        }
+    }
+
     override suspend fun selectMusicInfoById(itemId: String): XyMusic? {
         return try {
             dataSourceServer.selectMusicInfoById(itemId)
@@ -535,30 +566,19 @@ open class DataSourceManager(
     }
 
     /**
-     * 根据音乐获得歌词信息
-     * @param [itemId] 音乐id
-     * @return 返回歌词列表
+     * 获得专辑内音乐列表
+     * @param [itemId] 专辑id
      */
-    override suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>? {
-        return getMusicLyricListByMusicService(itemId)
-    }
-
-    /**
-     * 从当前音乐服务（Jellyfin/Emby/Navidrome/Plex/Subsonic）获取歌词
-     */
-    private suspend fun getMusicLyricListByMusicService(itemId: String): List<LrcEntryData>? {
-        return try {
-            dataSourceServer.getMusicLyricList(itemId)?.takeIf { it.isNotEmpty() }
-        } catch (e: SocketTimeoutException) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获得歌词超时", e)
-            null
-        } catch (e: ServiceException) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获得歌词失败", e)
-            null
-        } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获得歌词未知异常失败", e)
-            null
-        }
+    override fun selectMusicListByParentId(
+        itemId: String,
+        dataType: MusicDataTypeEnum,
+        sort: Sort
+    ): Flow<PagingData<XyMusic>> {
+        return dataSourceServer.selectMusicListByParentId(
+            itemId = itemId,
+            dataType = dataType,
+            sort = sort
+        )
     }
 
     /**
@@ -576,6 +596,126 @@ open class DataSourceManager(
         artistName: String
     ): Flow<PagingData<XyMusic>> {
         return dataSourceServer.selectMusicListByArtistId(artistId, artistName)
+    }
+
+    /**
+     * 获得歌曲列表
+     */
+    override suspend fun getMusicList(
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyPlayMusic>? {
+        return try {
+            dataSourceServer.getMusicList(pageSize, pageNum)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据超时", e)
+            null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据报错", e)
+            null
+        }
+    }
+
+    /**
+     * 根据专辑获得歌曲列表
+     */
+    override suspend fun getMusicListByAlbumId(
+        albumId: String,
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyPlayMusic>? {
+        return try {
+            dataSourceServer.getMusicListByAlbumId(albumId, pageSize, pageNum)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据超时", e)
+            null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据报错", e)
+            null
+        }
+    }
+
+    /**
+     * 根据艺术家获得歌曲列表
+     */
+    override suspend fun getMusicListByArtistId(
+        artistId: String,
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyPlayMusic>? {
+        return try {
+            dataSourceServer.getMusicListByArtistId(artistId, pageSize, pageNum)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据超时", e)
+            null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据报错", e)
+            null
+        }
+    }
+
+    /**
+     * 根据艺术家列表获得歌曲列表
+     */
+    override suspend fun getMusicListByArtistIds(
+        artistIds: List<String>,
+        pageSize: Int
+    ): List<XyMusic>? {
+        return try {
+            dataSourceServer.getMusicListByArtistIds(artistIds, pageSize)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "根据艺术家列表获得歌曲列表失败", e)
+            null
+        }
+    }
+
+    /**
+     * 获得收藏歌曲列表
+     */
+    override suspend fun getMusicListByFavorite(
+        pageSize: Int,
+        pageNum: Int
+    ): List<XyPlayMusic>? {
+        return try {
+            dataSourceServer.getMusicListByFavorite(pageSize, pageNum)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据超时", e)
+            null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据报错", e)
+            null
+        }
+    }
+
+    /**
+     * 获取远程服务器的专辑和歌单音乐列表
+     * @param [startIndex] 开始索引
+     * @param [pageSize] 页面大小
+     * @param [isFavorite] 是否收藏
+     * @param [sortType] 排序类型
+     * @param [years] 年列表
+     * @param [parentId] 上级id
+     * @param [dataType] 数据类型
+     * @return [AllResponse<XyMusic>]
+     */
+    override suspend fun getRemoteServerMusicListByAlbumOrPlaylist(
+        startIndex: Int,
+        pageSize: Int,
+        isFavorite: Boolean?,
+        sortType: SortTypeEnum?,
+        years: List<Int>?,
+        parentId: String,
+        dataType: MusicDataTypeEnum
+    ): XyResponse<XyMusic> {
+        return dataSourceServer.getRemoteServerMusicListByAlbumOrPlaylist(
+            startIndex = startIndex,
+            pageSize = pageSize,
+            isFavorite = isFavorite,
+            sortType = sortType,
+            years = years,
+            parentId = parentId,
+            dataType = dataType
+        )
     }
 
 
@@ -612,6 +752,26 @@ open class DataSourceManager(
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据报错", e)
             return null
+        }
+    }
+
+    /**
+     * 根据音乐获得歌词信息
+     * @param [itemId] 音乐id
+     * @return 返回歌词列表
+     */
+    override suspend fun getMusicLyricList(itemId: String): List<LrcEntryData>? {
+        return try {
+            dataSourceServer.getMusicLyricList(itemId)?.takeIf { it.isNotEmpty() }
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得歌词超时", e)
+            null
+        } catch (e: ServiceException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得歌词失败", e)
+            null
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得歌词未知异常失败", e)
+            null
         }
     }
 
@@ -756,51 +916,12 @@ open class DataSourceManager(
         }
     }
 
-    /**
-     * 获得媒体库列表
-     */
-    override suspend fun selectMediaLibrary(connectionId: Long) {
-        try {
-            dataSourceServer.selectMediaLibrary(connectionId)
-        } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获得媒体库列表失败", e)
-        }
-    }
-
-    /**
-     * 获得最近播放音乐
-     */
-    override suspend fun playRecordMusicOrAlbumList(pageSize: Int) {
-        try {
-            dataSourceServer.playRecordMusicOrAlbumList(pageSize)
-        } catch (e: SocketTimeoutException) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐更新超时", e)
-        } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐更新失败", e)
-        } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获得最近播放音乐未知错误失败", e)
-        }
-    }
-
-    /**
-     * 获得最近播放音乐列表
-     */
-    override suspend fun getPlayRecordMusicList(pageSize: Int): List<XyMusic> {
-        return dataSourceServer.getPlayRecordMusicList(pageSize)
-    }
 
     /**
      * 获得艺术家信息
      */
     override suspend fun selectArtistInfoByIds(artistIds: List<String>): List<XyArtist> {
         return dataSourceServer.selectArtistInfoByIds(artistIds)
-    }
-
-    /**
-     * 初始化收藏数据
-     */
-    override suspend fun initFavoriteData(connectionId: Long) {
-        return dataSourceServer.initFavoriteData(connectionId)
     }
 
     /**
@@ -828,32 +949,34 @@ open class DataSourceManager(
     }
 
     /**
-     * 获得最多播放
+     * 获得歌手热门歌曲列表
      */
-    override suspend fun getMostPlayerMusicList() {
-        try {
-            dataSourceServer.getMostPlayerMusicList()
+    override suspend fun getArtistPopularMusicList(
+        artistId: String?,
+        artistName: String?
+    ): List<XyMusicExtend> {
+        return try {
+            dataSourceServer.getArtistPopularMusicList(artistId, artistName)
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获得最多播放专辑失败", e)
-        }
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得歌手热门歌曲列表失败", e)
+            null
+        } ?: emptyList()
     }
 
     /**
-     * 获得最新专辑
+     * 远程获得相似艺术家
      */
-    override suspend fun getNewestAlbumList() {
-        try {
-            dataSourceServer.getNewestAlbumList()
+    override suspend fun getSimilarArtistsRemotely(
+        artistId: String,
+        startIndex: Int,
+        pageSize: Int
+    ): List<XyArtist> {
+        return try {
+            dataSourceServer.getSimilarArtistsRemotely(artistId, startIndex, pageSize)
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获得最新专辑失败", e)
-        }
-    }
-
-    /**
-     * 获得收藏歌曲列表
-     */
-    override fun selectFavoriteMusicFlowList(): Flow<PagingData<XyMusic>> {
-        return dataSourceServer.selectFavoriteMusicFlowList()
+            Log.e(Constants.LOG_ERROR_PREFIX, "获得歌手热门歌曲列表失败", e)
+            null
+        } ?: emptyList()
     }
 
     /**
@@ -900,165 +1023,44 @@ open class DataSourceManager(
     }
 
     /**
-     * 获得歌曲列表
-     */
-    override suspend fun getMusicList(
-        pageSize: Int,
-        pageNum: Int
-    ): List<XyPlayMusic>? {
-        return try {
-            dataSourceServer.getMusicList(pageSize, pageNum)
-        } catch (e: SocketTimeoutException) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据超时", e)
-            null
-        } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据报错", e)
-            null
-        }
-    }
-
-    /**
-     * 根据专辑获得歌曲列表
-     */
-    override suspend fun getMusicListByAlbumId(
-        albumId: String,
-        pageSize: Int,
-        pageNum: Int
-    ): List<XyPlayMusic>? {
-        return try {
-            dataSourceServer.getMusicListByAlbumId(albumId, pageSize, pageNum)
-        } catch (e: SocketTimeoutException) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据超时", e)
-            null
-        } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据报错", e)
-            null
-        }
-    }
-
-    /**
-     * 根据艺术家获得歌曲列表
-     */
-    override suspend fun getMusicListByArtistId(
-        artistId: String,
-        pageSize: Int,
-        pageNum: Int
-    ): List<XyPlayMusic>? {
-        return try {
-            dataSourceServer.getMusicListByArtistId(artistId, pageSize, pageNum)
-        } catch (e: SocketTimeoutException) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据超时", e)
-            null
-        } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据报错", e)
-            null
-        }
-    }
-
-    /**
-     * 根据艺术家列表获得歌曲列表
-     */
-    override suspend fun getMusicListByArtistIds(
-        artistIds: List<String>,
-        pageSize: Int
-    ): List<XyMusic>? {
-        return try {
-            dataSourceServer.getMusicListByArtistIds(artistIds, pageSize)
-        } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "根据艺术家列表获得歌曲列表失败", e)
-            null
-        }
-    }
-
-    /**
      * 获得收藏歌曲列表
      */
-    override suspend fun getMusicListByFavorite(
-        pageSize: Int,
-        pageNum: Int
-    ): List<XyPlayMusic>? {
+    override fun selectFavoriteMusicFlowList(): Flow<PagingData<XyMusic>> {
+        return dataSourceServer.selectFavoriteMusicFlowList()
+    }
+
+    /**
+     * 将项目标记为收藏
+     * @param [itemId] 专辑/音乐id
+     */
+    override suspend fun markFavoriteItem(itemId: String, dataType: MusicTypeEnum): Boolean {
         return try {
-            dataSourceServer.getMusicListByFavorite(pageSize, pageNum)
+            dataSourceServer.markFavoriteItem(itemId, dataType)
         } catch (e: SocketTimeoutException) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据超时", e)
-            null
+            Log.e(Constants.LOG_ERROR_PREFIX, "收藏超时", e)
+            return false
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "加载分页数据报错", e)
-            null
+            Log.e(Constants.LOG_ERROR_PREFIX, "收藏失败", e)
+            return false
         }
+
     }
 
     /**
-     * 获取远程服务器的专辑和歌单音乐列表
-     * @param [startIndex] 开始索引
-     * @param [pageSize] 页面大小
-     * @param [isFavorite] 是否收藏
-     * @param [sortType] 排序类型
-     * @param [years] 年列表
-     * @param [parentId] 上级id
-     * @param [dataType] 数据类型
-     * @return [AllResponse<XyMusic>]
+     * 取消项目收藏
+     * @param [itemId] 专辑/音乐id
      */
-    override suspend fun getRemoteServerMusicListByAlbumOrPlaylist(
-        startIndex: Int,
-        pageSize: Int,
-        isFavorite: Boolean?,
-        sortType: SortTypeEnum?,
-        years: List<Int>?,
-        parentId: String,
-        dataType: MusicDataTypeEnum
-    ): XyResponse<XyMusic> {
-        return dataSourceServer.getRemoteServerMusicListByAlbumOrPlaylist(
-            startIndex = startIndex,
-            pageSize = pageSize,
-            isFavorite = isFavorite,
-            sortType = sortType,
-            years = years,
-            parentId = parentId,
-            dataType = dataType
-        )
-    }
-
-    /**
-     * 获得OkHttpClient
-     */
-    override fun getOkhttpClient(): OkHttpClient {
-        return dataSourceServer.getOkhttpClient()
-    }
-
-    /**
-     * 设置token
-     */
-    override fun setToken() {
-        dataSourceServer.setToken()
-    }
-
-    /**
-     * 上报播放
-     */
-    override suspend fun reportPlaying(
-        musicId: String,
-        playSessionId: String,
-        isPaused: Boolean,
-        positionTicks: Long?
-    ) {
-
-        try {
-            dataSourceServer.reportPlaying(musicId, playSessionId, isPaused, positionTicks)
+    override suspend fun unmarkFavoriteItem(itemId: String, dataType: MusicTypeEnum): Boolean {
+        return try {
+            dataSourceServer.unmarkFavoriteItem(itemId, dataType)
+        } catch (e: SocketTimeoutException) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "取消收藏超时", e)
+            return true
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "播放上报失败", e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "取消收藏失败", e)
+            return true
         }
-    }
 
-    /**
-     * 上报播放进度
-     */
-    override suspend fun reportProgress(
-        musicId: String,
-        playSessionId: String,
-        positionTicks: Long?
-    ) {
-        dataSourceServer.reportProgress(musicId, playSessionId, positionTicks)
     }
 
     /**
@@ -1086,6 +1088,49 @@ open class DataSourceManager(
     }
 
     /**
+     * 上报播放
+     */
+    override suspend fun reportPlaying(
+        musicId: String,
+        playSessionId: String,
+        isPaused: Boolean,
+        positionTicks: Long?
+    ) {
+
+        try {
+            dataSourceServer.reportPlaying(musicId, playSessionId, isPaused, positionTicks)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "播放上报失败", e)
+        }
+    }
+
+    /**
+     * 上报播放进度
+     */
+    override suspend fun reportProgress(
+        musicId: String,
+        playSessionId: String,
+        positionTicks: Long?
+    ) {
+        try {
+            dataSourceServer.reportProgress(musicId, playSessionId, positionTicks)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "播放上报失败", e)
+        }
+    }
+
+    /**
+     * 取消上报播放进度
+     */
+    override suspend fun cancelReportProgress(musicId: String) {
+        try {
+            dataSourceServer.cancelReportProgress(musicId)
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "取消播放上报失败", e)
+        }
+    }
+
+    /**
      * 获得相似歌曲列表
      */
     override suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend> {
@@ -1095,80 +1140,6 @@ open class DataSourceManager(
             Log.e(Constants.LOG_ERROR_PREFIX, "获得相似歌曲列表失败", e)
             emptyList()
         }
-    }
-
-    /**
-     * 获得歌手热门歌曲列表
-     */
-    override suspend fun getArtistPopularMusicList(
-        artistId: String?,
-        artistName: String?
-    ): List<XyMusicExtend> {
-        return try {
-            dataSourceServer.getArtistPopularMusicList(artistId, artistName)
-        } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获得歌手热门歌曲列表失败", e)
-            null
-        } ?: emptyList()
-    }
-
-    /**
-     * 远程获得相似艺术家
-     */
-    override suspend fun getSimilarArtistsRemotely(
-        artistId: String,
-        startIndex: Int,
-        pageSize: Int
-    ): List<XyArtist> {
-        return try {
-            dataSourceServer.getSimilarArtistsRemotely(artistId, startIndex, pageSize)
-        } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获得歌手热门歌曲列表失败", e)
-            null
-        } ?: emptyList()
-    }
-
-
-    /**
-     * 获得连接设置
-     */
-    override fun getConnectionConfig(): ConnectionConfig? {
-        return dataSourceServer.getConnectionConfig()
-    }
-
-    /**
-     * 获得用户id
-     */
-    override fun getUserId(): String {
-        return dataSourceServer.getUserId()
-    }
-
-    /**
-     * 获得连接id
-     */
-    override fun getConnectionId(): Long {
-        return dataSourceServer.getConnectionId()
-    }
-
-    /**
-     * 获得连接地址
-     */
-    override fun getConnectionAddress(): String {
-        return dataSourceServer.getConnectionAddress()
-    }
-
-    /**
-     * 更新连接设置
-     */
-    override suspend fun updateConnectionConfig(connectionConfig: ConnectionConfig) {
-        dataSourceServer.updateConnectionConfig(connectionConfig)
-    }
-
-    /**
-     * 更新媒体库id
-     */
-    override suspend fun updateLibraryId(libraryIds: List<String>?, connectionId: Long) {
-        return dataSourceServer.updateLibraryId(libraryIds, connectionId)
     }
 
     /**
@@ -1195,76 +1166,19 @@ open class DataSourceManager(
     }
 
     /**
-     * 获得登录成功flow
-     */
-    fun getLoginStateFlow(): SharedFlow<LoginStateType> {
-        return dataSourceServer.getLoginStateFlow()
-    }
-
-    /**
      * 设置收藏音乐信息
      */
     @Transaction
     suspend fun setFavoriteData(
         type: MusicTypeEnum,
         itemId: String,
-        musicController: MusicController? = null,
         ifFavorite: Boolean
     ): Boolean {
-
-        val favorite = if (ifFavorite) {
-            unmarkFavoriteItem(itemId = itemId, type)
-        } else {
-            markFavoriteItem(itemId = itemId, type)
-        }
-
-        if (favorite != ifFavorite)
-            when (type) {
-                MusicTypeEnum.MUSIC -> {
-                    if (musicController?.musicInfo?.itemId == itemId) {
-                        musicController.updateCurrentFavorite(favorite)
-                    }
-                    db.musicDao.updateFavoriteByItemId(
-                        favorite,
-                        itemId,
-                        dataSourceServer.getConnectionId()
-                    )
-                }
-
-                MusicTypeEnum.ALBUM -> {
-                    //判断数据是否存在,如果存在则更新,否则新增
-                    val favoriteCount = db.albumDao.selectFavoriteCount(itemId)
-                    if (favoriteCount <= 0) {
-                        db.albumDao.saveFavoriteAlbum(
-                            FavoriteAlbum(
-                                albumId = itemId,
-                                connectionId = dataSourceServer.getConnectionId(),
-                                ifFavorite = favorite
-                            )
-                        )
-                    } else {
-                        //更新数据
-                        db.albumDao.updateFavoriteByItemId(favorite, itemId)
-                    }
-                }
-
-                MusicTypeEnum.ARTIST -> {
-                    val favoriteCount = db.artistDao.selectFavoriteCount(itemId)
-                    if (favoriteCount <= 0) {
-                        db.artistDao.saveFavoriteArtist(
-                            FavoriteArtist(
-                                artistId = itemId,
-                                connectionId = dataSourceServer.getConnectionId(),
-                                ifFavorite = favorite
-                            )
-                        )
-                    } else {
-                        db.artistDao.updateFavoriteByItemId(favorite, itemId)
-                    }
-                }
-            }
-
-        return favorite
+        return dataSourceServer.setFavoriteData(
+            type = type,
+            itemId = itemId,
+            ifFavorite = ifFavorite
+        )
     }
 
 
@@ -1274,8 +1188,8 @@ open class DataSourceManager(
      */
     @Transaction
     suspend fun removeMusicById(musicId: String) {
-        OperationTipUtils.operationTipNotToBlock() {
-            val bool = removeById(musicId)
+        OperationTipUtils.operationTipNotToBlock {
+            val bool = dataSourceServer.removeById(musicId)
             db.musicDao.removeByItemId(musicId)
             bool
         }
@@ -1287,8 +1201,13 @@ open class DataSourceManager(
      */
     @Transaction
     suspend fun removeMusicByIds(musicIds: List<String>): Boolean {
-        return OperationTipUtils.operationTipNotToBlock() {
-            val bool = removeByIds(musicIds)
+        return OperationTipUtils.operationTipNotToBlock {
+            val bool = try {
+                dataSourceServer.removeByIds(musicIds)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                false
+            }
             db.musicDao.removeByItemIds(musicIds)
             bool
         }
@@ -1309,9 +1228,6 @@ open class DataSourceManager(
     open suspend fun setCoilImageOkHttpClient() {
         val imageLoader = ImageLoader.Builder(application)
             .okHttpClient(imageApiClient.okhttpClientFunction())
-            .components {
-                add(BaseUrlMapper())
-            }
             .build()
         Coil.setImageLoader(imageLoader)
     }

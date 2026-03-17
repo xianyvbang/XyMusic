@@ -38,14 +38,15 @@ import androidx.media3.common.util.UnstableApi
 import androidx.room.withTransaction
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.api.events.ReLoginEvent
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.music.MusicController
+import cn.xybbz.common.music.PlaybackProgressReporter
 import cn.xybbz.common.music.PlayerEvent
 import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.config.BackgroundConfig
-import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.setting.TranscodingState
@@ -85,7 +86,7 @@ class MainViewModel @Inject constructor(
     val settingsManager: SettingsManager,
     val backgroundConfig: BackgroundConfig,
     private val musicPlayContext: MusicPlayContext,
-    private val alarmConfig: AlarmConfig,
+    private val playbackProgressReporter: PlaybackProgressReporter,
     val selectControl: SelectControl,
     private val versionCheckScheduler: VersionCheckScheduler,
 ) : ViewModel() {
@@ -214,19 +215,13 @@ class MainViewModel @Inject constructor(
                     positionTicks = musicController.progressStateFlow.value
                 )
             }
-            viewModelScope.launch {
-                dataSourceManager.reportProgress(
-                    musicId,
-                    playSessionId = playSessionId,
-                    positionTicks = musicController.progressStateFlow.value
-                )
-                alarmConfig.scheduleNextReport()
-            }
+            playbackProgressReporter.start()
 
         }
     }
 
     fun onPause(musicId: String, playSessionId: String) {
+        playbackProgressReporter.stop()
         if (settingsManager.get().ifEnableSyncPlayProgress) {
             viewModelScope.launch {
                 dataSourceManager.reportPlaying(
@@ -234,13 +229,6 @@ class MainViewModel @Inject constructor(
                     playSessionId = playSessionId,
                     true,
                     musicController.progressStateFlow.value
-                )
-            }
-            viewModelScope.launch {
-                dataSourceManager.reportProgress(
-                    musicId,
-                    playSessionId = playSessionId,
-                    positionTicks = musicController.progressStateFlow.value
                 )
             }
         }
@@ -252,29 +240,30 @@ class MainViewModel @Inject constructor(
     fun onPositionSeekTo(millSeconds: Long, itemId: String, playSessionId: String) {
         setPlayerProgress(millSeconds)
         if (settingsManager.get().ifEnableSyncPlayProgress)
-            viewModelScope.launch {
-                dataSourceManager.reportProgress(
-                    itemId,
-                    playSessionId = playSessionId,
-                    positionTicks = millSeconds
-                )
-            }
+            playbackProgressReporter.reportNow()
     }
 
     /**
      * 设置手动音频切换方法
      */
     fun onBeforeChangeMusic() {
+        playbackProgressReporter.stop()
         setPlayerProgress(musicController.progressStateFlow.value)
+    }
+
+    override fun onCleared() {
+        playbackProgressReporter.stop()
+        super.onCleared()
     }
 
     fun onFavoriteMusic(musicId: String) {
         viewModelScope.launch {
-            dataSourceManager.setFavoriteData(
+            FavoriteCoordinator.setFavoriteData(
+                dataSourceManager = dataSourceManager,
                 type = MusicTypeEnum.MUSIC,
                 itemId = musicId,
-                musicController = musicController,
-                ifFavorite = db.musicDao.selectIfFavoriteByMusic(musicId)
+                ifFavorite = db.musicDao.selectIfFavoriteByMusic(musicId),
+                musicController = musicController
             )
         }
     }

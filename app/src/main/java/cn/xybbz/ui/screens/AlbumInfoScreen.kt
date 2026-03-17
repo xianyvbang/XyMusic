@@ -96,6 +96,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import cn.xybbz.R
+import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.config.image.rememberAlbumCoverUrls
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
@@ -413,11 +414,12 @@ fun AlbumInfoScreen(
                         IconButton(onClick = composeClick {
                             coroutineScope.launch {
                                 val ifFavoriteData =
-                                    albumInfoViewModel.dataSourceManager.setFavoriteData(
+                                    FavoriteCoordinator.setFavoriteData(
+                                        dataSourceManager = albumInfoViewModel.dataSourceManager,
                                         type = MusicTypeEnum.ALBUM,
                                         itemId = albumInfoViewModel.xyAlbumInfoData?.itemId ?: "",
-                                        musicController = albumInfoViewModel.musicController,
-                                        ifFavorite = albumInfoViewModel.ifFavorite
+                                        ifFavorite = albumInfoViewModel.ifFavorite,
+                                        musicController = albumInfoViewModel.musicController
                                     )
                                 albumInfoViewModel.updateIfFavorite(ifFavoriteData)
                             }

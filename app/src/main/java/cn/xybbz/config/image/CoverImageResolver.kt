@@ -1,9 +1,11 @@
 package cn.xybbz.config.image
 
 import android.content.Context
+import android.webkit.URLUtil
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import cn.xybbz.api.TokenServer.baseUrl
 import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.custom.data.CustomCoverQuery
 import cn.xybbz.config.setting.SettingsManager
@@ -28,6 +30,15 @@ class CoverImageResolver @Inject constructor(
     private val settingsManager: SettingsManager,
     private val customMediaApiClient: CustomMediaApiClient
 ) {
+
+    fun resolveRaw(primaryUrl: String?, fallbackUrl: String? = null): CoverImageUrls {
+        val normalizedPrimaryUrl = primaryUrl.normalizeCoverUrl()
+        val normalizedFallbackUrl = fallbackUrl.normalizeCoverUrl()
+        return CoverImageUrls(
+            primaryUrl = normalizedPrimaryUrl,
+            fallbackUrl = normalizedFallbackUrl?.takeIf { it != normalizedPrimaryUrl }
+        )
+    }
 
     fun resolveMusic(music: XyMusic?): CoverImageUrls {
         return resolveMusic(
@@ -184,6 +195,14 @@ fun rememberArtistBackdropCoverUrls(artist: XyArtist?): CoverImageUrls {
 }
 
 @Composable
+fun rememberRawCoverUrls(primaryUrl: String?, fallbackUrl: String? = null): CoverImageUrls {
+    val resolver = rememberCoverImageResolver()
+    return remember(primaryUrl, fallbackUrl) {
+        resolver.resolveRaw(primaryUrl, fallbackUrl)
+    }
+}
+
+@Composable
 private fun rememberCoverImageResolver(): CoverImageResolver {
     val context = LocalContext.current.applicationContext
     return remember(context) {
@@ -196,6 +215,11 @@ fun Context.coverImageResolver(): CoverImageResolver {
         .coverImageResolver()
 }
 
-private fun String?.normalizeCoverUrl(): String? {
-    return this?.trim()?.takeIf { it.isNotBlank() }
+fun String?.normalizeCoverUrl(): String? {
+    val normalizedValue = this?.trim()?.takeIf { it.isNotBlank() } ?: return null
+    return if (URLUtil.isNetworkUrl(normalizedValue)) {
+        normalizedValue
+    } else {
+        baseUrl + normalizedValue
+    }
 }

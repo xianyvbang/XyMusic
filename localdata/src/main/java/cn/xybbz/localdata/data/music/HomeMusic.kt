@@ -74,4 +74,18 @@ data class HomeMusic(
     val connectionId: Long,
     val index:Int,
     val cachedAt: Long = System.currentTimeMillis()// 缓存时间戳（System.currentTimeMillis()）
-)
+) {
+    fun toPagingMusic(): XyMusic {
+        return XyMusic(
+            itemId = musicId,
+            pic = pic,
+            name = name,
+            downloadUrl = "",
+            album = album,
+            connectionId = connectionId,
+            artists = artists,
+            codec = codec,
+            bitRate = bitRate,
+        )
+    }
+}

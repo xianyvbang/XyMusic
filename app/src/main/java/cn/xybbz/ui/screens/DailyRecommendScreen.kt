@@ -24,7 +24,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
@@ -41,7 +40,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.R
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalNavigator
-import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
@@ -52,6 +50,7 @@ import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.DailyRecommendViewModel
 import kotlinx.coroutines.launch
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,13 +110,7 @@ fun DailyRecommendScreen(
                     contentType = { _-> MusicTypeEnum.MUSIC }
                 ) { musicExtend ->
                     MusicItemComponent(
-                        itemId = musicExtend.music.itemId,
-                        name = musicExtend.music.name,
-                        album = musicExtend.music.album,
-                        artists = musicExtend.music.artists?.joinToString(),
-                        pic = musicExtend.music.pic,
-                        codec = musicExtend.music.codec,
-                        bitRate = musicExtend.music.bitRate,
+                        music = musicExtend.music,
                         onIfFavorite = {
                             musicExtend.music.itemId in favoriteList
                         },

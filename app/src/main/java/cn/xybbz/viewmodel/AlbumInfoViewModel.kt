@@ -48,6 +48,8 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 @HiltViewModel(assistedFactory = AlbumInfoViewModel.Factory::class)
@@ -114,12 +116,22 @@ class AlbumInfoViewModel @AssistedInject constructor(
      */
     fun getAlbumInfoData() {
         viewModelScope.launch {
-            val albumInfo = dataSourceManager.selectAlbumInfoById(itemId, dataType)
-            if (albumInfo != null) {
-                xyAlbumInfoData = albumInfo
-                ifFavorite = albumInfo.ifFavorite
-            }
+            coroutineScope {
+                val localAlbumInfoDeferred =
+                    async { dataSourceManager.selectLocalAlbumInfoById(itemId) }
+                val serverAlbumInfoDeferred =
+                    async { dataSourceManager.selectServerAlbumInfoById(itemId, dataType) }
 
+                localAlbumInfoDeferred.await()?.let { localAlbumInfo ->
+                    xyAlbumInfoData = localAlbumInfo
+                    ifFavorite = localAlbumInfo.ifFavorite
+                }
+
+                serverAlbumInfoDeferred.await()?.let { serverAlbumInfo ->
+                    xyAlbumInfoData = serverAlbumInfo
+                    ifFavorite = serverAlbumInfo.ifFavorite
+                }
+            }
         }
 
     }
