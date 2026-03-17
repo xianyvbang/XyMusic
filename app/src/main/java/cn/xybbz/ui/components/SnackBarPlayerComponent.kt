@@ -56,6 +56,7 @@ import androidx.compose.material.icons.rounded.PlaylistRemove
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -72,8 +73,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -87,7 +86,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.palette.graphics.Palette
 import cn.xybbz.R
-import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.music.MusicController
@@ -95,6 +93,7 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.ResourcesUtils.drawableToBitmap
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.extension.playProgress
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
@@ -202,13 +201,7 @@ fun SnackBarPlayerComponent(
             .zIndex(Float.MAX_VALUE)
             .padding(horizontal = XyTheme.dimens.innerHorizontalPadding)
             .clip(shape = RoundedCornerShape(topEnd = 25.dp, bottomEnd = 25.dp))
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(Color(0xff3b82f6), Color(0xff8b5cf6)),
-                    start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
-                    end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
-                ),
-            )
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .drawBehind {
                 drawRect(animatedColor)
             }

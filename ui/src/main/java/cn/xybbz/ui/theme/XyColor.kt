@@ -36,7 +36,7 @@ val darkPrimary = Color(0xFF1478C8)
 //text
 val darkOnSurface = Color(0xFFEBEEF1)
 //subText
-val darkOnSurfaceVariant = Color(0xBFE1E6EB)
+val darkOnSurfaceVariant = Color(0xFFE1E6EB)
 //background
 val darkSurface = Color(0xFF1A1A1A)
 //val darkSurface = Color(0xFFEBEEF1)

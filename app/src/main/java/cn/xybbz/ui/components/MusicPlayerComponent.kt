@@ -89,11 +89,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.FavoriteCoordinator
-import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.compositionLocal.LocalMainViewModel
+import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.PlayerTypeEnum
@@ -123,9 +123,9 @@ fun MusicPlayerComponent(
 ) {
     val mainViewModel = LocalMainViewModel.current
     val coroutineScope = rememberCoroutineScope()
-  /*  val sheetStateR = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )*/
+    /*  val sheetStateR = rememberModalBottomSheetState(
+          skipPartiallyExpanded = true
+      )*/
 
     val horPagerState =
         rememberPagerState {
@@ -314,6 +314,7 @@ fun MusicPlayerScreen(
                             }
 
                         }
+
                         1 -> {
                             LrcViewNewCompose(
                                 listState = lrcListState,
@@ -324,6 +325,7 @@ fun MusicPlayerScreen(
                                 }
                             )
                         }
+
                         else -> {
                             MusicPlayerSimilarPopularComponent(
                                 listState = similarPopularListState,
@@ -382,7 +384,7 @@ fun MusicPlayerScreen(
                             musicDetail = musicDetail,
                             dataSourceManager = musicPlayerViewModel.dataSourceManager,
                             musicController = musicPlayerViewModel.musicController,
-                            onFavoriteMusicIdSet = {favoriteList}
+                            onFavoriteMusicIdSet = { favoriteList }
                         )
                         IconButton(
                             modifier = Modifier.offset(x = (10).dp),
