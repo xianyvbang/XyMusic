@@ -96,6 +96,7 @@ import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.extension.playProgress
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import cn.xybbz.localdata.enums.PlayerTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
@@ -480,10 +481,39 @@ fun RowScope.HorizontalPagerSnackBar(
             state = horPagerState,
             modifier = modifier
         ) { page ->
-            val index by remember {
+            val index by remember(
+                page,
+                basePage,
+                originMusicListIsEmpty,
+                musicController.curOriginIndex,
+                musicController.playType
+            ) {
                 derivedStateOf {
-                    if (originMusicListIsEmpty.isEmpty()) 0
-                    else (page % originMusicListIsEmpty.size + originMusicListIsEmpty.size) % originMusicListIsEmpty.size
+                    if (originMusicListIsEmpty.isEmpty()) {
+                        0
+                    } else {
+                        val listSize = originMusicListIsEmpty.size
+                        val currentIndex = musicController.curOriginIndex
+                            .takeIf { it in originMusicListIsEmpty.indices }
+                            ?: 0
+                        val fallbackIndex =
+                            (page % listSize + listSize) % listSize
+
+                        if (musicController.playType != PlayerTypeEnum.RANDOM_PLAY) {
+                            fallbackIndex
+                        } else {
+                            when (page - basePage) {
+                                0 -> currentIndex
+                                1 -> musicController.getNextPlayableIndex()
+                                    ?: ((currentIndex + 1) % listSize)
+
+                                -1 -> musicController.getPreviousPlayableIndex()
+                                    ?: ((currentIndex - 1 + listSize) % listSize)
+
+                                else -> fallbackIndex
+                            }
+                        }
+                    }
                 }
             }
             Text(

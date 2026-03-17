@@ -472,6 +472,14 @@ class MusicController(
 
     }
 
+    fun getNextPlayableIndex(): Int? {
+        return mediaController?.nextMediaItemIndex?.takeIf { it in originMusicList.indices }
+    }
+
+    fun getPreviousPlayableIndex(): Int? {
+        return mediaController?.previousMediaItemIndex?.takeIf { it in originMusicList.indices }
+    }
+
 
     fun removeItem(index: Int) {
         //判断要删除的索引和当前索引是否一致
