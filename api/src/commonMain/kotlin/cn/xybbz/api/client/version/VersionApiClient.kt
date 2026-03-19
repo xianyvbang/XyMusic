@@ -35,7 +35,7 @@ class VersionApiClient : ApiFactory, DownloadFactory {
     private lateinit var gitHubVersionApi: GitHubVersionApi
 
     init {
-        setRetrofitData("", false)
+        createHttpClient("", false)
     }
 
     /**
@@ -45,7 +45,7 @@ class VersionApiClient : ApiFactory, DownloadFactory {
         return instance().create(clazz)
     }
 
-    override fun setRetrofitData(baseUrl: String, ifTmp: Boolean) {
+    override fun createHttpClient(baseUrl: String, ifTmp: Boolean) {
         retrofit = Retrofit.Builder()
             .baseUrl("https://api.github.com/").client(getOkHttpClient())
             .addConverterFactory(

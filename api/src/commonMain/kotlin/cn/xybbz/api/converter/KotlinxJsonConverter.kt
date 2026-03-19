@@ -18,10 +18,7 @@
 
 package cn.xybbz.api.converter
 
-import cn.xybbz.api.constants.ApiConstants.HEADER_ACCEPT
 import kotlinx.serialization.json.Json
-import okhttp3.MediaType.Companion.toMediaType
-import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 /*
 val module = SerializersModule {
@@ -42,5 +39,3 @@ val json = Json {
     explicitNulls = false     // null 不输出（可选）
     classDiscriminator = "__type"
 }
-
-fun kotlinxJsonConverter() = json.asConverterFactory(HEADER_ACCEPT.toMediaType())

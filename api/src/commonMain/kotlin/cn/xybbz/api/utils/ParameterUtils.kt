@@ -1,7 +1,5 @@
 package cn.xybbz.api.utils
 
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 object ParameterUtils {
 
@@ -25,9 +23,4 @@ object ParameterUtils {
     private fun encodeParameterValue(raw: String): String = raw
         .trim()
         .replace(Regex("\\n"), " ")
-        .encodeUrlParameter()
-
-    fun String.encodeUrlParameter(): String {
-        return URLEncoder.encode(this, StandardCharsets.UTF_8.toString())
-    }
 }

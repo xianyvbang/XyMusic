@@ -21,6 +21,9 @@ core = "1.7.0"
 coil = "3.4.0"
 ktor = "3.4.1"
 logging = "8.0.01"
+serialization = "1.10.0"
+datetime = "0.7.1"
+
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -52,8 +55,13 @@ kotlin-ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "
 kotlin-ktor-android = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 kotlin-ktor-ios = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 kotlin-ktor-apache = { module = "io.ktor:ktor-client-apache5", version.ref = "ktor" }
+kotlin-ktor-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
+kotlin-ktor-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 
 kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "logging" }
+
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "datetime" }
 
 
 [plugins]
@@ -65,3 +73,4 @@ composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "k
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 androidKotlinMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 androidLint = { id = "com.android.lint", version.ref = "agp" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

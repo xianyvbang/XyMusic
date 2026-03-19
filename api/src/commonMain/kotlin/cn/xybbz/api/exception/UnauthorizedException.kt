@@ -1,6 +1,7 @@
 package cn.xybbz.api.exception
 
-import java.io.IOException
+import kotlinx.io.IOException
+
 
 class UnauthorizedException(msg: String?) : IOException(msg) {
     var statusCode = 0

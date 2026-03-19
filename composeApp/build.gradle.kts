@@ -57,11 +57,11 @@ kotlin {
 
         iosMain.dependencies {
             implementation(libs.kotlin.ktor.ios)
-            implementation(libs.kotlin.ktor.apache)
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
+            implementation(libs.kotlin.ktor.apache)
         }
     }
 }

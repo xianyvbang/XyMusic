@@ -1,30 +1,47 @@
 package cn.xybbz.api.client.emby.service
 
 import cn.xybbz.api.base.BaseApi
+import cn.xybbz.api.client.jellyfin.data.ItemRequest
 import cn.xybbz.api.client.jellyfin.data.ItemResponse
 import cn.xybbz.api.client.jellyfin.data.Response
-import retrofit2.http.GET
-import retrofit2.http.Path
-import retrofit2.http.QueryMap
+import cn.xybbz.api.utils.toStringMap
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.http.parameters
+import io.ktor.util.StringValues
 
-interface EmbyArtistsApi : BaseApi {
+class EmbyArtistsApi(private val httpClient: HttpClient) : BaseApi {
 
     /**
      * 获取专辑列表
      * @param itemRequest [Map<String, String>]
      * @return [Response<ItemResponse>]
      */
-    @GET("/emby/Artists")
-    suspend fun getArtists(
-        @QueryMap itemRequest: Map<String, String>?,
-    ): Response<ItemResponse>
+
+    suspend fun getArtists(url: String, itemRequest: ItemRequest): Response<ItemResponse> {
+        return httpClient.get("/emby/Artists") {
+            parameters {
+                appendAll(StringValues.build {
+                    itemRequest.toStringMap()
+                })
+            }
+        }.body<Response<ItemResponse>>()
+    }
 
     /**
      * 相似歌手
      */
-    @GET("/emby/Artists/{artistId}/Similar")
     suspend fun getSimilarArtists(
-        @Path("artistId") artistId: String,
-        @QueryMap itemRequest: Map<String, String>?
-    ): Response<ItemResponse>
+        artistId: String,
+        itemRequest: ItemRequest?
+    ): Response<ItemResponse> {
+        return httpClient.get("/emby/Artists/${artistId}/Similar") {
+            parameters {
+                appendAll(StringValues.build {
+                    itemRequest.toStringMap()
+                })
+            }
+        }.body<Response<ItemResponse>>()
+    }
 }

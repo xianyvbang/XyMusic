@@ -1,6 +1,7 @@
 package cn.xybbz.api.exception
 
-import java.io.IOException
+import kotlinx.io.IOException
+
 
 /**
  * 服务异常

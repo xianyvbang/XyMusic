@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
     alias(libs.plugins.androidLint)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 kotlin {
@@ -66,15 +67,15 @@ kotlin {
             dependencies {
                 implementation(libs.kotlin.stdlib)
                 implementation(libs.kotlin.ktor.client.core)
+                implementation(libs.kotlin.ktor.logging)
+                implementation(libs.kotlin.ktor.content.negotiation)
+                implementation(libs.kotlin.logging)
+                implementation(libs.kotlinx.serialization.json)
+                implementation(libs.kotlinx.datetime)
                 // Add KMP dependencies here
             }
         }
 
-        commonTest {
-            dependencies {
-                implementation(libs.kotlin.test)
-            }
-        }
 
         androidMain {
             dependencies {
@@ -85,13 +86,6 @@ kotlin {
             }
         }
 
-        getByName("androidDeviceTest") {
-            dependencies {
-                implementation(libs.androidx.runner)
-                implementation(libs.androidx.core)
-                implementation(libs.androidx.testExt.junit)
-            }
-        }
 
         iosMain {
             dependencies {

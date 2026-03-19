@@ -19,26 +19,38 @@
 package cn.xybbz.api.client
 
 import cn.xybbz.api.TokenServer
-import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.base.IDownLoadApi
+import cn.xybbz.api.client.subsonic.data.SubsonicDefaultResponse
+import cn.xybbz.api.client.subsonic.data.SubsonicResponse
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.constants.ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
-import cn.xybbz.api.converter.kotlinxJsonConverter
+import cn.xybbz.api.converter.json
+import cn.xybbz.api.enums.subsonic.Status
 import cn.xybbz.api.events.ReLoginEventBus
-import cn.xybbz.api.okhttp.LoggingInterceptor
-import cn.xybbz.api.okhttp.NetWorkInterceptor
-import cn.xybbz.api.okhttp.plex.PlexQueryInterceptor
+import cn.xybbz.api.exception.ServiceException
+import cn.xybbz.api.exception.UnauthorizedException
 import cn.xybbz.api.okhttp.proxy.ProxyManager
-import okhttp3.OkHttpClient
-import retrofit2.Retrofit
-import java.util.concurrent.TimeUnit
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.DefaultRequest
+import io.ktor.client.plugins.HttpRequestRetry
+import io.ktor.client.plugins.HttpResponseValidator
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.http.parameters
+import io.ktor.util.appendAll
+import io.ktor.util.appendIfNameAndValueAbsent
 
-abstract class DefaultApiClient : ApiFactory,DownloadFactory {
+abstract class DefaultApiClient : ApiFactory, DownloadFactory {
 
-//    protected lateinit var baseUrl: String
-
-
-    private lateinit var retrofit: Retrofit
+    private lateinit var httpClient: HttpClient
 
     /**
      * token的header名称
@@ -56,77 +68,101 @@ abstract class DefaultApiClient : ApiFactory,DownloadFactory {
 
     val eventBus = ReLoginEventBus()
 
-    lateinit var apiOkHttpClient: OkHttpClient
-
     private lateinit var defaultDownloadApi: IDownLoadApi
-
-    override fun setRetrofitData(baseUrl: String, ifTmp: Boolean) {
+    private val logger = KotlinLogging.logger {}
+    override fun createHttpClient(baseUrl: String, ifTmp: Boolean) {
         TokenServer.updateBaseUrl(baseUrl)
-        retrofit = Retrofit.Builder()
-            .baseUrl(baseUrl).client(getOkHttpClient(ifTmp))
-//            .addConverterFactory(MyGsonConverterFactory.create()).build()
-            .addConverterFactory(
-                kotlinxJsonConverter()
-            ).build()
-        userApi(true)
-        userLibraryApi(true)
-        itemApi(true)
-        imageApi(true)
-        universalAudioApi(true)
-        lyricsApi(true)
-        userViewsApi(true)
-        playlistsApi(true)
-        artistsApi(true)
-        libraryApi(true)
-        genreApi(true)
-        downloadApi(true)
-    }
+        updateTokenHeaderName()
+        //todo 注意关闭
+        httpClient = provideClient().config {
+            engine {
+                proxy = ProxyManager.proxySelector().config
+            }
+            install(DefaultRequest) {
+                url(baseUrl)
+                headers {
+                    append(tokenHeaderName, createToken())
+                    val bool = headers.contains(ApiConstants.CUSTOM_IMAGE_HEADER_NAME)
+                    if (bool) {
+                        append(
+                            ApiConstants.AUTHORIZATION,
+                            headers.get(ApiConstants.AUTHORIZATION) ?: ""
+                        )
+                    }
+                }
+            }
 
-    override fun instance(): Retrofit {
-        return retrofit
-    }
+            install(Logging) {
+                logger = object : Logger {
+                    private val logger = KotlinLogging.logger {}
+                    override fun log(message: String) {
+                        logger.info { message }
+                    }
+                }
+                level = LogLevel.HEADERS
+            }
+            install(ContentNegotiation) {
+                json
+            }
+            install(HttpRequestRetry) {
+                maxRetries = 2
+            }
+            install(HttpTimeout) {
+                requestTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
+                connectTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
+                socketTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
+            }
 
-    /**
-     * 获得okhttp客户端
-     */
-    protected open fun getOkHttpClient(ifTmp: Boolean = false): OkHttpClient {
-        if (!ifTmp) {
-            updateTokenHeaderName()
+            HttpResponseValidator {
+                validateResponse { response ->
+                    val body: SubsonicResponse<SubsonicDefaultResponse> = response.body()
+                    if (body.subsonicResponse.status == Status.Failed){
+                        val error = body.subsonicResponse.error
+                        val code = error?.code
+                        if (code == 40) {
+                            logger.error { "接口报错响应:${body.subsonicResponse}" }
+                            throw UnauthorizedException(
+                                msg = "${error.message}",
+                                statusCode = code,
+                                responsePhrase = error.message
+                            )
+                        } else {
+                            throw ServiceException(
+                                message = error?.message ?: "",
+                                code = code
+                            )
+                        }
+                    }
+                }
+            }
         }
-        val okHttpClientBuilder = OkHttpClient.Builder()
-            .proxySelector(ProxyManager.proxySelector())
-            .addInterceptor(
-                NetWorkInterceptor(
-                    { if (ifTmp) tokenHeaderName else TokenServer.tokenHeaderName },
-                    { if (ifTmp) token else TokenServer.token },
-                    { if (ifTmp) queryMap else TokenServer.queryMap },
-                    { if (ifTmp) headerMap else TokenServer.headerMap }
-                )
-            )
-            .connectTimeout(DEFAULT_TIMEOUT_MILLISECONDS, TimeUnit.MILLISECONDS)
-            .readTimeout(DEFAULT_TIMEOUT_MILLISECONDS, TimeUnit.MILLISECONDS)
-            .writeTimeout(DEFAULT_TIMEOUT_MILLISECONDS, TimeUnit.MILLISECONDS)
-            .addNetworkInterceptor(PlexQueryInterceptor())
-            .addNetworkInterceptor(LoggingInterceptor())
-            .followRedirects(true)
-            .followSslRedirects(true)
-            .retryOnConnectionFailure(true)
-        apiOkHttpClient = okHttpClientBuilder
-            // 可以添加其他配置，比如连接超时、读写超时等
-            .build()
-        return apiOkHttpClient
+
+        downloadApi(true)
     }
 
     /**
      * 更新token和请求头和请求参数
      */
     open fun updateTokenOrHeadersOrQuery() {
-        TokenServer.clearAllData()
         token = createToken()
-        TokenServer.setTokenData(token)
         queryMap = getQueryMapData()
-        TokenServer.setQueryMapData(queryMap)
         headerMap = getHeadersMapData()
+        httpClient.config {
+            defaultRequest {
+                headers {
+                    append(tokenHeaderName, token)
+                    appendAll(headerMap)
+                }
+                parameters {
+                    appendAll(queryMap)
+                }
+            }
+        }
+
+        //todo 有待观察
+        TokenServer.clearAllData()
+        TokenServer.setTokenData(token)
+        TokenServer.setQueryMapData(queryMap)
         TokenServer.setHeaderMapData(headerMap)
     }
 
@@ -152,83 +188,6 @@ abstract class DefaultApiClient : ApiFactory,DownloadFactory {
     }
 
     /**
-     * 获得用户接口服务
-     */
-    open fun userApi(restart: Boolean = false): BaseApi = object : BaseApi {
-
-    }
-
-    /**
-     *用户资源接口服务
-     */
-    open fun userLibraryApi(restart: Boolean = false): BaseApi = object : BaseApi {
-
-    }
-
-    /**
-     * 音乐,专辑,艺术家相关接口
-     */
-    open fun itemApi(restart: Boolean = false): BaseApi = object : BaseApi {
-
-    }
-
-    /**
-     * 获取文件图片
-     */
-    open fun imageApi(restart: Boolean = false): BaseApi = object : BaseApi {
-
-    }
-
-    /**
-     * 创建音乐流
-     */
-    open fun universalAudioApi(restart: Boolean = false): BaseApi = object : BaseApi {
-
-    }
-
-    /**
-     * 歌词接口
-     */
-    open fun lyricsApi(restart: Boolean = false): BaseApi = object : BaseApi {
-
-    }
-
-    /**
-     * 用户视图信息
-     */
-    open fun userViewsApi(restart: Boolean = false): BaseApi = object : BaseApi {
-
-    }
-
-    /**
-     * 播放列表接口
-     */
-    open fun playlistsApi(restart: Boolean = false): BaseApi = object : BaseApi {
-
-    }
-
-    /**
-     * 艺术家接口
-     */
-    open fun artistsApi(restart: Boolean = false): BaseApi = object : BaseApi {
-
-    }
-
-    /**
-     * 资源接口
-     */
-    open fun libraryApi(restart: Boolean = false): BaseApi = object : BaseApi {
-
-    }
-
-    /**
-     * 流派接口
-     */
-    open fun genreApi(restart: Boolean = false): BaseApi = object : BaseApi {
-
-    }
-
-    /**
      * 下载相关接口
      */
     override fun downloadApi(restart: Boolean): IDownLoadApi {
@@ -236,10 +195,6 @@ abstract class DefaultApiClient : ApiFactory,DownloadFactory {
             defaultDownloadApi = instance().create(IDownLoadApi::class.java)
         }
         return defaultDownloadApi
-    }
-
-    override fun <T> createApiObj(clazz: Class<T>): T {
-        return instance().create(clazz)
     }
 
     open fun updateTokenHeaderName() {
@@ -252,5 +207,12 @@ abstract class DefaultApiClient : ApiFactory,DownloadFactory {
      */
     override fun getBaseUrl(): String {
         return TokenServer.baseUrl
+    }
+
+    /**
+     * 清空数据
+     */
+    override fun release() {
+        httpClient.close()
     }
 }

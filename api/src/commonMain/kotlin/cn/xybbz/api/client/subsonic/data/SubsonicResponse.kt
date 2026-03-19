@@ -18,10 +18,6 @@
 
 package cn.xybbz.api.client.subsonic.data
 
-import android.util.Log
-import cn.xybbz.api.enums.subsonic.Status
-import cn.xybbz.api.exception.ServiceException
-import cn.xybbz.api.exception.UnauthorizedException
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -33,7 +29,7 @@ data class SubsonicResponse<T : SubsonicParentResponse>(
     @SerialName(value = "subsonic-response")
     val subsonicResponse: T
 ){
-    init {
+    /*init {
         hasOkStatus()
     }
 
@@ -56,5 +52,5 @@ data class SubsonicResponse<T : SubsonicParentResponse>(
                 )
             }
         }
-    }
+    }*/
 }
