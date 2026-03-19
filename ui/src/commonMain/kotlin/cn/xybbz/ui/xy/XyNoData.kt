@@ -25,10 +25,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import cn.xybbz.common.UiConstants.MusicCardImageSize
-import cn.xybbz.ui.R
+import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
+import org.jetbrains.compose.resources.stringResource
+import xymusic_kmp.ui.generated.resources.Res
+import xymusic_kmp.ui.generated.resources.no_data
 
 @Composable
 fun XyNoData(modifier: Modifier = Modifier) {
@@ -39,7 +40,7 @@ fun XyNoData(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center
     ) {
         XyText(
-            text = stringResource(R.string.no_data),
+            text = stringResource(Res.string.no_data),
         )
     }
 }

@@ -34,6 +34,7 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.kotlin.ktor.android)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -44,10 +45,19 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+
+            implementation(libs.coil.compose)
+            implementation(libs.coil.ktor)
+
             implementation(project(path = ":ui"))
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+        }
+
+        iosMain.dependencies {
+            implementation(libs.kotlin.ktor.ios)
+            implementation(libs.kotlin.ktor.apache)
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)

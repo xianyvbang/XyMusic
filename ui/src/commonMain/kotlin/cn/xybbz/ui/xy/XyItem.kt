@@ -60,7 +60,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.key.Key.Companion.R
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -81,6 +80,7 @@ import cn.xybbz.ui.theme.XyTheme
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import xymusic_kmp.ui.generated.resources.Res
+import xymusic_kmp.ui.generated.resources.check_24px
 import xymusic_kmp.ui.generated.resources.download_done_24px
 import xymusic_kmp.ui.generated.resources.downloaded
 import xymusic_kmp.ui.generated.resources.favorite_24px
@@ -370,7 +370,7 @@ fun XyItemReversal(
 @Composable
 fun XyItemIcon(
     modifier: Modifier = Modifier,
-    imageVector: ImageVector,
+    painter: Painter,
     text: String,
     sub: String? = null,
     enabled: Boolean = true,
@@ -394,7 +394,7 @@ fun XyItemIcon(
             horizontalArrangement = Arrangement.Start
         ) {
             Icon(
-                imageVector = imageVector,
+                painter = painter,
                 contentDescription = text,
                 tint = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -428,7 +428,7 @@ fun XyItemIcon(
 fun XyItemIconSelect(
     modifier: Modifier = Modifier,
     text: String,
-    imageVector: ImageVector? = null,
+    painter: Painter? = null,
     enabled: Boolean = true,
     enableLeading: Boolean = true,
     onIfSelected: () -> Boolean = { false },
@@ -451,10 +451,10 @@ fun XyItemIconSelect(
             horizontalArrangement = Arrangement.Start
         ) {
             if (enableLeading) {
-                imageVector?.let {
+                painter?.let {
                     Icon(
                         modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize),
-                        imageVector = imageVector,
+                        painter = painter,
                         contentDescription = text,
                         tint = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -475,7 +475,7 @@ fun XyItemIconSelect(
             Row {
                 Icon(
                     modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize),
-                    painter = Icons.Rounded.Check,
+                    painter = painterResource(Res.drawable.check_24px),
                     contentDescription = stringResource(Res.string.selected),
                 )
                 Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))

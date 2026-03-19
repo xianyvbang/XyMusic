@@ -18,6 +18,9 @@ material3 = "1.10.0-alpha05"
 kotlinStdlib = "2.3.10"
 runner = "1.7.0"
 core = "1.7.0"
+coil = "3.4.0"
+ktor = "3.4.1"
+logging = "8.0.01"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -41,6 +44,17 @@ kotlinx-coroutinesSwing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-s
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlinStdlib" }
 androidx-runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
 androidx-core = { group = "androidx.test", name = "core", version.ref = "core" }
+
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
+
+kotlin-ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+kotlin-ktor-android = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+kotlin-ktor-ios = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
+kotlin-ktor-apache = { module = "io.ktor:ktor-client-apache5", version.ref = "ktor" }
+
+kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "logging" }
+
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

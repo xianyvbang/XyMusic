@@ -32,13 +32,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.DefaultAlpha
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.key.Key.Companion.R
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import cn.xybbz.ui.R
-import coil.compose.AsyncImage
-import coil.compose.AsyncImagePainter.State
+import coil3.compose.AsyncImage
+import coil3.compose.AsyncImagePainter
+import org.jetbrains.compose.resources.painterResource
+import xymusic_kmp.ui.generated.resources.Res
+import xymusic_kmp.ui.generated.resources.default_placeholder
 
 @Composable
 fun XySmallImage(
@@ -47,9 +49,9 @@ fun XySmallImage(
     backModel: Any? = null,
     size: Dp = 50.dp,
     contentDescription: String? = null,
-    placeholder: Painter? = painterResource(id = R.drawable.default_placeholder),
-    error: Painter? = painterResource(id = R.drawable.default_placeholder),
-    fallback: Painter? = painterResource(id = R.drawable.default_placeholder),
+    placeholder: Painter? = painterResource(resource = Res.drawable.default_placeholder),
+    error: Painter? = painterResource(resource = Res.drawable.default_placeholder),
+    fallback: Painter? = painterResource(resource = Res.drawable.default_placeholder),
 ) {
     XyImage(
         modifier = Modifier
@@ -77,9 +79,9 @@ fun XyImage(
     contentScale: ContentScale = ContentScale.Crop,
     alpha: Float = DefaultAlpha,
     contentDescription: String? = null,
-    onSuccess: ((State.Success) -> Unit)? = null,
-    onLoading: ((State.Loading) -> Unit)? = null,
-    onError: ((State.Error) -> Unit)? = null,
+    onSuccess: ((AsyncImagePainter.State.Success) -> Unit)? = null,
+    onLoading: ((AsyncImagePainter.State.Loading) -> Unit)? = null,
+    onError: ((AsyncImagePainter.State.Error) -> Unit)? = null,
 ) {
     val fallbackModel = when (backModel) {
         is String -> backModel.trim().takeIf { it.isNotBlank() }
@@ -154,7 +156,7 @@ fun XySmallImage(
                 .then(modifier)
                 .aspectRatio(1F)
                 .clip(shape),
-            painter = painterResource(id = R.drawable.default_placeholder),
+            painter = painterResource(resource = Res.drawable.default_placeholder),
             contentDescription = contentDescription,
             contentScale = ContentScale.Crop
         )
