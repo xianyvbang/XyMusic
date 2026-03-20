@@ -18,7 +18,6 @@
 
 package cn.xybbz.api.client.plex
 
-import android.util.Log
 import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
@@ -34,7 +33,6 @@ import cn.xybbz.api.client.plex.service.PlexUserViewsApi
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.UnauthorizedException
-import cn.xybbz.api.utils.ParameterUtils.encodeUrlParameter
 
 class PlexApiClient : DefaultParentApiClient() {
 
@@ -198,13 +196,13 @@ class PlexApiClient : DefaultParentApiClient() {
      */
     public override fun getHeadersMapData(): Map<String, String> {
         return mapOf(
-            ApiConstants.PLEX_CLIENT_IDENTIFIER to clientId.encodeUrlParameter(),
-            ApiConstants.PLEX_PRODUCT to clientName.encodeUrlParameter(),
-            ApiConstants.PLEX_VERSION to clientVersion.encodeUrlParameter(),
+            ApiConstants.PLEX_CLIENT_IDENTIFIER to clientId,
+            ApiConstants.PLEX_PRODUCT to clientName,
+            ApiConstants.PLEX_VERSION to clientVersion,
             ApiConstants.PLEX_PLATFORM to "Android",
             ApiConstants.PLEX_PROVIDES to "player",
-            ApiConstants.PLEX_DEVICE_NAME to deviceName.encodeUrlParameter(),
-            ApiConstants.PLEX_DEVICE to deviceModel.encodeUrlParameter(),
+            ApiConstants.PLEX_DEVICE_NAME to deviceName,
+            ApiConstants.PLEX_DEVICE to deviceModel,
         )
     }
 
@@ -253,7 +251,7 @@ class PlexApiClient : DefaultParentApiClient() {
      */
     override fun userApi(restart: Boolean): PlexUserApi {
         if (!this::plexUserApi.isInitialized || restart) {
-            plexUserApi = instance().create(PlexUserApi::class.java)
+            plexUserApi = PlexUserApi(httpClient)
         }
         return plexUserApi
     }
@@ -263,7 +261,7 @@ class PlexApiClient : DefaultParentApiClient() {
      */
     override fun userViewsApi(restart: Boolean): PlexUserViewsApi {
         if (!this::plexUserViewsApi.isInitialized || restart) {
-            plexUserViewsApi = instance().create(PlexUserViewsApi::class.java)
+            plexUserViewsApi = PlexUserViewsApi(httpClient)
         }
         return plexUserViewsApi
     }
@@ -273,7 +271,7 @@ class PlexApiClient : DefaultParentApiClient() {
      */
     override fun itemApi(restart: Boolean): PlexItemApi {
         if (!this::plexItemApi.isInitialized || restart) {
-            plexItemApi = instance().create(PlexItemApi::class.java)
+            plexItemApi = PlexItemApi(httpClient)
         }
         return plexItemApi
     }
@@ -283,7 +281,7 @@ class PlexApiClient : DefaultParentApiClient() {
      */
     override fun playlistsApi(restart: Boolean): PlexPlaylistsApi {
         if (!this::plexPlaylistsApi.isInitialized || restart) {
-            plexPlaylistsApi = instance().create(PlexPlaylistsApi::class.java)
+            plexPlaylistsApi = PlexPlaylistsApi(httpClient)
         }
         return plexPlaylistsApi
     }
@@ -293,7 +291,7 @@ class PlexApiClient : DefaultParentApiClient() {
      */
     override fun userLibraryApi(restart: Boolean): PlexUserLibraryApi {
         if (!this::plexUserLibraryApi.isInitialized || restart) {
-            plexUserLibraryApi = instance().create(PlexUserLibraryApi::class.java)
+            plexUserLibraryApi = PlexUserLibraryApi(httpClient)
         }
         return plexUserLibraryApi
     }
@@ -303,7 +301,7 @@ class PlexApiClient : DefaultParentApiClient() {
      */
     override fun libraryApi(restart: Boolean): PlexLibraryApi {
         if (!this::plexLibraryApi.isInitialized || restart) {
-            plexLibraryApi = instance().create(PlexLibraryApi::class.java)
+            plexLibraryApi = PlexLibraryApi(httpClient)
         }
         return plexLibraryApi
     }
@@ -333,16 +331,17 @@ class PlexApiClient : DefaultParentApiClient() {
         }
         val postPingSystem = try {
             val pingInfo = ping()
-            Log.i("=====", pingInfo.toString())
+            logger.info { "ping响应数据: $pingInfo" }
             //获得machineIdentifier
             pingAfter(pingInfo.mediaContainer?.machineIdentifier)
             pingInfo
         } catch (e: Exception) {
-            Log.i("error", "ping服务器失败", e)
+            logger.error(e) { "ping服务器失败" }
             when (e) {
                 !is UnauthorizedException -> {
                     throw ConnectionException()
                 }
+
                 else -> throw e
             }
         }
@@ -379,7 +378,7 @@ class PlexApiClient : DefaultParentApiClient() {
                 "https://plex.tv/api/v2/users/signin",
                 clientLoginInfoReq.toPlexLogin()
             )
-        Log.i("=====", "返回响应值: $responseData")
+        logger.info { "返回响应值: $responseData" }
         loginAfter(
             responseData.authToken, responseData.id.toString(),
             clientLoginInfoReq = clientLoginInfoReq
@@ -400,7 +399,7 @@ class PlexApiClient : DefaultParentApiClient() {
      */
     override fun lyricsApi(restart: Boolean): PlexLyricsApi {
         if (!this::plexLyricsApi.isInitialized || restart) {
-            plexLyricsApi = instance().create(PlexLyricsApi::class.java)
+            plexLyricsApi = PlexLyricsApi(httpClient)
         }
         return plexLyricsApi
     }
@@ -411,7 +410,7 @@ class PlexApiClient : DefaultParentApiClient() {
      */
     //todo 修改图片获取方式
     fun getImageUrl(plexFileUrl: String, width: Int = 297, height: Int = 297): String {
-        val tmpPlexFileUrl = "${plexFileUrl}?X-Plex-Token=${accessToken}".encodeUrlParameter()
+        val tmpPlexFileUrl = "${plexFileUrl}?X-Plex-Token=${accessToken}"
         return "/photo/:/transcode?width=${width}&height=${height}&url=${tmpPlexFileUrl}&minSize=1&upscale=1&X-Plex-Token=${accessToken}"
     }
 
