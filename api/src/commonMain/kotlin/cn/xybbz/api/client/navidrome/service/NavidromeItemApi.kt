@@ -20,75 +20,129 @@ package cn.xybbz.api.client.navidrome.service
 
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.navidrome.data.AlbumItem
+import cn.xybbz.api.client.navidrome.data.FullResponse
 import cn.xybbz.api.client.navidrome.data.SongItem
+import cn.xybbz.api.client.navidrome.data.toFullResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicAlbumInfo2Response
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicSimilarSongsResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicTopSongsResponse
 import cn.xybbz.api.enums.navidrome.OrderType
 import cn.xybbz.api.enums.navidrome.SortType
-import retrofit2.Response
-import retrofit2.http.GET
-import retrofit2.http.Path
-import retrofit2.http.Query
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.http.parameters
 
 /**
  * 音乐,专辑,艺术家相关接口
  */
-interface NavidromeItemApi : BaseApi {
+class NavidromeItemApi(private val httpClient: HttpClient) : BaseApi {
 
-    @GET("/api/album")
     suspend fun getAlbumList(
-        @Query("_start") start: Int,
-        @Query("_end") end: Int,
-        @Query("_order") order: OrderType = OrderType.ASC,
-        @Query("_sort") sort: SortType = SortType.NAME,
-        @Query("name") name: String? = null,
-        @Query("missing") missing: Boolean? = null,
-        @Query("starred") starred: Boolean? = null,
-        @Query("year") year: Int? = null,
-        @Query("genre_id") genreId: String? = null,
-        @Query("artist_id") artistId: String? = null,
+        start: Int,
+        end: Int,
+        order: OrderType = OrderType.ASC,
+        sort: SortType = SortType.NAME,
+        name: String? = null,
+        missing: Boolean? = null,
+        starred: Boolean? = null,
+        year: Int? = null,
+        genreId: String? = null,
+        artistId: String? = null,
         //是否最近播放
-        @Query("recently_played") recentlyPlayed: Boolean? = null,
-        @Query("library_id") libraryIds: List<String>? = null
-    ): Response<List<AlbumItem>>
+        recentlyPlayed: Boolean? = null,
+        libraryIds: List<String>? = null
+    ): FullResponse<List<AlbumItem>> {
+        return httpClient.get("/api/album") {
+            parameters {
+                append("_start", start.toString())
+                append("_end", end.toString())
+                append("_order", order.toString())
+                append("_sort", sort.toString())
+                append("name", name)
+                append("missing", missing)
+                append("starred", starred)
+                append("year", year)
+                append("genre_id", genreId)
+                append("artist_id", artistId)
+                append("recently_played", recentlyPlayed)
+                appendAll("library_id", libraryIds)
+            }
+        }.toFullResponse()
+    }
 
-    @GET("/api/album/{id}")
-    suspend fun getAlbum(@Path("id") id: String): AlbumItem
+    suspend fun getAlbum(id: String): AlbumItem {
+        return httpClient.get("/api/album/$id").body()
+    }
 
-    @GET("/rest/getAlbumInfo2")
     suspend fun getAlbumInfo2(
-        @Query("id") id: String
-    ): SubsonicResponse<SubsonicAlbumInfo2Response>
+        id: String
+    ): SubsonicResponse<SubsonicAlbumInfo2Response> {
+        return httpClient.get("/rest/getAlbumInfo2") {
+            parameters {
+                append("id", id)
+            }
+        }.body()
+    }
 
-    @GET("/api/song")
     suspend fun getSong(
-        @Query("_start") start: Int,
-        @Query("_end") end: Int,
-        @Query("_order") order: OrderType = OrderType.ASC,
-        @Query("_sort") sort: SortType = SortType.TITLE,
-        @Query("title") title: String? = null,
-        @Query("missing") missing: Boolean? = null,
-        @Query("starred") starred: Boolean? = null,
-        @Query("genre_id") genreIds: List<String>? = null,
-        @Query("album_id") albumId: String? = null,
-        @Query("artist_id") artistIds: List<String>? = null,
-        @Query("year") year: Int? = null,
-        @Query("library_id") libraryIds: List<String>? = null
-    ): Response<List<SongItem>>
+        start: Int,
+        end: Int,
+        order: OrderType = OrderType.ASC,
+        sort: SortType = SortType.TITLE,
+        title: String? = null,
+        missing: Boolean? = null,
+        starred: Boolean? = null,
+        genreIds: List<String>? = null,
+        albumId: String? = null,
+        artistIds: List<String>? = null,
+        year: Int? = null,
+        libraryIds: List<String>? = null
+    ): FullResponse<List<SongItem>> {
+        return httpClient.get("/api/song") {
+            parameters {
+                append("_start", start.toString())
+                append("_end", end.toString())
+                append("_order", order.toString())
+                append("_sort", sort.toString())
+                append("title", title)
+                append("missing", missing)
+                append("starred", starred)
+                appendAll("genre_id", genreIds)
+                append("album_id", albumId)
+                appendAll("artist_id", artistIds)
+                append("year", year)
+                appendAll("library_id", libraryIds)
+            }
+        }.toFullResponse()
+    }
 
-    @GET("/rest/getTopSongs")
     suspend fun getTopSongs(
-        @Query("artist") artistName: String,
-        @Query("count") count: Int = 20,
-        @Query("library_id") libraryIds: List<String>? = null
-    ): SubsonicResponse<SubsonicTopSongsResponse>
+        artistName: String,
+        count: Int = 20,
+        libraryIds: List<String>? = null
+    ): SubsonicResponse<SubsonicTopSongsResponse> {
+        return httpClient.get("/rest/getTopSongs") {
+            parameters {
+                append("artist", artistName)
+                append("count", count.toString())
+                appendAll("library_id", libraryIds)
+            }
+        }.body()
+    }
 
-    @GET("/rest/getSimilarSongs")
     suspend fun getSimilarSongs(
-        @Query("id") songId: String,
-        @Query("count") count: Int = 20,
-        @Query("library_id") libraryIds: List<String>? = null
-    ): SubsonicResponse<SubsonicSimilarSongsResponse>
+        songId: String,
+        count: Int = 20,
+        libraryIds: List<String>? = null
+    ): SubsonicResponse<SubsonicSimilarSongsResponse> {
+        return httpClient.get("/rest/getSimilarSongs") {
+            parameters {
+                append("id", songId)
+                append("count", count.toString())
+                appendAll("library_id", libraryIds)
+            }
+        }.body()
+    }
 }

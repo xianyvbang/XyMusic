@@ -5,52 +5,68 @@ import cn.xybbz.api.client.jellyfin.data.AuthenticateResponse
 import cn.xybbz.api.client.jellyfin.data.LoginRequest
 import cn.xybbz.api.client.jellyfin.data.PlaybackStartInfo
 import cn.xybbz.api.client.jellyfin.data.SystemInfoResponse
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.POST
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 
 /**
  * 用户相关请求实体类
  */
-interface UserApi : BaseApi {
+class UserApi(private val httpClient: HttpClient) : BaseApi {
 
     /**
      * 按用户名和密码进行身份验证
      * @param [loginRequest] 登录请求
      * @return [AuthenticateResponse]
      */
-    @POST("/Users/AuthenticateByName")
-    suspend fun authenticateByName(@Body loginRequest: LoginRequest): AuthenticateResponse
+    suspend fun authenticateByName(loginRequest: LoginRequest): AuthenticateResponse {
+        return httpClient.post("/Users/AuthenticateByName") {
+            postBlock { setBody(loginRequest) }
+        }.body()
+    }
 
     /**
      * POST PING系统
      * @return [String]
      */
-    @POST("/System/Ping")
-    suspend fun postPingSystem(): String
+    suspend fun postPingSystem(): String {
+        return httpClient.post("/System/Ping").body()
+    }
 
     /**
      * 获得服务端信息
      */
-    @GET("/System/Info")
-    suspend fun getSystemInfo(): SystemInfoResponse
+    suspend fun getSystemInfo(): SystemInfoResponse {
+        return httpClient.get("/System/Info").body()
+    }
 
     /**
      * 上报正在播放音乐
      */
-    @POST("/Sessions/Playing")
-    suspend fun playing(@Body data: PlaybackStartInfo)
+    suspend fun playing(data: PlaybackStartInfo) {
+        httpClient.post("/Sessions/Playing") {
+            postBlock { setBody(data) }
+        }
+    }
 
     /**
      * 上报播放进度
      */
-    @POST("/Sessions/Playing/Progress")
-    suspend fun progress(@Body data: PlaybackStartInfo)
+    suspend fun progress(data: PlaybackStartInfo) {
+        httpClient.post("/Sessions/Playing/Progress") {
+            postBlock { setBody(data) }
+        }
+    }
 
     /**
      * 上报停止播放
      */
-    @POST("/Sessions/Playing/Stopped")
-    suspend fun stopped(@Body data: PlaybackStartInfo)
+    suspend fun stopped(data: PlaybackStartInfo) {
+        httpClient.post("/Sessions/Playing/Stopped") {
+            postBlock { setBody(data) }
+        }
+    }
 
 }

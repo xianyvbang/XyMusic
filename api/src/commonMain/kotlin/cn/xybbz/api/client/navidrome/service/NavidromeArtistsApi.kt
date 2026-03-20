@@ -20,35 +20,60 @@ package cn.xybbz.api.client.navidrome.service
 
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.navidrome.data.ArtistItem
+import cn.xybbz.api.client.navidrome.data.FullResponse
+import cn.xybbz.api.client.navidrome.data.toFullResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicArtistInfoResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
+import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.enums.navidrome.OrderType
 import cn.xybbz.api.enums.navidrome.SortType
-import retrofit2.Response
-import retrofit2.http.GET
-import retrofit2.http.Path
-import retrofit2.http.Query
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.http.parameters
+import kotlinx.coroutines.NonCancellable.start
 
-interface NavidromeArtistsApi : BaseApi {
-    @GET("/api/artist")
+class NavidromeArtistsApi(private val httpClient: HttpClient) : BaseApi {
     suspend fun getArtists(
-        @Query("_start") start: Int,
-        @Query("_end") end: Int,
-        @Query("_order") order: OrderType = OrderType.ASC,
-        @Query("_sort") sort: SortType = SortType.NAME,
-        @Query("name") name: String? = null,
-        @Query("missing") missing: Boolean? = null,
-        @Query("starred") starred: Boolean? = null,
-        @Query("library_id") libraryIds: List<String>? = null
-    ): Response<List<ArtistItem>?>
+        start: Int,
+        end: Int,
+        order: OrderType = OrderType.ASC,
+        sort: SortType = SortType.NAME,
+        name: String? = null,
+        missing: Boolean? = null,
+        starred: Boolean? = null,
+        libraryIds: List<String>? = null
+    ): FullResponse<List<ArtistItem>?> {
+        val httpResponse = httpClient.get("/api/artist") {
+            parameters {
+                append("_start", start.toString())
+                append("_end", end.toString())
+                append("_order", order.toString())
+                append("_sort", sort.toString())
+                append("name", name)
+                append("missing", missing)
+                append("starred", starred)
+                appendAll("library_id", libraryIds)
+            }
+        }
 
-    @GET("/api/artist/{artistId}")
-    suspend fun getArtist(@Path("artistId") artistId: String): ArtistItem?
+        return httpResponse.toFullResponse()
+    }
 
-    @GET("/rest/getArtistInfo2")
+    suspend fun getArtist(artistId: String): ArtistItem? {
+        return httpClient.get("/api/artist/${artistId}").body()
+    }
+
     suspend fun getArtistInfo(
-        @Query("id") id: String,
-        @Query("count") count: Int? = null
-    ): SubsonicResponse<SubsonicArtistInfoResponse>
+        id: String,
+        count: Int? = null
+    ): SubsonicResponse<SubsonicArtistInfoResponse> {
+        return httpClient.get("/rest/getArtistInfo2") {
+            parameters {
+                append("id", id)
+                append("count", count)
+            }
+        }.body()
+    }
 
 }

@@ -19,6 +19,7 @@
 package cn.xybbz.api.client.navidrome.service
 
 import cn.xybbz.api.base.BaseApi
+import cn.xybbz.api.client.navidrome.data.FullResponse
 import cn.xybbz.api.client.navidrome.data.NavidromeCreatePlaylistResponse
 import cn.xybbz.api.client.navidrome.data.PlaylistAddMusicsUpdateRequest
 import cn.xybbz.api.client.navidrome.data.PlaylistAddMusicsUpdateResponse
@@ -27,66 +28,101 @@ import cn.xybbz.api.client.navidrome.data.PlaylistItemData
 import cn.xybbz.api.client.navidrome.data.PlaylistRemoveMusicsUpdateResponse
 import cn.xybbz.api.client.navidrome.data.PlaylistUpdateRequest
 import cn.xybbz.api.client.navidrome.data.SongItem
+import cn.xybbz.api.client.navidrome.data.toFullResponse
 import cn.xybbz.api.enums.navidrome.OrderType
 import cn.xybbz.api.enums.navidrome.SortType
-import retrofit2.Response
-import retrofit2.http.Body
-import retrofit2.http.DELETE
-import retrofit2.http.GET
-import retrofit2.http.Headers
-import retrofit2.http.POST
-import retrofit2.http.PUT
-import retrofit2.http.Path
-import retrofit2.http.Query
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
+import io.ktor.http.parameters
 
-interface NavidromePlaylistsApi : BaseApi {
+class NavidromePlaylistsApi(private val httpClient: HttpClient) : BaseApi {
 
-    @POST("/api/playlist")
-    @Headers("Content-Type: application/json")
     suspend fun createPlaylist(
-        @Body playlistCreateRequest: PlaylistCreateRequest
-    ): NavidromeCreatePlaylistResponse?
+        playlistCreateRequest: PlaylistCreateRequest
+    ): NavidromeCreatePlaylistResponse? {
+        return httpClient.post("/api/playlist") {
+            postBlock { setBody(playlistCreateRequest) }
+        }.body()
+    }
 
-    @PUT("/api/playlist/{playlistId}")
     suspend fun updatePlaylist(
-        @Path("playlistId") playlistId: String,
-        @Body playlistUpdateRequest: PlaylistUpdateRequest
-    ): PlaylistItemData
+        playlistId: String,
+        playlistUpdateRequest: PlaylistUpdateRequest
+    ): PlaylistItemData {
+        return httpClient.put("/api/playlist/$playlistId") {
+            postBlock { setBody(playlistUpdateRequest) }
+        }.body()
+    }
 
-    @DELETE("/api/playlist/{playlistId}")
     suspend fun deletePlaylist(
-        @Path("playlistId") playlistId: String
-    )
+        playlistId: String
+    ) {
+        httpClient.delete("/api/playlist/$playlistId")
+    }
 
-    @GET("/api/playlist")
     suspend fun getPlaylists(
-        @Query("_order") order: OrderType = OrderType.ASC,
-        @Query("_start") start: Int = 0,
-        @Query("_end") end: Int = 0,
-        @Query("_sort") sort: SortType = SortType.ID,
-        @Query("library_id") libraryIds: List<String>? = null
-    ): Response<List<PlaylistItemData>>
+        order: OrderType = OrderType.ASC,
+        start: Int = 0,
+        end: Int = 0,
+        sort: SortType = SortType.ID,
+        libraryIds: List<String>? = null
+    ): FullResponse<List<PlaylistItemData>> {
+        return httpClient.get("/api/playlist") {
+            parameters {
+                append("_order", order.toString())
+                append("_start", start.toString())
+                append("_end", end.toString())
+                append("_sort", sort.toString())
+                appendAll("library_id", libraryIds)
 
-    @POST("/api/playlist/{playlistId}/tracks")
+            }
+        }.toFullResponse()
+    }
+
     suspend fun addPlaylistMusics(
-        @Path("playlistId") playlistId: String,
-        @Body playlistAddMusicsRequest: PlaylistAddMusicsUpdateRequest
-    ): PlaylistAddMusicsUpdateResponse
+        playlistId: String,
+        playlistAddMusicsRequest: PlaylistAddMusicsUpdateRequest
+    ): PlaylistAddMusicsUpdateResponse {
+        return httpClient.post("/api/playlist/$playlistId/tracks") {
+            postBlock { setBody(playlistAddMusicsRequest) }
+        }.body()
+    }
 
-    @DELETE("/api/playlist/{playlistId}/tracks")
     suspend fun removePlaylistMusics(
-        @Path("playlistId") playlistId: String,
-        @Query("id") id: List<String>
-    ): PlaylistRemoveMusicsUpdateResponse
+        playlistId: String,
+        id: List<String>
+    ): PlaylistRemoveMusicsUpdateResponse {
+        return httpClient.delete("/api/playlist/$playlistId/tracks") {
+            parameters {
+                appendAll("id", id)
+            }
+        }.body()
+    }
 
-    @GET("/api/playlist/{playlistId}/tracks")
     suspend fun getPlaylistMusicList(
-        @Path("playlistId") playlistId: String,
-        @Query("_start") start: Int,
-        @Query("_end") end: Int,
-        @Query("_order") order: OrderType = OrderType.ASC,
-        @Query("_sort") sort: SortType = SortType.TITLE,
-        @Query("missing") missing: Boolean? = null,
-        @Query("starred") starred: Boolean? = null
-    ): Response<List<SongItem>>
+        playlistId: String,
+        start: Int,
+        end: Int,
+        order: OrderType = OrderType.ASC,
+        sort: SortType = SortType.TITLE,
+        missing: Boolean? = null,
+        starred: Boolean? = null
+    ): FullResponse<List<SongItem>> {
+        return httpClient.get("/api/playlist/$playlistId/tracks") {
+            parameters {
+                append("_start", start.toString())
+                append("_end", end.toString())
+                append("_order", order.toString())
+                append("_sort", sort.toString())
+                append("missing", missing)
+                append("starred", starred)
+
+            }
+        }.toFullResponse()
+    }
 }

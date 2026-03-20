@@ -8,13 +8,14 @@ import cn.xybbz.api.client.plex.data.PlexPingSystemResponse
 import cn.xybbz.api.client.plex.data.PlexSystemInfoResponse
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.enums.plex.PlayState
+import io.ktor.client.HttpClient
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
 import retrofit2.http.Url
 
-interface PlexUserApi : BaseApi {
+class PlexUserApi(private val httpClient: HttpClient) : BaseApi {
 
     /**
      * 按名称进行身份验证

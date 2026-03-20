@@ -43,11 +43,8 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
 import io.ktor.http.parameters
 import io.ktor.util.appendAll
-import io.ktor.util.appendIfNameAndValueAbsent
 
 abstract class DefaultApiClient : ApiFactory, DownloadFactory {
 
@@ -67,13 +64,18 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
     var headerMap: Map<String, String> = emptyMap()
         private set
 
+    //是否临时使用
+    var ifTmp = false
+
     val eventBus = ReLoginEventBus()
 
     private lateinit var defaultDownloadApi: IDownLoadApi
-    private val logger = KotlinLogging.logger {}
+    protected val logger = KotlinLogging.logger {}
     override fun createHttpClient(baseUrl: String, ifTmp: Boolean) {
+        this.ifTmp = ifTmp
         TokenServer.updateBaseUrl(baseUrl)
-        updateTokenHeaderName()
+        if (!ifTmp)
+            updateTokenHeaderName()
         //todo 注意关闭
         httpClient = provideClient().config {
             engine {
@@ -117,7 +119,7 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
             HttpResponseValidator {
                 validateResponse { response ->
                     val body: SubsonicResponse<SubsonicDefaultResponse> = response.body()
-                    if (body.subsonicResponse.status == Status.Failed){
+                    if (body.subsonicResponse.status == Status.Failed) {
                         val error = body.subsonicResponse.error
                         val code = error?.code
                         if (code == 40) {
@@ -161,10 +163,12 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
         }
 
         //todo 有待观察
-        TokenServer.clearAllData()
-        TokenServer.setTokenData(token)
-        TokenServer.setQueryMapData(queryMap)
-        TokenServer.setHeaderMapData(headerMap)
+        if (!ifTmp){
+            TokenServer.clearAllData()
+            TokenServer.setTokenData(token)
+            TokenServer.setQueryMapData(queryMap)
+            TokenServer.setHeaderMapData(headerMap)
+        }
     }
 
     /**

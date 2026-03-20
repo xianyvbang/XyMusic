@@ -20,9 +20,10 @@ package cn.xybbz.api.client.emby.service
 
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.jellyfin.data.CountsResponse
+import cn.xybbz.api.client.jellyfin.data.ItemRequest
 import cn.xybbz.api.client.jellyfin.data.ItemResponse
 import cn.xybbz.api.client.jellyfin.data.Response
-import cn.xybbz.api.utils.toStringMap
+import cn.xybbz.api.utils.toListMap
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -41,11 +42,11 @@ class EmbyItemApi(private val httpClient: HttpClient) : BaseApi {
      * @return [Response<ItemResponse>]
      */
     suspend fun getUserItems(
-        userId: String, itemRequest: ItemResponse
+        userId: String, itemRequest: ItemRequest
     ): Response<ItemResponse> {
         return httpClient.get("/emby/Users/${userId}/Items") {
             parameters{
-                appendAll(itemRequest.toStringMap())
+                appendAll(*itemRequest.toListMap())
             }
         }.body()
     }
@@ -64,7 +65,7 @@ class EmbyItemApi(private val httpClient: HttpClient) : BaseApi {
             parameters{
                 append("userId", userId)
                 append("Limit", limit.toString())
-                fields?.let { append("Fields", it) }
+                append("Fields", fields)
             }
         }.body()
     }
@@ -78,8 +79,8 @@ class EmbyItemApi(private val httpClient: HttpClient) : BaseApi {
     ): CountsResponse{
         return httpClient.get("/emby/Items/Counts"){
             parameters{
-                userId?.let { append("userId", it) }
-                isFavorite?.let { append("isFavorite", it.toString()) }
+                append("userId", userId)
+                append("isFavorite", isFavorite)
             }
         }.body()
     }

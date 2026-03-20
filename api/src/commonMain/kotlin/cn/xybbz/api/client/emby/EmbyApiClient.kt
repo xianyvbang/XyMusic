@@ -18,7 +18,6 @@
 
 package cn.xybbz.api.client.emby
 
-import android.util.Log
 import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
@@ -38,8 +37,6 @@ import cn.xybbz.api.enums.jellyfin.ImageType
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.UnauthorizedException
 import cn.xybbz.api.utils.ParameterUtils.buildParameter
-import okhttp3.ResponseBody
-import retrofit2.Response
 
 /**
  * EMBY API 客户端
@@ -161,7 +158,7 @@ class EmbyApiClient : DefaultParentApiClient() {
      */
     override fun userApi(restart: Boolean): EmbyUserApi {
         if (!this::embyUserApi.isInitialized || restart) {
-            embyUserApi = EmbyUserApi()
+            embyUserApi = EmbyUserApi(this.httpClient)
         }
         return embyUserApi
     }
@@ -171,7 +168,7 @@ class EmbyApiClient : DefaultParentApiClient() {
      */
     override fun playlistsApi(restart: Boolean): EmbyPlaylistsApi {
         if (!this::embyPlaylistsApi.isInitialized || restart) {
-            embyPlaylistsApi = EmbyPlaylistsApi()
+            embyPlaylistsApi = EmbyPlaylistsApi(this.httpClient)
         }
         return embyPlaylistsApi
     }
@@ -192,7 +189,7 @@ class EmbyApiClient : DefaultParentApiClient() {
      */
     override fun itemApi(restart: Boolean): EmbyItemApi {
         if (!this::embyItemApi.isInitialized || restart) {
-            embyItemApi = EmbyItemApi()
+            embyItemApi = EmbyItemApi(this.httpClient)
         }
         return embyItemApi
     }
@@ -202,7 +199,7 @@ class EmbyApiClient : DefaultParentApiClient() {
      */
     override fun genreApi(restart: Boolean): EmbyGenreApi {
         if (!this::embyGenreApi.isInitialized || restart) {
-            embyGenreApi = EmbyGenreApi()
+            embyGenreApi = EmbyGenreApi(this.httpClient)
         }
         return embyGenreApi
     }
@@ -220,14 +217,7 @@ class EmbyApiClient : DefaultParentApiClient() {
     override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
 
         try {
-            val pingData = ping()
-            Log.i("=====", "是否连通: $pingData")
-            if (pingData.isSuccessful) {
-                val raw = pingData.body()?.string()
-                Log.i("=====", "ping数据返回: $raw")// "Ping"
-            } else {
-                throw ConnectionException()
-            }
+            ping()
         } catch (e: Exception) {
             e.printStackTrace()
             when (e) {
@@ -240,14 +230,14 @@ class EmbyApiClient : DefaultParentApiClient() {
         }
         val responseData =
             userApi().authenticateByName(clientLoginInfoReq.toLogin())
-        Log.i("=====", "返回响应值: $responseData")
+        logger.info { "返回响应值: $responseData" }
         loginAfter(
             responseData.accessToken,
             responseData.user?.id,
             clientLoginInfoReq = clientLoginInfoReq
         )
         val systemInfo = userApi().getSystemInfo()
-        Log.i("=====", "服务器信息 $systemInfo")
+        logger.info { "服务器信息 $systemInfo" }
 
         return LoginSuccessData(
             userId = responseData.user?.id,
@@ -271,8 +261,8 @@ class EmbyApiClient : DefaultParentApiClient() {
         updateTokenOrHeadersOrQuery()
     }
 
-    override suspend fun ping(): Response<ResponseBody> {
-        return userApi().postPingSystem()
+    override suspend fun ping() {
+        userApi().postPingSystem()
     }
 
     /**
@@ -280,7 +270,7 @@ class EmbyApiClient : DefaultParentApiClient() {
      */
     override fun libraryApi(restart: Boolean): EmbyLibraryApi {
         if (!this::embyLibraryApi.isInitialized || restart) {
-            embyLibraryApi = instance().create(EmbyLibraryApi::class.java)
+            embyLibraryApi = EmbyLibraryApi(this.httpClient)
         }
         return embyLibraryApi
     }
@@ -290,7 +280,7 @@ class EmbyApiClient : DefaultParentApiClient() {
      */
     override fun userLibraryApi(restart: Boolean): EmbyUserLibraryApi {
         if (!this::embyUserLibraryApi.isInitialized || restart) {
-            embyUserLibraryApi = instance().create(EmbyUserLibraryApi::class.java)
+            embyUserLibraryApi = EmbyUserLibraryApi(this.httpClient)
         }
         return embyUserLibraryApi
     }
@@ -300,7 +290,7 @@ class EmbyApiClient : DefaultParentApiClient() {
      */
     override fun lyricsApi(restart: Boolean): EmbyLyricsApi {
         if (!this::embyLyricsApi.isInitialized || restart) {
-            embyLyricsApi = instance().create(EmbyLyricsApi::class.java)
+            embyLyricsApi = EmbyLyricsApi(this.httpClient)
         }
         return embyLyricsApi
     }
@@ -310,7 +300,7 @@ class EmbyApiClient : DefaultParentApiClient() {
      */
     override fun userViewsApi(restart: Boolean): EmbyUserViewsApi {
         if (!this::embyUserViewsApi.isInitialized || restart) {
-            embyUserViewsApi = instance().create(EmbyUserViewsApi::class.java)
+            embyUserViewsApi = EmbyUserViewsApi(this.httpClient)
         }
         return embyUserViewsApi
     }

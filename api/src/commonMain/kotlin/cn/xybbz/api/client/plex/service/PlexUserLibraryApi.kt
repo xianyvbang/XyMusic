@@ -7,6 +7,7 @@ import cn.xybbz.api.client.plex.data.PlexLibraryItemResponse
 import cn.xybbz.api.client.plex.data.PlexResponse
 import cn.xybbz.api.enums.plex.PlexSortOrder
 import cn.xybbz.api.enums.plex.PlexSortType
+import io.ktor.client.HttpClient
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -14,7 +15,7 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-interface PlexUserLibraryApi : BaseApi {
+class PlexUserLibraryApi(private val httpClient: HttpClient) : BaseApi {
     /**
      * 增加收藏合集
      * @return [FavoriteResponse]

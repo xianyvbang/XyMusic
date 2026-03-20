@@ -20,61 +20,88 @@ package cn.xybbz.api.client.navidrome.service
 
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.jellyfin.data.AuthenticateResponse
+import cn.xybbz.api.client.navidrome.data.FullResponse
 import cn.xybbz.api.client.navidrome.data.NavidromeLoginRequest
 import cn.xybbz.api.client.navidrome.data.NavidromeLoginResponse
 import cn.xybbz.api.client.navidrome.data.TranscodingInfo
+import cn.xybbz.api.client.navidrome.data.toFullResponse
+import cn.xybbz.api.client.subsonic.data.ScrobbleRequest
 import cn.xybbz.api.client.subsonic.data.SubsonicDefaultResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicUserResponse
 import cn.xybbz.api.enums.navidrome.OrderType
 import cn.xybbz.api.enums.navidrome.SortType
-import retrofit2.Response
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.Query
-import retrofit2.http.QueryMap
+import cn.xybbz.api.utils.toListMap
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.parameters
+import io.ktor.util.appendAll
 
 /**
  * 用户相关请求实体类
  */
-interface NavidromeUserApi : BaseApi {
+class NavidromeUserApi(private val httpClient: HttpClient) : BaseApi {
 
 
     /**
      * 按名称进行身份验证
      * @return [AuthenticateResponse]
      */
-    @POST("/auth/login")
-    suspend fun login(@Body loginRequest: NavidromeLoginRequest): NavidromeLoginResponse
+    suspend fun login(loginRequest: NavidromeLoginRequest): NavidromeLoginResponse {
+        return httpClient.post("/auth/login") {
+            postBlock { setBody(loginRequest) }
+        }.body()
+    }
 
     /**
      * 获取用户信息
      */
-    @GET("/rest/getUser")
-    suspend fun getUser(@Query("username") username: String): SubsonicResponse<SubsonicUserResponse>
+    suspend fun getUser(username: String): SubsonicResponse<SubsonicUserResponse> {
+        return httpClient.get("/rest/getUser") {
+            parameters {
+                append("username", username)
+            }
+        }.body()
+    }
 
     /**
      * POST PING系统
      * @return [String]
      */
-    @POST("/rest/ping")
-    suspend fun postPingSystem(): SubsonicResponse<SubsonicDefaultResponse>
+    suspend fun postPingSystem(): SubsonicResponse<SubsonicDefaultResponse> {
+        return httpClient.post("/rest/ping") {}.body()
+    }
 
     /**
      * 上报播放记录
      */
-    @GET("/rest/scrobble")
-    suspend fun scrobble(@QueryMap scrobbleRequest: Map<String, String>): SubsonicResponse<SubsonicDefaultResponse>
+    suspend fun scrobble(scrobbleRequest: ScrobbleRequest): SubsonicResponse<SubsonicDefaultResponse> {
+        return httpClient.get("/rest/scrobble") {
+            parameters {
+                appendAll(*scrobbleRequest.toListMap())
+            }
+        }.body()
+    }
 
     /**
      * 获得转码信息
      */
-    @GET("/api/transcoding")
     suspend fun getTranscodingInfo(
-        @Query("_start") start: Int = 0,
-        @Query("_end") end: Int = 1000,
-        @Query("_order") order: OrderType = OrderType.ASC,
-        @Query("_sort") sort: SortType = SortType.NAME,
-    ): Response<List<TranscodingInfo>>
+        start: Int = 0,
+        end: Int = 1000,
+        order: OrderType = OrderType.ASC,
+        sort: SortType = SortType.NAME,
+    ): FullResponse<List<TranscodingInfo>> {
+        return httpClient.get("/api/transcoding") {
+            parameters {
+                append("_start", start.toString())
+                append("_end", end.toString())
+                append("_order", order.toString())
+                append("_sort", sort.toString())
+            }
+        }.toFullResponse()
+    }
 }

@@ -20,44 +20,65 @@ package cn.xybbz.api.client.jellyfin.service
 
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.jellyfin.data.CountsResponse
+import cn.xybbz.api.client.jellyfin.data.ItemRequest
 import cn.xybbz.api.client.jellyfin.data.ItemResponse
 import cn.xybbz.api.client.jellyfin.data.Response
-import retrofit2.http.GET
-import retrofit2.http.Path
-import retrofit2.http.Query
-import retrofit2.http.QueryMap
+import cn.xybbz.api.utils.toListMap
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.http.parameters
+import io.ktor.util.appendAll
 
 /**
  * 音乐,专辑,艺术家相关接口
  */
-interface ItemApi : BaseApi {
+class ItemApi(private val httpClient: HttpClient) : BaseApi {
 
     /**
      * 获取音频列表
      * @param [itemRequest] 物品请求
      * @return [Response<ItemResponse>]
      */
-    @GET("/Items")
-    suspend fun getItems(@QueryMap itemRequest: Map<String, String>): Response<ItemResponse>
+    suspend fun getItems(itemRequest: ItemRequest): Response<ItemResponse> {
+        return httpClient.get("/Items") {
+            parameters {
+                appendAll(*itemRequest.toListMap())
+            }
+        }.body()
+    }
 
 
     /**
      * 获得相似歌曲
      */
-    @GET("/Items/{itemId}/Similar")
     suspend fun getSimilarItems(
-        @Path("itemId") itemId: String,
-        @Query("userId") userId: String,
-        @Query("Limit") limit: Int,
-        @Query("Fields") fields: String? = null
-    ): Response<ItemResponse>
+        itemId: String,
+        userId: String,
+        limit: Int,
+        fields: String? = null
+    ): Response<ItemResponse> {
+        return httpClient.get("/Items/$itemId/Similar") {
+            parameters {
+                append("userId", userId)
+                append("Limit", limit.toString())
+                append("Fields", fields)
+            }
+        }.body()
+    }
 
     /**
      * 获得数量统计
      */
-    @GET("/Items/Counts")
     suspend fun getCounts(
-        @Query("userId") userId: String? = null,
-        @Query("isFavorite") isFavorite: Boolean? = null
-    ): CountsResponse
+        userId: String? = null,
+        isFavorite: Boolean? = null
+    ): CountsResponse {
+        return httpClient.get("/Items/Counts") {
+            parameters {
+                append("userId", userId)
+                append("isFavorite",isFavorite)
+            }
+        }.body()
+    }
 }

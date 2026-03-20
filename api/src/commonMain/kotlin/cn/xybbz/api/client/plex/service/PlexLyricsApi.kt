@@ -1,11 +1,13 @@
 package cn.xybbz.api.client.plex.service
 
 import cn.xybbz.api.base.BaseApi
-import retrofit2.http.GET
-import retrofit2.http.Path
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
 
-interface PlexLyricsApi : BaseApi {
+class PlexLyricsApi(private val httpClient: HttpClient) : BaseApi {
 
-    @GET("/library/streams/{lrcId}")
-    suspend fun getLyrics(@Path("lrcId") lrcId: String): String?
+    suspend fun getLyrics(lrcId: String): String? {
+        return httpClient.get("/library/streams/${lrcId}").body()
+    }
 }

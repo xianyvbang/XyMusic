@@ -18,7 +18,6 @@
 
 package cn.xybbz.api.client.jellyfin
 
-import android.util.Log
 import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
@@ -145,7 +144,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
      */
     override fun userApi(restart: Boolean): UserApi {
         if (!this::jellyfinUserApi.isInitialized || restart) {
-            jellyfinUserApi = instance().create(UserApi::class.java)
+            jellyfinUserApi = UserApi(httpClient)
         }
         return jellyfinUserApi
     }
@@ -155,7 +154,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
      */
     override fun userLibraryApi(restart: Boolean): UserLibraryApi {
         if (!this::jellyfinUserLibraryApi.isInitialized || restart) {
-            jellyfinUserLibraryApi = instance().create(UserLibraryApi::class.java)
+            jellyfinUserLibraryApi = UserLibraryApi(httpClient)
         }
         return jellyfinUserLibraryApi
     }
@@ -165,7 +164,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
      */
     override fun itemApi(restart: Boolean): ItemApi {
         if (!this::jellyfinItemApi.isInitialized || restart) {
-            jellyfinItemApi = instance().create(ItemApi::class.java)
+            jellyfinItemApi = ItemApi(httpClient)
         }
         return jellyfinItemApi
     }
@@ -175,7 +174,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
      */
     override fun lyricsApi(restart: Boolean): LyricsApi {
         if (!this::jellyfinLyricsApi.isInitialized || restart) {
-            jellyfinLyricsApi = instance().create(LyricsApi::class.java)
+            jellyfinLyricsApi = LyricsApi(httpClient)
         }
         return jellyfinLyricsApi
     }
@@ -186,7 +185,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
      */
     override fun userViewsApi(restart: Boolean): UserViewsApi {
         if (!this::jellyfinUserViewsApi.isInitialized || restart) {
-            jellyfinUserViewsApi = instance().create(UserViewsApi::class.java)
+            jellyfinUserViewsApi = UserViewsApi(httpClient)
         }
         return jellyfinUserViewsApi
     }
@@ -196,7 +195,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
      */
     override fun playlistsApi(restart: Boolean): PlaylistsApi {
         if (!this::jellyfinPlaylistsApi.isInitialized || restart) {
-            jellyfinPlaylistsApi = instance().create(PlaylistsApi::class.java)
+            jellyfinPlaylistsApi = PlaylistsApi(httpClient)
         }
         return jellyfinPlaylistsApi
     }
@@ -206,7 +205,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
      */
     override fun artistsApi(restart: Boolean): ArtistsApi {
         if (!this::jellyfinArtistsApi.isInitialized || restart) {
-            jellyfinArtistsApi = instance().create(ArtistsApi::class.java)
+            jellyfinArtistsApi = ArtistsApi(httpClient)
         }
         return jellyfinArtistsApi
     }
@@ -216,7 +215,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
      */
     override fun libraryApi(restart: Boolean): LibraryApi {
         if (!this::jellyfinLibraryApi.isInitialized || restart) {
-            jellyfinLibraryApi = instance().create(LibraryApi::class.java)
+            jellyfinLibraryApi = LibraryApi(httpClient)
         }
         return jellyfinLibraryApi
     }
@@ -226,7 +225,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
      */
     override fun genreApi(restart: Boolean): GenreApi {
         if (!this::jellyfinGenreApi.isInitialized || restart) {
-            jellyfinGenreApi = instance().create(GenreApi::class.java)
+            jellyfinGenreApi = GenreApi(httpClient)
         }
         return jellyfinGenreApi
     }
@@ -245,7 +244,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
 
         try {
             val pingData = ping()
-            Log.i("=====", "ping数据返回: $pingData")
+            logger.info { "ping数据返回: $pingData" }
         } catch (e: Exception) {
             e.printStackTrace()
             when (e) {
@@ -258,10 +257,10 @@ class JellyfinApiClient : DefaultParentApiClient() {
 
         val responseData =
             userApi().authenticateByName(clientLoginInfoReq.toLogin())
-        Log.i("=====", "返回响应值: $responseData")
+        logger.info { "返回响应值: $responseData" }
         loginAfter(responseData.accessToken, clientLoginInfoReq = clientLoginInfoReq)
         val systemInfo = userApi().getSystemInfo()
-        Log.i("=====", "服务器信息 $systemInfo")
+        logger.info { "服务器信息 $systemInfo" }
         return LoginSuccessData(
             userId = responseData.user?.id,
             accessToken = responseData.accessToken,

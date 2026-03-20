@@ -1,22 +1,35 @@
 package cn.xybbz.api.client.navidrome.service
 
 import cn.xybbz.api.base.BaseApi
+import cn.xybbz.api.client.navidrome.data.FullResponse
 import cn.xybbz.api.client.navidrome.data.Genre
+import cn.xybbz.api.client.navidrome.data.toFullResponse
 import cn.xybbz.api.enums.navidrome.OrderType
 import cn.xybbz.api.enums.navidrome.SortType
-import retrofit2.Response
-import retrofit2.http.GET
-import retrofit2.http.Query
+import io.ktor.client.HttpClient
+import io.ktor.client.request.get
+import io.ktor.http.parameters
 
-interface NavidromeGenreApi : BaseApi {
+class NavidromeGenreApi(private val httpClient: HttpClient) : BaseApi {
 
-    @GET("/api/genre")
     suspend fun getGenres(
-        @Query("_start") start: Int,
-        @Query("_end") end: Int,
-        @Query("_order") order: OrderType = OrderType.ASC,
-        @Query("_sort") sort: SortType = SortType.NAME,
-        @Query("name") name: String? = null,
-        @Query("library_id") libraryIds: List<String>? = null
-    ): Response<List<Genre>>
+        start: Int,
+        end: Int,
+        order: OrderType = OrderType.ASC,
+        sort: SortType = SortType.NAME,
+        name: String? = null,
+        libraryIds: List<String>? = null
+    ): FullResponse<List<Genre>> {
+        val httpResponse = httpClient.get("/api/genre") {
+            parameters {
+                append("_start", start.toString())
+                append("_end", end.toString())
+                append("_order", order.toString())
+                append("_sort", sort.toString())
+                append("name", name)
+                appendAll("library_id", libraryIds)
+            }
+        }
+        return httpResponse.toFullResponse()
+    }
 }

@@ -1,13 +1,11 @@
 package cn.xybbz.api.base
 
-import cn.xybbz.api.constants.ApiConstants
-import okhttp3.ResponseBody
-import retrofit2.Call
+import io.ktor.client.HttpClient
+import io.ktor.client.request.header
+import io.ktor.client.request.prepareGet
+import io.ktor.client.statement.HttpStatement
 import retrofit2.http.GET
-import retrofit2.http.Header
-import retrofit2.http.HeaderMap
 import retrofit2.http.Streaming
-import retrofit2.http.Url
 
 /**
  * 下载方法的基础API
@@ -15,15 +13,14 @@ import retrofit2.http.Url
  * @date 2025/12/02
  * @constructor 创建[IDownLoadApi]
  */
-interface IDownLoadApi {
+class IDownLoadApi(private val httpClient: HttpClient) : BaseApi {
 
-    @GET
-    @Streaming
-    fun downloadFile(
-        @Url fileUrl: String,
-        @HeaderMap headers: Map<String, String> = mapOf(
-            ApiConstants.ACCEPT to ApiConstants.DOWNLOAD_ACCEPT
-        ),
-        @Header("Range") range: String, /*= "bytes=0-"*/
-    ): Call<ResponseBody>
+    suspend fun downloadFile(
+        fileUrl: String,
+        range: String, /*= "bytes=0-"*/
+    ): HttpStatement {
+        return httpClient.prepareGet(fileUrl) {
+            header("Range", range)
+        }
+    }
 }

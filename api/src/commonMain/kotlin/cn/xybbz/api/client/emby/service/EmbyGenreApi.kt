@@ -1,14 +1,14 @@
 package cn.xybbz.api.client.emby.service
 
 import cn.xybbz.api.base.BaseApi
+import cn.xybbz.api.client.jellyfin.data.ItemRequest
 import cn.xybbz.api.client.jellyfin.data.ItemResponse
 import cn.xybbz.api.client.jellyfin.data.Response
-import cn.xybbz.api.utils.toStringMap
+import cn.xybbz.api.utils.toListMap
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.http.parameters
-import io.ktor.util.StringValues
 import io.ktor.util.appendAll
 
 class EmbyGenreApi(private val httpClient: HttpClient) : BaseApi {
@@ -18,10 +18,10 @@ class EmbyGenreApi(private val httpClient: HttpClient) : BaseApi {
      * @param itemRequest [Map<String, String>]
      * @return [Response<ItemResponse>]
      */
-    suspend fun getGenres(itemRequest: ItemResponse): Response<ItemResponse> {
+    suspend fun getGenres(itemRequest: ItemRequest): Response<ItemResponse> {
         return httpClient.get("/emby/Genres") {
             parameters {
-                appendAll(itemRequest.toStringMap())
+                appendAll(*itemRequest.toListMap())
             }
         }.body<Response<ItemResponse>>()
     }

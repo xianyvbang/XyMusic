@@ -6,11 +6,10 @@ import cn.xybbz.api.client.jellyfin.data.LoginRequest
 import cn.xybbz.api.client.jellyfin.data.PlaybackStartInfo
 import cn.xybbz.api.client.jellyfin.data.SystemInfoResponse
 import io.ktor.client.HttpClient
-import okhttp3.ResponseBody
-import retrofit2.Response
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.POST
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 
 class EmbyUserApi(private val httpClient: HttpClient) : BaseApi {
 
@@ -19,40 +18,55 @@ class EmbyUserApi(private val httpClient: HttpClient) : BaseApi {
      * @param [LoginRequest]
      * @return [AuthenticateResponse]
      */
-    @POST("/emby/Users/AuthenticateByName")
-    suspend fun authenticateByName(@Body loginRequest: LoginRequest): AuthenticateResponse
+    suspend fun authenticateByName(loginRequest: LoginRequest): AuthenticateResponse {
+        return httpClient.post("/emby/Users/AuthenticateByName") {
+            postBlock { setBody(loginRequest) }
+        }.body()
+    }
 
 
     /**
      * POST PING系统
      * @return [String]
      */
-    @POST("/emby/System/Ping")
-    suspend fun postPingSystem(): Response<ResponseBody>
+    suspend fun postPingSystem(): String {
+        return httpClient.post("/emby/System/Ping") {
+        }.body()
+    }
 
     /**
      * 获得服务端信息
      */
-    @GET("/emby/System/Info")
-    suspend fun getSystemInfo(): SystemInfoResponse
+    suspend fun getSystemInfo(): SystemInfoResponse {
+        return httpClient.get("/emby/System/Info").body()
+    }
 
     /**
      * 上报正在播放音乐
      * @param [data] 数据
      */
-    @POST("/emby/Sessions/Playing")
-    suspend fun playing(@Body data: PlaybackStartInfo)
+    suspend fun playing(data: PlaybackStartInfo) {
+        httpClient.post("/emby/Sessions/Playing") {
+            postBlock { setBody(data) }
+        }
+    }
 
     /**
      * 上报播放进度
      * @param [data] 数据
      */
-    @POST("/emby/Sessions/Playing/Progress")
-    suspend fun progress(@Body data: PlaybackStartInfo)
+    suspend fun progress(data: PlaybackStartInfo) {
+        httpClient.post("/emby/Sessions/Playing/Progress") {
+            postBlock { setBody(data) }
+        }
+    }
 
     /**
      * 上报停止播放
      */
-    @POST("/emby/Sessions/Playing/Stopped")
-    suspend fun stopped(@Body data: PlaybackStartInfo)
+    suspend fun stopped(data: PlaybackStartInfo) {
+        httpClient.post("/emby/Sessions/Playing/Stopped") {
+            postBlock { setBody(data) }
+        }
+    }
 }

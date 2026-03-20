@@ -19,30 +19,49 @@
 package cn.xybbz.api.client.jellyfin.service
 
 import cn.xybbz.api.base.BaseApi
+import cn.xybbz.api.client.jellyfin.data.ItemRequest
 import cn.xybbz.api.client.jellyfin.data.ItemResponse
 import cn.xybbz.api.client.jellyfin.data.Response
-import retrofit2.http.GET
-import retrofit2.http.Path
-import retrofit2.http.QueryMap
+import cn.xybbz.api.utils.toListMap
+import cn.xybbz.api.utils.toStringMap
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.http.parameters
+import io.ktor.util.appendAll
 
-interface ArtistsApi : BaseApi {
+class ArtistsApi(private val httpClient: HttpClient) : BaseApi {
 
     /**
      * 获得艺术家列表
      * @param [itemRequest] 请求信息
      * @return [Response<ItemResponse>]
      */
-    @GET("/Artists")
     suspend fun getArtists(
-        @QueryMap itemRequest: Map<String, String>?,
-    ): Response<ItemResponse>
+        itemRequest: ItemRequest?,
+    ): Response<ItemResponse> {
+        return httpClient.get("/Artists") {
+            parameters {
+                itemRequest?.let {
+                    appendAll(*it.toListMap())
+                }
+            }
+        }.body()
+    }
 
     /**
      * 相似歌手
      */
-    @GET("/Artists/{artistId}/Similar")
     suspend fun getSimilarArtists(
-        @Path("artistId") artistId: String,
-        @QueryMap itemRequest: Map<String, String>?
-    ): Response<ItemResponse>
+        artistId: String,
+        itemRequest: ItemRequest?
+    ): Response<ItemResponse> {
+        return httpClient.get("/Artists/$artistId/Similar") {
+            parameters {
+                itemRequest?.let {
+                    appendAll(*it.toListMap())
+                }
+            }
+        }.body()
+    }
 }

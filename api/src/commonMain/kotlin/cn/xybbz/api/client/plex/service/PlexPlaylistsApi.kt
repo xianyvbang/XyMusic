@@ -25,72 +25,115 @@ import cn.xybbz.api.client.plex.data.PlexLibraryItemResponse
 import cn.xybbz.api.client.plex.data.PlexPlaylistResponse
 import cn.xybbz.api.client.plex.data.PlexResponse
 import cn.xybbz.api.enums.plex.PlexPlaylistType
-import retrofit2.http.DELETE
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.PUT
-import retrofit2.http.Path
-import retrofit2.http.Query
-import retrofit2.http.QueryMap
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.put
+import io.ktor.http.parameters
 
-interface PlexPlaylistsApi : BaseApi {
+class PlexPlaylistsApi(private val httpClient: HttpClient) : BaseApi {
 
-    @POST("/playlists")
     suspend fun createPlaylist(
-        @Query("title") title: String,
-        @Query("type") type: String = PlexPlaylistType.AUDIO.toString(),
-        @Query("public") smart: Int = 1,
-    ): PlexResponse<PlexPlaylistResponse>
+        title: String,
+        type: String = PlexPlaylistType.AUDIO.toString(),
+        smart: Int = 1,
+    ): PlexResponse<PlexPlaylistResponse> {
+        return httpClient.post("/playlists") {
+            parameters {
+                append("title", title)
+                append("type", type)
+                append("public", smart)
+            }
+        }.body()
+    }
 
-    @PUT("/playlists/{playlistId}")
     suspend fun updatePlaylist(
-        @Path("playlistId") playlistId: String,
-        @Query("title") title: String
-    ): PlaylistItemData
+        playlistId: String,
+        title: String
+    ): PlaylistItemData {
+        return httpClient.put("/playlists/$playlistId") {
+            parameters {
+                append("title", title)
+            }
+        }.body()
+    }
 
-    @DELETE("/playlists/{playlistId}")
     suspend fun deletePlaylist(
-        @Path("playlistId") playlistId: String
-    )
+        playlistId: String
+    ) {
+        httpClient.delete("/playlists/$playlistId")
+    }
 
-    @GET("/playlists")
     suspend fun getPlaylists(
-        @Query("plexPlaylistType") order: PlexPlaylistType = PlexPlaylistType.AUDIO,
-        @Query("smart") smart: Int? = null,
-        @Query("X-Plex-Container-Start") start: Int,
-        @Query("X-Plex-Container-Size") pageSize: Int
-    ): PlexResponse<PlexPlaylistResponse>
+        order: PlexPlaylistType = PlexPlaylistType.AUDIO,
+        smart: Int? = null,
+        start: Int,
+        pageSize: Int
+    ): PlexResponse<PlexPlaylistResponse> {
+        return httpClient.get("/playlists") {
+            parameters {
+                append("type", order.toString())
+                append("smart", smart)
+                append("X-Plex-Container-Start", start.toString())
+                append("X-Plex-Container-Size", pageSize.toString())
+            }
+        }.body()
+    }
 
-    @GET("/playlists/{playlistId}")
     suspend fun getPlaylistById(
-        @Path("playlistId") id: String
-    ): PlexResponse<PlexPlaylistResponse>
+        id: String
+    ): PlexResponse<PlexPlaylistResponse> {
+        return httpClient.get("/playlists/$id").body()
+    }
 
-    @PUT("/playlists/{playlistId}/items")
     suspend fun addPlaylistMusics(
-        @Path("playlistId") playlistId: String,
-        @Query("uri") uri: String
-    ): PlexResponse<PlexPlaylistResponse>
+        playlistId: String,
+        uri: String
+    ): PlexResponse<PlexPlaylistResponse> {
+        return httpClient.put("/playlists/$playlistId/items") {
+            parameters {
+                append("uri", uri)
+            }
+        }.body()
+    }
 
-    @DELETE("/playlists/{playlistId}/items/{itemId}")
     suspend fun removePlaylistMusics(
-        @Path("playlistId") playlistId: String,
-        @Path("itemId") itemId: String
-    ): PlaylistRemoveMusicsUpdateResponse
+        playlistId: String,
+        itemId: String
+    ): PlaylistRemoveMusicsUpdateResponse {
+        return httpClient.delete("/playlists/$playlistId/items/$itemId").body()
+    }
 
-    @GET("/playlists/{playlistId}/items")
     suspend fun getPlaylistMusicList(
-        @Path("playlistId") playlistId: String,
-        @Query("type") type: Int? = 10,
-        @Query("X-Plex-Container-Start") start: Int,
-        @Query("X-Plex-Container-Size") pageSize: Int,
-        @Query("artist.id") artistId: String? = null,
-        @Query("album.id") albumId: String? = null,
-        @Query("sort") sort: String? = null,
-        @Query("track.collection") trackCollection: Int? = null,
-        @Query("album.decade", encoded = false) albumDecade: String? = null,
-        @Query("album.year>>=", encoded = false) albumStartYear: Int? = null,
-        @Query("album.year<<=", encoded = false) albumEndYear: Int? = null,
-        @QueryMap params: Map<String, String>? = null
-    ): PlexResponse<PlexLibraryItemResponse>
+        playlistId: String,
+        type: Int? = 10,
+        start: Int,
+        pageSize: Int,
+        artistId: String? = null,
+        albumId: String? = null,
+        sort: String? = null,
+        trackCollection: Int? = null,
+        albumDecade: String? = null,
+        albumStartYear: Int? = null,
+        albumEndYear: Int? = null,
+        params: Map<String, String>? = null
+    ): PlexResponse<PlexLibraryItemResponse> {
+        return httpClient.get("/playlists/$playlistId/items") {
+            parameters {
+                append("type", type)
+                append("X-Plex-Container-Start", start.toString())
+                append("X-Plex-Container-Size", pageSize.toString())
+                append("artist.id", artistId)
+                append("album.id", albumId)
+                append("sort", sort)
+                append("track.collection", trackCollection)
+                append("album.decade", albumDecade)
+                append("album.year>>=", albumStartYear)
+                append("album.year<<=", albumEndYear)
+                appendAll(params)
+            }
+        }.body()
+    }
 }

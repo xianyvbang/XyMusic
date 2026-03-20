@@ -26,25 +26,84 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonPrimitive
 
+/**
+ * 到字符串映射
+ * @param [isConvertList] 是转换列表 true 将列表使用逗号(,)分隔并转换成字符串,false的时候多个相同的key对应多个不同的值
+ * @return [List<Pair<String, String>>]
+ */
 inline fun <reified T> T.toStringMap(
-    isConvertList: Boolean = true
-): Map<String, String> {
+    isConvertList: Boolean = false
+): List<Pair<String, String>> {
     val jsonElement = json.encodeToJsonElement(this)
-    if (jsonElement !is JsonObject) return emptyMap()
-    return jsonElement.toStringMap(isConvertList)
+    if (jsonElement !is JsonObject) return emptyList()
+    //改为Pair
+    return jsonElement.convertToPairs(isConvertList)
 }
 
-fun JsonObject.toStringMap(isConvertList: Boolean = true): Map<String, String> {
+
+inline fun <reified T> T.toListMap(
+    isConvertList: Boolean = false
+): Array<Pair<String, Iterable<String>>> {
+    val jsonElement = json.encodeToJsonElement(this)
+    if (jsonElement !is JsonObject) return emptyArray()
+    //改为Pair
+    return jsonElement.convertToListPairs(isConvertList).toTypedArray()
+}
+
+
+fun JsonObject.convertToListPairs(isConvertList: Boolean): List<Pair<String, Iterable<String>>> {
     val toMap = this.toMap()
-    val mapNotNull = toMap.mapNotNull { (key, value) ->
-        val stringValue = when (value) {
-            is JsonPrimitive -> value.content
-            is JsonArray -> if (isConvertList) value.filter { !it.jsonPrimitive.contentOrNull.isNullOrEmpty() }
-                .joinToString(",") { it.jsonPrimitive.content } else value.toString() // List -> CSV
-            else -> value.toString()
+
+    val flatMap = toMap.flatMap { (key, value) ->
+        when (value) {
+            is JsonPrimitive -> {
+                val content = value.content
+                if (content.isNotEmpty()) listOf(key to listOf(content)) else emptyList()
+            }
+            is JsonArray -> {
+                if (isConvertList) {
+                    listOf(key to listOf(value.filter { !it.jsonPrimitive.contentOrNull.isNullOrEmpty() }
+                        .joinToString(",") { it.jsonPrimitive.content }))
+                } else {
+                    listOf(key to value.map { it.toString() }.toList())
+                }
+            }
+            else -> {
+                val str = value.toString()
+                if (str.isNotEmpty()) listOf(key to listOf(str)) else emptyList()
+            }
         }
-        key to stringValue
-    }.filter { it.second.isNotEmpty() }
-    val toMutableMap = mapNotNull.toMap().toMutableMap()
-    return toMutableMap
+    }
+    return flatMap
+}
+
+
+fun JsonObject.convertToPairs(isConvertList: Boolean): List<Pair<String, String>> {
+    val toMap = this.toMap()
+
+    return toMap.flatMap { (key, value) ->
+        when (value) {
+            is JsonPrimitive -> {
+                val content = value.content
+                if (content.isNotEmpty()) listOf(key to content) else emptyList()
+            }
+
+            is JsonArray -> {
+                if (isConvertList) {
+                    listOf(key to value.filter { !it.jsonPrimitive.contentOrNull.isNullOrEmpty() }
+                        .joinToString(",") { it.jsonPrimitive.content })
+                } else {
+                    value.mapNotNull {
+                        val content = it.jsonPrimitive.contentOrNull
+                        if (!content.isNullOrEmpty()) key to content else null
+                    }
+                }
+            }
+
+            else -> {
+                val str = value.toString()
+                if (str.isNotEmpty()) listOf(key to str) else emptyList()
+            }
+        }
+    }
 }

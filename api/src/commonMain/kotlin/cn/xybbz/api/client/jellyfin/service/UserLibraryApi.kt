@@ -2,29 +2,35 @@ package cn.xybbz.api.client.jellyfin.service
 
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.jellyfin.data.FavoriteResponse
+import cn.xybbz.api.client.jellyfin.data.ItemRequest
 import cn.xybbz.api.client.jellyfin.data.ItemResponse
-import retrofit2.http.DELETE
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.Path
-import retrofit2.http.QueryMap
+import cn.xybbz.api.utils.toListMap
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.put
+import io.ktor.http.parameters
+import io.ktor.util.appendAll
 
-interface UserLibraryApi : BaseApi {
+class UserLibraryApi(private val httpClient: HttpClient) : BaseApi {
     /**
      * 标记最喜欢项目
      * @param [itemId] 项目ID
      * @return [FavoriteResponse]
      */
-    @POST("/UserFavoriteItems/{itemId}")
-    suspend fun markFavoriteItem(@Path("itemId") itemId: String): FavoriteResponse
+    suspend fun markFavoriteItem(itemId: String): FavoriteResponse{
+        return httpClient.put("/UserFavoriteItems/${itemId}").body()
+    }
 
     /**
      * 取消标记喜欢物品
      * @param [itemId] 项目ID
      * @return [FavoriteResponse]
      */
-    @DELETE("/UserFavoriteItems/{itemId}")
-    suspend fun unmarkFavoriteItem(@Path("itemId") itemId: String): FavoriteResponse
+    suspend fun unmarkFavoriteItem(itemId: String): FavoriteResponse{
+        return httpClient.delete("/UserFavoriteItems/${itemId}").body()
+    }
 
 
     /**
@@ -32,14 +38,20 @@ interface UserLibraryApi : BaseApi {
      * @param [itemId] 商品编号
      * @return [ItemResponse]
      */
-    @GET("/Items/{itemId}")
-    suspend fun getItem(@Path("itemId") itemId: String): ItemResponse
+    suspend fun getItem(itemId: String): ItemResponse{
+        return httpClient.get("/Items/${itemId}").body()
+    }
 
     /**
      * 获取最新音乐列表
      * @param [itemRequest] 物品请求
      * @return [List<ItemResponse>]
      */
-    @GET("/Items/Latest")
-    suspend fun getLatestMedia(@QueryMap itemRequest: Map<String, String>): List<ItemResponse>
+    suspend fun getLatestMedia(itemRequest: ItemRequest): List<ItemResponse>{
+        return httpClient.get("/Items/Latest"){
+            parameters {
+                appendAll(*itemRequest.toListMap())
+            }
+        }.body()
+    }
 }

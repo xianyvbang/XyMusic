@@ -5,68 +5,120 @@ import cn.xybbz.api.client.plex.data.ItemInfoResponse
 import cn.xybbz.api.client.plex.data.PlexLibrary
 import cn.xybbz.api.client.plex.data.PlexLibraryItemResponse
 import cn.xybbz.api.client.plex.data.PlexResponse
-import retrofit2.http.GET
-import retrofit2.http.Path
-import retrofit2.http.Query
-import retrofit2.http.QueryMap
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.http.parameters
 
-interface PlexItemApi : BaseApi {
+class PlexItemApi(private val httpClient: HttpClient) : BaseApi {
 
-    @GET("/library/sections/{sectionKey}/{selectType}")
     suspend fun getSongs(
-        @Path("sectionKey") sectionKey: String,
-        @Path("selectType") selectType: String,
-        @Query("type") type: Int? = 10,
-        @Query("sort") sort: String? = null,
-        @Query("title") title: String? = null,
-        @Query("includeCollections") includeCollections: Int = 1,
-        @Query("includeMeta") includeMeta: Int = 1,
-        @Query("includeExternalMedia") includeExternalMedia: Int = 1,
-        @Query("X-Plex-Container-Start") start: Int,
-        @Query("X-Plex-Container-Size") pageSize: Int,
-        @Query("artist.id") artistId: String? = null,
-        @Query("album.id") albumId: String? = null,
+        sectionKey: String,
+        selectType: String,
+        type: Int? = 10,
+        sort: String? = null,
+        title: String? = null,
+        includeCollections: Int = 1,
+        includeMeta: Int = 1,
+        includeExternalMedia: Int = 1,
+        start: Int,
+        pageSize: Int,
+        artistId: String? = null,
+        albumId: String? = null,
         //使用逗号分割
-        @Query("genre") genreIds: String? = null,
-        @Query("album.collection") albumCollection: Int? = null,
-        @Query("track.collection") trackCollection: Int? = null,
-        @Query("artist.collection") artistCollection: Int? = null,
-        @Query("decade", encoded = false) decade: String? = null,
-        @Query("album.decade", encoded = false) albumDecade: String? = null,
-        @Query("album.year>>=", encoded = false) albumStartYear: Int? = null,
-        @Query("album.year<<=", encoded = false) albumEndYear: Int? = null,
-        @Query("artist.title", encoded = false) artistTitle: String? = null,
-        @QueryMap(encoded = false) params: Map<String, String>? = null
-    ): PlexResponse<PlexLibraryItemResponse>
+        genreIds: String? = null,
+        albumCollection: Int? = null,
+        trackCollection: Int? = null,
+        artistCollection: Int? = null,
+        decade: String? = null,
+        albumDecade: String? = null,
+        albumStartYear: Int? = null,
+        albumEndYear: Int? = null,
+        artistTitle: String? = null,
+        params: Map<String, String>? = null
+    ): PlexResponse<PlexLibraryItemResponse> {
+        return httpClient.get("/library/sections/${sectionKey}/${selectType}") {
+            parameters {
+                append("type", type)
+                append("sort", sort)
+                append("title", title)
+                append("includeCollections", includeCollections)
+                append("includeMeta", includeMeta)
+                append("includeExternalMedia", includeExternalMedia)
+                append("X-Plex-Container-Start", start)
+                append("X-Plex-Container-Size", pageSize)
+                append("artist.id", artistId)
+                append("album.id", albumId)
+                append("genre", genreIds)
+                append("album.collection", albumCollection)
+                append("track.collection", trackCollection)
+                append("artist.collection", artistCollection)
+                append("decade", decade)
+                append("album.decade", albumDecade)
+                append("album.year>>=", albumStartYear)
+                append("album.year<<=", albumEndYear)
+                append("artist.title", artistTitle)
+                appendAll(params)
+
+            }
+        }.body()
+    }
 
 
-    @GET("/library/metadata/{sectionKey}")
     suspend fun getLibraryInfo(
-        @Path("sectionKey") sectionKey: String,
-        @Query("includeConcerts") includeConcerts: Int = 1,
-        @Query("includeExtras") includeExtras: Int = 1,
-        @Query("includeOnDeck") includeOnDeck: Int = 1,
-        @Query("includePopularLeaves") includePopularLeaves: Int = 1,
-        @Query("includePreferences") includePreferences: Int = 1,
-        @Query("includeChapters") includeChapters: Int = 1,
-        @Query("includeStations") includeStations: Int = 1,
-        @Query("includeMarkers") includeMarkers: Int = 1,
-        @Query("includeExternalMedia") includeExternalMedia: Int = 1,
-        @Query("asyncAugmentMetadata") asyncAugmentMetadata: Int = 1,
-        @Query("includeRelated") includeRelated: Int = 1,
-        @Query("checkFiles") checkFiles: Int = 1,
-        @Query("asyncRefreshAnalysis") asyncRefreshAnalysis: Int = 1,
-        @Query("asyncRefreshLocalMediaAgent") asyncRefreshLocalMediaAgent: Int = 1,
-    ): PlexResponse<ItemInfoResponse>
+        sectionKey: String,
+        includeConcerts: Int = 1,
+        includeExtras: Int = 1,
+        includeOnDeck: Int = 1,
+        includePopularLeaves: Int = 1,
+        includePreferences: Int = 1,
+        includeChapters: Int = 1,
+        includeStations: Int = 1,
+        includeMarkers: Int = 1,
+        includeExternalMedia: Int = 1,
+        asyncAugmentMetadata: Int = 1,
+        includeRelated: Int = 1,
+        checkFiles: Int = 1,
+        asyncRefreshAnalysis: Int = 1,
+        asyncRefreshLocalMediaAgent: Int = 1,
+    ): PlexResponse<ItemInfoResponse> {
+        return httpClient.get("/library/metadata/${sectionKey}") {
+            parameters {
+                append("includeConcerts", includeConcerts)
+                append("includeExtras", includeExtras)
+                append("includeOnDeck", includeOnDeck)
+                append("includePopularLeaves", includePopularLeaves)
+                append("includePreferences", includePreferences)
+                append("includeChapters", includeChapters)
+                append("includeStations", includeStations)
+                append("includeMarkers", includeMarkers)
+                append("includeExternalMedia", includeExternalMedia)
+                append("asyncAugmentMetadata", asyncAugmentMetadata)
+                append("includeRelated", includeRelated)
+                append("checkFiles", checkFiles)
+                append("asyncRefreshAnalysis", asyncRefreshAnalysis)
+                append("asyncRefreshLocalMediaAgent", asyncRefreshLocalMediaAgent)
+            }
+        }.body()
+    }
 
 
-    @GET("/library/sections/{sectionKey}/genre")
     suspend fun getGenres(
-        @Path("sectionKey") sectionKey: String,
-        @Query("type") type: Int? = 10,
-        @Query("sort") sort: String? = null,
-        @Query("title") title: String? = null,
-        @Query("X-Plex-Container-Start") start: Int? = null,
-        @Query("X-Plex-Container-Size") pageSize: Int? = null
-    ): PlexResponse<PlexLibrary>
+        sectionKey: String,
+        type: Int? = 10,
+        sort: String? = null,
+        title: String? = null,
+        start: Int? = null,
+        pageSize: Int? = null
+    ): PlexResponse<PlexLibrary> {
+        return httpClient.get("/library/sections/${sectionKey}/genre") {
+            parameters {
+                append("type", type)
+                append("sort", sort)
+                append("title", title)
+                append("X-Plex-Container-Start", start)
+                append("X-Plex-Container-Size", pageSize)
+            }
+        }.body()
+    }
 }

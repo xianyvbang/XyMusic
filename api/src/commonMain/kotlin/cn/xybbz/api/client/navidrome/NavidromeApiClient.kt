@@ -18,7 +18,6 @@
 
 package cn.xybbz.api.client.navidrome
 
-import android.util.Log
 import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
@@ -156,7 +155,7 @@ class NavidromeApiClient : DefaultParentApiClient() {
      */
     override fun userApi(restart: Boolean): NavidromeUserApi {
         if (!this::navidromeUserApi.isInitialized || restart) {
-            navidromeUserApi = instance().create(NavidromeUserApi::class.java)
+            navidromeUserApi = NavidromeUserApi(httpClient)
         }
         return navidromeUserApi
     }
@@ -166,7 +165,7 @@ class NavidromeApiClient : DefaultParentApiClient() {
      */
     override fun itemApi(restart: Boolean): NavidromeItemApi {
         if (!this::navidromeItemApi.isInitialized || restart) {
-            navidromeItemApi = instance().create(NavidromeItemApi::class.java)
+            navidromeItemApi = NavidromeItemApi(httpClient)
         }
         return navidromeItemApi
     }
@@ -177,7 +176,7 @@ class NavidromeApiClient : DefaultParentApiClient() {
      */
     override fun playlistsApi(restart: Boolean): NavidromePlaylistsApi {
         if (!this::navidromePlaylistsApi.isInitialized || restart) {
-            navidromePlaylistsApi = instance().create(NavidromePlaylistsApi::class.java)
+            navidromePlaylistsApi = NavidromePlaylistsApi(httpClient)
         }
         return navidromePlaylistsApi
     }
@@ -187,7 +186,7 @@ class NavidromeApiClient : DefaultParentApiClient() {
      */
     override fun artistsApi(restart: Boolean): NavidromeArtistsApi {
         if (!this::navidromeArtistsApi.isInitialized || restart) {
-            navidromeArtistsApi = instance().create(NavidromeArtistsApi::class.java)
+            navidromeArtistsApi = NavidromeArtistsApi(httpClient)
         }
         return navidromeArtistsApi
     }
@@ -197,7 +196,7 @@ class NavidromeApiClient : DefaultParentApiClient() {
      */
     override fun genreApi(restart: Boolean): NavidromeGenreApi {
         if (!this::navidromeGenreApi.isInitialized || restart) {
-            navidromeGenreApi = instance().create(NavidromeGenreApi::class.java)
+            navidromeGenreApi = NavidromeGenreApi(httpClient)
         }
         return navidromeGenreApi
     }
@@ -214,7 +213,7 @@ class NavidromeApiClient : DefaultParentApiClient() {
      */
     override suspend fun login(clientLoginInfoReq: ClientLoginInfoReq): LoginSuccessData {
         val responseData = userApi().login(clientLoginInfoReq.toNavidromeLogin())
-        Log.i("=====", "返回响应值: $responseData")
+        logger.info { "返回响应值: $responseData" }
         loginAfter(
             accessToken = responseData.token,
             userId = responseData.id,
@@ -234,7 +233,7 @@ class NavidromeApiClient : DefaultParentApiClient() {
             }
         }
         val user = userApi().getUser(username)
-        Log.i("=====", "服务器信息 $systemInfo 用户信息 $user")
+        logger.info { "服务器信息 $systemInfo 用户信息 $user" }
         val serverVersion = systemInfo.subsonicResponse.serverVersion
         return LoginSuccessData(
             userId = responseData.id,
@@ -280,7 +279,7 @@ class NavidromeApiClient : DefaultParentApiClient() {
      */
     override fun userLibraryApi(restart: Boolean): NavidromeUserLibraryApi {
         if (!this::navidromeUserLibraryApi.isInitialized || restart) {
-            navidromeUserLibraryApi = instance().create(NavidromeUserLibraryApi::class.java)
+            navidromeUserLibraryApi = NavidromeUserLibraryApi(httpClient)
         }
         return navidromeUserLibraryApi
     }
@@ -290,7 +289,7 @@ class NavidromeApiClient : DefaultParentApiClient() {
      */
     override fun userViewsApi(restart: Boolean): NavidromeUserViewsApi {
         if (!this::navidromeUserViewsApi.isInitialized || restart) {
-            navidromeUserViewsApi = instance().create(NavidromeUserViewsApi::class.java)
+            navidromeUserViewsApi = NavidromeUserViewsApi(httpClient)
         }
         return navidromeUserViewsApi
     }

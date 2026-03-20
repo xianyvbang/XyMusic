@@ -30,7 +30,7 @@ class EmbyPlaylistsApi(private val httpClient: HttpClient) : BaseApi {
         return httpClient.post("/emby/Playlists") {
             parameters {
                 append("Name", name)
-                ids?.let { append("Ids", it) }
+                append("Ids", ids)
                 mediaType?.let { append("MediaType", it.serialName) }
             }
         }.body()
@@ -49,8 +49,8 @@ class EmbyPlaylistsApi(private val httpClient: HttpClient) : BaseApi {
     ) {
         httpClient.post("/emby/Playlists/$playlistId/Items") {
             parameters {
-                ids?.let { append("ids", it) }
-                userId?.let { append("userId", it) }
+                append("ids", ids)
+                append("userId", userId)
             }
         }
     }
@@ -65,8 +65,7 @@ class EmbyPlaylistsApi(private val httpClient: HttpClient) : BaseApi {
         createPlaylistRequest: CreatePlaylistRequest
     ) {
         httpClient.post("/emby/items/$playlistId") {
-            contentType(ContentType.Application.Json)
-            setBody(createPlaylistRequest)
+            postBlock { setBody(createPlaylistRequest) }
         }
     }
 
