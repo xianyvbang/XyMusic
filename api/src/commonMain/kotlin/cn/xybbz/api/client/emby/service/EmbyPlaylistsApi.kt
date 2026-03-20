@@ -4,13 +4,16 @@ import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.jellyfin.data.CreatePlaylistRequest
 import cn.xybbz.api.client.jellyfin.data.PlaylistResponse
 import cn.xybbz.api.enums.jellyfin.MediaType
-import retrofit2.http.Body
-import retrofit2.http.DELETE
-import retrofit2.http.POST
-import retrofit2.http.Path
-import retrofit2.http.Query
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.delete
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.http.parameters
 
-interface EmbyPlaylistsApi : BaseApi {
+class EmbyPlaylistsApi(private val httpClient: HttpClient) : BaseApi {
 
     /**
      * 创建歌单
@@ -19,12 +22,19 @@ interface EmbyPlaylistsApi : BaseApi {
      * @param [mediaType] 媒体类型
      * @return [PlaylistResponse]
      */
-    @POST("/emby/Playlists")
     suspend fun createPlaylist(
-        @Query("Name") name: String,
-        @Query("Ids") ids: String? = null,
-        @Query("MediaType") mediaType: MediaType? = null
-    ): PlaylistResponse
+        name: String,
+        ids: String? = null,
+        mediaType: MediaType? = null
+    ): PlaylistResponse {
+        return httpClient.post("/emby/Playlists") {
+            parameters {
+                append("Name", name)
+                ids?.let { append("Ids", it) }
+                mediaType?.let { append("MediaType", it.serialName) }
+            }
+        }.body()
+    }
 
     /**
      * 将音乐添加到歌单
@@ -32,33 +42,48 @@ interface EmbyPlaylistsApi : BaseApi {
      * @param [ids] 音乐ids
      * @param [userId] 用户ID
      */
-    @POST("/emby/Playlists/{playlistId}/Items")
     suspend fun addItemToPlaylist(
-        @Path("playlistId") playlistId: String,
-        @Query("ids") ids: String? = null,
-        @Query("userId") userId: String? = null,
-    )
+        playlistId: String,
+        ids: String? = null,
+        userId: String? = null,
+    ) {
+        httpClient.post("/emby/Playlists/$playlistId/Items") {
+            parameters {
+                ids?.let { append("ids", it) }
+                userId?.let { append("userId", it) }
+            }
+        }
+    }
 
     /**
      * 更新歌单
      * @param [playlistId] 歌单Id
      * @param [createPlaylistRequest] 歌单信息请求实体类
      */
-    @POST("/emby/items/{playlistId}")
     suspend fun updatePlaylist(
-        @Path("playlistId") playlistId: String,
-        @Body createPlaylistRequest: CreatePlaylistRequest
-    )
+        playlistId: String,
+        createPlaylistRequest: CreatePlaylistRequest
+    ) {
+        httpClient.post("/emby/items/$playlistId") {
+            contentType(ContentType.Application.Json)
+            setBody(createPlaylistRequest)
+        }
+    }
 
     /**
      * 删除歌单内音乐
      * @param [playlistId] 歌单id
      * @param [entryIds] 音乐ids
      */
-    @DELETE("/emby/Playlists/{playlistId}/Items")
     suspend fun deletePlaylist(
-        @Path("playlistId") playlistId: String,
-        @Query("entryIds") entryIds: String
-    )
+        playlistId: String,
+        entryIds: String
+    ) {
+        httpClient.delete("/emby/Playlists/$playlistId/Items") {
+            parameters {
+                append("entryIds", entryIds)
+            }
+        }
+    }
 
 }

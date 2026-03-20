@@ -3,13 +3,14 @@ package cn.xybbz.api.client.emby.service
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.jellyfin.data.FavoriteResponse
 import cn.xybbz.api.client.jellyfin.data.ItemResponse
+import io.ktor.client.HttpClient
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.QueryMap
 
-interface EmbyUserLibraryApi : BaseApi {
+class EmbyUserLibraryApi(private val httpClient: HttpClient) : BaseApi {
     /**
      * 标记最喜欢项目
      * @param [itemId] 数据id

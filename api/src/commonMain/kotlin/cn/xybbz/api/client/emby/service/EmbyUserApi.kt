@@ -5,13 +5,14 @@ import cn.xybbz.api.client.jellyfin.data.AuthenticateResponse
 import cn.xybbz.api.client.jellyfin.data.LoginRequest
 import cn.xybbz.api.client.jellyfin.data.PlaybackStartInfo
 import cn.xybbz.api.client.jellyfin.data.SystemInfoResponse
+import io.ktor.client.HttpClient
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 
-interface EmbyUserApi : BaseApi {
+class EmbyUserApi(private val httpClient: HttpClient) : BaseApi {
 
     /**
      * 按用户名和密码进行身份验证

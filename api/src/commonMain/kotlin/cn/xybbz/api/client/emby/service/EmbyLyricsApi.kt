@@ -2,16 +2,18 @@ package cn.xybbz.api.client.emby.service
 
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.jellyfin.data.LyricResponse
-import retrofit2.http.GET
-import retrofit2.http.Path
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
 
-interface EmbyLyricsApi : BaseApi {
+class EmbyLyricsApi(private val httpClient: HttpClient) : BaseApi {
 
     /**
      * 获取歌词
      * @param [itemId] 音乐id
      * @return [LyricResponse]
      */
-    @GET("/emby/Audio/{itemId}/Lyrics")
-    suspend fun getLyrics(@Path("itemId") itemId: String): LyricResponse
+    suspend fun getLyrics(itemId: String): LyricResponse{
+        return httpClient.get("/emby/Audio/$itemId/Lyrics").body()
+    }
 }

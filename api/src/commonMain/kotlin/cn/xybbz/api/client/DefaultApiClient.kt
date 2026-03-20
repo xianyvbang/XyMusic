@@ -19,6 +19,7 @@
 package cn.xybbz.api.client
 
 import cn.xybbz.api.TokenServer
+import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.base.IDownLoadApi
 import cn.xybbz.api.client.subsonic.data.SubsonicDefaultResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
@@ -50,7 +51,7 @@ import io.ktor.util.appendIfNameAndValueAbsent
 
 abstract class DefaultApiClient : ApiFactory, DownloadFactory {
 
-    private lateinit var httpClient: HttpClient
+    protected lateinit var httpClient: HttpClient
 
     /**
      * token的header名称
@@ -207,6 +208,83 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
      */
     override fun getBaseUrl(): String {
         return TokenServer.baseUrl
+    }
+
+    /**
+     * 获得用户接口服务
+     */
+    open fun userApi(restart: Boolean = false): BaseApi = object : BaseApi {
+
+    }
+
+    /**
+     *用户资源接口服务
+     */
+    open fun userLibraryApi(restart: Boolean = false): BaseApi = object : BaseApi {
+
+    }
+
+    /**
+     * 音乐,专辑,艺术家相关接口
+     */
+    open fun itemApi(restart: Boolean = false): BaseApi = object : BaseApi {
+
+    }
+
+    /**
+     * 获取文件图片
+     */
+    open fun imageApi(restart: Boolean = false): BaseApi = object : BaseApi {
+
+    }
+
+    /**
+     * 创建音乐流
+     */
+    open fun universalAudioApi(restart: Boolean = false): BaseApi = object : BaseApi {
+
+    }
+
+    /**
+     * 歌词接口
+     */
+    open fun lyricsApi(restart: Boolean = false): BaseApi = object : BaseApi {
+
+    }
+
+    /**
+     * 用户视图信息
+     */
+    open fun userViewsApi(restart: Boolean = false): BaseApi = object : BaseApi {
+
+    }
+
+    /**
+     * 播放列表接口
+     */
+    open fun playlistsApi(restart: Boolean = false): BaseApi = object : BaseApi {
+
+    }
+
+    /**
+     * 艺术家接口
+     */
+    open fun artistsApi(restart: Boolean = false): BaseApi = object : BaseApi {
+
+    }
+
+    /**
+     * 资源接口
+     */
+    open fun libraryApi(restart: Boolean = false): BaseApi = object : BaseApi {
+
+    }
+
+    /**
+     * 流派接口
+     */
+    open fun genreApi(restart: Boolean = false): BaseApi = object : BaseApi {
+
     }
 
     /**

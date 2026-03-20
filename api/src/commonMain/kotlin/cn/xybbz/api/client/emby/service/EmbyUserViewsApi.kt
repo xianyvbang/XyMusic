@@ -3,11 +3,12 @@ package cn.xybbz.api.client.emby.service
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.jellyfin.data.ItemResponse
 import cn.xybbz.api.client.jellyfin.data.Response
+import io.ktor.client.HttpClient
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.QueryMap
 
-interface EmbyUserViewsApi : BaseApi {
+class EmbyUserViewsApi(private val httpClient: HttpClient) : BaseApi {
 
     /**
      * 获得媒体库列表

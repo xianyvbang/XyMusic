@@ -123,18 +123,11 @@ class EmbyApiClient : DefaultParentApiClient() {
         this.userId = userId
     }
 
-
     /**
-     * 获得请求头Map
-     * @return [Map<String, String>]
+     * token的header名称
      */
-    public override fun getHeadersMapData(): Map<String, String> {
-        val headerMap = mutableMapOf<String, String>()
-        accessToken?.let {
-            headerMap.put(ApiConstants.EMBY_AUTHORIZATION, it)
-        }
-        return headerMap
-    }
+    override val tokenHeaderName: String
+        get() = ApiConstants.EMBY_AUTHORIZATION
 
 
     /**
@@ -168,7 +161,7 @@ class EmbyApiClient : DefaultParentApiClient() {
      */
     override fun userApi(restart: Boolean): EmbyUserApi {
         if (!this::embyUserApi.isInitialized || restart) {
-            embyUserApi = instance().create(EmbyUserApi::class.java)
+            embyUserApi = EmbyUserApi()
         }
         return embyUserApi
     }
@@ -178,7 +171,7 @@ class EmbyApiClient : DefaultParentApiClient() {
      */
     override fun playlistsApi(restart: Boolean): EmbyPlaylistsApi {
         if (!this::embyPlaylistsApi.isInitialized || restart) {
-            embyPlaylistsApi = instance().create(EmbyPlaylistsApi::class.java)
+            embyPlaylistsApi = EmbyPlaylistsApi()
         }
         return embyPlaylistsApi
     }
@@ -188,7 +181,7 @@ class EmbyApiClient : DefaultParentApiClient() {
      */
     override fun artistsApi(restart: Boolean): EmbyArtistsApi {
         if (!this::embyArtistsApi.isInitialized || restart) {
-            embyArtistsApi = instance().create(EmbyArtistsApi::class.java)
+            embyArtistsApi = EmbyArtistsApi(this.httpClient)
         }
         return embyArtistsApi
     }
@@ -199,7 +192,7 @@ class EmbyApiClient : DefaultParentApiClient() {
      */
     override fun itemApi(restart: Boolean): EmbyItemApi {
         if (!this::embyItemApi.isInitialized || restart) {
-            embyItemApi = instance().create(EmbyItemApi::class.java)
+            embyItemApi = EmbyItemApi()
         }
         return embyItemApi
     }
@@ -209,7 +202,7 @@ class EmbyApiClient : DefaultParentApiClient() {
      */
     override fun genreApi(restart: Boolean): EmbyGenreApi {
         if (!this::embyGenreApi.isInitialized || restart) {
-            embyGenreApi = instance().create(EmbyGenreApi::class.java)
+            embyGenreApi = EmbyGenreApi()
         }
         return embyGenreApi
     }

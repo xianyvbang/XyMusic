@@ -10,6 +10,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.http.parameters
 import io.ktor.util.StringValues
+import io.ktor.util.appendAll
 
 class EmbyArtistsApi(private val httpClient: HttpClient) : BaseApi {
 
@@ -19,12 +20,10 @@ class EmbyArtistsApi(private val httpClient: HttpClient) : BaseApi {
      * @return [Response<ItemResponse>]
      */
 
-    suspend fun getArtists(url: String, itemRequest: ItemRequest): Response<ItemResponse> {
+    suspend fun getArtists(itemRequest: ItemRequest): Response<ItemResponse> {
         return httpClient.get("/emby/Artists") {
             parameters {
-                appendAll(StringValues.build {
-                    itemRequest.toStringMap()
-                })
+                appendAll(itemRequest.toStringMap())
             }
         }.body<Response<ItemResponse>>()
     }

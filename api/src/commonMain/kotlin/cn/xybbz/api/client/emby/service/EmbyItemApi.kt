@@ -22,15 +22,17 @@ import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.jellyfin.data.CountsResponse
 import cn.xybbz.api.client.jellyfin.data.ItemResponse
 import cn.xybbz.api.client.jellyfin.data.Response
-import retrofit2.http.GET
-import retrofit2.http.Path
-import retrofit2.http.Query
-import retrofit2.http.QueryMap
+import cn.xybbz.api.utils.toStringMap
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.http.parameters
+import io.ktor.util.appendAll
 
 /**
  * 音乐,专辑,艺术家相关接口
  */
-interface EmbyItemApi : BaseApi {
+class EmbyItemApi(private val httpClient: HttpClient) : BaseApi {
 
     /**
      * 获得音乐列表
@@ -38,29 +40,47 @@ interface EmbyItemApi : BaseApi {
      * @param itemRequest 请求参数
      * @return [Response<ItemResponse>]
      */
-    @GET("/emby/Users/{userId}/Items")
     suspend fun getUserItems(
-        @Path("userId") userId: String, @QueryMap itemRequest: Map<String, String>
-    ): Response<ItemResponse>
+        userId: String, itemRequest: ItemResponse
+    ): Response<ItemResponse> {
+        return httpClient.get("/emby/Users/${userId}/Items") {
+            parameters{
+                appendAll(itemRequest.toStringMap())
+            }
+        }.body()
+    }
 
 
     /**
      * 获得相似歌曲
      */
-    @GET("/emby/Items/{itemId}/Similar")
     suspend fun getSimilarItems(
-        @Path("itemId") itemId: String,
-        @Query("userId") userId: String,
-        @Query("Limit") limit: Int,
-        @Query("Fields") fields: String? = null
-    ): Response<ItemResponse>
+        itemId: String,
+        userId: String,
+        limit: Int,
+        fields: String? = null
+    ): Response<ItemResponse>{
+        return httpClient.get("/emby/Items/${itemId}/Similar"){
+            parameters{
+                append("userId", userId)
+                append("Limit", limit.toString())
+                fields?.let { append("Fields", it) }
+            }
+        }.body()
+    }
 
     /**
      * 获得数量统计
      */
-    @GET("/emby/Items/Counts")
     suspend fun getCounts(
-        @Query("userId") userId: String? = null,
-        @Query("isFavorite") isFavorite: Boolean? = null
-    ): CountsResponse
+        userId: String? = null,
+        isFavorite: Boolean? = null
+    ): CountsResponse{
+        return httpClient.get("/emby/Items/Counts"){
+            parameters{
+                userId?.let { append("userId", it) }
+                isFavorite?.let { append("isFavorite", it.toString()) }
+            }
+        }.body()
+    }
 }
