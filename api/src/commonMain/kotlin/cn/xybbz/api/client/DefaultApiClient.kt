@@ -118,22 +118,25 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
 
             HttpResponseValidator {
                 validateResponse { response ->
-                    val body: SubsonicResponse<SubsonicDefaultResponse> = response.body()
-                    if (body.subsonicResponse.status == Status.Failed) {
-                        val error = body.subsonicResponse.error
-                        val code = error?.code
-                        if (code == 40) {
-                            logger.error { "接口报错响应:${body.subsonicResponse}" }
-                            throw UnauthorizedException(
-                                msg = "${error.message}",
-                                statusCode = code,
-                                responsePhrase = error.message
-                            )
-                        } else {
-                            throw ServiceException(
-                                message = error?.message ?: "",
-                                code = code
-                            )
+                    val any = response.body<Any>()
+                    if (any is SubsonicResponse<*>) {
+                        val body: SubsonicResponse<*> = any
+                        if (body.subsonicResponse.status == Status.Failed) {
+                            val error = body.subsonicResponse.error
+                            val code = error?.code
+                            if (code == 40) {
+                                logger.error { "接口报错响应:${body.subsonicResponse}" }
+                                throw UnauthorizedException(
+                                    msg = "${error.message}",
+                                    statusCode = code,
+                                    responsePhrase = error.message
+                                )
+                            } else {
+                                throw ServiceException(
+                                    message = error?.message ?: "",
+                                    code = code
+                                )
+                            }
                         }
                     }
                 }

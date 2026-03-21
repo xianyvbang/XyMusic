@@ -13,7 +13,7 @@ import retrofit2.http.Streaming
  * @date 2025/12/02
  * @constructor 创建[IDownLoadApi]
  */
-class IDownLoadApi(private val httpClient: HttpClient) : BaseApi {
+open class IDownLoadApi(private val httpClient: HttpClient) : BaseApi {
 
     suspend fun downloadFile(
         fileUrl: String,
