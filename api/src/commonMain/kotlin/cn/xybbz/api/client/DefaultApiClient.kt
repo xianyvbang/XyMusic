@@ -21,7 +21,6 @@ package cn.xybbz.api.client
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.base.IDownLoadApi
-import cn.xybbz.api.client.subsonic.data.SubsonicDefaultResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.constants.ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
@@ -200,7 +199,7 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
      */
     override fun downloadApi(restart: Boolean): IDownLoadApi {
         if (!this::defaultDownloadApi.isInitialized || restart) {
-            defaultDownloadApi = instance().create(IDownLoadApi::class.java)
+            defaultDownloadApi = IDownLoadApi(httpClient)
         }
         return defaultDownloadApi
     }
