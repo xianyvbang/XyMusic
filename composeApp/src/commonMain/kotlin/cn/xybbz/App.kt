@@ -18,15 +18,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.XyButton
 import org.jetbrains.compose.resources.painterResource
 
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.compose_multiplatform
 
 @Composable
-@Preview
+//@Preview
 fun App() {
-    MaterialTheme {
+    XyTheme {
         WindowInsets.systemBars.union(WindowInsets.displayCutout)
         var showContent by remember { mutableStateOf(false) }
         Column(

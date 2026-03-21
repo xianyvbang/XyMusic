@@ -47,7 +47,8 @@ import io.ktor.util.appendAll
 
 abstract class DefaultApiClient : ApiFactory, DownloadFactory {
 
-    protected lateinit var httpClient: HttpClient
+    lateinit var httpClient: HttpClient
+        protected set
 
     /**
      * token的header名称
@@ -165,7 +166,7 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
         }
 
         //todo 有待观察
-        if (!ifTmp){
+        if (!ifTmp) {
             TokenServer.clearAllData()
             TokenServer.setTokenData(token)
             TokenServer.setQueryMapData(queryMap)

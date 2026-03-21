@@ -4,8 +4,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.HttpStatement
-import retrofit2.http.GET
-import retrofit2.http.Streaming
 
 /**
  * 下载方法的基础API

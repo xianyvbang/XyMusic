@@ -66,10 +66,6 @@ fun XyTheme(
             xyConfigs.isDarkTheme -> DarkColorScheme
             else -> LightColorScheme
         }
-        /*val view = LocalView.current
-        val window = (view.context as Activity).window
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        window.statusBarColor = Color.Transparent.toArgb()*/
         MaterialTheme(
             colorScheme = colorScheme,
             typography = Typography,

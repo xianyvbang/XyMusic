@@ -18,7 +18,7 @@ kotlin {
                 minorApiLevel = 1
             }
         }
-        minSdk = 34
+        minSdk = 28
 
         withHostTestBuilder {
         }
@@ -27,6 +27,9 @@ kotlin {
             sourceSetTreeName = "test"
         }.configure {
             instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        }
+        androidResources {
+            enable = true
         }
     }
 
