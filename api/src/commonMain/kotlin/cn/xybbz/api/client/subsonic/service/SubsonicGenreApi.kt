@@ -3,10 +3,13 @@ package cn.xybbz.api.client.subsonic.service
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.subsonic.data.SubsonicGenresResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
-import retrofit2.http.GET
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
 
-interface SubsonicGenreApi : BaseApi {
+class SubsonicGenreApi(private val httpClient: HttpClient) : BaseApi {
 
-    @GET("/rest/getGenres")
-    suspend fun getGenres(): SubsonicResponse<SubsonicGenresResponse>
+    suspend fun getGenres(): SubsonicResponse<SubsonicGenresResponse>{
+        return httpClient.get("/rest/getGenres").body()
+    }
 }

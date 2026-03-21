@@ -23,21 +23,39 @@ import cn.xybbz.api.client.subsonic.data.SubsonicArtistInfoResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicArtistResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicArtistsResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
-import retrofit2.http.GET
-import retrofit2.http.Query
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.http.parameters
 
-interface SubsonicArtistsApi : BaseApi{
-    @GET("/rest/getArtists")
+class SubsonicArtistsApi(private val httpClient: HttpClient) : BaseApi {
     suspend fun getArtists(
-        @Query("musicFolderId") musicFolderId: String?,
-    ): SubsonicResponse<SubsonicArtistsResponse>
+        musicFolderId: String?,
+    ): SubsonicResponse<SubsonicArtistsResponse> {
+        return httpClient.get("/rest/getArtists") {
+            parameters {
+                append("musicFolderId", musicFolderId)
+            }
+        }.body()
+    }
 
-    @GET("/rest/getArtist")
-    suspend fun getArtist(@Query("id") id: String): SubsonicResponse<SubsonicArtistResponse>
+    suspend fun getArtist(id: String): SubsonicResponse<SubsonicArtistResponse> {
+        return httpClient.get("/rest/getArtist") {
+            parameters {
+                append("id", id)
+            }
+        }.body()
+    }
 
-    @GET("/rest/getArtistInfo2")
     suspend fun getArtistInfo(
-        @Query("id") id: String,
-        @Query("count") count: Int? = null
-    ): SubsonicResponse<SubsonicArtistInfoResponse>
+        id: String,
+        count: Int? = null
+    ): SubsonicResponse<SubsonicArtistInfoResponse> {
+        return httpClient.get("/rest/getArtistInfo2") {
+            parameters {
+                append("id", id)
+                append("count", count)
+            }
+        }.body()
+    }
 }

@@ -18,7 +18,6 @@
 
 package cn.xybbz.api.client.subsonic
 
-import android.util.Log
 import cn.xybbz.api.client.DefaultParentApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
@@ -114,7 +113,7 @@ class SubsonicApiClient : DefaultParentApiClient() {
      */
     override fun artistsApi(restart: Boolean): SubsonicArtistsApi {
         if (!this::subsonicArtistsApi.isInitialized || restart) {
-            subsonicArtistsApi = instance().create(SubsonicArtistsApi::class.java)
+            subsonicArtistsApi = SubsonicArtistsApi(httpClient)
         }
         return subsonicArtistsApi
     }
@@ -124,7 +123,7 @@ class SubsonicApiClient : DefaultParentApiClient() {
      */
     override fun userApi(restart: Boolean): SubsonicUserApi {
         if (!this::subsonicUserApi.isInitialized || restart) {
-            subsonicUserApi = instance().create(SubsonicUserApi::class.java)
+            subsonicUserApi = SubsonicUserApi(httpClient)
         }
         return subsonicUserApi
     }
@@ -134,7 +133,7 @@ class SubsonicApiClient : DefaultParentApiClient() {
      */
     override fun itemApi(restart: Boolean): SubsonicItemApi {
         if (!this::subsonicItemApi.isInitialized || restart) {
-            subsonicItemApi = instance().create(SubsonicItemApi::class.java)
+            subsonicItemApi = SubsonicItemApi(httpClient)
         }
         return subsonicItemApi
     }
@@ -144,7 +143,7 @@ class SubsonicApiClient : DefaultParentApiClient() {
      */
     override fun playlistsApi(restart: Boolean): SubsonicPlaylistsApi {
         if (!this::subsonicPlaylistsApi.isInitialized || restart) {
-            subsonicPlaylistsApi = instance().create(SubsonicPlaylistsApi::class.java)
+            subsonicPlaylistsApi = SubsonicPlaylistsApi(httpClient)
         }
         return subsonicPlaylistsApi
     }
@@ -154,7 +153,7 @@ class SubsonicApiClient : DefaultParentApiClient() {
      */
     override fun userViewsApi(restart: Boolean): SubsonicUserViewsApi {
         if (!this::subsonicUserViewsApi.isInitialized || restart) {
-            subsonicUserViewsApi = instance().create(SubsonicUserViewsApi::class.java)
+            subsonicUserViewsApi = SubsonicUserViewsApi(httpClient)
         }
         return subsonicUserViewsApi
     }
@@ -164,7 +163,7 @@ class SubsonicApiClient : DefaultParentApiClient() {
      */
     override fun genreApi(restart: Boolean): SubsonicGenreApi {
         if (!this::subsonicGenreApi.isInitialized || restart) {
-            subsonicGenreApi = instance().create(SubsonicGenreApi::class.java)
+            subsonicGenreApi = SubsonicGenreApi(httpClient)
         }
         return subsonicGenreApi
     }
@@ -174,7 +173,7 @@ class SubsonicApiClient : DefaultParentApiClient() {
      */
     override fun userLibraryApi(restart: Boolean): SubsonicUserLibraryApi {
         if (!this::subsonicUserLibraryApi.isInitialized || restart) {
-            subsonicUserLibraryApi = instance().create(SubsonicUserLibraryApi::class.java)
+            subsonicUserLibraryApi = SubsonicUserLibraryApi(httpClient)
         }
         return subsonicUserLibraryApi
     }
@@ -184,7 +183,7 @@ class SubsonicApiClient : DefaultParentApiClient() {
      */
     override fun lyricsApi(restart: Boolean): SubsonicLyricsApi {
         if (!this::subsonicLyricsApi.isInitialized || restart) {
-            subsonicLyricsApi = instance().create(SubsonicLyricsApi::class.java)
+            subsonicLyricsApi = SubsonicLyricsApi(httpClient)
         }
         return subsonicLyricsApi
     }
@@ -258,7 +257,7 @@ class SubsonicApiClient : DefaultParentApiClient() {
             }
         }
         val user = userApi().getUser(username)
-        Log.i("=====", "服务器信息 $systemInfo 用户信息 $user")
+        logger.info { "服务器信息 $systemInfo 用户信息 $user" }
         return LoginSuccessData(
             userId = clientLoginInfoReq.username,
             accessToken = clientLoginInfoReq.username,

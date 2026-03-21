@@ -21,14 +21,22 @@ package cn.xybbz.api.client.subsonic.service
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.subsonic.data.SubsonicLyricsResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
-import retrofit2.http.GET
-import retrofit2.http.Query
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.http.parameters
 
-interface SubsonicLyricsApi : BaseApi {
+class SubsonicLyricsApi(private val httpClient: HttpClient) : BaseApi {
 
-    @GET("/rest/getLyrics")
     suspend fun getLyrics(
-        @Query("artist") artist: String? = null,
-        @Query("title") title: String? = null
-    ): SubsonicResponse<SubsonicLyricsResponse>
+        artist: String? = null,
+        title: String? = null
+    ): SubsonicResponse<SubsonicLyricsResponse> {
+        return httpClient.get("/rest/getLyrics") {
+            parameters {
+                append("artist", artist)
+                append("title", title)
+            }
+        }.body()
+    }
 }

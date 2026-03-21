@@ -32,82 +32,157 @@ import cn.xybbz.api.client.subsonic.data.SubsonicSongsByGenreResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicStarred2Response
 import cn.xybbz.api.client.subsonic.data.SubsonicTopSongsResponse
 import cn.xybbz.api.enums.subsonic.AlbumType
-import retrofit2.http.GET
-import retrofit2.http.Query
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.http.parameters
 
 /**
  * 音乐,专辑,艺术家相关接口
  */
-interface SubsonicItemApi : BaseApi {
+class SubsonicItemApi(private val httpClient: HttpClient) : BaseApi {
 
-    @GET("/rest/getAlbumList2")
     suspend fun getAlbumList2(
-        @Query("type") type: AlbumType,
-        @Query("size") size: Int,
-        @Query("offset") offset: Int = 0,
-        @Query("fromYear") fromYear: Int? = null,
-        @Query("toYear") toYear: Int? = null,
-        @Query("genre") genre: String? = null,
-        @Query("musicFolderId") musicFolderId: String?,
-    ): SubsonicResponse<SubsonicAlbumListResponse>
+        type: AlbumType,
+        size: Int,
+        offset: Int = 0,
+        fromYear: Int? = null,
+        toYear: Int? = null,
+        genre: String? = null,
+        musicFolderId: String?,
+    ): SubsonicResponse<SubsonicAlbumListResponse> {
+        return httpClient.get("/rest/getAlbumList2") {
+            parameters {
+                append("type", type.toString())
+                append("size", size)
+                append("offset", offset)
+                append("fromYear", fromYear)
+                append("toYear", toYear)
+                append("genre", genre)
+                append("musicFolderId", musicFolderId)
+            }
+        }.body()
+    }
 
-    @GET("/rest/getAlbum")
-    suspend fun getAlbum(@Query("id") id: String): SubsonicResponse<SubsonicAlbumResponse>
+    suspend fun getAlbum(id: String): SubsonicResponse<SubsonicAlbumResponse> {
+        return httpClient.get("/rest/getAlbum") {
+            parameters {
+                append("id", id)
+            }
+        }.body()
+    }
 
-    @GET("/rest/getAlbumInfo2")
     suspend fun getAlbumInfo2(
-        @Query("id") id: String
-    ): SubsonicResponse<SubsonicAlbumInfo2Response>
+        id: String
+    ): SubsonicResponse<SubsonicAlbumInfo2Response> {
+        return httpClient.get("/rest/getAlbumInfo2") {
+            parameters {
+                append("id", id)
+            }
+        }.body()
+    }
 
-    @GET("/rest/getSong")
-    suspend fun getSong(@Query("id") id: String): SubsonicResponse<SubsonicSongResponse>
+    suspend fun getSong(id: String): SubsonicResponse<SubsonicSongResponse> {
+        return httpClient.get("/rest/getSong") {
+            parameters {
+                append("id", id)
+            }
+        }.body()
+    }
 
-    @GET("/rest/search3")
     suspend fun search3(
-        @Query("query") query: String,
-        @Query("artistCount") artistCount: Int = 20,
-        @Query("artistOffset") artistOffset: Int = 0,
-        @Query("albumCount") albumCount: Int = 20,
-        @Query("albumOffset") albumOffset: Int = 0,
-        @Query("songCount") songCount: Int = 20,
-        @Query("songOffset") songOffset: Int = 0,
-        @Query("musicFolderId") musicFolderId: String? = null
-    ): SubsonicResponse<SubsonicSearchResponse>
+        query: String,
+        artistCount: Int = 20,
+        artistOffset: Int = 0,
+        albumCount: Int = 20,
+        albumOffset: Int = 0,
+        songCount: Int = 20,
+        songOffset: Int = 0,
+        musicFolderId: String? = null
+    ): SubsonicResponse<SubsonicSearchResponse> {
+        return httpClient.get("/rest/search3") {
+            parameters {
+                append("query", query)
+                append("artistCount", artistCount)
+                append("artistOffset", artistOffset)
+                append("albumCount", albumCount)
+                append("albumOffset", albumOffset)
+                append("songCount", songCount)
+                append("songOffset", songOffset)
+                append("musicFolderId", musicFolderId)
+            }
+        }.body()
+    }
 
-    @GET("/rest/getRandomSongs")
     suspend fun getRandomSongs(
-        @Query("size") size: Int,
-        @Query("genre") genre: String? = null,
-        @Query("fromYear") fromYear: String? = null,
-        @Query("toYear") toYear: String? = null,
-        @Query("musicFolderId") musicFolderId: String? = null
-    ): SubsonicResponse<SubsonicRandomResponse>
+        size: Int,
+        genre: String? = null,
+        fromYear: String? = null,
+        toYear: String? = null,
+        musicFolderId: String? = null
+    ): SubsonicResponse<SubsonicRandomResponse> {
+        return httpClient.get("/rest/getRandomSongs") {
+            parameters {
+                append("size", size)
+                append("genre", genre)
+                append("fromYear", fromYear)
+                append("toYear", toYear)
+                append("musicFolderId", musicFolderId)
+            }
+        }.body()
+    }
 
-    @GET("/rest/getStarred2")
     suspend fun getStarred2(
-        @Query("musicFolderId") musicFolderId: String?
-    ): SubsonicResponse<SubsonicStarred2Response>
+        musicFolderId: String?
+    ): SubsonicResponse<SubsonicStarred2Response> {
+        return httpClient.get("/rest/getStarred2") {
+            parameters {
+                append("musicFolderId", musicFolderId)
+            }
+        }.body()
+    }
 
-    @GET("rest/getSongsByGenre")
     suspend fun getSongsByGenre(
-        @Query("genre") genre: String,
-        @Query("count") size: Int = 20,
-        @Query("offset") offset: Int = 0,
-        @Query("musicFolderId") musicFolderId: String? = null
-    ):SubsonicResponse<SubsonicSongsByGenreResponse>
+        genre: String,
+        size: Int = 20,
+        offset: Int = 0,
+        musicFolderId: String? = null
+    ): SubsonicResponse<SubsonicSongsByGenreResponse> {
+        return httpClient.get("/rest/getSongsByGenre") {
+            parameters {
+                append("genre", genre)
+                append("count", size)
+                append("offset", offset)
+                append("musicFolderId", musicFolderId)
+            }
+        }.body()
+    }
 
-    @GET("/rest/getTopSongs")
     suspend fun getTopSongs(
-        @Query("artist") artistName: String,
-        @Query("count") count: Int = 20
-    ): SubsonicResponse<SubsonicTopSongsResponse>
+        artistName: String,
+        count: Int = 20
+    ): SubsonicResponse<SubsonicTopSongsResponse> {
+        return httpClient.get("/rest/getTopSongs") {
+            parameters {
+                append("artist", artistName)
+                append("count", count)
+            }
+        }.body()
+    }
 
-    @GET("/rest/getSimilarSongs")
     suspend fun getSimilarSongs(
-        @Query("id") songId: String,
-        @Query("count") count: Int = 20
-    ): SubsonicResponse<SubsonicSimilarSongsResponse>
+        songId: String,
+        count: Int = 20
+    ): SubsonicResponse<SubsonicSimilarSongsResponse> {
+        return httpClient.get("/rest/getSimilarSongs") {
+            parameters {
+                append("id", songId)
+                append("count", count)
+            }
+        }.body()
+    }
 
-    @GET("/rest/getScanStatus")
-    suspend fun getScanStatus(): SubsonicResponse<SubsonicScanStatusResponse>
+    suspend fun getScanStatus(): SubsonicResponse<SubsonicScanStatusResponse> {
+        return httpClient.get("/rest/getScanStatus").body()
+    }
 }

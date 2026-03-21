@@ -20,43 +20,77 @@ package cn.xybbz.api.client.subsonic.service
 
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.subsonic.data.SubsonicDefaultResponse
-import cn.xybbz.api.client.subsonic.data.SubsonicParentResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicPlaylistResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicPlaylistsResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
-import retrofit2.http.GET
-import retrofit2.http.Query
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.http.parameters
 
-interface SubsonicPlaylistsApi : BaseApi {
+class SubsonicPlaylistsApi(private val httpClient: HttpClient) : BaseApi {
 
-    @GET("/rest/createPlaylist")
     suspend fun createPlaylist(
-        @Query("playlistId") playlistId: String? = null,
-        @Query("name") name: String? = null,
-        @Query("songId") songId: List<String>? = null
-    ): SubsonicResponse<SubsonicPlaylistResponse>
+        playlistId: String? = null,
+        name: String? = null,
+        songId: List<String>? = null
+    ): SubsonicResponse<SubsonicPlaylistResponse> {
+        return httpClient.get("/rest/createPlaylist") {
+            parameters {
+                append("playlistId", playlistId)
+                append("name", name)
+                appendAll("songId", songId)
+            }
+        }.body()
+    }
 
-    @GET("/rest/updatePlaylist")
     suspend fun updatePlaylist(
-        @Query("playlistId") playlistId: String,
-        @Query("name") name: String? = null,
-        @Query("comment") comment: String? = null,
-        @Query("public") public: Boolean? = false,
-        @Query("songIdToAdd") songIdToAdd: List<String>? = null,
-        @Query("songIndexToRemove") songIndexToRemove: List<String>? = null
-    ): SubsonicResponse<SubsonicDefaultResponse>
+        playlistId: String,
+        name: String? = null,
+        comment: String? = null,
+        public: Boolean? = false,
+        songIdToAdd: List<String>? = null,
+        songIndexToRemove: List<String>? = null
+    ): SubsonicResponse<SubsonicDefaultResponse> {
+        return httpClient.get("/rest/updatePlaylist") {
+            parameters {
+                append("playlistId", playlistId)
+                append("name", name)
+                append("comment", comment)
+                append("public", public)
+                appendAll("songIdToAdd", songIdToAdd)
+                appendAll("songIndexToRemove", songIndexToRemove)
+            }
+        }.body()
+    }
 
-    @GET("/rest/deletePlaylist")
     suspend fun deletePlaylist(
-        @Query("id") id: String
-    ): SubsonicResponse<SubsonicDefaultResponse>
+        id: String
+    ): SubsonicResponse<SubsonicDefaultResponse> {
+        return httpClient.get("/rest/deletePlaylist") {
+            parameters {
+                append("id", id)
+            }
+        }.body()
+    }
 
-    @GET("/rest/getPlaylists")
-    suspend fun getPlaylists(@Query("username") username: String): SubsonicResponse<SubsonicPlaylistsResponse>
 
-    @GET("/rest/getPlaylist")
+    suspend fun getPlaylists(username: String): SubsonicResponse<SubsonicPlaylistsResponse> {
+        return httpClient.get("/rest/getPlaylists") {
+            parameters {
+                append("username", username)
+            }
+        }.body()
+    }
+
     suspend fun getPlaylistById(
-        @Query("id") id: String
-    ): SubsonicResponse<SubsonicPlaylistResponse>
+        id: String
+    ): SubsonicResponse<SubsonicPlaylistResponse> {
+        return httpClient.get("/rest/getPlaylist") {
+            parameters {
+                append("id", id)
+            }
+        }.body()
+    }
 
 }

@@ -3,10 +3,13 @@ package cn.xybbz.api.client.subsonic.service
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.subsonic.data.SubsonicMusicFoldersResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
-import retrofit2.http.GET
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
 
-interface SubsonicUserViewsApi : BaseApi {
+class SubsonicUserViewsApi(private val httpClient: HttpClient) : BaseApi {
 
-    @GET("/rest/getMusicFolders")
-    suspend fun getMusicFolders(): SubsonicResponse<SubsonicMusicFoldersResponse>
+    suspend fun getMusicFolders(): SubsonicResponse<SubsonicMusicFoldersResponse>{
+        return httpClient.get("/rest/getMusicFolders").body()
+    }
 }

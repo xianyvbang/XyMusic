@@ -21,32 +21,47 @@ package cn.xybbz.api.client.subsonic.service
 import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.jellyfin.data.FavoriteResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicDefaultResponse
-import cn.xybbz.api.client.subsonic.data.SubsonicParentResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
-import retrofit2.http.GET
-import retrofit2.http.Query
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.http.parameters
 
-interface SubsonicUserLibraryApi : BaseApi {
+class SubsonicUserLibraryApi(private val httpClient: HttpClient) : BaseApi {
     /**
      * 标记最喜欢项目
      * @return [FavoriteResponse]
      */
-    @GET("/rest/star")
     suspend fun markFavoriteItem(
-        @Query("id") id: List<String>? = null,
-        @Query("albumId") albumId: List<String>? = null,
-        @Query("artistId") artistId: List<String>? = null
-    ): SubsonicResponse<SubsonicDefaultResponse>
+        id: List<String>? = null,
+        albumId: List<String>? = null,
+        artistId: List<String>? = null
+    ): SubsonicResponse<SubsonicDefaultResponse> {
+        return httpClient.get("/rest/star") {
+            parameters {
+                appendAll("id", id)
+                appendAll("albumId", albumId)
+                appendAll("artistId", artistId)
+            }
+        }.body()
+    }
 
     /**
      * 取消标记喜欢物品
      * @return [FavoriteResponse]
      */
-    @GET("/rest/unstar")
     suspend fun unmarkFavoriteItem(
-        @Query("id") id: List<String>? = null,
-        @Query("albumId") albumId: List<String>? = null,
-        @Query("artistId") artistId: List<String>? = null
-    ): SubsonicResponse<SubsonicDefaultResponse>
+        id: List<String>? = null,
+        albumId: List<String>? = null,
+        artistId: List<String>? = null
+    ): SubsonicResponse<SubsonicDefaultResponse> {
+        return httpClient.get("/rest/unstar") {
+            parameters {
+                appendAll("id", id)
+                appendAll("albumId", albumId)
+                appendAll("artistId", artistId)
+            }
+        }.body()
+    }
 
 }
