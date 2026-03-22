@@ -1,4 +1,3 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -7,6 +6,8 @@ plugins {
     alias(libs.plugins.androidLint)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.koin.compiler)
 }
 
 kotlin {
@@ -16,6 +17,9 @@ kotlin {
         minSdk = libs.versions.android.minSdk.get().toInt()
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_21)
+        }
+        androidResources {
+            enable = true
         }
     }
     
@@ -36,6 +40,14 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.kotlin.ktor.android)
+            implementation(libs.koin.android)
+            implementation(libs.androidx.media3.exoplayer)
+            implementation(libs.androidx.media3.datasource.okhttp)
+            // For exposing and controlling media sessions
+            implementation(libs.androidx.media3.session)
+            implementation(libs.androidx.media3.exoplayer.hls)
+            implementation(libs.androidx.media3.inspector)
+            implementation(libs.androidx.media3.workmanager)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -50,8 +62,24 @@ kotlin {
             implementation(libs.coil.compose)
             implementation(libs.coil.ktor)
 
+            implementation(libs.jetbrains.navigation3.ui)
+            implementation(libs.jetbrains.material3.adaptiveNavigation3)
+            implementation(libs.jetbrains.lifecycle.viewmodelNavigation3)
+
+            implementation(libs.kotlinx.serialization.json)
+
+            implementation(project.dependencies.platform(libs.koin.bom))
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.koin.compose.viewmodel.navigation3)
+            implementation(libs.koin.annotations)
+
+            implementation(libs.kotlin.logging)
+
             implementation(project(path = ":ui"))
             implementation(project(path = ":api"))
+            implementation(project(path = ":localdata"))
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -71,17 +99,7 @@ kotlin {
 
 
 dependencies {
-//    debugImplementation(libs.compose.uiTooling)
+    androidRuntimeClasspath(libs.compose.uiTooling)
 }
 
-compose.desktop {
-    application {
-        mainClass = "cn.xybbz.MainKt"
 
-        nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "cn.xybbz"
-            packageVersion = "1.0.0"
-        }
-    }
-}

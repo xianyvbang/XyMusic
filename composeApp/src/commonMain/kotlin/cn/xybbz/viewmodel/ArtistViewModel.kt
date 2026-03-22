@@ -1,0 +1,119 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
+package cn.xybbz.viewmodel
+
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.filter
+import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.entity.data.ArtistFilter
+import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.data.artist.XyArtistExt
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+/**
+ * 艺术家
+ */
+@HiltViewModel
+class ArtistViewModel @Inject constructor(
+    private val dataSourceManager: DataSourceManager,
+    private val db: DatabaseClient,
+    val backgroundConfig: BackgroundConfig
+) : ViewModel() {
+
+
+    private val _sortType = MutableStateFlow(ArtistFilter())
+
+    var ifFavorite by mutableStateOf<Boolean?>(null)
+        private set
+
+    val sortBy: StateFlow<ArtistFilter> = _sortType
+
+    /**
+     * 艺术家页面右侧筛选字符
+     */
+    var selectArtistChars by mutableStateOf(emptyList<Char>())
+        private set
+
+    init {
+        getSelectCharList()
+    }
+
+    /**
+     * 艺术家列表
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    // 先定义 artistListPage
+    val artistListPage: Flow<PagingData<XyArtistExt>> =
+        dataSourceManager.mergeFlow
+            .flatMapLatest {
+                dataSourceManager.selectArtistFlowList()
+            }
+            .cachedIn(viewModelScope)
+
+
+    val artistList: Flow<PagingData<XyArtistExt>> =
+        combine(artistListPage, sortBy) { pagingData, favorite ->
+            pagingData.filter { artist ->
+                favorite.isFavorite == null || artist.favorite == favorite.isFavorite
+            }
+        }
+            .cachedIn(viewModelScope) // 外层只缓存一次
+
+
+    fun setFavoriteFilterData(isFavorite: Boolean?) {
+        ifFavorite = isFavorite
+        _sortType.update {
+            it.isFavorite = isFavorite
+            it.copy()
+        }
+    }
+
+    /**
+     * 根据选择的字母获得index
+     */
+    suspend fun selectIndexBySelectChat(selectChat: String): Int {
+        return db.artistDao.selectIndexBySelectChat(selectChat)
+    }
+
+    /**
+     * 获得所有艺术家页面右侧筛选字符
+     */
+    fun getSelectCharList() {
+        viewModelScope.launch {
+            db.artistDao.getSelectCharList().collect {
+                selectArtistChars = it.map { char -> char[0].uppercaseChar() }.distinct()
+            }
+        }
+    }
+}

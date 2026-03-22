@@ -10,4 +10,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.androidKotlinMultiplatformLibrary) apply false
     alias(libs.plugins.androidLint) apply false
+    alias(libs.plugins.jetbrains.kotlin.jvm) apply false
+    alias(libs.plugins.androidx.room) apply false
+    alias(libs.plugins.kotlin.ksp) apply false
 }

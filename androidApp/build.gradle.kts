@@ -12,13 +12,17 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_21)
         }
     }
+
     dependencies {
         implementation(projects.composeApp)
-        implementation(libs.androidx.activity.compose)
         implementation(libs.compose.uiToolingPreview)
+        implementation(libs.androidx.activity.compose)
+        implementation(libs.kotlin.ktor.android)
+        implementation(project.dependencies.platform(libs.koin.bom))
+        implementation(libs.koin.core)
+        implementation(libs.koin.android)
     }
 }
-
 android {
     namespace = "cn.xybbz"
     compileSdk {

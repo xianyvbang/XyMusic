@@ -75,6 +75,8 @@ kotlin {
                 implementation(libs.kotlin.logging)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotlinx.datetime)
+
+
                 // Add KMP dependencies here
             }
         }
@@ -82,6 +84,7 @@ kotlin {
 
         androidMain {
             dependencies {
+                implementation(libs.squareup.okhttp)
                 // Add Android-specific dependencies here. Note that this source set depends on
                 // commonMain by default and will correctly pull the Android artifacts of any KMP
                 // dependencies declared in commonMain.

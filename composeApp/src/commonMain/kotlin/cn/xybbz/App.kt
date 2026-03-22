@@ -1,56 +1,60 @@
 package cn.xybbz
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.localdata.enums.ThemeTypeEnum
+import cn.xybbz.ui.screens.MainScreen
+import cn.xybbz.ui.theme.XyConfigs
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.XyButton
-import org.jetbrains.compose.resources.painterResource
-
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.compose_multiplatform
+import coil3.ImageLoader
+import coil3.compose.setSingletonImageLoaderFactory
+import coil3.network.ktor3.KtorNetworkFetcherFactory
+import coil3.request.crossfade
+import org.koin.compose.getKoin
 
 @Composable
 //@Preview
 fun App() {
-    XyTheme {
+
+    val dataSourceManager: DataSourceManager = getKoin().get()
+
+    setSingletonImageLoaderFactory { context ->
+        ImageLoader.Builder(context)
+            .crossfade(true)
+            .components {
+                add(KtorNetworkFetcherFactory(dataSourceManager.getHttpClient()))
+            }
+            .build()
+    }
+
+    val isDark = when (settingsManager.themeType) {
+        ThemeTypeEnum.SYSTEM -> isSystemInDarkTheme()
+        ThemeTypeEnum.DARK -> true
+        ThemeTypeEnum.LIGHT -> false
+    }
+    DialogX.globalTheme = if (isDark) DialogX.THEME.DARK else DialogX.THEME.LIGHT
+
+    XyTheme(
+        xyConfigs = XyConfigs(
+            isDarkTheme = isDark,
+            isDynamic = settingsManager.isDynamic
+        )
+    ) {
         WindowInsets.systemBars.union(WindowInsets.displayCutout)
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
         ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
-            }
+            MainScreen()
         }
     }
 }

@@ -1,0 +1,1015 @@
+/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
+package cn.xybbz.ui.screens
+
+import android.util.Log
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.PlaylistAddCheck
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.FavoriteBorder
+import androidx.compose.material.icons.rounded.PlayCircle
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Tab
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.Velocity
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
+import cn.xybbz.R
+import cn.xybbz.common.enums.MusicTypeEnum
+import cn.xybbz.common.enums.TabListEnum
+import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.config.image.rememberArtistBackdropCoverUrls
+import cn.xybbz.config.image.rememberArtistCoverUrls
+import cn.xybbz.config.select.SelectControl
+import cn.xybbz.entity.data.ext.joinToString
+import cn.xybbz.entity.data.music.MusicPlayContext
+import cn.xybbz.entity.data.music.OnMusicPlayParameter
+import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import cn.xybbz.router.AlbumInfo
+import cn.xybbz.router.ArtistInfo
+import cn.xybbz.ui.components.LazyListComponent
+import cn.xybbz.ui.components.LazyLoadingAndStatus
+import cn.xybbz.ui.components.LazyVerticalGridComponent
+import cn.xybbz.ui.components.MusicAlbumCardComponent
+import cn.xybbz.ui.components.MusicArtistCardComponent
+import cn.xybbz.ui.components.MusicItemComponent
+import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.VerticalGridListComponent
+import cn.xybbz.ui.components.XySelectAllComponent
+import cn.xybbz.ui.components.show
+import cn.xybbz.ui.ext.debounceClickable
+import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.LazyColumnParentComponent
+import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
+import cn.xybbz.ui.xy.XyColumnScreen
+import cn.xybbz.ui.xy.XyImage
+import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.viewmodel.ArtistInfoViewModel
+import kotlinx.coroutines.launch
+import kotlin.math.max
+import kotlin.math.roundToInt
+import cn.xybbz.ui.xy.XyIconButton as IconButton
+
+internal val DefaultImageHeight = 320.dp
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+fun ArtistInfoScreen(
+    artistId: () -> String = { "" },
+    artistName: () -> String = { "" },
+    artistInfoViewModel: ArtistInfoViewModel = hiltViewModel<ArtistInfoViewModel, ArtistInfoViewModel.Factory>(
+        creationCallback = { factory ->
+            factory.create(
+                artistId = artistId(),
+                artistName = artistName()
+            )
+        }
+    )
+) {
+
+    val horPagerState =
+        rememberPagerState(initialPage = 0) {
+            3
+        }
+    val musicPage =
+        artistInfoViewModel.musicList.collectAsLazyPagingItems()
+    val albumPageList =
+        artistInfoViewModel.albumList.collectAsLazyPagingItems()
+    val favoriteSet by artistInfoViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
+    val downloadMusicIds by artistInfoViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
+        emptyList()
+    )
+    val ifOpenSelect by artistInfoViewModel.selectControl.uiState.collectAsStateWithLifecycle()
+
+    val coroutineScope = rememberCoroutineScope()
+    val navigator = LocalNavigator.current
+    val lazyListState1 = rememberLazyListState()
+    val lazyListState = rememberLazyListState()
+    val parentState = rememberLazyListState()
+
+    // 渐变高度占图片高度的比例（原 0.4f，降低为一半）
+    val gradientHeight = 0.3f
+    val density = LocalDensity.current
+
+    val tabHeightDp = XyTheme.dimens.itemHeight * 0.6f
+    val pageBackgroundColor = MaterialTheme.colorScheme.background
+    val headerTextLiftOffsetDp = 8.dp
+    val pullDownResistanceDistancePx = with(density) { (DefaultImageHeight * 0.8f).toPx() }
+    val defaultImageHeightPx = with(density) { DefaultImageHeight.toPx() }
+    val listLiftUpOffsetPx = with(density) { (DefaultImageHeight * 0.12f).toPx() }
+    val gradientVisualHeightDp = DefaultImageHeight * gradientHeight
+    val gradientVisualHeightPx = with(density) { gradientVisualHeightDp.toPx() }
+    val headerInfoMinHeightPx = with(density) {
+        val titleHeightPx = 30.sp.toPx()
+        val titleAndDescGapPx = XyTheme.dimens.corner.toPx()
+        val descriptionHeightPx = 15.sp.toPx() * 3f
+        val safetyPaddingPx = (XyTheme.dimens.corner * 2f).toPx()
+        titleHeightPx + titleAndDescGapPx + descriptionHeightPx + safetyPaddingPx
+    }
+    val headerReservedHeightPx = max(gradientVisualHeightPx, headerInfoMinHeightPx)
+    val headerReservedHeightDp = with(density) { headerReservedHeightPx.toDp() }
+    val headerReservedExtraPx = (headerReservedHeightPx - gradientVisualHeightPx).coerceAtLeast(0f)
+    val gradientHeightPx = gradientVisualHeightPx
+    val topBarBottomPx = with(density) {
+        (
+            TopAppBarDefaults.TopAppBarExpandedHeight +
+                    WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+                ).toPx()
+    }
+    val collapseRangePx = (defaultImageHeightPx - topBarBottomPx).coerceAtLeast(1f)
+
+    var pullDownOffsetPx by remember { mutableFloatStateOf(0f) }
+    val isParentAtTop by remember {
+        derivedStateOf { isLazyListAtTop(parentState) }
+    }
+    val isCurrentListAtTop by remember {
+        derivedStateOf { isLazyListAtTop(lazyListState1) }
+    }
+    val distanceToTopBarBottomPx by remember {
+        derivedStateOf {
+            val item2OffsetPx =
+                parentState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == 2 }?.offset?.toFloat()
+            when {
+                item2OffsetPx != null -> item2OffsetPx - topBarBottomPx - headerReservedExtraPx
+                parentState.firstVisibleItemIndex > 2 -> 0f
+                else -> collapseRangePx + 1f
+            }
+        }
+    }
+
+    val rawCollapseProgress by remember {
+        derivedStateOf {
+            ((collapseRangePx - distanceToTopBarBottomPx) / collapseRangePx).coerceIn(0f, 1f)
+        }
+    }
+    val current by remember {
+        derivedStateOf {
+            if (isParentAtTop && !parentState.isScrollInProgress && pullDownOffsetPx == 0f) {
+                0f
+            } else {
+                rawCollapseProgress
+            }
+        }
+    }
+    //是否文本描述超过最大行数
+    var isOverflow by remember { mutableStateOf(false) }
+    //是否打开描述信息页面
+    var ifOpenDescribe by remember { mutableStateOf(false) }
+
+    // 使用 animateFloatAsState 实现平滑过渡
+    val collapseProgress by animateFloatAsState(
+        targetValue = current,
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_collapse_progress"
+    )
+    val pullDownOffsetAnimatedPx by animateFloatAsState(
+        targetValue = pullDownOffsetPx,
+        animationSpec = if (pullDownOffsetPx == 0f) {
+            spring(
+                dampingRatio = Spring.DampingRatioLowBouncy,
+                stiffness = Spring.StiffnessHigh
+            )
+        } else {
+            snap()
+        },
+        label = "artist_pull_down_offset"
+    )
+    val imageStretchPx = (pullDownOffsetAnimatedPx - listLiftUpOffsetPx).coerceAtLeast(0f)
+    val listPullDownTranslationY by animateFloatAsState(
+        targetValue = (pullDownOffsetAnimatedPx - listLiftUpOffsetPx).coerceAtLeast(0f),
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_list_pull_down_translation"
+    )
+    val imageScale by animateFloatAsState(
+        targetValue = 1f + (imageStretchPx / defaultImageHeightPx),
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_image_scale"
+    )
+    val imageTranslationY by animateFloatAsState(
+        targetValue = -with(density) { (DefaultImageHeight * 0.10f).toPx() } * collapseProgress,
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_image_translation"
+    )
+    val headerTitleTranslationY by animateFloatAsState(
+        targetValue = -with(density) { (DefaultImageHeight * 0.34f).toPx() } * collapseProgress,
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_header_title_translation"
+    )
+    val headerDescriptionTranslationY by animateFloatAsState(
+        targetValue = -with(density) { (DefaultImageHeight * 0.08f).toPx() } * collapseProgress,
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_header_description_translation"
+    )
+    val headerTitleAlpha by animateFloatAsState(
+        targetValue = inverseRangeProgress(collapseProgress, start = 0.72f, end = 1f),
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_header_title_alpha"
+    )
+    val headerDescriptionAlpha by animateFloatAsState(
+        targetValue = inverseRangeProgress(collapseProgress, start = 0.12f, end = 0.82f),
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_header_description_alpha"
+    )
+    val topBarAlpha by animateFloatAsState(
+        targetValue = rangeProgress(collapseProgress, start = 0.55f, end = 1f),
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_topbar_alpha"
+    )
+    val gradientFadeDistancePx = gradientHeightPx * 2f
+    val gradientFadeProgress by animateFloatAsState(
+        targetValue = ((collapseProgress * collapseRangePx) / gradientFadeDistancePx).coerceIn(0f, 1f),
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_gradient_fade_progress"
+    )
+    val topBarBackgroundAlpha by animateFloatAsState(
+        targetValue = ((gradientHeightPx - distanceToTopBarBottomPx) / gradientHeightPx).coerceIn(
+            0f,
+            1f
+        ),
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_topbar_background_alpha"
+    )
+
+    val topGradientBoxAlpha by animateFloatAsState(
+        targetValue = (distanceToTopBarBottomPx / gradientHeightPx).coerceIn(0f, 1f),
+        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
+        label = "artist_top_gradient_box_alpha"
+    )
+
+    LaunchedEffect(parentState, lazyListState1, lazyListState) {
+        snapshotFlow {
+            parentState.isScrollInProgress || lazyListState1.isScrollInProgress || lazyListState.isScrollInProgress
+        }.collect { scrolling ->
+            if (!scrolling && pullDownOffsetPx > 0f) {
+                pullDownOffsetPx = 0f
+            }
+        }
+    }
+
+    val scrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(
+                available: Offset,
+                source: NestedScrollSource,
+            ): Offset {
+                if (source == NestedScrollSource.UserInput &&
+                    available.y > 0 &&
+                    isParentAtTop &&
+                    isCurrentListAtTop
+                ) {
+                    val resistedDelta = calculatePullDownDeltaWithResistance(
+                        deltaY = available.y,
+                        currentOffsetPx = pullDownOffsetPx,
+                        resistanceDistancePx = pullDownResistanceDistancePx
+                    )
+                    pullDownOffsetPx += resistedDelta
+                    return Offset(x = 0f, y = available.y)
+                }
+
+                if (available.y < 0 && pullDownOffsetPx > 0f) {
+                    pullDownOffsetPx = max(0f, pullDownOffsetPx + available.y)
+                    return Offset(x = 0f, y = available.y)
+                }
+
+                return if (available.y > 0) {
+                    Offset.Zero
+                } else {
+                    Offset(
+                        x = 0f,
+                        y = -lazyListState1.dispatchRawDelta(
+                            -available.y
+                        )
+                    )
+                }
+            }
+
+            override suspend fun onPreFling(available: Velocity): Velocity {
+                pullDownOffsetPx = 0f
+                return Velocity.Zero
+            }
+
+            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
+                pullDownOffsetPx = 0f
+                return Velocity.Zero
+            }
+        }
+    }
+
+    val parentScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(
+                available: Offset,
+                source: NestedScrollSource,
+            ): Offset {
+                if (source == NestedScrollSource.UserInput &&
+                    available.y > 0 &&
+                    isParentAtTop &&
+                    isCurrentListAtTop
+                ) {
+                    val resistedDelta = calculatePullDownDeltaWithResistance(
+                        deltaY = available.y,
+                        currentOffsetPx = pullDownOffsetPx,
+                        resistanceDistancePx = pullDownResistanceDistancePx
+                    )
+                    pullDownOffsetPx += resistedDelta
+                    return Offset(x = 0f, y = available.y)
+                }
+
+                if (available.y < 0 && pullDownOffsetPx > 0f) {
+                    pullDownOffsetPx = max(0f, pullDownOffsetPx + available.y)
+                    return Offset(x = 0f, y = available.y)
+                }
+
+                return if (available.y > 0) {
+                    Offset.Zero
+                } else {
+                    Offset(
+                        x = 0f,
+                        y = -parentState.dispatchRawDelta(
+                            -available.y
+                        )
+                    )
+                }
+            }
+
+            override suspend fun onPreFling(available: Velocity): Velocity {
+                pullDownOffsetPx = 0f
+                return Velocity.Zero
+            }
+
+            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
+                pullDownOffsetPx = 0f
+                return Velocity.Zero
+            }
+        }
+    }
+
+    SideEffect {
+        Log.d("=====", "MusicAudiobookInfoScreen重组一次")
+    }
+
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        val maxHeight =
+            this.maxHeight - tabHeightDp - TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
+                .calculateTopPadding() /*- (DefaultImageHeight.times(0.2f))*/
+
+        val parentMaxHeight = this.maxHeight
+
+        ModalBottomSheetExtendComponent(
+            modifier = Modifier.statusBarsPadding(),
+            onIfDisplay = { ifOpenDescribe },
+            onClose = { bool -> ifOpenDescribe = bool },
+            titleText = artistName(),
+            dragHandle = { BottomSheetDefaults.DragHandle(height = 2.dp) }
+        ) {
+            LazyColumnParentComponent(
+                verticalArrangement = Arrangement.Top,
+                contentPadding = PaddingValues(
+                    horizontal = XyTheme.dimens.outerHorizontalPadding
+                ),
+            ) {
+                item {
+                    BasicText(
+                        text = artistInfoViewModel.artistDescribe ?: "",
+                        modifier = Modifier,
+                        color = {
+                            Color.White
+                        },
+                        style = MaterialTheme.typography.titleSmall.copy(lineHeight = 15.sp),
+                        overflow = TextOverflow.Visible,
+
+                        )
+                }
+            }
+
+        }
+
+        val artistCoverUrls = rememberArtistCoverUrls(artistInfoViewModel.artistInfoData)
+        val artistBackdropUrls = rememberArtistBackdropCoverUrls(artistInfoViewModel.artistInfoData)
+        val topOverlayColor = pageBackgroundColor.copy(alpha = topBarBackgroundAlpha)
+
+        Box(
+            modifier = Modifier
+                .height(
+                    DefaultImageHeight
+                )
+        ) {
+            XyImage(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer {
+                        transformOrigin = TransformOrigin(0.5f, 0f)
+                        scaleX = imageScale
+                        scaleY = imageScale
+                        translationY = imageTranslationY
+                    }
+                    .align(Alignment.TopCenter)
+                    .height(DefaultImageHeight),
+                model = artistBackdropUrls.primaryUrl ?: artistCoverUrls.primaryUrl,
+                backModel = artistBackdropUrls.fallbackUrl ?: artistCoverUrls.fallbackUrl,
+                placeholder = painterResource(R.drawable.artrist_info),
+                error = painterResource(R.drawable.artrist_info),
+                fallback = painterResource(R.drawable.artrist_info),
+                contentDescription = stringResource(R.string.artist_cover),
+//                alpha = (topBarAlpha - 1) * -1
+            )
+
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(DefaultImageHeight)
+                .background(topOverlayColor)
+        )
+
+        XyColumnScreen {
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .nestedScroll(parentScrollConnection),
+                state = parentState,
+            ) {
+                stickyHeader {
+                    TopAppBarComponent(
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                            scrolledContainerColor = Color.Transparent,
+                            navigationIconContentColor = Color.White,
+                            titleContentColor = Color.White,
+                            actionIconContentColor = Color.White
+                        ),
+                        title = {
+                            Box(
+                                modifier = Modifier
+                                    .padding(
+                                        top = WindowInsets.statusBars.asPaddingValues()
+                                            .calculateTopPadding()
+                                    )
+                                    .height(TopAppBarDefaults.TopAppBarExpandedHeight),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                BasicText(
+                                    text = artistName(),
+                                    modifier = Modifier.basicMarquee(
+                                        iterations = Int.MAX_VALUE
+                                    ),
+                                    color = {
+                                        Color.White.copy(alpha = topBarAlpha)
+                                    },
+                                    style = LocalTextStyle.current
+
+                                )
+                            }
+
+                        },
+                        actions = {
+                            Box(
+                                modifier = Modifier
+                                    .padding(
+                                        top = WindowInsets.statusBars.asPaddingValues()
+                                            .calculateTopPadding()
+                                    )
+                                    .height(TopAppBarDefaults.TopAppBarExpandedHeight),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                IconButton(onClick = {
+                                    coroutineScope.launch {
+                                        val ifFavorite =
+                                            artistInfoViewModel.dataSourceManager.setFavoriteData(
+                                                type = MusicTypeEnum.ARTIST,
+                                                itemId = artistId(),
+                                                ifFavorite = artistInfoViewModel.ifFavorite
+                                            )
+                                        artistInfoViewModel.updateFavorite(ifFavorite)
+                                    }
+                                }) {
+                                    Icon(
+                                        imageVector = if (artistInfoViewModel.ifFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                                        contentDescription = if (artistInfoViewModel.ifFavorite) stringResource(
+                                            R.string.favorite_added
+                                        ) else stringResource(R.string.favorite_removed),
+                                        tint = Color.Red
+                                    )
+                                }
+                            }
+                        },
+                        navigationIcon = {
+                            Box(
+                                modifier = Modifier
+                                    .padding(
+                                        top = WindowInsets.statusBars.asPaddingValues()
+                                            .calculateTopPadding()
+                                    )
+                                    .height(TopAppBarDefaults.TopAppBarExpandedHeight),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        navigator.goBack()
+                                    },
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = stringResource(R.string.return_home)
+                                    )
+                                }
+                            }
+
+
+                        },
+//                scrollBehavior = scrollBehavior
+                    )
+                }
+                item {
+                    Spacer(
+                        modifier = Modifier.padding(
+                            top =
+                                (DefaultImageHeight.times(1 - gradientHeight)) - TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
+                                    .calculateTopPadding()
+                        )
+                    )
+                }
+
+                item {
+                    Box(
+                        modifier = Modifier
+                            .offset {
+                                IntOffset(0, listPullDownTranslationY.roundToInt())
+                            }
+                            .height(gradientVisualHeightDp)
+                            .graphicsLayer {
+                                alpha = topGradientBoxAlpha
+                            }
+                    ) {
+
+                        Spacer(
+                            modifier = Modifier
+                                .align(alignment = Alignment.BottomCenter)
+                                .fillMaxWidth()
+                                .height(gradientVisualHeightDp)
+                                .drawBehind {
+                                    drawRect(
+                                        brush = Brush.verticalGradient(
+                                            colorStops = arrayOf(
+                                                0.00f to Color.Transparent,
+                                                1.00f to pageBackgroundColor.copy(alpha = (1f - gradientFadeProgress).coerceIn(0f, 1f))
+                                            ),
+                                            startY = 0f,
+                                            endY = size.height,
+                                            tileMode = TileMode.Repeated
+                                        ),
+                                        blendMode = BlendMode.SrcOver
+                                    )
+
+                                })
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(headerReservedHeightDp)
+                                .offset(y = -headerTextLiftOffsetDp)
+                                .align(Alignment.BottomCenter)
+                                .padding(horizontal = XyTheme.dimens.outerHorizontalPadding)
+                                .graphicsLayer {
+                                    translationY = headerTitleTranslationY
+                                }
+                        ) {
+
+                            BasicText(
+                                text = artistName(),
+                                modifier = Modifier
+                                    .basicMarquee(
+                                        iterations = Int.MAX_VALUE
+                                    )
+                                    .graphicsLayer {
+                                        alpha = headerTitleAlpha
+                                    },
+                                color = {
+                                    Color.White.copy(alpha = headerTitleAlpha)
+                                },
+                                style = LocalTextStyle.current.copy(fontSize = 30.sp)
+
+                            )
+                            Spacer(modifier = Modifier.height(XyTheme.dimens.corner))
+                            BasicText(
+                                text = artistInfoViewModel.artistDescribe
+                                    ?: stringResource(R.string.no_description),
+                                modifier = Modifier
+                                    .graphicsLayer {
+                                        translationY = headerDescriptionTranslationY
+                                        alpha = headerDescriptionAlpha
+                                    }
+                                    .debounceClickable(enabled = isOverflow) {
+                                        ifOpenDescribe = true
+                                    },
+                                color = {
+                                    Color.White.copy(alpha = headerDescriptionAlpha)
+                                },
+                                style = MaterialTheme.typography.titleSmall.copy(lineHeight = 15.sp),
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis,
+                                onTextLayout = { textLayoutResult ->
+                                    // 是否超过最大行数
+                                    isOverflow = textLayoutResult.hasVisualOverflow
+                                }
+
+                            )
+                        }
+                    }
+
+                }
+                item(key = 2) {
+                    LazyColumn(
+                        state = lazyListState1,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .offset {
+                                IntOffset(0, listPullDownTranslationY.roundToInt())
+                            }
+                            .height(
+                                parentMaxHeight - TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
+                                    .calculateTopPadding()
+                            )
+                            .nestedScroll(scrollConnection)
+                            .background(MaterialTheme.colorScheme.background)
+                    ) {
+                        stickyHeader {
+                            PrimaryTabRow(
+                                containerColor = MaterialTheme.colorScheme.background,
+                                selectedTabIndex = horPagerState.currentPage,
+                                divider = {},
+                            ) {
+                                TabListEnum.entries.forEachIndexed { index, it ->
+                                    Tab(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(XyTheme.dimens.corner)),
+                                        selected = horPagerState.currentPage == index,
+                                        onClick = {
+                                            coroutineScope
+                                                .launch {
+                                                    horPagerState.animateScrollToPage(index)
+                                                }
+                                        },
+                                        text = {
+                                            Text(
+                                                text = stringResource(it.message),
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        item {
+                            HorizontalPager(
+                                state = horPagerState,
+                                modifier = Modifier.background(MaterialTheme.colorScheme.background)
+                            ) { page: Int ->
+                                when (TabListEnum.entries[page]) {
+                                    TabListEnum.Music -> {
+                                        LazyListComponent(
+                                            state = lazyListState,
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .height(maxHeight),
+                                            collectAsLazyPagingItems = musicPage
+                                        ) { list ->
+                                            item {
+                                                ArtistMusicListOperation(
+                                                    artistId = artistId(),
+                                                    musicPlayContext = artistInfoViewModel.musicPlayContext,
+                                                    selectControl = artistInfoViewModel.selectControl,
+                                                    onSelectAll = {
+                                                        artistInfoViewModel.selectControl.toggleSelectionAll(
+                                                            musicPage.itemSnapshotList.items.map { it.itemId })
+                                                    },
+                                                    ifOpenSelect = ifOpenSelect,
+                                                    sortContent = {}
+                                                )
+                                            }
+                                            items(
+                                                list.itemCount,
+                                                key = list.itemKey { item -> item.itemId },
+                                                contentType = list.itemContentType { MusicTypeEnum.MUSIC }
+                                            ) { index ->
+                                                list[index]?.let { music ->
+                                                    MusicItemComponent(
+                                                        music = music,
+                                                        onIfFavorite = {
+                                                            music.itemId in favoriteSet
+                                                        },
+                                                        ifDownload = music.itemId in downloadMusicIds,
+                                                        ifPlay = artistInfoViewModel.musicController.musicInfo?.itemId == music.itemId,
+                                                        backgroundColor = Color.Transparent,
+                                                        trailingOnClick = {
+                                                            music.show()
+                                                        },
+                                                        onMusicPlay = {
+                                                            coroutineScope.launch {
+                                                                artistInfoViewModel.musicPlayContext.artist(
+                                                                    onMusicPlayParameter = it.copy(
+                                                                        artistId = artistId()
+                                                                    ),
+                                                                    index = index,
+                                                                    artistId = artistId()
+                                                                )
+                                                            }
+                                                        },
+                                                        ifSelect = ifOpenSelect,
+                                                        ifSelectCheckBox = { artistInfoViewModel.selectControl.selectMusicIdList.any { it == music.itemId } },
+                                                        trailingOnSelectClick = { _ ->
+                                                            artistInfoViewModel.selectControl.toggleSelection(
+                                                                music.itemId,
+                                                                onIsSelectAll = {
+                                                                    artistInfoViewModel.selectControl.selectMusicIdList.containsAll(
+                                                                        list.itemSnapshotList.items.map { it.itemId }
+                                                                    )
+                                                                }
+                                                            )
+                                                        }
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                    }
+
+                                    TabListEnum.Album -> {
+
+                                        VerticalGridListComponent(
+                                            modifier = Modifier.height(maxHeight),
+                                            collectAsLazyPagingItems = albumPageList,
+                                        ) {
+                                            items(
+                                                count = albumPageList.itemCount,
+                                                key = albumPageList.itemKey { it.itemId },
+                                                contentType = albumPageList.itemContentType { MusicTypeEnum.ALBUM.code }) { index ->
+                                                albumPageList[index]?.let { album ->
+                                                    MusicAlbumCardComponent(
+                                                        modifier = Modifier,
+                                                        onItem = { album },
+                                                        onRouter = {
+                                                            navigator.navigate(
+                                                                AlbumInfo(
+                                                                    it,
+                                                                    MusicDataTypeEnum.ALBUM
+                                                                )
+                                                            )
+                                                        }
+                                                    )
+
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    TabListEnum.RESEMBLANCE_ARTIST -> {
+
+                                        LazyVerticalGridComponent(
+                                            modifier = Modifier.height(maxHeight),
+                                        ) {
+                                            items(
+                                                artistInfoViewModel.resemblanceArtistList,
+                                                key = { item -> item.artistId },
+                                                contentType = { MusicTypeEnum.ARTIST }
+                                            ) { artist ->
+                                                MusicArtistCardComponent(
+                                                    modifier = Modifier,
+                                                    onItem = { artist },
+                                                    enabled = true
+                                                ) {
+                                                    navigator.navigate(
+                                                        ArtistInfo(
+                                                            it,
+                                                            artist.name ?: ""
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                                LazyLoadingAndStatus(
+                                                    text = stringResource(R.string.reached_bottom),
+                                                    ifLoading = false
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+/**
+ * 音乐列表操作栏
+ */
+@Composable
+private fun ArtistMusicListOperation(
+    artistId: String,
+    musicPlayContext: MusicPlayContext,
+    selectControl: SelectControl,
+    ifOpenSelect: Boolean,
+    onSelectAll: () -> Unit,
+    sortContent: @Composable () -> Unit
+) {
+    XyRow(
+        modifier = Modifier
+            .debounceClickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
+                if (ifOpenSelect) {
+                    onSelectAll()
+                } else {
+                    musicPlayContext.artist(
+                        OnMusicPlayParameter(
+                            musicId = "",
+                            artistId = artistId
+                        ),
+                        index = 0,
+                        artistId = artistId
+                    )
+                }
+            }
+            .height(XyTheme.dimens.itemHeight),
+        paddingValues = PaddingValues(
+            horizontal = XyTheme.dimens.outerHorizontalPadding
+        )
+    ) {
+
+
+        if (ifOpenSelect) {
+            XySelectAllComponent(
+                isSelectAll = selectControl.isSelectAll,
+                onSelectAll = onSelectAll
+            )
+            IconButton(onClick = {
+                selectControl.dismiss()
+            }) {
+                Icon(
+                    imageVector = Icons.Rounded.Close,
+                    contentDescription = stringResource(R.string.close_selection)
+                )
+            }
+        } else {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.PlayCircle,
+                    contentDescription = stringResource(R.string.start_playback)
+                )
+                Text(text = stringResource(R.string.start_playback))
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ) {
+                sortContent()
+
+                IconButton(onClick = {
+                    selectControl.show(
+                        true
+                    )
+                }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.PlaylistAddCheck,
+                        contentDescription = stringResource(R.string.select)
+                    )
+                }
+            }
+        }
+
+    }
+}
+
+private fun rangeProgress(value: Float, start: Float, end: Float): Float {
+    if (end <= start) return if (value >= end) 1f else 0f
+    return ((value - start) / (end - start)).coerceIn(0f, 1f)
+}
+
+private fun inverseRangeProgress(value: Float, start: Float, end: Float): Float {
+    return 1f - rangeProgress(value, start, end)
+}
+
+private fun isLazyListAtTop(state: LazyListState): Boolean {
+    return state.firstVisibleItemIndex == 0 && state.firstVisibleItemScrollOffset == 0
+}
+
+private fun calculatePullDownDeltaWithResistance(
+    deltaY: Float,
+    currentOffsetPx: Float,
+    resistanceDistancePx: Float
+): Float {
+    if (deltaY <= 0f) return deltaY
+    val normalized = (currentOffsetPx / resistanceDistancePx).coerceAtLeast(0f)
+    val resistanceFactor = (1f / (1f + normalized)).coerceIn(0.08f, 1f)
+    return deltaY * resistanceFactor
+}
