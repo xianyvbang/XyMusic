@@ -71,6 +71,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
 import java.time.Year
 import javax.inject.Inject
 
@@ -578,7 +579,7 @@ class MainViewModel @Inject constructor(
                     }
                     db.eraItemDao.saveBatch(
                         XyEraItem(
-                            title = application.getString(Res.string.era_title_decade, era),
+                            title = getString(Res.string.era_title_decade, era),
                             era = era,
                             years = years
                         )

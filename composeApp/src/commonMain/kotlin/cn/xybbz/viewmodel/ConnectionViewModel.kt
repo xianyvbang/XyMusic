@@ -18,7 +18,6 @@
 
 package cn.xybbz.viewmodel
 
-import android.R.attr.port
 import android.content.Context
 import android.util.Log
 import android.webkit.URLUtil
@@ -29,6 +28,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import org.jetbrains.compose.resources.StringResource
 import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.IDataSourceServer
@@ -109,7 +109,7 @@ class ConnectionViewModel @Inject constructor(
 
     //报错信息
 
-    var errorHint by mutableIntStateOf(Res.string.empty_info)
+    var errorHint by mutableStateOf<StringResource>(Res.string.empty_info)
         private set
 
     var errorMessage by mutableStateOf("")

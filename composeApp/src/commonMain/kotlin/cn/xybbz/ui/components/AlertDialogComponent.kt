@@ -19,7 +19,6 @@
 package cn.xybbz.ui.components
 
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -35,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -80,8 +80,8 @@ data class AlertDialogObject(
     val onDismissRequest: (() -> Unit)? = null,
     val onConfirmation: (() -> Unit)? = null,
     val properties: DialogProperties = DialogProperties(),
-    @param:StringRes val dismissText: Int = Res.string.cancel,
-    @param:StringRes val confirmText: Int = Res.string.confirm,
+    val dismissText: StringResource = Res.string.cancel,
+    val confirmText: StringResource = Res.string.confirm,
 )
 
 /**

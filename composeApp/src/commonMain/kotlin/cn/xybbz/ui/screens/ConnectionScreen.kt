@@ -107,11 +107,6 @@ import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.ConnectionViewModel
-import coil.ImageLoader
-import coil.compose.rememberAsyncImagePainter
-import coil.decode.GifDecoder.Companion.REPEAT_COUNT_KEY
-import coil.decode.ImageDecoderDecoder
-import coil.request.ImageRequest
 import kotlinx.coroutines.launch
 
 private enum class ScreenType {
@@ -156,11 +151,6 @@ fun ConnectionScreen(
     }
 
     val pleaseEnterRequiredContent = stringResource(Res.string.please_enter_required_content)
-
-    //自己构建图片加载器
-    val imageLoader = ImageLoader.Builder(context).components {
-        add(ImageDecoderDecoder.Factory())
-    }.build()
 
     Column(
         modifier = modifier
@@ -496,16 +486,7 @@ fun ConnectionScreen(
                                         XySmallImage(
                                             modifier = Modifier.size(150.dp),
                                             shape = RoundedCornerShape(XyTheme.dimens.corner),
-                                            model = //淡出效果
-                                                rememberAsyncImagePainter(
-                                                    model = ImageRequest.Builder(context)
-                                                        .setParameter(REPEAT_COUNT_KEY, 0)
-                                                        .data(data = Res.drawable.celebrate)
-                                                        .apply(block = fun ImageRequest.Builder.() {
-                                                            crossfade(true)//淡出效果
-                                                        }).build(),
-                                                    imageLoader = imageLoader,
-                                                ),
+                                            model = painterResource(Res.drawable.celebrate),
                                             contentDescription = stringResource(Res.string.connection_success_image)
                                         )
                                     }

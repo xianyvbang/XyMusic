@@ -1,10 +1,7 @@
 package cn.xybbz.common.utils
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
-import androidx.core.graphics.createBitmap
+import coil3.Bitmap
+
 
 /**
  * 资源工具类

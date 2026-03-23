@@ -646,7 +646,7 @@ private fun ImageCover(
         fallback = painterResource(Res.drawable.music_xy_placeholder_foreground),
         contentDescription = stringResource(Res.string.music_cover),
         onSuccess = {
-            val drawable = it.result.drawable
+            val drawable = it.result.image
             val bitmap = drawableToBitmap(drawable)
             bitmap?.let {
                 val scaledBitmap = bitmap.scale(200, 200, false)

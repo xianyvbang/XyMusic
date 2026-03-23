@@ -305,10 +305,10 @@ fun MusicPlayerScreen(
                                         ),
                                     model = coverUrls.primaryUrl ?: picByte,
                                     backModel = coverUrls.fallbackUrl ?: picByte,
-                                    placeholder = painterResource(id = Res.drawable.disc_placeholder),
+                                    placeholder = painterResource(Res.drawable.disc_placeholder),
                                     /*.graphicsLayer(rotationZ = rotationState)*/
-                                    error = painterResource(id = Res.drawable.disc_placeholder),
-                                    fallback = painterResource(id = Res.drawable.disc_placeholder),
+                                    error = painterResource(Res.drawable.disc_placeholder),
+                                    fallback = painterResource(Res.drawable.disc_placeholder),
                                     contentDescription = stringResource(Res.string.album_cover),
                                 )
                             }

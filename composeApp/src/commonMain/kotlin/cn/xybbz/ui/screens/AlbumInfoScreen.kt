@@ -722,9 +722,9 @@ private fun MusicAlbumInfoComponent(
                     ),
                 model = coverUrls.primaryUrl,
                 backModel = coverUrls.fallbackUrl,
-                placeholder = painterResource(id = Res.drawable.music_xy_placeholder_foreground),
-                error = painterResource(id = Res.drawable.music_xy_placeholder_foreground),
-                fallback = painterResource(id = Res.drawable.music_xy_placeholder_foreground),
+                placeholder = painterResource(Res.drawable.music_xy_placeholder_foreground),
+                error = painterResource(Res.drawable.music_xy_placeholder_foreground),
+                fallback = painterResource(Res.drawable.music_xy_placeholder_foreground),
                 contentDescription = stringResource(Res.string.album_cover),
             )
             Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))

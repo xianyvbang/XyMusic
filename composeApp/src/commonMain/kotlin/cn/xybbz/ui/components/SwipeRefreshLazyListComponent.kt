@@ -18,7 +18,6 @@
 
 package cn.xybbz.ui.components
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -56,6 +55,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.Dp
@@ -254,7 +254,10 @@ fun <T : Any> LazyListScope.lazyColumBottomComponent(
  * 底部加载更多失败处理
  * */
 @Composable
-fun ErrorMoreRetryItem(@StringRes onErrorText: () -> Int = { Res.string.retry }, retry: () -> Unit) {
+fun ErrorMoreRetryItem(
+    onErrorText: () -> StringResource = { Res.string.retry },
+    retry: () -> Unit
+) {
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         TextButton(
             onClick = { retry() },
@@ -289,7 +292,7 @@ fun ErrorContent(retry: () -> Unit) {
     ) {
         Image(
             modifier = Modifier.padding(top = 80.dp),
-            painter = painterResource(id = Res.drawable.icon_error),
+            painter = painterResource(Res.drawable.icon_error),
             contentDescription = null
         )
         Text(

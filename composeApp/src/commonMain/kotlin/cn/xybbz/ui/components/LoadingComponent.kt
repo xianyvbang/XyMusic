@@ -34,7 +34,6 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -58,6 +58,7 @@ var loadingObjectList = mutableStateListOf<LoadingObject>()
 @Immutable
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 data class LoadingObject constructor(
+    val id: String = "",
     val messageIsStringRes: Boolean = true,
     val loadingCompose: @Composable (Float?) -> Unit = {
         if (it == null) {
@@ -67,7 +68,9 @@ data class LoadingObject constructor(
         }
     }
 ) {
-    var message by mutableIntStateOf(Res.string.loading)
+    var messageResource by mutableStateOf<StringResource>(Res.string.loading)
+        private set
+    var messageText by mutableStateOf("0")
         private set
     var progress: Float? by mutableStateOf(null)
         private set
@@ -75,11 +78,15 @@ data class LoadingObject constructor(
 
     fun updateProgress(progress: Float, index: Int) {
         this.progress = progress
-        this.message = index
+        this.messageText = index.toString()
     }
 
     fun updateMessageProgress(message: Int) {
-        this.message = message
+        this.messageText = message.toString()
+    }
+
+    fun updateMessageProgress(message: StringResource) {
+        this.messageResource = message
     }
 }
 
@@ -119,7 +126,13 @@ fun LoadingCompose(modifier: Modifier = Modifier) {
                     it.loadingCompose(it.progress)
                 }
                 Spacer(modifier = Modifier.width(5.dp))
-                XyTextSubSmall(text = if (it.messageIsStringRes) stringResource(it.message) else it.message.toString())
+                XyTextSubSmall(
+                    text = if (it.messageIsStringRes) {
+                        stringResource(it.messageResource)
+                    } else {
+                        it.messageText
+                    }
+                )
             }
         }
 

@@ -85,9 +85,9 @@ fun MusicCardComponent(
         end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
     ),
     shape: Shape,
-    placeholder: Painter? = painterResource(id = Res.drawable.music_xy_placeholder_foreground),
-    error: Painter? = painterResource(id = Res.drawable.music_xy_placeholder_foreground),
-    fallback: Painter? = painterResource(id = Res.drawable.music_xy_placeholder_foreground),
+    placeholder: Painter? = painterResource(Res.drawable.music_xy_placeholder_foreground),
+    error: Painter? = painterResource(Res.drawable.music_xy_placeholder_foreground),
+    fallback: Painter? = painterResource(Res.drawable.music_xy_placeholder_foreground),
     onRouter: (String) -> Unit,
 ) {
     Column(
