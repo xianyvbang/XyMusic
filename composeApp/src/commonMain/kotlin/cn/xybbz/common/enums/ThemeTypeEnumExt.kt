@@ -18,13 +18,17 @@
 
 package cn.xybbz.common.enums
 
-import cn.xybbz.R
 import cn.xybbz.localdata.enums.ThemeTypeEnum
+import org.jetbrains.compose.resources.StringResource
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.dark
+import xymusic_kmp.composeapp.generated.resources.light
+import xymusic_kmp.composeapp.generated.resources.system
 
-fun ThemeTypeEnum.toResStringInt():Int{
+fun ThemeTypeEnum.toResStringInt(): StringResource{
     return when(this){
-        ThemeTypeEnum.SYSTEM -> R.string.system
-        ThemeTypeEnum.DARK -> R.string.dark
-        ThemeTypeEnum.LIGHT -> R.string.light
+        ThemeTypeEnum.SYSTEM -> Res.string.system
+        ThemeTypeEnum.DARK -> Res.string.dark
+        ThemeTypeEnum.LIGHT -> Res.string.light
     }
 }

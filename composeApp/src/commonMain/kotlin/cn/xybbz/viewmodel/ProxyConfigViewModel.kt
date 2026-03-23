@@ -7,33 +7,27 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.proxy.ProxyConfigServer
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.proxy.XyProxyConfig
-import dagger.hilt.android.lifecycle.HiltViewModel
+import io.ktor.client.request.request
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.HttpMethod
+import io.ktor.http.isSuccess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.Request
-import java.io.IOException
-import java.net.InetSocketAddress
-import java.net.Proxy
-import java.net.ProxySelector
-import java.net.Socket
-import java.net.SocketAddress
-import java.net.URI
-import java.util.concurrent.TimeUnit
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.test_connection_failed
+import xymusic_kmp.composeapp.generated.resources.test_connection_success
 
-@HiltViewModel
-class ProxyConfigViewModel @Inject constructor(
+@KoinViewModel
+class ProxyConfigViewModel(
     val db: DatabaseClient,
-    val backgroundConfig: BackgroundConfig,
     val poxyConfigServer: ProxyConfigServer,
     private val dataSourceManager: DataSourceManager
 ) : ViewModel() {
@@ -83,83 +77,26 @@ class ProxyConfigViewModel @Inject constructor(
 
     fun testProxyConfig() {
         viewModelScope.launch {
-            val testSate = testProxy() && testUrlProxy()
+            val testSate = testUrlProxy()
             if (testSate) {
-                MessageUtils.sendPopTipSuccess(R.string.test_connection_success)
+                MessageUtils.sendPopTipSuccess(Res.string.test_connection_success)
             } else {
-                MessageUtils.sendPopTipError(R.string.test_connection_failed)
+                MessageUtils.sendPopTipError(Res.string.test_connection_failed)
             }
 
         }
-    }
-
-    suspend fun testProxy(
-        timeoutMs: Int = ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS.toInt(),
-    ): Boolean = withContext(Dispatchers.IO) {
-        if (addressValue.text.isNotBlank()){
-            val addressTmp = poxyConfigServer.getAddress(addressValue.text)
-            val (host, port) = poxyConfigServer.parseHostPortSafe(addressTmp)
-
-            try {
-                Socket().use {
-                    it.connect(InetSocketAddress(host, port), timeoutMs)
-                }
-                true
-            } catch (e: Exception) {
-                e.printStackTrace()
-                false
-            }
-        }else true
-
     }
 
 
     suspend fun testUrlProxy(): Boolean = withContext(Dispatchers.IO) {
-        val address = dataSourceManager.getConnectionAddress()
-        val request = Request.Builder()
-            .url(address)
-            .head() // 用 HEAD，快，不下内容
-            .build()
-        val okHttpClientBuilder = dataSourceManager.getHttpClient().newBuilder()
-            .connectTimeout(1000, TimeUnit.MILLISECONDS)
-        if (addressValue.text.isNotBlank()){
-            val addressTmp = poxyConfigServer.getAddress(addressValue.text)
+        val httpClient = dataSourceManager.getHttpClient()
 
-            val (host, port) = poxyConfigServer.parseHostPortSafe(addressTmp)
 
-            okHttpClientBuilder
-                .proxySelector(object : ProxySelector() {
-                    override fun connectFailed(
-                        uri: URI?,
-                        sa: SocketAddress?,
-                        ioe: IOException?
-                    ) {
-
-                    }
-
-                    override fun select(uri: URI?): List<Proxy?> {
-                        return listOf(
-                            Proxy(
-                                Proxy.Type.HTTP,
-                                InetSocketAddress(host, port)
-                            ),
-                            Proxy(
-                                Proxy.Type.SOCKS,
-                                InetSocketAddress(host, port)
-                            ),
-                            Proxy.NO_PROXY
-                        )
-                    }
-
-                })
-        }
-
-        val client = okHttpClientBuilder.build()
         try {
-            client.newCall(request).execute().use { response ->
-                response.isSuccessful || response.isRedirect
+            val response: HttpResponse = httpClient.request("/") {
+                method = HttpMethod.Head
             }
-
+            response.status.isSuccess()
         } catch (e: Exception) {
             e.printStackTrace()
             false

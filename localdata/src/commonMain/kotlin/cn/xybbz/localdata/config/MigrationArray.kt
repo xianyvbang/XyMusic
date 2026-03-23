@@ -21,6 +21,6 @@ package cn.xybbz.localdata.config
 import androidx.room.migration.Migration
 
 
-internal object Migration1 : Migration(1, 2) {
+val Migration_1_2 =  object : Migration(1, 2) {
 
 }

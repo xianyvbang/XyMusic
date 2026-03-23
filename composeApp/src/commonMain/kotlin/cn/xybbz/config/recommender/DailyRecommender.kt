@@ -18,16 +18,18 @@
 
 package cn.xybbz.config.recommender
 
-import android.util.Log
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.utils.Log
 import cn.xybbz.localdata.data.music.XyMusic
-import java.util.concurrent.TimeUnit
 import kotlin.math.log10
 import kotlin.math.max
 import kotlin.random.Random
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
+import kotlin.time.DurationUnit
 
-private val DAY_MS = TimeUnit.DAYS.toMillis(1)
+private val DAY_MS = 1.days.toLong(DurationUnit.MILLISECONDS)
 
 data class RecommenderConfig(
     val recentPlayExcludeDays: Long = 3,
@@ -55,9 +57,9 @@ class DailyRecommender(
         val (artistPrefs: Map<String, Double>, genrePrefs) = buildUserProfile(recentPlays)
 
         // 3) 构建候选集（根据 artist/genre top + 部分随机采样）
-        val candidatesStartTime = System.currentTimeMillis()
+        val candidatesStartTime = Clock.System.now().toEpochMilliseconds()
         val candidates = buildCandidateSet(artistPrefs, genrePrefs)
-        val candidatesEndTime = System.currentTimeMillis()
+        val candidatesEndTime = Clock.System.now().toEpochMilliseconds()
         Log.i(
             "DailyRecommender",
             "Building candidate set took ${candidatesEndTime - candidatesStartTime} ms"
@@ -82,9 +84,9 @@ class DailyRecommender(
         // 5) 排序，应用去重 & 探索策略
         val sorted = scored.sortedByDescending { it.second }.map { it.first }
 
-        val scoringStartTime2 = System.currentTimeMillis()
+        val scoringStartTime2 = Clock.System.now().toEpochMilliseconds()
         // filter out recently played (exclude recent N days) and recentHistory
-        val now = System.currentTimeMillis()
+        val now = Clock.System.now().toEpochMilliseconds()
         val filtered = sorted.filterNot { s ->
             val daysSince =
                 if (s.lastPlayedDate <= 0L) config.recentPlayExcludeDays else (now - s.lastPlayedDate) / DAY_MS
@@ -95,13 +97,13 @@ class DailyRecommender(
             false
         }
 
-        val scoringStartTime4 = System.currentTimeMillis()
+        val scoringStartTime4 = Clock.System.now().toEpochMilliseconds()
         // To avoid multiple suspend calls in filter, get snapshot once:
         val finalFiltered = recentHistory.contains(filtered)
-        val scoringEndTime4 = System.currentTimeMillis()
+        val scoringEndTime4 = Clock.System.now().toEpochMilliseconds()
         Log.i("DailyRecommender", "Scoring room filter ${scoringEndTime4 - scoringStartTime4} ms")
 
-        val scoringStartTime5 = System.currentTimeMillis()
+        val scoringStartTime5 = Clock.System.now().toEpochMilliseconds()
         // Exploration: reserve some slots for exploration (unseen / low-score)
         val n = config.recommendCount
         val exploreCount = max(1, (n * config.explorationRate).toInt())
@@ -120,12 +122,12 @@ class DailyRecommender(
         val result =
             filter
                 .take(n)
-        val scoringEndTime5 = System.currentTimeMillis()
+        val scoringEndTime5 = Clock.System.now().toEpochMilliseconds()
         Log.i(
             "DailyRecommender",
             "Scoring room and play list filter ${scoringEndTime5 - scoringStartTime5} ms"
         )
-        val scoringEndTime2 = System.currentTimeMillis()
+        val scoringEndTime2 = Clock.System.now().toEpochMilliseconds()
         Log.i("DailyRecommender", "Scoring list filter ${scoringEndTime2 - scoringStartTime2} ms")
         Log.i("=====", "推荐音乐获取大小:${result.size} ")
         // 更新 recentHistory（异步安全）
@@ -139,7 +141,7 @@ class DailyRecommender(
     private fun buildUserProfile(recentPlays: List<XyMusic>): Pair<Map<String, Double>, Map<String, Double>> {
         val artistScore = mutableMapOf<String, Double>()
         val genreScore = mutableMapOf<String, Double>()
-        val now = System.currentTimeMillis()
+        val now = Clock.System.now().toEpochMilliseconds()
 
         // 权重设计：离得近的播放更重要；liked 给额外分
         recentPlays.forEach { s ->
@@ -187,21 +189,21 @@ class DailyRecommender(
             genrePrefs.entries.sortedByDescending { it.value }.take(6).map { it.key }.toSet()
 
         Log.i("DailyRecommender", "Top artists: $topArtists")
-        val startTime = System.currentTimeMillis()
+        val startTime = Clock.System.now().toEpochMilliseconds()
         val byArtists = repo.getMusicListByArtistIds(
             topArtists.toList(),
             pageSize = (Constants.ALBUM_MUSIC_LIST_PAGE * 0.8).toInt()
         ) ?: emptyList() // each artist 取部分
-        val endTime = System.currentTimeMillis()
+        val endTime = Clock.System.now().toEpochMilliseconds()
         Log.i("DailyRecommender", "Fetching music by artists took ${endTime - startTime} ms")
 
         Log.i("DailyRecommender", "Top genres: $topGenres")
-        val startTime1 = System.currentTimeMillis()
+        val startTime1 = Clock.System.now().toEpochMilliseconds()
         val byGenres = repo.selectMusicListByGenreIds(
             topGenres.toList(),
             pageSize = (Constants.ALBUM_MUSIC_LIST_PAGE * 0.4).toInt()
         ) ?: emptyList()
-        val endTime1 = System.currentTimeMillis()
+        val endTime1 = Clock.System.now().toEpochMilliseconds()
         Log.i("DailyRecommender", "Fetching music by genres took ${endTime1 - startTime1} ms")
         // 补充：如果候选少，随机从全库取一部分（分页）
         val seed = byArtists.union(byGenres).toMutableList()

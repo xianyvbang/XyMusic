@@ -18,18 +18,15 @@
 
 package cn.xybbz.config.select
 
-import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
-import cn.xybbz.R
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.common.enums.MusicTypeEnum
-import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.OperationTipUtils
+import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.ui.components.AddPlaylistBottomData
 import cn.xybbz.ui.components.AlertDialogObject
@@ -40,6 +37,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.delete_permanently
+import xymusic_kmp.composeapp.generated.resources.delete_warning
 
 /**
  * 选择列表数据
@@ -47,8 +49,7 @@ import kotlinx.coroutines.launch
  * @date 2025/01/18
  * @constructor 创建[SelectControl]
  */
-class SelectControl(val application: Context) {
-
+class SelectControl() {
 
 
     //选中音乐列表id
@@ -85,13 +86,13 @@ class SelectControl(val application: Context) {
         private set
 
     //永久删除所选音乐资源-从硬盘上删除
-    val onRemoveSelectListResource: ((DataSourceManager, CoroutineScope) -> Unit) =
+    val onRemoveSelectListResource: (suspend (DataSourceManager, CoroutineScope) -> Unit) =
         { dataSourceManager, viewModelScope ->
             AlertDialogObject(
-                title = application.getString(R.string.delete_permanently),
+                title = getString(Res.string.delete_permanently),
                 content = {
                     XyTextSubSmall(
-                        text = stringResource(R.string.delete_warning)
+                        text = stringResource(Res.string.delete_warning)
                     )
                 },
                 ifWarning = true,
@@ -101,7 +102,7 @@ class SelectControl(val application: Context) {
         }
 
     //增加选中音乐到播放列表
-    val onAddPlaySelect: suspend (MusicController, DatabaseClient) -> Unit =
+    val onAddPlaySelect: suspend (MusicCommonController, DatabaseClient) -> Unit =
         { musicController, db ->
             addPlayerList(musicController, db)
         }
@@ -123,7 +124,7 @@ class SelectControl(val application: Context) {
         }
 
     //取消收藏
-    val onRemoveFavorite: (DataSourceManager, CoroutineScope, MusicController) -> Unit =
+    val onRemoveFavorite: (DataSourceManager, CoroutineScope, MusicCommonController) -> Unit =
         { dataSourceManager, viewModelScope, musicController ->
             viewModelScope.launch {
                 OperationTipUtils.operationTipProgress() { loadingObject ->
@@ -234,7 +235,7 @@ class SelectControl(val application: Context) {
     /**
      * 播放选中列表
      */
-    suspend fun addPlayerList(musicController: MusicController, db: DatabaseClient) {
+    suspend fun addPlayerList(musicController: MusicCommonController, db: DatabaseClient) {
         val xyMusics = db.musicDao.selectExtendByIds(selectMusicIdList.toList())
         musicController.addMusicList(
             musicList = xyMusics,

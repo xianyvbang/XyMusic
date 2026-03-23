@@ -18,10 +18,6 @@
 
 package cn.xybbz.api.client.plex
 
-import android.os.Build
-import android.util.Log
-import androidx.room.withTransaction
-import cn.xybbz.R
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
@@ -31,7 +27,6 @@ import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.client.plex.data.Directory
 import cn.xybbz.api.client.plex.data.Metadatum
 import cn.xybbz.api.client.plex.data.PlaylistMetadatum
-import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.plex.ImageType
 import cn.xybbz.api.enums.plex.MetadatumType
@@ -44,10 +39,12 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
+import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PlaylistParser
-import cn.xybbz.config.download.DownLoadManager
+import cn.xybbz.config.info.getPlatformInfo
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.di.ContextWrapper
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.PlexOrder
 import cn.xybbz.entity.data.ResourceData
@@ -55,6 +52,7 @@ import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.toPlexOrder
 import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
@@ -66,28 +64,28 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import io.ktor.client.HttpClient
+import io.ktor.client.network.sockets.SocketTimeoutException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
-import java.net.SocketTimeoutException
-import java.util.UUID
+import org.jetbrains.compose.resources.getString
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.unknown_playlist
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 class PlexDatasourceServer(
     private val db: DatabaseClient,
     settingsManager: SettingsManager,
     private val plexApiClient: PlexApiClient,
     customMediaApiClient: CustomMediaApiClient,
-    mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
-    downloadManager: DownLoadManager
+    val contextWrapper: ContextWrapper
 ) : IDataSourceParentServer(
     db,
     settingsManager,
-    application,
     plexApiClient,
     customMediaApiClient,
-    mediaLibraryAndFavoriteSyncScheduler,
-    downloadManager
 ) {
 
     /**
@@ -114,7 +112,7 @@ class PlexDatasourceServer(
                 val musicCollection = plexApiClient.userLibraryApi()
                     .getCollection(
                         libraryIdTmp,
-                        title = application.getString(Constants.PLEX_MUSIC_COLLECTION_TITLE)
+                        title = getString(Constants.PLEX_MUSIC_COLLECTION_TITLE)
                     )
                 if (!musicCollection.mediaContainer?.metadata.isNullOrEmpty()) {
                     val musicCollectionInfo = musicCollection.mediaContainer?.metadata?.get(0)
@@ -131,7 +129,7 @@ class PlexDatasourceServer(
                     .getCollection(
                         libraryIdTmp,
                         subtype = 9,
-                        title = application.getString(Constants.PLEX_ALBUM_COLLECTION_TITLE)
+                        title = getString(Constants.PLEX_ALBUM_COLLECTION_TITLE)
                     )
                 if (!albumCollection.mediaContainer?.metadata.isNullOrEmpty()) {
                     val albumCollectionInfo = albumCollection.mediaContainer?.metadata?.get(
@@ -149,7 +147,7 @@ class PlexDatasourceServer(
                     .getCollection(
                         libraryIdTmp,
                         subtype = 8,
-                        title = application.getString(Constants.PLEX_ARTIST_COLLECTION_TITLE)
+                        title = getString(Constants.PLEX_ARTIST_COLLECTION_TITLE)
                     )
                 if (!albumCollection.mediaContainer?.metadata.isNullOrEmpty()) {
                     val artistCollectionInfo = albumCollection.mediaContainer?.metadata?.get(
@@ -174,34 +172,28 @@ class PlexDatasourceServer(
 
     /**
      * 创建连接客户端
-     * @param [address] 地址
      */
     override suspend fun createApiClient(
-        address: String,
         deviceId: String,
         username: String,
         password: String
     ) {
-        val packageManager = application.packageManager
-        val packageName = application.packageName
-        val packageInfo = packageManager.getPackageInfo(packageName, 0)
-        val versionName = packageInfo.versionName
+        val platformInfo = getPlatformInfo(contextWrapper)
         plexApiClient.createApiClient(
-            Constants.APP_NAME, deviceId, "$versionName", Build.BRAND, Build.MODEL
+            platformInfo.appName,
+            deviceId,
+            platformInfo.platformVersion,
+            platformInfo.deviceName,
+            platformInfo.platformName
         )
-        //提前写入没有sessionToken的Authenticate请求头,不然登录请求都会报错
-        setToken()
-        if (address.isBlank())
-            plexApiClient.setRetrofitData("http://localhost", ifTmpObject())
-        else
-            plexApiClient.setRetrofitData(address, ifTmpObject())
     }
 
     /**
      * 获得资源地址
      */
+    @OptIn(ExperimentalUuidApi::class)
     override suspend fun getResources(clientLoginInfoReq: ClientLoginInfoReq): List<ResourceData> {
-        createApiClient(address = "", deviceId = getDeviceId(), username = "", "")
+        initApiClient(address = "", deviceId = getDeviceId(), username = "", "")
         plexLogin(clientLoginInfoReq)
         val systemInfo = plexApiClient.userApi()
             .getSystemInfo("https://plex.tv/api/v2/resources?includeHttps=1&includeRelay=1")
@@ -220,7 +212,7 @@ class PlexDatasourceServer(
                     "http://${connection.address}:${connection.port}",
                     serverVersion = infoResponse.platformVersion ?: "",
                     serverName = infoResponse.name,
-                    serverId = UUID.randomUUID().toString()
+                    serverId = Uuid.random().toString()
 
                 )
                 tmpResourceData.add(ipv4Data)
@@ -232,7 +224,7 @@ class PlexDatasourceServer(
                         "http://[${connection.address}]:${connection.port}",
                         serverVersion = infoResponse.platformVersion ?: "",
                         serverName = infoResponse.name,
-                        serverId = UUID.randomUUID().toString()
+                        serverId = Uuid.random().toString()
                     )
                     tmpResourceData.add(ipv6Data)
                 }
@@ -243,7 +235,7 @@ class PlexDatasourceServer(
                     connection.uri,
                     serverVersion = infoResponse.platformVersion ?: "",
                     serverName = infoResponse.name,
-                    serverId = UUID.randomUUID().toString()
+                    serverId = Uuid.random().toString()
                 )
 
                 tmpResourceData.add(resourceData)
@@ -404,11 +396,11 @@ class PlexDatasourceServer(
                         val musicCollection = plexApiClient.userLibraryApi()
                             .getCollection(
                                 libraryId,
-                                title = application.getString(Constants.PLEX_MUSIC_COLLECTION_TITLE)
+                                title = getString(Constants.PLEX_MUSIC_COLLECTION_TITLE)
                             )
                         if (musicCollection.mediaContainer?.metadata.isNullOrEmpty()) {
                             val collectionResponse = plexApiClient.userLibraryApi().addCollection(
-                                title = application.getString(Constants.PLEX_MUSIC_COLLECTION_TITLE),
+                                title = getString(Constants.PLEX_MUSIC_COLLECTION_TITLE),
                                 sectionId = libraryId,
                                 uri = plexApiClient.createMusicUri(itemId)
                             )
@@ -446,12 +438,12 @@ class PlexDatasourceServer(
                             .getCollection(
                                 libraryId,
                                 subtype = 9,
-                                title = application.getString(Constants.PLEX_ALBUM_COLLECTION_TITLE)
+                                title = getString(Constants.PLEX_ALBUM_COLLECTION_TITLE)
                             )
                         if (albumCollection.mediaContainer?.metadata.isNullOrEmpty()) {
                             val collectionResponse = plexApiClient.userLibraryApi().addCollection(
                                 type = 9,
-                                title = application.getString(Constants.PLEX_ALBUM_COLLECTION_TITLE),
+                                title = getString(Constants.PLEX_ALBUM_COLLECTION_TITLE),
                                 sectionId = libraryId,
                                 uri = plexApiClient.createMusicUri(itemId)
                             )
@@ -487,12 +479,12 @@ class PlexDatasourceServer(
                             .getCollection(
                                 libraryId,
                                 subtype = 8,
-                                title = application.getString(Constants.PLEX_ARTIST_COLLECTION_TITLE)
+                                title = getString(Constants.PLEX_ARTIST_COLLECTION_TITLE)
                             )
                         if (albumCollection.mediaContainer?.metadata.isNullOrEmpty()) {
                             val collectionResponse = plexApiClient.userLibraryApi().addCollection(
                                 type = 8,
-                                title = application.getString(Constants.PLEX_ARTIST_COLLECTION_TITLE),
+                                title = getString(Constants.PLEX_ARTIST_COLLECTION_TITLE),
                                 sectionId = libraryId,
                                 uri = plexApiClient.createMusicUri(itemId)
                             )
@@ -556,7 +548,7 @@ class PlexDatasourceServer(
                         val musicCollection = plexApiClient.userLibraryApi()
                             .getCollection(
                                 libraryId,
-                                title = application.getString(Constants.PLEX_MUSIC_COLLECTION_TITLE)
+                                title = getString(Constants.PLEX_MUSIC_COLLECTION_TITLE)
                             )
                         val musicCollectionInfo = musicCollection.mediaContainer?.metadata?.get(
                             0
@@ -580,7 +572,7 @@ class PlexDatasourceServer(
                             .getCollection(
                                 libraryId,
                                 subtype = 9,
-                                title = application.getString(Constants.PLEX_ALBUM_COLLECTION_TITLE)
+                                title = getString(Constants.PLEX_ALBUM_COLLECTION_TITLE)
                             )
                         val albumCollectionInfo = albumCollection.mediaContainer?.metadata?.get(
                             0
@@ -604,7 +596,7 @@ class PlexDatasourceServer(
                             .getCollection(
                                 libraryId,
                                 subtype = 8,
-                                title = application.getString(Constants.PLEX_ARTIST_COLLECTION_TITLE)
+                                title = getString(Constants.PLEX_ARTIST_COLLECTION_TITLE)
                             )
                         val albumCollectionInfo = albumCollection.mediaContainer?.metadata?.get(
                             0
@@ -1246,7 +1238,7 @@ class PlexDatasourceServer(
      * 获得OkHttpClient
      */
     override fun getHttpClient(): HttpClient {
-        return plexApiClient.apiOkHttpClient
+        return plexApiClient.httpClient
     }
 
     /**
@@ -1665,7 +1657,7 @@ class PlexDatasourceServer(
                 plexApiClient.userLibraryApi()
                     .getCollection(
                         libraryId,
-                        title = application.getString(Constants.PLEX_MUSIC_COLLECTION_TITLE)
+                        title = getString(Constants.PLEX_MUSIC_COLLECTION_TITLE)
                     )
             }
         val collectionId =
@@ -1779,7 +1771,7 @@ class PlexDatasourceServer(
     /**
      * 将ItemResponse转换成XyAlbum
      */
-    fun convertToAlbumList(item: List<Metadatum>): List<XyAlbum> {
+    suspend fun convertToAlbumList(item: List<Metadatum>): List<XyAlbum> {
         return item.map { album ->
             convertToAlbum(album)
         }
@@ -1788,7 +1780,7 @@ class PlexDatasourceServer(
     /**
      * 将ItemResponse转换成XyAlbum
      */
-    fun convertToAlbum(album: Metadatum): XyAlbum {
+    suspend fun convertToAlbum(album: Metadatum): XyAlbum {
         val images = album.image
         val image = images?.findLast { it.type == ImageType.CoverPoster }
         val itemImageUrl =
@@ -1811,7 +1803,7 @@ class PlexDatasourceServer(
             premiereDate = album.originallyAvailableAt?.atStartOfDayIn(TimeZone.currentSystemDefault())
                 ?.toEpochMilliseconds(),
             genreIds = album.genre?.joinToString { it.tag },
-            ifFavorite = album.collection?.any { it.tag == application.getString(Constants.PLEX_ALBUM_COLLECTION_TITLE) } == true,
+            ifFavorite = album.collection?.any { it.tag == getString(Constants.PLEX_ALBUM_COLLECTION_TITLE) } == true,
             ifPlaylist = false,
             createTime = album.addedAt,
             musicCount = album.childCount ?: 0
@@ -1822,7 +1814,7 @@ class PlexDatasourceServer(
     /**
      * 将PlaylistItemData3转换成XyAlbum
      */
-    fun convertToPlaylists(playlists: List<PlaylistMetadatum>): List<XyAlbum> {
+    suspend fun convertToPlaylists(playlists: List<PlaylistMetadatum>): List<XyAlbum> {
         return playlists.map { playlist ->
             convertToPlaylist(playlist)
         }
@@ -1831,11 +1823,11 @@ class PlexDatasourceServer(
     /**
      * 将PlaylistItemData转换成XyAlbum
      */
-    fun convertToPlaylist(playlist: PlaylistMetadatum): XyAlbum {
+    suspend fun convertToPlaylist(playlist: PlaylistMetadatum): XyAlbum {
         return XyAlbum(
             itemId = playlist.ratingKey,
             pic = playlist.composite?.let { plexApiClient.getImageUrl(it) },
-            name = playlist.title ?: application.getString(R.string.unknown_playlist),
+            name = playlist.title ?: getString(Res.string.unknown_playlist),
             connectionId = getConnectionId(),
             ifFavorite = false,
             ifPlaylist = true,
@@ -1848,7 +1840,7 @@ class PlexDatasourceServer(
     /**
      * 将ItemResponse换成XyMusic
      */
-    fun convertToMusicList(item: List<Metadatum>): List<XyMusic> {
+    suspend fun convertToMusicList(item: List<Metadatum>): List<XyMusic> {
         return item.map { music ->
             convertToMusic(
                 music
@@ -1857,7 +1849,7 @@ class PlexDatasourceServer(
     }
 
     //ItemResponse转换XyMusic
-    fun convertToMusic(item: Metadatum): XyMusic {
+    suspend fun convertToMusic(item: Metadatum): XyMusic {
         val images = item.image
         val image = images?.findLast { it.type == ImageType.CoverPoster }
         val itemImageUrl =
@@ -1891,13 +1883,13 @@ class PlexDatasourceServer(
             artists = item.originalTitle?.split(Constants.ARTIST_DELIMITER_SEMICOLON),
             artistIds = item.grandparentRatingKey?.let { listOf(it) },
             albumArtist = listOf(
-                item.grandparentTitle ?: application.getString(Constants.UNKNOWN_ARTIST)
+                item.grandparentTitle ?: getString(Constants.UNKNOWN_ARTIST)
             ),
             albumArtistIds = item.grandparentRatingKey?.let { listOf(it) },
             createTime = item.addedAt,
             year = item.parentYear,
             playedCount = 0,
-            ifFavoriteStatus = item.collection?.any { it.tag == application.getString(Constants.PLEX_MUSIC_COLLECTION_TITLE) } == true,
+            ifFavoriteStatus = item.collection?.any { it.tag == getString(Constants.PLEX_MUSIC_COLLECTION_TITLE) } == true,
             ifLyric = mediaStreamLyric != null,
             lyric = mediaStreamLyric?.id.toString(),
             path = part?.file ?: "",
@@ -1920,7 +1912,7 @@ class PlexDatasourceServer(
      * @param [items] 项目
      * @return [List<ArtistItem>]
      */
-    fun convertToArtistList(items: List<Metadatum>): List<XyArtist> {
+    suspend fun convertToArtistList(items: List<Metadatum>): List<XyArtist> {
         val xyArtists = items.map { item ->
             convertToArtist(item)
         }
@@ -1930,7 +1922,7 @@ class PlexDatasourceServer(
     /**
      * 将ArtistID3转换成XyArtist
      */
-    fun convertToArtist(
+    suspend fun convertToArtist(
         artist: Metadatum,
     ): XyArtist {
         val images = artist.image
@@ -1971,7 +1963,7 @@ class PlexDatasourceServer(
             connectionId = getConnectionId(),
             describe = artist.summary,
             selectChat = selectChat,
-            ifFavorite = artist.collection?.any { it.tag == application.getString(Constants.PLEX_ARTIST_COLLECTION_TITLE) } == true,
+            ifFavorite = artist.collection?.any { it.tag == getString(Constants.PLEX_ARTIST_COLLECTION_TITLE) } == true,
         )
     }
 

@@ -9,7 +9,7 @@ object Log {
         logger.info { "[$tag] $msg" }
     }
 
-    fun e(tag: String, msg: String, e: Throwable) {
+    fun e(tag: String, msg: String?, e: Throwable) {
         logger.error(e) { "[$tag] $msg" }
     }
 }

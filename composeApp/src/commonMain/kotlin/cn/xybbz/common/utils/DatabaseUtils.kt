@@ -1,7 +1,7 @@
 package cn.xybbz.common.utils
 
-import androidx.room.withTransaction
 import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.withTransaction
 
 /**
  * 通用操作数据库方法

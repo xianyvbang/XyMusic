@@ -18,10 +18,6 @@
 
 package cn.xybbz.api.client.emby
 
-import android.icu.math.BigDecimal
-import android.os.Build
-import android.util.Log
-import androidx.room.withTransaction
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.data.XyResponse
@@ -31,7 +27,6 @@ import cn.xybbz.api.client.jellyfin.data.ItemResponse
 import cn.xybbz.api.client.jellyfin.data.PlaybackStartInfo
 import cn.xybbz.api.client.jellyfin.data.ViewRequest
 import cn.xybbz.api.client.navidrome.data.TranscodingInfo
-import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.BaseItemKind
 import cn.xybbz.api.enums.jellyfin.CollectionType
@@ -43,15 +38,16 @@ import cn.xybbz.api.enums.jellyfin.MediaProtocol
 import cn.xybbz.api.enums.jellyfin.MediaStreamType
 import cn.xybbz.api.enums.jellyfin.PlayMethod
 import cn.xybbz.api.enums.jellyfin.SortOrder
-import cn.xybbz.api.utils.toStringMap
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.Constants.LYRICS_AMPLIFICATION
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
+import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.PlaylistParser
-import cn.xybbz.config.download.DownLoadManager
+import cn.xybbz.config.info.getPlatformInfo
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.di.ContextWrapper
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchAndOrder
 import cn.xybbz.entity.data.SearchData
@@ -59,6 +55,7 @@ import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.toSearchAndOrder
 import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
@@ -69,25 +66,22 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import io.ktor.client.HttpClient
+import io.ktor.client.network.sockets.SocketTimeoutException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
-import java.net.SocketTimeoutException
+import org.jetbrains.compose.resources.getString
 
 class EmbyDatasourceServer(
     private val db: DatabaseClient,
     settingsManager: SettingsManager,
     private val embyApiClient: EmbyApiClient,
     customMediaApiClient: CustomMediaApiClient,
-    mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
-    downloadManager: DownLoadManager
+    val contextWrapper: ContextWrapper
 ) : IDataSourceParentServer(
     db,
     settingsManager,
-    application,
     embyApiClient,
     customMediaApiClient,
-    mediaLibraryAndFavoriteSyncScheduler,
-    downloadManager
 ) {
     /**
      * 获得当前数据源类型
@@ -100,23 +94,19 @@ class EmbyDatasourceServer(
      * 创建连接客户端
      * @param [address] 地址
      */
-    override suspend fun createApiClient(
+    override suspend fun initApiClient(
         address: String,
         deviceId: String,
         username: String,
         password: String
     ) {
-        val deviceName = "${Build.BRAND} ${Build.MODEL}"
-        val packageManager = application.packageManager
-        val packageName = application.packageName
-        val packageInfo = packageManager.getPackageInfo(packageName, 0)
-        val versionName = packageInfo.versionName
+        val platformInfo = getPlatformInfo(contextWrapper)
         embyApiClient.createApiClient(
-            "Android", "$versionName", deviceId, deviceName
+            platformInfo.platformName, platformInfo.platformVersion, deviceId, platformInfo.deviceName
         )
         //提前写入没有sessionToken的Authenticate请求头,不然登录请求都会报错
         setToken()
-        embyApiClient.setRetrofitData(address, ifTmpObject())
+        embyApiClient.createHttpClient(address, ifTmpObject())
     }
 
     /**
@@ -154,7 +144,7 @@ class EmbyDatasourceServer(
             parentId = libraryIds?.get(0)
         )
         val response = embyApiClient.artistsApi().getArtists(
-            itemRequest.toStringMap()
+            itemRequest
         )
         val artistList = convertToArtistList(response.items)
         return XyResponse(
@@ -174,7 +164,7 @@ class EmbyDatasourceServer(
                 ids = artistIds,
                 parentId = libraryIds?.get(0),
                 userId = getUserId()
-            ).toStringMap()
+            )
         ).items
         return convertToArtistList(items)
     }
@@ -487,6 +477,7 @@ class EmbyDatasourceServer(
             response.items?.let {
                 saveBatchAlbum(it, MusicDataTypeEnum.PLAYLIST, true)
             }
+
         }
     }
 
@@ -617,7 +608,7 @@ class EmbyDatasourceServer(
     override suspend fun selectMediaLibraryList(connectionId: Long): List<XyLibrary> {
         val viewLibrary = embyApiClient.userViewsApi().getUserViews(
             userId = getUserId(),
-            ViewRequest().toStringMap()
+            ViewRequest()
         )
         //存储历史记录
         val libraries =
@@ -685,7 +676,7 @@ class EmbyDatasourceServer(
                 limit = Constants.MIN_PAGE,
                 parentId = libraryIds?.get(0),
                 userId = getUserId()
-            ).toStringMap()
+            )
         )
         if (albumList.isNotEmpty())
             db.withTransaction {
@@ -842,7 +833,7 @@ class EmbyDatasourceServer(
      * 获得OkHttpClient
      */
     override fun getHttpClient(): HttpClient {
-        return embyApiClient.apiOkHttpClient
+        return embyApiClient.httpClient
     }
 
     /**
@@ -1036,7 +1027,7 @@ class EmbyDatasourceServer(
             ItemRequest(
                 limit = pageSize,
                 userId = getUserId()
-            ).toStringMap()
+            )
         )
         return convertToArtistList(response.items)
     }
@@ -1161,7 +1152,7 @@ class EmbyDatasourceServer(
                 parentId = if (parentId.isNullOrBlank()) libraryIds?.get(0) else parentId,
                 userId = getUserId(),
                 path = path
-            ).toStringMap()
+            )
         )
         return XyResponse(
             items = convertToMusicList(response.items),
@@ -1216,7 +1207,7 @@ class EmbyDatasourceServer(
                 genreIds = genreIds,
                 parentId = libraryIds?.get(0),
                 userId = getUserId()
-            ).toStringMap()
+            )
         )
 
         return XyResponse(
@@ -1254,7 +1245,7 @@ class EmbyDatasourceServer(
                         limit = pageSize,
                         parentId = libraryIds?.get(0),
                         userId = getUserId()
-                    ).toStringMap()
+                    )
                 )
             val xyResponse = XyResponse(
                 items = convertToAlbumList(playlists.items, true),
@@ -1302,7 +1293,7 @@ class EmbyDatasourceServer(
                 searchTerm = search,
                 imageTypeLimit = 1,
                 parentId = libraryIds?.get(0)
-            ).toStringMap()
+            )
         )
 
         return XyResponse(
@@ -1317,7 +1308,7 @@ class EmbyDatasourceServer(
      * @param [items] 项目
      * @return [List<ArtistItem>]
      */
-    fun convertToArtistList(items: List<ItemResponse>): List<XyArtist> {
+    suspend fun convertToArtistList(items: List<ItemResponse>): List<XyArtist> {
         val xyArtists = items.map { item ->
             convertToArtist(item)
         }
@@ -1327,7 +1318,7 @@ class EmbyDatasourceServer(
     /**
      * 将ArtistID3转换成XyArtist
      */
-    fun convertToArtist(
+    suspend fun convertToArtist(
         artist: ItemResponse,
     ): XyArtist {
         val artistImageUrl =
@@ -1367,7 +1358,7 @@ class EmbyDatasourceServer(
             if (!CharUtils.isEnglishLetter(shortNameStart)) "#" else shortNameStart.toString()
         return XyArtist(
             artistId = artist.id,
-            name = artist.name ?: application.getString(Constants.UNKNOWN_ARTIST),
+            name = artist.name ?: getString(Constants.UNKNOWN_ARTIST),
             pic = artistImageUrl,
             backdrop = backdropImageUrl,
             connectionId = getConnectionId(),
@@ -1384,7 +1375,7 @@ class EmbyDatasourceServer(
     /**
      * 将ItemResponse换成XyMusic
      */
-    fun convertToMusicList(item: List<ItemResponse>): List<XyMusic> {
+    suspend fun convertToMusicList(item: List<ItemResponse>): List<XyMusic> {
         return item.map { music ->
             convertToMusic(
                 music
@@ -1393,7 +1384,7 @@ class EmbyDatasourceServer(
     }
 
     //ItemResponse转换XyMusic
-    fun convertToMusic(item: ItemResponse): XyMusic {
+    suspend fun convertToMusic(item: ItemResponse): XyMusic {
 
         val albumId = item.albumId
         val itemImageUrl =
@@ -1415,11 +1406,10 @@ class EmbyDatasourceServer(
 
         val mediaStreamLyric =
             mediaSourceInfo?.mediaStreams?.find { it.type == MediaStreamType.LYRIC }
-
         return XyMusic(
             itemId = item.id,
             pic = itemImageUrl,
-            name = item.name ?: application.getString(Constants.UNKNOWN_MUSIC),
+            name = item.name ?: getString(Constants.UNKNOWN_MUSIC),
             downloadUrl = createDownloadUrl(item.id),
             album = albumId ?: "",
             albumName = item.album,
@@ -1427,7 +1417,7 @@ class EmbyDatasourceServer(
             artists = item.artistItems?.mapNotNull { artist -> artist.name },
             artistIds = item.artistItems?.map { artist -> artist.id },
             albumArtist = item.albumArtists?.map { artist -> artist.name.toString() }
-                ?: listOf(application.getString(Constants.UNKNOWN_ARTIST)),
+                ?: listOf(getString(Constants.UNKNOWN_ARTIST)),
             albumArtistIds = item.albumArtists?.map { artist -> artist.id },
             createTime = item.dateCreated ?: 0L,
             year = item.productionYear,
@@ -1440,8 +1430,7 @@ class EmbyDatasourceServer(
             sampleRate = mediaStream?.sampleRate,
             bitDepth = mediaStream?.bitDepth,
             size = mediaSourceInfo?.size ?: 0,
-            runTimeTicks = BigDecimal.valueOf(mediaSourceInfo?.runTimeTicks ?: 0)
-                .divide(BigDecimal(10000), BigDecimal.ROUND_UP).toLong(),
+            runTimeTicks = ((mediaSourceInfo?.runTimeTicks ?: 0) / 10000.0).toLong(),
             container = mediaSourceInfo?.container,
             codec = mediaStream?.codec,
             lyric = "",
@@ -1454,7 +1443,10 @@ class EmbyDatasourceServer(
     /**
      * 将ItemResponse转换成XyAlbum
      */
-    fun convertToAlbumList(item: List<ItemResponse>, ifPlaylist: Boolean = false): List<XyAlbum> {
+    suspend fun convertToAlbumList(
+        item: List<ItemResponse>,
+        ifPlaylist: Boolean = false
+    ): List<XyAlbum> {
         return item.map { album ->
             convertToAlbum(album, ifPlaylist)
         }
@@ -1463,7 +1455,7 @@ class EmbyDatasourceServer(
     /**
      * 将ItemResponse转换成XyAlbum
      */
-    fun convertToAlbum(album: ItemResponse, ifPlaylist: Boolean = false): XyAlbum {
+    suspend fun convertToAlbum(album: ItemResponse, ifPlaylist: Boolean = false): XyAlbum {
         val itemImageUrl =
             if (!album.imageTags.isNullOrEmpty()) embyApiClient.createImageUrl(
                 itemId = album.id,
@@ -1478,13 +1470,13 @@ class EmbyDatasourceServer(
             itemId = album.id,
             pic = itemImageUrl,
             name = album.name
-                ?: if (ifPlaylist) application.getString(Constants.UNKNOWN_PLAYLIST) else application.getString(
+                ?: if (ifPlaylist) getString(Constants.UNKNOWN_PLAYLIST) else getString(
                     Constants.UNKNOWN_ALBUM
                 ),
             connectionId = getConnectionId(),
             artistIds = album.albumArtists?.joinToString { it.id },
             artists = album.albumArtists?.mapNotNull { it.name }?.joinToString()
-                ?: application.getString(Constants.UNKNOWN_ARTIST),
+                ?: getString(Constants.UNKNOWN_ARTIST),
             year = album.productionYear,
             premiereDate = album.productionYear?.toLong(),
             genreIds = album.genreItems?.joinToString { it.id },
@@ -1500,7 +1492,7 @@ class EmbyDatasourceServer(
     /**
      * 将Genre转换成XyGenre
      */
-    fun convertToGenreList(genres: List<ItemResponse>): List<XyGenre> {
+    suspend fun convertToGenreList(genres: List<ItemResponse>): List<XyGenre> {
         return genres.map {
             convertToGenre(it)
         }
@@ -1509,7 +1501,7 @@ class EmbyDatasourceServer(
     /**
      * 将Genre转换成XyGenre
      */
-    fun convertToGenre(genre: ItemResponse): XyGenre {
+    suspend fun convertToGenre(genre: ItemResponse): XyGenre {
         val itemImageUrl = genre.imageTags?.get(ImageType.PRIMARY)?.let {
             embyApiClient.createImageUrl(
                 itemId = genre.id,
@@ -1524,7 +1516,7 @@ class EmbyDatasourceServer(
         return XyGenre(
             itemId = genre.id,
             pic = itemImageUrl ?: "",
-            name = genre.name ?: application.getString(Constants.UNKNOWN_ALBUM),
+            name = genre.name ?: getString(Constants.UNKNOWN_ALBUM),
             connectionId = getConnectionId(),
             createTime = genre.dateCreated ?: 0L,
         )

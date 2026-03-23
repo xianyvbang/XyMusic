@@ -18,28 +18,14 @@
 
 package cn.xybbz.config.volume
 
-import android.media.AudioManager
 
-class VolumeServer {
-    private lateinit var audioManager: AudioManager
+interface VolumeServer {
 
-    fun createVolumeManager(application: android.content.Context) {
-        audioManager = application.getSystemService(android.content.Context.AUDIO_SERVICE) as AudioManager
-    }
+    fun createVolumeManager()
 
-    fun updateVolume(volume: Int) {
-        audioManager.setStreamVolume(
-            AudioManager.STREAM_MUSIC,
-            volume,
-            0
-        )
-    }
+    fun updateVolume(volume: Int)
 
-    fun getMaxVolume(): Int {
-        return audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-    }
+    fun getMaxVolume(): Int
 
-    fun getStreamVolume(): Int {
-        return audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-    }
+    fun getStreamVolume(): Int
 }

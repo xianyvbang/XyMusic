@@ -2,6 +2,7 @@ package cn.xybbz.di
 
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.config.DatasourceFactory
+import cn.xybbz.localdata.config.getRoomDatabase
 import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
@@ -11,7 +12,6 @@ import org.koin.core.annotation.Single
 actual class DatabaseModule {
     @Single
     actual fun db(contextWrapper: ContextWrapper): DatabaseClient {
-        return DatasourceFactory(contextWrapper.context).createDatabaseClientBuilder()
-            .build()
+        return getRoomDatabase(DatasourceFactory(contextWrapper.context).createDatabaseClientBuilder())
     }
 }

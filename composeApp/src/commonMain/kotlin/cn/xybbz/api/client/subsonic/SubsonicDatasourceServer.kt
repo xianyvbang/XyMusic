@@ -18,10 +18,8 @@
 
 package cn.xybbz.api.client.subsonic
 
-import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.RemoteMediator
-import androidx.room.withTransaction
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.data.XyResponse
@@ -34,26 +32,27 @@ import cn.xybbz.api.client.subsonic.data.ScrobbleRequest
 import cn.xybbz.api.client.subsonic.data.SongID3
 import cn.xybbz.api.client.subsonic.data.SubsonicArtistsResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
-import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.CollectionType
 import cn.xybbz.api.enums.subsonic.AlbumType
 import cn.xybbz.api.enums.subsonic.Status
-import cn.xybbz.api.utils.toStringMap
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
+import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.common.utils.PlaylistParser
-import cn.xybbz.config.download.DownLoadManager
+import cn.xybbz.config.info.getPlatformInfo
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.di.ContextWrapper
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.ext.convertToArtist
 import cn.xybbz.entity.data.ext.toXyMusic
 import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
@@ -70,16 +69,12 @@ class SubsonicDatasourceServer(
     settingsManager: SettingsManager,
     private val subsonicApiClient: SubsonicApiClient,
     customMediaApiClient: CustomMediaApiClient,
-    mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
-    downloadManager: DownLoadManager
+    val contextWrapper: ContextWrapper
 ) : IDataSourceParentServer(
     db,
     settingsManager,
-    application,
     subsonicApiClient,
     customMediaApiClient,
-    mediaLibraryAndFavoriteSyncScheduler,
-    downloadManager
 ) {
     /**
      * 获得当前数据源类型
@@ -90,29 +85,20 @@ class SubsonicDatasourceServer(
 
     /**
      * 创建连接客户端
-     * @param [address] 地址
      */
     override suspend fun createApiClient(
-        address: String,
         deviceId: String,
         username: String,
         password: String
     ) {
-        val packageManager = application.packageManager
-        val packageName = application.packageName
-        val packageInfo = packageManager.getPackageInfo(packageName, 0)
-        val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
-        val appName = packageManager.getApplicationLabel(applicationInfo).toString()
-        val versionName = packageInfo.versionName
+        val platformInfo = getPlatformInfo(contextWrapper)
 
         val encryptMd5 = PasswordUtils.encryptMd5(password)
 
         subsonicApiClient.createApiClient(
             username, encryptMd5.passwordMd5, encryptMd5.encryptedSalt, getDataSourceType().version,
-            "${appName}:${versionName}"
+            "${platformInfo.appName}:${platformInfo.platformVersion}"
         )
-        setToken()
-        subsonicApiClient.setRetrofitData(address, ifTmpObject())
     }
 
 
@@ -701,7 +687,7 @@ class SubsonicDatasourceServer(
      * 获得OkHttpClient
      */
     override fun getHttpClient(): HttpClient {
-        return subsonicApiClient.apiOkHttpClient
+        return subsonicApiClient.httpClient
     }
 
     /**
@@ -724,7 +710,7 @@ class SubsonicDatasourceServer(
             ScrobbleRequest(
                 id = musicId,
                 submission = isPaused
-            ).toStringMap()
+            )
         )
     }
 
@@ -774,7 +760,7 @@ class SubsonicDatasourceServer(
             ).subsonicResponse.songs?.toXyMusic(
                 getConnectionId(),
                 { createDownloadUrl(it) },
-                { coverArt, title ->
+                { coverArt, _ ->
                     if (coverArt.isNullOrBlank())
                         ""
                     else
@@ -800,7 +786,7 @@ class SubsonicDatasourceServer(
             ).subsonicResponse.topSongs.toXyMusic(
                 getConnectionId(),
                 createDownloadUrl = { createDownloadUrl(it) },
-                getImageUrl = { coverArt, title ->
+                getImageUrl = { coverArt, _ ->
                     if (coverArt.isNullOrBlank())
                         ""
                     else

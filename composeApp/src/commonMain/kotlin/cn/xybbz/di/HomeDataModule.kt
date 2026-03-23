@@ -3,18 +3,15 @@ package cn.xybbz.di
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.HomeDataRepository
 import cn.xybbz.localdata.config.DatabaseClient
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import org.koin.core.annotation.Configuration
+import org.koin.core.annotation.Module
+import org.koin.core.annotation.Singleton
 
 @Module
-@InstallIn(SingletonComponent::class)
+@Configuration
 object HomeDataModule {
 
     @Singleton
-    @Provides
     fun homeDataRepository(
         db: DatabaseClient,
         datasourceServer: DataSourceManager

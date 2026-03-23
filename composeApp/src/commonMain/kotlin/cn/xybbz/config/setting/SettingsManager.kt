@@ -18,17 +18,13 @@
 
 package cn.xybbz.config.setting
 
-import android.content.Context
-import android.content.pm.PackageInfo
-import android.content.pm.PackageManager
-import android.os.Build
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cn.xybbz.common.enums.AllDataEnum
-import cn.xybbz.common.music.AudioFadeController
+import cn.xybbz.common.utils.Log
+import cn.xybbz.config.music.AudioFadeController
 import cn.xybbz.config.network.NetWorkMonitor
 import cn.xybbz.config.network.OnNetworkChangeListener
 import cn.xybbz.localdata.config.DatabaseClient
@@ -37,16 +33,14 @@ import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.LanguageType
 import cn.xybbz.localdata.enums.ThemeTypeEnum
-import com.hjq.language.MultiLanguages
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.withContext
-import java.util.Locale
 
 class SettingsManager(
     private val db: DatabaseClient,
-    private val applicationContext: Context,
     private val audioFadeController: AudioFadeController,
     private val netWorkMonitor: NetWorkMonitor
 ) {
@@ -69,9 +63,6 @@ class SettingsManager(
 
     //是否为非计费网络
     var isUnmeteredWifi: Boolean = false
-
-    lateinit var packageInfo: PackageInfo
-        private set
 
     //是否有连接配置
     var ifConnectionConfig by mutableStateOf(false)
@@ -118,19 +109,10 @@ class SettingsManager(
         updateIfConnectionConfig(this@SettingsManager.get().connectionId != null)
         if (this@SettingsManager.get().languageType != null) {
             this@SettingsManager.languageType = this@SettingsManager.get().languageType
-        } else {
-            setDefaultLanguage(applicationContext)
         }
         this@SettingsManager.cacheUpperLimit = this@SettingsManager.get().cacheUpperLimit
         Log.i("api", "动态设置数据--读取配置")
         audioFadeController.updateFadeDurationMs(this@SettingsManager.get().fadeDurationMs)
-        val packageManager = applicationContext.packageManager
-        val packageName = applicationContext.packageName
-        packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0))
-        } else {
-            packageManager.getPackageInfo(packageName, 0)
-        }
         netWorkMonitor.addListener(object : OnNetworkChangeListener {
             override fun onNetworkChange(isUnmeteredWifi: Boolean) {
                 this@SettingsManager.isUnmeteredWifi = isUnmeteredWifi
@@ -292,42 +274,6 @@ class SettingsManager(
         }
     }
 
-    /**
-     * 更新语言设置
-     */
-    suspend fun setLanguageTypeData(languageType: LanguageType, context: Context) {
-        settings = get().copy(languageType = languageType)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateLanguageType(
-                languageType = languageType,
-                get().id
-            )
-
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(languageType = languageType))
-            settings = get().copy(id = settingId)
-        }
-        updateLanguage(languageType, context)
-    }
-
-
-    /**
-     * 全局更新语言设置
-     */
-    fun updateLanguage(languageType: LanguageType, context: Context) {
-        val locale = Locale.forLanguageTag(languageType.languageCode)
-        MultiLanguages.setAppLanguage(context, locale)
-        this.languageType = languageType
-    }
-
-    /**
-     * 设置当前默认语言
-     */
-    fun setDefaultLanguage(context: Context) {
-        val systemLanguage = MultiLanguages.getSystemLanguage(context)
-        this.languageType = LanguageType.getThis(systemLanguage.toLanguageTag())
-    }
 
     /**
      * 设置缓存大小监听方法

@@ -22,6 +22,7 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.HomeRefreshReason
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.remote.RemoteCurrent
+import kotlin.time.Clock
 
 /**
  * 数据间隔判断存储
@@ -51,7 +52,7 @@ object DataRefreshEstimateUtils {
             .remoteKeyById(key)
 
         val lastTime = remoteCurrent?.createTime ?: 0L
-        val now = System.currentTimeMillis()
+        val now = Clock.System.now().toEpochMilliseconds()
         return (now - lastTime) >= (intervalMinutes * 60_000)
     }
 
@@ -63,7 +64,7 @@ object DataRefreshEstimateUtils {
             RemoteCurrent(
                 id = key,
                 connectionId = connectionId ?: Constants.MINUS_ONE_INT.toLong(),
-                createTime = System.currentTimeMillis(),
+                createTime = Clock.System.now().toEpochMilliseconds(),
                 refresh = false
             )
         )

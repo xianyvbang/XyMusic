@@ -18,38 +18,37 @@
 
 package cn.xybbz.api.client
 
-import android.content.Context
-import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.PagingData
 import androidx.paging.RemoteMediator
 import androidx.paging.map
 import androidx.room.Transaction
-import androidx.room.withTransaction
-import cn.xybbz.R
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.custom.data.CustomCoverQuery
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
-import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.exception.UnauthorizedException
 import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.common.enums.LoginStateType
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
+import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.PasswordUtils
-import cn.xybbz.config.download.DownLoadManager
+import cn.xybbz.config.info.getPlatformInfo
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.di.ContextWrapper
 import cn.xybbz.entity.data.EncryptAesData
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.album.FavoriteAlbum
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.FavoriteArtist
@@ -64,6 +63,7 @@ import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
+import cn.xybbz.localdata.data.remote.RemoteCurrent
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.page.bigPager
@@ -77,8 +77,9 @@ import cn.xybbz.page.parent.FavoriteMusicRemoteMediator
 import cn.xybbz.page.parent.GenreAlbumListRemoteMediator
 import cn.xybbz.page.parent.GenresRemoteMediator
 import cn.xybbz.page.parent.MusicRemoteMediator
-import com.github.promeg.pinyinhelper.Pinyin
+import io.ktor.client.network.sockets.SocketTimeoutException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -91,20 +92,23 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
-import java.net.SocketTimeoutException
-import java.util.UUID
-import java.util.concurrent.atomic.AtomicBoolean
+import org.jetbrains.compose.resources.getString
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.logging_in
+import xymusic_kmp.composeapp.generated.resources.server_version_cannot_be_obtained
+import xymusic_kmp.composeapp.generated.resources.server_version_too_low
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.minutes
 import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 
 abstract class IDataSourceParentServer(
     private val db: DatabaseClient,
     private val settingsManager: SettingsManager,
-    private val application: Context,
     private val defaultParentApiClient: DefaultParentApiClient,
     private val customMediaApiClient: CustomMediaApiClient,
-    private val mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
-    private val downloadManager: DownLoadManager,
+    private val contextWrapper: ContextWrapper
 ) : IDataSourceServer {
 
     private var connectionConfig: ConnectionConfig? = null
@@ -159,7 +163,7 @@ abstract class IDataSourceParentServer(
         connectionConfig: ConnectionConfig?
     ): Flow<ClientLoginInfoState> {
         val popTipHint = MessageUtils.sendPopTipHint(
-            R.string.logging_in
+            Res.string.logging_in
         )
         resetLoginRetry()
         return flow {
@@ -171,7 +175,7 @@ abstract class IDataSourceParentServer(
             }
 
             //保存客户端数据
-            createApiClient(
+            initApiClient(
                 clientLoginInfoReq.address,
                 deviceId,
                 username = clientLoginInfoReq.username,
@@ -189,15 +193,15 @@ abstract class IDataSourceParentServer(
                 val versionAtLeast = isVersionAtLeast(version)
                 if (!versionAtLeast) {
                     throw ServiceException(
-                        application.getString(
-                            R.string.server_version_too_low,
+                        getString(
+                            Res.string.server_version_too_low,
                             version,
                             getDataSourceType().version
                         )
                     )
                 }
             } else {
-                throw ServiceException(application.getString(R.string.server_version_cannot_be_obtained))
+                throw ServiceException(getString(Res.string.server_version_cannot_be_obtained))
             }
             val accessToken =
                 responseData.accessToken
@@ -219,8 +223,8 @@ abstract class IDataSourceParentServer(
                 iv = encryptAES.aesIv,
                 key = encryptAES.aesKey,
                 serverVersion = version,
-                updateTime = System.currentTimeMillis(),
-                lastLoginTime = System.currentTimeMillis(),
+                updateTime = Clock.System.now().toEpochMilliseconds(),
+                lastLoginTime = Clock.System.now().toEpochMilliseconds(),
                 deviceId = deviceId,
                 navidromeExtendToken = responseData.navidromeExtendToken,
                 navidromeExtendSalt = responseData.navidromeExtendSalt,
@@ -280,7 +284,7 @@ abstract class IDataSourceParentServer(
         connectionConfig: ConnectionConfig
     ): Flow<ClientLoginInfoState> {
         return flow {
-            db.withTransaction {
+            val connectionId = db.withTransaction {
                 val connectionId = if (connectionConfig.id != 0L) {
                     db.connectionConfigDao.update(connectionConfig)
                     connectionConfig.id
@@ -288,17 +292,15 @@ abstract class IDataSourceParentServer(
                     db.connectionConfigDao.save(connectionConfig)
                 }
 
-                if (!ifTmpObject()) {
-
-                    downloadManager.initData(connectionId)
-                    connection(connectionConfig.copy(id = connectionId), connectionConfig.id != 0L)
-                    mediaLibraryAndFavoriteSyncScheduler.cancel()
-                    mediaLibraryAndFavoriteSyncScheduler.enqueueIfNeeded(connectionId)
-                    MessageUtils.sendDismiss()
-                }
+                connectionId
             }
 
+
             emit(ClientLoginInfoState.UserLoginSuccess)
+            if (!ifTmpObject()) {
+                connection(connectionConfig.copy(id = connectionId), connectionConfig.id != 0L)
+                MessageUtils.sendDismiss()
+            }
         }
 
     }
@@ -306,16 +308,28 @@ abstract class IDataSourceParentServer(
     /**
      * 获得设备id
      */
+    @OptIn(ExperimentalUuidApi::class)
     open fun getDeviceId(): String {
-        return UUID.randomUUID().toString()
+        return Uuid.random().toString()
     }
 
+    //todo 需要拆分方法
     /**
      * 创建连接客户端
      * @param [address] 地址
      */
-    abstract suspend fun createApiClient(
+    open suspend fun initApiClient(
         address: String,
+        deviceId: String,
+        username: String,
+        password: String
+    ) {
+        createApiClient(deviceId, username, password)
+        setToken()
+        defaultParentApiClient.createHttpClient(address, ifTmpObject())
+    }
+
+    abstract suspend fun createApiClient(
         deviceId: String,
         username: String,
         password: String
@@ -342,11 +356,7 @@ abstract class IDataSourceParentServer(
 
         val address = connectionConfig.address
 
-        val packageManager = application.packageManager
-        val packageName = application.packageName
-        val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
-        val appName = packageManager.getApplicationLabel(applicationInfo).toString()
-
+        val platformInfo = getPlatformInfo(contextWrapper)
         //判断是否能连接
         return flow {
 
@@ -364,7 +374,7 @@ abstract class IDataSourceParentServer(
                 username = connectionConfig.username,
                 password = password,
                 address = address,
-                appName = appName,
+                appName = platformInfo.appName,
                 clientVersion = getDataSourceType().version,
                 serverVersion = connectionConfig.serverVersion,
                 serverName = connectionConfig.serverName,
@@ -381,7 +391,7 @@ abstract class IDataSourceParentServer(
                 resetLoginRetry()
                 emit(ClientLoginInfoState.Connected(clientLoginInfoReq.address))
                 //保存客户端数据
-                createApiClient(
+                initApiClient(
                     address,
                     connectionConfig.deviceId,
                     username = connectionConfig.username,
@@ -424,7 +434,6 @@ abstract class IDataSourceParentServer(
      * 设置token
      */
     abstract fun setToken()
-
 
 
     /**
@@ -1229,15 +1238,6 @@ abstract class IDataSourceParentServer(
 
 
     /**
-     * 汉字转拼音
-     */
-    fun toLatinCompat(text: String): String? {
-        if (text.isBlank()) return null
-        return Pinyin.toPinyin(text[0])
-
-    }
-
-    /**
      * 获得是否可以下载
      */
     fun getCanDownload(): Boolean {
@@ -1328,6 +1328,52 @@ abstract class IDataSourceParentServer(
         updateLibraryIds(this.connectionConfig?.libraryIds, true)
         settingsManager.saveConnectionId(connectionId = connectionConfig.id, connectionConfig.type)
         sendLoginCompleted(LoginStateType.SUCCESS)
+        val shouldSync = shouldSync()
+        if (!shouldSync) return
+        try {
+            Log.i(Constants.LOG_ERROR_PREFIX, "start syncing media library/favorites/counts")
+            db.withTransaction {
+                val remoteId = RemoteIdConstants.MEDIA_LIBRARY_AND_FAVORITE + connectionConfig.id
+
+                initFavoriteData(connectionId = connectionConfig.id)
+                try {
+                    getDataInfoCount(connectionConfig.id)
+                } catch (e: Exception) {
+                    Log.e(
+                        Constants.LOG_ERROR_PREFIX,
+                        "failed to fetch media/album/artist/favorite/genre counts",
+                        e
+                    )
+                }
+
+                try {
+                    getApiClient().ping()
+                } catch (e: Exception) {
+                    tryMarkLoginRetry()
+                    throw e
+                }
+
+                db.remoteCurrentDao.deleteById(remoteId)
+                db.remoteCurrentDao.insertOrReplace(
+                    RemoteCurrent(
+                        id = remoteId,
+                        nextKey = 0,
+                        total = 0,
+                        connectionId = connectionConfig.id,
+                        refresh = false
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "sync media/favorite/count failed", e)
+        }
+    }
+
+    suspend fun shouldSync(): Boolean {
+        val state = db.remoteCurrentDao.remoteKeyById(RemoteIdConstants.MEDIA_LIBRARY_AND_FAVORITE)
+        return (state == null) ||
+                ((Clock.System.now()
+                    .toEpochMilliseconds() - state.createTime) > 10.minutes.inWholeMilliseconds)
     }
 
     fun unConnection() {
@@ -1411,9 +1457,7 @@ abstract class IDataSourceParentServer(
     }
 
     override fun close() {
-        downloadManager.close()
         defaultParentApiClient.release()
-        mediaLibraryAndFavoriteSyncScheduler.cancel()
         TokenServer.clearAllData()
         unConnection()
         sendLoginCompleted(LoginStateType.UNKNOWN)

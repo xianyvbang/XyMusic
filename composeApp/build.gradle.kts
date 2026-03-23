@@ -41,6 +41,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.kotlin.ktor.android)
             implementation(libs.koin.android)
+
             implementation(libs.androidx.media3.exoplayer)
             implementation(libs.androidx.media3.datasource.okhttp)
             // For exposing and controlling media sessions
@@ -48,6 +49,8 @@ kotlin {
             implementation(libs.androidx.media3.exoplayer.hls)
             implementation(libs.androidx.media3.inspector)
             implementation(libs.androidx.media3.workmanager)
+            //拼音相关
+            implementation(libs.tinypinyin)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -76,6 +79,8 @@ kotlin {
             implementation(libs.koin.annotations)
 
             implementation(libs.kotlin.logging)
+
+            implementation(libs.kotlinx.datetime)
 
             implementation(project(path = ":ui"))
             implementation(project(path = ":api"))

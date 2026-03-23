@@ -16,7 +16,7 @@
  *
  */
 
-package cn.xybbz.music
+package cn.xybbz.config.music
 
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 

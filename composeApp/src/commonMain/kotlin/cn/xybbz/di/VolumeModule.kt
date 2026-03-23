@@ -18,26 +18,15 @@
 
 package cn.xybbz.di
 
-import android.content.Context
 import cn.xybbz.config.volume.VolumeServer
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import org.koin.core.annotation.Module
+import org.koin.core.annotation.Singleton
 
 @Module
-@InstallIn(SingletonComponent::class)
-object VolumeModule {
+expect class VolumeModule {
 
-    @Provides
     @Singleton
     fun volumeServer(
-        @ApplicationContext context: Context
-    ): VolumeServer{
-        val volumeServer = VolumeServer()
-        volumeServer.createVolumeManager(context)
-        return volumeServer
-    }
+        contextWrapper: ContextWrapper
+    ): VolumeServer
 }

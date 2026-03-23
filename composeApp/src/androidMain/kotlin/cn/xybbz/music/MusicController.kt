@@ -23,12 +23,6 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.annotation.OptIn
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.media3.common.C
@@ -51,7 +45,8 @@ import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
 import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.config.image.coverImageResolver
-import cn.xybbz.config.scope.IoScoped
+import cn.xybbz.config.music.MusicCommonController
+import cn.xybbz.config.music.PlayerEvent
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.ext.joinToString
@@ -61,10 +56,6 @@ import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import com.google.common.util.concurrent.ListenableFuture
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 
@@ -75,80 +66,12 @@ import kotlinx.coroutines.launch
 class MusicController(
     private val application: Context,
     private val downloadCacheController: DownloadCacheController,
-    private val fadeController: AudioFadeController,
+    private val fadeController: AudioFadeAndroidController,
     private val settingsManager: SettingsManager,
     private val dataSourceManager: DataSourceManager
-) : IoScoped() {
+) : MusicCommonController() {
 
     private val coverImageResolver by lazy { application.applicationContext.coverImageResolver() }
-
-    // 原始歌曲列表
-    var originMusicList by mutableStateOf(emptyList<XyPlayMusic>())
-        private set
-
-    //当前播放歌曲的进度
-    var musicCurrentPositionMap = mutableStateMapOf<String, Long>()
-        private set
-
-    // 当前播放的歌曲在原始歌曲列表中的索引
-    var curOriginIndex by mutableIntStateOf(Constants.MINUS_ONE_INT)
-        private set
-
-    //加载的音乐最大页码
-    var pageNum by mutableIntStateOf(0)
-        private set
-
-    var pageSize by mutableIntStateOf(0)
-        private set
-
-    //当前播放音乐信息
-    var musicInfo by mutableStateOf<XyPlayMusic?>(null)
-        private set
-
-    var picByte: ByteArray? by mutableStateOf(null)
-        private set
-
-    var coverRefreshVersion by mutableIntStateOf(0)
-        private set
-
-    //音频总时长
-    var duration by mutableLongStateOf(0L)
-        private set
-
-    //当前状态
-    var state by mutableStateOf(PlayStateEnum.None)
-        private set
-
-    //播放进度
-    private val _progressStateFlow = MutableStateFlow(0L)
-    val progressStateFlow = _progressStateFlow.asStateFlow()
-
-    //当前播放数据类型
-    var playDataType by mutableStateOf(MusicPlayTypeEnum.FOUNDATION)
-        private set
-
-    //片头跳过时间
-    var headTime by mutableLongStateOf(0L)
-        private set
-
-    //片尾跳过时间
-    var endTime by mutableLongStateOf(0L)
-        private set
-
-    //当前播放模式
-    var playType by mutableStateOf(PlayerTypeEnum.SEQUENTIAL_PLAYBACK)
-        private set
-
-    var ifNextPage = true
-
-    var ifGetNextPageMusicDataIsNullCount:Int = 0
-
-    //事件发送流
-    private val _events = MutableSharedFlow<PlayerEvent>(
-        replay = 0,
-        extraBufferCapacity = 16
-    )
-    val events = _events.asSharedFlow()
 
     lateinit var progressTicker: PlayProgressTicker
         private set
@@ -654,11 +577,11 @@ class MusicController(
             clearMediaItems()
             if (!ifInitPlayerList) {
                 updateState(PlayStateEnum.Loading)
-                musicListSetMediaItems(musicDataList,originIndex)
+                musicListSetMediaItems(musicDataList, originIndex)
                 thisPlay()
             } else {
                 updateState(PlayStateEnum.Pause)
-                musicListSetMediaItems(musicDataList,originIndex)
+                musicListSetMediaItems(musicDataList, originIndex)
                 prepare()
                 pause()
             }
@@ -671,7 +594,7 @@ class MusicController(
     /**
      * XyPlayMusic转换成MediaItem,并且加入到播放列表
      */
-    private fun musicListSetMediaItems(playMusicList: List<XyPlayMusic>,originIndex:Int?){
+    private fun musicListSetMediaItems(playMusicList: List<XyPlayMusic>, originIndex: Int?) {
         val mediaItemList = playMusicList.map { item -> musicSetMediaItem(item) }
         if (originIndex != null)
             mediaController?.setMediaItems(mediaItemList, originIndex, C.TIME_UNSET)
@@ -897,14 +820,14 @@ class MusicController(
      * 更新获取下一页音乐数据为空的次数
      */
     @Synchronized
-    fun updateIfGetNextPageMusicDataIsNullCount(count: Int){
+    fun updateIfGetNextPageMusicDataIsNullCount(count: Int) {
         this.ifGetNextPageMusicDataIsNullCount += count
-        if (this.ifGetNextPageMusicDataIsNullCount >= 3){
+        if (this.ifGetNextPageMusicDataIsNullCount >= 3) {
             updateIfNextPage(false)
         }
     }
 
-    fun updateRestartCount(){
+    fun updateRestartCount() {
         this.ifGetNextPageMusicDataIsNullCount = 0
         updateIfNextPage(true)
     }
@@ -912,7 +835,7 @@ class MusicController(
     /**
      * 更新是否可以加载下一页音乐数据
      */
-    private fun updateIfNextPage(ifNextPage: Boolean){
+    private fun updateIfNextPage(ifNextPage: Boolean) {
         this.ifNextPage = ifNextPage
     }
 

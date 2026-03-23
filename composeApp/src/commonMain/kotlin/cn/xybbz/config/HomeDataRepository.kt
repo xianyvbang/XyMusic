@@ -18,9 +18,9 @@
 
 package cn.xybbz.config
 
-import android.util.Log
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.utils.Log
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.count.XyDataCount
@@ -56,20 +56,20 @@ class HomeDataRepository(
     val dataCount: StateFlow<XyDataCount?> get() = _dataCount
 
 
-   suspend fun initData(){
+    suspend fun initData() {
         loadOnce()
     }
 
     /**
      * 执行登录状态数据监听
      */
-    suspend fun initLoginChangeMonitor(){
+    suspend fun initLoginChangeMonitor() {
         observeFlows()
     }
 
 
     private suspend fun loadOnce() = coroutineScope {
-        Log.d("HomeDataRepository", "loadOnce1 ${TokenServer.baseUrl}")
+        Log.i("HomeDataRepository", "loadOnce1 ${TokenServer.baseUrl}")
         launch {
             _mostPlayedMusic.value =
                 db.musicDao.selectMaximumPlayMusicExtendList(20)
@@ -104,7 +104,7 @@ class HomeDataRepository(
         }
     }
 
-    private suspend fun observeFlows() =coroutineScope{
+    private suspend fun observeFlows() = coroutineScope {
         launch {
             db.musicDao
                 .selectLimitMusicListFlow(MusicDataTypeEnum.MAXIMUM_PLAY, 20)

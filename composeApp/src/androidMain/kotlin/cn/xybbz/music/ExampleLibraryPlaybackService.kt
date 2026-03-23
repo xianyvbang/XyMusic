@@ -52,7 +52,7 @@ import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.lrc.LrcServer
-import cn.xybbz.config.media.MediaServer
+import cn.xybbz.media.MediaServer
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
@@ -104,7 +104,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
     lateinit var dataSourceManager: DataSourceManager
 
     @Inject
-    lateinit var fadeController: AudioFadeController
+    lateinit var fadeController: AudioFadeAndroidController
 
     @Inject
     lateinit var mediaServer: MediaServer

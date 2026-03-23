@@ -18,8 +18,6 @@
 
 package cn.xybbz.api.client.navidrome
 
-import android.util.Log
-import androidx.room.withTransaction
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.data.XyResponse
@@ -32,23 +30,20 @@ import cn.xybbz.api.client.navidrome.data.PlaylistItemData
 import cn.xybbz.api.client.navidrome.data.PlaylistUpdateRequest
 import cn.xybbz.api.client.navidrome.data.SongItem
 import cn.xybbz.api.client.navidrome.data.TranscodingInfo
-import cn.xybbz.api.client.navidrome.data.getWithTotalCount
 import cn.xybbz.api.client.subsonic.data.ArtistID3
 import cn.xybbz.api.client.subsonic.data.ScrobbleRequest
 import cn.xybbz.api.constants.ApiConstants
-import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.CollectionType
 import cn.xybbz.api.enums.navidrome.OrderType
 import cn.xybbz.api.enums.navidrome.SortType
-import cn.xybbz.api.utils.toStringMap
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
+import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PlaylistParser
-import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.NavidromeOrder
@@ -59,6 +54,7 @@ import cn.xybbz.entity.data.ext.toXyMusic
 import cn.xybbz.entity.data.toNavidromeOrder
 import cn.xybbz.entity.data.toNavidromeOrder2
 import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
@@ -69,25 +65,20 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import io.ktor.client.HttpClient
+import io.ktor.client.network.sockets.SocketTimeoutException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
-import java.net.SocketTimeoutException
 
 class NavidromeDatasourceServer(
     private val db: DatabaseClient,
     settingsManager: SettingsManager,
     private val navidromeApiClient: NavidromeApiClient,
-    customMediaApiClient: CustomMediaApiClient,
-    mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
-    downloadManager: DownLoadManager
+    customMediaApiClient: CustomMediaApiClient
 ) : IDataSourceParentServer(
     db,
     settingsManager,
-    application,
     navidromeApiClient,
     customMediaApiClient,
-    mediaLibraryAndFavoriteSyncScheduler,
-    downloadManager
 ) {
     /**
      * 获得当前数据源类型
@@ -98,15 +89,12 @@ class NavidromeDatasourceServer(
 
     /**
      * 创建连接客户端
-     * @param [address] 地址
      */
     override suspend fun createApiClient(
-        address: String,
         deviceId: String,
         username: String,
         password: String
     ) {
-        navidromeApiClient.setRetrofitData(address, ifTmpObject())
     }
 
     /**
@@ -128,15 +116,13 @@ class NavidromeDatasourceServer(
         search: String?
     ): XyResponse<XyArtist> {
         val response =
-            getWithTotalCount {
-                navidromeApiClient.artistsApi().getArtists(
-                    start = startIndex,
-                    end = startIndex + pageSize,
-                    name = search,
-                    starred = isFavorite,
-                    libraryIds = libraryIds
-                )
-            }
+            navidromeApiClient.artistsApi().getArtists(
+                start = startIndex,
+                end = startIndex + pageSize,
+                name = search,
+                starred = isFavorite,
+                libraryIds = libraryIds
+            )
         val artists = response.data?.let { convertToArtistList(it) } ?: emptyList()
         return XyResponse(
             items = artists,
@@ -384,7 +370,7 @@ class NavidromeDatasourceServer(
             genres.await()
             favorite.await()
         }
-        Log.w("数量", "数量信息,$music $album $artist $playlist $genres $favorite")
+        Log.i("数量", "数量信息,$music $album $artist $playlist $genres $favorite")
         updateOrSaveDataInfoCount(music, album, artist, playlist, genres, favorite, connectionId)
 
     }
@@ -837,7 +823,7 @@ class NavidromeDatasourceServer(
      * 获得OkHttpClient
      */
     override fun getHttpClient(): HttpClient {
-        return navidromeApiClient.apiOkHttpClient
+        return navidromeApiClient.httpClient
     }
 
     /**
@@ -861,7 +847,7 @@ class NavidromeDatasourceServer(
             submission = isPaused
         )
         navidromeApiClient.userApi().scrobble(
-            scrobbleRequest.toStringMap()
+            scrobbleRequest
         )
     }
 
@@ -912,7 +898,7 @@ class NavidromeDatasourceServer(
             ).subsonicResponse.songs.toXyMusic(
                 getConnectionId(),
                 createDownloadUrl = { createDownloadUrl(it) },
-                getImageUrl = { coverArt, title ->
+                getImageUrl = { coverArt, _ ->
                     if (coverArt.isNullOrBlank())
                         ""
                     else
@@ -939,7 +925,7 @@ class NavidromeDatasourceServer(
             ).subsonicResponse.topSongs.toXyMusic(
                 getConnectionId(),
                 createDownloadUrl = { createDownloadUrl(it) },
-                getImageUrl = { coverArt, title ->
+                getImageUrl = { coverArt, _ ->
                     if (coverArt.isNullOrBlank())
                         ""
                     else
@@ -1036,7 +1022,7 @@ class NavidromeDatasourceServer(
      * 获得数据源支持的转码类型
      */
     override suspend fun getTranscodingType(): List<TranscodingInfo> {
-        val response = getWithTotalCount { navidromeApiClient.userApi().getTranscodingInfo() }
+        val response = navidromeApiClient.userApi().getTranscodingInfo()
         return response.data ?: emptyList()
     }
 
@@ -1120,21 +1106,19 @@ class NavidromeDatasourceServer(
     ): XyResponse<XyAlbum> {
 
         val albumList =
-            getWithTotalCount {
-                navidromeApiClient.itemApi().getAlbumList(
-                    start = startIndex,
-                    end = startIndex + pageSize,
-                    name = search,
-                    order = orderType,
-                    sort = sortBy,
-                    starred = isFavorite,
-                    year = year,
-                    genreId = genreId,
-                    artistId = artistId,
-                    recentlyPlayed = recentlyPlayed,
-                    libraryIds = libraryIds
-                )
-            }
+            navidromeApiClient.itemApi().getAlbumList(
+                start = startIndex,
+                end = startIndex + pageSize,
+                name = search,
+                order = orderType,
+                sort = sortBy,
+                starred = isFavorite,
+                year = year,
+                genreId = genreId,
+                artistId = artistId,
+                recentlyPlayed = recentlyPlayed,
+                libraryIds = libraryIds
+            )
 
         return XyResponse(
             items = albumList.data?.let { convertToAlbumList(it) },
@@ -1164,21 +1148,19 @@ class NavidromeDatasourceServer(
         sortOrder: OrderType = OrderType.ASC,
     ): XyResponse<XyMusic> {
         val response =
-            getWithTotalCount {
-                navidromeApiClient.itemApi().getSong(
-                    start = startIndex,
-                    end = startIndex + pageSize,
-                    order = sortOrder,
-                    sort = sortBy,
-                    title = search,
-                    starred = isFavorite,
-                    genreIds = genreIds,
-                    albumId = albumId,
-                    artistIds = artistIds,
-                    year = year,
-                    libraryIds = libraryIds
-                )
-            }
+            navidromeApiClient.itemApi().getSong(
+                start = startIndex,
+                end = startIndex + pageSize,
+                order = sortOrder,
+                sort = sortBy,
+                title = search,
+                starred = isFavorite,
+                genreIds = genreIds,
+                albumId = albumId,
+                artistIds = artistIds,
+                year = year,
+                libraryIds = libraryIds
+            )
         return XyResponse(
             items = response.data?.let { convertToMusicList(it, false) },
             totalRecordCount = response.totalCount ?: 0,
@@ -1214,13 +1196,11 @@ class NavidromeDatasourceServer(
         } else {
             //存储歌曲数据
             val playlistMusicList =
-                getWithTotalCount {
-                    navidromeApiClient.playlistsApi().getPlaylistMusicList(
-                        playlistId = itemId, start = startIndex,
-                        end = startIndex + pageSize,
-                        starred = isFavorite
-                    )
-                }
+                navidromeApiClient.playlistsApi().getPlaylistMusicList(
+                    playlistId = itemId, start = startIndex,
+                    end = startIndex + pageSize,
+                    starred = isFavorite
+                )
 
             return XyResponse(
                 items = playlistMusicList.data?.let { convertToMusicList(it, true) },
@@ -1236,14 +1216,12 @@ class NavidromeDatasourceServer(
     suspend fun getPlaylistsServer(startIndex: Int, pageSize: Int): XyResponse<XyAlbum> {
         return try {
             val playlists =
-                getWithTotalCount {
-                    navidromeApiClient.playlistsApi()
-                        .getPlaylists(
-                            start = startIndex,
-                            end = startIndex + pageSize,
-                            libraryIds = libraryIds
-                        )
-                }
+                navidromeApiClient.playlistsApi()
+                    .getPlaylists(
+                        start = startIndex,
+                        end = startIndex + pageSize,
+                        libraryIds = libraryIds
+                    )
             val xyResponse = XyResponse(
                 items = playlists.data?.let { convertToPlaylists(it) },
                 totalRecordCount = playlists.totalCount ?: 0,
@@ -1273,16 +1251,14 @@ class NavidromeDatasourceServer(
         sortBy: SortType = SortType.NAME,
         sortOrder: OrderType = OrderType.ASC
     ): XyResponse<XyGenre> {
-        val genreResponse = getWithTotalCount {
-            navidromeApiClient.genreApi().getGenres(
-                start = startIndex,
-                end = startIndex + pageSize,
-                name = search,
-                order = sortOrder,
-                sort = sortBy,
-                libraryIds = libraryIds
-            )
-        }
+        val genreResponse = navidromeApiClient.genreApi().getGenres(
+            start = startIndex,
+            end = startIndex + pageSize,
+            name = search,
+            order = sortOrder,
+            sort = sortBy,
+            libraryIds = libraryIds
+        )
 
         return XyResponse(
             items = genreResponse.data?.let { convertToGenreList(it) },

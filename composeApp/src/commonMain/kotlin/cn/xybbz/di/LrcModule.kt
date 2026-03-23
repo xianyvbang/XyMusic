@@ -1,36 +1,25 @@
 package cn.xybbz.di
 
-import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.api.client.custom.CustomMediaApiClient
-import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.lrc.LrcServer
-import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.localdata.config.DatabaseClient
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import org.koin.core.annotation.Configuration
+import org.koin.core.annotation.Module
+import org.koin.core.annotation.Singleton
+import org.koin.core.scope.Scope
 
 @Module
-@InstallIn(SingletonComponent::class)
+@Configuration
 class LrcModule {
 
     @Singleton
-    @Provides
     fun lrcServer(
-        musicController: MusicController,
-        dataSourceManager: DataSourceManager,
-        db: DatabaseClient,
-        settingsManager: SettingsManager,
-        customMediaApiClient: CustomMediaApiClient,
+        scope: Scope
     ): LrcServer {
         val lrcServer = LrcServer(
-            musicController,
-            dataSourceManager,
-            db,
-            settingsManager,
-            customMediaApiClient
+            scope.get(),
+            scope.get(),
+            scope.get(),
+            scope.get(),
+            scope.get()
         )
         return lrcServer
     }

@@ -29,6 +29,7 @@ import androidx.media3.common.Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANG
 import androidx.media3.common.Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT
 import androidx.media3.common.Player.MEDIA_ITEM_TRANSITION_REASON_SEEK
 import cn.xybbz.common.enums.PlayStateEnum
+import cn.xybbz.config.music.PlayerEvent
 import cn.xybbz.localdata.data.music.XyPlayMusic
 
 class XyPlayerListener(

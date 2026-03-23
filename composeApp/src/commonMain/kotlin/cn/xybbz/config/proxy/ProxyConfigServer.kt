@@ -18,14 +18,10 @@
 
 package cn.xybbz.config.proxy
 
-import android.webkit.URLUtil
-import cn.xybbz.api.client.data.ProxyConfig
 import cn.xybbz.api.okhttp.proxy.ProxyManager
-import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.AllDataEnum
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.proxy.XyProxyConfig
-import java.net.URI
 
 class ProxyConfigServer(private val db: DatabaseClient) {
 
@@ -45,14 +41,8 @@ class ProxyConfigServer(private val db: DatabaseClient) {
      */
     fun updateProxyConfig() {
         if (proxyConfig.enabled && proxyConfig.address.isNotBlank()) {
-            val addressTmp = getAddress(proxyConfig.address)
-            val parseHostPortSafe = parseHostPortSafe(address = addressTmp)
             ProxyManager.updateProxy(
-                ProxyConfig(
-                    enabled = proxyConfig.enabled,
-                    host = parseHostPortSafe.first,
-                    port = parseHostPortSafe.second
-                )
+                proxyConfig.address
             )
         } else
             ProxyManager.clearProxy()
@@ -68,28 +58,6 @@ class ProxyConfigServer(private val db: DatabaseClient) {
             proxyConfig = get().copy(id = configId)
         }
         updateProxyConfig()
-    }
-
-    fun parseHostPortSafe(address: String): Pair<String, Int> {
-        require(address.isNotBlank()) { "address is blank" }
-
-        val uri = URI(
-            if (URLUtil.isNetworkUrl(address)) address
-            else "http://$address"
-        )
-        require(uri.host != null && uri.port != -1) {
-            "Invalid host:port format"
-        }
-
-        return uri.host to uri.port
-    }
-
-    fun getAddress(address: String): String{
-        var addressTmp = address
-        if (addressTmp.isBlank()) {
-            addressTmp = Constants.DEFAULT_PROXY_ADDRESS
-        }
-        return addressTmp
     }
 
 }

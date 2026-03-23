@@ -18,42 +18,12 @@
 
 package cn.xybbz.di
 
-import android.content.Context
-import androidx.media3.common.util.UnstableApi
-import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.common.music.AudioFadeController
-import cn.xybbz.common.music.DownloadCacheController
-import cn.xybbz.common.music.MusicController
-import cn.xybbz.config.setting.SettingsManager
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import cn.xybbz.config.music.MusicCommonController
+import org.koin.core.annotation.Singleton
+import org.koin.core.scope.Scope
 
-@Module
-@InstallIn(SingletonComponent::class)
-class MusicControllerModule {
+expect class MusicControllerModule {
 
-    @OptIn(UnstableApi::class)
     @Singleton
-    @Provides
-    fun musicController(
-        @ApplicationContext application: Context,
-        downloadCacheController: DownloadCacheController,
-        audioFadeController: AudioFadeController,
-        settingsManager: SettingsManager,
-        dataSourceManager: DataSourceManager
-    ): MusicController {
-        val controller =
-            MusicController(
-                application,
-                downloadCacheController,
-                audioFadeController,
-                settingsManager,
-                dataSourceManager
-            )
-        return controller
-    }
+    fun musicController(wrapper: ContextWrapper, scope: Scope): MusicCommonController
 }

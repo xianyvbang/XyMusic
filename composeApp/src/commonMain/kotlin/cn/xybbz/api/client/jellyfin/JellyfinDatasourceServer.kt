@@ -18,11 +18,6 @@
 
 package cn.xybbz.api.client.jellyfin
 
-import android.icu.math.BigDecimal
-import android.os.Build
-import android.util.Log
-import androidx.room.withTransaction
-import cn.xybbz.R
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.data.XyResponse
@@ -33,7 +28,6 @@ import cn.xybbz.api.client.jellyfin.data.PlaybackStartInfo
 import cn.xybbz.api.client.jellyfin.data.PlaylistUserPermissions
 import cn.xybbz.api.client.jellyfin.data.ViewRequest
 import cn.xybbz.api.client.navidrome.data.TranscodingInfo
-import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.BaseItemKind
 import cn.xybbz.api.enums.jellyfin.CollectionType
@@ -46,15 +40,16 @@ import cn.xybbz.api.enums.jellyfin.MediaStreamType
 import cn.xybbz.api.enums.jellyfin.MediaType
 import cn.xybbz.api.enums.jellyfin.PlayMethod
 import cn.xybbz.api.enums.jellyfin.SortOrder
-import cn.xybbz.api.utils.toStringMap
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.Constants.LYRICS_AMPLIFICATION
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.CharUtils
+import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.PlaylistParser
-import cn.xybbz.config.download.DownLoadManager
+import cn.xybbz.config.info.getPlatformInfo
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.di.ContextWrapper
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchAndOrder
 import cn.xybbz.entity.data.SearchData
@@ -62,6 +57,7 @@ import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.toSearchAndOrder
 import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
@@ -72,9 +68,12 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import io.ktor.client.HttpClient
+import io.ktor.client.network.sockets.SocketTimeoutException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
-import java.net.SocketTimeoutException
+import org.jetbrains.compose.resources.getString
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.unknown_artist
 
 /**
  * Jellyfin api客户端管理
@@ -86,16 +85,12 @@ class JellyfinDatasourceServer(
     settingsManager: SettingsManager,
     private val jellyfinApiClient: JellyfinApiClient,
     customMediaApiClient: CustomMediaApiClient,
-    mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
-    downloadManager: DownLoadManager
+    val contextWrapper: ContextWrapper
 ) : IDataSourceParentServer(
     db,
     settingsManager,
-    application,
     jellyfinApiClient,
-    customMediaApiClient,
-    mediaLibraryAndFavoriteSyncScheduler,
-    downloadManager
+    customMediaApiClient
 ) {
 
     /**
@@ -109,24 +104,14 @@ class JellyfinDatasourceServer(
      * 根据选择的服务端信息生成apiClient
      */
     override suspend fun createApiClient(
-        address: String,
         deviceId: String,
         username: String,
         password: String
     ) {
-        val deviceName = "${Build.BRAND} ${Build.MODEL}"
-        val packageManager = application.packageManager
-        val packageName = application.packageName
-        val packageInfo = packageManager.getPackageInfo(packageName, 0)
-        val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
-        val appName = packageManager.getApplicationLabel(applicationInfo).toString()
-        val versionName = packageInfo.versionName
+        val platformInfo = getPlatformInfo(contextWrapper)
         jellyfinApiClient.createApiClient(
-            appName, "$versionName", deviceId, deviceName
+            platformInfo.appName, platformInfo.platformVersion, deviceId, platformInfo.platformName
         )
-        //提前写入没有sessionToken的Authenticate请求头,不然登录请求都会报错
-        setToken()
-        jellyfinApiClient.setRetrofitData(address, ifTmpObject())
     }
 
     /**
@@ -531,12 +516,12 @@ class JellyfinDatasourceServer(
     /**
      * 获得媒体库列表
      */
-    override suspend fun selectMediaLibraryList(connectionId: Long): List<XyLibrary>? {
+    override suspend fun selectMediaLibraryList(connectionId: Long): List<XyLibrary> {
         val viewLibrary = jellyfinApiClient.userViewsApi().getUserViews(
             ViewRequest(
 //                    includeExternalContent = false,
 //                    presetViews = listOf(CollectionType.MUSIC)
-            ).toStringMap()
+            )
         )
         //存储历史记录
         val libraries =
@@ -718,7 +703,7 @@ class JellyfinDatasourceServer(
         val items = jellyfinApiClient.itemApi().getItems(
             ItemRequest(
                 ids = artistIds, parentId = libraryIds?.get(0)
-            ).toStringMap()
+            )
         ).items
         return convertToArtistList(items)
     }
@@ -763,7 +748,7 @@ class JellyfinDatasourceServer(
                 ),
                 limit = Constants.MIN_PAGE,
                 parentId = libraryIds?.get(0)
-            ).toStringMap()
+            )
         )
         if (albumList.isNotEmpty())
             db.withTransaction {
@@ -780,7 +765,7 @@ class JellyfinDatasourceServer(
      * 获得Okhttp客户端
      */
     override fun getHttpClient(): HttpClient {
-        return jellyfinApiClient.apiOkHttpClient
+        return jellyfinApiClient.httpClient
     }
 
     /**
@@ -799,7 +784,7 @@ class JellyfinDatasourceServer(
         isPaused: Boolean,
         positionTicks: Long?
     ) {
-        Log.i("reportPlaying","上报信息 ${isPaused}, ${positionTicks}")
+        Log.i("reportPlaying", "上报信息 ${isPaused}, $positionTicks")
         jellyfinApiClient.userApi().playing(
             PlaybackStartInfo(
                 itemId = musicId,
@@ -1004,7 +989,7 @@ class JellyfinDatasourceServer(
             ItemRequest(
                 limit = pageSize,
                 userId = getUserId()
-            ).toStringMap()
+            )
         )
         return convertToArtistList(response.items)
     }
@@ -1122,7 +1107,7 @@ class JellyfinDatasourceServer(
                 years = years,
                 genreIds = genreIds,
                 parentId = libraryIds?.get(0)
-            ).toStringMap()
+            )
         )
 
         return XyResponse(
@@ -1185,7 +1170,7 @@ class JellyfinDatasourceServer(
                 albumIds = albumId?.let { listOf(albumId) },
                 parentId = if (parentId.isNullOrBlank()) libraryIds?.get(0) else parentId,
                 path = path
-            ).toStringMap()
+            )
         )
         val items = response.items.map {
             convertToMusic(it)
@@ -1223,7 +1208,7 @@ class JellyfinDatasourceServer(
                 searchTerm = search,
                 isFavorite = isFavorite,
                 parentId = libraryIds?.get(0)
-            ).toStringMap()
+            )
         )
         val artistList = convertToArtistList(response.items)
         return XyResponse(
@@ -1267,7 +1252,7 @@ class JellyfinDatasourceServer(
                 searchTerm = search,
                 imageTypeLimit = 1,
                 parentId = libraryIds?.get(0)
-            ).toStringMap()
+            )
         )
         return XyResponse(
             items = convertToGenreList(genres.items),
@@ -1297,7 +1282,7 @@ class JellyfinDatasourceServer(
                         startIndex = 0,
                         limit = pageSize,
                         userId = getUserId()
-                    ).toStringMap()
+                    )
                 )
             val xyResponse = XyResponse(
                 items = convertToAlbumList(playlists.items, true),
@@ -1315,7 +1300,10 @@ class JellyfinDatasourceServer(
     /**
      * 将ItemResponse转换成XyAlbum
      */
-    fun convertToAlbumList(item: List<ItemResponse>, ifPlaylist: Boolean = false): List<XyAlbum> {
+    suspend fun convertToAlbumList(
+        item: List<ItemResponse>,
+        ifPlaylist: Boolean = false
+    ): List<XyAlbum> {
         return item.map { album ->
             convertToAlbum(album, ifPlaylist)
         }
@@ -1325,7 +1313,7 @@ class JellyfinDatasourceServer(
     /**
      * AlbumResponseVo转换为XyAlbum
      */
-    fun convertToAlbum(
+    suspend fun convertToAlbum(
         item: ItemResponse,
         ifPlaylist: Boolean = false
     ): XyAlbum {
@@ -1343,13 +1331,13 @@ class JellyfinDatasourceServer(
             itemId = item.id,
             pic = itemImageUrl,
             name = item.name
-                ?: if (ifPlaylist) application.getString(Constants.UNKNOWN_PLAYLIST) else application.getString(
+                ?: if (ifPlaylist) getString(Constants.UNKNOWN_PLAYLIST) else getString(
                     Constants.UNKNOWN_ALBUM
                 ),
             connectionId = getConnectionId(),
             artistIds = item.albumArtists?.joinToString { it.id },
             artists = item.albumArtists?.mapNotNull { it.name }?.joinToString()
-                ?: application.getString(Constants.UNKNOWN_ARTIST),
+                ?: getString(Constants.UNKNOWN_ARTIST),
             year = item.productionYear,
             premiereDate = item.productionYear?.toLong(),
             genreIds = item.genreItems?.joinToString { it.id },
@@ -1361,7 +1349,7 @@ class JellyfinDatasourceServer(
         )
     }
 
-    fun convertToMusicList(item: List<ItemResponse>): List<XyMusic> {
+    suspend fun convertToMusicList(item: List<ItemResponse>): List<XyMusic> {
         return item.map { music ->
             convertToMusic(
                 music
@@ -1370,7 +1358,7 @@ class JellyfinDatasourceServer(
     }
 
     //MusicResponseVo转换XyItem
-    fun convertToMusic(item: ItemResponse): XyMusic {
+    suspend fun convertToMusic(item: ItemResponse): XyMusic {
 
         val albumId = item.albumId
         val itemImageUrl =
@@ -1396,7 +1384,7 @@ class JellyfinDatasourceServer(
         return XyMusic(
             itemId = item.id,
             pic = itemImageUrl,
-            name = item.name ?: application.getString(Constants.UNKNOWN_MUSIC),
+            name = item.name ?: getString(Constants.UNKNOWN_MUSIC),
             downloadUrl = createDownloadUrl(item.id),
             album = albumId.toString(),
             albumName = item.album,
@@ -1404,7 +1392,7 @@ class JellyfinDatasourceServer(
             artists = item.artistItems?.mapNotNull { artist -> artist.name },
             artistIds = item.artistItems?.map { artist -> artist.id },
             albumArtist = item.albumArtists?.map { artist -> artist.name.toString() }
-                ?: listOf(application.getString(Constants.UNKNOWN_ARTIST)),
+                ?: listOf(getString(Constants.UNKNOWN_ARTIST)),
             albumArtistIds = item.albumArtists?.map { artist -> artist.id },
             createTime = item.dateCreated ?: 0L,
             year = item.productionYear,
@@ -1417,8 +1405,7 @@ class JellyfinDatasourceServer(
             sampleRate = mediaStream?.sampleRate,
             bitDepth = mediaStream?.bitDepth,
             size = mediaSourceInfo?.size,
-            runTimeTicks = BigDecimal.valueOf(mediaSourceInfo?.runTimeTicks ?: 0)
-                .divide(BigDecimal(10000), BigDecimal.ROUND_UP).toLong(),
+            runTimeTicks = ((mediaSourceInfo?.runTimeTicks ?: 0) / 10000.0).toLong(),
             container = mediaSourceInfo?.container,
             codec = mediaStream?.codec,
             lyric = "",
@@ -1433,7 +1420,7 @@ class JellyfinDatasourceServer(
      * @param [items] 项目
      * @return [List<ArtistItem>]
      */
-    fun convertToArtistList(items: List<ItemResponse>): List<XyArtist> {
+    suspend fun convertToArtistList(items: List<ItemResponse>): List<XyArtist> {
         val xyArtists = items.map { item ->
             val artistImageUrl =
                 if (!item.name.isNullOrBlank() && !item.imageTags.isNullOrEmpty() && item.imageTags?.containsKey(
@@ -1472,7 +1459,7 @@ class JellyfinDatasourceServer(
                 if (!CharUtils.isEnglishLetter(shortNameStart)) "#" else shortNameStart.toString()
             XyArtist(
                 artistId = item.id,
-                name = item.name ?: application.getString(R.string.unknown_artist),
+                name = item.name ?: getString(Res.string.unknown_artist),
                 pic = artistImageUrl,
                 backdrop = backdropImageUrl,
                 connectionId = getConnectionId(),
@@ -1491,7 +1478,7 @@ class JellyfinDatasourceServer(
     /**
      * 将Genre转换成XyGenre
      */
-    fun convertToGenreList(genres: List<ItemResponse>): List<XyGenre> {
+    suspend fun convertToGenreList(genres: List<ItemResponse>): List<XyGenre> {
         return genres.map {
             convertToGenre(it)
         }
@@ -1500,7 +1487,7 @@ class JellyfinDatasourceServer(
     /**
      * 将ItemResponse转换成XyGenre
      */
-    fun convertToGenre(item: ItemResponse): XyGenre {
+    suspend fun convertToGenre(item: ItemResponse): XyGenre {
         val itemImageUrl = item.imageTags?.get(ImageType.PRIMARY)?.let {
             jellyfinApiClient.createImageUrl(
                 itemId = item.id,
@@ -1514,7 +1501,7 @@ class JellyfinDatasourceServer(
         return XyGenre(
             itemId = item.id,
             pic = itemImageUrl ?: "",
-            name = item.name ?: application.getString(Constants.UNKNOWN_ALBUM),
+            name = item.name ?: getString(Constants.UNKNOWN_ALBUM),
             connectionId = getConnectionId(),
             createTime = item.dateCreated ?: 0L
         )

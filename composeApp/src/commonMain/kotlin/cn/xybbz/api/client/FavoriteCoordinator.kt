@@ -1,7 +1,7 @@
 package cn.xybbz.api.client
 
 import cn.xybbz.common.enums.MusicTypeEnum
-import cn.xybbz.common.music.MusicController
+import cn.xybbz.config.music.MusicCommonController
 
 object FavoriteCoordinator {
 
@@ -10,7 +10,7 @@ object FavoriteCoordinator {
         type: MusicTypeEnum,
         itemId: String,
         ifFavorite: Boolean,
-        musicController: MusicController? = null
+        musicController: MusicCommonController? = null
     ): Boolean {
         val favorite = dataSourceManager.setFavoriteData(
             type = type,

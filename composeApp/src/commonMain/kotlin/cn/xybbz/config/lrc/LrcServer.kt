@@ -18,7 +18,6 @@
 
 package cn.xybbz.config.lrc
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -28,8 +27,9 @@ import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.custom.data.CustomLyricsQuery
 import cn.xybbz.common.enums.AllDataEnum
 import cn.xybbz.common.enums.LrcDataType
-import cn.xybbz.common.music.MusicController
+import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.LrcUtils.getIndex
+import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LrcEntryData
@@ -44,12 +44,12 @@ import kotlin.coroutines.CoroutineContext
 
 
 class LrcServer(
-    private val musicController: MusicController,
+    private val musicController: MusicCommonController,
     private val dataSourceManager: DataSourceManager,
     private val db: DatabaseClient,
     private val settingsManager: SettingsManager,
     private val customMediaApiClient: CustomMediaApiClient
-) : IoScoped(){
+) : IoScoped() {
 
     /**
      * 歌词信息
@@ -68,7 +68,7 @@ class LrcServer(
     var lrcConfig: XyLrcConfig? by mutableStateOf(null)
         private set
 
-    fun init(coroutineContext: CoroutineContext){
+    fun init(coroutineContext: CoroutineContext) {
         createScope(coroutineContext)
         scope.launch {
             combine(
@@ -98,9 +98,13 @@ class LrcServer(
                 musicController.musicInfo?.itemId?.let { itemId ->
                     val settings = settingsManager.get()
                     val musicLyricList = if (settings.ifPriorityMusicApi) {
-                        getMusicLyricListByMusicService(itemId) ?: getMusicLyricListByCustomApi(itemId)
+                        getMusicLyricListByMusicService(itemId) ?: getMusicLyricListByCustomApi(
+                            itemId
+                        )
                     } else {
-                        getMusicLyricListByCustomApi(itemId) ?: getMusicLyricListByMusicService(itemId)
+                        getMusicLyricListByCustomApi(itemId) ?: getMusicLyricListByMusicService(
+                            itemId
+                        )
                     }
                     if (!musicLyricList.isNullOrEmpty())
                         createLrcList(musicLyricList, LrcDataType.NETWORK)

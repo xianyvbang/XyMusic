@@ -19,7 +19,6 @@
 package cn.xybbz.di
 
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.emby.EmbyApiClient
 import cn.xybbz.api.client.emby.EmbyDatasourceServer
@@ -32,18 +31,14 @@ import cn.xybbz.api.client.plex.PlexDatasourceServer
 import cn.xybbz.api.client.subsonic.SubsonicApiClient
 import cn.xybbz.api.client.subsonic.SubsonicDatasourceServer
 import cn.xybbz.api.client.version.VersionApiClient
-import cn.xybbz.api.dispatchs.MediaLibraryAndFavoriteSyncScheduler
 import cn.xybbz.config.alarm.AlarmConfig
-import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.enums.DataSourceType
 import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.Module
-import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
-import kotlin.jvm.JvmSuppressWildcards
 
 @Module
 @Configuration
@@ -55,17 +50,13 @@ class DataSourceModule {
         db: DatabaseClient,
         settingsManager: SettingsManager,
         jellyfinApiClient: JellyfinApiClient,
-        customMediaApiClient: CustomMediaApiClient,
-        mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
-        downloadManager: DownLoadManager
+        customMediaApiClient: CustomMediaApiClient
     ): JellyfinDatasourceServer {
         return JellyfinDatasourceServer(
             db,
             settingsManager,
             jellyfinApiClient,
-            customMediaApiClient,
-            mediaLibraryAndFavoriteSyncScheduler,
-            downloadManager
+            customMediaApiClient
         )
     }
 
@@ -76,16 +67,12 @@ class DataSourceModule {
         settingsManager: SettingsManager,
         subsonicApiClient: SubsonicApiClient,
         customMediaApiClient: CustomMediaApiClient,
-        mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
-        downloadManager: DownLoadManager
     ): SubsonicDatasourceServer {
         return SubsonicDatasourceServer(
             db,
             settingsManager,
             subsonicApiClient,
-            customMediaApiClient,
-            mediaLibraryAndFavoriteSyncScheduler,
-            downloadManager
+            customMediaApiClient
         )
     }
 
@@ -96,16 +83,12 @@ class DataSourceModule {
         settingsManager: SettingsManager,
         navidromeApiClient: NavidromeApiClient,
         customMediaApiClient: CustomMediaApiClient,
-        mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
-        downloadManager: DownLoadManager
     ): NavidromeDatasourceServer {
         return NavidromeDatasourceServer(
             db,
             settingsManager,
             navidromeApiClient,
             customMediaApiClient,
-            mediaLibraryAndFavoriteSyncScheduler,
-            downloadManager
         )
     }
 
@@ -116,16 +99,12 @@ class DataSourceModule {
         settingsManager: SettingsManager,
         embyApiClient: EmbyApiClient,
         customMediaApiClient: CustomMediaApiClient,
-        mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
-        downloadManager: DownLoadManager
     ): EmbyDatasourceServer {
         return EmbyDatasourceServer(
             db,
             settingsManager,
             embyApiClient,
             customMediaApiClient,
-            mediaLibraryAndFavoriteSyncScheduler,
-            downloadManager
         )
     }
 
@@ -137,16 +116,12 @@ class DataSourceModule {
         settingsManager: SettingsManager,
         plexApiClient: PlexApiClient,
         customMediaApiClient: CustomMediaApiClient,
-        mediaLibraryAndFavoriteSyncScheduler: MediaLibraryAndFavoriteSyncScheduler,
-        downloadManager: DownLoadManager,
     ): PlexDatasourceServer {
         return PlexDatasourceServer(
             db,
             settingsManager,
             plexApiClient,
             customMediaApiClient,
-            mediaLibraryAndFavoriteSyncScheduler,
-            downloadManager
         )
     }
 

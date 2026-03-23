@@ -16,9 +16,8 @@
  *
  */
 
-package cn.xybbz.config.media
+package cn.xybbz.media
 
-import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.Metadata
 import androidx.media3.common.util.UnstableApi
@@ -27,6 +26,7 @@ import androidx.media3.extractor.metadata.id3.CommentFrame
 import androidx.media3.extractor.metadata.id3.TextInformationFrame
 import androidx.media3.extractor.metadata.vorbis.VorbisComment
 import cn.xybbz.common.enums.LrcDataType
+import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.config.lrc.LrcServer
 import java.nio.charset.Charset
@@ -73,6 +73,7 @@ class MediaServer(
         lrcServer.getMusicLyricList()
     }
 
+    @OptIn(UnstableApi::class)
     fun readMp3Lyrics(entry: BinaryFrame): String? {
         if (entry.id == "USLT") {
             val data = entry.data
@@ -94,6 +95,6 @@ class MediaServer(
     }
 
     fun logd(msg: String) {
-        Log.d(DEFAULT_TAG, msg)
+        Log.i(DEFAULT_TAG, msg)
     }
 }

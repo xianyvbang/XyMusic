@@ -18,8 +18,16 @@
 
 package cn.xybbz.common.constants
 
-import androidx.annotation.StringRes
-import cn.xybbz.R
+import org.jetbrains.compose.resources.StringResource
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.plex_album_collection_title
+import xymusic_kmp.composeapp.generated.resources.plex_artist_collection_title
+import xymusic_kmp.composeapp.generated.resources.plex_music_collection_title
+import xymusic_kmp.composeapp.generated.resources.unknown
+import xymusic_kmp.composeapp.generated.resources.unknown_album
+import xymusic_kmp.composeapp.generated.resources.unknown_artist
+import xymusic_kmp.composeapp.generated.resources.unknown_music
+import xymusic_kmp.composeapp.generated.resources.unknown_playlist
 
 object Constants {
 
@@ -74,29 +82,29 @@ object Constants {
     /**
      * 音乐名称为空时显示内容: 未知音乐
      */
-    @StringRes
-    val UNKNOWN_MUSIC: Int = R.string.unknown_music
+    
+    val UNKNOWN_MUSIC: StringResource = Res.string.unknown_music
 
     /**
      * 专辑名称为空时显示内容: 未知专辑
      */
-    @StringRes
-    val UNKNOWN_ALBUM: Int = R.string.unknown_album
+    
+    val UNKNOWN_ALBUM: StringResource = Res.string.unknown_album
 
     /**
      * 艺术家名称为空时显示内容: 未知艺术家
      */
-    @StringRes
-    val UNKNOWN_ARTIST: Int = R.string.unknown_artist
+    
+    val UNKNOWN_ARTIST: StringResource = Res.string.unknown_artist
 
     /**
      * 歌单名称为空时显示内容: 未知歌单
      */
-    @StringRes
-    val UNKNOWN_PLAYLIST: Int = R.string.unknown_playlist
+    
+    val UNKNOWN_PLAYLIST: StringResource = Res.string.unknown_playlist
 
-    @StringRes
-    val UNKNOWN: Int = R.string.unknown
+    
+    val UNKNOWN: StringResource = Res.string.unknown
 
     /**
      * MusicPlayer自定义按钮主动调用类型
@@ -172,20 +180,20 @@ object Constants {
     /**
      * plex音乐收藏collection的名称
      */
-    @StringRes
-    val PLEX_MUSIC_COLLECTION_TITLE: Int = R.string.plex_music_collection_title
+    
+    val PLEX_MUSIC_COLLECTION_TITLE: StringResource = Res.string.plex_music_collection_title
 
     /**
      * plex专辑收藏collection的名称
      */
-    @StringRes
-    val PLEX_ALBUM_COLLECTION_TITLE: Int = R.string.plex_album_collection_title
+    
+    val PLEX_ALBUM_COLLECTION_TITLE: StringResource = Res.string.plex_album_collection_title
 
     /**
      * plex艺术家收藏collection的名称
      */
-    @StringRes
-    val PLEX_ARTIST_COLLECTION_TITLE: Int = R.string.plex_artist_collection_title
+    
+    val PLEX_ARTIST_COLLECTION_TITLE: StringResource = Res.string.plex_artist_collection_title
 
     /**
      * 下载唯一id

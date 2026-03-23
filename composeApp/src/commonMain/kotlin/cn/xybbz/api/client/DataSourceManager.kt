@@ -40,7 +40,6 @@ import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.common.utils.PlaylistParser
-import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.entity.data.LoginStateData
 import cn.xybbz.entity.data.LrcEntryData
@@ -111,7 +110,6 @@ import xymusic_kmp.composeapp.generated.resources.server_connection_timeout
  */
 open class DataSourceManager(
     private val db: DatabaseClient,
-    private val alarmConfig: AlarmConfig,
     private val versionApiClient: VersionApiClient,
 ) : IDataSourceServer, IoScoped(), KoinComponent {
 
@@ -1244,8 +1242,6 @@ open class DataSourceManager(
         dataSourceServer.close()
         dataSourceServerFlow.value = null
         dataSourceType = null
-        //取消定时任务
-        alarmConfig.cancelAllAlarm()
     }
 
     override fun close() {

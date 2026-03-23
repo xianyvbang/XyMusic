@@ -82,7 +82,8 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
                 proxy = ProxyManager.proxySelector().config
             }
             install(DefaultRequest) {
-                url(baseUrl)
+                if (baseUrl.isNotBlank())
+                    url(baseUrl)
                 headers {
                     append(tokenHeaderName, createToken())
                     val bool = headers.contains(ApiConstants.CUSTOM_IMAGE_HEADER_NAME)

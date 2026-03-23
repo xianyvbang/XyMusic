@@ -20,13 +20,14 @@ package cn.xybbz.music
 
 import android.media.AudioTrack
 import android.media.VolumeShaper
+import cn.xybbz.config.music.AudioFadeController
 import cn.xybbz.config.scope.IoScoped
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class AudioFadeController() : IoScoped() {
+class AudioFadeAndroidController() : IoScoped(),AudioFadeController {
 
     private var currentTrack: AudioTrack? = null
     private var volumeShaper: VolumeShaper? = null

@@ -18,15 +18,10 @@
 
 package cn.xybbz.common.utils
 
-import android.annotation.SuppressLint
-import android.icu.math.BigDecimal
-import android.icu.util.Calendar
-import android.text.format.DateFormat
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
+import androidx.compose.ui.input.key.Key.Companion.Calendar
+import androidx.compose.ui.text.intl.Locale
+import kotlinx.datetime.LocalDateTime
+
 
 object DateUtil {
 
@@ -35,7 +30,6 @@ object DateUtil {
      * @param pattern 时间样式 yyyy-MM-dd HH:mm:ss
      * @return [String] 时间字符串
      */
-    @SuppressLint("SimpleDateFormat")
     fun Long.toDateStr(pattern: String = "yyyy-MM-dd HH:mm:ss"): String {
         val inTimeInMillis = if (this < 1_000_000_000_000L) this * 1000 else this
         return DateFormat.format(pattern, inTimeInMillis).toString()

@@ -52,14 +52,12 @@ import androidx.media3.exoplayer.drm.KeyRequestInfo
 import androidx.media3.exoplayer.source.LoadEventInfo
 import androidx.media3.exoplayer.source.MediaLoadData
 import androidx.media3.extractor.metadata.id3.BinaryFrame
-import cn.xybbz.config.media.MediaServer
+import cn.xybbz.media.MediaServer
 import java.io.IOException
 import java.nio.charset.Charset
 import java.text.NumberFormat
 import java.util.Locale
-import kotlin.collections.get
 import kotlin.math.min
-import kotlin.text.iterator
 
 @SuppressLint("UnsafeOptInUsageError")
 
