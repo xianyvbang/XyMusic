@@ -81,6 +81,9 @@ kotlin {
             implementation(libs.kotlin.logging)
 
             implementation(libs.kotlinx.datetime)
+            implementation(libs.cryptography.core)
+            implementation(libs.cryptography.provider.optimal)
+            implementation(libs.cryptography.random)
 
             implementation(project(path = ":ui"))
             implementation(project(path = ":api"))
