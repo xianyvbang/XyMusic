@@ -2,6 +2,7 @@ package cn.xybbz
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.systemBars
@@ -12,15 +13,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.localdata.enums.ThemeTypeEnum
+import cn.xybbz.ui.popup.XyPopTipHost
 import cn.xybbz.ui.screens.MainScreen
 import cn.xybbz.ui.theme.XyConfigs
 import cn.xybbz.ui.theme.XyTheme
 import coil3.ImageLoader
+import coil3.annotation.ExperimentalCoilApi
 import coil3.compose.setSingletonImageLoaderFactory
 import coil3.network.ktor3.KtorNetworkFetcherFactory
 import coil3.request.crossfade
 import org.koin.compose.getKoin
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 //@Preview
 fun App() {
@@ -41,7 +45,6 @@ fun App() {
         ThemeTypeEnum.DARK -> true
         ThemeTypeEnum.LIGHT -> false
     }
-    DialogX.globalTheme = if (isDark) DialogX.THEME.DARK else DialogX.THEME.LIGHT
 
     XyTheme(
         xyConfigs = XyConfigs(
@@ -54,7 +57,10 @@ fun App() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            MainScreen()
+            Box(modifier = Modifier.fillMaxSize()) {
+                MainScreen()
+                XyPopTipHost()
+            }
         }
     }
 }
