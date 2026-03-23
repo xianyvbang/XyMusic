@@ -81,16 +81,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import androidx.core.graphics.scale
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.palette.graphics.Palette
 import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.MessageUtils
-import cn.xybbz.common.utils.ResourcesUtils.drawableToBitmap
+import cn.xybbz.common.utils.ResourcesUtils.readPaletteColor
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
@@ -646,19 +644,7 @@ private fun ImageCover(
         fallback = painterResource(Res.drawable.music_xy_placeholder_foreground),
         contentDescription = stringResource(Res.string.music_cover),
         onSuccess = {
-            val drawable = it.result.image
-            val bitmap = drawableToBitmap(drawable)
-            bitmap?.let {
-                val scaledBitmap = bitmap.scale(200, 200, false)
-                Palette.from(scaledBitmap).generate { palette ->
-                    val colorValue = palette?.darkMutedSwatch?.rgb
-                        ?: palette?.mutedSwatch?.rgb
-                        ?: palette?.darkVibrantSwatch?.rgb
-                        ?: palette?.vibrantSwatch?.rgb
-                        ?: palette?.dominantSwatch?.rgb
-                    onSetColor.invoke(colorValue?.let { Color(it) } ?: Color.Transparent)
-                }
-            }
+            readPaletteColor(it.result.image, onSetColor)
         },
         onError = {
             onSetColor.invoke(Color.Transparent)
