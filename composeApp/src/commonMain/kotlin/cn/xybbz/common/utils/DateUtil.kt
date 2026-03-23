@@ -18,12 +18,28 @@
 
 package cn.xybbz.common.utils
 
-import androidx.compose.ui.input.key.Key.Companion.Calendar
-import androidx.compose.ui.text.intl.Locale
 import kotlinx.datetime.LocalDateTime
-
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format.FormatStringsInDatetimeFormats
+import kotlinx.datetime.format.byUnicodePattern
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
+import kotlin.math.roundToInt
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 object DateUtil {
+    private val systemTimeZone: TimeZone
+        get() = TimeZone.currentSystemDefault()
+
+    @OptIn(FormatStringsInDatetimeFormats::class)
+    private fun dateTimeFormat(pattern: String) = LocalDateTime.Format {
+        byUnicodePattern(pattern)
+    }
+
+    private fun Long.toEpochMilliseconds(): Long {
+        return if (this < 1_000_000_000_000L) this * 1000 else this
+    }
 
     /**
      * 时间戳转换成字符窜
@@ -31,8 +47,10 @@ object DateUtil {
      * @return [String] 时间字符串
      */
     fun Long.toDateStr(pattern: String = "yyyy-MM-dd HH:mm:ss"): String {
-        val inTimeInMillis = if (this < 1_000_000_000_000L) this * 1000 else this
-        return DateFormat.format(pattern, inTimeInMillis).toString()
+        val localDateTime = Instant
+            .fromEpochMilliseconds(toEpochMilliseconds())
+            .toLocalDateTime(systemTimeZone)
+        return dateTimeFormat(pattern).format(localDateTime)
     }
 
     /**
@@ -41,9 +59,8 @@ object DateUtil {
      * @return [String] 时间字符串
      */
     fun String.toDateLong(pattern: String = "yyyy-MM-dd HH:mm:ss"): Long {
-        val formatter = DateTimeFormatter.ofPattern(pattern, Locale.getDefault())
-        val localDateTime = LocalDateTime.parse(this, formatter)
-        return localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val localDateTime = LocalDateTime.parse(this, dateTimeFormat(pattern))
+        return localDateTime.toInstant(systemTimeZone).toEpochMilliseconds()
     }
 
     /**
@@ -75,25 +92,28 @@ object DateUtil {
         minute: Int,
         second: Int
     ): Long {
-        val calendar = Calendar.getInstance()
-        calendar.set(year, month - 1, day, hour, minute, second)
-        calendar.set(Calendar.MILLISECOND, 0)
-        return calendar.timeInMillis
+        return LocalDateTime(
+            year = year,
+            month = month,
+            day = day,
+            hour = hour,
+            minute = minute,
+            second = second
+        ).toInstant(systemTimeZone).toEpochMilliseconds()
     }
 
     fun millisecondsToTime(milliseconds: Long): String {
-        val instant = Instant.ofEpochMilli(milliseconds)
-        val formatter = DateTimeFormatter.ofPattern("mm:ss").withZone(ZoneId.systemDefault())
-        return formatter.format(instant)
+        val totalSeconds = (milliseconds / 1000).coerceAtLeast(0)
+        val minutes = totalSeconds / 60
+        val seconds = totalSeconds % 60
+        return "${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
     }
 
     /**
      * 获得当前年
      */
     fun thisYear(): Int {
-        val calendar = Calendar.getInstance()
-        val year = calendar.get(Calendar.YEAR)
-        return year
+        return Clock.System.now().toLocalDateTime(systemTimeZone).year
     }
 
     /**
@@ -117,10 +137,8 @@ object DateUtil {
         }
     }
 
-    fun Long.toSecondMs():Float {
-        val div = BigDecimal(this).divide(BigDecimal.valueOf(1000), 2,
-            BigDecimal.ROUND_HALF_UP)
-        return div.toFloat()
+    fun Long.toSecondMs(): Float {
+        return ((this.toDouble() / 1000.0) * 100).roundToInt() / 100f
     }
 
 }
