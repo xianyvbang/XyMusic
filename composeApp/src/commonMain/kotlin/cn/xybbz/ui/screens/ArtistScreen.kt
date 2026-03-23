@@ -1,4 +1,4 @@
-package cn.xybbz.ui.screens
+﻿package cn.xybbz.ui.screens
 
 
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,12 +15,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.router.ArtistInfo
@@ -62,7 +62,7 @@ fun ArtistScreen(
             modifier = Modifier.statusBarsPadding(),
             title = {
                 TopAppBarTitle(
-                    title = stringResource(R.string.artist)
+                    title = stringResource(Res.string.artist)
                 )
             }, navigationIcon = {
                 IconButton(
@@ -72,7 +72,7 @@ fun ArtistScreen(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.return_home)
+                        contentDescription = stringResource(Res.string.return_home)
                     )
                 }
             }, actions = {
@@ -91,8 +91,8 @@ fun ArtistScreen(
                     Icon(
                         imageVector = if (artistViewModel.ifFavorite == true) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
                         contentDescription = if (artistViewModel.ifFavorite == true) stringResource(
-                            R.string.get_all_artists
-                        ) else stringResource(R.string.get_favorite_artists),
+                            Res.string.get_all_artists
+                        ) else stringResource(Res.string.get_favorite_artists),
                         tint = Color.Red
                     )
                 }
@@ -134,3 +134,4 @@ fun ArtistScreen(
         }
     }
 }
+

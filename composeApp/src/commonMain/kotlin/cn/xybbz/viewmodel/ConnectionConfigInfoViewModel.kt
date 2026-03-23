@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -25,7 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.utils.MessageUtils
@@ -175,7 +175,7 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
                 )
             }
 
-        MessageUtils.sendPopTipSuccess(R.string.modify_success)
+        MessageUtils.sendPopTipSuccess(Res.string.modify_success)
     }
 
     /**
@@ -183,7 +183,7 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
      */
     fun saveAddress() {
         if (address.isBlank()) {
-            MessageUtils.sendPopTip(R.string.connection_address_cannot_be_empty)
+            MessageUtils.sendPopTip(Res.string.connection_address_cannot_be_empty)
             return
         }
     }
@@ -193,7 +193,7 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
      */
     fun saveName() {
         if (connectionName.isBlank()) {
-            MessageUtils.sendPopTip(R.string.alias_cannot_be_empty)
+            MessageUtils.sendPopTip(Res.string.alias_cannot_be_empty)
             return
         }
     }
@@ -202,3 +202,4 @@ class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
         return dataSourceManager.getConnectionId()
     }
 }
+

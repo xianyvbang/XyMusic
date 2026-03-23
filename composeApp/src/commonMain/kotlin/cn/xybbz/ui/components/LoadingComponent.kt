@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -44,10 +44,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyTextSubSmall
@@ -67,7 +67,7 @@ data class LoadingObject constructor(
         }
     }
 ) {
-    var message by mutableIntStateOf(R.string.loading)
+    var message by mutableIntStateOf(Res.string.loading)
         private set
     var progress: Float? by mutableStateOf(null)
         private set
@@ -140,3 +140,4 @@ fun LoadingObject.show() {
 fun LoadingObject.dismiss() = apply {
     loadingObjectList.remove(this@dismiss)
 }
+

@@ -1,4 +1,4 @@
-package cn.xybbz.ui.components
+﻿package cn.xybbz.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -8,9 +8,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 
 @Composable
@@ -32,7 +32,7 @@ fun ScreenLazyColumn(
             items()
             item {
                 LazyLoadingAndStatus(
-                    stringResource(R.string.reached_bottom),
+                    stringResource(Res.string.reached_bottom),
                     ifLoading = false
                 )
             }

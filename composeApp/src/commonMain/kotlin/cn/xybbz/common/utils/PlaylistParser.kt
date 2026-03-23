@@ -1,8 +1,5 @@
 package cn.xybbz.common.utils
 
-import java.io.File
-import java.nio.charset.Charset
-
 /**
  * 播放列表解析工具类
  * 支持 M3U8 / TXT 格式

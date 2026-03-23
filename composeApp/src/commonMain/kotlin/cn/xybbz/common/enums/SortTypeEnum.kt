@@ -1,4 +1,4 @@
-package cn.xybbz.common.enums
+﻿package cn.xybbz.common.enums
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
@@ -8,7 +8,7 @@ import androidx.compose.material.icons.rounded.MoreTime
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.ui.graphics.vector.ImageVector
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import org.jetbrains.compose.resources.StringResource
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.sort_by_album_name_asc

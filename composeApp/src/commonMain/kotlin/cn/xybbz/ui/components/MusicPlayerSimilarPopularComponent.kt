@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -29,8 +29,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
-import cn.xybbz.R
+import org.jetbrains.compose.resources.stringResource
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
@@ -66,7 +66,7 @@ fun MusicPlayerSimilarPopularComponent(
                     vertical = XyTheme.dimens.outerVerticalPadding,
                     horizontal = XyTheme.dimens.outerHorizontalPadding
                 ),
-                text = stringResource(R.string.top_music)
+                text = stringResource(Res.string.top_music)
             )
         }
         if (mainViewModel.popularMusicList.isEmpty())
@@ -101,7 +101,7 @@ fun MusicPlayerSimilarPopularComponent(
                     vertical = XyTheme.dimens.outerVerticalPadding,
                     horizontal = XyTheme.dimens.outerHorizontalPadding
                 ),
-                text = stringResource(R.string.similar_music)
+                text = stringResource(Res.string.similar_music)
             )
         }
 

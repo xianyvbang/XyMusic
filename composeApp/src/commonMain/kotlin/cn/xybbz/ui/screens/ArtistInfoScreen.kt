@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -96,8 +96,8 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
@@ -108,7 +108,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.TabListEnum
 import cn.xybbz.compositionLocal.LocalNavigator
@@ -504,10 +504,10 @@ fun ArtistInfoScreen(
                     .height(DefaultImageHeight),
                 model = artistBackdropUrls.primaryUrl ?: artistCoverUrls.primaryUrl,
                 backModel = artistBackdropUrls.fallbackUrl ?: artistCoverUrls.fallbackUrl,
-                placeholder = painterResource(R.drawable.artrist_info),
-                error = painterResource(R.drawable.artrist_info),
-                fallback = painterResource(R.drawable.artrist_info),
-                contentDescription = stringResource(R.string.artist_cover),
+                placeholder = painterResource(Res.drawable.artrist_info),
+                error = painterResource(Res.drawable.artrist_info),
+                fallback = painterResource(Res.drawable.artrist_info),
+                contentDescription = stringResource(Res.string.artist_cover),
 //                alpha = (topBarAlpha - 1) * -1
             )
 
@@ -585,8 +585,8 @@ fun ArtistInfoScreen(
                                     Icon(
                                         imageVector = if (artistInfoViewModel.ifFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
                                         contentDescription = if (artistInfoViewModel.ifFavorite) stringResource(
-                                            R.string.favorite_added
-                                        ) else stringResource(R.string.favorite_removed),
+                                            Res.string.favorite_added
+                                        ) else stringResource(Res.string.favorite_removed),
                                         tint = Color.Red
                                     )
                                 }
@@ -609,7 +609,7 @@ fun ArtistInfoScreen(
                                 ) {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = stringResource(R.string.return_home)
+                                        contentDescription = stringResource(Res.string.return_home)
                                     )
                                 }
                             }
@@ -692,7 +692,7 @@ fun ArtistInfoScreen(
                             Spacer(modifier = Modifier.height(XyTheme.dimens.corner))
                             BasicText(
                                 text = artistInfoViewModel.artistDescribe
-                                    ?: stringResource(R.string.no_description),
+                                    ?: stringResource(Res.string.no_description),
                                 modifier = Modifier
                                     .graphicsLayer {
                                         translationY = headerDescriptionTranslationY
@@ -889,7 +889,7 @@ fun ArtistInfoScreen(
                                             }
                                             item(span = { GridItemSpan(maxLineSpan) }) {
                                                 LazyLoadingAndStatus(
-                                                    text = stringResource(R.string.reached_bottom),
+                                                    text = stringResource(Res.string.reached_bottom),
                                                     ifLoading = false
                                                 )
                                             }
@@ -954,7 +954,7 @@ private fun ArtistMusicListOperation(
             }) {
                 Icon(
                     imageVector = Icons.Rounded.Close,
-                    contentDescription = stringResource(R.string.close_selection)
+                    contentDescription = stringResource(Res.string.close_selection)
                 )
             }
         } else {
@@ -964,9 +964,9 @@ private fun ArtistMusicListOperation(
             ) {
                 Icon(
                     imageVector = Icons.Rounded.PlayCircle,
-                    contentDescription = stringResource(R.string.start_playback)
+                    contentDescription = stringResource(Res.string.start_playback)
                 )
-                Text(text = stringResource(R.string.start_playback))
+                Text(text = stringResource(Res.string.start_playback))
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -981,7 +981,7 @@ private fun ArtistMusicListOperation(
                 }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Rounded.PlaylistAddCheck,
-                        contentDescription = stringResource(R.string.select)
+                        contentDescription = stringResource(Res.string.select)
                     )
                 }
             }
@@ -1013,3 +1013,4 @@ private fun calculatePullDownDeltaWithResistance(
     val resistanceFactor = (1f / (1f + normalized)).coerceIn(0.08f, 1f)
     return deltaY * resistanceFactor
 }
+

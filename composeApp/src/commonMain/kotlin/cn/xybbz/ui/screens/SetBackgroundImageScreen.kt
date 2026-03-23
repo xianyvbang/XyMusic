@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -48,9 +48,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
@@ -103,7 +103,7 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
                 modifier = Modifier.statusBarsPadding(),
                 title = {
                     TopAppBarTitle(
-                        title = stringResource(R.string.background_image_setting)
+                        title = stringResource(Res.string.background_image_setting)
                     )
                 },
                 navigationIcon = {
@@ -114,7 +114,7 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.return_interface_settings)
+                            contentDescription = stringResource(Res.string.return_interface_settings)
                         )
                     }
                 },
@@ -126,13 +126,13 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
                         TextButton(onClick = composeClick() {
                             pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                         }) {
-                            Text(text = stringResource(R.string.select_image))
+                            Text(text = stringResource(Res.string.select_image))
                         }
 
                         TextButton(onClick = composeClick() {
                             setBackgroundImageViewModel.updateBackgroundImageUri(null)
                         }, enabled = ifSelectImage) {
-                            Text(text = stringResource(R.string.clear_image))
+                            Text(text = stringResource(Res.string.clear_image))
                         }
                     }
                 }
@@ -156,3 +156,4 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
 
 
 }
+

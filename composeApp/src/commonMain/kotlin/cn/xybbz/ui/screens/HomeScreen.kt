@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -78,14 +78,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.UiConstants.MusicCardImageSize
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.img
@@ -153,11 +153,11 @@ fun HomeScreen(
         skipPartiallyExpanded = true
     )
 
-    val deletePlaylist = stringResource(R.string.delete_playlist)
-    val loginExceptionInfo = stringResource(R.string.login_exception_info)
-    val newPlaylist = stringResource(R.string.new_playlist)
-    val createPlaylist = stringResource(R.string.create_playlist)
-    val modifyPlaylistName = stringResource(R.string.modify_playlist_name)
+    val deletePlaylist = stringResource(Res.string.delete_playlist)
+    val loginExceptionInfo = stringResource(Res.string.login_exception_info)
+    val newPlaylist = stringResource(Res.string.new_playlist)
+    val createPlaylist = stringResource(Res.string.create_playlist)
+    val modifyPlaylistName = stringResource(Res.string.modify_playlist_name)
 
     var playlistName by remember {
         mutableStateOf("")
@@ -215,8 +215,8 @@ fun HomeScreen(
                         ifShowConnectionMenu = true
                     }) {
                         Icon(
-                            painter = painterResource(R.drawable.splitscreen_add_24px),
-                            contentDescription = stringResource(R.string.open_add_or_switch_data_sources)
+                            painter = painterResource(Res.drawable.splitscreen_add_24px),
+                            contentDescription = stringResource(Res.string.open_add_or_switch_data_sources)
                         )
                     }
                     XyDropdownMenu(
@@ -227,10 +227,10 @@ fun HomeScreen(
                             .width(200.dp),
                         itemDataList = listOf(
                             MenuItemDefaultData(
-                                title = stringResource(R.string.add_connection), leadingIcon = {
+                                title = stringResource(Res.string.add_connection), leadingIcon = {
                                     Icon(
                                         Icons.Rounded.ChevronRight,
-                                        contentDescription = stringResource(R.string.add_connection)
+                                        contentDescription = stringResource(Res.string.add_connection)
                                     )
                                 },
                                 trailingIcon = {
@@ -242,7 +242,7 @@ fun HomeScreen(
                                     ) {
                                         Icon(
                                             imageVector = Icons.Rounded.AddCircle,
-                                            contentDescription = stringResource(R.string.add_connection)
+                                            contentDescription = stringResource(Res.string.add_connection)
                                         )
                                     }
 
@@ -259,7 +259,7 @@ fun HomeScreen(
                                             Icon(
                                                 Icons.Rounded.Check,
                                                 contentDescription = connection.name + stringResource(
-                                                    R.string.connection_link
+                                                    Res.string.connection_link
                                                 )
                                             )
                                     },
@@ -273,7 +273,7 @@ fun HomeScreen(
                                             Image(
                                                 painter = painterResource(connection.type.img),
                                                 contentDescription = connection.name + stringResource(
-                                                    R.string.icon
+                                                    Res.string.icon
                                                 ),
                                                 modifier = Modifier.size(25.dp)
                                             )
@@ -295,7 +295,7 @@ fun HomeScreen(
 
             }, title = {
                 XyScreenTitle(
-                    text = stringResource(R.string.home)
+                    text = stringResource(Res.string.home)
                 )
             }, actions = {
                 Row(
@@ -348,7 +348,7 @@ fun HomeScreen(
                         }) {
                             Icon(
                                 imageVector = Icons.Rounded.Warning,
-                                contentDescription = stringResource(R.string.login_failed),
+                                contentDescription = stringResource(Res.string.login_failed),
                                 tint = Color.Red
                             )
                         }
@@ -358,7 +358,7 @@ fun HomeScreen(
                     }) {
                         Icon(
                             imageVector = Icons.Rounded.Refresh,
-                            contentDescription = stringResource(R.string.refresh_login)
+                            contentDescription = stringResource(Res.string.refresh_login)
                         )
                     }
 
@@ -367,7 +367,7 @@ fun HomeScreen(
                     }) {
                         Icon(
                             imageVector = Icons.Rounded.Settings,
-                            contentDescription = stringResource(R.string.open_settings_page_button)
+                            contentDescription = stringResource(Res.string.open_settings_page_button)
                         )
                     }
                     IconButton(onClick = {
@@ -375,7 +375,7 @@ fun HomeScreen(
                     }) {
                         Icon(
                             imageVector = Icons.Rounded.Search,
-                            contentDescription = stringResource(R.string.search_page_switch_button)
+                            contentDescription = stringResource(Res.string.search_page_switch_button)
                         )
                     }
 
@@ -389,7 +389,7 @@ fun HomeScreen(
                         }) {
                             Icon(
                                 imageVector = Icons.Rounded.Download,
-                                contentDescription = stringResource(R.string.download_list)
+                                contentDescription = stringResource(Res.string.download_list)
                             )
                         }
                     }
@@ -420,7 +420,7 @@ fun HomeScreen(
                         XyItemLabel(
                             modifier = Modifier
                                 .weight(1f),
-                            text = stringResource(R.string.all_music),
+                            text = stringResource(Res.string.all_music),
                             sub = if (ifShowCount) dataCount?.musicCount?.toString()
                                 ?: stringResource(
                                     Constants.UNKNOWN
@@ -434,7 +434,7 @@ fun HomeScreen(
 
                         XyItemLabel(
                             modifier = Modifier.weight(1f),
-                            text = stringResource(R.string.local),
+                            text = stringResource(Res.string.local),
                             sub = if (ifShowCount) homeViewModel.localCount ?: stringResource(
                                 Constants.UNKNOWN
                             ) else null,
@@ -447,7 +447,7 @@ fun HomeScreen(
 
                         XyItemLabel(
                             modifier = Modifier.weight(1f),
-                            text = stringResource(R.string.album),
+                            text = stringResource(Res.string.album),
                             sub = if (ifShowCount) dataCount?.albumCount?.toString()
                                 ?: stringResource(
                                     Constants.UNKNOWN
@@ -460,7 +460,7 @@ fun HomeScreen(
                         )
                         XyItemLabel(
                             modifier = Modifier.weight(1f),
-                            text = stringResource(R.string.artist),
+                            text = stringResource(Res.string.artist),
                             sub = if (ifShowCount) dataCount?.artistCount?.toString()
                                 ?: stringResource(
                                     Constants.UNKNOWN
@@ -473,7 +473,7 @@ fun HomeScreen(
                         )
                         XyItemLabel(
                             modifier = Modifier.weight(1f),
-                            text = stringResource(R.string.favorite),
+                            text = stringResource(Res.string.favorite),
                             sub = if (ifShowCount) dataCount?.favoriteCount?.toString()
                                 ?: stringResource(
                                     Constants.UNKNOWN
@@ -487,7 +487,7 @@ fun HomeScreen(
 
                         XyItemLabel(
                             modifier = Modifier.weight(1f),
-                            text = stringResource(R.string.genres),
+                            text = stringResource(Res.string.genres),
                             sub = if (ifShowCount) dataCount?.genreCount?.toString()
                                 ?: stringResource(
                                     Constants.UNKNOWN
@@ -506,7 +506,7 @@ fun HomeScreen(
                         XyRow {
                             XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(R.string.most_played),
+                                text = stringResource(Res.string.most_played),
                             )
                         }
                     }
@@ -521,7 +521,7 @@ fun HomeScreen(
                         XyRow {
                             XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(R.string.most_played)
+                                text = stringResource(Res.string.most_played)
                             )
 
                             Row(
@@ -538,8 +538,8 @@ fun HomeScreen(
                                 }) {
                                     Icon(
                                         imageVector = Icons.Rounded.Shuffle,
-                                        contentDescription = stringResource(R.string.random_play) + stringResource(
-                                            R.string.most_played
+                                        contentDescription = stringResource(Res.string.random_play) + stringResource(
+                                            Res.string.most_played
                                         )
                                     )
                                 }
@@ -553,8 +553,8 @@ fun HomeScreen(
                                 }) {
                                     Icon(
                                         imageVector = Icons.Rounded.Repeat,
-                                        contentDescription = stringResource(R.string.list_loop) + stringResource(
-                                            R.string.most_played
+                                        contentDescription = stringResource(Res.string.list_loop) + stringResource(
+                                            Res.string.most_played
                                         )
                                     )
                                 }
@@ -576,7 +576,7 @@ fun HomeScreen(
                         XyRow {
                             XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(R.string.daily_recommendations)
+                                text = stringResource(Res.string.daily_recommendations)
                             )
 
                             Row(
@@ -593,8 +593,8 @@ fun HomeScreen(
                                 }) {
                                     Icon(
                                         imageVector = Icons.Rounded.Shuffle,
-                                        contentDescription = stringResource(R.string.random_play) + stringResource(
-                                            R.string.daily_recommendations
+                                        contentDescription = stringResource(Res.string.random_play) + stringResource(
+                                            Res.string.daily_recommendations
                                         )
                                     )
                                 }
@@ -608,8 +608,8 @@ fun HomeScreen(
                                 }) {
                                     Icon(
                                         imageVector = Icons.Rounded.Repeat,
-                                        contentDescription = stringResource(R.string.list_loop) + stringResource(
-                                            R.string.daily_recommendations
+                                        contentDescription = stringResource(Res.string.list_loop) + stringResource(
+                                            Res.string.daily_recommendations
                                         )
                                     )
                                 }
@@ -618,7 +618,7 @@ fun HomeScreen(
                                     navigator.navigate(DailyRecommend)
                                 }, contentPadding = PaddingValues()) {
                                     XyText(
-                                        text = stringResource(R.string.view_more)
+                                        text = stringResource(Res.string.view_more)
                                     )
                                 }
 
@@ -639,7 +639,7 @@ fun HomeScreen(
                         XyRow {
                             XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(R.string.latest_albums)
+                                text = stringResource(Res.string.latest_albums)
                             )
                         }
                     }
@@ -653,7 +653,7 @@ fun HomeScreen(
                         XyRow {
                             XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(R.string.recently_played_albums)
+                                text = stringResource(Res.string.recently_played_albums)
                             )
                         }
                     }
@@ -668,7 +668,7 @@ fun HomeScreen(
                         XyRow {
                             XyText(
                                 modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(R.string.recently_played_music)
+                                text = stringResource(Res.string.recently_played_music)
                             )
 
                             Row(
@@ -685,8 +685,8 @@ fun HomeScreen(
                                 }) {
                                     Icon(
                                         imageVector = Icons.Rounded.Shuffle,
-                                        contentDescription = stringResource(R.string.random_play) + stringResource(
-                                            R.string.recently_played_music
+                                        contentDescription = stringResource(Res.string.random_play) + stringResource(
+                                            Res.string.recently_played_music
                                         )
                                     )
                                 }
@@ -700,8 +700,8 @@ fun HomeScreen(
                                 }) {
                                     Icon(
                                         imageVector = Icons.Rounded.Repeat,
-                                        contentDescription = stringResource(R.string.list_loop) + stringResource(
-                                            R.string.recently_played_music
+                                        contentDescription = stringResource(Res.string.list_loop) + stringResource(
+                                            Res.string.recently_played_music
                                         )
                                     )
                                 }
@@ -723,7 +723,7 @@ fun HomeScreen(
                     XyRow {
                         XyText(
                             modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                            text = stringResource(R.string.playlist)
+                            text = stringResource(Res.string.playlist)
                         )
                         Box(contentAlignment = Alignment.CenterEnd) {
                             XyDropdownMenu(
@@ -768,11 +768,11 @@ fun HomeScreen(
                                             ).show()
                                         }),
                                     MenuItemDefaultData(
-                                        title = stringResource(R.string.refresh_playlist),
+                                        title = stringResource(Res.string.refresh_playlist),
                                         trailingIcon = {
                                             Icon(
                                                 imageVector = Icons.Rounded.Refresh,
-                                                contentDescription = stringResource(R.string.refresh_playlist)
+                                                contentDescription = stringResource(Res.string.refresh_playlist)
                                             )
                                         },
                                         onClick = composeClick {
@@ -791,7 +791,7 @@ fun HomeScreen(
                             }) {
                                 Icon(
                                     imageVector = Icons.Rounded.MoreHoriz,
-                                    contentDescription = stringResource(R.string.open_playlist_operations_popup)
+                                    contentDescription = stringResource(Res.string.open_playlist_operations_popup)
                                 )
                             }
 
@@ -833,7 +833,7 @@ fun HomeScreen(
                                         content = {
                                             XyTextSubSmall(
                                                 text = stringResource(
-                                                    R.string.confirm_delete_playlist,
+                                                    Res.string.confirm_delete_playlist,
                                                     item.name
                                                 )
                                             )
@@ -878,7 +878,7 @@ fun HomeScreen(
                             modifier = Modifier.height(40.dp),
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            XyTextSubSmall(text = stringResource(R.string.no_playlists))
+                            XyTextSubSmall(text = stringResource(Res.string.no_playlists))
                         }
                     }
                 }
@@ -947,3 +947,4 @@ private fun HomeAlbumItemLazyRow(
         }
     }
 }
+

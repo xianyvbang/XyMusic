@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -46,9 +46,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.ui.ext.composeClick
@@ -86,7 +86,7 @@ fun SelectSortBottomSheet(
         onIfDisplay = ifDisplay,
         onClose = onSetDisplay,
         dragHandle = null,
-        titleText = stringResource(R.string.select_sort_method)
+        titleText = stringResource(Res.string.select_sort_method)
     ) {
         filterContent()
     }
@@ -165,7 +165,7 @@ fun SelectSortBottomSheetComponent(
         }) {
             Icon(
                 imageVector = Icons.AutoMirrored.Rounded.MenuOpen,
-                contentDescription = stringResource(R.string.open_sort_and_filter_menu)
+                contentDescription = stringResource(Res.string.open_sort_and_filter_menu)
             )
         }
 
@@ -176,14 +176,14 @@ fun SelectSortBottomSheetComponent(
                 .width(250.dp),
             itemDataList = listOf(
                 MenuItemDefaultData(
-                    title = if (onIfFavorite()) stringResource(R.string.cancel_favorite_filter) else stringResource(
-                        R.string.get_favorite_music
+                    title = if (onIfFavorite()) stringResource(Res.string.cancel_favorite_filter) else stringResource(
+                        Res.string.get_favorite_music
                     ),
                     trailingIcon = {
                         Icon(
                             imageVector = if (onIfFavorite()) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                            contentDescription = if (onIfFavorite()) stringResource(R.string.can_cancel_favorite_filter) else stringResource(
-                                R.string.can_get_favorite_music
+                            contentDescription = if (onIfFavorite()) stringResource(Res.string.can_cancel_favorite_filter) else stringResource(
+                                Res.string.can_get_favorite_music
                             ),
                             tint = if (onIfFavorite()) Color.Red else MaterialTheme.colorScheme.onSurface
                         )
@@ -197,11 +197,11 @@ fun SelectSortBottomSheetComponent(
                     }, ifItemShow = { onIfFavoriteFilter() == true }),
                 //单年筛选
                 MenuItemDefaultData(
-                    title = stringResource(R.string.year_filter),
+                    title = stringResource(Res.string.year_filter),
                     trailingIcon = {
                         Icon(
                             imageVector = Icons.Rounded.CalendarToday,
-                            contentDescription = stringResource(R.string.year_filter),
+                            contentDescription = stringResource(Res.string.year_filter),
                         )
 
                     },
@@ -212,11 +212,11 @@ fun SelectSortBottomSheetComponent(
                     ifItemShow = { onIfSelectOneYear.invoke() == true }),
                 //年范围筛选
                 MenuItemDefaultData(
-                    title = stringResource(R.string.year_filter),
+                    title = stringResource(Res.string.year_filter),
                     trailingIcon = {
                         Icon(
                             imageVector = Icons.Rounded.CalendarToday,
-                            contentDescription = stringResource(R.string.year_filter),
+                            contentDescription = stringResource(Res.string.year_filter),
                         )
 
                     },
@@ -227,11 +227,11 @@ fun SelectSortBottomSheetComponent(
                     ifItemShow = { onIfStartEndYear.invoke() == true }),
                 //排序功能
                 MenuItemDefaultData(
-                    title = stringResource(R.string.sort_method),
+                    title = stringResource(Res.string.sort_method),
                     trailingIcon = {
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.Sort,
-                            contentDescription = stringResource(R.string.sort_method),
+                            contentDescription = stringResource(Res.string.sort_method),
                         )
 
                     },
@@ -241,12 +241,12 @@ fun SelectSortBottomSheetComponent(
                     },
                     ifItemShow = { onIfSort() == true }),
                 MenuItemDefaultData(
-                    title = stringResource(R.string.clear_filters),
+                    title = stringResource(Res.string.clear_filters),
                     enabled = onEnabledClearClick(),
                     trailingIcon = {
                         Icon(
                             imageVector = Icons.Rounded.Close,
-                            contentDescription = stringResource(R.string.clear_filters),
+                            contentDescription = stringResource(Res.string.clear_filters),
                         )
 
                     },
@@ -343,10 +343,10 @@ private fun YearFilterComponent(
                     onSetDisplay(false)
                 }
             }) {
-                Text(stringResource(R.string.cancel))
+                Text(stringResource(Res.string.cancel))
             }
 
-            XyText(text = stringResource(R.string.year_selection))
+            XyText(text = stringResource(Res.string.year_selection))
 
             TextButton(onClick = {
                 coroutineScope.launch {
@@ -356,7 +356,7 @@ private fun YearFilterComponent(
                     onSetDisplay(false)
                 }
             }) {
-                Text(stringResource(R.string.confirm))
+                Text(stringResource(Res.string.confirm))
             }
         }
         Picker(
@@ -405,9 +405,9 @@ private fun YearRangeFilterComponent(
                     onSetDisplay(false)
                 }
             }) {
-                Text(stringResource(R.string.cancel))
+                Text(stringResource(Res.string.cancel))
             }
-            XyText(text = stringResource(R.string.year_selection))
+            XyText(text = stringResource(Res.string.year_selection))
 
             TextButton(onClick = {
                 coroutineScope.launch {
@@ -418,7 +418,7 @@ private fun YearRangeFilterComponent(
                 }
 
             }) {
-                Text(stringResource(R.string.confirm))
+                Text(stringResource(Res.string.confirm))
             }
         }
         MultiPicker(
@@ -431,3 +431,4 @@ private fun YearRangeFilterComponent(
 
     }
 }
+

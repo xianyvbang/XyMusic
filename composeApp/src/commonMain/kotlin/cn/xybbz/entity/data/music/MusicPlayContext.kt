@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -25,7 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.media3.common.util.UnstableApi
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.music.MusicController
@@ -436,7 +436,7 @@ class MusicPlayContext @Inject constructor(
                         e.printStackTrace()
                     }
                 } else {
-                    MessageUtils.sendPopTip(R.string.get_music_failed_cannot_play)
+                    MessageUtils.sendPopTip(Res.string.get_music_failed_cannot_play)
                 }
 
             } catch (e: Exception) {
@@ -445,3 +445,4 @@ class MusicPlayContext @Inject constructor(
         }
     }
 }
+

@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -29,7 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.IDataSourceServer
 import cn.xybbz.api.client.data.ClientLoginInfoReq
@@ -109,7 +109,7 @@ class ConnectionViewModel @Inject constructor(
 
     //报错信息
 
-    var errorHint by mutableIntStateOf(R.string.empty_info)
+    var errorHint by mutableIntStateOf(Res.string.empty_info)
         private set
 
     var errorMessage by mutableStateOf("")
@@ -165,7 +165,7 @@ class ConnectionViewModel @Inject constructor(
 
             val loginSateInfo = dataSourceManager.getLoginSateInfo(it)
             loading = loginSateInfo.loading
-            errorHint = loginSateInfo.errorHint ?: R.string.empty_info
+            errorHint = loginSateInfo.errorHint ?: Res.string.empty_info
             errorMessage = loginSateInfo.errorMessage ?: ""
             isLoginSuccess = loginSateInfo.isLoginSuccess
             isLoginError = loginSateInfo.isError
@@ -314,7 +314,7 @@ class ConnectionViewModel @Inject constructor(
      * 清空登陆状态
      */
     private fun clearLoginStatus() {
-        errorHint = R.string.empty_info
+        errorHint = Res.string.empty_info
         errorMessage = ""
         isLoginSuccess = false
         isLoginError = false
@@ -324,7 +324,7 @@ class ConnectionViewModel @Inject constructor(
      * 清空资源获取状态
      */
     private fun clearResourceLoginStatus() {
-        errorHint = R.string.empty_info
+        errorHint = Res.string.empty_info
         errorMessage = ""
         isResourceLoginError = false
         resourceLoading = false
@@ -354,12 +354,12 @@ class ConnectionViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e("ConnectionScreen", "获取资源失败", e)
                 isResourceLoginError = true
-                errorHint = R.string.plex_resource_error
+                errorHint = Res.string.plex_resource_error
                 errorMessage = ""
             }
         } else {
             isResourceLoginError = true
-            errorHint = R.string.plex_resource_error
+            errorHint = Res.string.plex_resource_error
             errorMessage = ""
         }
 
@@ -385,3 +385,4 @@ class ConnectionViewModel @Inject constructor(
         val INVISIBLE_CHAR_REGEX = Regex("[\\u200B-\\u200D\\uFEFF]")
     }
 }
+

@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -49,7 +49,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -57,7 +57,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.music.ifNextPageNumList
@@ -109,7 +109,7 @@ fun MusicListComponent(
                     )
                 ) {
                     Text(
-                        text = stringResource(R.string.current_playlist),
+                        text = stringResource(Res.string.current_playlist),
                         fontWeight = FontWeight.W900,
                         fontSize = 19.sp
                     )
@@ -118,7 +118,7 @@ fun MusicListComponent(
                         onClearPlayerList()
                     }) {
                         XyTextSubSmall(
-                            text = stringResource(R.string.clear)
+                            text = stringResource(Res.string.clear)
                         )
                     }
 
@@ -172,7 +172,7 @@ fun MusicList(
         }
         item {
             LazyLoadingAndStatus(
-                stringResource(R.string.reached_bottom),
+                stringResource(Res.string.reached_bottom),
                 ifLoading = ifNextPageNumList
             )
         }
@@ -245,7 +245,7 @@ fun MusicListItem(
             if (curOriginIndex == index) {
                 Icon(
                     imageVector = Icons.Outlined.SignalCellularAlt,
-                    contentDescription = stringResource(R.string.playing),
+                    contentDescription = stringResource(Res.string.playing),
                     modifier = Modifier
                         .padding(horizontal = 3.dp),
                     tint = Color(0xffFB6580)
@@ -253,7 +253,7 @@ fun MusicListItem(
             }
             Icon(
                 imageVector = Icons.Default.Close,
-                contentDescription = stringResource(R.string.remove_from_playlist),
+                contentDescription = stringResource(Res.string.remove_from_playlist),
                 modifier = Modifier
                     .size(16.dp)
                     .debounceClickable {

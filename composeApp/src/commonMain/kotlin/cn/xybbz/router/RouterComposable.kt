@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -22,11 +22,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.ui.screens.AboutScreen
 import cn.xybbz.ui.screens.AlbumInfoScreen
 import cn.xybbz.ui.screens.AlbumScreen
@@ -66,7 +66,7 @@ inline fun <reified T : NavKey> EntryProviderScope<NavKey>.nodeComposable(noinli
             XyImage(
                 modifier = Modifier.fillMaxSize(),
                 model = XyTheme.brash.backgroundImageUri,
-                contentDescription = stringResource(R.string.background_image),
+                contentDescription = stringResource(Res.string.background_image),
             )
             content(it)
         }

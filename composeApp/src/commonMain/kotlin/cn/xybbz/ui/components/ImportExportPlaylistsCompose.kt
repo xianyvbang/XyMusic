@@ -1,4 +1,4 @@
-package cn.xybbz.ui.components
+﻿package cn.xybbz.ui.components
 
 import android.content.Context
 import android.net.Uri
@@ -24,9 +24,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.documentfile.provider.DocumentFile
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.PlaylistParser
@@ -45,7 +45,7 @@ inline fun getExportPlaylistsAlertDialogObject(
     crossinline onClick: () -> Unit
 ): () -> Unit {
     val context = LocalContext.current
-    val exportPlaylist = stringResource(R.string.export_playlist)
+    val exportPlaylist = stringResource(Res.string.export_playlist)
     val coroutineScope = rememberCoroutineScope()
     var playlist by remember {
         mutableStateOf<PlaylistParser.Playlist?>(null)
@@ -58,7 +58,7 @@ inline fun getExportPlaylistsAlertDialogObject(
 
                 val playTrackList = playlist
                 if (playTrackList == null) {
-                    MessageUtils.sendPopTipError(R.string.playlist_export_failed)
+                    MessageUtils.sendPopTipError(Res.string.playlist_export_failed)
                     Log.e(Constants.LOG_ERROR_PREFIX, "歌单信息为空")
                     return@launch
                 }
@@ -84,7 +84,7 @@ inline fun getExportPlaylistsAlertDialogObject(
                                     output.write(exportM3U.toByteArray())
                                 }
                             }
-                            MessageUtils.sendPopTipSuccess(R.string.playlist_export_success)
+                            MessageUtils.sendPopTipSuccess(Res.string.playlist_export_success)
                         }
                     }
                 }
@@ -138,7 +138,7 @@ fun ExportPlaylistsCompose(
         paddingValues = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding)
     ) {
         XyTextSubSmall(
-            text = stringResource(R.string.please_select_export_format)
+            text = stringResource(Res.string.please_select_export_format)
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -151,7 +151,7 @@ fun ExportPlaylistsCompose(
                     fileType = type
                     coroutineScope.launch {
                         if (onPlayTrackList() == null) {
-                            MessageUtils.sendPopTipError(R.string.playlist_export_failed)
+                            MessageUtils.sendPopTipError(Res.string.playlist_export_failed)
                             return@launch
                         }
                         /*val initUri = DocumentsContract.buildTreeDocumentUri(

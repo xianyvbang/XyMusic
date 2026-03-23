@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -85,8 +85,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -95,7 +95,7 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.config.image.rememberAlbumCoverUrls
 import cn.xybbz.common.enums.MusicTypeEnum
@@ -189,9 +189,9 @@ fun AlbumInfoScreen(
     }
 
 
-    val removePlaylistAlertTitle = stringResource(R.string.delete_playlist)
-    val editPlaylistAlertTitle = stringResource(R.string.modify_playlist_name)
-    val importPlaylistAlertTitle = stringResource(R.string.import_playlist)
+    val removePlaylistAlertTitle = stringResource(Res.string.delete_playlist)
+    val editPlaylistAlertTitle = stringResource(Res.string.modify_playlist_name)
+    val importPlaylistAlertTitle = stringResource(Res.string.import_playlist)
 
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
@@ -248,10 +248,10 @@ fun AlbumInfoScreen(
                         } else {
                             Text(
                                 text = if (dataType == MusicDataTypeEnum.PLAYLIST)
-                                    stringResource(R.string.playlist)
+                                    stringResource(Res.string.playlist)
                                 else
                                     stringResource(
-                                        R.string.album
+                                        Res.string.album
                                     ),
                                 modifier = Modifier.basicMarquee(
                                     iterations = Int.MAX_VALUE
@@ -269,7 +269,7 @@ fun AlbumInfoScreen(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.return_album_page)
+                            contentDescription = stringResource(Res.string.return_album_page)
                         )
                     }
                 },
@@ -283,7 +283,7 @@ fun AlbumInfoScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.MoreVert,
-                                    contentDescription = stringResource(R.string.open_operation_menu)
+                                    contentDescription = stringResource(Res.string.open_operation_menu)
                                 )
                             }
                             XyDropdownMenu(
@@ -308,7 +308,7 @@ fun AlbumInfoScreen(
                                                 title = importPlaylistAlertTitle,
                                                 content = {
                                                     XyTextSubSmall(
-                                                        text = stringResource(R.string.import_playlist_hint)
+                                                        text = stringResource(Res.string.import_playlist_hint)
                                                     )
                                                 },
                                                 onConfirmation = {
@@ -316,18 +316,18 @@ fun AlbumInfoScreen(
                                                         albumInfoViewModel.importPlaylist(it)
                                                     }
                                                 },
-                                                confirmText = R.string.import_info,
+                                                confirmText = Res.string.import_info,
                                                 onDismissRequest = {}).show()
 
                                         }) {
                                             ifShowMenu = false
                                         }),
                                     MenuItemDefaultData(
-                                        title = stringResource(R.string.export_playlist),
+                                        title = stringResource(Res.string.export_playlist),
                                         trailingIcon = {
                                             Icon(
                                                 imageVector = Icons.AutoMirrored.Rounded.Logout,
-                                                contentDescription = stringResource(R.string.export_playlist)
+                                                contentDescription = stringResource(Res.string.export_playlist)
                                             )
                                         },
                                         onClick = getExportPlaylistsAlertDialogObject(
@@ -339,11 +339,11 @@ fun AlbumInfoScreen(
                                             })
                                     ),
                                     MenuItemDefaultData(
-                                        title = stringResource(R.string.rename_playlist),
+                                        title = stringResource(Res.string.rename_playlist),
                                         trailingIcon = {
                                             Icon(
                                                 imageVector = Icons.Rounded.Edit,
-                                                contentDescription = stringResource(R.string.rename_playlist)
+                                                contentDescription = stringResource(Res.string.rename_playlist)
                                             )
                                         },
                                         onClick = {
@@ -387,7 +387,7 @@ fun AlbumInfoScreen(
                                                 content = {
                                                     XyTextSubSmall(
                                                         text = stringResource(
-                                                            R.string.confirm_delete_playlist,
+                                                            Res.string.confirm_delete_playlist,
                                                             albumInfoViewModel.xyAlbumInfoData?.name
                                                                 ?: ""
                                                         )
@@ -427,9 +427,9 @@ fun AlbumInfoScreen(
                             Icon(
                                 imageVector = if (albumInfoViewModel.ifFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
                                 contentDescription = if (albumInfoViewModel.ifFavorite) stringResource(
-                                    R.string.favorite_added
+                                    Res.string.favorite_added
                                 ) else stringResource(
-                                    R.string.favorite_removed
+                                    Res.string.favorite_removed
                                 ),
                                 tint = if (albumInfoViewModel.ifFavorite) Color.Red else LocalContentColor.current
                             )
@@ -498,7 +498,7 @@ fun AlbumInfoScreen(
                                                 music.itemId
                                             )
                                         ) stringResource(
-                                            R.string.played_progress_percent,
+                                            Res.string.played_progress_percent,
                                             albumInfoViewModel.albumPlayerHistoryProgressMap[music.itemId] ?: 0
                                         ) else music.artists?.joinToString()
                                             ?: "",
@@ -567,9 +567,9 @@ private fun MusicListOperation(
         }
     }
 
-    val pauseText = stringResource(R.string.pause_playback)
-    val resumeText = stringResource(R.string.resume_playback)
-    val startText = stringResource(R.string.start_playback)
+    val pauseText = stringResource(Res.string.pause_playback)
+    val resumeText = stringResource(Res.string.resume_playback)
+    val startText = stringResource(Res.string.start_playback)
 
     val textInfo by remember {
         derivedStateOf {
@@ -626,7 +626,7 @@ private fun MusicListOperation(
             }) {
                 Icon(
                     imageVector = Icons.Rounded.Close,
-                    contentDescription = stringResource(R.string.close_selection)
+                    contentDescription = stringResource(Res.string.close_selection)
                 )
             }
         } else {
@@ -650,7 +650,7 @@ private fun MusicListOperation(
                 }) {
                     Icon(
                         imageVector = Icons.Rounded.Close,
-                        contentDescription = stringResource(R.string.delete_playback_history)
+                        contentDescription = stringResource(Res.string.delete_playback_history)
                     )
                 }
             } else {
@@ -665,7 +665,7 @@ private fun MusicListOperation(
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.PlaylistAddCheck,
-                            contentDescription = stringResource(R.string.select)
+                            contentDescription = stringResource(Res.string.select)
                         )
                     }
                 }
@@ -722,10 +722,10 @@ private fun MusicAlbumInfoComponent(
                     ),
                 model = coverUrls.primaryUrl,
                 backModel = coverUrls.fallbackUrl,
-                placeholder = painterResource(id = R.drawable.music_xy_placeholder_foreground),
-                error = painterResource(id = R.drawable.music_xy_placeholder_foreground),
-                fallback = painterResource(id = R.drawable.music_xy_placeholder_foreground),
-                contentDescription = stringResource(R.string.album_cover),
+                placeholder = painterResource(id = Res.drawable.music_xy_placeholder_foreground),
+                error = painterResource(id = Res.drawable.music_xy_placeholder_foreground),
+                fallback = painterResource(id = Res.drawable.music_xy_placeholder_foreground),
+                contentDescription = stringResource(Res.string.album_cover),
             )
             Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
             Column(
@@ -749,7 +749,7 @@ private fun MusicAlbumInfoComponent(
             XyItemSwitcher(
                 state = onIfSavePlaybackHistory(),
                 onChange = { onSetIfSavePlaybackHistory(it) },
-                text = stringResource(R.string.enable_playback_history),
+                text = stringResource(Res.string.enable_playback_history),
                 paddingValue = PaddingValues()
             )
     }
@@ -854,3 +854,4 @@ private fun StickyHeaderOperationParent(
 
 
 }
+

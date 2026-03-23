@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -27,9 +27,9 @@ import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
@@ -73,12 +73,12 @@ fun ConnectionConfigInfoScreen(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                        contentDescription = stringResource(R.string.back)
+                        contentDescription = stringResource(Res.string.back)
                     )
                 }
             }, title = {
                 TopAppBarTitle(
-                    title = stringResource(R.string.connection_info)
+                    title = stringResource(Res.string.connection_info)
                 )
             })
 
@@ -118,8 +118,9 @@ fun ConnectionConfigInfoScreen(
                     }.invokeOnCompletion {
                         connectionConfigInfoViewModel.restartLogin()
                     }
-                }, text = stringResource(R.string.save))
+                }, text = stringResource(Res.string.save))
             }
         }
     }
 }
+

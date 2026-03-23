@@ -1,4 +1,4 @@
-package cn.xybbz.ui.screens
+﻿package cn.xybbz.ui.screens
 
 import android.util.Log
 import androidx.compose.foundation.basicMarquee
@@ -12,12 +12,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -72,7 +72,7 @@ fun GenresInfoScreen(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.back_to_genres_list)
+                        contentDescription = stringResource(Res.string.back_to_genres_list)
                     )
                 }
             }
@@ -102,3 +102,4 @@ fun GenresInfoScreen(
         }
     }
 }
+

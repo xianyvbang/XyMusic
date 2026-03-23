@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -75,14 +75,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.common.enums.img
 import cn.xybbz.common.utils.MessageUtils
@@ -155,7 +155,7 @@ fun ConnectionScreen(
         mutableStateOf(false)
     }
 
-    val pleaseEnterRequiredContent = stringResource(R.string.please_enter_required_content)
+    val pleaseEnterRequiredContent = stringResource(Res.string.please_enter_required_content)
 
     //自己构建图片加载器
     val imageLoader = ImageLoader.Builder(context).components {
@@ -171,7 +171,7 @@ fun ConnectionScreen(
     ) {
 
         TopAppBarComponent(title = {
-            TopAppBarTitle(title = stringResource(R.string.server_connection))
+            TopAppBarTitle(title = stringResource(Res.string.server_connection))
         }, navigationIcon = {
             if (connectionUiType != null && connectionUiType == ConnectionUiType.ADD_CONNECTION)
                 IconButton(
@@ -181,7 +181,7 @@ fun ConnectionScreen(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.return_setting_screen)
+                        contentDescription = stringResource(Res.string.return_setting_screen)
                     )
                 }
 
@@ -198,7 +198,7 @@ fun ConnectionScreen(
                     ),
                 name = connectionViewModel.dataSourceType?.title ?: "",
                 subordination = stringResource(
-                    R.string.connect_to_service,
+                    Res.string.connect_to_service,
                     connectionViewModel.dataSourceType?.describe ?: ""
                 ),
                 img = connectionViewModel.dataSourceType?.img?.let { img -> painterResource(img) },
@@ -240,7 +240,7 @@ fun ConnectionScreen(
                             item {
                                 XyRow {
                                     Text(
-                                        text = stringResource(R.string.select_protocol)
+                                        text = stringResource(Res.string.select_protocol)
                                     )
                                 }
                             }
@@ -255,7 +255,7 @@ fun ConnectionScreen(
                                         ),
                                     name = it.title,
                                     subordination = stringResource(
-                                        R.string.connect_to_service,
+                                        Res.string.connect_to_service,
                                         it.describe
                                     ),
                                     img = painterResource(it.img),
@@ -305,7 +305,7 @@ fun ConnectionScreen(
                                     onClick = {
                                         if (connectionViewModel.dataSourceType?.ifInputUrl == false) {
                                             if (connectionViewModel.ifInputAccount()) {
-                                                MessageUtils.sendPopTipError(R.string.username_cannot_be_empty)
+                                                MessageUtils.sendPopTipError(Res.string.username_cannot_be_empty)
                                                 return@Button
                                             }
                                             Log.i("ConnectionScreen", "noifInputUrl")
@@ -330,11 +330,11 @@ fun ConnectionScreen(
                                                 }
                                             }
                                         } else {
-                                            MessageUtils.sendPopTipError(R.string.connection_address_or_username_cannot_be_empty)
+                                            MessageUtils.sendPopTipError(Res.string.connection_address_or_username_cannot_be_empty)
                                         }
                                     }
                                 ) {
-                                    Text(text = stringResource(R.string.connect))
+                                    Text(text = stringResource(Res.string.connect))
                                 }
                                 Button(
                                     modifier = Modifier.width(width = 150.dp),
@@ -342,7 +342,7 @@ fun ConnectionScreen(
                                         ifSelectDataSource = ScreenType.SELECT_DATA_SOURCE
                                     }
                                 ) {
-                                    Text(text = stringResource(R.string.reselect))
+                                    Text(text = stringResource(Res.string.reselect))
                                 }
                             }
                         }
@@ -356,7 +356,7 @@ fun ConnectionScreen(
                             item {
                                 XyLoadingItem(
                                     modifier = Modifier.height(200.dp),
-                                    text = stringResource(R.string.fetching_resources)
+                                    text = stringResource(Res.string.fetching_resources)
                                 )
                             }
 
@@ -438,7 +438,7 @@ fun ConnectionScreen(
                                                 connectionViewModel.inputAddress(context)
                                             }
                                         }) {
-                                        Text(text = stringResource(R.string.connect))
+                                        Text(text = stringResource(Res.string.connect))
                                     }
                                 }
 
@@ -447,7 +447,7 @@ fun ConnectionScreen(
                                     onClick = {
                                         ifSelectDataSource = ScreenType.INPUT_DATA
                                     }) {
-                                    Text(stringResource(R.string.back_to_input_credentials))
+                                    Text(stringResource(Res.string.back_to_input_credentials))
                                 }
                             }
 
@@ -459,7 +459,7 @@ fun ConnectionScreen(
                     if (connectionViewModel.loading) {
                         XyLoadingItem(
                             modifier = Modifier.height(200.dp),
-                            text = stringResource(R.string.logging_in)
+                            text = stringResource(Res.string.logging_in)
                         )
                     } else {
                         LazyColumnComponent {
@@ -481,7 +481,7 @@ fun ConnectionScreen(
                                                 } else
                                                     ScreenType.SELECT_ADDRESS
                                         }) {
-                                        Text(text = stringResource(R.string.reconnect))
+                                        Text(text = stringResource(Res.string.reconnect))
                                     }
                                 }
                             }
@@ -490,7 +490,7 @@ fun ConnectionScreen(
                                 item {
                                     XyColumn {
                                         XyText(
-                                            text = stringResource(R.string.connection_successful),
+                                            text = stringResource(Res.string.connection_successful),
                                             style = MaterialTheme.typography.titleLarge,
                                         )
                                         XySmallImage(
@@ -500,13 +500,13 @@ fun ConnectionScreen(
                                                 rememberAsyncImagePainter(
                                                     model = ImageRequest.Builder(context)
                                                         .setParameter(REPEAT_COUNT_KEY, 0)
-                                                        .data(data = R.drawable.celebrate)
+                                                        .data(data = Res.drawable.celebrate)
                                                         .apply(block = fun ImageRequest.Builder.() {
                                                             crossfade(true)//淡出效果
                                                         }).build(),
                                                     imageLoader = imageLoader,
                                                 ),
-                                            contentDescription = stringResource(R.string.connection_success_image)
+                                            contentDescription = stringResource(Res.string.connection_success_image)
                                         )
                                     }
                                 }
@@ -521,7 +521,7 @@ fun ConnectionScreen(
                                             }
 
                                         }) {
-                                        Text(stringResource(R.string.enter_page))
+                                        Text(stringResource(Res.string.enter_page))
                                     }
                                 }
                             }
@@ -571,7 +571,7 @@ fun PlexResourceItem(
         if (select)
             Icon(
                 imageVector = Icons.Rounded.Check,
-                contentDescription = stringResource(R.string.selected_item, text)
+                contentDescription = stringResource(Res.string.selected_item, text)
             )
     }
 }
@@ -579,7 +579,7 @@ fun PlexResourceItem(
 @Composable
 private fun LoginError(
     modifier: Modifier = Modifier,
-    title: String = stringResource(R.string.login_failed),
+    title: String = stringResource(Res.string.login_failed),
     errorMessage: String,
     errorHint: String
 ) {
@@ -616,9 +616,9 @@ fun AddressInputEdit(
             updateAddress(it)
         },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-        hint = stringResource(R.string.connection_address_hint),
+        hint = stringResource(Res.string.connection_address_hint),
         icon = Icons.Rounded.Http,
-        iconContentDescription = stringResource(R.string.httpInput),
+        iconContentDescription = stringResource(Res.string.httpInput),
         actionContent = if (address.isNotBlank()) {
             {
                 IconButton(
@@ -630,7 +630,7 @@ fun AddressInputEdit(
                     Icon(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         imageVector = Icons.Rounded.Cancel,
-                        contentDescription = stringResource(R.string.clear)
+                        contentDescription = stringResource(Res.string.clear)
                     )
                 }
             }
@@ -652,9 +652,9 @@ fun UsernameInputEdit(
             updateUsername(it)
         },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-        hint = stringResource(R.string.username),
+        hint = stringResource(Res.string.username),
         icon = Icons.Rounded.Person,
-        iconContentDescription = stringResource(R.string.username),
+        iconContentDescription = stringResource(Res.string.username),
         actionContent = if (username.isNotBlank()) {
             {
                 IconButton(
@@ -666,7 +666,7 @@ fun UsernameInputEdit(
                     Icon(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         imageVector = Icons.Rounded.Cancel,
-                        contentDescription = stringResource(R.string.clear)
+                        contentDescription = stringResource(Res.string.clear)
                     )
                 }
             }
@@ -703,9 +703,9 @@ fun PasswordInputEdit(
         },
         visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-        hint = stringResource(R.string.password),
+        hint = stringResource(Res.string.password),
         icon = Icons.Rounded.Password,
-        iconContentDescription = stringResource(R.string.password)
+        iconContentDescription = stringResource(Res.string.password)
     )
 }
 
@@ -723,9 +723,9 @@ fun ConnectionNameInputEdit(
             updateConnectionName(it)
         },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-        hint = stringResource(R.string.set_alias),
+        hint = stringResource(Res.string.set_alias),
         icon = Icons.Rounded.DriveFileRenameOutline,
-        iconContentDescription = stringResource(R.string.set_alias),
+        iconContentDescription = stringResource(Res.string.set_alias),
         actionContent = if (connectionName.isNotBlank()) {
             {
                 IconButton(onClick = composeClick {
@@ -734,7 +734,7 @@ fun ConnectionNameInputEdit(
                     Icon(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         imageVector = Icons.Rounded.Cancel,
-                        contentDescription = stringResource(R.string.clear)
+                        contentDescription = stringResource(Res.string.clear)
                     )
                 }
             }
@@ -776,3 +776,4 @@ private fun ConnectionDataInfoInputEdit(
         actionContent = actionContent
     )
 }
+

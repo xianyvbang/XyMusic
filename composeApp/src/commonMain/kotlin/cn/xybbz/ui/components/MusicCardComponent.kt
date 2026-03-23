@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -44,11 +44,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.config.image.rememberAlbumCoverUrls
 import cn.xybbz.config.image.rememberArtistCoverUrls
 import cn.xybbz.config.image.rememberMusicCoverUrls
@@ -85,9 +85,9 @@ fun MusicCardComponent(
         end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
     ),
     shape: Shape,
-    placeholder: Painter? = painterResource(id = R.drawable.music_xy_placeholder_foreground),
-    error: Painter? = painterResource(id = R.drawable.music_xy_placeholder_foreground),
-    fallback: Painter? = painterResource(id = R.drawable.music_xy_placeholder_foreground),
+    placeholder: Painter? = painterResource(id = Res.drawable.music_xy_placeholder_foreground),
+    error: Painter? = painterResource(id = Res.drawable.music_xy_placeholder_foreground),
+    fallback: Painter? = painterResource(id = Res.drawable.music_xy_placeholder_foreground),
     onRouter: (String) -> Unit,
 ) {
     Column(
@@ -117,7 +117,7 @@ fun MusicCardComponent(
                     placeholder = placeholder,
                     error = error,
                     fallback = fallback,
-                    contentDescription = "${name}${stringResource(R.string.cover_suffix)}",
+                    contentDescription = "${name}${stringResource(Res.string.cover_suffix)}",
                 )
             }
         }
@@ -228,7 +228,7 @@ fun MusicMusicCardComponent(
         id = music?.itemId ?: "",
         name = music?.name ?: "",
         artistName = music?.artists?.joinToString()
-            ?: stringResource(R.string.unknown_artist),
+            ?: stringResource(Res.string.unknown_artist),
         imageSize = imageSize,
         model = coverUrls.primaryUrl ?: imageUrl,
         backModel = coverUrls.fallbackUrl,
@@ -263,3 +263,4 @@ fun MusicGenreCardComponent(
         onRouter = onRouter
     )
 }
+

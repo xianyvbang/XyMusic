@@ -1,4 +1,4 @@
-package cn.xybbz.ui.screens
+﻿package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,13 +18,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.MusicSettingSwitchItemComponent
 import cn.xybbz.ui.components.SettingItemComponent
@@ -60,7 +60,7 @@ fun ProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = hiltViewModel
             modifier = Modifier.statusBarsPadding(),
             title = {
                 TopAppBarTitle(
-                    title = stringResource(R.string.poxy_config)
+                    title = stringResource(Res.string.poxy_config)
                 )
             },
             navigationIcon = {
@@ -71,7 +71,7 @@ fun ProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = hiltViewModel
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.return_setting_screen)
+                        contentDescription = stringResource(Res.string.return_setting_screen)
                     )
                 }
             },
@@ -81,7 +81,7 @@ fun ProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = hiltViewModel
                         proxyConfigViewModel.saveConfig()
                     }
                 }) {
-                    Text(stringResource(R.string.save))
+                    Text(stringResource(Res.string.save))
                 }
             }
         )
@@ -93,7 +93,7 @@ fun ProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = hiltViewModel
             item {
                 SettingRoundedSurfaceColumn {
                     MusicSettingSwitchItemComponent(
-                        title = stringResource(R.string.open_proxy),
+                        title = stringResource(Res.string.open_proxy),
                         ifChecked = proxyConfigViewModel.enabled
                     ) { bol ->
                         coroutineScope.launch {
@@ -114,7 +114,7 @@ fun ProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = hiltViewModel
             item {
                 SettingRoundedSurfaceColumn {
                     SettingItemComponent(
-                        title = stringResource(R.string.test_connection),
+                        title = stringResource(Res.string.test_connection),
                         info = proxyConfigViewModel.getConnectionAddress(),
                         imageVector = null,
                         onClick = {
@@ -160,7 +160,7 @@ fun ProxyConfigComponent(
 ) {
 
     SettingRoundedSurfaceColumn {
-        SettingParentItemComponent(title = stringResource(R.string.proxy_address), trailingContent = {
+        SettingParentItemComponent(title = stringResource(Res.string.proxy_address), trailingContent = {
             Row(
                 modifier = Modifier.width(200.dp),
                 horizontalArrangement = Arrangement.End,
@@ -179,3 +179,4 @@ fun ProxyConfigComponent(
         })
     }
 }
+

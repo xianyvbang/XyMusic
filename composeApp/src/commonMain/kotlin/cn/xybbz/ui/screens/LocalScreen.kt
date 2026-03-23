@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -29,10 +29,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.PlayerTypeEnum
@@ -67,13 +67,13 @@ fun LocalScreen(localViewModel: LocalViewModel = hiltViewModel<LocalViewModel>()
             modifier = Modifier.statusBarsPadding(),
             title = {
                 TopAppBarTitle(
-                    title = stringResource(R.string.local_music)
+                    title = stringResource(Res.string.local_music)
                 )
             }, navigationIcon = {
                 IconButton(onClick = composeClick { navigator.goBack() }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.return_home)
+                        contentDescription = stringResource(Res.string.return_home)
                     )
                 }
             })
@@ -115,3 +115,4 @@ fun LocalScreen(localViewModel: LocalViewModel = hiltViewModel<LocalViewModel>()
         }
     }
 }
+

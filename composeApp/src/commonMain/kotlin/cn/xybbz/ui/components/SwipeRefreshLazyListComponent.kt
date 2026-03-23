@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -56,13 +56,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyTextSubSmall
@@ -204,14 +204,14 @@ fun <T : Any> LazyListScope.lazyColumBottomComponent(
     item {
 
         val text = if (onIfNotData())
-            R.string.reached_bottom
+            Res.string.reached_bottom
         else if (onIsLoading())
-            R.string.loading
+            Res.string.loading
         else if (onHomeMusicPagingItems()?.loadState?.append is LoadState.Loading)
-            R.string.loading
+            Res.string.loading
         else if (onHomeMusicPagingItems()?.loadState?.append?.endOfPaginationReached == true)
-            R.string.reached_bottom
-        else R.string.empty_info
+            Res.string.reached_bottom
+        else Res.string.empty_info
         LazyLoadingAndStatus(
             text = stringResource(text),
             ifLoading = onIsLoading() || onHomeMusicPagingItems()?.loadState?.append is LoadState.Loading
@@ -254,7 +254,7 @@ fun <T : Any> LazyListScope.lazyColumBottomComponent(
  * 底部加载更多失败处理
  * */
 @Composable
-fun ErrorMoreRetryItem(@StringRes onErrorText: () -> Int = { R.string.retry }, retry: () -> Unit) {
+fun ErrorMoreRetryItem(@StringRes onErrorText: () -> Int = { Res.string.retry }, retry: () -> Unit) {
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         TextButton(
             onClick = { retry() },
@@ -289,11 +289,11 @@ fun ErrorContent(retry: () -> Unit) {
     ) {
         Image(
             modifier = Modifier.padding(top = 80.dp),
-            painter = painterResource(id = R.drawable.icon_error),
+            painter = painterResource(id = Res.drawable.icon_error),
             contentDescription = null
         )
         Text(
-            text = stringResource(R.string.request_failed_check_network),
+            text = stringResource(Res.string.request_failed_check_network),
             modifier = Modifier.padding(8.dp)
         )
         TextButton(
@@ -309,7 +309,7 @@ fun ErrorContent(retry: () -> Unit) {
                 defaultElevation = 2.dp,
                 pressedElevation = 4.dp,
             )
-        ) { Text(text = stringResource(R.string.retry_button), color = Color.White) }
+        ) { Text(text = stringResource(Res.string.retry_button), color = Color.White) }
     }
 }
 

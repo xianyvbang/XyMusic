@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -53,7 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
@@ -61,7 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -131,11 +131,11 @@ fun SearchScreen(
                         }
                     },
                     textStyle = MaterialTheme.typography.bodySmall,
-                    placeholder = { XyTextSub(text = stringResource(R.string.search_music_album_artist)) },
+                    placeholder = { XyTextSub(text = stringResource(Res.string.search_music_album_artist)) },
                     leadingIcon = {
                         Icon(
                             Icons.Rounded.Search,
-                            contentDescription = stringResource(R.string.search_box_icon),
+                            contentDescription = stringResource(Res.string.search_box_icon),
                             tint = Color.Gray
                         )
                     },
@@ -147,7 +147,7 @@ fun SearchScreen(
                             }) {
                                 Icon(
                                     Icons.Default.Clear,
-                                    contentDescription = stringResource(R.string.clear),
+                                    contentDescription = stringResource(Res.string.clear),
                                     tint = Color.Gray
                                 )
                             }
@@ -187,7 +187,7 @@ fun SearchScreen(
                 }) {
                     Icon(
                         Icons.AutoMirrored.Rounded.ArrowBack,
-                        contentDescription = stringResource(R.string.return_home)
+                        contentDescription = stringResource(Res.string.return_home)
                     )
                 }
             }
@@ -251,7 +251,7 @@ private fun HistoryAndHintList(
     ) {
         SearchRecordComponent(
             onHistoryList(),
-            title = stringResource(R.string.search_history),
+            title = stringResource(Res.string.search_history),
             onClick = onClick,
             onClear = onClear
         )
@@ -286,7 +286,7 @@ fun SearchResultScreen(
         if (onLoadingState()) {
             item {
                 LazyLoadingAndStatus(
-                    text = stringResource(R.string.loading),
+                    text = stringResource(Res.string.loading),
                     ifLoading = true
                 )
             }
@@ -295,7 +295,7 @@ fun SearchResultScreen(
                 item {
                     XyRow {
                         XyText(
-                            text = stringResource(R.string.artist),
+                            text = stringResource(Res.string.artist),
                         )
                     }
 
@@ -317,7 +317,7 @@ fun SearchResultScreen(
             if (albumList.isNotEmpty()) {
                 item {
                     XyRow {
-                        XyText(text = stringResource(R.string.album))
+                        XyText(text = stringResource(Res.string.album))
                     }
                 }
                 item {
@@ -342,7 +342,7 @@ fun SearchResultScreen(
             if (musicList.isNotEmpty()) {
                 item {
                     XyRow {
-                        XyText(text = stringResource(R.string.music))
+                        XyText(text = stringResource(Res.string.music))
                     }
                 }
                 items(musicList, key = { music -> music.itemId }) { music ->
@@ -370,4 +370,5 @@ fun SearchResultScreen(
         }
     }
 }
+
 

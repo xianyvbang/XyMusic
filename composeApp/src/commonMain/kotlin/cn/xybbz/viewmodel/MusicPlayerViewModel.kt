@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -24,7 +24,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.DownloadCacheController
 import cn.xybbz.common.music.MusicController
@@ -47,7 +47,7 @@ class MusicPlayerViewModel @Inject constructor(
 
     var fontSize by mutableFloatStateOf(1.0f)
 
-    val dataList = listOf(R.string.song_tab, R.string.lyrics_tab, R.string.recommend)
+    val dataList = listOf(Res.string.song_tab, Res.string.lyrics_tab, Res.string.recommend)
 
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
 

@@ -1,4 +1,4 @@
-///*
+﻿///*
 // *   XyMusic
 // *   Copyright (C) 2023 xianyvbang
 // *
@@ -23,7 +23,7 @@
 //import androidx.compose.runtime.getValue
 //import androidx.compose.runtime.mutableStateOf
 //import androidx.compose.runtime.setValue
-//import cn.xybbz.R
+//import xymusic_kmp.composeapp.generated.resources.Res
 //import cn.xybbz.api.client.version.VersionApiClient
 //import cn.xybbz.api.client.version.data.ReleasesData
 //import cn.xybbz.common.constants.Constants
@@ -68,7 +68,7 @@
 //    suspend fun initLatestVersion(ifCheck: Boolean = false): Boolean {
 //
 //        if (ifCheck)
-//            MessageUtils.sendPopTipSuccess(R.string.get_latest_version)
+//            MessageUtils.sendPopTipSuccess(Res.string.get_latest_version)
 //
 //        val abis = Build.SUPPORTED_ABIS
 //        Log.d("ABI", abis.joinToString())
@@ -111,11 +111,11 @@
 //                GitHubVersionVersionUtils.isLatestVersion(versionName, latestVersion)
 //            if (ifCheck)
 //                if (!ifMaxVersion && ifGetVersionSuccess) {
-//                    MessageUtils.sendPopTipSuccess(R.string.get_latest_version_success)
+//                    MessageUtils.sendPopTipSuccess(Res.string.get_latest_version_success)
 //                } else if (!ifMaxVersion && !ifGetVersionSuccess) {
-//                    MessageUtils.sendPopTipError(R.string.get_latest_version_fail)
+//                    MessageUtils.sendPopTipError(Res.string.get_latest_version_fail)
 //                } else {
-//                    MessageUtils.sendPopTipSuccess(R.string.now_new_version)
+//                    MessageUtils.sendPopTipSuccess(Res.string.now_new_version)
 //                }
 //        }
 //        return ifGetVersionSuccess

@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -33,13 +33,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
@@ -84,7 +84,7 @@ fun MusicScreen(
     ) {
         MusicSelectTopBarComponent(
             modifier = Modifier.statusBarsPadding(),
-            title = stringResource(R.string.music),
+            title = stringResource(Res.string.music),
             musicViewModel = musicViewModel,
             onIfShowMusicDropdownMenu = { musicViewModel.dataSourceManager.dataSourceType?.ifShowMusicDropdownMenu == true },
             onRandomPlayerClick = {
@@ -223,7 +223,7 @@ fun MusicSelectTopBarComponent(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.return_home)
+                    contentDescription = stringResource(Res.string.return_home)
                 )
             }
 
@@ -235,7 +235,7 @@ fun MusicSelectTopBarComponent(
                 }) {
                     Icon(
                         imageVector = Icons.Rounded.Close,
-                        contentDescription = stringResource(R.string.close_selection)
+                        contentDescription = stringResource(Res.string.close_selection)
                     )
                 }
             } else {
@@ -244,7 +244,7 @@ fun MusicSelectTopBarComponent(
                 }) {
                     Icon(
                         imageVector = Icons.Rounded.Shuffle,
-                        contentDescription = stringResource(R.string.random_play)
+                        contentDescription = stringResource(Res.string.random_play)
                     )
                 }
 
@@ -253,7 +253,7 @@ fun MusicSelectTopBarComponent(
                 }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Rounded.PlaylistAddCheck,
-                        contentDescription = stringResource(R.string.open_selection_function)
+                        contentDescription = stringResource(Res.string.open_selection_function)
                     )
                 }
                 if (onIfShowMusicDropdownMenu())
@@ -265,3 +265,4 @@ fun MusicSelectTopBarComponent(
         colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
     )
 }
+

@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -41,9 +41,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
@@ -109,7 +109,7 @@ fun AddPlaylistBottomComponent(
         skipPartiallyExpanded = false
     )
 
-    val newPlaylist = stringResource(R.string.new_playlist)
+    val newPlaylist = stringResource(Res.string.new_playlist)
 
     ModalBottomSheetExtendComponent(
         modifier = Modifier.statusBarsPadding(),
@@ -122,7 +122,7 @@ fun AddPlaylistBottomComponent(
             }
         },
         onIfDisplay = { playlistObject.ifShow },
-        titleText = stringResource(R.string.add_to_playlist),
+        titleText = stringResource(Res.string.add_to_playlist),
         titleTailContent = {
             IconButton(onClick = {
                 var playlistName by mutableStateOf(
@@ -150,7 +150,7 @@ fun AddPlaylistBottomComponent(
             }) {
                 Icon(
                     imageVector = Icons.Rounded.Add,
-                    contentDescription = stringResource(R.string.create_playlist)
+                    contentDescription = stringResource(Res.string.create_playlist)
                 )
             }
         }
@@ -182,7 +182,7 @@ fun AddPlaylistBottomComponent(
                 MusicPlaylistItemComponent(
                     modifier = Modifier.padding(horizontal = XyTheme.dimens.outerHorizontalPadding),
                     name = item.name,
-                    subordination = "${item.musicCount}${stringResource(R.string.songs_count_suffix)}",
+                    subordination = "${item.musicCount}${stringResource(Res.string.songs_count_suffix)}",
                     imgUrl = item.pic,
 //                    brush = null,
                     backgroundColor = Color.Transparent,
@@ -209,3 +209,4 @@ fun AddPlaylistBottomComponent(
 fun AddPlaylistBottomData.show() = apply {
     playlistObject.thisCopyData(this)
 }
+

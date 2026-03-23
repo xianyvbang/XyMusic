@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -39,10 +39,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.LanguageType
 import cn.xybbz.ui.components.TopAppBarComponent
@@ -82,7 +82,7 @@ fun LanguageConfigScreen(
                 modifier = Modifier.statusBarsPadding(),
                 title = {
                     TopAppBarTitle(
-                        title = stringResource(R.string.language)
+                        title = stringResource(Res.string.language)
                     )
                 },
                 navigationIcon = {
@@ -93,7 +93,7 @@ fun LanguageConfigScreen(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.return_setting_screen)
+                            contentDescription = stringResource(Res.string.return_setting_screen)
                         )
                     }
                 }
@@ -169,3 +169,4 @@ private fun LanguageTextItem(
     }
 
 }
+

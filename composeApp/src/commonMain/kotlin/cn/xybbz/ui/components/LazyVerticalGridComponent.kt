@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -41,10 +41,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.theme.XyTheme
 
@@ -238,14 +238,14 @@ fun <T : Any> LazyGridScope.lazyColumBottomComponent(
     item(span = { GridItemSpan(maxLineSpan) }) {
 
         val text = if (onIfNotData())
-            R.string.reached_bottom
+            Res.string.reached_bottom
         else if (onIsLoading())
-            R.string.loading
+            Res.string.loading
         else if (items?.loadState?.append is LoadState.Loading)
-            R.string.loading
+            Res.string.loading
         else if (items?.loadState?.append?.endOfPaginationReached == true)
-            R.string.reached_bottom
-        else R.string.empty_info
+            Res.string.reached_bottom
+        else Res.string.empty_info
         LazyLoadingAndStatus(
             text = stringResource(text),
             ifLoading = onIsLoading() || items?.loadState?.append is LoadState.Loading

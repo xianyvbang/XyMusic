@@ -1,4 +1,4 @@
-package cn.xybbz.ui.components
+﻿package cn.xybbz.ui.components
 
 
 import androidx.compose.foundation.layout.Arrangement
@@ -14,8 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
-import androidx.compose.ui.res.stringResource
-import cn.xybbz.R
+import org.jetbrains.compose.resources.stringResource
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.config.image.rememberRawCoverUrls
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.xy.ItemTrailingContent
@@ -65,7 +65,7 @@ fun MusicPlaylistItemComponent(
                     }) {
                         Icon(
                             imageVector = Icons.Rounded.Edit,
-                            contentDescription = stringResource(R.string.modify_playlist_name)
+                            contentDescription = stringResource(Res.string.modify_playlist_name)
                         )
                     }
                 }
@@ -75,7 +75,7 @@ fun MusicPlaylistItemComponent(
                     }) {
                         Icon(
                             imageVector = Icons.Rounded.RemoveCircleOutline,
-                            contentDescription = stringResource(R.string.delete_playlist)
+                            contentDescription = stringResource(Res.string.delete_playlist)
                         )
                     }
                 }
@@ -84,3 +84,4 @@ fun MusicPlaylistItemComponent(
         }
     )
 }
+

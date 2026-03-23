@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -30,10 +30,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.config.image.rememberMusicCoverUrls
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
@@ -117,7 +117,7 @@ private fun MusicItemComponent(
     ifPlay: Boolean,
     onMusicPlay: (OnMusicPlayParameter) -> Unit,
     trailingIcon: ImageVector = Icons.Rounded.MoreVert,
-    trailingContentDescription: String = "${name}${stringResource(R.string.other_operations_button_suffix)}",
+    trailingContentDescription: String = "${name}${stringResource(Res.string.other_operations_button_suffix)}",
     ifShowTrailingContent: Boolean = true,
     ifSelect: Boolean = false,
     trailingOnSelectClick: ((Boolean) -> Unit)? = null,
@@ -224,7 +224,7 @@ fun MusicItemNotClickComponent(
             ) {
                 Icon(
                     imageVector = trailingIcon,
-                    contentDescription = stringResource(R.string.favorite_button),
+                    contentDescription = stringResource(Res.string.favorite_button),
                     tint = trailingColor
                 )
             }
@@ -239,3 +239,4 @@ fun MusicItemNotClickComponent(
 fun getMusicMedia(codec: String? = "", bitRate: Int? = 0): String {
     return "$codec ${bitRate?.div(1000)}k"
 }
+

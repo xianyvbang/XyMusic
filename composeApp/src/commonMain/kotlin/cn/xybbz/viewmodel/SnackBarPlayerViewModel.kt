@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -23,7 +23,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import androidx.room.Transaction
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.DownloadCacheController
 import cn.xybbz.common.music.MusicController
@@ -85,7 +85,7 @@ class SnackBarPlayerViewModel @Inject constructor(
                 downloadManager.enqueue(
                     *requests.toTypedArray()
                 )
-                MessageUtils.sendPopTip(R.string.add_download_list)
+                MessageUtils.sendPopTip(Res.string.add_download_list)
             }
 
         }.invokeOnCompletion { selectControl.dismiss() }

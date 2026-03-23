@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -61,7 +61,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
@@ -69,7 +69,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.data.music.XyMusic
@@ -99,7 +99,7 @@ fun DownloadScreen(
 ) {
     val context = LocalContext.current
 
-   val removeDownloadTitle = stringResource(R.string.remove_download_title)
+   val removeDownloadTitle = stringResource(Res.string.remove_download_title)
 
     val tasks by downloadViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
     XyColumnScreen(
@@ -124,7 +124,7 @@ fun DownloadScreen(
                         content = {
                             XyTextSubSmall(
                                 text = stringResource(
-                                    R.string.confirm_delete_download,
+                                    Res.string.confirm_delete_download,
                                     downloadViewModel.selectedTaskIds.size
                                 )
                             )
@@ -245,7 +245,7 @@ fun DownloadItemTrailingContent(
                     when (task.status) {
                         DownloadStatus.QUEUED -> {
                             DownloadPrompt(
-                                text = stringResource(R.string.download_status_queued),
+                                text = stringResource(Res.string.download_status_queued),
                                 fontSize = 14.sp
                             )
                         }
@@ -274,28 +274,28 @@ fun DownloadItemTrailingContent(
 
                         DownloadStatus.PAUSED -> {
                             DownloadPrompt(
-                                text = stringResource(R.string.tap_to_resume_download),
+                                text = stringResource(Res.string.tap_to_resume_download),
                                 fontSize = 14.sp,
                             )
                         }
 
                         DownloadStatus.COMPLETED -> {
                             DownloadPrompt(
-                                text = stringResource(R.string.download_completed),
+                                text = stringResource(Res.string.download_completed),
                                 fontSize = 14.sp,
                             )
                         }
 
                         DownloadStatus.FAILED -> {
                             DownloadPrompt(
-                                text = stringResource(R.string.download_failed_with_reason, task.error?:""),
+                                text = stringResource(Res.string.download_failed_with_reason, task.error?:""),
                                 fontSize = 14.sp,
                             )
                         }
 
                         DownloadStatus.CANCEL -> {
                             DownloadPrompt(
-                                text = stringResource(R.string.cancel_download),
+                                text = stringResource(Res.string.cancel_download),
                                 fontSize = 14.sp,
                             )
                         }
@@ -328,7 +328,7 @@ fun DownloadItemTrailingContent(
                 ) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = "${task.title ?: task.fileName}${stringResource(R.string.other_operations_button_suffix)}"
+                        contentDescription = "${task.title ?: task.fileName}${stringResource(Res.string.other_operations_button_suffix)}"
                     )
                 }
             }
@@ -380,7 +380,7 @@ fun MultiSelectTopAppEnd(
                         }) {
                             Icon(
                                 imageVector = Icons.Rounded.Close,
-                                contentDescription = stringResource(R.string.close)
+                                contentDescription = stringResource(Res.string.close)
                             )
                         }
                         XySelectAllComponent(
@@ -428,14 +428,14 @@ fun MultiSelectTopAppEnd(
                 modifier = Modifier.statusBarsPadding(),
                 title = {
                     TopAppBarTitle(
-                        title = stringResource(R.string.download_list)
+                        title = stringResource(Res.string.download_list)
                     )
                 }, navigationIcon = {
 
                     IconButton(onClick = composeClick { navigator.goBack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.return_home)
+                            contentDescription = stringResource(Res.string.return_home)
                         )
                     }
                 }, actions = {
@@ -449,7 +449,7 @@ fun MultiSelectTopAppEnd(
                         }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Rounded.PlaylistAddCheck,
-                                contentDescription = stringResource(R.string.open_selection_function)
+                                contentDescription = stringResource(Res.string.open_selection_function)
                             )
                         }
 
@@ -458,7 +458,7 @@ fun MultiSelectTopAppEnd(
                         }) {
                             Icon(
                                 imageVector = Icons.Rounded.Settings,
-                                contentDescription = stringResource(R.string.open_settings_page_button)
+                                contentDescription = stringResource(Res.string.open_settings_page_button)
                             )
                         }
                     }
@@ -480,3 +480,4 @@ private fun formatBytes(bytes: Long): String {
         units[digitGroups]
     )
 }
+

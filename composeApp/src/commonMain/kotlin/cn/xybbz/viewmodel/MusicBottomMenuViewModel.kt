@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -27,7 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.common.constants.Constants
@@ -207,7 +207,7 @@ class MusicBottomMenuViewModel @Inject constructor(
         viewModelScope.launch {
             alarmConfig.cancelAllAlarm()
             MessageUtils.sendPopTip(
-                R.string.cancel_timer_close_message
+                Res.string.cancel_timer_close_message
             )
         }
     }
@@ -252,7 +252,7 @@ class MusicBottomMenuViewModel @Inject constructor(
                     music = musicData
                 )
             )
-            MessageUtils.sendPopTip(R.string.add_download_list)
+            MessageUtils.sendPopTip(Res.string.add_download_list)
         }
 
     }
@@ -293,3 +293,4 @@ class MusicBottomMenuViewModel @Inject constructor(
     }
 
 }
+

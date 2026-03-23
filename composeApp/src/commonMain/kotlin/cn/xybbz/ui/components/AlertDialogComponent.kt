@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -35,11 +35,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyButton
@@ -80,8 +80,8 @@ data class AlertDialogObject(
     val onDismissRequest: (() -> Unit)? = null,
     val onConfirmation: (() -> Unit)? = null,
     val properties: DialogProperties = DialogProperties(),
-    @param:StringRes val dismissText: Int = R.string.cancel,
-    @param:StringRes val confirmText: Int = R.string.confirm,
+    @param:StringRes val dismissText: Int = Res.string.cancel,
+    @param:StringRes val confirmText: Int = Res.string.confirm,
 )
 
 /**
@@ -177,3 +177,4 @@ fun AlertDialogObject.show() = apply {
         alertDialogObjectList.add(this@show)
     }
 }
+

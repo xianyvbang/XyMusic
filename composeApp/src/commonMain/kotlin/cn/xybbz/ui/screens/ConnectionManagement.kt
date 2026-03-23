@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -44,11 +44,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.common.enums.img
 import cn.xybbz.compositionLocal.LocalNavigator
@@ -89,7 +89,7 @@ fun ConnectionManagement(
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
-    val warning = stringResource(R.string.warning)
+    val warning = stringResource(Res.string.warning)
 
     XyColumnScreen(
         modifier =
@@ -103,7 +103,7 @@ fun ConnectionManagement(
             modifier = Modifier.statusBarsPadding(),
             title = {
                 TopAppBarTitle(
-                    title = stringResource(R.string.connection_settings_list)
+                    title = stringResource(Res.string.connection_settings_list)
                 )
             }, actions = {
                 IconButton(onClick = {
@@ -119,7 +119,7 @@ fun ConnectionManagement(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.return_setting_screen)
+                        contentDescription = stringResource(Res.string.return_setting_screen)
                     )
                 }
             })
@@ -180,7 +180,7 @@ fun ConnectionManagement(
                                         content = { sheetObject ->
                                             RoundedSurfaceColumn {
                                                 SettingItemComponent(
-                                                    title = stringResource(R.string.modify_connection)
+                                                    title = stringResource(Res.string.modify_connection)
                                                 ) {
                                                     coroutineScope.launch {
                                                         sheetState.hide()
@@ -193,7 +193,7 @@ fun ConnectionManagement(
 
                                                 }
                                                 SettingItemComponent(
-                                                    title = stringResource(R.string.music_library),
+                                                    title = stringResource(Res.string.music_library),
                                                     onRouter = {
                                                         coroutineScope.launch {
                                                             sheetState.hide()
@@ -210,13 +210,13 @@ fun ConnectionManagement(
                                                 )
 
                                                 SettingParentItemComponent(
-                                                    title = stringResource(R.string.delete_connection),
+                                                    title = stringResource(Res.string.delete_connection),
                                                     onClick = {
                                                         AlertDialogObject(
                                                             title = warning,
                                                             content = {
                                                                 XyTextSubSmall(
-                                                                    text = stringResource(R.string.confirm_delete_connection)
+                                                                    text = stringResource(Res.string.confirm_delete_connection)
                                                                 )
                                                             },
                                                             ifWarning = true,
@@ -242,7 +242,7 @@ fun ConnectionManagement(
                                     imageVector = Icons.Rounded.MoreVert,
                                     contentDescription =
                                         stringResource(
-                                            R.string.view_connection_info,
+                                            Res.string.view_connection_info,
                                             connectionConfig.type.title + "-" + connectionConfig.username
                                         )
                                 )
@@ -254,4 +254,5 @@ fun ConnectionManagement(
         }
     }
 }
+
 

@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -40,7 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
@@ -53,7 +53,7 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.MusicSettingSwitchItemComponent
@@ -96,7 +96,7 @@ fun CustomApiScreen(
             modifier = Modifier.statusBarsPadding(),
             title = {
                 TopAppBarTitle(
-                    title = stringResource(R.string.customize_lyric_settings)
+                    title = stringResource(Res.string.customize_lyric_settings)
                 )
             },
             navigationIcon = {
@@ -105,7 +105,7 @@ fun CustomApiScreen(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.return_setting_screen)
+                        contentDescription = stringResource(Res.string.return_setting_screen)
                     )
                 }
             },
@@ -115,7 +115,7 @@ fun CustomApiScreen(
                         customLyricsViewModel.saveSettings()
                     }
                 }) {
-                    Text(stringResource(R.string.save))
+                    Text(stringResource(Res.string.save))
                 }
             }
         )
@@ -129,7 +129,7 @@ fun CustomApiScreen(
             item {
                 SettingRoundedSurfaceColumn {
                     MusicSettingSwitchItemComponent(
-                        title = stringResource(R.string.prioritize_music_service_api),
+                        title = stringResource(Res.string.prioritize_music_service_api),
                         ifChecked = customLyricsViewModel.ifPriorityMusicApi
                     ) { bol ->
                         customLyricsViewModel.updateIfPriorityMusicApi(bol)
@@ -139,7 +139,7 @@ fun CustomApiScreen(
 
             item {
                 CustomLyricsSettingTitleItem(
-                    title = stringResource(R.string.lyrics_api_auth_key)
+                    title = stringResource(Res.string.lyrics_api_auth_key)
                 )
             }
             item {
@@ -174,33 +174,33 @@ fun CustomApiScreen(
                     bottomInfo = annotatedText,
                     title = "验证信息",
                     value = customLyricsViewModel.customLrcApiAuthValue,
-                    hint = stringResource(R.string.lyrics_api_auth_key_hint),
+                    hint = stringResource(Res.string.lyrics_api_auth_key_hint),
                     onValueChange = { customLyricsViewModel.updateCustomLrcApiAuth(it) }
                 )
             }
 
             item {
                 CustomLyricsSettingTitleItem(
-                    title = stringResource(R.string.lyrics_single_api)
+                    title = stringResource(Res.string.lyrics_single_api)
                 )
             }
             item {
                 CustomLyricsSettingInput(
                     value = customLyricsViewModel.customLrcSingleApiValue,
-                    hint = stringResource(R.string.lyrics_single_api_hint),
+                    hint = stringResource(Res.string.lyrics_single_api_hint),
                     onValueChange = { customLyricsViewModel.updateCustomLrcSingleApi(it) }
                 )
             }
 
             item {
                 CustomLyricsSettingTitleItem(
-                    title = stringResource(R.string.custom_cover_api)
+                    title = stringResource(Res.string.custom_cover_api)
                 )
             }
             item {
                 CustomLyricsSettingInput(
                     value = customLyricsViewModel.customCoverApiValue,
-                    hint = stringResource(R.string.custom_cover_api_hint),
+                    hint = stringResource(Res.string.custom_cover_api_hint),
                     onValueChange = { customLyricsViewModel.updateCustomCoverApi(it) }
                 )
             }
@@ -316,3 +316,4 @@ private fun CustomLyricsItemComponent(
 
     }
 }
+

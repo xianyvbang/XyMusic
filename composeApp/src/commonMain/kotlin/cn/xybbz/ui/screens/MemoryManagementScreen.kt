@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -34,10 +34,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.TopAppBarComponent
@@ -63,7 +63,7 @@ fun MemoryManagementScreen(
     val context = LocalContext.current
     val navigator = LocalNavigator.current
 
-    val warning = stringResource(R.string.warning)
+    val warning = stringResource(Res.string.warning)
 
 
     LaunchedEffect(Unit) {
@@ -79,7 +79,7 @@ fun MemoryManagementScreen(
             modifier = Modifier.statusBarsPadding(),
             title = {
                 TopAppBarTitle(
-                    title = stringResource(R.string.storage_management)
+                    title = stringResource(Res.string.storage_management)
                 )
             },
             navigationIcon = {
@@ -90,7 +90,7 @@ fun MemoryManagementScreen(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.return_setting_screen)
+                        contentDescription = stringResource(Res.string.return_setting_screen)
                     )
                 }
             }
@@ -101,16 +101,16 @@ fun MemoryManagementScreen(
                 MemoryManagementItem(
                     cacheSize = memoryManagementViewModel.musicCacheSize,
                     onClick = { memoryManagementViewModel.clearMusicCache() },
-                    text = stringResource(R.string.audio_cache),
-                    describe = stringResource(R.string.audio_cache_description)
+                    text = stringResource(Res.string.audio_cache),
+                    describe = stringResource(Res.string.audio_cache_description)
                 )
             }
             item {
                 MemoryManagementItem(
                     cacheSize = memoryManagementViewModel.cacheSize,
                     onClick = { memoryManagementViewModel.clearAllCache(context) },
-                    text = stringResource(R.string.temporary_cache),
-                    describe = stringResource(R.string.temporary_cache_description)
+                    text = stringResource(Res.string.temporary_cache),
+                    describe = stringResource(Res.string.temporary_cache_description)
                 )
             }
 
@@ -122,7 +122,7 @@ fun MemoryManagementScreen(
                             title = warning,
                             content = {
                                 XyTextSubSmall(
-                                    text = stringResource(R.string.confirm_delete_database)
+                                    text = stringResource(Res.string.confirm_delete_database)
                                 )
                             },
                             ifWarning = true,
@@ -131,15 +131,15 @@ fun MemoryManagementScreen(
                             }
                         ).show()
                     },
-                    text = stringResource(R.string.database_data),
-                    describe = stringResource(R.string.database_data_description)
+                    text = stringResource(Res.string.database_data),
+                    describe = stringResource(Res.string.database_data_description)
                 )
             }
             item {
                 MemoryManagementItem(
                     cacheSize = memoryManagementViewModel.appDataSize,
-                    text = stringResource(R.string.essential_data),
-                    describe = stringResource(R.string.essential_data_description),
+                    text = stringResource(Res.string.essential_data),
+                    describe = stringResource(Res.string.essential_data_description),
                     ifShowButton = false
                 )
             }
@@ -193,7 +193,7 @@ fun MemoryManagementItem(
                     modifier = Modifier,
                     enabled = cacheSize != "0B",
                     onClick = { onClick?.invoke() },
-                    text = stringResource(R.string.clear)
+                    text = stringResource(Res.string.clear)
                 )
         }
         Row(
@@ -215,3 +215,4 @@ fun MemoryManagementItem(
 
     }
 }
+

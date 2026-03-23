@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -51,14 +51,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.DownloadStatus
@@ -102,9 +102,9 @@ fun AboutScreen(
         aboutViewModel.downloadAndInstall()
     }
 
-    val newVersionDownload = stringResource(R.string.new_version_download)
-    val functionNotImplemented = stringResource(R.string.function_not_implemented)
-    val noOfficialWebsiteYet = stringResource(R.string.no_official_website_yet)
+    val newVersionDownload = stringResource(Res.string.new_version_download)
+    val functionNotImplemented = stringResource(Res.string.function_not_implemented)
+    val noOfficialWebsiteYet = stringResource(Res.string.no_official_website_yet)
 
     XyColumnScreen(
         modifier = Modifier.brashColor(
@@ -116,7 +116,7 @@ fun AboutScreen(
             modifier = Modifier.statusBarsPadding(),
             title = {
                 TopAppBarTitle(
-                    title = stringResource(R.string.about)
+                    title = stringResource(Res.string.about)
                 )
             }, navigationIcon = {
                 IconButton(
@@ -126,7 +126,7 @@ fun AboutScreen(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.return_setting_screen)
+                        contentDescription = stringResource(Res.string.return_setting_screen)
                     )
                 }
             })
@@ -140,9 +140,9 @@ fun AboutScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(R.drawable.logo_new),
+                        painter = painterResource(Res.drawable.logo_new),
                         contentScale = ContentScale.Crop,
-                        contentDescription = stringResource(R.string.app_icon_info)
+                        contentDescription = stringResource(Res.string.app_icon_info)
                     )
                 }
             }
@@ -152,13 +152,13 @@ fun AboutScreen(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    XyText(text = stringResource(R.string.app_name))
+                    XyText(text = stringResource(Res.string.app_name))
                 }
 
             }
             item {
                 SettingItemComponent(
-                    title = stringResource(R.string.current_version),
+                    title = stringResource(Res.string.current_version),
                     info = aboutViewModel.apkUpdateManager.currentVersion
                 ) {
 
@@ -167,10 +167,10 @@ fun AboutScreen(
             }
             item {
                 SettingItemComponent(
-                    title = stringResource(R.string.check_updates),
-                    info = if (aboutViewModel.apkUpdateManager.ifMaxVersion) stringResource(R.string.latest_version) else "${
+                    title = stringResource(Res.string.check_updates),
+                    info = if (aboutViewModel.apkUpdateManager.ifMaxVersion) stringResource(Res.string.latest_version) else "${
                         stringResource(
-                            R.string.new_version_detected
+                            Res.string.new_version_detected
                         )
                     }:${aboutViewModel.apkUpdateManager.latestVersion}",
                     ifOpenBadge = !aboutViewModel.apkUpdateManager.ifMaxVersion,
@@ -195,7 +195,7 @@ fun AboutScreen(
                                             }
                                         }
                                         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                                        XyTextSub(text = "${stringResource(R.string.version_number)}: ${aboutViewModel.apkUpdateManager.latestVersion}")
+                                        XyTextSub(text = "${stringResource(Res.string.version_number)}: ${aboutViewModel.apkUpdateManager.latestVersion}")
                                         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
                                         LinearProgressIndicator(
                                             progress = {
@@ -214,11 +214,11 @@ fun AboutScreen(
                                             },
                                         )
                                         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                                        BasicText(text = "${stringResource(R.string.current_download_progress)}: ${apkDownloadInfo?.progress ?: 0f}%")
+                                        BasicText(text = "${stringResource(Res.string.current_download_progress)}: ${apkDownloadInfo?.progress ?: 0f}%")
                                         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
                                         if (apkDownloadInfo?.status == DownloadStatus.FAILED) {
                                             XyTextSub(
-                                                text = stringResource(R.string.download_failed),
+                                                text = stringResource(Res.string.download_failed),
                                                 color = MaterialTheme.colorScheme.onErrorContainer
                                             )
                                             Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
@@ -230,7 +230,7 @@ fun AboutScreen(
                                                 onClick = {
                                                     aboutViewModel.cancelDownload()
                                                 },
-                                                text = stringResource(R.string.cancel_download),
+                                                text = stringResource(Res.string.cancel_download),
                                                 enabled = apkDownloadInfo?.status == DownloadStatus.DOWNLOADING
                                             )
                                             Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
@@ -253,7 +253,7 @@ fun AboutScreen(
                                                     )
 //                                            CircularWavyProgressIndicator()
                                                 Text(
-                                                    text = stringResource(R.string.download_install),
+                                                    text = stringResource(Res.string.download_install),
                                                     modifier = Modifier
                                                         .fillMaxWidth(),
                                                     color = Color.White,
@@ -266,23 +266,24 @@ fun AboutScreen(
                                     }
 
                                 },
-                                dismissText = R.string.close,
+                                dismissText = Res.string.close,
                                 onDismissRequest = {}).show()
                         }
                     }
                 }
             }
             item {
-                SettingItemComponent(title = stringResource(R.string.problem_feedback)) {
+                SettingItemComponent(title = stringResource(Res.string.problem_feedback)) {
                     MessageUtils.sendPopTip(functionNotImplemented)
                 }
             }
 
             item {
-                SettingItemComponent(title = stringResource(R.string.official_website)) {
+                SettingItemComponent(title = stringResource(Res.string.official_website)) {
                     MessageUtils.sendPopTip(noOfficialWebsiteYet)
                 }
             }
         }
     }
 }
+

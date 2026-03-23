@@ -1,4 +1,4 @@
-package cn.xybbz.ui.screens
+﻿package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -9,12 +9,12 @@ import androidx.compose.material3.Icon
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.router.GenreInfo
 import cn.xybbz.ui.components.MusicGenreCardComponent
@@ -48,13 +48,13 @@ fun GenresScreen(
             modifier = Modifier.statusBarsPadding(),
             title = {
                 TopAppBarTitle(
-                    title = stringResource(R.string.genres)
+                    title = stringResource(Res.string.genres)
                 )
             }, navigationIcon = {
                 IconButton(onClick = composeClick { navigator.goBack() }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.return_home)
+                        contentDescription = stringResource(Res.string.return_home)
                     )
                 }
             })
@@ -82,3 +82,4 @@ fun GenresScreen(
         }
     }
 }
+

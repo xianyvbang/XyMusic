@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -39,10 +39,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
@@ -148,7 +148,7 @@ fun SettingItemComponent(
                             Icon(
                                 imageVector = imageVector,
                                 contentDescription = stringResource(
-                                    R.string.enter_settings,
+                                    Res.string.enter_settings,
                                     title
                                 )
                             )
@@ -211,3 +211,4 @@ fun MusicSettingSwitchItemComponent(
 ) {
     XyItemSwitcher(state = ifChecked, onChange = { onRouter(it) }, text = title)
 }
+

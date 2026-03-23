@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -36,7 +36,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import androidx.room.withTransaction
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.api.events.ReLoginEvent
@@ -501,9 +501,9 @@ class MainViewModel @Inject constructor(
     //region 音乐循环类型
     val iconList by mutableStateOf(
         listOf(
-            PlayerTypeData(icon = Icons.Rounded.RepeatOne, message = R.string.single_loop),
-            PlayerTypeData(icon = Icons.Rounded.Repeat, message = R.string.list_loop),
-            PlayerTypeData(icon = Icons.Rounded.Shuffle, message = R.string.shuffle_play),
+            PlayerTypeData(icon = Icons.Rounded.RepeatOne, message = Res.string.single_loop),
+            PlayerTypeData(icon = Icons.Rounded.Repeat, message = Res.string.list_loop),
+            PlayerTypeData(icon = Icons.Rounded.Shuffle, message = Res.string.shuffle_play),
         )
     )
 
@@ -578,7 +578,7 @@ class MainViewModel @Inject constructor(
                     }
                     db.eraItemDao.saveBatch(
                         XyEraItem(
-                            title = application.getString(R.string.era_title_decade, era),
+                            title = application.getString(Res.string.era_title_decade, era),
                             era = era,
                             years = years
                         )
@@ -694,3 +694,4 @@ class MainViewModel @Inject constructor(
     }
 
 }
+

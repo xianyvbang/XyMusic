@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -30,9 +30,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.MusicSettingSwitchItemComponent
@@ -67,7 +67,7 @@ fun StreamingQualityScreen(
             modifier = Modifier.statusBarsPadding(),
             title = {
                 TopAppBarTitle(
-                    title = stringResource(R.string.online_music_quality)
+                    title = stringResource(Res.string.online_music_quality)
                 )
             }, navigationIcon = {
                 IconButton(
@@ -77,7 +77,7 @@ fun StreamingQualityScreen(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.return_setting_screen)
+                        contentDescription = stringResource(Res.string.return_setting_screen)
                     )
                 }
             })
@@ -91,7 +91,7 @@ fun StreamingQualityScreen(
             item {
                 SettingRoundedSurfaceColumn {
                     MusicSettingSwitchItemComponent(
-                        title = stringResource(R.string.any_network),
+                        title = stringResource(Res.string.any_network),
                         ifChecked = streamingQualityViewModel.ifTranscoding
                     ) { bol ->
                         coroutineScope.launch {
@@ -112,7 +112,7 @@ fun StreamingQualityScreen(
                     horizontalArrangement = Arrangement.Start
                 ) {
                     XyText(
-                        text = stringResource(R.string.mobile_network_playback_sound_quality)
+                        text = stringResource(Res.string.mobile_network_playback_sound_quality)
                     )
                 }
 
@@ -143,7 +143,7 @@ fun StreamingQualityScreen(
                     horizontalArrangement = Arrangement.Start
                 ) {
                     XyText(
-                        text = stringResource(R.string.wifi_network)
+                        text = stringResource(Res.string.wifi_network)
                     )
                 }
 
@@ -176,7 +176,7 @@ fun StreamingQualityScreen(
                     horizontalArrangement = Arrangement.Start
                 ) {
                     XyText(
-                        text = stringResource(R.string.transcoding_format)
+                        text = stringResource(Res.string.transcoding_format)
                     )
                 }
 
@@ -200,4 +200,5 @@ fun StreamingQualityScreen(
         }
     }
 }
+
 

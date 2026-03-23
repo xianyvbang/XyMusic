@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -77,8 +77,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -86,7 +86,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.common.enums.MusicTypeEnum
@@ -217,7 +217,7 @@ fun MusicPlayerScreen(
             model = coverUrls.primaryUrl ?: picByte,
             backModel = coverUrls.fallbackUrl ?: picByte,
             alpha = 0.2f,
-            contentDescription = stringResource(R.string.album_cover),
+            contentDescription = stringResource(Res.string.album_cover),
         )
         XyColumnScreen(
             modifier = Modifier
@@ -262,7 +262,7 @@ fun MusicPlayerScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.KeyboardArrowDown,
-                            contentDescription = stringResource(R.string.close_player_screen)
+                            contentDescription = stringResource(Res.string.close_player_screen)
                         )
                     }
                 }, actions = {
@@ -305,11 +305,11 @@ fun MusicPlayerScreen(
                                         ),
                                     model = coverUrls.primaryUrl ?: picByte,
                                     backModel = coverUrls.fallbackUrl ?: picByte,
-                                    placeholder = painterResource(id = R.drawable.disc_placeholder),
+                                    placeholder = painterResource(id = Res.drawable.disc_placeholder),
                                     /*.graphicsLayer(rotationZ = rotationState)*/
-                                    error = painterResource(id = R.drawable.disc_placeholder),
-                                    fallback = painterResource(id = R.drawable.disc_placeholder),
-                                    contentDescription = stringResource(R.string.album_cover),
+                                    error = painterResource(id = Res.drawable.disc_placeholder),
+                                    fallback = painterResource(id = Res.drawable.disc_placeholder),
+                                    contentDescription = stringResource(Res.string.album_cover),
                                 )
                             }
 
@@ -366,7 +366,7 @@ fun MusicPlayerScreen(
                             )
 
                             Text(
-                                text = if (musicDetail.artists.isNullOrEmpty()) stringResource(R.string.unknown_artist) else musicDetail.artists?.joinToString()
+                                text = if (musicDetail.artists.isNullOrEmpty()) stringResource(Res.string.unknown_artist) else musicDetail.artists?.joinToString()
                                     ?: "",
                                 color = Color(0xff7B7B8B),
                                 fontSize = 17.sp,
@@ -404,7 +404,7 @@ fun MusicPlayerScreen(
                                 imageVector = Icons.Default.MoreVert,
                                 contentDescription = "${musicPlayerViewModel.musicController.musicInfo?.name}${
                                     stringResource(
-                                        R.string.other_operations_button_suffix
+                                        Res.string.other_operations_button_suffix
                                     )
                                 }"
                             )
@@ -432,7 +432,7 @@ fun MusicPlayerScreen(
                             PlayerTypeComponent(musicController = musicPlayerViewModel.musicController)
                             Icon(
                                 imageVector = Icons.Rounded.SkipPrevious,
-                                contentDescription = stringResource(R.string.previous_track),
+                                contentDescription = stringResource(Res.string.previous_track),
                                 modifier = Modifier
                                     .size(30.dp, 35.dp)
                                     .debounceClickable {
@@ -447,7 +447,7 @@ fun MusicPlayerScreen(
 
                             Icon(
                                 imageVector = Icons.Rounded.SkipNext,
-                                contentDescription = stringResource(R.string.next_track),
+                                contentDescription = stringResource(Res.string.next_track),
                                 modifier = Modifier
                                     .size(30.dp, 35.dp)
                                     .debounceClickable {
@@ -467,7 +467,7 @@ fun MusicPlayerScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Sharp.QueueMusic,
-                                    contentDescription = stringResource(R.string.music_list)
+                                    contentDescription = stringResource(Res.string.music_list)
                                 )
                             }
                         }
@@ -560,8 +560,8 @@ fun PlayerStateComponent(
                 || musicController.state == PlayStateEnum.Loading
             ) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
             contentDescription = if (musicController.state == PlayStateEnum.Playing) stringResource(
-                R.string.playing
-            ) else stringResource(R.string.pause),
+                Res.string.playing
+            ) else stringResource(Res.string.pause),
             modifier = Modifier
                 .size(size)
                 .clip(CircleShape)
@@ -617,10 +617,11 @@ private fun FavoriteMusicIconComponent(
                     Icons.Rounded.Favorite
                 else
                     Icons.Rounded.FavoriteBorder,
-            contentDescription = stringResource(R.string.favorite_button),
+            contentDescription = stringResource(Res.string.favorite_button),
             tint = if (musicDetail.itemId in onFavoriteMusicIdSet()) Color.Red else LocalContentColor.current
         )
     }
 
 }
+
 

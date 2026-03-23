@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -74,8 +74,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -85,7 +85,7 @@ import androidx.core.graphics.scale
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.palette.graphics.Palette
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.music.MusicController
@@ -104,6 +104,18 @@ import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.viewmodel.SnackBarPlayerViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.launch
+import xymusic_kmp.composeapp.generated.resources.add_to_playlist
+import xymusic_kmp.composeapp.generated.resources.delete_local_permanently
+import xymusic_kmp.composeapp.generated.resources.delete_permanently
+import xymusic_kmp.composeapp.generated.resources.download_list
+import xymusic_kmp.composeapp.generated.resources.music_cover
+import xymusic_kmp.composeapp.generated.resources.music_list
+import xymusic_kmp.composeapp.generated.resources.music_remove_from_playlist
+import xymusic_kmp.composeapp.generated.resources.pause
+import xymusic_kmp.composeapp.generated.resources.play_selected
+import xymusic_kmp.composeapp.generated.resources.playing
+import xymusic_kmp.composeapp.generated.resources.please_select
+import xymusic_kmp.composeapp.generated.resources.unfavorite
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
@@ -137,7 +149,7 @@ fun SnackBarPlayerComponent(
         skipPartiallyExpanded = true
     )
 
-    val pleaseSelect = stringResource(R.string.please_select)
+    val pleaseSelect = stringResource(Res.string.please_select)
 
     MusicBottomMenuComponent(
         onAlbumRouter = { albumId ->
@@ -242,8 +254,8 @@ fun SnackBarPlayerComponent(
                             Icon(
                                 imageVector = Icons.Rounded.Delete,
                                 contentDescription = if (snackBarPlayerViewModel.selectControl.ifLocal) stringResource(
-                                    R.string.delete_local_permanently
-                                ) else stringResource(R.string.delete_permanently)
+                                    Res.string.delete_local_permanently
+                                ) else stringResource(Res.string.delete_permanently)
                             )
                         }
 
@@ -261,7 +273,7 @@ fun SnackBarPlayerComponent(
                     }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.PlaylistPlay,
-                            contentDescription = stringResource(R.string.play_selected)
+                            contentDescription = stringResource(Res.string.play_selected)
                         )
                     }
 
@@ -275,7 +287,7 @@ fun SnackBarPlayerComponent(
                     }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.PlaylistAdd,
-                            contentDescription = stringResource(R.string.add_to_playlist)
+                            contentDescription = stringResource(Res.string.add_to_playlist)
                         )
                     }
                     if (snackBarPlayerViewModel.selectControl.ifPlaylist)
@@ -290,7 +302,7 @@ fun SnackBarPlayerComponent(
                         }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
                             Icon(
                                 imageVector = Icons.Rounded.PlaylistRemove,
-                                contentDescription = stringResource(R.string.music_remove_from_playlist)
+                                contentDescription = stringResource(Res.string.music_remove_from_playlist)
                             )
                         }
 
@@ -306,7 +318,7 @@ fun SnackBarPlayerComponent(
                     }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
                         Icon(
                             imageVector = Icons.Rounded.HeartBroken,
-                            contentDescription = stringResource(R.string.unfavorite)
+                            contentDescription = stringResource(Res.string.unfavorite)
                         )
                     }
 
@@ -321,7 +333,7 @@ fun SnackBarPlayerComponent(
                         }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
                             Icon(
                                 imageVector = Icons.Rounded.Download,
-                                contentDescription = stringResource(R.string.download_list)
+                                contentDescription = stringResource(Res.string.download_list)
                             )
                         }
                 }
@@ -372,7 +384,7 @@ fun SnackBarPlayerComponent(
                         )
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.QueueMusic,
-                            contentDescription = stringResource(R.string.music_list),
+                            contentDescription = stringResource(Res.string.music_list),
                             tint = Color.White,
                             modifier = Modifier
                                 .padding(horizontal = 5.dp)
@@ -588,8 +600,8 @@ private fun CircularProgressIndicatorComp(musicController: MusicController) {
         Icon(
             imageVector = if (musicController.state == PlayStateEnum.Playing || musicController.state == PlayStateEnum.Loading) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
             contentDescription = if (musicController.state == PlayStateEnum.Playing) stringResource(
-                R.string.playing
-            ) else stringResource(R.string.pause),
+                Res.string.playing
+            ) else stringResource(Res.string.pause),
             modifier = Modifier
                 .size(25.dp)
                 .clip(CircleShape)
@@ -629,10 +641,10 @@ private fun ImageCover(
             .size(XyTheme.dimens.snackBarPlayerHeight),
         model = activeCoverModel,
         backModel = backupCoverModel,
-        placeholder = painterResource(R.drawable.music_xy_placeholder_foreground),
-        error = painterResource(R.drawable.music_xy_placeholder_foreground),
-        fallback = painterResource(R.drawable.music_xy_placeholder_foreground),
-        contentDescription = stringResource(R.string.music_cover),
+        placeholder = painterResource(Res.drawable.music_xy_placeholder_foreground),
+        error = painterResource(Res.drawable.music_xy_placeholder_foreground),
+        fallback = painterResource(Res.drawable.music_xy_placeholder_foreground),
+        contentDescription = stringResource(Res.string.music_cover),
         onSuccess = {
             val drawable = it.result.drawable
             val bitmap = drawableToBitmap(drawable)
@@ -653,4 +665,5 @@ private fun ImageCover(
         },
     )
 }
+
 

@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -46,10 +46,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.router.About
@@ -103,7 +103,7 @@ fun SettingScreen(
 
     val clipboardManager = LocalClipboard.current
 
-    val copySuccess = stringResource(R.string.copy_success)
+    val copySuccess = stringResource(Res.string.copy_success)
 
     XyColumnScreen(
         modifier = Modifier.brashColor(
@@ -115,7 +115,7 @@ fun SettingScreen(
             modifier = Modifier.statusBarsPadding(),
             title = {
                 TopAppBarTitle(
-                    title = stringResource(R.string.settings)
+                    title = stringResource(Res.string.settings)
                 )
             }, navigationIcon = {
                 IconButton(
@@ -125,7 +125,7 @@ fun SettingScreen(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.return_home)
+                        contentDescription = stringResource(Res.string.return_home)
                     )
                 }
             })
@@ -138,7 +138,7 @@ fun SettingScreen(
             item {
                 SettingRoundedSurfaceColumn {
                     MusicSettingSwitchItemComponent(
-                        title = stringResource(R.string.broadcast_while_down),
+                        title = stringResource(Res.string.broadcast_while_down),
                         ifChecked = settingsViewModel.settingDataNow.ifEnableEdgeDownload
                     ) { bol ->
                         coroutineScope.launch {
@@ -149,17 +149,17 @@ fun SettingScreen(
                     }
 
                     AnimatedVisibility(visible = settingsViewModel.settingDataNow.ifEnableEdgeDownload) {
-                        SettingItemComponent(title = stringResource(R.string.cache_limit)) {
+                        SettingItemComponent(title = stringResource(Res.string.cache_limit)) {
                             navigator.navigate(CacheLimit)
                         }
                     }
 
-                    SettingItemComponent(title = stringResource(R.string.online_music_quality)) {
+                    SettingItemComponent(title = stringResource(Res.string.online_music_quality)) {
                         navigator.navigate(StreamingQuality)
                     }
 
                     MusicSettingSwitchItemComponent(
-                        title = stringResource(R.string.album_playback_history),
+                        title = stringResource(Res.string.album_playback_history),
                         ifChecked = settingsViewModel.settingDataNow.ifEnableAlbumHistory
                     ) { bol ->
                         coroutineScope.launch {
@@ -170,7 +170,7 @@ fun SettingScreen(
                     }
 
                     MusicSettingSwitchItemComponent(
-                        title = stringResource(R.string.allow_simultaneous_playback),
+                        title = stringResource(Res.string.allow_simultaneous_playback),
                         ifChecked = settingsViewModel.settingDataNow.ifHandleAudioFocus
                     ) { bol ->
                         coroutineScope.launch {
@@ -181,7 +181,7 @@ fun SettingScreen(
                     }
 
                     MusicSettingSwitchItemComponent(
-                        title = stringResource(R.string.enabled_sync_play_progress),
+                        title = stringResource(Res.string.enabled_sync_play_progress),
                         ifChecked = settingsViewModel.settingDataNow.ifEnableSyncPlayProgress
                     ) { bol ->
                         coroutineScope.launch {
@@ -192,7 +192,7 @@ fun SettingScreen(
                     }
 
                     SettingItemComponent(
-                        title = stringResource(R.string.cache_location),
+                        title = stringResource(Res.string.cache_location),
                         bottomInfo = settingsViewModel.settingsManager.cacheFilePath,
                         maxLines = Int.MAX_VALUE,
                         imageVector = null
@@ -216,7 +216,7 @@ fun SettingScreen(
             }
             item {
                 SettingRoundedSurfaceColumn {
-                    SettingItemComponent(title = stringResource(R.string.connection_management)) {
+                    SettingItemComponent(title = stringResource(Res.string.connection_management)) {
                         navigator.navigate(ConnectionManagement)
                     }
                 }
@@ -225,7 +225,7 @@ fun SettingScreen(
             item {
                 SettingRoundedSurfaceColumn {
                     SettingItemComponent(
-                        title = stringResource(R.string.download_max_list),
+                        title = stringResource(Res.string.download_max_list),
                         info = settingsViewModel.settingDataNow.maxConcurrentDownloads.toString(),
                         imageVector = Icons.Rounded.KeyboardArrowDown,
                         trailingContent = {
@@ -241,7 +241,7 @@ fun SettingScreen(
                                                 Icon(
                                                     Icons.Rounded.Check,
                                                     contentDescription = stringResource(
-                                                        R.string.download_max_list
+                                                        Res.string.download_max_list
                                                     ) + "1"
                                                 )
                                         },
@@ -263,7 +263,7 @@ fun SettingScreen(
                                                 Icon(
                                                     Icons.Rounded.Check,
                                                     contentDescription = stringResource(
-                                                        R.string.download_max_list
+                                                        Res.string.download_max_list
                                                     ) + "3"
                                                 )
                                         },
@@ -285,7 +285,7 @@ fun SettingScreen(
                                                 Icon(
                                                     Icons.Rounded.Check,
                                                     contentDescription = stringResource(
-                                                        R.string.download_max_list
+                                                        Res.string.download_max_list
                                                     ) + "5"
                                                 )
                                         },
@@ -309,7 +309,7 @@ fun SettingScreen(
                     }
 
                     SettingItemComponent(
-                        title = stringResource(R.string.song_cache_location),
+                        title = stringResource(Res.string.song_cache_location),
                         bottomInfo = settingsViewModel.downLoadManager.getConfig().finalDirectory,
                         maxLines = Int.MAX_VALUE,
                         imageVector = null
@@ -335,29 +335,29 @@ fun SettingScreen(
             item {
                 SettingRoundedSurfaceColumn {
 
-                    SettingItemComponent(title = stringResource(R.string.storage_management)) {
+                    SettingItemComponent(title = stringResource(Res.string.storage_management)) {
                         navigator.navigate(MemoryManagement)
                     }
 
                     SettingItemComponent(
-                        title = stringResource(R.string.customize_lyric_settings)
+                        title = stringResource(Res.string.customize_lyric_settings)
                     ) {
                         navigator.navigate(CustomApi)
                     }
 
-                    SettingItemComponent(title = stringResource(R.string.poxy_config)) {
+                    SettingItemComponent(title = stringResource(Res.string.poxy_config)) {
                         navigator.navigate(ProxyConfig)
                     }
 
-                    SettingItemComponent(title = stringResource(R.string.interface_settings)) {
+                    SettingItemComponent(title = stringResource(Res.string.interface_settings)) {
                         navigator.navigate(InterfaceSetting)
                     }
 
-                    SettingItemComponent(title = stringResource(R.string.language)) {
+                    SettingItemComponent(title = stringResource(Res.string.language)) {
                         navigator.navigate(LanguageConfig)
                     }
 
-                    SettingItemComponent(title = stringResource(R.string.about)) {
+                    SettingItemComponent(title = stringResource(Res.string.about)) {
                         //版本信息,检查更新
                         navigator.navigate(About)
                     }
@@ -378,3 +378,4 @@ fun SettingRoundedSurfaceColumn(content: @Composable ColumnScope.() -> Unit) {
         content = content
     )
 }
+

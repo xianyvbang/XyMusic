@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -76,7 +76,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
@@ -86,7 +86,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.common.utils.LrcUtils.formatTime
 import cn.xybbz.common.utils.LrcUtils.getIndex
@@ -281,7 +281,7 @@ fun LrcViewNewCompose(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = stringResource(R.string.no_lyrics),
+                            text = stringResource(Res.string.no_lyrics),
                             modifier = Modifier.align(Alignment.Center)
                         )
                     }
@@ -342,7 +342,7 @@ fun LrcViewNewCompose(
                     fabMenuExpanded = !fabMenuExpanded
                 },
                 label = {
-                    Text(text = stringResource(R.string.lrc_config))
+                    Text(text = stringResource(Res.string.lrc_config))
                 })
         }
     }
@@ -484,19 +484,19 @@ private fun LrcConfigComponent(
 
     val items =
         listOf(
-            LrcConfigData(Icons.Rounded.Add, stringResource(R.string.forward_offset), {
+            LrcConfigData(Icons.Rounded.Add, stringResource(Res.string.forward_offset), {
                 offsetMillis += 500
                 onSetTmpLrcOffset(offsetMillis)
             }),
-            LrcConfigData(Icons.Rounded.Remove, stringResource(R.string.backward_offset), {
+            LrcConfigData(Icons.Rounded.Remove, stringResource(Res.string.backward_offset), {
                 offsetMillis -= 500
                 onSetTmpLrcOffset(offsetMillis)
             }),
-            LrcConfigData(Icons.Rounded.RestartAlt, stringResource(R.string.reset), {
+            LrcConfigData(Icons.Rounded.RestartAlt, stringResource(Res.string.reset), {
                 offsetMillis = 0
                 onSetTmpLrcOffset(offsetMillis)
             }),
-            LrcConfigData(Icons.Rounded.Check, stringResource(R.string.confirm), {
+            LrcConfigData(Icons.Rounded.Check, stringResource(Res.string.confirm), {
                 onSetLrcOffset(offsetMillis)
                 onSetFabMenuExpanded(false)
             })
@@ -509,7 +509,7 @@ private fun LrcConfigComponent(
         modifier = modifier.padding(end = XyTheme.dimens.outerHorizontalPadding)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            XyTextSubSmall(text = "${stringResource(R.string.offset)}: ${offsetMillis.toSecondMs()}s")
+            XyTextSubSmall(text = "${stringResource(Res.string.offset)}: ${offsetMillis.toSecondMs()}s")
             items.forEachIndexed { index, item ->
                 AssistChip(
                     modifier = Modifier.semantics {

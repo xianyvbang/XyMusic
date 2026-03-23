@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -41,11 +41,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.localdata.data.search.SearchHistory
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyIconButton as IconButton
@@ -80,7 +80,7 @@ fun SearchRecordComponent(
             }) {
                 Icon(
                     imageVector = Icons.Rounded.Delete,
-                    contentDescription = "${stringResource(R.string.delete_prefix)}${title}",
+                    contentDescription = "${stringResource(Res.string.delete_prefix)}${title}",
                     modifier = Modifier
                         .size(20.dp)
                 )
@@ -113,7 +113,7 @@ fun SearchRecordComponent(
                 },
                 label = {
                     Text(
-                        text = stringResource(R.string.no_search_history),
+                        text = stringResource(Res.string.no_search_history),
                         style = MaterialTheme.typography.titleSmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -124,3 +124,4 @@ fun SearchRecordComponent(
         }
     }
 }
+

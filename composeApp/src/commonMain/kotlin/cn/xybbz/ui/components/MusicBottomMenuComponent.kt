@@ -1,4 +1,4 @@
-/*
+﻿/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -75,7 +75,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction.Companion.Done
 import androidx.compose.ui.text.input.KeyboardType
@@ -84,7 +84,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cn.xybbz.R
+import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.utils.DateUtil.millisecondsToTime
 import cn.xybbz.common.utils.DateUtil.toDateStr
 import cn.xybbz.common.utils.DateUtil.toSecondMsString
@@ -152,11 +152,11 @@ fun MusicBottomMenuComponent(
         mutableStateOf(musicBottomMenuViewModel.alarmConfig.canScheduleExactAlarm())
     }
 
-    val exactAlarmPermissionGranted = stringResource(R.string.exact_alarm_permission_granted)
-    val exactAlarmPermissionNotGranted = stringResource(R.string.exact_alarm_permission_not_granted)
-    val addToNextPlaySuccess = stringResource(R.string.add_to_next_play_success)
-    val deletePermanently = stringResource(R.string.delete_permanently)
-    val timerClose = stringResource(R.string.timer_close)
+    val exactAlarmPermissionGranted = stringResource(Res.string.exact_alarm_permission_granted)
+    val exactAlarmPermissionNotGranted = stringResource(Res.string.exact_alarm_permission_not_granted)
+    val addToNextPlaySuccess = stringResource(Res.string.add_to_next_play_success)
+    val deletePermanently = stringResource(Res.string.delete_permanently)
+    val timerClose = stringResource(Res.string.timer_close)
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -304,7 +304,7 @@ fun MusicBottomMenuComponent(
                     XyItemIcon(
                         imageVector = Icons.Rounded.Download,
 //                        enabled = musicBottomMenuViewModel.dataSourceManager.getCanDownload(),
-                        text = stringResource(R.string.download),
+                        text = stringResource(Res.string.download),
                         onClick = {
 //                            permissionState?.launchMultiplePermissionRequest()
                         })
@@ -314,7 +314,7 @@ fun MusicBottomMenuComponent(
                 item {
                     XyItemIcon(
                         imageVector = Icons.Rounded.Person,
-                        text = "${stringResource(R.string.artist)}: ${music.artists}",
+                        text = "${stringResource(Res.string.artist)}: ${music.artists}",
                         onClick = {
                             //获得歌手信息
                             music.artistIds?.let { artistIds ->
@@ -345,7 +345,7 @@ fun MusicBottomMenuComponent(
                 item {
                     XyItemIcon(
                         imageVector = Icons.Rounded.Album,
-                        text = "${stringResource(R.string.album)}: ${music.albumName ?: ""}",
+                        text = "${stringResource(Res.string.album)}: ${music.albumName ?: ""}",
                         onClick = {
                             coroutineScope.launch {
                                 sheetState.hide()
@@ -363,7 +363,7 @@ fun MusicBottomMenuComponent(
                 item {
                     XyItemIcon(
                         imageVector = Icons.Rounded.KeyboardDoubleArrowRight,
-                        text = stringResource(R.string.skip_head_tail),
+                        text = stringResource(Res.string.skip_head_tail),
                         onClick = {
                             coroutineScope.launch {
                                 sheetState.hide()
@@ -380,7 +380,7 @@ fun MusicBottomMenuComponent(
                 item {
                     XyItemIcon(
                         imageVector = Icons.Rounded.AvTimer,
-                        text = stringResource(R.string.timer_close),
+                        text = stringResource(Res.string.timer_close),
                         onClick = {
                             coroutineScope.launch {
                                 sheetState.hide()
@@ -395,7 +395,7 @@ fun MusicBottomMenuComponent(
                 item {
                     XyItemIcon(
                         imageVector = Icons.Rounded.Speed,
-                        text = stringResource(R.string.double_speed),
+                        text = stringResource(Res.string.double_speed),
                         onClick = {
                             coroutineScope.launch {
                                 sheetState.hide()
@@ -411,7 +411,7 @@ fun MusicBottomMenuComponent(
                 item {
                     XyItemIcon(
                         imageVector = Icons.Rounded.Add,
-                        text = stringResource(R.string.add_to_playlist),
+                        text = stringResource(Res.string.add_to_playlist),
                         onClick = {
                             coroutineScope.launch {
                                 sheetState.hide()
@@ -429,7 +429,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        text = stringResource(R.string.volume_value_setting),
+                        text = stringResource(Res.string.volume_value_setting),
                         sub = (musicBottomMenuViewModel.volumeValue * 100).toInt().toString(),
                         imageVector = Icons.AutoMirrored.Rounded.VolumeUp,
                         middleContent = {
@@ -447,7 +447,7 @@ fun MusicBottomMenuComponent(
                 item {
                     XyItemIcon(
                         imageVector = Icons.Rounded.SettingsVoice,
-                        text = "${stringResource(R.string.play_settings)}: ${
+                        text = "${stringResource(Res.string.play_settings)}: ${
                             musicBottomMenuViewModel.getFadeDurationMs().toSecondMsString()
                         }",
                         onClick = {
@@ -464,7 +464,7 @@ fun MusicBottomMenuComponent(
                 item {
                     XyItemIcon(
                         imageVector = Icons.AutoMirrored.Rounded.PlaylistAdd,
-                        text = stringResource(R.string.play_next),
+                        text = stringResource(Res.string.play_next),
                         onClick = {
                             coroutineScope.launch {
                                 sheetState.hide()
@@ -483,7 +483,7 @@ fun MusicBottomMenuComponent(
                 item {
                     XyItemIcon(
                         imageVector = Icons.Rounded.Share,
-                        text = stringResource(R.string.share_song),
+                        text = stringResource(Res.string.share_song),
                         onClick = {
                             if (URLUtil.isNetworkUrl(music.downloadUrl)) {
                                 val sendIntent: Intent = Intent().apply {
@@ -526,7 +526,7 @@ fun MusicBottomMenuComponent(
                 item {
                     XyItemIcon(
                         imageVector = Icons.Rounded.Info,
-                        text = stringResource(R.string.song_info),
+                        text = stringResource(Res.string.song_info),
                         onClick = {
                             coroutineScope.launch {
                                 sheetState.hide()
@@ -547,7 +547,7 @@ fun MusicBottomMenuComponent(
                                     title = deletePermanently,
                                     content = {
                                         XyTextSubSmall(
-                                            text = stringResource(R.string.delete_warning)
+                                            text = stringResource(Res.string.delete_warning)
                                         )
                                     },
                                     ifWarning = true,
@@ -674,8 +674,8 @@ fun TimerComponent(
     )
     val coroutineScope = rememberCoroutineScope()
 
-    val customTimerClose = stringResource(R.string.custom_timer_close)
-    val max24Hours = stringResource(R.string.max_24_hours)
+    val customTimerClose = stringResource(Res.string.custom_timer_close)
+    val max24Hours = stringResource(Res.string.max_24_hours)
 
     //输入内容
     var customInputValue by remember {
@@ -693,7 +693,7 @@ fun TimerComponent(
         number = sdf.format(calendar.time)
     }
 
-    val timerClose = stringResource(R.string.timer_close)
+    val timerClose = stringResource(Res.string.timer_close)
     ModalBottomSheetExtendComponent(
         bottomSheetState = sheetTimer,
         modifier = Modifier.statusBarsPadding(),
@@ -707,7 +707,7 @@ fun TimerComponent(
         },
         titleText = timerClose,
         titleSub = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !ifCanScheduleExactAlarms) stringResource(
-            R.string.timer_close_subtitle
+            Res.string.timer_close_subtitle
         ) else null,
         titleTailContent = if (!ifCanScheduleExactAlarms) {
             {
@@ -719,7 +719,7 @@ fun TimerComponent(
                     }
                 ) {
                     XyTextSub(
-                        text = stringResource(R.string.apply_permission),
+                        text = stringResource(Res.string.apply_permission),
                     )
                 }
                 Spacer(modifier = Modifier.width(XyTheme.dimens.innerHorizontalPadding))
@@ -738,7 +738,7 @@ fun TimerComponent(
                     },
                 ) {
                     XyTextSubSmall(
-                        text = stringResource(R.string.reset)
+                        text = stringResource(Res.string.reset)
                     )
                 }
             }
@@ -758,7 +758,7 @@ fun TimerComponent(
                                     val pattern = Regex("[^0-9]") // 定义正则表达式，匹配至少1位数字
                                     var replace = input.replace(pattern, "")
                                     if (replace.length >= 4) {
-                                        MessageUtils.sendPopTipError(R.string.max_24_hours)
+                                        MessageUtils.sendPopTipError(Res.string.max_24_hours)
                                         replace = replace.take(4)
                                     } else {
                                         isError = false
@@ -792,43 +792,43 @@ fun TimerComponent(
                 onSetSliderTimerEndData(it)
                 //判断是否为自定义
             }, valueRange = 0f..75f, steps = 4,
-            text = "${stringResource(R.string.countdown_prefix)}${
+            text = "${stringResource(Res.string.countdown_prefix)}${
                 when (onSliderTimerEndData()) {
-                    0f -> stringResource(R.string.timer_close_disabled)
-                    75f -> "${stringResource(R.string.timer_close_custom)} ${onTimerInfo()}${
+                    0f -> stringResource(Res.string.timer_close_disabled)
+                    75f -> "${stringResource(Res.string.timer_close_custom)} ${onTimerInfo()}${
                         stringResource(
-                            R.string.custom_timer_suffix
+                            Res.string.custom_timer_suffix
                         )
                     } $number $timerClose"
 
-                    else -> "${onSliderTimerEndData().toInt()}${stringResource(R.string.custom_timer_suffix)} $number $timerClose"
+                    else -> "${onSliderTimerEndData().toInt()}${stringResource(Res.string.custom_timer_suffix)} $number $timerClose"
                 }
             }"
         )
 
         XyRow {
             XyTextSubSmall(
-                text = stringResource(R.string.timer_close_disabled),
+                text = stringResource(Res.string.timer_close_disabled),
                 color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
             )
             XyTextSubSmall(
-                text = "15${stringResource(R.string.minutes)}",
+                text = "15${stringResource(Res.string.minutes)}",
                 color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
             )
             XyTextSubSmall(
-                text = "30${stringResource(R.string.minutes)}",
+                text = "30${stringResource(Res.string.minutes)}",
                 color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
             )
             XyTextSubSmall(
-                text = "45${stringResource(R.string.minutes)}",
+                text = "45${stringResource(Res.string.minutes)}",
                 color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
             )
             XyTextSubSmall(
-                text = "60${stringResource(R.string.minutes)}",
+                text = "60${stringResource(Res.string.minutes)}",
                 color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
             )
             XyTextSubSmall(
-                text = stringResource(R.string.timer_close_custom),
+                text = stringResource(Res.string.timer_close_custom),
                 color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -841,7 +841,7 @@ fun TimerComponent(
                     onSetIfPlayEndClose(it)
                 }
             },
-            text = stringResource(R.string.close_after_playback)
+            text = stringResource(Res.string.close_after_playback)
         )
 
     }
@@ -878,7 +878,7 @@ private fun DoubleSpeedComponent(
             onSetIfDoubleSpeed(false)
             mainViewModel.putIterations(1)
         },
-        titleText = stringResource(R.string.double_speed),
+        titleText = stringResource(Res.string.double_speed),
         titleTailContent = {
             OutlinedButton(
                 modifier = Modifier.size(height = 25.dp, width = 50.dp),
@@ -890,7 +890,7 @@ private fun DoubleSpeedComponent(
                 },
             ) {
                 Text(
-                    text = stringResource(R.string.reset),
+                    text = stringResource(Res.string.reset),
                     fontSize = 10.sp
                 )
             }
@@ -903,10 +903,10 @@ private fun DoubleSpeedComponent(
             },
             valueRange = 0.5f..2f,
             steps = 2,
-            text = "${stringResource(R.string.playback_speed)}: ${
+            text = "${stringResource(Res.string.playback_speed)}: ${
                 when (doubleSpeedTmp) {
                     0.5f -> "0.5"
-                    1f -> stringResource(R.string.normal)
+                    1f -> stringResource(Res.string.normal)
                     1.5f -> "1.5"
                     2f -> "2"
                     else -> ""
@@ -920,7 +920,7 @@ private fun DoubleSpeedComponent(
             XyTextSubSmall(text = "2.0")
         }
 
-        XyButtonHorizontalPadding(text = stringResource(R.string.confirm), onClick = {
+        XyButtonHorizontalPadding(text = stringResource(Res.string.confirm), onClick = {
             coroutineScope
                 .launch {
                     sheetDoubleSpeed.hide()
@@ -981,7 +981,7 @@ private fun SkipBeginningAndEndComponent(
             mainViewModel.putIterations(1)
         },
         dragHandle = null,
-        titleText = stringResource(R.string.skip_head_tail),
+        titleText = stringResource(Res.string.skip_head_tail),
         titleTailContent = {
             OutlinedButton(
                 modifier = Modifier.size(height = 25.dp, width = 50.dp),
@@ -1001,7 +1001,7 @@ private fun SkipBeginningAndEndComponent(
                 },
             ) {
                 Text(
-                    text = stringResource(R.string.reset),
+                    text = stringResource(Res.string.reset),
                     fontSize = 10.sp,
                 )
             }
@@ -1013,7 +1013,7 @@ private fun SkipBeginningAndEndComponent(
                 startTime = it.toLong().toFloat()
             },
             valueRange = 0f..60f,
-            text = "${stringResource(R.string.skip_head_prefix)} ${startTime.toLong()}s"
+            text = "${stringResource(Res.string.skip_head_prefix)} ${startTime.toLong()}s"
         )
         XyRow(
             modifier = Modifier.fillMaxWidth()
@@ -1028,14 +1028,14 @@ private fun SkipBeginningAndEndComponent(
                 endTime = it.toLong().toFloat()
             },
             valueRange = 0f..60f,
-            text = "${stringResource(R.string.skip_tail_prefix)} ${endTime.toLong()}s"
+            text = "${stringResource(Res.string.skip_tail_prefix)} ${endTime.toLong()}s"
         )
         XyRow {
             XyTextSubSmall(text = "0s")
             XyTextSubSmall(text = "60s")
         }
 
-        XyButtonHorizontalPadding(text = stringResource(R.string.confirm), onClick = {
+        XyButtonHorizontalPadding(text = stringResource(Res.string.confirm), onClick = {
             if (onAlbumId().isNotBlank()) {
                 skipTime.endTime = endTime.toLong()
                 skipTime.headTime = startTime.toLong()
@@ -1085,38 +1085,38 @@ fun MusicInfoBottomComponent(
             onSetShowMusicInfo(false)
             mainViewModel.putIterations(1)
         },
-        titleText = stringResource(R.string.song_info)
+        titleText = stringResource(Res.string.song_info)
     ) {
 
         LazyColumnBottomSheetComponent(horizontal = XyTheme.dimens.outerHorizontalPadding) {
-            item { XyItemReversal(text = stringResource(R.string.title), sub = musicInfo.name) }
+            item { XyItemReversal(text = stringResource(Res.string.title), sub = musicInfo.name) }
             item {
                 XyItemReversal(
-                    text = stringResource(R.string.artist),
+                    text = stringResource(Res.string.artist),
                     sub = musicInfo.artists?.joinToString() ?: ""
                 )
             }
             item {
                 XyItemReversal(
-                    text = stringResource(R.string.album),
+                    text = stringResource(Res.string.album),
                     sub = musicInfo.albumName ?: ""
                 )
             }
             item {
                 XyItemReversal(
-                    text = stringResource(R.string.album_artist),
+                    text = stringResource(Res.string.album_artist),
                     sub = musicInfo.albumArtist?.joinToString() ?: ""
                 )
             }
             item {
                 XyItemReversal(
-                    text = stringResource(R.string.media_source),
+                    text = stringResource(Res.string.media_source),
                     sub = dataSourceType?.title ?: ""
                 )
             }
             item {
                 XyItemReversal(
-                    text = stringResource(R.string.duration),
+                    text = stringResource(Res.string.duration),
                     sub = millisecondsToTime(
                         BigDecimal(
                             musicInfo.runTimeTicks
@@ -1126,25 +1126,25 @@ fun MusicInfoBottomComponent(
             }
             item {
                 XyItemReversal(
-                    text = stringResource(R.string.bitrate),
+                    text = stringResource(Res.string.bitrate),
                     sub = "${(musicInfo.bitRate ?: 0) / 1000}kbps"
                 )
             }
             item {
                 XyItemReversal(
-                    text = stringResource(R.string.sample_rate),
+                    text = stringResource(Res.string.sample_rate),
                     sub = "${musicInfo.sampleRate ?: 0}Hz"
                 )
             }
             item {
                 XyItemReversal(
-                    text = stringResource(R.string.bit_depth),
+                    text = stringResource(Res.string.bit_depth),
                     sub = "${musicInfo.bitDepth ?: 0}bit"
                 )
             }
             item {
                 XyItemReversal(
-                    text = stringResource(R.string.size),
+                    text = stringResource(Res.string.size),
                     sub = "${
                         BigDecimal(musicInfo.size ?: 0).divide(BigDecimal(1024))
                             .divide(
@@ -1155,19 +1155,19 @@ fun MusicInfoBottomComponent(
             }
             item {
                 XyItemReversal(
-                    text = stringResource(R.string.format),
+                    text = stringResource(Res.string.format),
                     sub = musicInfo.container ?: ""
                 )
             }
             item {
                 XyItemReversal(
-                    text = stringResource(R.string.actual_path),
+                    text = stringResource(Res.string.actual_path),
                     sub = musicInfo.path
                 )
             }
             item {
                 XyItemReversal(
-                    text = stringResource(R.string.add_time),
+                    text = stringResource(Res.string.add_time),
                     sub = musicInfo.createTime.toDateStr(
                         "yyyy/MM/dd HH:mm"
                     )
@@ -1205,7 +1205,7 @@ fun ArtistItemListBottomSheet(
             onSetShowArtistList(false)
             mainViewModel.putIterations(1)
         },
-        titleText = stringResource(R.string.artist_list_title)
+        titleText = stringResource(Res.string.artist_list_title)
     ) {
         LazyVerticalGridComponent {
             items(artistList, key = { it.artistId }) { artist ->
@@ -1253,7 +1253,7 @@ private fun FadeInOutBottomSheet(
             onSetShowFadeInOut(it)
         },
         dragHandle = null,
-        titleText = stringResource(R.string.play_settings),
+        titleText = stringResource(Res.string.play_settings),
         titleTailContent = {
             OutlinedButton(
                 modifier = Modifier.size(height = 25.dp, width = 50.dp),
@@ -1264,7 +1264,7 @@ private fun FadeInOutBottomSheet(
                 },
             ) {
                 Text(
-                    text = stringResource(R.string.reset),
+                    text = stringResource(Res.string.reset),
                     fontSize = 10.sp,
                 )
             }
@@ -1276,7 +1276,7 @@ private fun FadeInOutBottomSheet(
                 fadeDurationMs = it.toLong()
             },
             valueRange = 0f..15000f,
-            text = "${stringResource(R.string.play_settings_time)}: ${fadeDurationMs.toSecondMsString()}"
+            text = "${stringResource(Res.string.play_settings_time)}: ${fadeDurationMs.toSecondMsString()}"
         )
         XyRow(
             modifier = Modifier.fillMaxWidth()
@@ -1285,7 +1285,7 @@ private fun FadeInOutBottomSheet(
             XyTextSubSmall(text = "15s")
         }
 
-        XyButtonHorizontalPadding(text = stringResource(R.string.confirm), onClick = {
+        XyButtonHorizontalPadding(text = stringResource(Res.string.confirm), onClick = {
             coroutineScope
                 .launch {
                     bottomSheetState.hide()
