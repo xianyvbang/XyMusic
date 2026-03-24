@@ -34,7 +34,7 @@ import cn.xybbz.common.utils.PlaylistFileUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.Sort
-import cn.xybbz.entity.data.music.MusicPlayContext
+import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.music.XyMusic

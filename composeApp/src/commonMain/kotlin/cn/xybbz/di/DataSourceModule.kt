@@ -31,7 +31,6 @@ import cn.xybbz.api.client.plex.PlexDatasourceServer
 import cn.xybbz.api.client.subsonic.SubsonicApiClient
 import cn.xybbz.api.client.subsonic.SubsonicDatasourceServer
 import cn.xybbz.api.client.version.VersionApiClient
-import cn.xybbz.config.alarm.AlarmConfig
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.enums.DataSourceType
@@ -50,13 +49,15 @@ class DataSourceModule {
         db: DatabaseClient,
         settingsManager: SettingsManager,
         jellyfinApiClient: JellyfinApiClient,
-        customMediaApiClient: CustomMediaApiClient
+        customMediaApiClient: CustomMediaApiClient,
+        contextWrapper: ContextWrapper
     ): JellyfinDatasourceServer {
         return JellyfinDatasourceServer(
             db,
             settingsManager,
             jellyfinApiClient,
-            customMediaApiClient
+            customMediaApiClient,
+            contextWrapper
         )
     }
 
@@ -67,12 +68,14 @@ class DataSourceModule {
         settingsManager: SettingsManager,
         subsonicApiClient: SubsonicApiClient,
         customMediaApiClient: CustomMediaApiClient,
+        contextWrapper: ContextWrapper
     ): SubsonicDatasourceServer {
         return SubsonicDatasourceServer(
             db,
             settingsManager,
             subsonicApiClient,
-            customMediaApiClient
+            customMediaApiClient,
+            contextWrapper
         )
     }
 
@@ -99,12 +102,14 @@ class DataSourceModule {
         settingsManager: SettingsManager,
         embyApiClient: EmbyApiClient,
         customMediaApiClient: CustomMediaApiClient,
+        contextWrapper: ContextWrapper
     ): EmbyDatasourceServer {
         return EmbyDatasourceServer(
             db,
             settingsManager,
             embyApiClient,
             customMediaApiClient,
+            contextWrapper
         )
     }
 
@@ -116,12 +121,14 @@ class DataSourceModule {
         settingsManager: SettingsManager,
         plexApiClient: PlexApiClient,
         customMediaApiClient: CustomMediaApiClient,
+        contextWrapper: ContextWrapper
     ): PlexDatasourceServer {
         return PlexDatasourceServer(
             db,
             settingsManager,
             plexApiClient,
             customMediaApiClient,
+            contextWrapper
         )
     }
 
@@ -129,12 +136,12 @@ class DataSourceModule {
     @Singleton
     fun dataSourceManager(
         db: DatabaseClient,
-        alarmConfig: AlarmConfig,
+//        alarmConfig: AlarmConfig,
         versionApiClient: VersionApiClient,
     ): DataSourceManager {
         val dataSourceManager = DataSourceManager(
             db,
-            alarmConfig,
+//            alarmConfig,
             versionApiClient
         )
         return dataSourceManager

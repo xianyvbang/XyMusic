@@ -26,11 +26,15 @@ abstract class IoScoped() : AutoCloseable {
 
     protected lateinit var scope: XyCloseableCoroutineScope
 
+    protected open fun scopeName(): String {
+        return this::class.qualifiedName ?: this::class.simpleName ?: "IoScoped"
+    }
+
     fun createScope(coroutineContext: CoroutineContext? = null) {
         scope =
             coroutineContext?.childScope()
                 ?: CoroutineScopeUtils.getIo(
-                    this::javaClass.name
+                    scopeName()
                 )
     }
 

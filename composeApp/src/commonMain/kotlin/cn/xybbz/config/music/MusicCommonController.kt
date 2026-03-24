@@ -17,8 +17,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.koin.core.component.KoinComponent
 
-abstract class MusicCommonController: IoScoped() {
+abstract class MusicCommonController: IoScoped(),KoinComponent  {
 
     // 原始歌曲列表
     var originMusicList by mutableStateOf(emptyList<XyPlayMusic>())
@@ -103,9 +104,37 @@ abstract class MusicCommonController: IoScoped() {
      */
   abstract  fun updateCurrentFavorite(isFavorite: Boolean)
 
-
     /**
      * 清空播放列表
      */
     abstract fun clearPlayerList()
+
+    /**
+     * 设置播放类型
+     */
+    abstract fun setPlayTypeData(playerTypeEnum: PlayerTypeEnum)
+
+
+    /**
+     * 设置跳过片头片尾时间
+     */
+   open fun setHeadAndEntTime(headTime: Long, endTime: Long) {
+        this.headTime = headTime
+        this.endTime = endTime
+    }
+
+
+    /**
+     * 设置当前音乐列表
+     */
+   abstract fun initMusicList(
+        musicDataList: List<XyPlayMusic>,
+        musicCurrentPositionMapData: Map<String, Long>?,
+        originIndex: Int?,
+        pageNum: Int,
+        pageSize: Int,
+        artistId: String?,
+        ifInitPlayerList: Boolean = false,
+        musicPlayTypeEnum: MusicPlayTypeEnum
+    )
 }

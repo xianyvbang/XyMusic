@@ -19,7 +19,6 @@
 package cn.xybbz.viewmodel
 
 import android.util.Log
-import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -38,7 +37,7 @@ import cn.xybbz.common.utils.DataRefreshEstimateUtils
 import cn.xybbz.common.utils.DataSourceChangeUtils
 import cn.xybbz.config.HomeDataRepository
 import cn.xybbz.config.recommender.DailyRecommender
-import cn.xybbz.entity.data.music.MusicPlayContext
+import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig

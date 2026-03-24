@@ -4,6 +4,8 @@ import androidx.compose.ui.graphics.Color
 import coil3.Bitmap
 import coil3.Image
 import coil3.toBitmap
+import kotlin.math.abs
+import kotlin.math.max
 
 /**
  * 资源工具类
@@ -11,18 +13,7 @@ import coil3.toBitmap
 object ResourcesUtils {
 
     /**
-     * 将字节数组转换成Bimap
-     */
-    fun bytes2Bimap(bytes: ByteArray?): Bitmap? {
-        return if (bytes != null && bytes.isNotEmpty()) {
-            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-        } else {
-            null
-        }
-    }
-
-    /**
-     * Coil 3 的成功结果返回的是 `Image`，这里统一转成 `Bitmap` 供 Palette 使用。
+     * Coil 3 的成功结果返回的是 `Image`，这里统一转成 `Bitmap` 供跨平台取色使用。
      */
     fun drawableToBitmap(drawable: Image?): Bitmap? {
         return drawable?.toBitmap()
@@ -40,14 +31,100 @@ object ResourcesUtils {
             onColorReady(Color.Transparent)
             return
         }
-        val scaledBitmap = bitmap.scale(200, 200, false)
-        Palette.from(scaledBitmap).generate { palette ->
-            val colorValue = palette?.darkMutedSwatch?.rgb
-                ?: palette?.mutedSwatch?.rgb
-                ?: palette?.darkVibrantSwatch?.rgb
-                ?: palette?.vibrantSwatch?.rgb
-                ?: palette?.dominantSwatch?.rgb
-            onColorReady(colorValue?.let(::Color) ?: Color.Transparent)
+        onColorReady(extractDominantColor(bitmap))
+    }
+}
+
+internal expect fun bitmapWidth(bitmap: Bitmap): Int
+
+internal expect fun bitmapHeight(bitmap: Bitmap): Int
+
+internal expect fun bitmapColor(bitmap: Bitmap, x: Int, y: Int): Int
+
+private data class ColorBucket(
+    var count: Int = 0,
+    var red: Int = 0,
+    var green: Int = 0,
+    var blue: Int = 0,
+    var saturation: Float = 0f,
+    var value: Float = 0f
+)
+
+internal fun extractDominantColor(bitmap: Bitmap): Color {
+    return sampleDominantColor(
+        width = bitmapWidth(bitmap),
+        height = bitmapHeight(bitmap),
+        colorAt = { x, y -> bitmapColor(bitmap, x, y) }
+    )
+}
+
+private fun sampleDominantColor(
+    width: Int,
+    height: Int,
+    colorAt: (Int, Int) -> Int
+): Color {
+    if (width <= 0 || height <= 0) {
+        return Color.Transparent
+    }
+
+    val stepX = max(1, width / 24)
+    val stepY = max(1, height / 24)
+    val buckets = LinkedHashMap<Int, ColorBucket>()
+
+    for (y in 0 until height step stepY) {
+        for (x in 0 until width step stepX) {
+            val argb = colorAt(x, y)
+            val alpha = (argb ushr 24) and 0xFF
+            if (alpha < 128) {
+                continue
+            }
+
+            val red = (argb ushr 16) and 0xFF
+            val green = (argb ushr 8) and 0xFF
+            val blue = argb and 0xFF
+            val (_, saturation, value) = rgbToHsv(red, green, blue)
+
+            if (value < 0.08f) {
+                continue
+            }
+
+            val bucketKey = ((red shr 4) shl 8) or ((green shr 4) shl 4) or (blue shr 4)
+            val bucket = buckets.getOrPut(bucketKey) { ColorBucket() }
+            bucket.count++
+            bucket.red += red
+            bucket.green += green
+            bucket.blue += blue
+            bucket.saturation += saturation
+            bucket.value += value
         }
     }
+
+    val bestBucket = buckets.values.maxByOrNull { bucket ->
+        val averageSaturation = bucket.saturation / bucket.count
+        val averageValue = bucket.value / bucket.count
+        val darknessFit = (1f - abs(averageValue - 0.35f) / 0.35f).coerceIn(0f, 1f)
+        bucket.count * (0.65f + averageSaturation * 0.35f + darknessFit * 0.25f)
+    } ?: return Color.Transparent
+
+    val averageRed = bestBucket.red / bestBucket.count
+    val averageGreen = bestBucket.green / bestBucket.count
+    val averageBlue = bestBucket.blue / bestBucket.count
+    return Color(
+        red = averageRed,
+        green = averageGreen,
+        blue = averageBlue,
+        alpha = 255
+    )
+}
+
+private fun rgbToHsv(red: Int, green: Int, blue: Int): Triple<Float, Float, Float> {
+    val r = red / 255f
+    val g = green / 255f
+    val b = blue / 255f
+    val maxColor = maxOf(r, g, b)
+    val minColor = minOf(r, g, b)
+    val delta = maxColor - minColor
+    val saturation = if (maxColor == 0f) 0f else delta / maxColor
+
+    return Triple(0f, saturation, maxColor)
 }

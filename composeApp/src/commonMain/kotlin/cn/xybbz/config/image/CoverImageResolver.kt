@@ -1,10 +1,7 @@
 package cn.xybbz.config.image
 
-import android.content.Context
-import android.webkit.URLUtil
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import cn.xybbz.api.TokenServer.baseUrl
 import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.custom.data.CustomCoverQuery
@@ -13,20 +10,14 @@ import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyPlayMusic
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Inject
-import javax.inject.Singleton
+import org.koin.compose.koinInject
 
 data class CoverImageUrls(
     val primaryUrl: String?,
     val fallbackUrl: String?
 )
 
-@Singleton
-class CoverImageResolver @Inject constructor(
+class CoverImageResolver(
     private val settingsManager: SettingsManager,
     private val customMediaApiClient: CustomMediaApiClient
 ) {
@@ -146,8 +137,6 @@ class CoverImageResolver @Inject constructor(
     }
 }
 
-@EntryPoint
-@InstallIn(SingletonComponent::class)
 interface CoverImageEntryPoint {
     fun coverImageResolver(): CoverImageResolver
 }
@@ -204,22 +193,22 @@ fun rememberRawCoverUrls(primaryUrl: String?, fallbackUrl: String? = null): Cove
 
 @Composable
 private fun rememberCoverImageResolver(): CoverImageResolver {
-    val context = LocalContext.current.applicationContext
-    return remember(context) {
-        context.coverImageResolver()
+    val context = koinInject<CoverImageResolver>()
+    return remember {
+        context
     }
-}
-
-fun Context.coverImageResolver(): CoverImageResolver {
-    return EntryPointAccessors.fromApplication(this, CoverImageEntryPoint::class.java)
-        .coverImageResolver()
 }
 
 fun String?.normalizeCoverUrl(): String? {
     val normalizedValue = this?.trim()?.takeIf { it.isNotBlank() } ?: return null
-    return if (URLUtil.isNetworkUrl(normalizedValue)) {
+    return if (normalizedValue.isAbsoluteNetworkUrl()) {
         normalizedValue
     } else {
         baseUrl + normalizedValue
     }
+}
+
+private fun String.isAbsoluteNetworkUrl(): Boolean {
+    return startsWith("http://", ignoreCase = true) ||
+        startsWith("https://", ignoreCase = true)
 }

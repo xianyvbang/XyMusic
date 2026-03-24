@@ -16,22 +16,19 @@
  *
  */
 
-package cn.xybbz.entity.data.music
+package cn.xybbz.config.music
 
-import android.util.Log
-import androidx.annotation.OptIn
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.media3.common.util.UnstableApi
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.common.music.MusicController
-import cn.xybbz.common.utils.CoroutineScopeUtils
+import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.MusicListIndexUtils
+import cn.xybbz.config.scope.IoScoped
+import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.data.player.XyPlayer
@@ -44,8 +41,8 @@ import cn.xybbz.ui.components.dismiss
 import cn.xybbz.ui.components.show
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import java.util.UUID
-import javax.inject.Inject
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.get_music_failed_cannot_play
 
 @Immutable
 data class MusicPlayData(
@@ -63,15 +60,17 @@ var ifNextPageNumList by mutableStateOf(false)
 /**
  * 音乐播放请求上下文
  */
-class MusicPlayContext @Inject constructor(
+class MusicPlayContext(
     private val dataSourceManager: DataSourceManager,
-    private val musicController: MusicController,
+    private val musicController: MusicCommonController,
     private val db: DatabaseClient
-) {
+) : IoScoped() {
 
     var musicPlayData: MusicPlayData? = null
 
-    private val playCoroutineScope = CoroutineScopeUtils.getMain(this.javaClass.name)
+    init {
+        createScope()
+    }
 
 
     /**
@@ -90,7 +89,7 @@ class MusicPlayContext @Inject constructor(
                 onMusicPlayParameter = onMusicPlayParameter,
                 xyMusicList = { musicList }),
             ifSkip = false,
-            coroutineScope = playCoroutineScope,
+            coroutineScope = scope,
             musicPlayTypeEnum = MusicPlayTypeEnum.RECORD
         )
     }
@@ -109,7 +108,7 @@ class MusicPlayContext @Inject constructor(
                 val pageNum =
                     MusicListIndexUtils.getPageNum(index, Constants.UI_LIST_PAGE)
 
-                val loadingObject = LoadingObject(id = UUID.randomUUID().toString())
+                val loadingObject = LoadingObject()
                 loadingObject.show()
                 //数据库中获取
                 val musicList = dataSourceManager.getMusicList(
@@ -130,7 +129,7 @@ class MusicPlayContext @Inject constructor(
         musicOperate(
             musicPlayData = musicPlayContext,
             ifSkip = false,
-            coroutineScope = playCoroutineScope,
+            coroutineScope = scope,
             musicPlayTypeEnum = type
         )
     }
@@ -142,7 +141,7 @@ class MusicPlayContext @Inject constructor(
         val musicPlayData = MusicPlayData(
             onMusicPlayParameter = onMusicPlayParameter,
             xyMusicList = {
-                val loadingObject = LoadingObject(id = UUID.randomUUID().toString())
+                val loadingObject = LoadingObject()
                 loadingObject.show()
                 val musicList = if (onMusicPlayParameter.albumId != null) {
                     val progress =
@@ -179,7 +178,7 @@ class MusicPlayContext @Inject constructor(
         musicOperate(
             musicPlayData = musicPlayData,
             ifSkip = false,
-            coroutineScope = playCoroutineScope,
+            coroutineScope = scope,
             musicPlayTypeEnum = MusicPlayTypeEnum.ALBUM
         )
     }
@@ -197,7 +196,7 @@ class MusicPlayContext @Inject constructor(
             onMusicPlayParameter = onMusicPlayParameter,
             xyMusicList = {
 
-                val loadingObject = LoadingObject(id = UUID.randomUUID().toString())
+                val loadingObject = LoadingObject()
                 loadingObject.show()
                 val pageNum = MusicListIndexUtils.getPageNum(
                     index,
@@ -221,7 +220,7 @@ class MusicPlayContext @Inject constructor(
         musicOperate(
             musicPlayData = musicPlayData,
             ifSkip = false,
-            coroutineScope = playCoroutineScope,
+            coroutineScope = scope,
             musicPlayTypeEnum = MusicPlayTypeEnum.ARTIST
         )
     }
@@ -234,7 +233,7 @@ class MusicPlayContext @Inject constructor(
         val musicPlayData = MusicPlayData(
             onMusicPlayParameter = onMusicPlayParameter,
             xyMusicList = {
-                val loadingObject = LoadingObject(id = UUID.randomUUID().toString())
+                val loadingObject = LoadingObject()
                 loadingObject.show()
                 val pageNum = MusicListIndexUtils.getPageNum(
                     index,
@@ -256,7 +255,7 @@ class MusicPlayContext @Inject constructor(
         musicOperate(
             musicPlayData = musicPlayData,
             ifSkip = false,
-            coroutineScope = playCoroutineScope,
+            coroutineScope = scope,
             musicPlayTypeEnum = MusicPlayTypeEnum.FAVORITE
         )
     }
@@ -268,7 +267,7 @@ class MusicPlayContext @Inject constructor(
         val musicPlayData = MusicPlayData(
             onMusicPlayParameter = onMusicPlayParameter,
             xyMusicList = {
-                val loadingObject = LoadingObject(id = UUID.randomUUID().toString())
+                val loadingObject = LoadingObject()
                 loadingObject.show()
                 val musicList = dataSourceManager.getRandomMusicExtendList(
                     pageNum = 0,
@@ -288,7 +287,7 @@ class MusicPlayContext @Inject constructor(
         musicOperate(
             musicPlayData = musicPlayData,
             ifSkip = false,
-            coroutineScope = playCoroutineScope,
+            coroutineScope = scope,
             musicPlayTypeEnum = MusicPlayTypeEnum.RANDOM
         )
     }
@@ -358,7 +357,7 @@ class MusicPlayContext @Inject constructor(
                 ifSkip = player.ifSkip,
                 pageNum = player.pageNum,
                 ifInitPlayerList = true,
-                coroutineScope = playCoroutineScope,
+                coroutineScope = scope,
                 musicPlayTypeEnum = player.dataType
             )
 
@@ -373,7 +372,6 @@ class MusicPlayContext @Inject constructor(
      * @param [coroutineScope] 协程作用域
      * @param [ifSkip] 如果跳过头尾
      */
-    @OptIn(UnstableApi::class)
     fun musicOperate(
         musicPlayData: MusicPlayData,
         ifSkip: Boolean,

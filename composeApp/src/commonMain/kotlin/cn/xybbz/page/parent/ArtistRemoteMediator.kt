@@ -22,25 +22,24 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
-import androidx.room.withTransaction
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.remote.RemoteCurrent
 import cn.xybbz.localdata.enums.DataSourceType
-import coil.network.HttpException
-import java.io.IOException
-import java.util.concurrent.TimeUnit
+import coil3.network.HttpException
+import kotlinx.io.IOException
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.DurationUnit
 
 /**
  * jellyfin艺术家的网络数据加载
  * @author xybbz
  * @date 2024/06/14
  * @constructor 创建[ArtistRemoteMediator]
- * @param [userId] 用户id
- * @param [database] 本地缓存管理类
  * @param [dataSource] 数据源来兴
  */
 @OptIn(ExperimentalPagingApi::class)
@@ -121,14 +120,8 @@ class ArtistRemoteMediator(
 
     override suspend fun initialize(): InitializeAction {
         val cacheTimeout =
-            TimeUnit.MILLISECONDS.convert(Constants.ARTIST_PAGE_TIME_FAILURE, TimeUnit.MINUTES)
-        return if (System.currentTimeMillis() - (remoteKeyDao.remoteKeyById(remoteId)?.createTime
-                ?: 0) <= cacheTimeout
-        ) {
-            InitializeAction.SKIP_INITIAL_REFRESH
-        } else {
-            InitializeAction.LAUNCH_INITIAL_REFRESH
-        }
+            Constants.ARTIST_PAGE_TIME_FAILURE.minutes.toLong(DurationUnit.MILLISECONDS)
+        return getInitializeAction(remoteKeyDao, remoteId, cacheTimeout)
     }
 
 

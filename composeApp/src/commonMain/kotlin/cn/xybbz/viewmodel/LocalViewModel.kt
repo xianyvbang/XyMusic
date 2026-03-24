@@ -21,7 +21,7 @@ package cn.xybbz.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.common.music.MusicController
-import cn.xybbz.entity.data.music.MusicPlayContext
+import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.download.XyDownload

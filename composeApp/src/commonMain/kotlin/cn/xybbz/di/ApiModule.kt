@@ -46,11 +46,11 @@ class ApiModule {
         return plexApiClient
     }
 
-    @Singleton
+ /*   @Singleton
     fun cacheApiClient(): CacheApiClient {
         val cacheApiClient = CacheApiClient()
         return cacheApiClient
-    }
+    }*/
 
 
     @Singleton

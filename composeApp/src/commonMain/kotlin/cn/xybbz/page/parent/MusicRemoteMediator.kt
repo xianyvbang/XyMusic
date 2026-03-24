@@ -18,7 +18,6 @@
 
 package cn.xybbz.page.parent
 
-import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.XyResponse
@@ -51,7 +50,6 @@ class MusicRemoteMediator(
         loadKey: Int,
         pageSize: Int
     ): XyResponse<XyMusic> {
-        Log.i("music数据变化","music数据变化1")
         return datasourceServer.getRemoteServerMusicList(
             startIndex = loadKey * pageSize,
             pageSize = pageSize,

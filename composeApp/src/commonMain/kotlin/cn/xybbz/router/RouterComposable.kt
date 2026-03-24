@@ -56,6 +56,7 @@ import cn.xybbz.ui.screens.SettingScreen
 import cn.xybbz.ui.screens.StreamingQualityScreen
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyImage
+import xymusic_kmp.composeapp.generated.resources.background_image
 
 /**
  * 节点页面

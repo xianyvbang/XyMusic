@@ -22,7 +22,6 @@ import android.app.Application
 import android.icu.math.BigDecimal
 import android.icu.math.MathContext
 import android.util.Log
-import androidx.annotation.OptIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.RepeatOne
@@ -51,8 +50,8 @@ import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.setting.TranscodingState
 import cn.xybbz.config.update.VersionCheckScheduler
 import cn.xybbz.entity.data.PlayerTypeData
-import cn.xybbz.entity.data.music.MusicPlayContext
-import cn.xybbz.entity.data.music.ifNextPageNumList
+import cn.xybbz.config.music.MusicPlayContext
+import cn.xybbz.config.music.ifNextPageNumList
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.era.XyEraItem
 import cn.xybbz.localdata.data.music.PlayHistoryMusic

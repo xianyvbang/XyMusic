@@ -44,6 +44,7 @@ import cn.xybbz.common.constants.Constants.MUSIC_POSITION_UPDATE_INTERVAL
 import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
 import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
 import cn.xybbz.common.enums.PlayStateEnum
+import cn.xybbz.config.image.CoverImageResolver
 import cn.xybbz.config.image.coverImageResolver
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.PlayerEvent
@@ -57,6 +58,9 @@ import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
+import kotlin.getValue
 
 
 /**
@@ -71,7 +75,7 @@ class MusicController(
     private val dataSourceManager: DataSourceManager
 ) : MusicCommonController() {
 
-    private val coverImageResolver by lazy { application.applicationContext.coverImageResolver() }
+    private val coverImageResolver: CoverImageResolver = get()
 
     lateinit var progressTicker: PlayProgressTicker
         private set
@@ -748,13 +752,6 @@ class MusicController(
         }
     }
 
-    /**
-     * 设置跳过片头片尾时间
-     */
-    fun setHeadAndEntTime(headTime: Long, endTime: Long) {
-        this.headTime = headTime
-        this.endTime = endTime
-    }
 
     /**
      * 更新当前音乐的收藏信息->更新UI数据

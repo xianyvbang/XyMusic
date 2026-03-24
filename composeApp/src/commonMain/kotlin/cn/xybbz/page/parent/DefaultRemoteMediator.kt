@@ -22,12 +22,14 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
-import androidx.room.withTransaction
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.remote.RemoteCurrent
-import java.util.concurrent.TimeUnit
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.DurationUnit
 
 @OptIn(ExperimentalPagingApi::class)
 abstract class DefaultRemoteMediator<T : Any, K : Any>(
@@ -101,19 +103,8 @@ abstract class DefaultRemoteMediator<T : Any, K : Any>(
     }
 
     open suspend fun getInitializeAction(): InitializeAction {
-        val remoteCurrent = remoteKeyDao.remoteKeyById(remoteId)
-        if (remoteCurrent?.refresh == true){
-            return InitializeAction.LAUNCH_INITIAL_REFRESH
-        }
-        val cacheTimeout =
-            TimeUnit.MILLISECONDS.convert(Constants.PAGE_TIME_FAILURE, TimeUnit.MINUTES)
-        return if (System.currentTimeMillis() - (remoteCurrent?.createTime
-                ?: 0) <= cacheTimeout
-        ) {
-            InitializeAction.SKIP_INITIAL_REFRESH
-        } else {
-            InitializeAction.LAUNCH_INITIAL_REFRESH
-        }
+        val cacheTimeout = Constants.PAGE_TIME_FAILURE.minutes.toLong(DurationUnit.MILLISECONDS)
+        return getInitializeAction(remoteKeyDao,remoteId,cacheTimeout)
     }
 
     /**

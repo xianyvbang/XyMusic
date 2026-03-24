@@ -60,7 +60,7 @@ import androidx.compose.ui.unit.sp
 import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.entity.data.ext.joinToString
-import cn.xybbz.entity.data.music.ifNextPageNumList
+import cn.xybbz.config.music.ifNextPageNumList
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme

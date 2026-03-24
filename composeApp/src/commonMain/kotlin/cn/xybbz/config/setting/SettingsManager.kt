@@ -120,6 +120,7 @@ class SettingsManager(
             }
         })
         netWorkMonitor.start()
+        this@SettingsManager.isUnmeteredWifi = netWorkMonitor.isUnmeteredWifi.value
         get()
     }
 

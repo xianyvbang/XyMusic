@@ -27,7 +27,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class AudioFadeAndroidController() : IoScoped(),AudioFadeController {
+class AudioFadeAndroidController : IoScoped(),AudioFadeController {
 
     private var currentTrack: AudioTrack? = null
     private var volumeShaper: VolumeShaper? = null
@@ -35,7 +35,7 @@ class AudioFadeAndroidController() : IoScoped(),AudioFadeController {
     private var released = false  // 新增标志
     private var fadeDurationMs: Long = 300L
 
-    fun updateFadeDurationMs(fadeDurationMs: Long) {
+   override fun updateFadeDurationMs(fadeDurationMs: Long) {
         this.fadeDurationMs = fadeDurationMs
     }
 

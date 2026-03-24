@@ -18,87 +18,70 @@
 
 package cn.xybbz.config.network
 
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.Network
-import android.net.NetworkCapabilities
-import android.net.NetworkRequest
-import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class NetWorkMonitor(application: Context) {
+abstract class NetWorkMonitor {
 
-    private val connectivityManager =
-        application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
+    private val listeners = mutableListOf<OnNetworkChangeListener>()
     private val _isUnmeteredWifi = MutableStateFlow(false)
+    private var started = false
+
     val isUnmeteredWifi: StateFlow<Boolean> = _isUnmeteredWifi.asStateFlow()
 
-
-    val onNetworkChanges = mutableListOf<OnNetworkChangeListener>()
-
-
-    private fun check(caps: NetworkCapabilities?) {
-        if (caps == null) {
-            _isUnmeteredWifi.value = false
-            return
-        }
-
-        val isWifi = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
-        val isUnmetered = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-
-
-        _isUnmeteredWifi.value = isWifi && isUnmetered
-
-        for (listener in onNetworkChanges) {
-            listener.onNetworkChange(isUnmetered)
-        }
-    }
-
-    private val callback = object : ConnectivityManager.NetworkCallback() {
-
-        override fun onAvailable(network: Network) {
-            Log.i("music","网络切换1")
-            check(connectivityManager.getNetworkCapabilities(network))
-        }
-
-        override fun onCapabilitiesChanged(
-            network: Network,
-            networkCapabilities: NetworkCapabilities
-        ) {
-            Log.i("music","网络切换2")
-//            check(networkCapabilities)
-        }
-
-        override fun onLost(network: Network) {
-            _isUnmeteredWifi.value = false
-            for (listener in onNetworkChanges) {
-                listener.onNetworkChange(false)
-            }
-        }
+    fun addListener(listener: OnNetworkChangeListener) {
+        listeners.add(listener)
     }
 
     fun start() {
-        val request = NetworkRequest.Builder()
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-            .build()
-        connectivityManager.registerNetworkCallback(request, callback)
+        if (started) {
+            return
+        }
+        started = true
 
-    }
-
-    fun addListener(listener: OnNetworkChangeListener) {
-        onNetworkChanges.add(listener)
+        try {
+            onStart()
+        } catch (error: Throwable) {
+            started = false
+            throw error
+        }
     }
 
     fun stop() {
-        try {
-            onNetworkChanges.clear()
-            connectivityManager.unregisterNetworkCallback(callback)
-        } catch (_: Exception) {
+        if (!started) {
+            listeners.clear()
+            return
+        }
+        started = false
 
+        try {
+            onStop()
+        } finally {
+            listeners.clear()
+        }
+    }
+
+    protected abstract fun onStart()
+
+    protected abstract fun onStop()
+
+    protected fun publishNetworkState(
+        isUnmeteredWifi: Boolean,
+        force: Boolean = false
+    ) {
+        if (!started) {
+            return
+        }
+
+        val changed = force || _isUnmeteredWifi.value != isUnmeteredWifi
+        _isUnmeteredWifi.value = isUnmeteredWifi
+        if (!changed) {
+            return
+        }
+
+        for (listener in listeners.toList()) {
+            listener.onNetworkChange(isUnmeteredWifi)
         }
     }
 }

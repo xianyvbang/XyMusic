@@ -51,6 +51,7 @@ import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyTextSubSmall
+import xymusic_kmp.composeapp.generated.resources.loading
 
 
 var loadingObjectList = mutableStateListOf<LoadingObject>()
@@ -58,7 +59,6 @@ var loadingObjectList = mutableStateListOf<LoadingObject>()
 @Immutable
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 data class LoadingObject constructor(
-    val id: String = "",
     val messageIsStringRes: Boolean = true,
     val loadingCompose: @Composable (Float?) -> Unit = {
         if (it == null) {
