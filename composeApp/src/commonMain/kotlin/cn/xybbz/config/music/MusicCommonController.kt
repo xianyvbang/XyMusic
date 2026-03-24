@@ -110,6 +110,16 @@ abstract class MusicCommonController: IoScoped(),KoinComponent  {
     abstract fun clearPlayerList()
 
     /**
+     * 暂停当前播放
+     */
+    abstract fun pause()
+
+    /**
+     * 设置倍速
+     */
+    abstract fun setDoubleSpeed(value: Float)
+
+    /**
      * 设置播放类型
      */
     abstract fun setPlayTypeData(playerTypeEnum: PlayerTypeEnum)

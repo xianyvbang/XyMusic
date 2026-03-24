@@ -18,8 +18,6 @@
 
 package cn.xybbz.viewmodel
 
-import android.icu.text.SimpleDateFormat
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -31,6 +29,8 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
+import cn.xybbz.common.enums.PlayStateEnum
+import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.download.core.DownloadRequest
 import cn.xybbz.config.music.MusicCommonController
@@ -41,14 +41,21 @@ import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.setting.SkipTime
 import cn.xybbz.localdata.enums.DownloadTypes
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format.FormatStringsInDatetimeFormats
+import kotlinx.datetime.format.byUnicodePattern
+import kotlinx.datetime.toLocalDateTime
 import org.koin.core.annotation.KoinViewModel
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.minutes
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.add_download_list
 import xymusic_kmp.composeapp.generated.resources.cancel_timer_close_message
-import java.util.Calendar
-import java.util.Date
 
 @KoinViewModel
 class MusicBottomMenuViewModel(
@@ -110,6 +117,9 @@ class MusicBottomMenuViewModel(
     fun setTimerInfoData(value: Long) {
         timerInfo = value
     }
+
+    private var timerJob: Job? = null
+    private var stopAfterCurrentTrackJob: Job? = null
 
     //endregion
     //region 播放速度
@@ -183,29 +193,47 @@ class MusicBottomMenuViewModel(
     /**
      * 音乐app定时关闭
      */
+    @OptIn(FormatStringsInDatetimeFormats::class)
     fun createMusicStop(timerClose: String) {
-        alarmConfig.cancelAllAlarm()
-        val calendar = android.icu.util.Calendar.getInstance()
-            .apply { time = Date() } // 创建Calendar对象并设置为当前时间
-        calendar.add(Calendar.MINUTE, timerInfo.toInt())
-        alarmConfig.getUpAlarmManagerStartWork(calendar, ifPlayEndClose)
-        Log.i("=====", "触发时间${SimpleDateFormat.getTimeInstance().format(calendar.time)}")
-        MessageUtils.sendPopTip(
-            SimpleDateFormat.getTimeInstance().format(calendar.time) + timerClose
-        )
+        cancelTimerJobs()
+        if (timerInfo <= 0L || sliderTimerEndData <= 0f) {
+            return
+        }
 
+        val systemTimeZone = TimeZone.currentSystemDefault()
+        val targetTime = (Clock.System.now() + timerInfo.toInt().minutes)
+            .toLocalDateTime(systemTimeZone)
+        val timeText = LocalDateTime.Format {
+            byUnicodePattern("HH:mm:ss")
+        }.format(targetTime)
+
+        timerJob = viewModelScope.launch {
+            delay(timerInfo * 60_000L)
+            timerJob = null
+
+            val currentItemId = musicController.musicInfo?.itemId
+            val shouldWaitForTrackEnd = ifPlayEndClose &&
+                !currentItemId.isNullOrBlank() &&
+                (musicController.state == PlayStateEnum.Playing || musicController.state == PlayStateEnum.Loading)
+
+            if (shouldWaitForTrackEnd && currentItemId != null) {
+                waitForCurrentTrackToFinish(currentItemId)
+            } else {
+                stopPlaybackByTimer()
+            }
+        }
+
+        MessageUtils.sendPopTip("$timeText$timerClose")
     }
 
     /**
      * 取消音乐app定时关闭
      */
     fun cancelAlarm() {
-        viewModelScope.launch {
-            alarmConfig.cancelAllAlarm()
-            MessageUtils.sendPopTip(
-                Res.string.cancel_timer_close_message
-            )
-        }
+        cancelTimerJobs()
+        MessageUtils.sendPopTip(
+            Res.string.cancel_timer_close_message
+        )
     }
 
     /**
@@ -286,6 +314,47 @@ class MusicBottomMenuViewModel(
 
     fun getFadeDurationMs(): Long {
         return settingsManager.get().fadeDurationMs
+    }
+
+    override fun onCleared() {
+        cancelTimerJobs()
+        super.onCleared()
+    }
+
+    private fun cancelTimerJobs() {
+        timerJob?.cancel()
+        timerJob = null
+        stopAfterCurrentTrackJob?.cancel()
+        stopAfterCurrentTrackJob = null
+    }
+
+    private fun waitForCurrentTrackToFinish(currentItemId: String) {
+        stopAfterCurrentTrackJob?.cancel()
+        stopAfterCurrentTrackJob = viewModelScope.launch {
+            var lastPosition = musicController.progressStateFlow.value
+
+            musicController.progressStateFlow.collect { position ->
+                val itemChanged = musicController.musicInfo?.itemId != currentItemId
+                val playbackStopped =
+                    musicController.state == PlayStateEnum.Pause || musicController.state == PlayStateEnum.None
+                val progressRestarted = position < lastPosition
+
+                if (itemChanged || playbackStopped || progressRestarted) {
+                    stopPlaybackByTimer()
+                    cancel()
+                } else {
+                    lastPosition = position
+                }
+            }
+        }
+    }
+
+    private fun stopPlaybackByTimer() {
+        stopAfterCurrentTrackJob?.cancel()
+        stopAfterCurrentTrackJob = null
+        timerInfo = 0L
+        sliderTimerEndData = 0f
+        musicController.pause()
     }
 
 }

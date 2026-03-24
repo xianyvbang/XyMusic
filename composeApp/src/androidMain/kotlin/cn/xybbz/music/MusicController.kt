@@ -317,7 +317,7 @@ class MusicController(
             downloadCacheController.cacheMedia(music, ifStatic)
     }
 
-    fun pause() {
+    override fun pause() {
         mediaController?.pause()
     }
 
@@ -712,7 +712,7 @@ class MusicController(
     /**
      * 设置倍速
      */
-    fun setDoubleSpeed(value: Float) {
+    override fun setDoubleSpeed(value: Float) {
         mediaController?.setPlaybackSpeed(value)
     }
 

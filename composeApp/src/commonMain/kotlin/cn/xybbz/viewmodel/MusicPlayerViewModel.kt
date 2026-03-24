@@ -18,27 +18,28 @@
 
 package cn.xybbz.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.common.music.DownloadCacheController
-import cn.xybbz.common.music.MusicController
+import cn.xybbz.common.utils.Log
 import cn.xybbz.config.lrc.LrcServer
+import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.entity.data.ext.toPlayerMusic
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.music.XyMusicExtend
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.lyrics_tab
+import xymusic_kmp.composeapp.generated.resources.recommend
+import xymusic_kmp.composeapp.generated.resources.song_tab
 
-@HiltViewModel
-class MusicPlayerViewModel @Inject constructor(
-    val musicController: MusicController,
+@KoinViewModel
+class MusicPlayerViewModel (
+    val musicController: MusicCommonController,
     val dataSourceManager: DataSourceManager,
     val downloadCacheController: DownloadCacheController,
     val lrcServer: LrcServer,

@@ -32,9 +32,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.outlined.SignalCellularAlt
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -49,7 +46,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -57,10 +53,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.compositionLocal.LocalMainViewModel
-import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.config.music.ifNextPageNumList
+import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
@@ -68,6 +63,16 @@ import cn.xybbz.ui.xy.LazyColumnParentComponent
 import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyTextSubSmall
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.clear
+import xymusic_kmp.composeapp.generated.resources.close_24px
+import xymusic_kmp.composeapp.generated.resources.current_playlist
+import xymusic_kmp.composeapp.generated.resources.playing
+import xymusic_kmp.composeapp.generated.resources.reached_bottom
+import xymusic_kmp.composeapp.generated.resources.remove_from_playlist
+import xymusic_kmp.composeapp.generated.resources.signal_cellular_alt_24px
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -244,7 +249,7 @@ fun MusicListItem(
         ) {
             if (curOriginIndex == index) {
                 Icon(
-                    imageVector = Icons.Outlined.SignalCellularAlt,
+                    painter = painterResource(Res.drawable.signal_cellular_alt_24px),
                     contentDescription = stringResource(Res.string.playing),
                     modifier = Modifier
                         .padding(horizontal = 3.dp),
@@ -252,7 +257,7 @@ fun MusicListItem(
                 )
             }
             Icon(
-                imageVector = Icons.Default.Close,
+                painter = painterResource(Res.drawable.close_24px),
                 contentDescription = stringResource(Res.string.remove_from_playlist),
                 modifier = Modifier
                     .size(16.dp)

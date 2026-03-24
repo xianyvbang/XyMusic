@@ -22,7 +22,6 @@ package cn.xybbz.ui.components
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -47,8 +46,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.Key.Companion.Calendar
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction.Companion.Done
 import androidx.compose.ui.text.input.KeyboardType
@@ -81,25 +78,30 @@ import cn.xybbz.ui.xy.XyItemSlider
 import cn.xybbz.ui.xy.XyItemSwitcher
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XySmallSlider
-import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.DrawableResource
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format.FormatStringsInDatetimeFormats
+import kotlinx.datetime.format.byUnicodePattern
+import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.actual_path
+import xymusic_kmp.composeapp.generated.resources.add_24px
 import xymusic_kmp.composeapp.generated.resources.add_time
 import xymusic_kmp.composeapp.generated.resources.add_to_next_play_success
 import xymusic_kmp.composeapp.generated.resources.add_to_playlist
 import xymusic_kmp.composeapp.generated.resources.album
+import xymusic_kmp.composeapp.generated.resources.album_24px
 import xymusic_kmp.composeapp.generated.resources.album_artist
-import xymusic_kmp.composeapp.generated.resources.apply_permission
 import xymusic_kmp.composeapp.generated.resources.artist
 import xymusic_kmp.composeapp.generated.resources.artist_list_title
+import xymusic_kmp.composeapp.generated.resources.av_timer_24px
 import xymusic_kmp.composeapp.generated.resources.bit_depth
 import xymusic_kmp.composeapp.generated.resources.bitrate
 import xymusic_kmp.composeapp.generated.resources.close_after_playback
@@ -107,50 +109,47 @@ import xymusic_kmp.composeapp.generated.resources.confirm
 import xymusic_kmp.composeapp.generated.resources.countdown_prefix
 import xymusic_kmp.composeapp.generated.resources.custom_timer_close
 import xymusic_kmp.composeapp.generated.resources.custom_timer_suffix
+import xymusic_kmp.composeapp.generated.resources.delete_forever_24px
 import xymusic_kmp.composeapp.generated.resources.delete_permanently
 import xymusic_kmp.composeapp.generated.resources.delete_warning
 import xymusic_kmp.composeapp.generated.resources.double_speed
 import xymusic_kmp.composeapp.generated.resources.download
+import xymusic_kmp.composeapp.generated.resources.download_24px
 import xymusic_kmp.composeapp.generated.resources.duration
-import xymusic_kmp.composeapp.generated.resources.exact_alarm_permission_granted
-import xymusic_kmp.composeapp.generated.resources.exact_alarm_permission_not_granted
+import xymusic_kmp.composeapp.generated.resources.favorite_24px
+import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
 import xymusic_kmp.composeapp.generated.resources.format
+import xymusic_kmp.composeapp.generated.resources.info_24px
+import xymusic_kmp.composeapp.generated.resources.keyboard_double_arrow_right_24px
 import xymusic_kmp.composeapp.generated.resources.max_24_hours
 import xymusic_kmp.composeapp.generated.resources.media_source
 import xymusic_kmp.composeapp.generated.resources.minutes
-import xymusic_kmp.composeapp.generated.resources.msr_add
-import xymusic_kmp.composeapp.generated.resources.msr_album
-import xymusic_kmp.composeapp.generated.resources.msr_av_timer
-import xymusic_kmp.composeapp.generated.resources.msr_delete_forever
-import xymusic_kmp.composeapp.generated.resources.msr_download
-import xymusic_kmp.composeapp.generated.resources.msr_favorite
-import xymusic_kmp.composeapp.generated.resources.msr_favorite_border
-import xymusic_kmp.composeapp.generated.resources.msr_info
-import xymusic_kmp.composeapp.generated.resources.msr_keyboard_double_arrow_right
-import xymusic_kmp.composeapp.generated.resources.msr_person
-import xymusic_kmp.composeapp.generated.resources.msr_playlist_add
-import xymusic_kmp.composeapp.generated.resources.msr_settings_voice
-import xymusic_kmp.composeapp.generated.resources.msr_share
-import xymusic_kmp.composeapp.generated.resources.msr_speed
-import xymusic_kmp.composeapp.generated.resources.msr_volume_up
 import xymusic_kmp.composeapp.generated.resources.normal
+import xymusic_kmp.composeapp.generated.resources.person_24px
 import xymusic_kmp.composeapp.generated.resources.play_next
 import xymusic_kmp.composeapp.generated.resources.play_settings
 import xymusic_kmp.composeapp.generated.resources.play_settings_time
 import xymusic_kmp.composeapp.generated.resources.playback_speed
+import xymusic_kmp.composeapp.generated.resources.playlist_add_24px
 import xymusic_kmp.composeapp.generated.resources.reset
 import xymusic_kmp.composeapp.generated.resources.sample_rate
+import xymusic_kmp.composeapp.generated.resources.settings_voice_24px
+import xymusic_kmp.composeapp.generated.resources.share_24px
 import xymusic_kmp.composeapp.generated.resources.share_song
+import xymusic_kmp.composeapp.generated.resources.size_num
 import xymusic_kmp.composeapp.generated.resources.skip_head_prefix
 import xymusic_kmp.composeapp.generated.resources.skip_head_tail
 import xymusic_kmp.composeapp.generated.resources.skip_tail_prefix
 import xymusic_kmp.composeapp.generated.resources.song_info
+import xymusic_kmp.composeapp.generated.resources.speed_24px
 import xymusic_kmp.composeapp.generated.resources.timer_close
 import xymusic_kmp.composeapp.generated.resources.timer_close_custom
 import xymusic_kmp.composeapp.generated.resources.timer_close_disabled
-import xymusic_kmp.composeapp.generated.resources.timer_close_subtitle
 import xymusic_kmp.composeapp.generated.resources.title
+import xymusic_kmp.composeapp.generated.resources.volume_up_24px
 import xymusic_kmp.composeapp.generated.resources.volume_value_setting
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.minutes
 
 var bottomMenuMusicInfo = mutableStateListOf<XyMusic>()
 
@@ -174,7 +173,6 @@ fun MusicBottomMenuComponent(
 
 
     val coroutineScope = rememberCoroutineScope()
-    val context = LocalContext.current
     val contextWrapper = koinInject<ContextWrapper>()
 
     var ifShowArtistList by remember {
@@ -185,9 +183,6 @@ fun MusicBottomMenuComponent(
         Log.i("=====", "MusicBottomMenuComponent重组一次")
     }
 
-    val exactAlarmPermissionGranted = stringResource(Res.string.exact_alarm_permission_granted)
-    val exactAlarmPermissionNotGranted =
-        stringResource(Res.string.exact_alarm_permission_not_granted)
     val addToNextPlaySuccess = stringResource(Res.string.add_to_next_play_success)
     val deletePermanently = stringResource(Res.string.delete_permanently)
     val timerClose = stringResource(Res.string.timer_close)
@@ -294,9 +289,9 @@ fun MusicBottomMenuComponent(
                         ifDownload = music.itemId in downloadMusicIds,
                         backgroundColor = Color.Transparent,
                         trailingIcon = if (favoriteState)
-                            Res.drawable.msr_favorite
+                            Res.drawable.favorite_24px
                         else
-                            Res.drawable.msr_favorite_border,
+                            Res.drawable.favorite_border_24px,
                         trailingOnClick = {
                             coroutineScope.launch {
                                 sheetState.hide()
@@ -315,7 +310,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        painter = painterResource(Res.drawable.msr_download),
+                        painter = painterResource(Res.drawable.download_24px),
 //                        enabled = musicBottomMenuViewModel.dataSourceManager.getCanDownload(),
                         text = stringResource(Res.string.download),
                         onClick = {
@@ -326,7 +321,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        painter = painterResource(Res.drawable.msr_person),
+                        painter = painterResource(Res.drawable.person_24px),
                         text = "${stringResource(Res.string.artist)}: ${music.artists}",
                         onClick = {
                             //获得歌手信息
@@ -357,7 +352,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        painter = painterResource(Res.drawable.msr_album),
+                        painter = painterResource(Res.drawable.album_24px),
                         text = "${stringResource(Res.string.album)}: ${music.albumName ?: ""}",
                         onClick = {
                             coroutineScope.launch {
@@ -375,7 +370,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        painter = painterResource(Res.drawable.msr_keyboard_double_arrow_right),
+                        painter = painterResource(Res.drawable.keyboard_double_arrow_right_24px),
                         text = stringResource(Res.string.skip_head_tail),
                         onClick = {
                             coroutineScope.launch {
@@ -392,7 +387,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        painter = painterResource(Res.drawable.msr_av_timer),
+                        painter = painterResource(Res.drawable.av_timer_24px),
                         text = stringResource(Res.string.timer_close),
                         onClick = {
                             coroutineScope.launch {
@@ -407,7 +402,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        painter = painterResource(Res.drawable.msr_speed),
+                        painter = painterResource(Res.drawable.speed_24px),
                         text = stringResource(Res.string.double_speed),
                         onClick = {
                             coroutineScope.launch {
@@ -423,7 +418,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        painter = painterResource(Res.drawable.msr_add),
+                        painter = painterResource(Res.drawable.add_24px),
                         text = stringResource(Res.string.add_to_playlist),
                         onClick = {
                             coroutineScope.launch {
@@ -444,7 +439,7 @@ fun MusicBottomMenuComponent(
                     XyItemIcon(
                         text = stringResource(Res.string.volume_value_setting),
                         sub = (musicBottomMenuViewModel.volumeValue * 100).toInt().toString(),
-                        painter = painterResource(Res.drawable.msr_volume_up),
+                        painter = painterResource(Res.drawable.volume_up_24px),
                         middleContent = {
                             Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
                             XySmallSlider(
@@ -459,7 +454,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        painter = painterResource(Res.drawable.msr_settings_voice),
+                        painter = painterResource(Res.drawable.settings_voice_24px),
                         text = "${stringResource(Res.string.play_settings)}: ${
                             musicBottomMenuViewModel.getFadeDurationMs().toSecondMsString()
                         }",
@@ -476,7 +471,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        painter = painterResource(Res.drawable.msr_playlist_add),
+                        painter = painterResource(Res.drawable.playlist_add_24px),
                         text = stringResource(Res.string.play_next),
                         onClick = {
                             coroutineScope.launch {
@@ -495,7 +490,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        painter = painterResource(Res.drawable.msr_share),
+                        painter = painterResource(Res.drawable.share_24px),
                         text = stringResource(Res.string.share_song),
                         onClick = {
                             shareMusicResource(
@@ -514,7 +509,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        painter = painterResource(Res.drawable.msr_info),
+                        painter = painterResource(Res.drawable.info_24px),
                         text = stringResource(Res.string.song_info),
                         onClick = {
                             coroutineScope.launch {
@@ -529,7 +524,7 @@ fun MusicBottomMenuComponent(
                 if (ifDelete) {
                     item {
                         XyItemIcon(
-                            painter = painterResource(Res.drawable.msr_delete_forever),
+                            painter = painterResource(Res.drawable.delete_forever_24px),
                             text = deletePermanently,
                             onClick = {
                                 AlertDialogObject(
@@ -586,9 +581,9 @@ fun MusicBottomMenuComponent(
                 music.dismiss()
             },
             onTimerInfo = { musicBottomMenuViewModel.timerInfo },
-            onSetTimerInfo = { num, ifApplyRight ->
+            onSetTimerInfo = { num, applyTimer ->
                 musicBottomMenuViewModel.setTimerInfoData(num)
-                if (ifCanScheduleExactAlarms && ifApplyRight) {
+                if (applyTimer) {
                     coroutineScope
                         .launch {
                             if (musicBottomMenuViewModel.sliderTimerEndData == 0f || musicBottomMenuViewModel.timerInfo == 0L) {
@@ -604,19 +599,7 @@ fun MusicBottomMenuComponent(
             onSliderTimerEndData = { musicBottomMenuViewModel.sliderTimerEndData },
             onSetSliderTimerEndData = { musicBottomMenuViewModel.setSliderTimerEndDataValue(it) },
             onIfPlayEndClose = { musicBottomMenuViewModel.ifPlayEndClose },
-            onSetIfPlayEndClose = { musicBottomMenuViewModel.setPlayEndCloseData(it) },
-            ifCanScheduleExactAlarms = ifCanScheduleExactAlarms,
-            onApplyPermission = {
-                val canScheduleExactAlarms =
-                    musicBottomMenuViewModel.alarmConfig.canScheduleExactAlarm()
-                if (!canScheduleExactAlarms && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                        data = "package:${context.packageName}".toUri()
-                    }
-                    launcher.launch(intent)
-                }
-            }
-
+            onSetIfPlayEndClose = { musicBottomMenuViewModel.setPlayEndCloseData(it) }
         )
         DoubleSpeedComponent(
             onIfDoubleSpeed = { ifDoubleSpeed },
@@ -643,7 +626,7 @@ fun MusicBottomMenuComponent(
 /**
  * 定时关闭
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
+@OptIn(FormatStringsInDatetimeFormats::class, ExperimentalMaterial3Api::class)
 @Composable
 fun TimerComponent(
     onIfTimer: () -> Boolean,
@@ -653,15 +636,14 @@ fun TimerComponent(
     onSliderTimerEndData: () -> Float,
     onSetSliderTimerEndData: (Float) -> Unit,
     onIfPlayEndClose: () -> Boolean,
-    onSetIfPlayEndClose: (Boolean) -> Unit,
-    ifCanScheduleExactAlarms: Boolean,
-    onApplyPermission: () -> Unit
+    onSetIfPlayEndClose: (Boolean) -> Unit
 ) {
     val mainViewModel = LocalMainViewModel.current
     val sheetTimer = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
     val coroutineScope = rememberCoroutineScope()
+    val maxCustomTimerMinutes = 24 * 60L
 
     val customTimerClose = stringResource(Res.string.custom_timer_close)
     val max24Hours = stringResource(Res.string.max_24_hours)
@@ -675,11 +657,39 @@ fun TimerComponent(
     var number by remember {
         mutableStateOf("")
     }
-    LaunchedEffect(onTimerInfo()) {
-        val sdf = SimpleDateFormat.getTimeInstance()
-        val calendar = Calendar.getInstance().apply { time = Date() } // 创建Calendar对象并设置为当前时间
-        calendar.add(Calendar.MINUTE, onTimerInfo().toInt())
-        number = sdf.format(calendar.time)
+    var draftSliderTimerEndData by remember {
+        mutableFloatStateOf(onSliderTimerEndData())
+    }
+    var draftTimerInfo by remember {
+        mutableLongStateOf(onTimerInfo())
+    }
+    var draftPlayEndClose by remember {
+        mutableStateOf(onIfPlayEndClose())
+    }
+    val systemTimeZone = remember { TimeZone.currentSystemDefault() }
+    val timerTimeFormat = remember {
+        LocalDateTime.Format {
+            byUnicodePattern("HH:mm:ss")
+        }
+    }
+
+    LaunchedEffect(onIfTimer()) {
+        if (onIfTimer()) {
+            draftSliderTimerEndData = onSliderTimerEndData()
+            draftTimerInfo = onTimerInfo()
+            draftPlayEndClose = onIfPlayEndClose()
+        }
+    }
+
+    LaunchedEffect(draftTimerInfo) {
+        number = if (draftTimerInfo > 0) {
+            timerTimeFormat.format(
+                (Clock.System.now() + draftTimerInfo.toInt().minutes)
+                    .toLocalDateTime(systemTimeZone)
+            )
+        } else {
+            ""
+        }
     }
 
     val timerClose = stringResource(Res.string.timer_close)
@@ -689,55 +699,42 @@ fun TimerComponent(
         dragHandle = null,
         onIfDisplay = onIfTimer,
         onClose = {
-            onSetTimerInfo(0, false)
-            onSetSliderTimerEndData(0f)
             mainViewModel.putIterations(1)
             onSetIfTimer(it)
         },
         titleText = timerClose,
-        titleSub = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !ifCanScheduleExactAlarms) stringResource(
-            Res.string.timer_close_subtitle
-        ) else null,
-        titleTailContent = if (!ifCanScheduleExactAlarms) {
-            {
-                OutlinedButton(
-                    modifier = Modifier/*size(height = 25.dp, width = 50.dp)*/.height(25.dp),
-                    contentPadding = PaddingValues(horizontal = 2.dp),
-                    onClick = {
-                        onApplyPermission()
+        titleTailContent = {
+            OutlinedButton(
+                modifier = Modifier.size(height = 25.dp, width = 50.dp),
+                contentPadding = PaddingValues(horizontal = 2.dp),
+                onClick = {
+                    draftSliderTimerEndData = 0f
+                    draftTimerInfo = 0L
+                    draftPlayEndClose = false
+                    customInputValue = ""
+                    isError = false
+                    coroutineScope.launch {
+                        onSetSliderTimerEndData(0f)
+                        onSetIfPlayEndClose(false)
+                        onSetTimerInfo(0, true)
                     }
-                ) {
-                    XyTextSub(
-                        text = stringResource(Res.string.apply_permission),
-                    )
-                }
-                Spacer(modifier = Modifier.width(XyTheme.dimens.innerHorizontalPadding))
-
-                OutlinedButton(
-                    modifier = Modifier.size(height = 25.dp, width = 50.dp),
-                    contentPadding = PaddingValues(horizontal = 2.dp),
-                    enabled = ifCanScheduleExactAlarms,
-                    onClick = {
-                        coroutineScope
-                            .launch {
-                                onSetTimerInfo(0, true)
-                                onSetSliderTimerEndData(0f)
-                                onSetIfPlayEndClose(false)
-                            }
-                    },
-                ) {
-                    XyTextSubSmall(
-                        text = stringResource(Res.string.reset)
-                    )
-                }
+                },
+            ) {
+                XyTextSubSmall(
+                    text = stringResource(Res.string.reset)
+                )
             }
-        } else null
+        }
     ) {
         XyItemSlider(
-            value = onSliderTimerEndData(),
-            enabled = ifCanScheduleExactAlarms,
+            value = draftSliderTimerEndData,
             onValueChange = {
                 if (it >= 75f) {
+                    customInputValue = draftTimerInfo
+                        .takeIf { minutes -> minutes > 0 }
+                        ?.toString()
+                        .orEmpty()
+                    isError = false
                     AlertDialogObject(
                         title = customTimerClose,
                         content = {
@@ -749,9 +746,10 @@ fun TimerComponent(
                                     if (replace.length >= 4) {
                                         MessageUtils.sendPopTipError(Res.string.max_24_hours)
                                         replace = replace.take(4)
-                                    } else {
-                                        isError = false
                                     }
+                                    isError = replace.toLongOrNull()?.let { value ->
+                                        value !in 1..maxCustomTimerMinutes
+                                    } ?: false
                                     customInputValue = replace
                                 },
                                 keyboardOptions = KeyboardOptions(
@@ -766,31 +764,35 @@ fun TimerComponent(
                         },
                         onDismissRequest = {
                             customInputValue = ""
-                            onSetSliderTimerEndData(0F)
+                            isError = false
                         },
                         onConfirmation = {
-                            if (!isError) {
-                                Log.i("=====", "调用设置${customInputValue}")
-                                onSetTimerInfo(customInputValue.toLong(), true)
+                            val customMinutes = customInputValue.toLongOrNull()
+                            if (customMinutes != null && customMinutes in 1..maxCustomTimerMinutes) {
+                                draftSliderTimerEndData = 75f
+                                draftTimerInfo = customMinutes
+                            } else {
+                                isError = true
+                                MessageUtils.sendPopTipError(Res.string.max_24_hours)
                             }
                             customInputValue = ""
-                        }).show()
+                        }
+                    ).show()
                 } else {
-                    onSetTimerInfo(it.toLong(), true)
+                    draftSliderTimerEndData = it
+                    draftTimerInfo = it.toLong()
                 }
-                onSetSliderTimerEndData(it)
-                //判断是否为自定义
             }, valueRange = 0f..75f, steps = 4,
             text = "${stringResource(Res.string.countdown_prefix)}${
-                when (onSliderTimerEndData()) {
+                when (draftSliderTimerEndData) {
                     0f -> stringResource(Res.string.timer_close_disabled)
-                    75f -> "${stringResource(Res.string.timer_close_custom)} ${onTimerInfo()}${
+                    75f -> "${stringResource(Res.string.timer_close_custom)} ${draftTimerInfo}${
                         stringResource(
                             Res.string.custom_timer_suffix
                         )
                     } $number $timerClose"
 
-                    else -> "${onSliderTimerEndData().toInt()}${stringResource(Res.string.custom_timer_suffix)} $number $timerClose"
+                    else -> "${draftSliderTimerEndData.toInt()}${stringResource(Res.string.custom_timer_suffix)} $number $timerClose"
                 }
             }"
         )
@@ -798,39 +800,52 @@ fun TimerComponent(
         XyRow {
             XyTextSubSmall(
                 text = stringResource(Res.string.timer_close_disabled),
-                color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurface
             )
             XyTextSubSmall(
                 text = "15${stringResource(Res.string.minutes)}",
-                color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurface
             )
             XyTextSubSmall(
                 text = "30${stringResource(Res.string.minutes)}",
-                color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurface
             )
             XyTextSubSmall(
                 text = "45${stringResource(Res.string.minutes)}",
-                color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurface
             )
             XyTextSubSmall(
                 text = "60${stringResource(Res.string.minutes)}",
-                color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurface
             )
             XyTextSubSmall(
                 text = stringResource(Res.string.timer_close_custom),
-                color = if (ifCanScheduleExactAlarms) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 
         XyItemSwitcher(
-            state = onIfPlayEndClose(),
-            enabled = ifCanScheduleExactAlarms,
+            state = draftPlayEndClose,
             onChange = {
-                coroutineScope.launch {
-                    onSetIfPlayEndClose(it)
-                }
+                draftPlayEndClose = it
             },
             text = stringResource(Res.string.close_after_playback)
+        )
+
+        XyButtonHorizontalPadding(
+            text = stringResource(Res.string.confirm),
+            onClick = {
+                coroutineScope
+                    .launch {
+                        onSetSliderTimerEndData(draftSliderTimerEndData)
+                        onSetIfPlayEndClose(draftPlayEndClose)
+                        onSetTimerInfo(draftTimerInfo, true)
+                        sheetTimer.hide()
+                    }
+                    .invokeOnCompletion {
+                        onSetIfTimer(false)
+                    }
+            }
         )
 
     }
@@ -1107,9 +1122,7 @@ fun MusicInfoBottomComponent(
                 XyItemReversal(
                     text = stringResource(Res.string.duration),
                     sub = millisecondsToTime(
-                        BigDecimal(
-                            musicInfo.runTimeTicks
-                        ).toLong()
+                        musicInfo.runTimeTicks
                     )
                 )
             }
@@ -1133,12 +1146,9 @@ fun MusicInfoBottomComponent(
             }
             item {
                 XyItemReversal(
-                    text = stringResource(Res.string.size),
+                    text = stringResource(Res.string.size_num),
                     sub = "${
-                        BigDecimal(musicInfo.size ?: 0).divide(BigDecimal(1024))
-                            .divide(
-                                BigDecimal(1024), BigDecimal.ROUND_UP
-                            ).toInt()
+                        ((musicInfo.size ?: 0L) + 1024 * 1024 - 1) / (1024 * 1024)
                     }MB"
                 )
             }

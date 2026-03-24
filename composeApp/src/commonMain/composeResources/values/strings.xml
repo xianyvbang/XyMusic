@@ -320,7 +320,7 @@
     <string name="sample_rate">采样率</string>
     <string name="bit_depth">位深</string>
     <string name="bit">bit</string>
-    <string name="size">大小</string>
+    <string name="size_num">大小</string>
     <string name="format">格式</string>
     <string name="play_path">播放路径</string>
     <string name="actual_path">实际路径</string>

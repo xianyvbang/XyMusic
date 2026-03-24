@@ -47,16 +47,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.sharp.QueueMusic
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.FavoriteBorder
-import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.Pause
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.SkipNext
-import androidx.compose.material.icons.rounded.SkipPrevious
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -84,16 +74,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
-import cn.xybbz.common.music.MusicController
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
+import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.PlayerTypeEnum
@@ -107,6 +96,22 @@ import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.MusicPlayerViewModel
 import kotlinx.coroutines.launch
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.album_cover
+import xymusic_kmp.composeapp.generated.resources.close_player_screen
+import xymusic_kmp.composeapp.generated.resources.disc_placeholder
+import xymusic_kmp.composeapp.generated.resources.favorite_button
+import xymusic_kmp.composeapp.generated.resources.more_vert_24px
+import xymusic_kmp.composeapp.generated.resources.music_list
+import xymusic_kmp.composeapp.generated.resources.next_track
+import xymusic_kmp.composeapp.generated.resources.other_operations_button_suffix
+import xymusic_kmp.composeapp.generated.resources.pause
+import xymusic_kmp.composeapp.generated.resources.playing
+import xymusic_kmp.composeapp.generated.resources.previous_track
+import xymusic_kmp.composeapp.generated.resources.queue_music_24px
+import xymusic_kmp.composeapp.generated.resources.skip_next_24px
+import xymusic_kmp.composeapp.generated.resources.skip_previous_24px
+import xymusic_kmp.composeapp.generated.resources.unknown_artist
 import kotlin.math.roundToInt
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
@@ -188,7 +193,7 @@ fun MusicPlayerComponent(
 fun MusicPlayerScreen(
     musicDetail: XyPlayMusic,
     picByte: ByteArray? = null,
-    musicPlayerViewModel: MusicPlayerViewModel = hiltViewModel<MusicPlayerViewModel>(),
+    musicPlayerViewModel: MusicPlayerViewModel = koinViewModel<MusicPlayerViewModel>(),
     onCloseSheet: () -> Unit,
     onSeekToNext: () -> Unit,
     onSeekBack: () -> Unit,
@@ -401,7 +406,7 @@ fun MusicPlayerScreen(
                             },
                         ) {
                             Icon(
-                                imageVector = Icons.Default.MoreVert,
+                                painter = painterResource(Res.drawable.more_vert_24px),
                                 contentDescription = "${musicPlayerViewModel.musicController.musicInfo?.name}${
                                     stringResource(
                                         Res.string.other_operations_button_suffix
@@ -431,7 +436,7 @@ fun MusicPlayerScreen(
                         XyRow(modifier = Modifier/*.weight(1f)*/) {
                             PlayerTypeComponent(musicController = musicPlayerViewModel.musicController)
                             Icon(
-                                imageVector = Icons.Rounded.SkipPrevious,
+                                painter = painterResource(Res.drawable.skip_previous_24px),
                                 contentDescription = stringResource(Res.string.previous_track),
                                 modifier = Modifier
                                     .size(30.dp, 35.dp)
@@ -446,7 +451,7 @@ fun MusicPlayerScreen(
                             PlayerStateComponent(musicController = musicPlayerViewModel.musicController)
 
                             Icon(
-                                imageVector = Icons.Rounded.SkipNext,
+                                painter = painterResource(Res.drawable.skip_next_24px),
                                 contentDescription = stringResource(Res.string.next_track),
                                 modifier = Modifier
                                     .size(30.dp, 35.dp)
@@ -466,7 +471,7 @@ fun MusicPlayerScreen(
                                 },
                             ) {
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Sharp.QueueMusic,
+                                    painter = painterResource(Res.drawable.queue_music_24px),
                                     contentDescription = stringResource(Res.string.music_list)
                                 )
                             }
@@ -487,7 +492,7 @@ fun MusicPlayerScreen(
  */
 @Composable
 private fun PlayerTypeComponent(
-    musicController: MusicController
+    musicController: MusicCommonController
 ) {
     val mainViewModel = LocalMainViewModel.current
     IconButton(
@@ -513,7 +518,7 @@ private fun PlayerTypeComponent(
  */
 @Composable
 private fun PlayerCurrentPosition(
-    musicController: MusicController,
+    musicController: MusicCommonController,
     onCacheProgress: () -> Float
 ) {
 
@@ -548,7 +553,7 @@ private fun PlayerCurrentPosition(
 @Composable
 fun PlayerStateComponent(
     size: Dp = 60.dp,
-    musicController: MusicController
+    musicController: MusicCommonController
 ) {
     Box(
         modifier = Modifier
@@ -591,7 +596,7 @@ fun PlayerStateComponent(
 private fun FavoriteMusicIconComponent(
     musicDetail: XyPlayMusic,
     dataSourceManager: DataSourceManager,
-    musicController: MusicController,
+    musicController: MusicCommonController,
     onFavoriteMusicIdSet: () -> List<String>
 ) {
     val coroutineScope = rememberCoroutineScope()

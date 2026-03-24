@@ -17,4 +17,10 @@ class JvmMusicController : MusicCommonController() {
 
     override fun clearPlayerList() {
     }
+
+    override fun pause() {
+    }
+
+    override fun setDoubleSpeed(value: Float) {
+    }
 }

@@ -52,17 +52,20 @@ import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.config.image.rememberAlbumCoverUrls
 import cn.xybbz.config.image.rememberArtistCoverUrls
 import cn.xybbz.config.image.rememberMusicCoverUrls
-import cn.xybbz.common.UiConstants.MusicCardImageSize
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyItem
+import xymusic_kmp.composeapp.generated.resources.cover_suffix
+import xymusic_kmp.composeapp.generated.resources.music_xy_placeholder_foreground
+import xymusic_kmp.composeapp.generated.resources.unknown_artist
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 /**
