@@ -1,23 +1,22 @@
 package cn.xybbz.viewmodel
 
 import androidx.lifecycle.ViewModel
-import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.lrc.LrcServer
-import dagger.hilt.android.lifecycle.HiltViewModel
+import cn.xybbz.config.music.MusicCommonController
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
 
-@HiltViewModel
-class LrcViewModel @Inject constructor(
-    private val _musicController: MusicController,
+@KoinViewModel
+class LrcViewModel (
+    val musicController: MusicCommonController,
     val lrcServer: LrcServer
 ): ViewModel() {
 
 
     fun getProgressStateFlow():Flow<Long>{
-        return _musicController.progressStateFlow
+        return musicController.progressStateFlow
     }
     fun seekTo(millSeconds: Long){
-        _musicController.seekTo(millSeconds)
+        musicController.seekTo(millSeconds)
     }
 }

@@ -8,7 +8,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.PlayStateEnum
-import cn.xybbz.common.utils.Log
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
@@ -17,6 +16,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 
 abstract class MusicCommonController: IoScoped(),KoinComponent  {
@@ -137,4 +137,56 @@ abstract class MusicCommonController: IoScoped(),KoinComponent  {
         ifInitPlayerList: Boolean = false,
         musicPlayTypeEnum: MusicPlayTypeEnum
     )
+
+    /**
+     * 设置当前播放进度
+     */
+    fun setCurrentPositionData(currentPosition: Long) {
+        _progressStateFlow.value = currentPosition
+    }
+
+    /**
+     * 调用onFavorite
+     */
+    fun invokingOnFavorite(itemId: String) {
+        scope.launch {
+            _events.emit(PlayerEvent.Favorite(itemId))
+        }
+    }
+
+    fun updateState(state: PlayStateEnum) {
+        this.state = state
+    }
+
+    fun updateDuration(duration: Long) {
+        this.duration = duration
+    }
+
+
+    /**
+     * 更新获取下一页音乐数据为空的次数
+     */
+    fun updateIfGetNextPageMusicDataIsNullCount(count: Int) {
+        this.ifGetNextPageMusicDataIsNullCount += count
+        if (this.ifGetNextPageMusicDataIsNullCount >= 3) {
+            updateIfNextPage(false)
+        }
+    }
+
+    fun updateRestartCount() {
+        this.ifGetNextPageMusicDataIsNullCount = 0
+        updateIfNextPage(true)
+    }
+
+    /**
+     * 更新是否可以加载下一页音乐数据
+     */
+    private fun updateIfNextPage(ifNextPage: Boolean) {
+        this.ifNextPage = ifNextPage
+    }
+
+    /**
+     * 跳转播放到指定位置
+     */
+    abstract fun seekTo(millSeconds: Long)
 }

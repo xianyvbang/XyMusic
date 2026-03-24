@@ -18,7 +18,6 @@
 
 package cn.xybbz.ui.components.lrc
 
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -44,11 +43,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Remove
-import androidx.compose.material.icons.rounded.RestartAlt
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -76,7 +70,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
@@ -84,10 +77,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.utils.DateUtil.toSecondMs
+import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.LrcUtils.formatTime
 import cn.xybbz.common.utils.LrcUtils.getIndex
 import cn.xybbz.entity.data.LrcConfigData
@@ -99,6 +91,21 @@ import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.LrcViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.add_24px
+import xymusic_kmp.composeapp.generated.resources.backward_offset
+import xymusic_kmp.composeapp.generated.resources.check_24px
+import xymusic_kmp.composeapp.generated.resources.confirm
+import xymusic_kmp.composeapp.generated.resources.forward_offset
+import xymusic_kmp.composeapp.generated.resources.lrc_config
+import xymusic_kmp.composeapp.generated.resources.no_lyrics
+import xymusic_kmp.composeapp.generated.resources.offset
+import xymusic_kmp.composeapp.generated.resources.remove_24px
+import xymusic_kmp.composeapp.generated.resources.reset
+import xymusic_kmp.composeapp.generated.resources.restart_alt_24px
 
 
 //歌词横向的padding
@@ -109,11 +116,13 @@ private val lyricHorizontalPadding = 30.dp
 fun LrcViewNewCompose(
     modifier: Modifier = Modifier,
     onSetLrcOffset: (Long) -> Unit,
-    lrcViewModel: LrcViewModel = hiltViewModel<LrcViewModel>(),
+    lrcViewModel: LrcViewModel = koinViewModel<LrcViewModel>(),
     listState: LazyListState = rememberLazyListState(),
 ) {
 
-    val lcrEntryList by lrcViewModel.lrcServer.lcrEntryListFlow.collectAsStateWithLifecycle(emptyList())
+    val lcrEntryList by lrcViewModel.lrcServer.lcrEntryListFlow.collectAsStateWithLifecycle(
+        emptyList()
+    )
     val coroutineScope = rememberCoroutineScope()
 
     var tmpOffsetMs by remember {
@@ -147,7 +156,7 @@ fun LrcViewNewCompose(
         var dragLineIndex by remember { mutableIntStateOf(0) }
         //是否在拖动列表
 //        val isDragState = isDrag(listState.interactionSource)
-        var isDragState = remember { mutableStateOf(false) }
+        val isDragState = remember { mutableStateOf(false) }
         var isDragStateTmp by remember { mutableStateOf(false) }
         var currentTimeMillis by remember {
             mutableLongStateOf(0L)
@@ -173,7 +182,7 @@ fun LrcViewNewCompose(
 
 
         //播放歌词的位置
-        val playIndex by produceState<Int>(initialValue = 0, lcrEntryList) {
+        val playIndex by produceState(initialValue = 0, lcrEntryList) {
             //播放进度的flow，每秒钟发射一次
             lrcViewModel.getProgressStateFlow().collect {
                 currentTimeMillis = it
@@ -271,8 +280,6 @@ fun LrcViewNewCompose(
                             }
                         }
                     }
-
-
 
 
                 } else {
@@ -484,22 +491,22 @@ private fun LrcConfigComponent(
 
     val items =
         listOf(
-            LrcConfigData(Icons.Rounded.Add, stringResource(Res.string.forward_offset), {
+            LrcConfigData(Res.drawable.add_24px, stringResource(Res.string.forward_offset)) {
                 offsetMillis += 500
                 onSetTmpLrcOffset(offsetMillis)
-            }),
-            LrcConfigData(Icons.Rounded.Remove, stringResource(Res.string.backward_offset), {
+            },
+            LrcConfigData(Res.drawable.remove_24px, stringResource(Res.string.backward_offset)) {
                 offsetMillis -= 500
                 onSetTmpLrcOffset(offsetMillis)
-            }),
-            LrcConfigData(Icons.Rounded.RestartAlt, stringResource(Res.string.reset), {
+            },
+            LrcConfigData(Res.drawable.restart_alt_24px, stringResource(Res.string.reset)) {
                 offsetMillis = 0
                 onSetTmpLrcOffset(offsetMillis)
-            }),
-            LrcConfigData(Icons.Rounded.Check, stringResource(Res.string.confirm), {
+            },
+            LrcConfigData(Res.drawable.check_24px, stringResource(Res.string.confirm)) {
                 onSetLrcOffset(offsetMillis)
                 onSetFabMenuExpanded(false)
-            })
+            }
         )
 
 
@@ -510,7 +517,7 @@ private fun LrcConfigComponent(
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             XyTextSubSmall(text = "${stringResource(Res.string.offset)}: ${offsetMillis.toSecondMs()}s")
-            items.forEachIndexed { index, item ->
+            items.forEachIndexed { _, item ->
                 AssistChip(
                     modifier = Modifier.semantics {
                         isTraversalGroup = true
@@ -524,7 +531,7 @@ private fun LrcConfigComponent(
                     }, label = {
                         XyTextSubSmall(text = item.title)
                     }, leadingIcon = {
-                        Icon(item.icon, contentDescription = null)
+                        Icon(painterResource(item.icon), contentDescription = item.title)
                     })
             }
         }

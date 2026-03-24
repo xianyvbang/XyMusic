@@ -23,8 +23,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -40,17 +38,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import org.jetbrains.compose.resources.stringResource
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
 import cn.xybbz.ui.xy.XyEdit
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import cn.xybbz.viewmodel.PlaylistBottomViewModel
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.add_24px
+import xymusic_kmp.composeapp.generated.resources.add_to_playlist
+import xymusic_kmp.composeapp.generated.resources.create_playlist
+import xymusic_kmp.composeapp.generated.resources.new_playlist
+import xymusic_kmp.composeapp.generated.resources.songs_count_suffix
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 val playlistObject by mutableStateOf(
     AddPlaylistBottomData(
@@ -102,7 +105,7 @@ class AddPlaylistBottomData() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddPlaylistBottomComponent(
-    playlistBottomViewModel: PlaylistBottomViewModel = hiltViewModel<PlaylistBottomViewModel>()
+    playlistBottomViewModel: PlaylistBottomViewModel = koinViewModel<PlaylistBottomViewModel>()
 ) {
     val coroutineScope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(
@@ -149,7 +152,7 @@ fun AddPlaylistBottomComponent(
                 ).show()
             }) {
                 Icon(
-                    imageVector = Icons.Rounded.Add,
+                    painter = painterResource(Res.drawable.add_24px),
                     contentDescription = stringResource(Res.string.create_playlist)
                 )
             }

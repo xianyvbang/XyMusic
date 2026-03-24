@@ -25,6 +25,8 @@ import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.GenresViewModel
+import xymusic_kmp.composeapp.generated.resources.genres
+import xymusic_kmp.composeapp.generated.resources.return_home
 
 /**
  * 流派页面

@@ -20,8 +20,6 @@ package cn.xybbz.ui.components
 
 
 import androidx.compose.foundation.layout.offset
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -29,23 +27,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.config.image.rememberMusicCoverUrls
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.xy.ItemTrailingContent
-import com.google.common.collect.Multimaps.index
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.favorite_button
+import xymusic_kmp.composeapp.generated.resources.more_vert_24px
+import xymusic_kmp.composeapp.generated.resources.other_operations_button_suffix
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 /**
  * 音乐列表item
  * @param [modifier] 修饰符
- * @param [index] 索引
  * @param [onMusicPlay] 播放方法
  */
 
@@ -61,7 +61,7 @@ fun MusicItemComponent(
     brush: Brush? = null,
     ifPlay: Boolean,
     onMusicPlay: (OnMusicPlayParameter) -> Unit,
-    trailingIcon: ImageVector = Icons.Rounded.MoreVert,
+    trailingIcon: DrawableResource = Res.drawable.more_vert_24px,
     ifShowTrailingContent: Boolean = true,
     ifSelect: Boolean = false,
     trailingOnSelectClick: ((Boolean) -> Unit)? = null,
@@ -116,7 +116,7 @@ private fun MusicItemComponent(
     brush: Brush? = null,
     ifPlay: Boolean,
     onMusicPlay: (OnMusicPlayParameter) -> Unit,
-    trailingIcon: ImageVector = Icons.Rounded.MoreVert,
+    trailingIcon: DrawableResource = Res.drawable.more_vert_24px,
     trailingContentDescription: String = "${name}${stringResource(Res.string.other_operations_button_suffix)}",
     ifShowTrailingContent: Boolean = true,
     ifSelect: Boolean = false,
@@ -159,7 +159,7 @@ private fun MusicItemComponent(
                         },
                     ) {
                         Icon(
-                            imageVector = trailingIcon,
+                            painter = painterResource(trailingIcon),
                             contentDescription = trailingContentDescription
                         )
                     }
@@ -185,7 +185,6 @@ private fun MusicItemComponent(
 /**
  * 音乐列表item
  * @param [modifier] 修饰符
- * @param [index] 索引
  */
 @Composable
 fun MusicItemNotClickComponent(
@@ -196,7 +195,7 @@ fun MusicItemNotClickComponent(
     backgroundColor: Color = MaterialTheme.colorScheme.background,
     picSize: Dp = 62.dp,
     brush: Brush? = null,
-    trailingIcon: ImageVector,
+    trailingIcon: DrawableResource,
     trailingOnClick: () -> Unit,
     trailingColor: Color
 ) {
@@ -223,7 +222,7 @@ fun MusicItemNotClickComponent(
                 },
             ) {
                 Icon(
-                    imageVector = trailingIcon,
+                    painter = painterResource(trailingIcon),
                     contentDescription = stringResource(Res.string.favorite_button),
                     tint = trailingColor
                 )

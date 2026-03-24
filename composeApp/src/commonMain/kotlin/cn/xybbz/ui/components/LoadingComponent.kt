@@ -18,7 +18,6 @@
 
 package cn.xybbz.ui.components
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -47,6 +46,9 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
@@ -58,7 +60,7 @@ var loadingObjectList = mutableStateListOf<LoadingObject>()
 
 @Immutable
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-data class LoadingObject constructor(
+data class LoadingObject(
     val messageIsStringRes: Boolean = true,
     val loadingCompose: @Composable (Float?) -> Unit = {
         if (it == null) {
@@ -95,7 +97,13 @@ data class LoadingObject constructor(
 fun LoadingCompose(modifier: Modifier = Modifier) {
     loadingObjectList.forEach { it ->
         //禁用返回
-        BackHandler(enabled = true) {}
+        val navigationEventState = rememberNavigationEventState(NavigationEventInfo.None)
+        NavigationBackHandler(
+            state = navigationEventState,
+            isBackEnabled = true,
+            onBackCompleted = {},
+            onBackCancelled = {},
+        )
         Box(
             modifier = Modifier
                 .fillMaxSize()

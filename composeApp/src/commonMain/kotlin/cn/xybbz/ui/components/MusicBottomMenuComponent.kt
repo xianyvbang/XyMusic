@@ -19,17 +19,6 @@
 package cn.xybbz.ui.components
 
 
-import android.content.Intent
-import android.icu.math.BigDecimal
-import android.icu.text.SimpleDateFormat
-import android.os.Build
-import android.os.Bundle
-import android.provider.Settings
-import android.util.Log
-import android.webkit.URLUtil
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,22 +28,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
-import androidx.compose.material.icons.automirrored.rounded.VolumeUp
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Album
-import androidx.compose.material.icons.rounded.AvTimer
-import androidx.compose.material.icons.rounded.DeleteForever
-import androidx.compose.material.icons.rounded.Download
-import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.FavoriteBorder
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.KeyboardDoubleArrowRight
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.SettingsVoice
-import androidx.compose.material.icons.rounded.Share
-import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -74,23 +47,23 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key.Companion.Calendar
 import androidx.compose.ui.platform.LocalContext
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction.Companion.Done
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.net.toUri
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.utils.DateUtil.millisecondsToTime
 import cn.xybbz.common.utils.DateUtil.toDateStr
 import cn.xybbz.common.utils.DateUtil.toSecondMsString
+import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
+import cn.xybbz.common.utils.shareMusicResource
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.di.ContextWrapper
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
@@ -111,10 +84,73 @@ import cn.xybbz.ui.xy.XySmallSlider
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.MusicBottomMenuViewModel
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.launch
-import java.util.Calendar
-import java.util.Date
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.actual_path
+import xymusic_kmp.composeapp.generated.resources.add_time
+import xymusic_kmp.composeapp.generated.resources.add_to_next_play_success
+import xymusic_kmp.composeapp.generated.resources.add_to_playlist
+import xymusic_kmp.composeapp.generated.resources.album
+import xymusic_kmp.composeapp.generated.resources.album_artist
+import xymusic_kmp.composeapp.generated.resources.apply_permission
+import xymusic_kmp.composeapp.generated.resources.artist
+import xymusic_kmp.composeapp.generated.resources.artist_list_title
+import xymusic_kmp.composeapp.generated.resources.bit_depth
+import xymusic_kmp.composeapp.generated.resources.bitrate
+import xymusic_kmp.composeapp.generated.resources.close_after_playback
+import xymusic_kmp.composeapp.generated.resources.confirm
+import xymusic_kmp.composeapp.generated.resources.countdown_prefix
+import xymusic_kmp.composeapp.generated.resources.custom_timer_close
+import xymusic_kmp.composeapp.generated.resources.custom_timer_suffix
+import xymusic_kmp.composeapp.generated.resources.delete_permanently
+import xymusic_kmp.composeapp.generated.resources.delete_warning
+import xymusic_kmp.composeapp.generated.resources.double_speed
+import xymusic_kmp.composeapp.generated.resources.download
+import xymusic_kmp.composeapp.generated.resources.duration
+import xymusic_kmp.composeapp.generated.resources.exact_alarm_permission_granted
+import xymusic_kmp.composeapp.generated.resources.exact_alarm_permission_not_granted
+import xymusic_kmp.composeapp.generated.resources.format
+import xymusic_kmp.composeapp.generated.resources.max_24_hours
+import xymusic_kmp.composeapp.generated.resources.media_source
+import xymusic_kmp.composeapp.generated.resources.minutes
+import xymusic_kmp.composeapp.generated.resources.msr_add
+import xymusic_kmp.composeapp.generated.resources.msr_album
+import xymusic_kmp.composeapp.generated.resources.msr_av_timer
+import xymusic_kmp.composeapp.generated.resources.msr_delete_forever
+import xymusic_kmp.composeapp.generated.resources.msr_download
+import xymusic_kmp.composeapp.generated.resources.msr_favorite
+import xymusic_kmp.composeapp.generated.resources.msr_favorite_border
+import xymusic_kmp.composeapp.generated.resources.msr_info
+import xymusic_kmp.composeapp.generated.resources.msr_keyboard_double_arrow_right
+import xymusic_kmp.composeapp.generated.resources.msr_person
+import xymusic_kmp.composeapp.generated.resources.msr_playlist_add
+import xymusic_kmp.composeapp.generated.resources.msr_settings_voice
+import xymusic_kmp.composeapp.generated.resources.msr_share
+import xymusic_kmp.composeapp.generated.resources.msr_speed
+import xymusic_kmp.composeapp.generated.resources.msr_volume_up
+import xymusic_kmp.composeapp.generated.resources.normal
+import xymusic_kmp.composeapp.generated.resources.play_next
+import xymusic_kmp.composeapp.generated.resources.play_settings
+import xymusic_kmp.composeapp.generated.resources.play_settings_time
+import xymusic_kmp.composeapp.generated.resources.playback_speed
+import xymusic_kmp.composeapp.generated.resources.reset
+import xymusic_kmp.composeapp.generated.resources.sample_rate
+import xymusic_kmp.composeapp.generated.resources.share_song
+import xymusic_kmp.composeapp.generated.resources.skip_head_prefix
+import xymusic_kmp.composeapp.generated.resources.skip_head_tail
+import xymusic_kmp.composeapp.generated.resources.skip_tail_prefix
+import xymusic_kmp.composeapp.generated.resources.song_info
+import xymusic_kmp.composeapp.generated.resources.timer_close
+import xymusic_kmp.composeapp.generated.resources.timer_close_custom
+import xymusic_kmp.composeapp.generated.resources.timer_close_disabled
+import xymusic_kmp.composeapp.generated.resources.timer_close_subtitle
+import xymusic_kmp.composeapp.generated.resources.title
+import xymusic_kmp.composeapp.generated.resources.volume_value_setting
 
 var bottomMenuMusicInfo = mutableStateListOf<XyMusic>()
 
@@ -122,10 +158,10 @@ var bottomMenuMusicInfo = mutableStateListOf<XyMusic>()
  * 底部弹出菜单
  * todo 这里要限制一下弹出的高度为最大高度的百分之55
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MusicBottomMenuComponent(
-    musicBottomMenuViewModel: MusicBottomMenuViewModel = hiltViewModel<MusicBottomMenuViewModel>(),
+    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
     onAlbumRouter: (String) -> Unit,
     onPlayerSheetClose: () -> Unit
 ) {
@@ -139,39 +175,23 @@ fun MusicBottomMenuComponent(
 
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
+    val contextWrapper = koinInject<ContextWrapper>()
 
     var ifShowArtistList by remember {
         mutableStateOf(false)
     }
 
     SideEffect {
-        Log.d("=====", "MusicBottomMenuComponent重组一次")
-    }
-
-    var ifCanScheduleExactAlarms by remember {
-        mutableStateOf(musicBottomMenuViewModel.alarmConfig.canScheduleExactAlarm())
+        Log.i("=====", "MusicBottomMenuComponent重组一次")
     }
 
     val exactAlarmPermissionGranted = stringResource(Res.string.exact_alarm_permission_granted)
-    val exactAlarmPermissionNotGranted = stringResource(Res.string.exact_alarm_permission_not_granted)
+    val exactAlarmPermissionNotGranted =
+        stringResource(Res.string.exact_alarm_permission_not_granted)
     val addToNextPlaySuccess = stringResource(Res.string.add_to_next_play_success)
     val deletePermanently = stringResource(Res.string.delete_permanently)
     val timerClose = stringResource(Res.string.timer_close)
 
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) {
-        val canScheduleExactAlarms =
-            musicBottomMenuViewModel.alarmConfig.canScheduleExactAlarm()
-        ifCanScheduleExactAlarms = canScheduleExactAlarms
-        Toast.makeText(
-            context,
-            if (canScheduleExactAlarms)
-                exactAlarmPermissionGranted
-            else exactAlarmPermissionNotGranted,
-            Toast.LENGTH_SHORT
-        ).show()
-    }
 
     ArtistItemListBottomSheet(
         artistList = musicBottomMenuViewModel.xyArtists,
@@ -189,8 +209,6 @@ fun MusicBottomMenuComponent(
 
         LaunchedEffect(Unit) {
             musicBottomMenuViewModel.refreshVolume()
-            //更新权限信息
-            ifCanScheduleExactAlarms = musicBottomMenuViewModel.alarmConfig.canScheduleExactAlarm()
         }
 
         //收藏信息
@@ -243,11 +261,6 @@ fun MusicBottomMenuComponent(
             }
         }
 
-        val permissionState = downloadPermission {
-            musicBottomMenuViewModel.downloadMusic(music)
-            ifShowBottom = false
-            music.dismiss()
-        }
 
         MusicInfoBottomComponent(
             musicInfo = music,
@@ -281,9 +294,9 @@ fun MusicBottomMenuComponent(
                         ifDownload = music.itemId in downloadMusicIds,
                         backgroundColor = Color.Transparent,
                         trailingIcon = if (favoriteState)
-                            Icons.Rounded.Favorite
+                            Res.drawable.msr_favorite
                         else
-                            Icons.Rounded.FavoriteBorder,
+                            Res.drawable.msr_favorite_border,
                         trailingOnClick = {
                             coroutineScope.launch {
                                 sheetState.hide()
@@ -302,7 +315,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        imageVector = Icons.Rounded.Download,
+                        painter = painterResource(Res.drawable.msr_download),
 //                        enabled = musicBottomMenuViewModel.dataSourceManager.getCanDownload(),
                         text = stringResource(Res.string.download),
                         onClick = {
@@ -313,7 +326,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        imageVector = Icons.Rounded.Person,
+                        painter = painterResource(Res.drawable.msr_person),
                         text = "${stringResource(Res.string.artist)}: ${music.artists}",
                         onClick = {
                             //获得歌手信息
@@ -344,7 +357,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        imageVector = Icons.Rounded.Album,
+                        painter = painterResource(Res.drawable.msr_album),
                         text = "${stringResource(Res.string.album)}: ${music.albumName ?: ""}",
                         onClick = {
                             coroutineScope.launch {
@@ -362,7 +375,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        imageVector = Icons.Rounded.KeyboardDoubleArrowRight,
+                        painter = painterResource(Res.drawable.msr_keyboard_double_arrow_right),
                         text = stringResource(Res.string.skip_head_tail),
                         onClick = {
                             coroutineScope.launch {
@@ -379,7 +392,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        imageVector = Icons.Rounded.AvTimer,
+                        painter = painterResource(Res.drawable.msr_av_timer),
                         text = stringResource(Res.string.timer_close),
                         onClick = {
                             coroutineScope.launch {
@@ -394,7 +407,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        imageVector = Icons.Rounded.Speed,
+                        painter = painterResource(Res.drawable.msr_speed),
                         text = stringResource(Res.string.double_speed),
                         onClick = {
                             coroutineScope.launch {
@@ -410,7 +423,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        imageVector = Icons.Rounded.Add,
+                        painter = painterResource(Res.drawable.msr_add),
                         text = stringResource(Res.string.add_to_playlist),
                         onClick = {
                             coroutineScope.launch {
@@ -431,7 +444,7 @@ fun MusicBottomMenuComponent(
                     XyItemIcon(
                         text = stringResource(Res.string.volume_value_setting),
                         sub = (musicBottomMenuViewModel.volumeValue * 100).toInt().toString(),
-                        imageVector = Icons.AutoMirrored.Rounded.VolumeUp,
+                        painter = painterResource(Res.drawable.msr_volume_up),
                         middleContent = {
                             Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
                             XySmallSlider(
@@ -446,7 +459,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        imageVector = Icons.Rounded.SettingsVoice,
+                        painter = painterResource(Res.drawable.msr_settings_voice),
                         text = "${stringResource(Res.string.play_settings)}: ${
                             musicBottomMenuViewModel.getFadeDurationMs().toSecondMsString()
                         }",
@@ -463,7 +476,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        imageVector = Icons.AutoMirrored.Rounded.PlaylistAdd,
+                        painter = painterResource(Res.drawable.msr_playlist_add),
                         text = stringResource(Res.string.play_next),
                         onClick = {
                             coroutineScope.launch {
@@ -482,37 +495,13 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        imageVector = Icons.Rounded.Share,
+                        painter = painterResource(Res.drawable.msr_share),
                         text = stringResource(Res.string.share_song),
                         onClick = {
-                            if (URLUtil.isNetworkUrl(music.downloadUrl)) {
-                                val sendIntent: Intent = Intent().apply {
-                                    action = Intent.ACTION_SEND
-                                    putExtra(
-                                        Intent.EXTRA_TEXT,
-                                        music.downloadUrl
-                                    )
-//                                putExtra(Intent.EXTRA_TEXT, "<a href = 'https://www.baidu.com'>百度</a>")
-                                    type = "text/plain"
-                                }
-                                context.startActivity(
-                                    sendIntent,
-                                    Bundle()
-                                )
-                            } else {
-                                val sendIntent: Intent = Intent().apply {
-                                    action = Intent.ACTION_SEND
-                                    putExtra(
-                                        Intent.EXTRA_STREAM,
-                                        music.downloadUrl
-                                    )
-                                    type = "video/*"
-                                }
-                                context.startActivity(
-                                    sendIntent,
-                                    Bundle()
-                                )
-                            }
+                            shareMusicResource(
+                                contextWrapper = contextWrapper,
+                                resource = music.downloadUrl
+                            )
                             coroutineScope.launch {
                                 sheetState.hide()
                             }.invokeOnCompletion {
@@ -525,7 +514,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        imageVector = Icons.Rounded.Info,
+                        painter = painterResource(Res.drawable.msr_info),
                         text = stringResource(Res.string.song_info),
                         onClick = {
                             coroutineScope.launch {
@@ -540,7 +529,7 @@ fun MusicBottomMenuComponent(
                 if (ifDelete) {
                     item {
                         XyItemIcon(
-                            imageVector = Icons.Rounded.DeleteForever,
+                            painter = painterResource(Res.drawable.msr_delete_forever),
                             text = deletePermanently,
                             onClick = {
                                 AlertDialogObject(

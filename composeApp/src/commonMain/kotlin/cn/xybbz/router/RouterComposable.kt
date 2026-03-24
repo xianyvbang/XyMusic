@@ -61,7 +61,7 @@ import xymusic_kmp.composeapp.generated.resources.background_image
 /**
  * 节点页面
  */
-inline fun <reified T : NavKey> EntryProviderScope<NavKey>.nodeComposable(noinline content: @Composable (T) -> Unit) {
+private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.nodeComposable(noinline content: @Composable (T) -> Unit) {
     entry<T> {
         Box {
             XyImage(

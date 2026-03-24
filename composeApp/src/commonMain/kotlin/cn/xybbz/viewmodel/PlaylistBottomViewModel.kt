@@ -18,30 +18,28 @@
 
 package cn.xybbz.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.utils.Log
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
 
 /**
  * 底部弹窗歌单ViewModel
  */
-@HiltViewModel
-class PlaylistBottomViewModel @Inject constructor(
+@KoinViewModel
+class PlaylistBottomViewModel(
     private val db: DatabaseClient,
     val dataSourceManager: DataSourceManager
-
-    ) : ViewModel() {
+) : ViewModel() {
 
     /**
      * 歌单列表
@@ -67,6 +65,7 @@ class PlaylistBottomViewModel @Inject constructor(
             }
         }
     }
+
     /**
      * 获得歌单数据
      */
@@ -88,7 +87,7 @@ class PlaylistBottomViewModel @Inject constructor(
 
 
     suspend fun getServerPlaylists() {
-        Log.i("=====","获得歌单数据")
+        Log.i("=====", "获得歌单数据")
         dataSourceManager.getPlaylists()
     }
 }

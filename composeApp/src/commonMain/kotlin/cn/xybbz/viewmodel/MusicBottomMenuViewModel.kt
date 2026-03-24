@@ -27,17 +27,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.MusicTypeEnum
-import cn.xybbz.common.music.MusicController
-import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.common.utils.MessageUtils
-import cn.xybbz.config.alarm.AlarmConfig
-import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.config.download.core.DownloadRequest
+import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.volume.VolumeServer
 import cn.xybbz.localdata.config.DatabaseClient
@@ -45,21 +41,21 @@ import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.setting.SkipTime
 import cn.xybbz.localdata.enums.DownloadTypes
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import org.koin.core.annotation.KoinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.add_download_list
+import xymusic_kmp.composeapp.generated.resources.cancel_timer_close_message
 import java.util.Calendar
 import java.util.Date
-import javax.inject.Inject
 
-@HiltViewModel
-class MusicBottomMenuViewModel @Inject constructor(
+@KoinViewModel
+class MusicBottomMenuViewModel(
     private val settingsManager: SettingsManager,
     private val db: DatabaseClient,
-    val musicController: MusicController,
+    val musicController: MusicCommonController,
     val dataSourceManager: DataSourceManager,
-    val alarmConfig: AlarmConfig,
-    val downloadManager: DownLoadManager,
     val volumeServer: VolumeServer,
 ) : ViewModel() {
 

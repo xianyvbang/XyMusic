@@ -18,7 +18,7 @@
 
 package cn.xybbz.entity.data
 
-import androidx.compose.ui.graphics.vector.ImageVector
+import org.jetbrains.compose.resources.DrawableResource
 
 
 /**
@@ -28,7 +28,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
  * @constructor 创建[LrcConfigData]
  */
 data class LrcConfigData(
-    val icon: ImageVector,
+    val icon: DrawableResource,
     val title: String,
     val onClick: () -> Unit
 )

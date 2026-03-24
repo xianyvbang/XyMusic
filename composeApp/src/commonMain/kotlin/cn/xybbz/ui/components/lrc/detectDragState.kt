@@ -1,6 +1,5 @@
 package cn.xybbz.ui.components.lrc
 
-import android.annotation.SuppressLint
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -14,7 +13,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
 import kotlin.math.hypot
 
-@SuppressLint("ReturnFromAwaitPointerEventScope", "MultipleAwaitPointerEventScopes")
 fun Modifier.detectDragState(
     onDragStateChanged: (Boolean) -> Unit
 ): Modifier = composed {

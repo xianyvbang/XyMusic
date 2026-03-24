@@ -49,23 +49,23 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import org.jetbrains.compose.resources.StringResource
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyTextSubSmall
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.icon_error
+import xymusic_kmp.composeapp.generated.resources.request_failed_check_network
+import xymusic_kmp.composeapp.generated.resources.retry
+import xymusic_kmp.composeapp.generated.resources.retry_button
 
 /**
  * 下拉加载封装
@@ -78,10 +78,10 @@ fun <T : Any> SwipeRefreshListComponent(
     modifier: Modifier = Modifier,
     lazyState: LazyListState = rememberLazyListState(),
     collectAsLazyPagingItems: LazyPagingItems<T>?,
-    lazyColumBottom: (LazyListScope.(isLoading: Boolean, ifNotData: Boolean) -> Unit)? = { isLoading, ifNotData ->
+    lazyColumBottom: (LazyListScope.(PagingUiState) -> Unit)? = { pagingUiState ->
         lazyColumBottomComponent(
-            onIsLoading = { isLoading },
-            onIfNotData = { ifNotData }) { collectAsLazyPagingItems }
+            pagingUiState = pagingUiState,
+        ) { collectAsLazyPagingItems }
     },
     bottomItem: (LazyListScope.() -> Unit)? = {
         item {
@@ -95,39 +95,12 @@ fun <T : Any> SwipeRefreshListComponent(
     },
     listContent: LazyListScope.(LazyPagingItems<T>) -> Unit,
 ) {
-
-    //是否加载中
-    val isLoading by remember {
-        derivedStateOf {
-            collectAsLazyPagingItems == null || (collectAsLazyPagingItems.loadState.refresh is LoadState.Loading && collectAsLazyPagingItems.itemCount <= 0)
-
-        }
-    }
-
-    val ifNotData by remember {
-        derivedStateOf {
-            collectAsLazyPagingItems != null && collectAsLazyPagingItems.loadState.refresh is LoadState.NotLoading
-                    && ((collectAsLazyPagingItems.loadState.mediator != null
-                    && collectAsLazyPagingItems.loadState.mediator?.refresh is LoadState.NotLoading)
-                    || collectAsLazyPagingItems.loadState.mediator == null)
-                    && collectAsLazyPagingItems.loadState.source.refresh is LoadState.NotLoading
-                    && collectAsLazyPagingItems.loadState.prepend is LoadState.NotLoading
-                    && collectAsLazyPagingItems.loadState.append is LoadState.NotLoading
-                    && collectAsLazyPagingItems.itemCount <= 0
-        }
-    }
-
+    val pagingUiState = collectAsLazyPagingItems.toPagingUiState(treatNullAsInitialLoading = true)
     val state = rememberPullToRefreshState()
-    val isRefreshing by remember {
-        derivedStateOf {
-            collectAsLazyPagingItems?.loadState?.refresh is LoadState.Loading
-        }
-    }
-
 
     PullToRefreshBox(
         state = state,
-        isRefreshing = !ifNotData && !isLoading && isRefreshing,
+        isRefreshing = pagingUiState.shouldShowPullRefreshIndicator,
         onRefresh = {
             collectAsLazyPagingItems?.refresh()
         }
@@ -140,8 +113,7 @@ fun <T : Any> SwipeRefreshListComponent(
 
             lazyColumBottom?.invoke(
                 this,
-                isLoading,
-                ifNotData
+                pagingUiState
             )
         }
     }
@@ -159,35 +131,15 @@ fun <T : Any> LazyListComponent(
     collectAsLazyPagingItems: LazyPagingItems<T>?,
     listContent: LazyListScope.(LazyPagingItems<T>) -> Unit,
 ) {
-
-    //是否加载中
-    val isLoading by remember {
-        derivedStateOf {
-            collectAsLazyPagingItems == null || (collectAsLazyPagingItems.loadState.refresh is LoadState.Loading
-                    && collectAsLazyPagingItems.itemCount <= 0)
-        }
-    }
-
-    val ifNotData by remember {
-        derivedStateOf {
-            collectAsLazyPagingItems != null && collectAsLazyPagingItems.loadState.refresh is LoadState.NotLoading
-                    && ((collectAsLazyPagingItems.loadState.mediator != null
-                    && collectAsLazyPagingItems.loadState.mediator?.refresh is LoadState.NotLoading)
-                    || collectAsLazyPagingItems.loadState.mediator == null)
-                    && collectAsLazyPagingItems.loadState.source.refresh is LoadState.NotLoading
-                    && collectAsLazyPagingItems.loadState.prepend is LoadState.NotLoading
-                    && collectAsLazyPagingItems.loadState.append is LoadState.NotLoading
-                    && collectAsLazyPagingItems.itemCount <= 0
-        }
-    }
+    val pagingUiState = collectAsLazyPagingItems.toPagingUiState(treatNullAsInitialLoading = true)
 
     LazyColumnNotComponent(modifier = modifier, state = state) {
         collectAsLazyPagingItems?.let {
             listContent(collectAsLazyPagingItems)
         }
         lazyColumBottomComponent(
-            onIsLoading = { isLoading },
-            onIfNotData = { ifNotData }) { collectAsLazyPagingItems }
+            pagingUiState = pagingUiState,
+        ) { collectAsLazyPagingItems }
     }
 }
 
@@ -196,30 +148,19 @@ fun <T : Any> LazyListComponent(
  */
 fun <T : Any> LazyListScope.lazyColumBottomComponent(
     retry: (() -> Unit)? = null,
-    onIsLoading: () -> Boolean,
-    onIfNotData: () -> Boolean,
+    pagingUiState: PagingUiState,
     onHomeMusicPagingItems: () -> LazyPagingItems<T>?
 ) {
 
     item {
-
-        val text = if (onIfNotData())
-            Res.string.reached_bottom
-        else if (onIsLoading())
-            Res.string.loading
-        else if (onHomeMusicPagingItems()?.loadState?.append is LoadState.Loading)
-            Res.string.loading
-        else if (onHomeMusicPagingItems()?.loadState?.append?.endOfPaginationReached == true)
-            Res.string.reached_bottom
-        else Res.string.empty_info
         LazyLoadingAndStatus(
-            text = stringResource(text),
-            ifLoading = onIsLoading() || onHomeMusicPagingItems()?.loadState?.append is LoadState.Loading
+            text = stringResource(pagingUiState.bottomText),
+            ifLoading = pagingUiState.shouldShowBottomLoading
         )
     }
 
     when {
-        onHomeMusicPagingItems()?.loadState?.append is LoadState.Error -> {
+        pagingUiState.appendError -> {
             //加载更多异常
             item(key = 8888) {
                 ErrorMoreRetryItem {
@@ -232,9 +173,9 @@ fun <T : Any> LazyListScope.lazyColumBottomComponent(
 
         }
 
-        onHomeMusicPagingItems()?.loadState?.refresh is LoadState.Error -> {
+        pagingUiState.refreshError -> {
             item(key = 7777) {
-                if ((onHomeMusicPagingItems()?.itemCount ?: 0) <= 0) {
+                if (!pagingUiState.hasData) {
                     //刷新的时候，如果itemCount小于0，第一次加载异常
 
                     ErrorContent {

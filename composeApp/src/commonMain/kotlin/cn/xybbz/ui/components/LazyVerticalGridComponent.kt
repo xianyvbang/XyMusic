@@ -36,16 +36,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.jetbrains.compose.resources.stringResource
-import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
-import xymusic_kmp.composeapp.generated.resources.Res
-import cn.xybbz.common.UiConstants.MusicCardImageSize
+import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.theme.XyTheme
 
 /**
@@ -65,38 +60,12 @@ fun <T : Any> SwipeRefreshVerticalGridListComponent(
     collectAsLazyPagingItems: LazyPagingItems<T>,
     content: LazyGridScope.(Boolean) -> Unit
 ) {
-
-    val isRefreshing by remember {
-        derivedStateOf {
-            collectAsLazyPagingItems.loadState.refresh is LoadState.Loading
-        }
-    }
-    //是否加载中
-    val isLoading by remember {
-        derivedStateOf {
-            collectAsLazyPagingItems.loadState.refresh is LoadState.Loading && collectAsLazyPagingItems.itemCount <= 0
-
-        }
-    }
-
-    val ifNotData by remember {
-        derivedStateOf {
-            collectAsLazyPagingItems.loadState.refresh is LoadState.NotLoading
-                    && ((collectAsLazyPagingItems.loadState.mediator != null
-                    && collectAsLazyPagingItems.loadState.mediator?.refresh is LoadState.NotLoading)
-                    || collectAsLazyPagingItems.loadState.mediator == null)
-                    && collectAsLazyPagingItems.loadState.source.refresh is LoadState.NotLoading
-                    && collectAsLazyPagingItems.loadState.prepend is LoadState.NotLoading
-                    && collectAsLazyPagingItems.loadState.append is LoadState.NotLoading
-                    && collectAsLazyPagingItems.itemCount <= 0
-        }
-    }
-
+    val pagingUiState = collectAsLazyPagingItems.toPagingUiState()
 
     val state = rememberPullToRefreshState()
     PullToRefreshBox(
         state = state,
-        isRefreshing = !ifNotData && !isLoading && isRefreshing,
+        isRefreshing = pagingUiState.shouldShowPullRefreshIndicator,
         onRefresh = {
             collectAsLazyPagingItems.refresh()
         }
@@ -105,10 +74,9 @@ fun <T : Any> SwipeRefreshVerticalGridListComponent(
             modifier = modifier,
             pageListItems = collectAsLazyPagingItems,
             lazyGridState = lazyGridState,
-            onIsLoading = { isLoading },
-            onIfNotData = { ifNotData },
+            pagingUiState = pagingUiState,
             content = {
-                content.invoke(this, isRefreshing)
+                content.invoke(this, pagingUiState.isRefreshing)
             }
         )
     }
@@ -123,36 +91,12 @@ fun <T : Any> VerticalGridListComponent(
     collectAsLazyPagingItems: LazyPagingItems<T>,
     content: LazyGridScope.() -> Unit
 ) {
-
-    //是否加载中
-    val isLoading by remember {
-        derivedStateOf {
-            (collectAsLazyPagingItems.loadState.refresh is LoadState.Loading && collectAsLazyPagingItems.itemCount <= 0)
-
-        }
-    }
-
-    val ifNotData by remember {
-        derivedStateOf {
-            collectAsLazyPagingItems.loadState.refresh is LoadState.NotLoading
-                    && ((collectAsLazyPagingItems.loadState.mediator != null
-                    && collectAsLazyPagingItems.loadState.mediator?.refresh is LoadState.NotLoading)
-                    || collectAsLazyPagingItems.loadState.mediator == null)
-                    && collectAsLazyPagingItems.loadState.source.refresh is LoadState.NotLoading
-                    && collectAsLazyPagingItems.loadState.prepend is LoadState.NotLoading
-                    && collectAsLazyPagingItems.loadState.append is LoadState.NotLoading
-                    && collectAsLazyPagingItems.itemCount <= 0
-        }
-    }
-
-
-
+    val pagingUiState = collectAsLazyPagingItems.toPagingUiState()
     LazyVerticalGridComponent(
         modifier = modifier,
         pageListItems = collectAsLazyPagingItems,
         lazyGridState = lazyGridState,
-        onIsLoading = { isLoading },
-        onIfNotData = { ifNotData },
+        pagingUiState = pagingUiState,
         content = content
     )
 
@@ -166,8 +110,7 @@ fun <T : Any> LazyVerticalGridComponent(
     modifier: Modifier = Modifier,
     pageListItems: LazyPagingItems<T>?,
     lazyGridState: LazyGridState,
-    onIsLoading: () -> Boolean,
-    onIfNotData: () -> Boolean,
+    pagingUiState: PagingUiState,
     content: LazyGridScope.() -> Unit
 ) {
 
@@ -177,8 +120,7 @@ fun <T : Any> LazyVerticalGridComponent(
     ) {
         content()
         lazyColumBottomComponent(
-            onIsLoading = onIsLoading,
-            onIfNotData = onIfNotData,
+            pagingUiState = pagingUiState,
             items = pageListItems
         )
 
@@ -230,46 +172,35 @@ fun LazyVerticalGridComponent(
  */
 fun <T : Any> LazyGridScope.lazyColumBottomComponent(
     retry: (() -> Unit)? = null,
-    onIsLoading: () -> Boolean,
-    onIfNotData: () -> Boolean,
+    pagingUiState: PagingUiState,
     items: LazyPagingItems<T>?
 ) {
 
     item(span = { GridItemSpan(maxLineSpan) }) {
-
-        val text = if (onIfNotData())
-            Res.string.reached_bottom
-        else if (onIsLoading())
-            Res.string.loading
-        else if (items?.loadState?.append is LoadState.Loading)
-            Res.string.loading
-        else if (items?.loadState?.append?.endOfPaginationReached == true)
-            Res.string.reached_bottom
-        else Res.string.empty_info
         LazyLoadingAndStatus(
-            text = stringResource(text),
-            ifLoading = onIsLoading() || items?.loadState?.append is LoadState.Loading
+            text = stringResource(pagingUiState.bottomText),
+            ifLoading = pagingUiState.shouldShowBottomLoading
         )
     }
 
     when {
-        items?.loadState?.refresh is LoadState.Error -> {
+        pagingUiState.refreshError -> {
             item(key = 7777, span = { GridItemSpan(maxLineSpan) }) {
-                if (items.itemCount <= 0) {
+                if (!pagingUiState.hasData) {
                     //刷新的时候，如果itemCount小于0，第一次加载异常
 
                     ErrorContent {
-                        items.retry()
+                        items?.retry()
                     }
                 } else {
                     ErrorMoreRetryItem {
-                        items.retry()
+                        items?.retry()
                     }
                 }
             }
         }
 
-        items?.loadState?.append is LoadState.Error -> {
+        pagingUiState.appendError -> {
             item(span = {
                 // LazyGridItemSpanScope:
                 // maxLineSpan
@@ -277,7 +208,7 @@ fun <T : Any> LazyGridScope.lazyColumBottomComponent(
             }) {
                 ErrorMoreRetryItem {
                     if (retry == null)
-                        items.retry()
+                        items?.retry()
                     else
                         retry.invoke()
                 }
