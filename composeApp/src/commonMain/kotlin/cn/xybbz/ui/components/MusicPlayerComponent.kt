@@ -100,6 +100,8 @@ import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.album_cover
 import xymusic_kmp.composeapp.generated.resources.close_player_screen
 import xymusic_kmp.composeapp.generated.resources.disc_placeholder
+import xymusic_kmp.composeapp.generated.resources.favorite_24px
+import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
 import xymusic_kmp.composeapp.generated.resources.favorite_button
 import xymusic_kmp.composeapp.generated.resources.more_vert_24px
 import xymusic_kmp.composeapp.generated.resources.music_list
@@ -617,11 +619,11 @@ private fun FavoriteMusicIconComponent(
         Icon(
             modifier = Modifier
                 .size(60.dp),
-            imageVector =
-                if (musicDetail.itemId in onFavoriteMusicIdSet())
-                    Icons.Rounded.Favorite
-                else
-                    Icons.Rounded.FavoriteBorder,
+            painter =
+               painterResource( if (musicDetail.itemId in onFavoriteMusicIdSet())
+                   Res.drawable.favorite_24px
+               else
+                   Res.drawable.favorite_border_24px),
             contentDescription = stringResource(Res.string.favorite_button),
             tint = if (musicDetail.itemId in onFavoriteMusicIdSet()) Color.Red else LocalContentColor.current
         )
