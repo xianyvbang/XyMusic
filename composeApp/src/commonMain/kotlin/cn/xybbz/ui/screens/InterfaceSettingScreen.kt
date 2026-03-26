@@ -149,7 +149,7 @@ fun InterfaceSettingScreen(
                     SettingItemComponent(
                         title = stringResource(Res.string.theme_mode),
                         info = stringResource(interfaceSettingViewModel.settingsManager.themeType.toResStringInt()),
-                        imageVector = Icons.Rounded.KeyboardArrowDown,
+                        painter = Icons.Rounded.KeyboardArrowDown,
                         trailingContent = {
                             XyDropdownMenu(
                                 onIfShowMenu = { ifShowThemeMenu },

@@ -3,9 +3,6 @@
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.RemoveCircleOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -14,11 +11,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TileMode
-import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.config.image.rememberRawCoverUrls
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.xy.ItemTrailingContent
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.delete_24px
+import xymusic_kmp.composeapp.generated.resources.delete_playlist
+import xymusic_kmp.composeapp.generated.resources.edit_24px
+import xymusic_kmp.composeapp.generated.resources.modify_playlist_name
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @Composable
@@ -64,7 +66,7 @@ fun MusicPlaylistItemComponent(
                         it.invoke()
                     }) {
                         Icon(
-                            imageVector = Icons.Rounded.Edit,
+                            painter = painterResource(Res.drawable.edit_24px) ,
                             contentDescription = stringResource(Res.string.modify_playlist_name)
                         )
                     }
@@ -74,7 +76,7 @@ fun MusicPlaylistItemComponent(
                         it.invoke()
                     }) {
                         Icon(
-                            imageVector = Icons.Rounded.RemoveCircleOutline,
+                            painter = painterResource(Res.drawable.delete_24px),
                             contentDescription = stringResource(Res.string.delete_playlist)
                         )
                     }

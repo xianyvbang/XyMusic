@@ -67,15 +67,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.common.enums.MusicTypeEnum
@@ -96,18 +93,24 @@ import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.MusicPlayerViewModel
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.album_cover
 import xymusic_kmp.composeapp.generated.resources.close_player_screen
 import xymusic_kmp.composeapp.generated.resources.disc_placeholder
 import xymusic_kmp.composeapp.generated.resources.favorite_24px
 import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
 import xymusic_kmp.composeapp.generated.resources.favorite_button
+import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
 import xymusic_kmp.composeapp.generated.resources.more_vert_24px
 import xymusic_kmp.composeapp.generated.resources.music_list
 import xymusic_kmp.composeapp.generated.resources.next_track
 import xymusic_kmp.composeapp.generated.resources.other_operations_button_suffix
 import xymusic_kmp.composeapp.generated.resources.pause
+import xymusic_kmp.composeapp.generated.resources.pause_24px
+import xymusic_kmp.composeapp.generated.resources.play_arrow_24px
 import xymusic_kmp.composeapp.generated.resources.playing
 import xymusic_kmp.composeapp.generated.resources.previous_track
 import xymusic_kmp.composeapp.generated.resources.queue_music_24px
@@ -268,7 +271,7 @@ fun MusicPlayerScreen(
                         },
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.KeyboardArrowDown,
+                            painter = painterResource(Res.drawable.keyboard_arrow_down_24px),
                             contentDescription = stringResource(Res.string.close_player_screen)
                         )
                     }
@@ -563,9 +566,9 @@ fun PlayerStateComponent(
     ) {
 
         Icon(
-            imageVector = if (musicController.state == PlayStateEnum.Playing
+            painter = painterResource(if (musicController.state == PlayStateEnum.Playing
                 || musicController.state == PlayStateEnum.Loading
-            ) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+            ) Res.drawable.pause_24px else Res.drawable.play_arrow_24px) ,
             contentDescription = if (musicController.state == PlayStateEnum.Playing) stringResource(
                 Res.string.playing
             ) else stringResource(Res.string.pause),

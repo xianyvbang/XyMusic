@@ -26,8 +26,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.InputChipDefaults
@@ -41,15 +39,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.localdata.data.search.SearchHistory
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import cn.xybbz.ui.xy.XyTextSubSmall
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.delete_24px
+import xymusic_kmp.composeapp.generated.resources.delete_prefix
+import xymusic_kmp.composeapp.generated.resources.no_search_history
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -79,7 +81,7 @@ fun SearchRecordComponent(
                 onClear()
             }) {
                 Icon(
-                    imageVector = Icons.Rounded.Delete,
+                    painter = painterResource(Res.drawable.delete_24px),
                     contentDescription = "${stringResource(Res.string.delete_prefix)}${title}",
                     modifier = Modifier
                         .size(20.dp)

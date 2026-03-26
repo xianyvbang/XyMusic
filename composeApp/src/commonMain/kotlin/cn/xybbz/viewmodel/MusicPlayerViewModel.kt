@@ -26,6 +26,7 @@ import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.utils.Log
 import cn.xybbz.config.lrc.LrcServer
+import cn.xybbz.config.music.DownloadCacheCommonController
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.entity.data.ext.toPlayerMusic
 import cn.xybbz.localdata.config.DatabaseClient
@@ -41,12 +42,11 @@ import xymusic_kmp.composeapp.generated.resources.song_tab
 class MusicPlayerViewModel (
     val musicController: MusicCommonController,
     val dataSourceManager: DataSourceManager,
-    val downloadCacheController: DownloadCacheController,
+    val downloadCacheController: DownloadCacheCommonController,
     val lrcServer: LrcServer,
     private val db: DatabaseClient
 ) : ViewModel() {
 
-    var fontSize by mutableFloatStateOf(1.0f)
 
     val dataList = listOf(Res.string.song_tab, Res.string.lyrics_tab, Res.string.recommend)
 

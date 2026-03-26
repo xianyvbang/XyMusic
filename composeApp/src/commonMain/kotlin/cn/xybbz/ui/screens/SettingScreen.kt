@@ -195,7 +195,7 @@ fun SettingScreen(
                         title = stringResource(Res.string.cache_location),
                         bottomInfo = settingsViewModel.settingsManager.cacheFilePath,
                         maxLines = Int.MAX_VALUE,
-                        imageVector = null
+                        painter = null
                     ) {
                         if (settingsViewModel.settingsManager.cacheFilePath.isNotBlank()) {
                             val clipData =
@@ -227,7 +227,7 @@ fun SettingScreen(
                     SettingItemComponent(
                         title = stringResource(Res.string.download_max_list),
                         info = settingsViewModel.settingDataNow.maxConcurrentDownloads.toString(),
-                        imageVector = Icons.Rounded.KeyboardArrowDown,
+                        painter = Icons.Rounded.KeyboardArrowDown,
                         trailingContent = {
                             XyDropdownMenu(
                                 onIfShowMenu = { ifShowMaxConcurrentDownloads },
@@ -312,7 +312,7 @@ fun SettingScreen(
                         title = stringResource(Res.string.song_cache_location),
                         bottomInfo = settingsViewModel.downLoadManager.getConfig().finalDirectory,
                         maxLines = Int.MAX_VALUE,
-                        imageVector = null
+                        painter = null
                     ) {
                         if (settingsViewModel.settingsManager.cacheFilePath.isNotBlank()) {
                             val clipData =

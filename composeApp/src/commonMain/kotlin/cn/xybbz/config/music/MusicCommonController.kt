@@ -48,7 +48,7 @@ abstract class MusicCommonController: IoScoped(),KoinComponent  {
         private set
 
     var coverRefreshVersion by mutableIntStateOf(0)
-        protected set
+        private set
 
     //音频总时长
     var duration by mutableLongStateOf(0L)
@@ -64,19 +64,19 @@ abstract class MusicCommonController: IoScoped(),KoinComponent  {
 
     //当前播放数据类型
     var playDataType by mutableStateOf(MusicPlayTypeEnum.FOUNDATION)
-        private set
+        protected set
 
     //片头跳过时间
     var headTime by mutableLongStateOf(0L)
-        private set
+        protected set
 
     //片尾跳过时间
     var endTime by mutableLongStateOf(0L)
-        private set
+        protected set
 
     //当前播放模式
     var playType by mutableStateOf(PlayerTypeEnum.SEQUENTIAL_PLAYBACK)
-        private set
+        protected set
 
     var ifNextPage = true
 
@@ -115,6 +115,36 @@ abstract class MusicCommonController: IoScoped(),KoinComponent  {
     abstract fun pause()
 
     /**
+     * 恢复当前播放
+     */
+    abstract fun resume()
+
+    /**
+     * 跳转播放到指定位置
+     */
+    abstract fun seekTo(millSeconds: Long)
+
+    /**
+     * 获取当前播放模式下的下一首歌曲
+     */
+    abstract fun seekToNext()
+
+    /**
+     * 获取当前播放模式下的上一首歌曲
+     */
+    abstract fun seekToPrevious()
+
+    /**
+     * 跳转至指定index位置音乐
+     */
+    abstract fun seekToIndex(index: Int)
+
+    /**
+     * 删除指定index位置音乐
+     */
+    abstract fun removeItem(index: Int)
+
+    /**
      * 设置倍速
      */
     abstract fun setDoubleSpeed(value: Float)
@@ -123,6 +153,22 @@ abstract class MusicCommonController: IoScoped(),KoinComponent  {
      * 设置播放类型
      */
     abstract fun setPlayTypeData(playerTypeEnum: PlayerTypeEnum)
+
+
+    /**
+     * 添加下一首播放功能
+     */
+    abstract fun addNextPlayer(music: XyPlayMusic)
+
+    /**
+     * 获取下一首播放位置的索引
+     */
+    abstract fun getNextPlayableIndex(): Int?
+
+    /**
+     * 获取上一首播放位置的索引
+     */
+    abstract fun getPreviousPlayableIndex(): Int?
 
 
     /**
@@ -195,8 +241,11 @@ abstract class MusicCommonController: IoScoped(),KoinComponent  {
         this.ifNextPage = ifNextPage
     }
 
-    /**
-     * 跳转播放到指定位置
-     */
-    abstract fun seekTo(millSeconds: Long)
+
+    fun updateEvent(event: PlayerEvent) {
+        scope.launch {
+            _events.emit(event)
+        }
+    }
+
 }

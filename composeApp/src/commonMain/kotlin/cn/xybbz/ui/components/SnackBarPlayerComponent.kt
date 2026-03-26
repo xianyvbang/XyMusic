@@ -19,7 +19,6 @@
 package cn.xybbz.ui.components
 
 
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
@@ -43,16 +42,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.QueueMusic
-import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
-import androidx.compose.material.icons.automirrored.rounded.PlaylistPlay
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Download
-import androidx.compose.material.icons.rounded.HeartBroken
-import androidx.compose.material.icons.rounded.Pause
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.PlaylistRemove
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -61,7 +50,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -74,24 +62,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.PlayStateEnum
-import cn.xybbz.common.music.MusicController
+import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.ResourcesUtils.readPaletteColor
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
+import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.extension.playProgress
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
@@ -100,27 +85,40 @@ import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.viewmodel.SnackBarPlayerViewModel
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.add_to_playlist
+import xymusic_kmp.composeapp.generated.resources.delete_24px
 import xymusic_kmp.composeapp.generated.resources.delete_local_permanently
 import xymusic_kmp.composeapp.generated.resources.delete_permanently
+import xymusic_kmp.composeapp.generated.resources.download_24px
 import xymusic_kmp.composeapp.generated.resources.download_list
+import xymusic_kmp.composeapp.generated.resources.heart_broken_24px
 import xymusic_kmp.composeapp.generated.resources.music_cover
 import xymusic_kmp.composeapp.generated.resources.music_list
 import xymusic_kmp.composeapp.generated.resources.music_remove_from_playlist
+import xymusic_kmp.composeapp.generated.resources.music_xy_placeholder_foreground
 import xymusic_kmp.composeapp.generated.resources.pause
+import xymusic_kmp.composeapp.generated.resources.pause_24px
+import xymusic_kmp.composeapp.generated.resources.play_arrow_24px
 import xymusic_kmp.composeapp.generated.resources.play_selected
 import xymusic_kmp.composeapp.generated.resources.playing
+import xymusic_kmp.composeapp.generated.resources.playlist_add_24px
+import xymusic_kmp.composeapp.generated.resources.playlist_play_24px
+import xymusic_kmp.composeapp.generated.resources.playlist_remove_24px
 import xymusic_kmp.composeapp.generated.resources.please_select
+import xymusic_kmp.composeapp.generated.resources.queue_music_24px
 import xymusic_kmp.composeapp.generated.resources.unfavorite
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
-@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SnackBarPlayerComponent(
     modifier: Modifier = Modifier,
-    snackBarPlayerViewModel: SnackBarPlayerViewModel = hiltViewModel<SnackBarPlayerViewModel>(),
+    snackBarPlayerViewModel: SnackBarPlayerViewModel = koinViewModel<SnackBarPlayerViewModel>(),
     onClick: () -> Unit
 ) {
     val mainViewModel = LocalMainViewModel.current
@@ -140,9 +138,7 @@ fun SnackBarPlayerComponent(
         label = "backgroundColorAnim"
     )
 
-    val permissionState = downloadPermission {
-        snackBarPlayerViewModel.downloadMusics()
-    }
+
     val playerSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
@@ -243,14 +239,17 @@ fun SnackBarPlayerComponent(
                             if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
                                 MessageUtils.sendPopTip(pleaseSelect)
                             } else {
-                                snackBarPlayerViewModel.selectControl.onRemoveSelectListResource.invoke(
-                                    snackBarPlayerViewModel.dataSourceManager,
-                                    coroutineScope
-                                )
+                                coroutineScope.launch {
+                                    snackBarPlayerViewModel.selectControl.onRemoveSelectListResource.invoke(
+                                        snackBarPlayerViewModel.dataSourceManager,
+                                        coroutineScope
+                                    )
+                                }
+
                             }
                         }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
                             Icon(
-                                imageVector = Icons.Rounded.Delete,
+                                painter = painterResource(Res.drawable.delete_24px),
                                 contentDescription = if (snackBarPlayerViewModel.selectControl.ifLocal) stringResource(
                                     Res.string.delete_local_permanently
                                 ) else stringResource(Res.string.delete_permanently)
@@ -270,7 +269,7 @@ fun SnackBarPlayerComponent(
                         }
                     }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.PlaylistPlay,
+                            painter = painterResource(Res.drawable.playlist_play_24px),
                             contentDescription = stringResource(Res.string.play_selected)
                         )
                     }
@@ -284,7 +283,7 @@ fun SnackBarPlayerComponent(
 
                     }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.PlaylistAdd,
+                            painter = painterResource(Res.drawable.playlist_add_24px),
                             contentDescription = stringResource(Res.string.add_to_playlist)
                         )
                     }
@@ -299,7 +298,7 @@ fun SnackBarPlayerComponent(
                                 )
                         }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
                             Icon(
-                                imageVector = Icons.Rounded.PlaylistRemove,
+                                painter = painterResource(Res.drawable.playlist_remove_24px),
                                 contentDescription = stringResource(Res.string.music_remove_from_playlist)
                             )
                         }
@@ -315,7 +314,7 @@ fun SnackBarPlayerComponent(
                             )
                     }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
                         Icon(
-                            imageVector = Icons.Rounded.HeartBroken,
+                            painter = painterResource(Res.drawable.heart_broken_24px),
                             contentDescription = stringResource(Res.string.unfavorite)
                         )
                     }
@@ -325,12 +324,12 @@ fun SnackBarPlayerComponent(
                             if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
                                 MessageUtils.sendPopTip(pleaseSelect)
                             } else {
-                                permissionState?.launchMultiplePermissionRequest()
+                                MessageUtils.sendPopTipError("下载功能暂时不可用")
                             }
 
                         }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
                             Icon(
-                                imageVector = Icons.Rounded.Download,
+                                painter = painterResource(Res.drawable.download_24px),
                                 contentDescription = stringResource(Res.string.download_list)
                             )
                         }
@@ -381,7 +380,7 @@ fun SnackBarPlayerComponent(
                             musicController = snackBarPlayerViewModel.musicController
                         )
                         Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.QueueMusic,
+                            painter = painterResource(Res.drawable.queue_music_24px),
                             contentDescription = stringResource(Res.string.music_list),
                             tint = Color.White,
                             modifier = Modifier
@@ -410,7 +409,7 @@ fun RowScope.HorizontalPagerSnackBar(
     modifier: Modifier,
     toNext: (Int) -> Unit,
     backNext: () -> Unit,
-    musicController: MusicController
+    musicController: MusicCommonController
 ) {
     val originMusicListIsEmpty by remember {
         derivedStateOf {
@@ -443,9 +442,6 @@ fun RowScope.HorizontalPagerSnackBar(
 
         val mainViewModel = LocalMainViewModel.current
 
-        SideEffect {
-            Log.d("=====", "HorizontalPagerSnackBar重组一次${horPagerState.currentPage}")
-        }
         val intState = remember {
             derivedStateOf {
                 musicController.curOriginIndex
@@ -549,7 +545,7 @@ fun RowScope.HorizontalPagerSnackBar(
 }
 
 @Composable
-private fun CircularProgressIndicatorComp(musicController: MusicController) {
+private fun CircularProgressIndicatorComp(musicController: MusicCommonController) {
 
     val progress by playProgress(musicController.duration, musicController.progressStateFlow)
 
@@ -596,7 +592,7 @@ private fun CircularProgressIndicatorComp(musicController: MusicController) {
         }
 
         Icon(
-            imageVector = if (musicController.state == PlayStateEnum.Playing || musicController.state == PlayStateEnum.Loading) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+            painter = painterResource(if (musicController.state == PlayStateEnum.Playing || musicController.state == PlayStateEnum.Loading) Res.drawable.pause_24px else Res.drawable.play_arrow_24px),
             contentDescription = if (musicController.state == PlayStateEnum.Playing) stringResource(
                 Res.string.playing
             ) else stringResource(Res.string.pause),
@@ -621,7 +617,7 @@ private fun CircularProgressIndicatorComp(musicController: MusicController) {
 
 @Composable
 private fun ImageCover(
-    musicController: MusicController,
+    musicController: MusicCommonController,
     onSetColor: (Color?) -> Unit
 ) {
     val coverUrls = rememberPlayMusicCoverUrls(

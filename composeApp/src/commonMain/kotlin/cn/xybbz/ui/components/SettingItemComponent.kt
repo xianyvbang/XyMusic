@@ -27,8 +27,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -38,11 +36,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
@@ -52,6 +47,12 @@ import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSubSmall
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.enter_settings
+import xymusic_kmp.composeapp.generated.resources.keyboard_double_arrow_right_24px
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @Composable
@@ -60,7 +61,7 @@ fun SettingItemComponent(
     modifier: Modifier = Modifier,
     info: String? = null,
     bottomInfo: String? = null,
-    imageVector: ImageVector? = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+    painter: DrawableResource? = Res.drawable.keyboard_double_arrow_right_24px,
     maxLines: Int = 1,
     ifOpenBadge: Boolean = false,
     enabled: Boolean = true,
@@ -117,7 +118,7 @@ fun SettingItemComponent(
                     )
                 }
                 trailingContent?.invoke()
-                imageVector?.let {
+                painter?.let {
                     Spacer(modifier = Modifier.width(5.dp))
                     IconButton(onClick = composeClick {
                         if (onRouter != null)
@@ -146,7 +147,7 @@ fun SettingItemComponent(
                             }
                         ) {
                             Icon(
-                                imageVector = imageVector,
+                                painter = painterResource(painter),
                                 contentDescription = stringResource(
                                     Res.string.enter_settings,
                                     title

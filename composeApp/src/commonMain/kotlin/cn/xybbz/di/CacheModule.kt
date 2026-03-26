@@ -18,23 +18,15 @@
 
 package cn.xybbz.di
 
-import cn.xybbz.api.client.CacheApiClient
+import cn.xybbz.config.music.DownloadCacheCommonController
 import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.music.DownloadCacheController
-import org.koin.core.annotation.Configuration
-import org.koin.core.annotation.Module
 import org.koin.core.annotation.Singleton
 
-@Module
-@Configuration
-class CacheModule {
+expect class CacheModule {
 
     @Singleton
     fun downloadCacheController(
         contextWrapper: ContextWrapper,
-        settingsManager: SettingsManager,
-        cacheApiClient: CacheApiClient
-    ): DownloadCacheController {
-        return DownloadCacheController(contextWrapper.context, settingsManager,cacheApiClient)
-    }
+        settingsManager: SettingsManager
+    ): DownloadCacheCommonController
 }

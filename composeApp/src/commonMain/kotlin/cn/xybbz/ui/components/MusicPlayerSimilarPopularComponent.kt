@@ -21,16 +21,12 @@ package cn.xybbz.ui.components
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
@@ -38,6 +34,11 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyNoData
 import cn.xybbz.ui.xy.XyText
+import org.jetbrains.compose.resources.stringResource
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.playlist_add_24px
+import xymusic_kmp.composeapp.generated.resources.similar_music
+import xymusic_kmp.composeapp.generated.resources.top_music
 
 @Composable
 fun MusicPlayerSimilarPopularComponent(
@@ -70,9 +71,9 @@ fun MusicPlayerSimilarPopularComponent(
             )
         }
         if (mainViewModel.popularMusicList.isEmpty())
-        item {
-            XyNoData()
-        }
+            item {
+                XyNoData()
+            }
         items(mainViewModel.popularMusicList) { musicExt ->
 
             MusicItemComponent(
@@ -88,7 +89,7 @@ fun MusicPlayerSimilarPopularComponent(
                 },
                 backgroundColor = Color.Transparent,
                 ifShowTrailingContent = musicExt.music.itemId !in playIdSet,
-                trailingIcon = Icons.AutoMirrored.Rounded.PlaylistAdd,
+                trailingIcon = Res.drawable.playlist_add_24px,
                 trailingOnClick = {
                     if (musicExt.music.itemId !in playIdSet)
                         onAddPlayMusic(musicExt)
@@ -125,7 +126,7 @@ fun MusicPlayerSimilarPopularComponent(
                 },
                 backgroundColor = Color.Transparent,
                 ifShowTrailingContent = musicExt.music.itemId !in playIdSet,
-                trailingIcon = Icons.AutoMirrored.Rounded.PlaylistAdd,
+                trailingIcon = Res.drawable.playlist_add_24px,
                 trailingOnClick = {
                     if (musicExt.music.itemId !in playIdSet)
                         onAddPlayMusic(musicExt)

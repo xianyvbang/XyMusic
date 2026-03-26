@@ -1,16 +1,13 @@
 ﻿package cn.xybbz.common.enums
 
-import androidx.annotation.StringRes
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Album
-import androidx.compose.material.icons.rounded.DateRange
-import androidx.compose.material.icons.rounded.MoreTime
-import androidx.compose.material.icons.rounded.MusicNote
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.ui.graphics.vector.ImageVector
-import xymusic_kmp.composeapp.generated.resources.Res
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
 import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.album_24px
+import xymusic_kmp.composeapp.generated.resources.date_range_24px
+import xymusic_kmp.composeapp.generated.resources.more_time_24px
+import xymusic_kmp.composeapp.generated.resources.music_note_24px
+import xymusic_kmp.composeapp.generated.resources.person_24px
 import xymusic_kmp.composeapp.generated.resources.sort_by_album_name_asc
 import xymusic_kmp.composeapp.generated.resources.sort_by_album_name_desc
 import xymusic_kmp.composeapp.generated.resources.sort_by_artist_name_asc
@@ -22,11 +19,11 @@ import xymusic_kmp.composeapp.generated.resources.sort_by_music_name_desc
 import xymusic_kmp.composeapp.generated.resources.sort_by_premiere_date_asc
 import xymusic_kmp.composeapp.generated.resources.sort_by_premiere_date_desc
 
-enum class SortTypeEnum(val title: StringResource, val imageVector: ImageVector?) {
+enum class SortTypeEnum(val title: StringResource, val painter: DrawableResource?) {
     /**
      * 创建时间排序
      */
-    CREATE_TIME_ASC(Res.string.sort_by_create_time_asc, Icons.Rounded.MoreTime),
+    CREATE_TIME_ASC(Res.string.sort_by_create_time_asc, Res.drawable.more_time_24px),
 
     /**
      * 创建时间倒序
@@ -36,7 +33,7 @@ enum class SortTypeEnum(val title: StringResource, val imageVector: ImageVector?
     /**
      * 按歌曲名称排序
      */
-    MUSIC_NAME_ASC(Res.string.sort_by_music_name_asc, Icons.Rounded.MusicNote),
+    MUSIC_NAME_ASC(Res.string.sort_by_music_name_asc, Res.drawable.music_note_24px),
 
     /**
      * 按歌曲名称倒序
@@ -46,7 +43,7 @@ enum class SortTypeEnum(val title: StringResource, val imageVector: ImageVector?
     /**
      * 按专辑名称排序
      */
-    ALBUM_NAME_ASC(Res.string.sort_by_album_name_asc, Icons.Rounded.Album),
+    ALBUM_NAME_ASC(Res.string.sort_by_album_name_asc, Res.drawable.album_24px),
 
     /**
      * 按专辑名称倒序
@@ -56,7 +53,7 @@ enum class SortTypeEnum(val title: StringResource, val imageVector: ImageVector?
     /**
      * 按艺术家排序
      */
-    ARTIST_NAME_ASC(Res.string.sort_by_artist_name_asc, Icons.Rounded.Person),
+    ARTIST_NAME_ASC(Res.string.sort_by_artist_name_asc, Res.drawable.person_24px),
 
     /**
      * 按艺术家倒序
@@ -66,7 +63,7 @@ enum class SortTypeEnum(val title: StringResource, val imageVector: ImageVector?
     /**
      * 按发行时间正序
      */
-    PREMIERE_DATE_ASC(Res.string.sort_by_premiere_date_asc, Icons.Rounded.DateRange),
+    PREMIERE_DATE_ASC(Res.string.sort_by_premiere_date_asc, Res.drawable.date_range_24px),
 
     /**
      * 按发行时间倒叙

@@ -8,10 +8,11 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.ui.xy.LazyColumnNotComponent
+import org.jetbrains.compose.resources.stringResource
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.reached_bottom
 
 @Composable
 fun ScreenLazyColumn(

@@ -116,7 +116,7 @@ fun ProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = hiltViewModel
                     SettingItemComponent(
                         title = stringResource(Res.string.test_connection),
                         info = proxyConfigViewModel.getConnectionAddress(),
-                        imageVector = null,
+                        painter = null,
                         onClick = {
                             proxyConfigViewModel.testProxyConfig()
                         }

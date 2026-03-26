@@ -18,34 +18,24 @@
 
 package cn.xybbz.viewmodel
 
-import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.util.UnstableApi
 import androidx.room.Transaction
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.common.music.DownloadCacheController
-import cn.xybbz.common.music.MusicController
-import cn.xybbz.common.utils.MessageUtils
-import cn.xybbz.config.download.DownLoadManager
-import cn.xybbz.config.download.core.DownloadRequest
+import cn.xybbz.config.music.DownloadCacheCommonController
+import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.localdata.config.DatabaseClient
-import cn.xybbz.localdata.enums.DownloadTypes
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
 
-@HiltViewModel
-@OptIn(UnstableApi::class)
-class SnackBarPlayerViewModel @Inject constructor(
-    val musicController: MusicController,
+@KoinViewModel
+class SnackBarPlayerViewModel (
+    val musicController: MusicCommonController,
     val db: DatabaseClient,
-    private val downloadCacheController: DownloadCacheController,
+    private val downloadCacheController: DownloadCacheCommonController,
     val dataSourceManager: DataSourceManager,
     val selectControl: SelectControl,
-    private val downloadManager: DownLoadManager
 ) : ViewModel() {
 
 
@@ -63,30 +53,6 @@ class SnackBarPlayerViewModel @Inject constructor(
 
     fun downloadMusics() {
         viewModelScope.launch {
-            val downloadTypes =
-                dataSourceManager.dataSourceType?.getDownloadType() ?: DownloadTypes.APK
-            val itemIds = selectControl.selectMusicIdList.toList()
-            val musicList = db.musicDao.selectByIds(itemIds)
-            val requests = musicList.map { musicData ->
-                DownloadRequest(
-                    url = musicData.downloadUrl,
-                    fileName = musicData.name + "." + musicData.container,
-                    fileSize = musicData.size ?: 0,
-                    uid = musicData.itemId,
-                    title = musicData.name,
-                    type = downloadTypes,
-                    cover = musicData.pic,
-                    duration = musicData.runTimeTicks,
-                    connectionId = dataSourceManager.getConnectionId(),
-                    music = musicData
-                )
-            }
-            if (requests.isNotEmpty()) {
-                downloadManager.enqueue(
-                    *requests.toTypedArray()
-                )
-                MessageUtils.sendPopTip(Res.string.add_download_list)
-            }
 
         }.invokeOnCompletion { selectControl.dismiss() }
 

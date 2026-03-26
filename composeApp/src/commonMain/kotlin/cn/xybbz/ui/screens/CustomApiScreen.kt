@@ -239,7 +239,7 @@ private fun CustomLyricsSettingInput(
         SettingItemComponent(
             title = title,
             bottomInfo = bottomInfo,
-            imageVector = null,
+            painter = null,
             onRouter = {},
             trailingContent = {
                 XyEdit(

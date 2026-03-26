@@ -77,6 +77,7 @@ import androidx.compose.ui.unit.sp
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import xymusic_kmp.ui.generated.resources.Res
@@ -428,7 +429,7 @@ fun XyItemIcon(
 fun XyItemIconSelect(
     modifier: Modifier = Modifier,
     text: String,
-    painter: Painter? = null,
+    painter: DrawableResource? = null,
     enabled: Boolean = true,
     enableLeading: Boolean = true,
     onIfSelected: () -> Boolean = { false },
@@ -454,7 +455,7 @@ fun XyItemIconSelect(
                 painter?.let {
                     Icon(
                         modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize),
-                        painter = painter,
+                        painter = painterResource(painter),
                         contentDescription = text,
                         tint = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                     )

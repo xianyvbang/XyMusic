@@ -45,7 +45,6 @@ import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
 import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.config.image.CoverImageResolver
-import cn.xybbz.config.image.coverImageResolver
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.PlayerEvent
 import cn.xybbz.config.setting.OnSettingsChangeListener
@@ -58,9 +57,7 @@ import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.launch
-import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
-import kotlin.getValue
 
 
 /**
@@ -408,7 +405,7 @@ class MusicController(
     }
 
 
-    fun removeItem(index: Int) {
+    override fun removeItem(index: Int) {
         //判断要删除的索引和当前索引是否一致
         val tmpList = mutableListOf<XyPlayMusic>()
         tmpList.addAll(originMusicList)
@@ -426,10 +423,10 @@ class MusicController(
     /**
      * 设置播放类型
      */
-    fun setPlayTypeData(playerTypeEnum: PlayerTypeEnum) {
+    override fun setPlayTypeData(playerTypeEnum: PlayerTypeEnum) {
         playType = playerTypeEnum
         scope.launch {
-            _events.emit(PlayerEvent.PlayerTypeChange(playerTypeEnum))
+            updateEvent(PlayerEvent.PlayerTypeChange(playerTypeEnum))
         }
         generateRealMusicList()
     }
@@ -437,7 +434,7 @@ class MusicController(
     /**
      * 列表中添加数据
      */
-    fun addMusicList(
+    override fun addMusicList(
         musicList: List<XyPlayMusic>,
         artistId: String? = null,
         isPlayer: Boolean? = null

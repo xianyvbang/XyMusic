@@ -23,13 +23,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.MenuOpen
-import androidx.compose.material.icons.automirrored.rounded.Sort
-import androidx.compose.material.icons.rounded.CalendarToday
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -46,9 +39,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.ui.ext.composeClick
@@ -56,11 +47,32 @@ import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.xy.LazyColumnBottomSheetComponent
 import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import cn.xybbz.ui.xy.XyItemIconSelect
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.calendar_today_24px
+import xymusic_kmp.composeapp.generated.resources.can_cancel_favorite_filter
+import xymusic_kmp.composeapp.generated.resources.can_get_favorite_music
+import xymusic_kmp.composeapp.generated.resources.cancel
+import xymusic_kmp.composeapp.generated.resources.cancel_favorite_filter
+import xymusic_kmp.composeapp.generated.resources.clear_filters
+import xymusic_kmp.composeapp.generated.resources.close_24px
+import xymusic_kmp.composeapp.generated.resources.confirm
+import xymusic_kmp.composeapp.generated.resources.favorite_24px
+import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
+import xymusic_kmp.composeapp.generated.resources.get_favorite_music
+import xymusic_kmp.composeapp.generated.resources.menu_open_24px
+import xymusic_kmp.composeapp.generated.resources.open_sort_and_filter_menu
+import xymusic_kmp.composeapp.generated.resources.select_sort_method
+import xymusic_kmp.composeapp.generated.resources.sort_24px
+import xymusic_kmp.composeapp.generated.resources.sort_method
+import xymusic_kmp.composeapp.generated.resources.year_filter
+import xymusic_kmp.composeapp.generated.resources.year_selection
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 
 /**
@@ -164,7 +176,7 @@ fun SelectSortBottomSheetComponent(
             ifShowSortOrFilterMenu = true
         }) {
             Icon(
-                imageVector = Icons.AutoMirrored.Rounded.MenuOpen,
+                painter = painterResource(Res.drawable.menu_open_24px),
                 contentDescription = stringResource(Res.string.open_sort_and_filter_menu)
             )
         }
@@ -181,7 +193,7 @@ fun SelectSortBottomSheetComponent(
                     ),
                     trailingIcon = {
                         Icon(
-                            imageVector = if (onIfFavorite()) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                            painter = painterResource(if (onIfFavorite()) Res.drawable.favorite_24px else Res.drawable.favorite_border_24px),
                             contentDescription = if (onIfFavorite()) stringResource(Res.string.can_cancel_favorite_filter) else stringResource(
                                 Res.string.can_get_favorite_music
                             ),
@@ -200,7 +212,7 @@ fun SelectSortBottomSheetComponent(
                     title = stringResource(Res.string.year_filter),
                     trailingIcon = {
                         Icon(
-                            imageVector = Icons.Rounded.CalendarToday,
+                            painter = painterResource(Res.drawable.calendar_today_24px),
                             contentDescription = stringResource(Res.string.year_filter),
                         )
 
@@ -215,7 +227,7 @@ fun SelectSortBottomSheetComponent(
                     title = stringResource(Res.string.year_filter),
                     trailingIcon = {
                         Icon(
-                            imageVector = Icons.Rounded.CalendarToday,
+                            painter = painterResource(Res.drawable.calendar_today_24px),
                             contentDescription = stringResource(Res.string.year_filter),
                         )
 
@@ -230,7 +242,7 @@ fun SelectSortBottomSheetComponent(
                     title = stringResource(Res.string.sort_method),
                     trailingIcon = {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.Sort,
+                            painter =painterResource(Res.drawable.sort_24px),
                             contentDescription = stringResource(Res.string.sort_method),
                         )
 
@@ -245,7 +257,7 @@ fun SelectSortBottomSheetComponent(
                     enabled = onEnabledClearClick(),
                     trailingIcon = {
                         Icon(
-                            imageVector = Icons.Rounded.Close,
+                            painter = painterResource(Res.drawable.close_24px),
                             contentDescription = stringResource(Res.string.clear_filters),
                         )
 
@@ -289,7 +301,7 @@ fun SelectSortBottomSheetComponent(
                 items(sortTypeList) { item ->
                     XyItemIconSelect(
                         text = stringResource(item.title),
-                        imageVector = item.imageVector,
+                        painter = item.painter,
                         onIfSelected = { onSortType() == item }) {
                         coroutineScope.launch {
                             if (onSortType() == item) {

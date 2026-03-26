@@ -43,6 +43,7 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
 import cn.xybbz.api.client.CacheApiClient
+import cn.xybbz.config.music.DownloadCacheCommonController
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
@@ -52,6 +53,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.Executors
@@ -60,9 +63,8 @@ import java.util.concurrent.Executors
 @SuppressLint("UnsafeOptInUsageError")
 class DownloadCacheController(
     private val context: Context,
-    private val settingsManager: SettingsManager,
-    cacheApiClient: CacheApiClient
-) : IoScoped() {
+    private val settingsManager: SettingsManager
+) : DownloadCacheCommonController(), KoinComponent {
 
     val cache: Cache
     var cacheDataSourceFactory: CacheDataSource.Factory
@@ -82,11 +84,6 @@ class DownloadCacheController(
 
     private val childPath = "cache"
 
-    /**
-     * 当前缓存进度
-     */
-    private val _cacheSchedule = MutableStateFlow(0f)
-    val cacheSchedule = _cacheSchedule.asStateFlow()
 
     /**
      * 所有缓存大小
@@ -95,6 +92,7 @@ class DownloadCacheController(
     val allCacheSizeFlow = _allCacheSizeFlow.asStateFlow()
 
     init {
+        val cacheApiClient: CacheApiClient = get()
         //2025年1月20日 11:12:19 修改缓存数据目录到cache中,使其可以被系统的清除缓存功能删除
         val cacheParentDirectory =
             if (Environment.MEDIA_MOUNTED == Environment.getExternalStorageState()) {
@@ -171,7 +169,7 @@ class DownloadCacheController(
             {
                 Log.i("music", "缓存进度 $it")
 //                切换当前数据源?
-                _cacheSchedule.value = it / 100.0f
+                updateCacheSchedule(it / 100.0f)
             }
         )
 
@@ -222,7 +220,7 @@ class DownloadCacheController(
         val oldDownload = downloadManager.downloadIndex.getDownload(itemId)
         if (oldDownload != null) {
             download = oldDownload
-            _cacheSchedule.value = oldDownload.percentDownloaded / 100.0f
+            updateCacheSchedule(oldDownload.percentDownloaded / 100.0f)
             if (oldDownload.percentDownloaded == 100f) {
                 return
             }
@@ -281,7 +279,7 @@ class DownloadCacheController(
      */
     private fun cancelCurrentCache() {
         pauseCache()
-        _cacheSchedule.value = 0f
+        updateCacheSchedule(0f)
         download = null
         currentTaskId = null
         Log.i("music", "已取消当前缓存")
