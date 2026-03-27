@@ -1,52 +1,68 @@
 package cn.xybbz.ui.components
 
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.graphics.createBitmap
-import coil.request.ImageRequest
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.sp
 
+@OptIn(ExperimentalTextApi::class)
 @Composable
 fun textToBitmap(name: String, url: String? = null): Any {
-    return if (!url.isNullOrBlank()) url else {
-        val context = LocalContext.current
-        val letter = name.firstOrNull()?.uppercase() ?: "?"
+    if (!url.isNullOrBlank()) return url
 
-        // Remember bitmap so it's not recreated every recomposition
-        val bitmap = remember(letter) { generateInitialBitmap(letter) }
-        ImageRequest.Builder(context)
-            .data(bitmap)
-            .build()
+    val letter = remember(name) {
+        name.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+    }
+    val textMeasurer = rememberTextMeasurer()
+
+    return remember(letter, textMeasurer) {
+        InitialLetterPainter(
+            letter = letter,
+            textMeasurer = textMeasurer
+        )
     }
 }
 
-// Function to generate a Bitmap with a single character
-fun generateInitialBitmap(letter: String): Bitmap {
-    val size = 256
-    val bitmap = createBitmap(size, size)
-    val canvas = Canvas(bitmap)
+private class InitialLetterPainter(
+    private val letter: String,
+    private val textMeasurer: TextMeasurer,
+) : Painter() {
+    private val textStyle = TextStyle(
+        color = Color.White,
+        fontSize = 64.sp,
+        fontWeight = FontWeight.Bold
+    )
 
-    // Background
-    canvas.drawColor(Color.argb(100,64,112,74))
+    override val intrinsicSize: Size = Size(256f, 256f)
 
-    // Text paint
-    val paint = Paint().apply {
-        color = Color.WHITE
-        textSize = 64f
-        textAlign = Paint.Align.CENTER
-        isAntiAlias = true
-        typeface = android.graphics.Typeface.DEFAULT_BOLD
+    override fun DrawScope.onDraw() {
+        drawRect(
+            color = Color(0x6440704A),
+            size = size
+        )
+
+        val textLayoutResult = textMeasurer.measure(
+            text = AnnotatedString(letter),
+            style = textStyle
+        )
+
+        drawText(
+            textLayoutResult = textLayoutResult,
+            topLeft = Offset(
+                x = (size.width - textLayoutResult.size.width) / 2f,
+                y = (size.height - textLayoutResult.size.height) / 2f
+            )
+        )
     }
-
-    // Draw text centered
-    val xPos = size / 2f
-    val yPos = size / 2f - (paint.descent() + paint.ascent()) / 2
-
-    canvas.drawText(letter, xPos, yPos, paint)
-
-    return bitmap
 }

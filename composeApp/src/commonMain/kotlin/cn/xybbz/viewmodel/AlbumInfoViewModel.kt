@@ -18,7 +18,6 @@
 
 package cn.xybbz.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -29,48 +28,37 @@ import androidx.room.Transaction
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.common.enums.SortTypeEnum
-import cn.xybbz.common.music.MusicController
+import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.PlaylistFileUtils
 import cn.xybbz.common.utils.PlaylistParser
+import cn.xybbz.config.music.MusicCommonController
+import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.Sort
-import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.progress.EnableProgress
 import cn.xybbz.localdata.data.progress.Progress
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import org.koin.core.annotation.InjectedParam
+import org.koin.core.annotation.KoinViewModel
 
-@HiltViewModel(assistedFactory = AlbumInfoViewModel.Factory::class)
-class AlbumInfoViewModel @AssistedInject constructor(
-    @Assisted private val itemId: String,
-    @Assisted private val dataType: MusicDataTypeEnum,
+@KoinViewModel
+class AlbumInfoViewModel(
+    @InjectedParam private val itemId: String,
+    @InjectedParam private val dataType: MusicDataTypeEnum,
     val dataSourceManager: DataSourceManager,
     val db: DatabaseClient,
     val musicPlayContext: MusicPlayContext,
-    val musicController: MusicController,
+    val musicController: MusicCommonController,
     val selectControl: SelectControl,
-    val backgroundConfig: BackgroundConfig
 ) : PageListViewModel<XyMusic>(dataSourceManager, SortTypeEnum.MUSIC_NAME_ASC) {
-
-    /**
-     * 创建方法
-     * [dataType] 0专辑,1歌单
-     */
-    @AssistedFactory
-    interface Factory {
-        fun create(itemId: String, dataType: MusicDataTypeEnum): AlbumInfoViewModel
-    }
 
     val downloadMusicIdsFlow =
         db.downloadDao.getAllMusicTaskUidsFlow()

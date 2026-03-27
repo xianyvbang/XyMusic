@@ -28,7 +28,7 @@ fun TopAppBarComponent(
 ) {
     TopAppBar(
         modifier = modifier,
-        windowInsets = WindowInsets.Companion.systemBars.only(
+        windowInsets = WindowInsets.systemBars.only(
             WindowInsetsSides.Horizontal
         ),
         title = title,

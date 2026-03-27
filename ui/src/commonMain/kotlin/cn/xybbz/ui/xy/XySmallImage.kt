@@ -95,26 +95,36 @@ fun XyImage(
         mutableStateOf(primaryModel ?: fallbackModel)
     }
 
-    AsyncImage(
-        modifier = Modifier
-            .then(modifier),
-        placeholder = placeholder,
-        error = error,
-        fallback = fallback,
-        model = tempModel,
-        contentDescription = contentDescription,
-        alpha = alpha,
-        contentScale = contentScale,
-        onSuccess = onSuccess,
-        onLoading = onLoading,
-        onError = {
-            if (fallbackModel != null && tempModel != fallbackModel) {
-                tempModel = fallbackModel
-            } else {
-                onError?.invoke(it)
+    when (val currentModel = tempModel) {
+        is Painter -> Image(
+            modifier = Modifier.then(modifier),
+            painter = currentModel,
+            contentDescription = contentDescription,
+            alpha = alpha,
+            contentScale = contentScale
+        )
+
+        else -> AsyncImage(
+            modifier = Modifier
+                .then(modifier),
+            placeholder = placeholder,
+            error = error,
+            fallback = fallback,
+            model = tempModel,
+            contentDescription = contentDescription,
+            alpha = alpha,
+            contentScale = contentScale,
+            onSuccess = onSuccess,
+            onLoading = onLoading,
+            onError = {
+                if (fallbackModel != null && tempModel != fallbackModel) {
+                    tempModel = fallbackModel
+                } else {
+                    onError?.invoke(it)
+                }
             }
-        }
-    )
+        )
+    }
 }
 
 @Composable

@@ -19,7 +19,6 @@
 package cn.xybbz.ui.screens
 
 
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
@@ -48,29 +47,14 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.Login
-import androidx.compose.material.icons.automirrored.rounded.Logout
-import androidx.compose.material.icons.automirrored.rounded.PlaylistAddCheck
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.FavoriteBorder
-import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material.icons.rounded.PauseCircle
-import androidx.compose.material.icons.rounded.PlayCircle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -85,27 +69,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.client.FavoriteCoordinator
-import cn.xybbz.config.image.rememberAlbumCoverUrls
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.enums.SortTypeEnum
+import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.config.image.rememberAlbumCoverUrls
+import cn.xybbz.config.music.MusicPlayContext
+import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.entity.data.ext.joinToString
-import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.extension.isSticking
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -122,7 +104,6 @@ import cn.xybbz.ui.components.XySelectAllComponent
 import cn.xybbz.ui.components.getExportPlaylistsAlertDialogObject
 import cn.xybbz.ui.components.importPlaylistsCompose
 import cn.xybbz.ui.components.show
-import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.popup.MenuItemDefaultData
@@ -139,7 +120,48 @@ import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.AlbumInfoViewModel
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.album
+import xymusic_kmp.composeapp.generated.resources.album_cover
+import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.close_24px
+import xymusic_kmp.composeapp.generated.resources.close_selection
+import xymusic_kmp.composeapp.generated.resources.confirm_delete_playlist
+import xymusic_kmp.composeapp.generated.resources.delete_24px
+import xymusic_kmp.composeapp.generated.resources.delete_playback_history
+import xymusic_kmp.composeapp.generated.resources.delete_playlist
+import xymusic_kmp.composeapp.generated.resources.edit_24px
+import xymusic_kmp.composeapp.generated.resources.enable_playback_history
+import xymusic_kmp.composeapp.generated.resources.export_playlist
+import xymusic_kmp.composeapp.generated.resources.favorite_24px
+import xymusic_kmp.composeapp.generated.resources.favorite_added
+import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
+import xymusic_kmp.composeapp.generated.resources.favorite_removed
+import xymusic_kmp.composeapp.generated.resources.import_info
+import xymusic_kmp.composeapp.generated.resources.import_playlist
+import xymusic_kmp.composeapp.generated.resources.import_playlist_hint
+import xymusic_kmp.composeapp.generated.resources.login_24px
+import xymusic_kmp.composeapp.generated.resources.modify_playlist_name
+import xymusic_kmp.composeapp.generated.resources.more_vert_24px
+import xymusic_kmp.composeapp.generated.resources.music_xy_placeholder_foreground
+import xymusic_kmp.composeapp.generated.resources.open_operation_menu
+import xymusic_kmp.composeapp.generated.resources.pause_circle_24px
+import xymusic_kmp.composeapp.generated.resources.pause_playback
+import xymusic_kmp.composeapp.generated.resources.play_circle_24px
+import xymusic_kmp.composeapp.generated.resources.played_progress_percent
+import xymusic_kmp.composeapp.generated.resources.playlist
+import xymusic_kmp.composeapp.generated.resources.playlist_add_check_24px
+import xymusic_kmp.composeapp.generated.resources.rename_playlist
+import xymusic_kmp.composeapp.generated.resources.resume_playback
+import xymusic_kmp.composeapp.generated.resources.return_album_page
+import xymusic_kmp.composeapp.generated.resources.select
+import xymusic_kmp.composeapp.generated.resources.start_playback
 import kotlin.io.encoding.ExperimentalEncodingApi
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 
 internal val DefaultAlbumInfoHeight = 124.dp
@@ -153,13 +175,12 @@ internal val DefaultAlbumInfoHeight = 124.dp
 fun AlbumInfoScreen(
     itemId: String,
     dataType: MusicDataTypeEnum,
-    albumInfoViewModel: AlbumInfoViewModel = hiltViewModel<AlbumInfoViewModel, AlbumInfoViewModel.Factory>(
-        creationCallback = { factory ->
-            factory.create(
-                itemId = itemId,
-                dataType = dataType
-            )
-        })
+    albumInfoViewModel: AlbumInfoViewModel = koinViewModel<AlbumInfoViewModel> {
+        parametersOf(
+            itemId,
+            dataType
+        )
+    }
 ) {
 
     SideEffect {
@@ -214,12 +235,7 @@ fun AlbumInfoScreen(
 
     BoxWithConstraints {
         val maxHeight = this.maxHeight
-        XyColumnScreen(
-            modifier = Modifier.brashColor(
-                topVerticalColor = albumInfoViewModel.backgroundConfig.albumInfoBrash[0],
-                bottomVerticalColor = albumInfoViewModel.backgroundConfig.albumInfoBrash[1]
-            )
-        ) {
+        XyColumnScreen {
             TopAppBarComponent(
                 modifier = Modifier.statusBarsPadding(),
                 title = {
@@ -268,7 +284,7 @@ fun AlbumInfoScreen(
                         },
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            painter = painterResource(Res.drawable.arrow_back_24px),
                             contentDescription = stringResource(Res.string.return_album_page)
                         )
                     }
@@ -282,7 +298,7 @@ fun AlbumInfoScreen(
                                 },
                             ) {
                                 Icon(
-                                    imageVector = Icons.Rounded.MoreVert,
+                                    painter = painterResource(Res.drawable.more_vert_24px),
                                     contentDescription = stringResource(Res.string.open_operation_menu)
                                 )
                             }
@@ -299,7 +315,7 @@ fun AlbumInfoScreen(
                                         title = importPlaylistAlertTitle,
                                         trailingIcon = {
                                             Icon(
-                                                imageVector = Icons.AutoMirrored.Rounded.Login,
+                                                painter = painterResource(Res.drawable.login_24px),
                                                 contentDescription = importPlaylistAlertTitle
                                             )
                                         },
@@ -326,7 +342,7 @@ fun AlbumInfoScreen(
                                         title = stringResource(Res.string.export_playlist),
                                         trailingIcon = {
                                             Icon(
-                                                imageVector = Icons.AutoMirrored.Rounded.Logout,
+                                                painter = painterResource(Res.drawable.login_24px),
                                                 contentDescription = stringResource(Res.string.export_playlist)
                                             )
                                         },
@@ -342,7 +358,7 @@ fun AlbumInfoScreen(
                                         title = stringResource(Res.string.rename_playlist),
                                         trailingIcon = {
                                             Icon(
-                                                imageVector = Icons.Rounded.Edit,
+                                                painter = painterResource(Res.drawable.edit_24px),
                                                 contentDescription = stringResource(Res.string.rename_playlist)
                                             )
                                         },
@@ -375,7 +391,7 @@ fun AlbumInfoScreen(
                                         title = removePlaylistAlertTitle,
                                         trailingIcon = {
                                             Icon(
-                                                imageVector = Icons.Rounded.Delete,
+                                                painter = painterResource(Res.drawable.delete_24px),
                                                 contentDescription = removePlaylistAlertTitle,
                                                 tint = Color.Red
                                             )
@@ -425,7 +441,7 @@ fun AlbumInfoScreen(
                             }
                         }) {
                             Icon(
-                                imageVector = if (albumInfoViewModel.ifFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                                painter = painterResource(if (albumInfoViewModel.ifFavorite) Res.drawable.favorite_24px else Res.drawable.favorite_border_24px),
                                 contentDescription = if (albumInfoViewModel.ifFavorite) stringResource(
                                     Res.string.favorite_added
                                 ) else stringResource(
@@ -499,7 +515,8 @@ fun AlbumInfoScreen(
                                             )
                                         ) stringResource(
                                             Res.string.played_progress_percent,
-                                            albumInfoViewModel.albumPlayerHistoryProgressMap[music.itemId] ?: 0
+                                            albumInfoViewModel.albumPlayerHistoryProgressMap[music.itemId]
+                                                ?: 0
                                         ) else music.artists?.joinToString()
                                             ?: "",
                                     onMusicPlay = { parameter ->
@@ -541,48 +558,37 @@ fun AlbumInfoScreen(
  */
 @Composable
 private fun MusicListOperation(
-    onAlbumPlayerHistoryProgress: () -> Progress?,
-    onPlayAlbumId: () -> String,
-    onMusicAlbum: () -> XyAlbum?,
+    playbackHistoryProgress: Progress?,
+    currentPlayAlbumId: String,
+    album: XyAlbum?,
     musicPlayContext: MusicPlayContext,
-    onPlayState: () -> PlayStateEnum,
+    playState: PlayStateEnum,
     onRemovePlayerHistory: (String) -> Unit,
-    onMusicPlanOrPause: () -> Unit,
-    albumInfoViewModel: AlbumInfoViewModel,
+    onPlayOrPause: () -> Unit,
+    selectControl: SelectControl,
     onSelectAll: () -> Unit,
     ifOpenSelect: Boolean,
     sortContent: @Composable () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
-
-    val iconImageVector by remember {
-        derivedStateOf {
-            if (ifOpenSelect) null else if (onMusicAlbum()?.itemId == onPlayAlbumId())
-                if (onPlayState() == PlayStateEnum.Playing)
-                    Icons.Rounded.PauseCircle
-                else
-                    Icons.Rounded.PlayCircle
-            else
-                Icons.Rounded.PlayCircle
-        }
-    }
-
     val pauseText = stringResource(Res.string.pause_playback)
     val resumeText = stringResource(Res.string.resume_playback)
     val startText = stringResource(Res.string.start_playback)
-
-    val textInfo by remember {
-        derivedStateOf {
-            if (onMusicAlbum()?.itemId == onPlayAlbumId()) {
-                if (onPlayState() == PlayStateEnum.Playing)
-                    pauseText
-                else
-                    resumeText
-            } else if (onAlbumPlayerHistoryProgress() != null)
-                "$resumeText:${onAlbumPlayerHistoryProgress()?.musicName}"
-            else
-                startText
-        }
+    val albumId = album?.itemId.orEmpty()
+    val isCurrentAlbum = albumId == currentPlayAlbumId
+    val isPlayingCurrentAlbum = isCurrentAlbum && playState == PlayStateEnum.Playing
+    val hasPlaybackHistory = playbackHistoryProgress != null
+    val showPlaybackHistoryAction = !isCurrentAlbum && hasPlaybackHistory
+    val playIcon = when {
+        ifOpenSelect -> null
+        isPlayingCurrentAlbum -> Res.drawable.pause_circle_24px
+        else -> Res.drawable.play_circle_24px
+    }
+    val playActionText = when {
+        isPlayingCurrentAlbum -> pauseText
+        isCurrentAlbum -> resumeText
+        hasPlaybackHistory -> "$resumeText:${playbackHistoryProgress.musicName}"
+        else -> startText
     }
 
     XyRow(
@@ -595,14 +601,13 @@ private fun MusicListOperation(
                     onSelectAll()
                 } else {
                     coroutineScope.launch {
-                        if (onMusicAlbum()?.itemId == onPlayAlbumId()) {
-                            onMusicPlanOrPause()
+                        if (isCurrentAlbum) {
+                            onPlayOrPause()
                         } else {
                             musicPlayContext.album(
                                 OnMusicPlayParameter(
-                                    musicId = onAlbumPlayerHistoryProgress()?.musicId
-                                        ?: "",
-                                    albumId = onMusicAlbum()?.itemId ?: ""
+                                    musicId = playbackHistoryProgress?.musicId.orEmpty(),
+                                    albumId = albumId
                                 )
                             )
                         }
@@ -618,14 +623,14 @@ private fun MusicListOperation(
 
         if (ifOpenSelect) {
             XySelectAllComponent(
-                isSelectAll = albumInfoViewModel.selectControl.isSelectAll,
+                isSelectAll = selectControl.isSelectAll,
                 onSelectAll = onSelectAll
             )
             IconButton(onClick = {
-                albumInfoViewModel.selectControl.dismiss()
+                selectControl.dismiss()
             }) {
                 Icon(
-                    imageVector = Icons.Rounded.Close,
+                    painter = painterResource(Res.drawable.close_24px),
                     contentDescription = stringResource(Res.string.close_selection)
                 )
             }
@@ -634,22 +639,20 @@ private fun MusicListOperation(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                iconImageVector?.let { imageVector ->
+                playIcon?.let { painter ->
                     Icon(
-                        imageVector = imageVector,
-                        contentDescription = textInfo
+                        painter = painterResource(painter),
+                        contentDescription = playActionText
                     )
                 }
-                Text(text = textInfo)
+                Text(text = playActionText)
             }
-            if (onMusicAlbum()?.itemId != onPlayAlbumId() && onAlbumPlayerHistoryProgress() != null) {
+            if (showPlaybackHistoryAction) {
                 IconButton(onClick = {
-                    onAlbumPlayerHistoryProgress()?.let {
-                        onRemovePlayerHistory(it.musicId)
-                    }
+                    onRemovePlayerHistory(playbackHistoryProgress.musicId)
                 }) {
                     Icon(
-                        imageVector = Icons.Rounded.Close,
+                        painter = painterResource(Res.drawable.close_24px),
                         contentDescription = stringResource(Res.string.delete_playback_history)
                     )
                 }
@@ -661,10 +664,10 @@ private fun MusicListOperation(
                     sortContent()
 
                     IconButton(onClick = {
-                        albumInfoViewModel.show()
+                        selectControl.show(true)
                     }) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.PlaylistAddCheck,
+                            painter = painterResource(Res.drawable.playlist_add_check_24px),
                             contentDescription = stringResource(Res.string.select)
                         )
                     }
@@ -765,27 +768,24 @@ private fun StickyHeaderOperation(
     sortContent: @Composable () -> Unit
 ) {
     MusicListOperation(
-        onAlbumPlayerHistoryProgress = { albumInfoViewModel.albumPlayerHistoryProgress },
-        onPlayAlbumId = {
-            albumInfoViewModel.musicController.musicInfo?.album
-                ?: ""
-        },
-        onMusicAlbum = { albumInfoViewModel.xyAlbumInfoData },
+        playbackHistoryProgress = albumInfoViewModel.albumPlayerHistoryProgress,
+        currentPlayAlbumId = albumInfoViewModel.musicController.musicInfo?.album.orEmpty(),
+        album = albumInfoViewModel.xyAlbumInfoData,
         musicPlayContext = albumInfoViewModel.musicPlayContext,
-        onPlayState = { albumInfoViewModel.musicController.state },
+        playState = albumInfoViewModel.musicController.state,
         onRemovePlayerHistory = {
             albumInfoViewModel.removeAlbumPlayerHistoryProgress(
                 it
             )
         },
-        onMusicPlanOrPause = {
+        onPlayOrPause = {
             if (albumInfoViewModel.musicController.state != PlayStateEnum.Pause) {
                 albumInfoViewModel.musicController.pause()
             } else {
                 albumInfoViewModel.musicController.resume()
             }
         },
-        albumInfoViewModel = albumInfoViewModel,
+        selectControl = albumInfoViewModel.selectControl,
         onSelectAll = {
             albumInfoViewModel.selectControl.toggleSelectionAll(onMusicListPage().itemSnapshotList.items.map { it.itemId })
         },

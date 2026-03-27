@@ -22,95 +22,56 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicText
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ProgressIndicatorDefaults
-import androidx.compose.material3.ProgressIndicatorDefaults.drawStopIndicator
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.resources.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalNavigator
-import cn.xybbz.localdata.enums.DownloadStatus
-import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.SettingItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
-import cn.xybbz.ui.components.downloadPermission
-import cn.xybbz.ui.components.show
-import cn.xybbz.ui.ext.brashColor
-import cn.xybbz.ui.ext.composeClick
-import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.LazyColumnBottomSheetComponent
 import cn.xybbz.ui.xy.LazyColumnNotComponent
-import cn.xybbz.ui.xy.XyButton
-import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
-import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.AboutViewModel
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.about
+import xymusic_kmp.composeapp.generated.resources.app_icon_info
+import xymusic_kmp.composeapp.generated.resources.app_name
+import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.current_version
+import xymusic_kmp.composeapp.generated.resources.function_not_implemented
+import xymusic_kmp.composeapp.generated.resources.logo_new
+import xymusic_kmp.composeapp.generated.resources.no_official_website_yet
+import xymusic_kmp.composeapp.generated.resources.official_website
+import xymusic_kmp.composeapp.generated.resources.problem_feedback
+import xymusic_kmp.composeapp.generated.resources.return_setting_screen
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 
 @OptIn(
     ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class,
-    ExperimentalPermissionsApi::class
 )
 @Composable
 fun AboutScreen(
-    aboutViewModel: AboutViewModel = hiltViewModel<AboutViewModel>()
+    aboutViewModel: AboutViewModel = koinViewModel<AboutViewModel>()
 ) {
     val navigator = LocalNavigator.current
-    val coroutineScope = rememberCoroutineScope()
 
-    val apkDownloadInfo by aboutViewModel.apkDownloadInfo.collectAsStateWithLifecycle()
-    val primary = MaterialTheme.colorScheme.primary
-    val permissionState = downloadPermission(ifDownloadApk = true) {
-        aboutViewModel.downloadAndInstall()
-    }
-
-    val newVersionDownload = stringResource(Res.string.new_version_download)
     val functionNotImplemented = stringResource(Res.string.function_not_implemented)
     val noOfficialWebsiteYet = stringResource(Res.string.no_official_website_yet)
 
     XyColumnScreen(
-        modifier = Modifier.brashColor(
-            topVerticalColor = aboutViewModel.backgroundConfig.aboutBrash[0],
-            bottomVerticalColor = aboutViewModel.backgroundConfig.aboutBrash[1]
-        )
+        modifier = Modifier
     ) {
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
@@ -125,7 +86,7 @@ fun AboutScreen(
                     },
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        painter = painterResource(Res.drawable.arrow_back_24px),
                         contentDescription = stringResource(Res.string.return_setting_screen)
                     )
                 }
@@ -159,118 +120,13 @@ fun AboutScreen(
             item {
                 SettingItemComponent(
                     title = stringResource(Res.string.current_version),
-                    info = aboutViewModel.apkUpdateManager.currentVersion
+                    info = aboutViewModel.versionInfo
                 ) {
 
                 }
 
             }
             item {
-                SettingItemComponent(
-                    title = stringResource(Res.string.check_updates),
-                    info = if (aboutViewModel.apkUpdateManager.ifMaxVersion) stringResource(Res.string.latest_version) else "${
-                        stringResource(
-                            Res.string.new_version_detected
-                        )
-                    }:${aboutViewModel.apkUpdateManager.latestVersion}",
-                    ifOpenBadge = !aboutViewModel.apkUpdateManager.ifMaxVersion,
-                    enabled = false
-                ) {
-                    coroutineScope.launch {
-                        val initLatestVersion =
-                            aboutViewModel.apkUpdateManager.initLatestVersion(true)
-//                        if (initLatestVersion && !aboutViewModel.apkUpdateManager.ifMaxVersion) {
-                        if (true) {
-                            AlertDialogObject(
-                                title = newVersionDownload,
-                                content = {
-                                    XyColumn(backgroundColor = Color.Transparent) {
-                                        LazyColumnBottomSheetComponent(
-                                            modifier = Modifier.height(
-                                                300.dp
-                                            )
-                                        ) {
-                                            item {
-                                                XyTextSub(text = "${aboutViewModel.apkUpdateManager.releasesInfo?.body}")
-                                            }
-                                        }
-                                        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                                        XyTextSub(text = "${stringResource(Res.string.version_number)}: ${aboutViewModel.apkUpdateManager.latestVersion}")
-                                        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                                        LinearProgressIndicator(
-                                            progress = {
-                                                if ((apkDownloadInfo?.totalBytes
-                                                        ?: 0) > 0
-                                                ) ((apkDownloadInfo?.progress
-                                                    ?: 0f) / 100f) else 0f
-                                            },
-                                            drawStopIndicator = {
-                                                drawStopIndicator(
-                                                    drawScope = this,
-                                                    stopSize = 0.dp,
-                                                    color = primary,
-                                                    strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
-                                                )
-                                            },
-                                        )
-                                        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                                        BasicText(text = "${stringResource(Res.string.current_download_progress)}: ${apkDownloadInfo?.progress ?: 0f}%")
-                                        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                                        if (apkDownloadInfo?.status == DownloadStatus.FAILED) {
-                                            XyTextSub(
-                                                text = stringResource(Res.string.download_failed),
-                                                color = MaterialTheme.colorScheme.onErrorContainer
-                                            )
-                                            Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                                        }
-
-                                        Row {
-                                            XyButton(
-                                                modifier = Modifier.weight(1f),
-                                                onClick = {
-                                                    aboutViewModel.cancelDownload()
-                                                },
-                                                text = stringResource(Res.string.cancel_download),
-                                                enabled = apkDownloadInfo?.status == DownloadStatus.DOWNLOADING
-                                            )
-                                            Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
-                                            Button(
-                                                onClick = composeClick {
-                                                    permissionState?.launchMultiplePermissionRequest()
-                                                },
-                                                enabled = apkDownloadInfo?.status != DownloadStatus.DOWNLOADING,
-                                                shape = RoundedCornerShape(XyTheme.dimens.corner),
-                                                modifier = Modifier.weight(1f),
-                                                colors = ButtonDefaults.buttonColors(
-                                                    containerColor = MaterialTheme.colorScheme.primary
-                                                )
-                                            ) {
-                                                if (apkDownloadInfo?.status == DownloadStatus.DOWNLOADING)
-                                                    ContainedLoadingIndicator(
-                                                        modifier = Modifier.size(
-                                                            30.dp
-                                                        )
-                                                    )
-//                                            CircularWavyProgressIndicator()
-                                                Text(
-                                                    text = stringResource(Res.string.download_install),
-                                                    modifier = Modifier
-                                                        .fillMaxWidth(),
-                                                    color = Color.White,
-                                                    textAlign = TextAlign.Center,
-                                                    overflow = TextOverflow.Ellipsis,
-                                                    maxLines = 1
-                                                )
-                                            }
-                                        }
-                                    }
-
-                                },
-                                dismissText = Res.string.close,
-                                onDismissRequest = {}).show()
-                        }
-                    }
-                }
             }
             item {
                 SettingItemComponent(title = stringResource(Res.string.problem_feedback)) {
