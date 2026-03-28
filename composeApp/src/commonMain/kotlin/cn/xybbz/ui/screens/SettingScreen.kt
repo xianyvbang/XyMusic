@@ -19,19 +19,12 @@
 package cn.xybbz.ui.screens
 
 
-import android.content.ClipData
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.painterResource(Res.drawable.arrow_back_24px)
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -43,13 +36,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ClipEntry
-import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalContext
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
+import cn.xybbz.common.utils.copyTextToClipboard
+import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.router.About
@@ -65,7 +54,6 @@ import cn.xybbz.ui.components.MusicSettingSwitchItemComponent
 import cn.xybbz.ui.components.SettingItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
-import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.theme.XyTheme
@@ -73,8 +61,34 @@ import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.RoundedSurfaceColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.SettingsViewModel
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import coil3.compose.AsyncImagePainter.State.Empty.painter
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.about
+import xymusic_kmp.composeapp.generated.resources.album_playback_history
+import xymusic_kmp.composeapp.generated.resources.allow_simultaneous_playback
+import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.broadcast_while_down
+import xymusic_kmp.composeapp.generated.resources.cache_limit
+import xymusic_kmp.composeapp.generated.resources.cache_location
+import xymusic_kmp.composeapp.generated.resources.check_24px
+import xymusic_kmp.composeapp.generated.resources.connection_management
+import xymusic_kmp.composeapp.generated.resources.copy_success
+import xymusic_kmp.composeapp.generated.resources.customize_lyric_settings
+import xymusic_kmp.composeapp.generated.resources.download_max_list
+import xymusic_kmp.composeapp.generated.resources.enabled_sync_play_progress
+import xymusic_kmp.composeapp.generated.resources.interface_settings
+import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
+import xymusic_kmp.composeapp.generated.resources.language
+import xymusic_kmp.composeapp.generated.resources.online_music_quality
+import xymusic_kmp.composeapp.generated.resources.poxy_config
+import xymusic_kmp.composeapp.generated.resources.return_home
+import xymusic_kmp.composeapp.generated.resources.settings
+import xymusic_kmp.composeapp.generated.resources.song_cache_location
+import xymusic_kmp.composeapp.generated.resources.storage_management
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 /**
@@ -82,11 +96,10 @@ import cn.xybbz.ui.xy.XyIconButton as IconButton
  */
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalLayoutApi::class, ExperimentalPermissionsApi::class
 )
 @Composable
 fun SettingScreen(
-    settingsViewModel: SettingsViewModel = hiltViewModel<SettingsViewModel>()
+    settingsViewModel: SettingsViewModel = koinViewModel<SettingsViewModel>()
 ) {
 
     val navigator = LocalNavigator.current
@@ -96,21 +109,13 @@ fun SettingScreen(
         mutableStateOf(false)
     }
 
-    val context = LocalContext.current
     LaunchedEffect(Unit) {
         Log.i("=====", "MusicSettingScreen: ")
     }
 
-    val clipboardManager = LocalClipboard.current
-
     val copySuccess = stringResource(Res.string.copy_success)
 
-    XyColumnScreen(
-        modifier = Modifier.brashColor(
-            topVerticalColor = settingsViewModel.backgroundConfig.settingsBrash[0],
-            bottomVerticalColor = settingsViewModel.backgroundConfig.settingsBrash[1]
-        )
-    ) {
+    XyColumnScreen {
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
             title = {
@@ -198,16 +203,8 @@ fun SettingScreen(
                         painter = null
                     ) {
                         if (settingsViewModel.settingsManager.cacheFilePath.isNotBlank()) {
-                            val clipData =
-                                ClipData.newPlainText(
-                                    "label",
-                                    settingsViewModel.settingsManager.cacheFilePath
-                                )
-                            coroutineScope.launch {
-                                clipboardManager.setClipEntry(ClipEntry(clipData))
-                            }.invokeOnCompletion {
-                                MessageUtils.sendPopTip(copySuccess)
-                            }
+                            copyTextToClipboard(settingsViewModel.settingsManager.cacheFilePath)
+                            MessageUtils.sendPopTip(copySuccess)
                         }
 
                     }
@@ -227,7 +224,7 @@ fun SettingScreen(
                     SettingItemComponent(
                         title = stringResource(Res.string.download_max_list),
                         info = settingsViewModel.settingDataNow.maxConcurrentDownloads.toString(),
-                        painter = Icons.Rounded.KeyboardArrowDown,
+                        painter = Res.drawable.keyboard_arrow_down_24px,
                         trailingContent = {
                             XyDropdownMenu(
                                 onIfShowMenu = { ifShowMaxConcurrentDownloads },
@@ -239,7 +236,7 @@ fun SettingScreen(
                                         title = "1", leadingIcon = {
                                             if (settingsViewModel.settingDataNow.maxConcurrentDownloads == 1)
                                                 Icon(
-                                                    Icons.Rounded.Check,
+                                                    painter = painterResource(Res.drawable.check_24px),
                                                     contentDescription = stringResource(
                                                         Res.string.download_max_list
                                                     ) + "1"
@@ -249,8 +246,7 @@ fun SettingScreen(
                                             coroutineScope.launch {
                                                 ifShowMaxConcurrentDownloads = false
                                                 settingsViewModel.setMaxConcurrentDownloads(
-                                                    1,
-                                                    context
+                                                    1
                                                 )
                                             }.invokeOnCompletion {
 
@@ -261,7 +257,7 @@ fun SettingScreen(
                                         title = "3", leadingIcon = {
                                             if (settingsViewModel.settingDataNow.maxConcurrentDownloads == 3)
                                                 Icon(
-                                                    Icons.Rounded.Check,
+                                                    painter = painterResource(Res.drawable.check_24px),
                                                     contentDescription = stringResource(
                                                         Res.string.download_max_list
                                                     ) + "3"
@@ -271,8 +267,7 @@ fun SettingScreen(
                                             coroutineScope.launch {
                                                 ifShowMaxConcurrentDownloads = false
                                                 settingsViewModel.setMaxConcurrentDownloads(
-                                                    3,
-                                                    context
+                                                    3
                                                 )
                                             }.invokeOnCompletion {
 
@@ -283,7 +278,7 @@ fun SettingScreen(
                                         title = "5", leadingIcon = {
                                             if (settingsViewModel.settingDataNow.maxConcurrentDownloads == 5)
                                                 Icon(
-                                                    Icons.Rounded.Check,
+                                                    painter = painterResource(Res.drawable.check_24px),
                                                     contentDescription = stringResource(
                                                         Res.string.download_max_list
                                                     ) + "5"
@@ -293,8 +288,7 @@ fun SettingScreen(
                                             coroutineScope.launch {
                                                 ifShowMaxConcurrentDownloads = false
                                                 settingsViewModel.setMaxConcurrentDownloads(
-                                                    5,
-                                                    context
+                                                    5
                                                 )
                                             }.invokeOnCompletion {
 
@@ -310,23 +304,11 @@ fun SettingScreen(
 
                     SettingItemComponent(
                         title = stringResource(Res.string.song_cache_location),
-                        bottomInfo = settingsViewModel.downLoadManager.getConfig().finalDirectory,
+                        bottomInfo = "",
                         maxLines = Int.MAX_VALUE,
-                        painter = null
+                        painter = null,
+                        enabled = false
                     ) {
-                        if (settingsViewModel.settingsManager.cacheFilePath.isNotBlank()) {
-                            val clipData =
-                                ClipData.newPlainText(
-                                    "label",
-                                    settingsViewModel.downLoadManager.getConfig().finalDirectory
-                                )
-                            coroutineScope.launch {
-                                clipboardManager.setClipEntry(ClipEntry(clipData))
-                            }.invokeOnCompletion {
-                                MessageUtils.sendPopTip(copySuccess)
-                            }
-                        }
-
                     }
 
                 }

@@ -28,14 +28,11 @@ import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.config.setting.SettingsManager
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import java.util.Locale.getDefault
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
 
-@HiltViewModel
-class StreamingQualityViewModel @Inject constructor(
-    val backgroundConfig: BackgroundConfig,
+@KoinViewModel
+class StreamingQualityViewModel (
     private val settingsManager: SettingsManager,
     private val dataSourceManager: DataSourceManager
 ) : ViewModel() {
@@ -106,7 +103,7 @@ class StreamingQualityViewModel @Inject constructor(
 
             }
             transcodeAudioBitRateType = transcodingInfoList.map {
-                it.copy(name = it.targetFormat.uppercase(getDefault()))
+                it.copy(name = it.targetFormat.uppercase())
             }
         }
     }

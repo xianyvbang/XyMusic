@@ -1,7 +1,5 @@
 package cn.xybbz.viewmodel
 
-import android.content.Context
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,24 +8,20 @@ import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.PlayStateEnum
-import cn.xybbz.common.music.MusicController
-import cn.xybbz.common.music.PlaybackProgressReporter
+import cn.xybbz.common.utils.Log
+import cn.xybbz.config.music.MusicCommonController
+import cn.xybbz.config.music.PlaybackProgressReporter
 import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.config.download.DownLoadManager
-import cn.xybbz.config.download.core.DownloaderConfig
 import cn.xybbz.localdata.config.DatabaseClient
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
 
-@HiltViewModel
-class SettingsViewModel @Inject constructor(
+@KoinViewModel
+class SettingsViewModel(
     val settingsManager: SettingsManager,
     private val db: DatabaseClient,
-    val backgroundConfig: BackgroundConfig,
-    val downLoadManager: DownLoadManager,
-    private val musicController: MusicController,
+    private val musicController: MusicCommonController,
     private val playbackProgressReporter: PlaybackProgressReporter,
     private val dataSourceManager: DataSourceManager
 ) : ViewModel() {
@@ -57,12 +51,12 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    suspend fun setMaxConcurrentDownloads(maxConcurrentDownloads: Int, context: Context) {
+    suspend fun setMaxConcurrentDownloads(maxConcurrentDownloads: Int) {
         settingsManager.setMaxConcurrentDownloads(maxConcurrentDownloads)
-        downLoadManager.updateConfig(
-            DownloaderConfig.Builder(context).setMaxConcurrentDownloads(maxConcurrentDownloads)
-                .build()
-        )
+        /* downLoadManager.updateConfig(
+             DownloaderConfig.Builder(context).setMaxConcurrentDownloads(maxConcurrentDownloads)
+                 .build()
+         )*/
     }
 
     suspend fun setSyncPlayProgressEnabled(enabled: Boolean) {

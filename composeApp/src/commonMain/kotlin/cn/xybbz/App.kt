@@ -1,8 +1,8 @@
 package cn.xybbz
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.systemBars
@@ -12,6 +12,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.enums.ThemeTypeEnum
 import cn.xybbz.ui.popup.XyPopTipHost
 import cn.xybbz.ui.screens.MainScreen
@@ -31,6 +32,7 @@ import org.koin.compose.getKoin
 fun App() {
 
     val dataSourceManager: DataSourceManager = getKoin().get()
+    val settingsManager: SettingsManager = getKoin().get()
 
     setSingletonImageLoaderFactory { context ->
         ImageLoader.Builder(context)
@@ -50,7 +52,6 @@ fun App() {
     XyTheme(
         xyConfigs = XyConfigs(
             isDarkTheme = isDark,
-            isDynamic = settingsManager.isDynamic
         ),
         brash = xyBackgroundBrash(
             backgroundImageUri = settingsManager.imageFilePath

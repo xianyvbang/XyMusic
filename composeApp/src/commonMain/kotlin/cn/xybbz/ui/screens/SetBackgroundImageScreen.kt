@@ -18,12 +18,8 @@
 
 package cn.xybbz.ui.screens
 
-import android.content.Intent
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -31,7 +27,6 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.weight
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -43,20 +38,17 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import org.jetbrains.compose.resources.stringResource
-import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
+import cn.xybbz.ui.components.rememberBackgroundImagePicker
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import cn.xybbz.ui.xy.XyNoData
 import cn.xybbz.viewmodel.SetBackgroundImageViewModel
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
@@ -64,6 +56,7 @@ import xymusic_kmp.composeapp.generated.resources.background_image_setting
 import xymusic_kmp.composeapp.generated.resources.clear_image
 import xymusic_kmp.composeapp.generated.resources.return_interface_settings
 import xymusic_kmp.composeapp.generated.resources.select_image
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 /**
  * 设置背景图片界面
@@ -78,30 +71,11 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
         }
     }
     val navigator = LocalNavigator.current
-
-    val context = LocalContext.current
-
-    // 打开系统相册
-    val pickMedia =
-        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-            if (uri != null) {
-                val flag = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                runCatching {
-                    context.contentResolver.takePersistableUriPermission(uri, flag)
-                }
-                setBackgroundImageViewModel.updateBackgroundImageUri(uri)
-                Log.d("PhotoPicker", "Selected URI: $uri")
-            } else {
-                Log.d("PhotoPicker", "No media selected")
-            }
-        }
+    val imagePicker = rememberBackgroundImagePicker(
+        onImagePicked = setBackgroundImageViewModel::updateBackgroundImagePath
+    )
     key(XyTheme.brash.backgroundImageUri) {
-        XyColumnScreen(
-            modifier = Modifier.brashColor(
-                Color(0xFF610015),
-                Color(0xFF04717D)
-            )
-        ) {
+        XyColumnScreen {
 
             TopAppBarComponent(
                 modifier = Modifier.statusBarsPadding(),
@@ -128,13 +102,13 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
                         horizontalArrangement = Arrangement.End
                     ) {
                         TextButton(onClick = composeClick() {
-                            pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                            imagePicker.pickImage()
                         }) {
                             Text(text = stringResource(Res.string.select_image))
                         }
 
                         TextButton(onClick = composeClick() {
-                            setBackgroundImageViewModel.updateBackgroundImageUri(null)
+                            setBackgroundImageViewModel.updateBackgroundImagePath(null)
                         }, enabled = ifSelectImage) {
                             Text(text = stringResource(Res.string.clear_image))
                         }

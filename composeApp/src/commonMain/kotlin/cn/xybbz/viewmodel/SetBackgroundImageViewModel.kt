@@ -1,19 +1,19 @@
 package cn.xybbz.viewmodel
 
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cn.xybbz.config.setting.SettingsManager
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
 class SetBackgroundImageViewModel (
-    val backgroundConfig: BackgroundConfig,
+    val settingsManager: SettingsManager,
 ): ViewModel() {
 
-    fun updateBackgroundImageUri(backgroundImageUri: Uri?) {
+    fun updateBackgroundImagePath(imageFilePath: String?) {
         viewModelScope.launch {
-            backgroundConfig.updateBackgroundImageUri(backgroundImageUri)
+            settingsManager.setImageFilePath(imageFilePath)
         }
     }
 }
