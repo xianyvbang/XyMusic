@@ -22,22 +22,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.common.music.MusicController
+import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flatMapLatest
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
 
-@HiltViewModel
-class FavoriteViewModel @Inject constructor(
+@KoinViewModel
+class FavoriteViewModel(
     private val dataSourceManager: DataSourceManager,
-    private val db: DatabaseClient,
+    db: DatabaseClient,
     val musicPlayContext: MusicPlayContext,
-    val musicController: MusicController,
-    val backgroundConfig: BackgroundConfig
+    val musicController: MusicCommonController
 ) : ViewModel() {
 
     val downloadMusicIdsFlow =

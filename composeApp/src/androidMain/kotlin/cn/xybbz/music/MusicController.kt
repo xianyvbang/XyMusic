@@ -212,6 +212,8 @@ class MusicController(
             scope.launch {
                 _events.emit(it)
             }
+
+            updateCurrentFavorite(musicInfo?.ifFavoriteStatus ?: false)
         },
         onSetCurOriginIndex = {
             setCurrentPositionData(0)
@@ -761,12 +763,6 @@ class MusicController(
         }
     }
 
-    /**
-     * 设置PageNum
-     */
-    fun setPageNumData(pageNum: Int) {
-        this.pageNum = pageNum
-    }
 
     /**
      * 更新自定义按钮状态

@@ -510,7 +510,7 @@ private fun PlayerTypeComponent(
                 Text(text = "1", fontSize = 10.sp)
             }
             Icon(
-                imageVector = mainViewModel.iconList[musicController.playType.code].icon,
+                painter = mainViewModel.iconList[musicController.playType.code].icon,
                 contentDescription = stringResource(mainViewModel.iconList[musicController.playType.code].message),
             )
         }

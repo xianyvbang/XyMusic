@@ -18,12 +18,9 @@
 
 package cn.xybbz.localdata.config
 
-import androidx.room.Database
-import androidx.room.AutoMigration
 import androidx.room.ConstructedBy
-import androidx.room.RenameTable
+import androidx.room.Database
 import androidx.room.RoomDatabase
-import androidx.room.migration.AutoMigrationSpec
 import cn.xybbz.localdata.dao.album.AlbumDao
 import cn.xybbz.localdata.dao.connection.ConnectionConfigDao
 import cn.xybbz.localdata.dao.count.XyDataCountDao

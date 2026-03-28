@@ -22,21 +22,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.enums.ThemeTypeEnum
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
 
-@HiltViewModel
-class InterfaceSettingViewModel @Inject constructor(
-    val backgroundConfig: BackgroundConfig,
+@KoinViewModel
+class InterfaceSettingViewModel(
     val settingsManager: SettingsManager
 ) : ViewModel() {
 
 
-    fun setThemeTypeData(themeType: ThemeTypeEnum){
+    fun setThemeTypeData(themeType: ThemeTypeEnum) {
         viewModelScope.launch {
             settingsManager.setThemeTypeData(themeType)
-            backgroundConfig.updateIfEnabled(false)
         }
 
     }

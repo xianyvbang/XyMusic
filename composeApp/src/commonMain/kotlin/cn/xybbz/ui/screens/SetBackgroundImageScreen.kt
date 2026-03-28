@@ -33,7 +33,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.painterResource(Res.drawable.arrow_back_24px)
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import cn.xybbz.ui.xy.XyIconButton as IconButton
@@ -113,7 +113,7 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
                         },
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            painter = painterResource(Res.drawable.arrow_back_24px),
                             contentDescription = stringResource(Res.string.return_interface_settings)
                         )
                     }

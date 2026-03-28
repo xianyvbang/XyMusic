@@ -2,31 +2,30 @@
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.stringResource
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.router.GenreInfo
 import cn.xybbz.ui.components.MusicGenreCardComponent
 import cn.xybbz.ui.components.SwipeRefreshVerticalGridListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
-import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.GenresViewModel
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.genres
 import xymusic_kmp.composeapp.generated.resources.return_home
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 /**
  * 流派页面
@@ -34,18 +33,13 @@ import xymusic_kmp.composeapp.generated.resources.return_home
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GenresScreen(
-    genresViewModel: GenresViewModel = hiltViewModel<GenresViewModel>()
+    genresViewModel: GenresViewModel = koinViewModel<GenresViewModel>()
 ) {
     val navigator = LocalNavigator.current
     val genreLazyPagingItems = genresViewModel.genresPage.collectAsLazyPagingItems()
 
 
-    XyColumnScreen(
-        modifier = Modifier.brashColor(
-            topVerticalColor = genresViewModel.backgroundConfig.genresBrash[0],
-            bottomVerticalColor = genresViewModel.backgroundConfig.genresBrash[1]
-        )
-    ) {
+    XyColumnScreen {
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
             title = {
@@ -55,7 +49,7 @@ fun GenresScreen(
             }, navigationIcon = {
                 IconButton(onClick = composeClick { navigator.goBack() }) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        painter = painterResource(Res.drawable.arrow_back_24px),
                         contentDescription = stringResource(Res.string.return_home)
                     )
                 }

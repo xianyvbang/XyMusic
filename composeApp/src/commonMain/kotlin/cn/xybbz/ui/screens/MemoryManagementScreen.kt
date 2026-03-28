@@ -19,13 +19,10 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import cn.xybbz.ui.xy.XyIconButton as IconButton
@@ -33,17 +30,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.show
-import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.RoundedSurfaceColumn
@@ -53,6 +47,20 @@ import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.MemoryManagementViewModel
+import org.jetbrains.compose.resources.painterResource
+import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.audio_cache
+import xymusic_kmp.composeapp.generated.resources.audio_cache_description
+import xymusic_kmp.composeapp.generated.resources.clear
+import xymusic_kmp.composeapp.generated.resources.confirm_delete_database
+import xymusic_kmp.composeapp.generated.resources.database_data
+import xymusic_kmp.composeapp.generated.resources.database_data_description
+import xymusic_kmp.composeapp.generated.resources.essential_data
+import xymusic_kmp.composeapp.generated.resources.essential_data_description
+import xymusic_kmp.composeapp.generated.resources.return_setting_screen
+import xymusic_kmp.composeapp.generated.resources.storage_management
+import xymusic_kmp.composeapp.generated.resources.temporary_cache
+import xymusic_kmp.composeapp.generated.resources.temporary_cache_description
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,7 +68,6 @@ fun MemoryManagementScreen(
     memoryManagementViewModel: MemoryManagementViewModel = hiltViewModel<MemoryManagementViewModel>()
 ) {
 
-    val context = LocalContext.current
     val navigator = LocalNavigator.current
 
     val warning = stringResource(Res.string.warning)
@@ -89,7 +96,7 @@ fun MemoryManagementScreen(
                     },
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        painter = painterResource(Res.drawable.arrow_back_24px),
                         contentDescription = stringResource(Res.string.return_setting_screen)
                     )
                 }

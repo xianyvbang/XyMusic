@@ -20,8 +20,6 @@ package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -29,10 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import org.jetbrains.compose.resources.stringResource
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.PlayerTypeEnum
@@ -41,28 +36,29 @@ import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.show
-import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.LocalViewModel
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.local_music
+import xymusic_kmp.composeapp.generated.resources.return_home
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LocalScreen(localViewModel: LocalViewModel = hiltViewModel<LocalViewModel>()) {
+fun LocalScreen(localViewModel: LocalViewModel = koinViewModel<LocalViewModel>()) {
 
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
     val downloadMusicList by localViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
     val favoriteSet by localViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
 
-    XyColumnScreen(
-        modifier = Modifier.brashColor(
-            topVerticalColor = localViewModel.backgroundConfig.localMusicBrash[0],
-            bottomVerticalColor = localViewModel.backgroundConfig.localMusicBrash[0]
-        )
-    ) {
+    XyColumnScreen {
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
             title = {
@@ -72,7 +68,7 @@ fun LocalScreen(localViewModel: LocalViewModel = hiltViewModel<LocalViewModel>()
             }, navigationIcon = {
                 IconButton(onClick = composeClick { navigator.goBack() }) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        painter = painterResource(Res.drawable.arrow_back_24px),
                         contentDescription = stringResource(Res.string.return_home)
                     )
                 }

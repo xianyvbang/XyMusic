@@ -18,14 +18,11 @@
 
 package cn.xybbz.viewmodel
 
-import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.util.UnstableApi
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.utils.MessageUtils
@@ -33,26 +30,20 @@ import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.entity.data.EncryptAesData
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import org.koin.core.annotation.InjectedParam
+import org.koin.core.annotation.KoinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.alias_cannot_be_empty
+import xymusic_kmp.composeapp.generated.resources.connection_address_cannot_be_empty
+import xymusic_kmp.composeapp.generated.resources.modify_success
 
-@HiltViewModel(assistedFactory = ConnectionConfigInfoViewModel.Factory::class)
-class ConnectionConfigInfoViewModel @OptIn(UnstableApi::class)
-@AssistedInject constructor(
-    @Assisted private val connectionId: Long,
+@KoinViewModel
+class ConnectionConfigInfoViewModel(
+    @InjectedParam private val connectionId: Long,
     private val dataSourceManager: DataSourceManager,
-    private val db: DatabaseClient,
-    val backgroundConfig: BackgroundConfig
+    private val db: DatabaseClient
 ) : ViewModel() {
-
-    @AssistedFactory
-    interface Factory {
-        fun create(connectionId: Long): ConnectionConfigInfoViewModel
-    }
-
     var connectionConfig by mutableStateOf<ConnectionConfig?>(null)
         private set
 

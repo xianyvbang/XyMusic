@@ -25,15 +25,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import java.util.Locale
-import javax.inject.Inject
+import kotlin.math.roundToLong
+import org.koin.core.annotation.KoinViewModel
 
-@HiltViewModel
-class CacheLimitViewModel @Inject constructor(
-    private val settingsManager: SettingsManager,
-    val backgroundConfig: BackgroundConfig
+@KoinViewModel
+class CacheLimitViewModel (
+    private val settingsManager: SettingsManager
 ) : ViewModel() {
 
     /**
@@ -64,7 +62,7 @@ class CacheLimitViewModel @Inject constructor(
 
     }
 
-    fun formatSize(size: Long): String? {
+    fun formatSize(size: Long): String {
         var suffix = "B"
         var value = size.toDouble()
 
@@ -81,6 +79,6 @@ class CacheLimitViewModel @Inject constructor(
             value /= 1024.0
         }
 
-        return String.format(Locale.getDefault(), "%.0f%s", value, suffix)
+        return "${value.roundToLong()}$suffix"
     }
 }

@@ -20,6 +20,7 @@ package cn.xybbz.di
 
 import cn.xybbz.config.music.AudioFadeController
 import cn.xybbz.config.network.NetWorkMonitor
+import cn.xybbz.config.setting.LanguagePlatformManager
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import org.koin.core.annotation.Module
@@ -33,8 +34,9 @@ class SettingsModule {
     fun settingsManager(
         db: DatabaseClient,
         audioFadeController: AudioFadeController,
-        netWorkMonitor: NetWorkMonitor
+        netWorkMonitor: NetWorkMonitor,
+        languagePlatformManager: LanguagePlatformManager
     ): SettingsManager {
-        return SettingsManager(db, audioFadeController, netWorkMonitor);
+        return SettingsManager(db, audioFadeController, netWorkMonitor, languagePlatformManager)
     }
 }

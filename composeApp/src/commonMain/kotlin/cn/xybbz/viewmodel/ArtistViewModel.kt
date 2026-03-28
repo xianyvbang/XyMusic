@@ -30,7 +30,6 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.entity.data.ArtistFilter
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtistExt
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,16 +38,15 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
 
 /**
  * 艺术家
  */
-@HiltViewModel
-class ArtistViewModel @Inject constructor(
+@KoinViewModel
+class ArtistViewModel (
     private val dataSourceManager: DataSourceManager,
-    private val db: DatabaseClient,
-    val backgroundConfig: BackgroundConfig
+    private val db: DatabaseClient
 ) : ViewModel() {
 
 

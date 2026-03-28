@@ -18,47 +18,43 @@
 
 package cn.xybbz.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.util.UnstableApi
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.state.Source
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.common.enums.HomeRefreshReason
 import cn.xybbz.common.enums.LoginType
-import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.DataRefreshEstimateUtils
 import cn.xybbz.common.utils.DataSourceChangeUtils
+import cn.xybbz.common.utils.Log
 import cn.xybbz.config.HomeDataRepository
-import cn.xybbz.config.recommender.DailyRecommender
+import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
+import cn.xybbz.config.recommender.DailyRecommender
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.localdata.enums.PlayerTypeEnum
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
 
-@HiltViewModel
-class HomeViewModel @OptIn(UnstableApi::class)
-@Inject constructor(
+@KoinViewModel
+class HomeViewModel(
     private val db: DatabaseClient,
     val dataSourceManager: DataSourceManager,
     val musicPlayContext: MusicPlayContext,
-    private val musicController: MusicController,
-    val backgroundConfig: BackgroundConfig,
+    private val musicController: MusicCommonController,
     private val dailyRecommender: DailyRecommender,
     val homeDataRepository: HomeDataRepository
 ) : ViewModel() {
@@ -215,7 +211,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
             }*/
 
             dataSourceManager.mergeFlow.collect {
-                val reason =  when (it) {
+                val reason = when (it) {
                     is Source.Login ->
                         HomeRefreshReason.Login
 
@@ -223,7 +219,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
                         HomeRefreshReason.Manual
                 }
 
-                Log.i("home", "登录数据变化22222${it}--- ${reason}")
+                Log.i("home", "登录数据变化22222${it}--- $reason")
                 tryRefreshHome(
                     isRefresh = true,
                     reason = reason
@@ -251,10 +247,10 @@ class HomeViewModel @OptIn(UnstableApi::class)
         val connectionId = dataSourceManager.getConnectionId()
         val key = RemoteIdConstants.HOME_REFRESH + connectionId
         //todo 创建的有问题 所以没有刷新
-        /*if (!DataRefreshEstimateUtils.shouldRefresh(reason, db, key)) {
+        if (!DataRefreshEstimateUtils.shouldRefresh(reason, db, key)) {
             onEnd?.invoke(false)
             return
-        }*/
+        }
         refreshDataAll(onEnd, isRefresh)
         DataRefreshEstimateUtils.updateHomeRefreshTime(connectionId, db, key)
     }
@@ -289,7 +285,7 @@ class HomeViewModel @OptIn(UnstableApi::class)
                 }
 
                 if (isRefresh)
-                    async {
+                    launch {
                         generateRecommendedMusicList()
                     }
 

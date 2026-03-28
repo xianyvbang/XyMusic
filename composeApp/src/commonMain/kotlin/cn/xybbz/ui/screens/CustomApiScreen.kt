@@ -18,7 +18,6 @@
 
 package cn.xybbz.ui.screens
 
-import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -27,8 +26,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -39,8 +36,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import org.jetbrains.compose.resources.stringResource
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
@@ -51,16 +47,12 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.MusicSettingSwitchItemComponent
 import cn.xybbz.ui.components.SettingItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
-import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumn
@@ -72,25 +64,34 @@ import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.CustomLyricsViewModel
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.custom_cover_api
+import xymusic_kmp.composeapp.generated.resources.custom_cover_api_hint
+import xymusic_kmp.composeapp.generated.resources.customize_lyric_settings
+import xymusic_kmp.composeapp.generated.resources.lyrics_api_auth_key
+import xymusic_kmp.composeapp.generated.resources.lyrics_api_auth_key_hint
+import xymusic_kmp.composeapp.generated.resources.lyrics_single_api
+import xymusic_kmp.composeapp.generated.resources.lyrics_single_api_hint
+import xymusic_kmp.composeapp.generated.resources.prioritize_music_service_api
+import xymusic_kmp.composeapp.generated.resources.return_setting_screen
+import xymusic_kmp.composeapp.generated.resources.save
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomApiScreen(
-    modifier: Modifier = Modifier,
-    customLyricsViewModel: CustomLyricsViewModel = hiltViewModel()
+    customLyricsViewModel: CustomLyricsViewModel = koinViewModel<CustomLyricsViewModel>()
 ) {
     val navigator = LocalNavigator.current
-    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val uriHandler = LocalUriHandler.current
 
     // 页面整体：复用设置页背景渐变
-    XyColumnScreen(
-        modifier = modifier.brashColor(
-            topVerticalColor = customLyricsViewModel.backgroundConfig.settingsBrash[0],
-            bottomVerticalColor = customLyricsViewModel.backgroundConfig.settingsBrash[1]
-        )
-    ) {
+    XyColumnScreen {
         // 顶部栏：返回 + 保存
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
@@ -104,7 +105,7 @@ fun CustomApiScreen(
                     onClick = { navigator.goBack() },
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        painter = painterResource(Res.drawable.arrow_back_24px),
                         contentDescription = stringResource(Res.string.return_setting_screen)
                     )
                 }
@@ -155,9 +156,7 @@ fun CustomApiScreen(
                         LinkAnnotation.Clickable(
                             tag = "CLICK",
                             linkInteractionListener = {
-                                val intent =
-                                    Intent(Intent.ACTION_VIEW, customLyricsViewModel.url.toUri())
-                                context.startActivity(intent)
+                                uriHandler.openUri(customLyricsViewModel.url)
                             },
                             styles = TextLinkStyles(
                                 style = SpanStyle(
@@ -284,7 +283,10 @@ private fun CustomLyricsItemComponent(
             backgroundColor = Color.Transparent,
             horizontalAlignment = Alignment.Start,
         ) {
-            XyRow(paddingValues = PaddingValues(top = XyTheme.dimens.innerVerticalPadding), modifier = Modifier) {
+            XyRow(
+                paddingValues = PaddingValues(top = XyTheme.dimens.innerVerticalPadding),
+                modifier = Modifier
+            ) {
                 XyText(
                     text = title,
                     color = if (enabled) textColor else MaterialTheme.colorScheme.onSurfaceVariant,

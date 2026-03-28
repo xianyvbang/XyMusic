@@ -4,23 +4,15 @@
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import org.jetbrains.compose.resources.stringResource
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.router.ArtistInfo
@@ -29,11 +21,22 @@ import cn.xybbz.ui.components.MusicArtistCardComponent
 import cn.xybbz.ui.components.SwipeRefreshVerticalGridListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
-import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.ArtistViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.artist
+import xymusic_kmp.composeapp.generated.resources.favorite_24px
+import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
+import xymusic_kmp.composeapp.generated.resources.get_all_artists
+import xymusic_kmp.composeapp.generated.resources.get_favorite_artists
+import xymusic_kmp.composeapp.generated.resources.return_home
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 /**
  * 艺术家页面
@@ -41,7 +44,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArtistScreen(
-    artistViewModel: ArtistViewModel = hiltViewModel<ArtistViewModel>(),
+    artistViewModel: ArtistViewModel = koinViewModel<ArtistViewModel>(),
 ) {
     val artistListPaging =
         artistViewModel.artistList.collectAsLazyPagingItems()
@@ -52,12 +55,7 @@ fun ArtistScreen(
 
     val navigator = LocalNavigator.current
 
-    XyColumnScreen(
-        modifier = Modifier.brashColor(
-            topVerticalColor = artistViewModel.backgroundConfig.artistBrash[0],
-            bottomVerticalColor = artistViewModel.backgroundConfig.artistBrash[1]
-        )
-    ) {
+    XyColumnScreen {
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
             title = {
@@ -71,7 +69,7 @@ fun ArtistScreen(
                     },
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        painter = painterResource(Res.drawable.arrow_back_24px),
                         contentDescription = stringResource(Res.string.return_home)
                     )
                 }
@@ -89,7 +87,7 @@ fun ArtistScreen(
                     }
                 }) {
                     Icon(
-                        imageVector = if (artistViewModel.ifFavorite == true) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                        painter = painterResource(if (artistViewModel.ifFavorite == true) Res.drawable.favorite_24px else Res.drawable.favorite_border_24px),
                         contentDescription = if (artistViewModel.ifFavorite == true) stringResource(
                             Res.string.get_all_artists
                         ) else stringResource(Res.string.get_favorite_artists),
@@ -125,8 +123,8 @@ fun ArtistScreen(
                             modifier = Modifier,
                             onItem = { artist },
                             enabled = !it
-                        ) {
-                            navigator.navigate(ArtistInfo(it, artist.name ?: ""))
+                        ) {artistId ->
+                            navigator.navigate(ArtistInfo(artistId, artist.name ?: ""))
                         }
                     }
                 }

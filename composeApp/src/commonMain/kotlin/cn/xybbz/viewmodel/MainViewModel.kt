@@ -18,14 +18,6 @@
 
 package cn.xybbz.viewmodel
 
-import android.app.Application
-import android.icu.math.BigDecimal
-import android.icu.math.MathContext
-import android.util.Log
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Repeat
-import androidx.compose.material.icons.rounded.RepeatOne
-import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -33,26 +25,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.util.UnstableApi
-import androidx.room.withTransaction
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.api.events.ReLoginEvent
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.MusicTypeEnum
-import cn.xybbz.common.music.MusicController
-import cn.xybbz.common.music.PlaybackProgressReporter
-import cn.xybbz.common.music.PlayerEvent
 import cn.xybbz.common.utils.DateUtil
+import cn.xybbz.common.utils.Log
+import cn.xybbz.config.music.MusicCommonController
+import cn.xybbz.config.music.MusicPlayContext
+import cn.xybbz.config.music.PlaybackProgressReporter
+import cn.xybbz.config.music.PlayerEvent
+import cn.xybbz.config.music.ifNextPageNumList
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.setting.TranscodingState
-import cn.xybbz.config.update.VersionCheckScheduler
 import cn.xybbz.entity.data.PlayerTypeData
-import cn.xybbz.config.music.MusicPlayContext
-import cn.xybbz.config.music.ifNextPageNumList
 import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.era.XyEraItem
 import cn.xybbz.localdata.data.music.PlayHistoryMusic
 import cn.xybbz.localdata.data.music.PlayQueueMusic
@@ -61,7 +51,6 @@ import cn.xybbz.localdata.data.player.XyPlayer
 import cn.xybbz.localdata.data.progress.Progress
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -71,23 +60,26 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
-import java.time.Year
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.era_title_decade
+import xymusic_kmp.composeapp.generated.resources.list_loop
+import xymusic_kmp.composeapp.generated.resources.repeat_24px
+import xymusic_kmp.composeapp.generated.resources.repeat_one_24px
+import xymusic_kmp.composeapp.generated.resources.shuffle_24px
+import xymusic_kmp.composeapp.generated.resources.shuffle_play
+import xymusic_kmp.composeapp.generated.resources.single_loop
 
 
-@OptIn(UnstableApi::class)
-@HiltViewModel
-class MainViewModel @Inject constructor(
-    private val application: Application,
+@KoinViewModel
+class MainViewModel(
     val db: DatabaseClient,
-    private val musicController: MusicController,
+    private val musicController: MusicCommonController,
     val dataSourceManager: DataSourceManager,
     val settingsManager: SettingsManager,
-    val backgroundConfig: BackgroundConfig,
     private val musicPlayContext: MusicPlayContext,
     private val playbackProgressReporter: PlaybackProgressReporter,
-    val selectControl: SelectControl,
-    private val versionCheckScheduler: VersionCheckScheduler,
+    val selectControl: SelectControl
 ) : ViewModel() {
 
     /**
@@ -103,7 +95,6 @@ class MainViewModel @Inject constructor(
     val yearSet by mutableStateOf(DateUtil.getYearSet())
 
     private var enableProgressJob: Job? = null
-    private var playerListJob: Job? = null
 
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
@@ -176,7 +167,7 @@ class MainViewModel @Inject constructor(
                     }
 
                     is PlayerEvent.PositionSeekTo -> {
-                        onPositionSeekTo(it.positionMs, it.musicId, it.playSessionId)
+                        onPositionSeekTo(it.positionMs)
                     }
 
                     is PlayerEvent.RemovePlaybackProgress -> {
@@ -187,7 +178,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun initLastPlayList(){
+    private fun initLastPlayList() {
         viewModelScope.launch {
             db.settingsDao.selectConnectionId().distinctUntilChanged().collect {
                 Log.i("=====", "MainViewModel: 登录状态改变: $it")
@@ -236,7 +227,7 @@ class MainViewModel @Inject constructor(
         setPlayerProgress(musicController.progressStateFlow.value)
     }
 
-    fun onPositionSeekTo(millSeconds: Long, itemId: String, playSessionId: String) {
+    fun onPositionSeekTo(millSeconds: Long) {
         setPlayerProgress(millSeconds)
         if (settingsManager.get().ifEnableSyncPlayProgress)
             playbackProgressReporter.reportNow()
@@ -268,10 +259,6 @@ class MainViewModel @Inject constructor(
     }
 
     fun onOnChangeMusic(musicId: String, artistId: String?, artistName: String?) {
-
-        viewModelScope.launch {
-            musicController.updateButtonCommend(db.musicDao.selectIfFavoriteByMusic(musicId))
-        }
 
         viewModelScope.launch {
             similarMusicList = dataSourceManager.getSimilarMusicList(musicId)
@@ -445,6 +432,24 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    private fun calculateProgressPercentage(progress: Long, duration: Long): Int {
+        if (duration <= 0L) return 0
+
+        val scaledProgress = progress * 100L
+        val quotient = scaledProgress / duration
+        val remainder = scaledProgress % duration
+        val doubledRemainder = remainder * 2L
+
+        val roundedPercentage = when {
+            doubledRemainder < duration -> quotient
+            doubledRemainder > duration -> quotient + 1
+            quotient % 2L == 0L -> quotient
+            else -> quotient + 1
+        }
+
+        return roundedPercentage.toInt()
+    }
+
 
     //设置播放进度
     private fun setPlayerProgress(progress: Long) {
@@ -458,11 +463,7 @@ class MainViewModel @Inject constructor(
                     savePlayerProgress(
                         progress = progress,
                         progressPercentage = if (musicController.duration > 0) {
-                            BigDecimal(progress).divide(
-                                BigDecimal(musicController.duration),
-                                2,
-                                MathContext.ROUND_HALF_EVEN
-                            ).multiply(BigDecimal(100)).intValueExact()
+                            calculateProgressPercentage(progress, musicController.duration)
                         } else {
                             0
                         },
@@ -501,9 +502,9 @@ class MainViewModel @Inject constructor(
     //region 音乐循环类型
     val iconList by mutableStateOf(
         listOf(
-            PlayerTypeData(icon = Icons.Rounded.RepeatOne, message = Res.string.single_loop),
-            PlayerTypeData(icon = Icons.Rounded.Repeat, message = Res.string.list_loop),
-            PlayerTypeData(icon = Icons.Rounded.Shuffle, message = Res.string.shuffle_play),
+            PlayerTypeData(icon = Res.drawable.repeat_one_24px, message = Res.string.single_loop),
+            PlayerTypeData(icon = Res.drawable.repeat_24px, message = Res.string.list_loop),
+            PlayerTypeData(icon = Res.drawable.shuffle_24px, message = Res.string.shuffle_play),
         )
     )
 
@@ -529,7 +530,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             val eraStart = 1970
             //当前年代
-            val year = Year.now().value
+            val year = DateUtil.thisYear()
             val era = (year / 10) * 10
 
             val eraItemList = db.eraItemDao.selectList()
@@ -649,7 +650,7 @@ class MainViewModel @Inject constructor(
      * 初始化版本信息获取
      */
     fun initGetVersionInfo() {
-        versionCheckScheduler.enqueueIfNeeded()
+//        versionCheckScheduler.enqueueIfNeeded()
     }
 
     fun initTranscodeListener() {
@@ -671,7 +672,7 @@ class MainViewModel @Inject constructor(
      * 启动登陆监听重试登陆
      */
 
-    @kotlin.OptIn(ExperimentalCoroutinesApi::class)
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun startLoginEventBus() {
         viewModelScope.launch {
             dataSourceManager.dataSourceServerFlow

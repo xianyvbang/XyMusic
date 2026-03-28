@@ -16,13 +16,10 @@
  *
  */
 
-@file:kotlin.OptIn(ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalMaterial3Api::class)
 
 package cn.xybbz.ui.screens
 
-import android.annotation.SuppressLint
-import android.util.Log
-import androidx.annotation.OptIn
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,10 +33,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.media3.common.util.UnstableApi
 import androidx.navigation3.runtime.NavKey
+import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.router.Connection
@@ -56,16 +52,13 @@ import cn.xybbz.ui.components.LifecycleEffect
 import cn.xybbz.ui.components.LoadingCompose
 import cn.xybbz.ui.components.SnackBarPlayerComponent
 import cn.xybbz.viewmodel.MainViewModel
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.koin.compose.viewmodel.koinViewModel
 
 
-@ExperimentalPermissionsApi
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(UnstableApi::class)
 @Composable
-fun MainScreen(mainViewModel: MainViewModel = hiltViewModel<MainViewModel>()) {
+fun MainScreen(mainViewModel: MainViewModel = koinViewModel<MainViewModel>()) {
 
     val coroutineScope = rememberCoroutineScope()
     val ifOpenSelect by mainViewModel.selectControl.uiState.collectAsStateWithLifecycle()

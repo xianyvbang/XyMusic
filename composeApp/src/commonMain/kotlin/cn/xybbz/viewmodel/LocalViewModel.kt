@@ -20,26 +20,24 @@ package cn.xybbz.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cn.xybbz.common.music.MusicController
+import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.localdata.enums.PlayerTypeEnum
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
 
-@HiltViewModel
-class LocalViewModel @Inject constructor(
+@KoinViewModel
+class LocalViewModel(
     val db: DatabaseClient,
-    val musicController: MusicController,
-    val musicPlayContext: MusicPlayContext,
-    val backgroundConfig: BackgroundConfig
+    val musicController: MusicCommonController,
+    val musicPlayContext: MusicPlayContext
 ) : ViewModel() {
 
     val favoriteSet = db.musicDao.selectFavoriteListFlow()

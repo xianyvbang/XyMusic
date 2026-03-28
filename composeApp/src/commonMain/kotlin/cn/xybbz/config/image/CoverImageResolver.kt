@@ -5,6 +5,8 @@ import androidx.compose.runtime.remember
 import cn.xybbz.api.TokenServer.baseUrl
 import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.custom.data.CustomCoverQuery
+import cn.xybbz.common.constants.Constants.HTTP
+import cn.xybbz.common.constants.Constants.HTTPS
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -208,7 +210,7 @@ fun String?.normalizeCoverUrl(): String? {
     }
 }
 
-private fun String.isAbsoluteNetworkUrl(): Boolean {
-    return startsWith("http://", ignoreCase = true) ||
-        startsWith("https://", ignoreCase = true)
+fun String.isAbsoluteNetworkUrl(): Boolean {
+    return startsWith(HTTP, ignoreCase = true) ||
+        startsWith(HTTPS, ignoreCase = true)
 }

@@ -18,7 +18,6 @@
 
 package cn.xybbz.ui.screens
 
-import android.util.Log
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -54,13 +53,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.PlaylistAddCheck
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.FavoriteBorder
-import androidx.compose.material.icons.rounded.PlayCircle
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -72,7 +64,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -96,26 +87,22 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.TabListEnum
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.image.rememberArtistBackdropCoverUrls
 import cn.xybbz.config.image.rememberArtistCoverUrls
-import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.music.MusicPlayContext
+import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
@@ -139,6 +126,27 @@ import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.ArtistInfoViewModel
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.artist_cover
+import xymusic_kmp.composeapp.generated.resources.artrist_info
+import xymusic_kmp.composeapp.generated.resources.close_24px
+import xymusic_kmp.composeapp.generated.resources.close_selection
+import xymusic_kmp.composeapp.generated.resources.favorite_24px
+import xymusic_kmp.composeapp.generated.resources.favorite_added
+import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
+import xymusic_kmp.composeapp.generated.resources.favorite_removed
+import xymusic_kmp.composeapp.generated.resources.no_description
+import xymusic_kmp.composeapp.generated.resources.play_circle_24px
+import xymusic_kmp.composeapp.generated.resources.playlist_add_check_24px
+import xymusic_kmp.composeapp.generated.resources.reached_bottom
+import xymusic_kmp.composeapp.generated.resources.return_home
+import xymusic_kmp.composeapp.generated.resources.select
+import xymusic_kmp.composeapp.generated.resources.start_playback
 import kotlin.math.max
 import kotlin.math.roundToInt
 import cn.xybbz.ui.xy.XyIconButton as IconButton
@@ -148,16 +156,14 @@ internal val DefaultImageHeight = 320.dp
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ArtistInfoScreen(
-    artistId: () -> String = { "" },
-    artistName: () -> String = { "" },
-    artistInfoViewModel: ArtistInfoViewModel = hiltViewModel<ArtistInfoViewModel, ArtistInfoViewModel.Factory>(
-        creationCallback = { factory ->
-            factory.create(
-                artistId = artistId(),
-                artistName = artistName()
-            )
-        }
-    )
+    artistId: String,
+    artistName: String,
+    artistInfoViewModel: ArtistInfoViewModel = koinViewModel<ArtistInfoViewModel> {
+        parametersOf(
+            artistId,
+            artistName
+        )
+    }
 ) {
 
     val horPagerState =
@@ -202,11 +208,10 @@ fun ArtistInfoScreen(
     val headerReservedHeightPx = max(gradientVisualHeightPx, headerInfoMinHeightPx)
     val headerReservedHeightDp = with(density) { headerReservedHeightPx.toDp() }
     val headerReservedExtraPx = (headerReservedHeightPx - gradientVisualHeightPx).coerceAtLeast(0f)
-    val gradientHeightPx = gradientVisualHeightPx
     val topBarBottomPx = with(density) {
         (
-            TopAppBarDefaults.TopAppBarExpandedHeight +
-                    WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+                TopAppBarDefaults.TopAppBarExpandedHeight +
+                        WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
                 ).toPx()
     }
     val collapseRangePx = (defaultImageHeightPx - topBarBottomPx).coerceAtLeast(1f)
@@ -308,14 +313,17 @@ fun ArtistInfoScreen(
         animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
         label = "artist_topbar_alpha"
     )
-    val gradientFadeDistancePx = gradientHeightPx * 2f
+    val gradientFadeDistancePx = gradientVisualHeightPx * 2f
     val gradientFadeProgress by animateFloatAsState(
-        targetValue = ((collapseProgress * collapseRangePx) / gradientFadeDistancePx).coerceIn(0f, 1f),
+        targetValue = ((collapseProgress * collapseRangePx) / gradientFadeDistancePx).coerceIn(
+            0f,
+            1f
+        ),
         animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
         label = "artist_gradient_fade_progress"
     )
     val topBarBackgroundAlpha by animateFloatAsState(
-        targetValue = ((gradientHeightPx - distanceToTopBarBottomPx) / gradientHeightPx).coerceIn(
+        targetValue = ((gradientVisualHeightPx - distanceToTopBarBottomPx) / gradientVisualHeightPx).coerceIn(
             0f,
             1f
         ),
@@ -324,7 +332,7 @@ fun ArtistInfoScreen(
     )
 
     val topGradientBoxAlpha by animateFloatAsState(
-        targetValue = (distanceToTopBarBottomPx / gradientHeightPx).coerceIn(0f, 1f),
+        targetValue = (distanceToTopBarBottomPx / gradientVisualHeightPx).coerceIn(0f, 1f),
         animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
         label = "artist_top_gradient_box_alpha"
     )
@@ -437,9 +445,6 @@ fun ArtistInfoScreen(
         }
     }
 
-    SideEffect {
-        Log.d("=====", "MusicAudiobookInfoScreen重组一次")
-    }
 
     BoxWithConstraints(
         modifier = Modifier
@@ -455,7 +460,7 @@ fun ArtistInfoScreen(
             modifier = Modifier.statusBarsPadding(),
             onIfDisplay = { ifOpenDescribe },
             onClose = { bool -> ifOpenDescribe = bool },
-            titleText = artistName(),
+            titleText = artistName,
             dragHandle = { BottomSheetDefaults.DragHandle(height = 2.dp) }
         ) {
             LazyColumnParentComponent(
@@ -547,7 +552,7 @@ fun ArtistInfoScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 BasicText(
-                                    text = artistName(),
+                                    text = artistName,
                                     modifier = Modifier.basicMarquee(
                                         iterations = Int.MAX_VALUE
                                     ),
@@ -575,14 +580,14 @@ fun ArtistInfoScreen(
                                         val ifFavorite =
                                             artistInfoViewModel.dataSourceManager.setFavoriteData(
                                                 type = MusicTypeEnum.ARTIST,
-                                                itemId = artistId(),
+                                                itemId = artistId,
                                                 ifFavorite = artistInfoViewModel.ifFavorite
                                             )
                                         artistInfoViewModel.updateFavorite(ifFavorite)
                                     }
                                 }) {
                                     Icon(
-                                        imageVector = if (artistInfoViewModel.ifFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                                        painter = painterResource(if (artistInfoViewModel.ifFavorite) Res.drawable.favorite_24px else Res.drawable.favorite_border_24px),
                                         contentDescription = if (artistInfoViewModel.ifFavorite) stringResource(
                                             Res.string.favorite_added
                                         ) else stringResource(Res.string.favorite_removed),
@@ -607,7 +612,7 @@ fun ArtistInfoScreen(
                                     },
                                 ) {
                                     Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        painter = painterResource(Res.drawable.arrow_back_24px),
                                         contentDescription = stringResource(Res.string.return_home)
                                     )
                                 }
@@ -650,7 +655,12 @@ fun ArtistInfoScreen(
                                         brush = Brush.verticalGradient(
                                             colorStops = arrayOf(
                                                 0.00f to Color.Transparent,
-                                                1.00f to pageBackgroundColor.copy(alpha = (1f - gradientFadeProgress).coerceIn(0f, 1f))
+                                                1.00f to pageBackgroundColor.copy(
+                                                    alpha = (1f - gradientFadeProgress).coerceIn(
+                                                        0f,
+                                                        1f
+                                                    )
+                                                )
                                             ),
                                             startY = 0f,
                                             endY = size.height,
@@ -674,7 +684,7 @@ fun ArtistInfoScreen(
                         ) {
 
                             BasicText(
-                                text = artistName(),
+                                text = artistName,
                                 modifier = Modifier
                                     .basicMarquee(
                                         iterations = Int.MAX_VALUE
@@ -776,7 +786,7 @@ fun ArtistInfoScreen(
                                         ) { list ->
                                             item {
                                                 ArtistMusicListOperation(
-                                                    artistId = artistId(),
+                                                    artistId = artistId,
                                                     musicPlayContext = artistInfoViewModel.musicPlayContext,
                                                     selectControl = artistInfoViewModel.selectControl,
                                                     onSelectAll = {
@@ -808,10 +818,10 @@ fun ArtistInfoScreen(
                                                             coroutineScope.launch {
                                                                 artistInfoViewModel.musicPlayContext.artist(
                                                                     onMusicPlayParameter = it.copy(
-                                                                        artistId = artistId()
+                                                                        artistId = artistId
                                                                     ),
                                                                     index = index,
-                                                                    artistId = artistId()
+                                                                    artistId = artistId
                                                                 )
                                                             }
                                                         },
@@ -952,7 +962,7 @@ private fun ArtistMusicListOperation(
                 selectControl.dismiss()
             }) {
                 Icon(
-                    imageVector = Icons.Rounded.Close,
+                    painter = painterResource(Res.drawable.close_24px),
                     contentDescription = stringResource(Res.string.close_selection)
                 )
             }
@@ -962,7 +972,7 @@ private fun ArtistMusicListOperation(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.PlayCircle,
+                    painter = painterResource(Res.drawable.play_circle_24px),
                     contentDescription = stringResource(Res.string.start_playback)
                 )
                 Text(text = stringResource(Res.string.start_playback))
@@ -979,7 +989,7 @@ private fun ArtistMusicListOperation(
                     )
                 }) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.PlaylistAddCheck,
+                        painter = painterResource(Res.drawable.playlist_add_check_24px),
                         contentDescription = stringResource(Res.string.select)
                     )
                 }

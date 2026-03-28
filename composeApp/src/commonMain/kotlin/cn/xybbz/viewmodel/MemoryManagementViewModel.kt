@@ -36,23 +36,24 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.DownloadCacheController
 import cn.xybbz.common.music.MusicController
 import cn.xybbz.config.download.DownLoadManager
+import cn.xybbz.config.music.DownloadCacheCommonController
+import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.withTransaction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import org.koin.core.annotation.KoinViewModel
 import java.io.File
 import javax.inject.Inject
 
-@OptIn(UnstableApi::class)
-@HiltViewModel
-class MemoryManagementViewModel @Inject constructor(
-    private val downloadCacheController: DownloadCacheController,
+@KoinViewModel
+class MemoryManagementViewModel (
+    private val downloadCacheController: DownloadCacheCommonController,
     private val db: DatabaseClient,
     private val settingsManager: SettingsManager,
     private val dataSourceManager: DataSourceManager,
-    private val musicController: MusicController,
-    val backgroundConfig: BackgroundConfig,
-    private val downLoadManager: DownLoadManager
+    private val musicController: MusicCommonController,
 ) : ViewModel() {
 
 
@@ -91,7 +92,7 @@ class MemoryManagementViewModel @Inject constructor(
      * @throws Exception
      */
     //todo 获取和清除缓存可以通过settingConfig.cacheFilePath进行操作
-    @Throws(java.lang.Exception::class)
+    @Throws(Exception::class)
     fun getTotalCacheSize(context: Context): String {
         var cacheSize = getFolderSize(context.cacheDir)
         if (Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED) {

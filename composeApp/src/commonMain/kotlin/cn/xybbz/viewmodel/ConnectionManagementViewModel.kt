@@ -18,32 +18,27 @@
 
 package cn.xybbz.viewmodel
 
-import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.util.UnstableApi
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.common.music.MusicController
 import cn.xybbz.common.utils.DataSourceChangeUtils
 import cn.xybbz.common.utils.DatabaseUtils
+import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
 
-@HiltViewModel
-@OptIn(UnstableApi::class)
-class ConnectionManagementViewModel @Inject constructor(
+@KoinViewModel
+class ConnectionManagementViewModel (
     val dataSourceManager: DataSourceManager,
     private val db: DatabaseClient,
-    private val musicController: MusicController,
-    val backgroundConfig: BackgroundConfig,
+    private val musicController: MusicCommonController,
     private val settingsManager: SettingsManager
 ) : ViewModel() {
 
@@ -80,7 +75,6 @@ class ConnectionManagementViewModel @Inject constructor(
     /**
      * 切换连接服务
      */
-    @OptIn(UnstableApi::class)
     fun changeDataSource(connectionConfig: ConnectionConfig) {
         viewModelScope.launch {
             DataSourceChangeUtils.changeDataSource(
@@ -95,7 +89,6 @@ class ConnectionManagementViewModel @Inject constructor(
     /**
      * 删除当前连接
      */
-    @OptIn(UnstableApi::class)
     suspend fun removeConnection(connectionId: Long) {
         DatabaseUtils.clearDatabaseByConnectionConfig(
             db,

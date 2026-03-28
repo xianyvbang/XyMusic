@@ -18,7 +18,6 @@
 
 package cn.xybbz.ui.screens
 
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
@@ -27,7 +26,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,21 +44,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.rounded.Cancel
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.DriveFileRenameOutline
-import androidx.compose.material.icons.rounded.Http
-import androidx.compose.material.icons.rounded.Password
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.Visibility
-import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -73,18 +60,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.resources.stringResource
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.common.enums.img
+import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.DataSourceType
@@ -97,6 +80,7 @@ import cn.xybbz.ui.xy.ItemTrailingArrowRight
 import cn.xybbz.ui.xy.LazyColumnComponent
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumn
+import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyItemOutSpacer
 import cn.xybbz.ui.xy.XyItemRadioButton
@@ -108,6 +92,44 @@ import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.ConnectionViewModel
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.back_to_input_credentials
+import xymusic_kmp.composeapp.generated.resources.cancel_24px
+import xymusic_kmp.composeapp.generated.resources.celebrate
+import xymusic_kmp.composeapp.generated.resources.check_24px
+import xymusic_kmp.composeapp.generated.resources.clear
+import xymusic_kmp.composeapp.generated.resources.connect
+import xymusic_kmp.composeapp.generated.resources.connect_to_service
+import xymusic_kmp.composeapp.generated.resources.connection_address_hint
+import xymusic_kmp.composeapp.generated.resources.connection_address_or_username_cannot_be_empty
+import xymusic_kmp.composeapp.generated.resources.connection_success_image
+import xymusic_kmp.composeapp.generated.resources.connection_successful
+import xymusic_kmp.composeapp.generated.resources.enter_page
+import xymusic_kmp.composeapp.generated.resources.fetching_resources
+import xymusic_kmp.composeapp.generated.resources.httpInput
+import xymusic_kmp.composeapp.generated.resources.http_24px
+import xymusic_kmp.composeapp.generated.resources.label_24px
+import xymusic_kmp.composeapp.generated.resources.logging_in
+import xymusic_kmp.composeapp.generated.resources.login_failed
+import xymusic_kmp.composeapp.generated.resources.password
+import xymusic_kmp.composeapp.generated.resources.password_24px
+import xymusic_kmp.composeapp.generated.resources.person_24px
+import xymusic_kmp.composeapp.generated.resources.reconnect
+import xymusic_kmp.composeapp.generated.resources.reselect
+import xymusic_kmp.composeapp.generated.resources.return_setting_screen
+import xymusic_kmp.composeapp.generated.resources.select_protocol
+import xymusic_kmp.composeapp.generated.resources.selected_item
+import xymusic_kmp.composeapp.generated.resources.server_connection
+import xymusic_kmp.composeapp.generated.resources.set_alias
+import xymusic_kmp.composeapp.generated.resources.username
+import xymusic_kmp.composeapp.generated.resources.username_cannot_be_empty
+import xymusic_kmp.composeapp.generated.resources.visibility_24px
+import xymusic_kmp.composeapp.generated.resources.visibility_off_24px
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 private enum class ScreenType {
     /**
@@ -136,28 +158,19 @@ private enum class ScreenType {
 fun ConnectionScreen(
     connectionUiType: ConnectionUiType?,
     modifier: Modifier = Modifier,
-    connectionViewModel: ConnectionViewModel = hiltViewModel<ConnectionViewModel>(),
+    connectionViewModel: ConnectionViewModel = koinViewModel<ConnectionViewModel>(),
 ) {
 
-    val context = LocalContext.current
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
     var ifSelectDataSource by remember {
         mutableStateOf(ScreenType.SELECT_DATA_SOURCE)
     }
 
-    var showPassword by remember {
-        mutableStateOf(false)
-    }
-
-    val pleaseEnterRequiredContent = stringResource(Res.string.please_enter_required_content)
-
-    Column(
+    XyColumnScreen(
         modifier = modifier
-            .statusBarsPadding()
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .statusBarsPadding(),
+        background = MaterialTheme.colorScheme.background
     ) {
 
         TopAppBarComponent(title = {
@@ -170,7 +183,7 @@ fun ConnectionScreen(
                     },
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        painter = painterResource(Res.drawable.arrow_back_24px),
                         contentDescription = stringResource(Res.string.return_setting_screen)
                     )
                 }
@@ -316,7 +329,7 @@ fun ConnectionScreen(
                                                     connectionViewModel.setTmpAddressData(
                                                         connectionViewModel.address
                                                     )
-                                                    connectionViewModel.inputAddress(context)
+                                                    connectionViewModel.inputAddress()
                                                 }
                                             }
                                         } else {
@@ -425,7 +438,7 @@ fun ConnectionScreen(
                                                     connectionViewModel.selectUrlIndex
                                                 )
                                                 ifSelectDataSource = ScreenType.LOGIN
-                                                connectionViewModel.inputAddress(context)
+                                                connectionViewModel.inputAddress()
                                             }
                                         }) {
                                         Text(text = stringResource(Res.string.connect))
@@ -551,7 +564,7 @@ fun PlexResourceItem(
         }
         if (select)
             Icon(
-                imageVector = Icons.Rounded.Check,
+                painter = painterResource(Res.drawable.check_24px),
                 contentDescription = stringResource(Res.string.selected_item, text)
             )
     }
@@ -598,7 +611,7 @@ fun AddressInputEdit(
         },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
         hint = stringResource(Res.string.connection_address_hint),
-        icon = Icons.Rounded.Http,
+        icon = painterResource(Res.drawable.http_24px),
         iconContentDescription = stringResource(Res.string.httpInput),
         actionContent = if (address.isNotBlank()) {
             {
@@ -610,7 +623,7 @@ fun AddressInputEdit(
                 ) {
                     Icon(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        imageVector = Icons.Rounded.Cancel,
+                        painter = painterResource(Res.drawable.cancel_24px),
                         contentDescription = stringResource(Res.string.clear)
                     )
                 }
@@ -634,7 +647,7 @@ fun UsernameInputEdit(
         },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
         hint = stringResource(Res.string.username),
-        icon = Icons.Rounded.Person,
+        icon = painterResource(Res.drawable.person_24px),
         iconContentDescription = stringResource(Res.string.username),
         actionContent = if (username.isNotBlank()) {
             {
@@ -646,7 +659,7 @@ fun UsernameInputEdit(
                 ) {
                     Icon(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        imageVector = Icons.Rounded.Cancel,
+                        painter = painterResource(Res.drawable.cancel_24px),
                         contentDescription = stringResource(Res.string.clear)
                     )
                 }
@@ -677,7 +690,7 @@ fun PasswordInputEdit(
                 modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize)
             ) {
                 Icon(
-                    imageVector = if (showPassword) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
+                    painter = painterResource(if (showPassword) Res.drawable.visibility_24px else Res.drawable.visibility_off_24px),
                     contentDescription = null
                 )
             }
@@ -685,7 +698,7 @@ fun PasswordInputEdit(
         visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
         hint = stringResource(Res.string.password),
-        icon = Icons.Rounded.Password,
+        icon = painterResource(Res.drawable.password_24px),
         iconContentDescription = stringResource(Res.string.password)
     )
 }
@@ -705,7 +718,7 @@ fun ConnectionNameInputEdit(
         },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
         hint = stringResource(Res.string.set_alias),
-        icon = Icons.Rounded.DriveFileRenameOutline,
+        icon = painterResource(Res.drawable.label_24px),
         iconContentDescription = stringResource(Res.string.set_alias),
         actionContent = if (connectionName.isNotBlank()) {
             {
@@ -714,7 +727,7 @@ fun ConnectionNameInputEdit(
                 }, modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize)) {
                     Icon(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        imageVector = Icons.Rounded.Cancel,
+                        painter = painterResource(Res.drawable.cancel_24px),
                         contentDescription = stringResource(Res.string.clear)
                     )
                 }
@@ -732,7 +745,7 @@ private fun ConnectionDataInfoInputEdit(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     hint: String? = null,
-    icon: ImageVector,
+    icon: Painter,
     iconContentDescription: String,
     actionContent: (@Composable () -> Unit)? = null,
 ) {
@@ -750,7 +763,7 @@ private fun ConnectionDataInfoInputEdit(
         hint = hint,
         leadingContent = {
             Icon(
-                imageVector = icon,
+                painter = icon,
                 contentDescription = iconContentDescription
             )
         },

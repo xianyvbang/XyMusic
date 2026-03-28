@@ -42,7 +42,8 @@ import kotlinx.coroutines.withContext
 class SettingsManager(
     private val db: DatabaseClient,
     private val audioFadeController: AudioFadeController,
-    private val netWorkMonitor: NetWorkMonitor
+    private val netWorkMonitor: NetWorkMonitor,
+    private val languagePlatformManager: LanguagePlatformManager
 ) {
 
     private var settings: XySettings? = null
@@ -109,6 +110,8 @@ class SettingsManager(
         updateIfConnectionConfig(this@SettingsManager.get().connectionId != null)
         if (this@SettingsManager.get().languageType != null) {
             this@SettingsManager.languageType = this@SettingsManager.get().languageType
+        } else {
+            setDefaultLanguage()
         }
         this@SettingsManager.cacheUpperLimit = this@SettingsManager.get().cacheUpperLimit
         Log.i("api", "动态设置数据--读取配置")
@@ -299,6 +302,41 @@ class SettingsManager(
                 db.settingsDao.save(XySettings(latestVersion = version))
             settings = get().copy(id = settingId)
         }
+    }
+
+    /**
+     * 更新语言设置
+     */
+    suspend fun setLanguageTypeData(languageType: LanguageType) {
+        settings = get().copy(languageType = languageType)
+        if (get().id != AllDataEnum.All.code) {
+            db.settingsDao.updateLanguageType(
+                languageType = languageType,
+                get().id
+            )
+
+        } else {
+            val settingId =
+                db.settingsDao.save(XySettings(languageType = languageType))
+            settings = get().copy(id = settingId)
+        }
+        updateLanguage(languageType)
+    }
+
+
+    /**
+     * 全局更新语言设置
+     */
+    fun updateLanguage(languageType: LanguageType) {
+        languagePlatformManager.applyLanguage(languageType)
+        this.languageType = languageType
+    }
+
+    /**
+     * 设置当前默认语言
+     */
+    fun setDefaultLanguage() {
+        this.languageType = languagePlatformManager.getSystemLanguageType()
     }
 
     /**

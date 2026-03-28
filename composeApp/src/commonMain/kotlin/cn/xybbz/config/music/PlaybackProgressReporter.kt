@@ -1,22 +1,22 @@
-package cn.xybbz.music
+package cn.xybbz.config.music
 
-import android.util.Log
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.PlayStateEnum
+import cn.xybbz.common.utils.Log
 import cn.xybbz.config.setting.SettingsManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import javax.inject.Singleton
+import org.koin.core.annotation.Singleton
 
 @Singleton
-class PlaybackProgressReporter @Inject constructor(
-    private val musicController: MusicController,
+class PlaybackProgressReporter(
+    private val musicController: MusicCommonController,
     private val dataSourceManager: DataSourceManager,
     private val settingsManager: SettingsManager
 ) {

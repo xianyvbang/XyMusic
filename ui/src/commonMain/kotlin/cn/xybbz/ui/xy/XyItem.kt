@@ -538,7 +538,7 @@ fun XyItemLabel(
     onClick: () -> Unit,
     text: String,
     sub: String? = null,
-    imageVector: ImageVector,
+    painter: Painter,
     enabled: Boolean = true,
     iconColor: Color? = null
 ) {
@@ -553,7 +553,7 @@ fun XyItemLabel(
     ) {
 
         Icon(
-            imageVector = imageVector,
+            painter = painter,
             contentDescription = text,
             tint = iconColor
                 ?: if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(

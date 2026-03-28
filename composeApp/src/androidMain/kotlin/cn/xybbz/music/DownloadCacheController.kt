@@ -85,11 +85,6 @@ class DownloadCacheController(
     private val childPath = "cache"
 
 
-    /**
-     * 所有缓存大小
-     */
-    private val _allCacheSizeFlow = MutableStateFlow(0L)
-    val allCacheSizeFlow = _allCacheSizeFlow.asStateFlow()
 
     init {
         val cacheApiClient: CacheApiClient = get()

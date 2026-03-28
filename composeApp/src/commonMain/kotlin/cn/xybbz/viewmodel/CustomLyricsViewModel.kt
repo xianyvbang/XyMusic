@@ -5,12 +5,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import cn.xybbz.config.setting.SettingsManager
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
 
-@HiltViewModel
-class CustomLyricsViewModel @Inject constructor(
-    val backgroundConfig: BackgroundConfig,
+@KoinViewModel
+class CustomLyricsViewModel (
     private val settingsManager: SettingsManager
 ) : ViewModel() {
 

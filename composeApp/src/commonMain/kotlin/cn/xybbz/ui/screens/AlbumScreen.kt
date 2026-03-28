@@ -21,21 +21,15 @@ package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.stringResource
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.compositionLocal.LocalMainViewModel
@@ -47,14 +41,21 @@ import cn.xybbz.ui.components.SelectSortBottomSheetComponent
 import cn.xybbz.ui.components.SwipeRefreshVerticalGridListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
-import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.AlbumViewModel
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.album
+import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.return_home
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlbumScreen(
-    albumViewModel: AlbumViewModel = hiltViewModel<AlbumViewModel>()
+    albumViewModel: AlbumViewModel = koinViewModel<AlbumViewModel>()
 ) {
 
     val navigator = LocalNavigator.current
@@ -68,12 +69,7 @@ fun AlbumScreen(
 
 
 
-    XyColumnScreen(
-        modifier = Modifier.brashColor(
-            topVerticalColor = albumViewModel.backgroundConfig.albumBrash[0],
-            bottomVerticalColor = albumViewModel.backgroundConfig.albumBrash[1]
-        )
-    ) {
+    XyColumnScreen {
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
             title = {
@@ -87,7 +83,7 @@ fun AlbumScreen(
                     },
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        painter = painterResource(Res.drawable.arrow_back_24px),
                         contentDescription = stringResource(Res.string.return_home)
                     )
                 }
@@ -98,15 +94,15 @@ fun AlbumScreen(
                     onIfSort = { albumViewModel.dataSourceManager.dataSourceType?.ifAlbumSort },
                     onIfFavoriteFilter = { albumViewModel.dataSourceManager.dataSourceType?.ifAlbumFavoriteFilter },
                     onSortTypeClick = {
-                        albumViewModel.setSortedData(it, { albumPageListItems.refresh() })
+                        albumViewModel.setSortedData(it) { albumPageListItems.refresh() }
                     },
                     onSortType = { sortBy.sortType },
                     onDefaultSortType = { albumViewModel.defaultSortType },
                     onIfFavorite = { sortBy.isFavorite == true },
                     setFavorite = {
                         albumViewModel.setFavorite(
-                            it,
-                            { albumPageListItems.refresh() })
+                            it
+                        ) { albumPageListItems.refresh() }
                     },
                     sortTypeList = listOf(
                         SortTypeEnum.CREATE_TIME_ASC,
@@ -123,14 +119,15 @@ fun AlbumScreen(
                     onSetSelectYear = { year ->
                         year?.let {
                             albumViewModel.setFilterYear(
-                                listOf(it),
-                                { albumPageListItems.refresh() })
+                                listOf(it)
+                            ) { albumPageListItems.refresh() }
                         }
                     },
                     onSelectRangeYear = { sortBy.yearList },
                     onSetSelectRangeYear = { years ->
-                        albumViewModel.setFilterYear(years.mapNotNull { it },
-                            { albumPageListItems.refresh() })
+                        albumViewModel.setFilterYear(
+                            years.mapNotNull { it }
+                        ) { albumPageListItems.refresh() }
                     },
                     onEnabledClearClick = { albumViewModel.isSortChange() }
                 ) {
@@ -143,13 +140,13 @@ fun AlbumScreen(
         ) {
             items(
                 count = albumPageListItems.itemCount,
-                key = albumPageListItems.itemKey {item ->  item.itemId },
+                key = albumPageListItems.itemKey { item -> item.itemId },
                 contentType = albumPageListItems.itemContentType { MusicTypeEnum.ALBUM.code }) { index ->
                 MusicAlbumCardComponent(
                     modifier = Modifier,
                     onItem = { albumPageListItems[index] },
                     enabled = !it,
-                    onRouter = {itemId->
+                    onRouter = { itemId ->
                         //取消刷新
                         navigator.navigate(
                             AlbumInfo(

@@ -18,12 +18,12 @@
 
 package cn.xybbz.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -33,31 +33,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Label
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.AddCircle
-import androidx.compose.material.icons.rounded.Album
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.material.icons.rounded.Download
-import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.MoreHoriz
-import androidx.compose.material.icons.rounded.MusicNote
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material.icons.rounded.Repeat
-import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.Shuffle
-import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import cn.xybbz.ui.xy.XyIconButton as IconButton
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextButton
@@ -78,17 +60,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import xymusic_kmp.composeapp.generated.resources.Res
-import cn.xybbz.common.UiConstants.MusicCardImageSize
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.img
+import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -107,6 +85,7 @@ import cn.xybbz.router.Local
 import cn.xybbz.router.Music
 import cn.xybbz.router.Search
 import cn.xybbz.router.Setting
+import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.BottomSheetObject
 import cn.xybbz.ui.components.MusicAlbumCardComponent
@@ -115,7 +94,6 @@ import cn.xybbz.ui.components.MusicPlaylistItemComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.show
-import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
@@ -130,12 +108,67 @@ import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.HomeViewModel
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.add_24px
+import xymusic_kmp.composeapp.generated.resources.add_circle_24px
+import xymusic_kmp.composeapp.generated.resources.add_connection
+import xymusic_kmp.composeapp.generated.resources.album
+import xymusic_kmp.composeapp.generated.resources.album_24px
+import xymusic_kmp.composeapp.generated.resources.all_music
+import xymusic_kmp.composeapp.generated.resources.artist
+import xymusic_kmp.composeapp.generated.resources.check_24px
+import xymusic_kmp.composeapp.generated.resources.chevron_right_24px
+import xymusic_kmp.composeapp.generated.resources.confirm_delete_playlist
+import xymusic_kmp.composeapp.generated.resources.connection_link
+import xymusic_kmp.composeapp.generated.resources.create_playlist
+import xymusic_kmp.composeapp.generated.resources.daily_recommendations
+import xymusic_kmp.composeapp.generated.resources.delete_playlist
+import xymusic_kmp.composeapp.generated.resources.download_24px
+import xymusic_kmp.composeapp.generated.resources.download_list
+import xymusic_kmp.composeapp.generated.resources.favorite
+import xymusic_kmp.composeapp.generated.resources.favorite_24px
+import xymusic_kmp.composeapp.generated.resources.genres
+import xymusic_kmp.composeapp.generated.resources.home
+import xymusic_kmp.composeapp.generated.resources.icon
+import xymusic_kmp.composeapp.generated.resources.label_24px
+import xymusic_kmp.composeapp.generated.resources.latest_albums
+import xymusic_kmp.composeapp.generated.resources.list_loop
+import xymusic_kmp.composeapp.generated.resources.local
+import xymusic_kmp.composeapp.generated.resources.login_exception_info
+import xymusic_kmp.composeapp.generated.resources.login_failed
+import xymusic_kmp.composeapp.generated.resources.modify_playlist_name
+import xymusic_kmp.composeapp.generated.resources.more_horiz_24px
+import xymusic_kmp.composeapp.generated.resources.most_played
+import xymusic_kmp.composeapp.generated.resources.music_note_24px
+import xymusic_kmp.composeapp.generated.resources.new_playlist
+import xymusic_kmp.composeapp.generated.resources.no_playlists
+import xymusic_kmp.composeapp.generated.resources.open_add_or_switch_data_sources
+import xymusic_kmp.composeapp.generated.resources.open_playlist_operations_popup
+import xymusic_kmp.composeapp.generated.resources.open_settings_page_button
+import xymusic_kmp.composeapp.generated.resources.person_24px
+import xymusic_kmp.composeapp.generated.resources.playlist
+import xymusic_kmp.composeapp.generated.resources.random_play
+import xymusic_kmp.composeapp.generated.resources.recently_played_albums
+import xymusic_kmp.composeapp.generated.resources.recently_played_music
+import xymusic_kmp.composeapp.generated.resources.refresh_24px
+import xymusic_kmp.composeapp.generated.resources.refresh_login
+import xymusic_kmp.composeapp.generated.resources.refresh_playlist
+import xymusic_kmp.composeapp.generated.resources.repeat_24px
+import xymusic_kmp.composeapp.generated.resources.search_24px
+import xymusic_kmp.composeapp.generated.resources.search_page_switch_button
+import xymusic_kmp.composeapp.generated.resources.settings_24px
+import xymusic_kmp.composeapp.generated.resources.shuffle_24px
+import xymusic_kmp.composeapp.generated.resources.splitscreen_add_24px
+import xymusic_kmp.composeapp.generated.resources.view_more
+import xymusic_kmp.composeapp.generated.resources.warning_24px
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HomeScreen(
-    modifier: Modifier = Modifier,
-    homeViewModel: HomeViewModel = hiltViewModel<HomeViewModel>()
+    homeViewModel: HomeViewModel = koinViewModel<HomeViewModel>()
 ) {
     SideEffect {
         Log.d("=====", "HomeScreen重组一次")
@@ -199,13 +232,7 @@ fun HomeScreen(
 
     val coroutineScope = rememberCoroutineScope()
 
-    XyColumnScreen(
-        modifier = modifier
-            .brashColor(
-                topVerticalColor = homeViewModel.backgroundConfig.homeBrash[0],
-                bottomVerticalColor = homeViewModel.backgroundConfig.homeBrash[1]
-            )
-    ) {
+    XyColumnScreen {
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
@@ -229,7 +256,7 @@ fun HomeScreen(
                             MenuItemDefaultData(
                                 title = stringResource(Res.string.add_connection), leadingIcon = {
                                     Icon(
-                                        Icons.Rounded.ChevronRight,
+                                        painter = painterResource(Res.drawable.chevron_right_24px),
                                         contentDescription = stringResource(Res.string.add_connection)
                                     )
                                 },
@@ -241,7 +268,7 @@ fun HomeScreen(
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Rounded.AddCircle,
+                                            painter = painterResource(Res.drawable.add_circle_24px),
                                             contentDescription = stringResource(Res.string.add_connection)
                                         )
                                     }
@@ -257,7 +284,7 @@ fun HomeScreen(
                                     leadingIcon = {
                                         if (homeViewModel.dataSourceManager.getConnectionId() == connection.id)
                                             Icon(
-                                                Icons.Rounded.Check,
+                                                painterResource(Res.drawable.check_24px),
                                                 contentDescription = connection.name + stringResource(
                                                     Res.string.connection_link
                                                 )
@@ -347,7 +374,7 @@ fun HomeScreen(
                             ).show()
                         }) {
                             Icon(
-                                imageVector = Icons.Rounded.Warning,
+                                painter = painterResource(Res.drawable.warning_24px),
                                 contentDescription = stringResource(Res.string.login_failed),
                                 tint = Color.Red
                             )
@@ -357,7 +384,7 @@ fun HomeScreen(
                         homeViewModel.autoLogin()
                     }) {
                         Icon(
-                            imageVector = Icons.Rounded.Refresh,
+                            painter = painterResource(Res.drawable.refresh_24px),
                             contentDescription = stringResource(Res.string.refresh_login)
                         )
                     }
@@ -366,7 +393,7 @@ fun HomeScreen(
                         navigator.navigate(Setting)
                     }) {
                         Icon(
-                            imageVector = Icons.Rounded.Settings,
+                            painter = painterResource(Res.drawable.settings_24px),
                             contentDescription = stringResource(Res.string.open_settings_page_button)
                         )
                     }
@@ -374,7 +401,7 @@ fun HomeScreen(
                         navigator.navigate(Search)
                     }) {
                         Icon(
-                            imageVector = Icons.Rounded.Search,
+                            painter = painterResource(Res.drawable.search_24px),
                             contentDescription = stringResource(Res.string.search_page_switch_button)
                         )
                     }
@@ -388,7 +415,7 @@ fun HomeScreen(
                             }
                         }) {
                             Icon(
-                                imageVector = Icons.Rounded.Download,
+                                painter = painterResource(Res.drawable.download_24px),
                                 contentDescription = stringResource(Res.string.download_list)
                             )
                         }
@@ -425,7 +452,7 @@ fun HomeScreen(
                                 ?: stringResource(
                                     Constants.UNKNOWN
                                 ) else null,
-                            imageVector = Icons.Rounded.MusicNote,
+                            painter = painterResource(Res.drawable.music_note_24px),
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
                                 navigator.navigate(Music)
@@ -438,7 +465,7 @@ fun HomeScreen(
                             sub = if (ifShowCount) homeViewModel.localCount ?: stringResource(
                                 Constants.UNKNOWN
                             ) else null,
-                            imageVector = Icons.Rounded.MusicNote,
+                            painter = painterResource(Res.drawable.music_note_24px),
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
                                 navigator.navigate(Local)
@@ -452,7 +479,7 @@ fun HomeScreen(
                                 ?: stringResource(
                                     Constants.UNKNOWN
                                 ) else null,
-                            imageVector = Icons.Rounded.Album,
+                            painter = painterResource(Res.drawable.album_24px),
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
                                 navigator.navigate(Album)
@@ -465,7 +492,7 @@ fun HomeScreen(
                                 ?: stringResource(
                                     Constants.UNKNOWN
                                 ) else null,
-                            imageVector = Icons.Rounded.Person,
+                            painter = painterResource(Res.drawable.person_24px),
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
                                 navigator.navigate(Artist)
@@ -478,7 +505,7 @@ fun HomeScreen(
                                 ?: stringResource(
                                     Constants.UNKNOWN
                                 ) else null,
-                            imageVector = Icons.Rounded.Favorite,
+                            painter = painterResource(Res.drawable.favorite_24px),
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
                                 navigator.navigate(FavoriteList)
@@ -492,7 +519,7 @@ fun HomeScreen(
                                 ?: stringResource(
                                     Constants.UNKNOWN
                                 ) else null,
-                            imageVector = Icons.AutoMirrored.Rounded.Label,
+                            painter = painterResource(Res.drawable.label_24px),
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
                                 navigator.navigate(Genres)
@@ -503,12 +530,7 @@ fun HomeScreen(
 
                 if (mostPlayerAlbumList.isNotEmpty()) {
                     item(key = "most_played_album_title") {
-                        XyRow {
-                            XyText(
-                                modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(Res.string.most_played),
-                            )
-                        }
+                        HomeSectionTitle(title = stringResource(Res.string.most_played))
                     }
 
                     item(key = "most_played_album") {
@@ -518,47 +540,36 @@ fun HomeScreen(
 
                 if (mostPlayerMusicList.isNotEmpty()) {
                     item(key = "most_played_music_title") {
-                        XyRow {
-                            XyText(
-                                modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(Res.string.most_played)
-                            )
-
-                            Row(
-                                horizontalArrangement = Arrangement.End,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                IconButton(onClick = composeClick {
-                                    if (mostPlayerMusicList.isNotEmpty())
-                                        homeViewModel.musicList(
-                                            musicList = mostPlayerMusicList,
-                                            onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
-                                            playerTypeEnum = PlayerTypeEnum.RANDOM_PLAY
-                                        )
-                                }) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Shuffle,
-                                        contentDescription = stringResource(Res.string.random_play) + stringResource(
-                                            Res.string.most_played
-                                        )
+                        HomeSectionTitle(title = stringResource(Res.string.most_played)) {
+                            IconButton(onClick = composeClick {
+                                if (mostPlayerMusicList.isNotEmpty())
+                                    homeViewModel.musicList(
+                                        musicList = mostPlayerMusicList,
+                                        onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
+                                        playerTypeEnum = PlayerTypeEnum.RANDOM_PLAY
                                     )
-                                }
-                                IconButton(onClick = composeClick {
-                                    if (mostPlayerMusicList.isNotEmpty())
-                                        homeViewModel.musicList(
-                                            musicList = mostPlayerMusicList,
-                                            onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
-                                            playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
-                                        )
-                                }) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Repeat,
-                                        contentDescription = stringResource(Res.string.list_loop) + stringResource(
-                                            Res.string.most_played
-                                        )
+                            }) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.shuffle_24px),
+                                    contentDescription = stringResource(Res.string.random_play) + stringResource(
+                                        Res.string.most_played
                                     )
-                                }
-
+                                )
+                            }
+                            IconButton(onClick = composeClick {
+                                if (mostPlayerMusicList.isNotEmpty())
+                                    homeViewModel.musicList(
+                                        musicList = mostPlayerMusicList,
+                                        onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
+                                        playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
+                                    )
+                            }) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.repeat_24px),
+                                    contentDescription = stringResource(Res.string.list_loop) + stringResource(
+                                        Res.string.most_played
+                                    )
+                                )
                             }
                         }
                     }
@@ -573,55 +584,44 @@ fun HomeScreen(
 
                 if (recommendedMusicList.isNotEmpty()) {
                     item(key = "daily_recommendations_title") {
-                        XyRow {
-                            XyText(
-                                modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(Res.string.daily_recommendations)
-                            )
-
-                            Row(
-                                horizontalArrangement = Arrangement.End,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                IconButton(onClick = composeClick {
-                                    if (recommendedMusicList.isNotEmpty())
-                                        homeViewModel.musicList(
-                                            musicList = recommendedMusicList,
-                                            onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
-                                            playerTypeEnum = PlayerTypeEnum.RANDOM_PLAY
-                                        )
-                                }) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Shuffle,
-                                        contentDescription = stringResource(Res.string.random_play) + stringResource(
-                                            Res.string.daily_recommendations
-                                        )
+                        HomeSectionTitle(title = stringResource(Res.string.daily_recommendations)) {
+                            IconButton(onClick = composeClick {
+                                if (recommendedMusicList.isNotEmpty())
+                                    homeViewModel.musicList(
+                                        musicList = recommendedMusicList,
+                                        onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
+                                        playerTypeEnum = PlayerTypeEnum.RANDOM_PLAY
                                     )
-                                }
-                                IconButton(onClick = composeClick {
-                                    if (recommendedMusicList.isNotEmpty())
-                                        homeViewModel.musicList(
-                                            musicList = recommendedMusicList,
-                                            onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
-                                            playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
-                                        )
-                                }) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Repeat,
-                                        contentDescription = stringResource(Res.string.list_loop) + stringResource(
-                                            Res.string.daily_recommendations
-                                        )
+                            }) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.shuffle_24px),
+                                    contentDescription = stringResource(Res.string.random_play) + stringResource(
+                                        Res.string.daily_recommendations
                                     )
-                                }
-
-                                TextButton(onClick = composeClick {
-                                    navigator.navigate(DailyRecommend)
-                                }, contentPadding = PaddingValues()) {
-                                    XyText(
-                                        text = stringResource(Res.string.view_more)
+                                )
+                            }
+                            IconButton(onClick = composeClick {
+                                if (recommendedMusicList.isNotEmpty())
+                                    homeViewModel.musicList(
+                                        musicList = recommendedMusicList,
+                                        onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
+                                        playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
                                     )
-                                }
+                            }) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.repeat_24px),
+                                    contentDescription = stringResource(Res.string.list_loop) + stringResource(
+                                        Res.string.daily_recommendations
+                                    )
+                                )
+                            }
 
+                            TextButton(onClick = composeClick {
+                                navigator.navigate(DailyRecommend)
+                            }, contentPadding = PaddingValues()) {
+                                XyText(
+                                    text = stringResource(Res.string.view_more)
+                                )
                             }
                         }
                     }
@@ -636,12 +636,7 @@ fun HomeScreen(
 
                 if (newAlbumList.isNotEmpty()) {
                     item(key = "new_album_title") {
-                        XyRow {
-                            XyText(
-                                modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(Res.string.latest_albums)
-                            )
-                        }
+                        HomeSectionTitle(title = stringResource(Res.string.latest_albums))
                     }
                     item(key = "new_album") {
                         HomeAlbumItemLazyRow(newAlbumList)
@@ -650,12 +645,7 @@ fun HomeScreen(
 
                 if (albumRecentlyList.isNotEmpty()) {
                     item(key = "album_recently_title") {
-                        XyRow {
-                            XyText(
-                                modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(Res.string.recently_played_albums)
-                            )
-                        }
+                        HomeSectionTitle(title = stringResource(Res.string.recently_played_albums))
                     }
 
                     item(key = "album_recently") {
@@ -665,49 +655,37 @@ fun HomeScreen(
 
                 if (musicRecentlyList.isNotEmpty()) {
                     item(key = "music_recently_title") {
-                        XyRow {
-                            XyText(
-                                modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                                text = stringResource(Res.string.recently_played_music)
-                            )
-
-                            Row(
-                                horizontalArrangement = Arrangement.End,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                IconButton(onClick = composeClick {
-                                    if (musicRecentlyList.isNotEmpty())
-                                        homeViewModel.musicList(
-                                            musicList = musicRecentlyList,
-                                            onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
-                                            playerTypeEnum = PlayerTypeEnum.RANDOM_PLAY
-                                        )
-                                }) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Shuffle,
-                                        contentDescription = stringResource(Res.string.random_play) + stringResource(
-                                            Res.string.recently_played_music
-                                        )
+                        HomeSectionTitle(title = stringResource(Res.string.recently_played_music)) {
+                            IconButton(onClick = composeClick {
+                                if (musicRecentlyList.isNotEmpty())
+                                    homeViewModel.musicList(
+                                        musicList = musicRecentlyList,
+                                        onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
+                                        playerTypeEnum = PlayerTypeEnum.RANDOM_PLAY
                                     )
-                                }
-                                IconButton(onClick = composeClick {
-                                    if (musicRecentlyList.isNotEmpty())
-                                        homeViewModel.musicList(
-                                            musicList = musicRecentlyList,
-                                            onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
-                                            playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
-                                        )
-                                }) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Repeat,
-                                        contentDescription = stringResource(Res.string.list_loop) + stringResource(
-                                            Res.string.recently_played_music
-                                        )
+                            }) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.shuffle_24px),
+                                    contentDescription = stringResource(Res.string.random_play) + stringResource(
+                                        Res.string.recently_played_music
                                     )
-                                }
-
+                                )
                             }
-
+                            IconButton(onClick = composeClick {
+                                if (musicRecentlyList.isNotEmpty())
+                                    homeViewModel.musicList(
+                                        musicList = musicRecentlyList,
+                                        onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
+                                        playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
+                                    )
+                            }) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.repeat_24px),
+                                    contentDescription = stringResource(Res.string.list_loop) + stringResource(
+                                        Res.string.recently_played_music
+                                    )
+                                )
+                            }
                         }
                     }
 
@@ -720,11 +698,7 @@ fun HomeScreen(
                 }
 
                 item(key = "playlist_title") {
-                    XyRow {
-                        XyText(
-                            modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                            text = stringResource(Res.string.playlist)
-                        )
+                    HomeSectionTitle(title = stringResource(Res.string.playlist)) {
                         Box(contentAlignment = Alignment.CenterEnd) {
                             XyDropdownMenu(
                                 offset = DpOffset(
@@ -740,7 +714,7 @@ fun HomeScreen(
                                         title = createPlaylist,
                                         trailingIcon = {
                                             Icon(
-                                                imageVector = Icons.Rounded.Add,
+                                                painter = painterResource(Res.drawable.add_24px),
                                                 contentDescription = createPlaylist
                                             )
                                         },
@@ -771,7 +745,7 @@ fun HomeScreen(
                                         title = stringResource(Res.string.refresh_playlist),
                                         trailingIcon = {
                                             Icon(
-                                                imageVector = Icons.Rounded.Refresh,
+                                                painter = painterResource(Res.drawable.refresh_24px),
                                                 contentDescription = stringResource(Res.string.refresh_playlist)
                                             )
                                         },
@@ -790,7 +764,7 @@ fun HomeScreen(
                                 ifShowPlaylistMenu = true
                             }) {
                                 Icon(
-                                    imageVector = Icons.Rounded.MoreHoriz,
+                                    painter = painterResource(Res.drawable.more_horiz_24px),
                                     contentDescription = stringResource(Res.string.open_playlist_operations_popup)
                                 )
                             }
@@ -916,6 +890,25 @@ private fun HomeMusicItemLazyRow(
                 }
             )
         }
+    }
+}
+
+@Composable
+private fun HomeSectionTitle(
+    title: String,
+    actions: @Composable RowScope.() -> Unit = {}
+) {
+    XyRow {
+        XyText(
+            modifier = Modifier.padding(vertical = XyTheme.dimens.outerVerticalPadding),
+            text = title
+        )
+
+        Row(
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
+            content = actions
+        )
     }
 }
 

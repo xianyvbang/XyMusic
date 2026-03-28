@@ -1,45 +1,42 @@
 ﻿package cn.xybbz.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.stringResource
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.enums.MusicTypeEnum
+import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.SwipeRefreshVerticalGridListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
-import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.GenresInfoViewModel
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.back_to_genres_list
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GenresInfoScreen(
     genreId: String,
-    genresInfoViewModel: GenresInfoViewModel = hiltViewModel<GenresInfoViewModel, GenresInfoViewModel.Factory>(
-        creationCallback = { factory ->
-            factory.create(
-                genreId = genreId,
-            )
-        }
-    )
+    genresInfoViewModel: GenresInfoViewModel = koinViewModel<GenresInfoViewModel> {
+        parametersOf(genreId)
+    }
 ) {
     SideEffect {
         Log.d("=====", "MusicAudiobookInfoScreen重组一次")
@@ -48,12 +45,7 @@ fun GenresInfoScreen(
     val albumListPage =
         genresInfoViewModel.albumList.collectAsLazyPagingItems()
 
-    XyColumnScreen(
-        modifier = Modifier.brashColor(
-            topVerticalColor = genresInfoViewModel.backgroundConfig.genresInfoBrash[0],
-            bottomVerticalColor = genresInfoViewModel.backgroundConfig.genresInfoBrash[1],
-        )
-    ) {
+    XyColumnScreen {
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
             title = {
@@ -71,7 +63,7 @@ fun GenresInfoScreen(
                     },
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        painter = painterResource(Res.drawable.arrow_back_24px),
                         contentDescription = stringResource(Res.string.back_to_genres_list)
                     )
                 }

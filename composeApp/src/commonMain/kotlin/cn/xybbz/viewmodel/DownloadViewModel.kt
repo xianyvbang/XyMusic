@@ -18,7 +18,6 @@
 
 package cn.xybbz.viewmodel
 
-import android.annotation.SuppressLint
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateSetOf
@@ -26,26 +25,21 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.config.download.DownLoadManager
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.data.music.XyMusic
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
 
-@SuppressLint("UnsafeOptInUsageError")
-@HiltViewModel
-class DownloadViewModel @Inject constructor(
+@KoinViewModel
+class DownloadViewModel(
     val db: DatabaseClient,
-    private val downLoadManager: DownLoadManager,
     private val datasourceServer: DataSourceManager,
-    val backgroundConfig: BackgroundConfig,
 ) : ViewModel() {
 
 
@@ -68,10 +62,10 @@ class DownloadViewModel @Inject constructor(
 
     val selectedTaskIds = mutableStateSetOf<Long>()
 
-    fun pauseDownload(id: Long) = downLoadManager.pause(id)
-    fun resumeDownload(id: Long) = downLoadManager.resume(id)
-    fun cancelDownload(id: Long) = downLoadManager.cancel(id)
-    fun deleteDownload(id: Long) = downLoadManager.delete(id)
+    fun pauseDownload(id: Long) = { -> }
+    fun resumeDownload(id: Long) = { -> }
+    fun cancelDownload(id: Long) = { -> }
+    fun deleteDownload(id: Long) = { -> }
 
 
     fun enterMultiSelectMode() {
@@ -92,7 +86,7 @@ class DownloadViewModel @Inject constructor(
             //判断是否已经全选
             val downloadIds = musicDownloadInfo.value.map { it.id }
             selectedTaskIds.add(taskId)
-            if (selectedTaskIds.containsAll(downloadIds)){
+            if (selectedTaskIds.containsAll(downloadIds)) {
                 isSelectAll = true
             }
         }
@@ -105,10 +99,10 @@ class DownloadViewModel @Inject constructor(
     fun toggleSelectionAll() {
         viewModelScope.launch {
             val downloadIds = musicDownloadInfo.value.map { it.id }
-            if (isSelectAll){
+            if (isSelectAll) {
                 selectedTaskIds.clear()
                 isSelectAll = false
-            }else {
+            } else {
                 isSelectAll = true
                 selectedTaskIds.addAll(downloadIds)
             }
@@ -124,7 +118,7 @@ class DownloadViewModel @Inject constructor(
     fun performBatchPause() {
         val idsToPause = selectedTaskIds
         if (idsToPause.isNotEmpty()) {
-            downLoadManager.pause(*idsToPause.toLongArray())
+//            downLoadManager.pause(*idsToPause.toLongArray())
         }
         exitMultiSelectMode()
     }
@@ -132,7 +126,7 @@ class DownloadViewModel @Inject constructor(
     fun performBatchResume() {
         val idsToResume = selectedTaskIds
         if (idsToResume.isNotEmpty()) {
-            downLoadManager.resume(*idsToResume.toLongArray())
+//            downLoadManager.resume(*idsToResume.toLongArray())
         }
         exitMultiSelectMode()
     }
@@ -140,7 +134,7 @@ class DownloadViewModel @Inject constructor(
     fun performBatchCancel() {
         val idsToCancel = selectedTaskIds
         if (idsToCancel.isNotEmpty()) {
-            downLoadManager.cancel(*idsToCancel.toLongArray())
+//            downLoadManager.cancel(*idsToCancel.toLongArray())
         }
         exitMultiSelectMode()
     }
@@ -148,7 +142,7 @@ class DownloadViewModel @Inject constructor(
     fun performBatchDelete() {
         val idsToCancel = selectedTaskIds
         if (idsToCancel.isNotEmpty()) {
-            downLoadManager.delete(*idsToCancel.toLongArray())
+//            downLoadManager.delete(*idsToCancel.toLongArray())
         }
         exitMultiSelectMode()
     }

@@ -18,9 +18,6 @@
 
 package cn.xybbz.viewmodel
 
-import android.content.Context
-import android.util.Log
-import android.webkit.URLUtil
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -28,33 +25,38 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import org.jetbrains.compose.resources.StringResource
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.IDataSourceServer
 import cn.xybbz.api.client.data.ClientLoginInfoReq
-import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.constants.Constants.HTTP
+import cn.xybbz.common.constants.Constants.HTTPS
+import cn.xybbz.common.utils.Log
+import cn.xybbz.common.utils.extractPortOrNull
+import cn.xybbz.config.image.isAbsoluteNetworkUrl
+import cn.xybbz.config.info.getPlatformInfo
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.di.ContextWrapper
 import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.localdata.enums.DataSourceType
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import java.net.URI
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.empty_info
+import xymusic_kmp.composeapp.generated.resources.plex_resource_error
 
 /**
  * 连接model
  */
-@HiltViewModel
-class ConnectionViewModel @Inject constructor(
+@KoinViewModel
+class ConnectionViewModel(
     val dataSourceManager: DataSourceManager,
-    val settingsManager: SettingsManager
+    val settingsManager: SettingsManager,
+    val contextWrapper: ContextWrapper
 ) : ViewModel() {
 
 
-
-    val options = listOf(Constants.HTTP, Constants.HTTPS)
+    val options = listOf(HTTP, HTTPS)
 
     var dataSourceType by mutableStateOf<DataSourceType?>(null)
         private set
@@ -109,7 +111,7 @@ class ConnectionViewModel @Inject constructor(
 
     //报错信息
 
-    var errorHint by mutableStateOf<StringResource>(Res.string.empty_info)
+    var errorHint by mutableStateOf(Res.string.empty_info)
         private set
 
     var errorMessage by mutableStateOf("")
@@ -119,7 +121,7 @@ class ConnectionViewModel @Inject constructor(
         clearConnectionInputData()
     }
 
-    suspend fun inputAddress(application: Context) {
+    suspend fun inputAddress() {
         address = normalizeInputText(address)
         username = normalizeInputText(username)
 
@@ -144,17 +146,15 @@ class ConnectionViewModel @Inject constructor(
                 dataSourceManager.getDataSourceServerByType(tmpDatasource, true)
         }
 
-        val packageManager = application.packageManager
-        val packageName = application.packageName
-        val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
-        val appName = packageManager.getApplicationLabel(applicationInfo).toString()
+        val platformInfo = getPlatformInfo(contextWrapper)
+
 
         val clientLoginInfoReq =
             ClientLoginInfoReq(
                 username = username,
                 password = password,
                 address = tmpAddress,
-                appName = appName,
+                appName = platformInfo.appName,
                 clientVersion = tmpDatasource.version,
                 serverVersion = plexInfo?.serverVersion,
                 serverName = plexInfo?.serverName,
@@ -224,13 +224,13 @@ class ConnectionViewModel @Inject constructor(
         clearLoginStatus()
         clearResourceLoginStatus()
         updateSelectUrlIndexZero()
-        if (!URLUtil.isNetworkUrl(address)) {
+        if (!address.isAbsoluteNetworkUrl()) {
             options.forEach {
                 val url = "${it}$address"
                 tmpAddressList.add(url)
                 val ipAndPort = isEndPort(url)
                 if (!ipAndPort) {
-                    if (URLUtil.isHttpUrl(url)) {
+                    if (url.startsWith(HTTP)) {
                         tmpAddressList.add("${url}:${dataSourceType?.httpPort}")
                     } else {
                         tmpAddressList.add("${url}:${dataSourceType?.httpsPort}")
@@ -241,7 +241,7 @@ class ConnectionViewModel @Inject constructor(
             tmpAddressList.add(address)
             val ipAndPort = isEndPort(address)
             if (!ipAndPort) {
-                if (URLUtil.isHttpUrl(address)) {
+                if (address.startsWith(HTTP)) {
                     tmpAddressList.add("${address}:${dataSourceType?.httpPort}")
                 } else {
                     tmpAddressList.add("${address}:${dataSourceType?.httpsPort}")
@@ -255,21 +255,14 @@ class ConnectionViewModel @Inject constructor(
      * 判断输入的链接是否是以http://或者http://开头,结尾是否有端口号
      */
     fun isHttpStartAndPortEnd(): Boolean {
-        return (URLUtil.isNetworkUrl(address) && isEndPort(address)) && dataSourceType?.ifInputUrl == true
+        return (address.isAbsoluteNetworkUrl() && isEndPort(address)) && dataSourceType?.ifInputUrl == true
     }
 
     /**
      * 判断链接地址是否有端口号结尾
      */
     private fun isEndPort(address: String): Boolean {
-        try {
-            val uri = URI(address)
-            val port = uri.port
-            return port != -1
-        }catch (e: Exception){
-            Log.i(Constants.LOG_ERROR_PREFIX,"是否有结束地址端口报错",e)
-            return false
-        }
+        return address.extractPortOrNull() != null
     }
 
     /**

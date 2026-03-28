@@ -1,5 +1,6 @@
 package cn.xybbz.common.utils
 
+import cn.xybbz.config.image.isAbsoluteNetworkUrl
 import cn.xybbz.di.ContextWrapper
 import java.awt.Desktop
 import java.awt.Toolkit
@@ -15,7 +16,7 @@ actual fun shareMusicResource(
     val desktop = if (Desktop.isDesktopSupported()) Desktop.getDesktop() else null
 
     runCatching {
-        if (value.startsWith("http://") || value.startsWith("https://")) {
+        if (value.isAbsoluteNetworkUrl()) {
             if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
                 desktop.browse(URI(value))
                 return

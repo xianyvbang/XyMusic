@@ -21,7 +21,7 @@ package cn.xybbz.ui.screens
 import android.util.Log
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.painterResource(Res.drawable.arrow_back_24px)
 import androidx.compose.material.icons.automirrored.rounded.PlaylistAddCheck
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Shuffle
@@ -222,7 +222,7 @@ fun MusicSelectTopBarComponent(
                 },
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    painter = painterResource(Res.drawable.arrow_back_24px),
                     contentDescription = stringResource(Res.string.return_home)
                 )
             }
@@ -234,7 +234,7 @@ fun MusicSelectTopBarComponent(
                     selectControl.dismiss()
                 }) {
                     Icon(
-                        imageVector = Icons.Rounded.Close,
+                        painter = Icons.Rounded.Close,
                         contentDescription = stringResource(Res.string.close_selection)
                     )
                 }
@@ -243,7 +243,7 @@ fun MusicSelectTopBarComponent(
                     onRandomPlayerClick()
                 }) {
                     Icon(
-                        imageVector = Icons.Rounded.Shuffle,
+                        painter = Icons.Rounded.Shuffle,
                         contentDescription = stringResource(Res.string.random_play)
                     )
                 }
@@ -252,7 +252,7 @@ fun MusicSelectTopBarComponent(
                     musicViewModel.selectControl.show(ifOpenSelect = true)
                 }) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.PlaylistAddCheck,
+                        painter = Icons.AutoMirrored.Rounded.PlaylistAddCheck,
                         contentDescription = stringResource(Res.string.open_selection_function)
                     )
                 }

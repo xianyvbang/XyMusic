@@ -24,16 +24,14 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.localdata.data.genre.XyGenre
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
 
-@HiltViewModel
-class GenresViewModel @Inject constructor(
-    private val dataSourceManager: DataSourceManager,
-    val backgroundConfig: BackgroundConfig
+@KoinViewModel
+class GenresViewModel(
+    private val dataSourceManager: DataSourceManager
 ) : ViewModel() {
 
 

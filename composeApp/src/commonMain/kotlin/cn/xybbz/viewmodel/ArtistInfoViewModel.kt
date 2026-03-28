@@ -26,6 +26,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.music.MusicController
+import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.localdata.config.DatabaseClient
@@ -38,29 +39,22 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
+import org.koin.core.annotation.InjectedParam
+import org.koin.core.annotation.KoinViewModel
 
 /**
  * 艺术家详情ViewModel
  */
-@HiltViewModel(assistedFactory = ArtistInfoViewModel.Factory::class)
-class ArtistInfoViewModel @AssistedInject constructor(
-    @Assisted("artistId") private val artistId: String,
-    @Assisted("artistName") private val artistName: String,
+@KoinViewModel
+class ArtistInfoViewModel(
+    @InjectedParam private val artistId: String,
+    @InjectedParam private val artistName: String,
     val dataSourceManager: DataSourceManager,
     val musicPlayContext: MusicPlayContext,
-    val musicController: MusicController,
-    val backgroundConfig: BackgroundConfig,
+    val musicController: MusicCommonController,
     val db: DatabaseClient,
     val selectControl: SelectControl
 ) : ViewModel() {
-
-    @AssistedFactory
-    interface Factory {
-        fun create(
-            @Assisted("artistId") artistId: String,
-            @Assisted("artistName") artistName: String
-        ): ArtistInfoViewModel
-    }
 
     val downloadMusicIdsFlow =
         db.downloadDao.getAllMusicTaskUidsFlow()

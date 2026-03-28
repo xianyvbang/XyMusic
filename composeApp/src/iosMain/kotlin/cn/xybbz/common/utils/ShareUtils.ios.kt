@@ -1,5 +1,6 @@
 package cn.xybbz.common.utils
 
+import cn.xybbz.config.image.isAbsoluteNetworkUrl
 import cn.xybbz.di.ContextWrapper
 import platform.Foundation.NSURL
 import platform.UIKit.UIActivityViewController
@@ -11,7 +12,7 @@ actual fun shareMusicResource(
     resource: String?
 ) {
     val value = resource?.trim()?.takeIf { it.isNotEmpty() } ?: return
-    val shareItem = if (value.startsWith("http://") || value.startsWith("https://")) {
+    val shareItem = if (value.isAbsoluteNetworkUrl()) {
         NSURL.URLWithString(value) ?: value
     } else {
         NSURL.fileURLWithPath(value)

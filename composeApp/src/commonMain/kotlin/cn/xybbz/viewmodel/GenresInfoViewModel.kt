@@ -28,28 +28,18 @@ import androidx.paging.cachedIn
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.genre.XyGenre
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
+import org.koin.core.annotation.InjectedParam
+import org.koin.core.annotation.KoinViewModel
 
-@HiltViewModel(assistedFactory = GenresInfoViewModel.Factory::class)
-class GenresInfoViewModel @AssistedInject constructor(
-    @Assisted private val genreId: String,
-    private val dataSourceManager: DataSourceManager,
-    val backgroundConfig: BackgroundConfig
+@KoinViewModel
+class GenresInfoViewModel (
+    @InjectedParam private val genreId: String,
+    private val dataSourceManager: DataSourceManager
 ) : ViewModel() {
-
-    @AssistedFactory
-    interface Factory {
-        fun create(genreId: String): GenresInfoViewModel
-    }
-
-
 
     var genreInfo by mutableStateOf<XyGenre?>(null)
         private set

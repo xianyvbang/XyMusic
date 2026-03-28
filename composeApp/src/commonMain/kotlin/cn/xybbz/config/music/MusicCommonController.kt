@@ -170,6 +170,11 @@ abstract class MusicCommonController: IoScoped(),KoinComponent  {
      */
     abstract fun getPreviousPlayableIndex(): Int?
 
+    /**
+     * 替换音乐播放连接
+     */
+    abstract fun replacePlaylistItemUrl()
+
 
     /**
      * 设置跳过片头片尾时间
@@ -246,6 +251,14 @@ abstract class MusicCommonController: IoScoped(),KoinComponent  {
         scope.launch {
             _events.emit(event)
         }
+    }
+
+
+    /**
+     * 设置PageNum
+     */
+    fun setPageNumData(pageNum: Int) {
+        this.pageNum = pageNum
     }
 
 }

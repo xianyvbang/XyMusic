@@ -33,16 +33,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.PlaylistAddCheck
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.rounded.Cancel
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Pause
-import androidx.compose.material.icons.rounded.PlayCircle
-import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,16 +50,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.data.music.XyMusic
@@ -81,34 +67,51 @@ import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.XySelectAllComponent
 import cn.xybbz.ui.components.show
-import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.DownloadViewModel
 import kotlinx.coroutines.launch
-import kotlin.math.log10
-import kotlin.math.pow
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.cancel_24px
+import xymusic_kmp.composeapp.generated.resources.cancel_download
+import xymusic_kmp.composeapp.generated.resources.close
+import xymusic_kmp.composeapp.generated.resources.close_24px
+import xymusic_kmp.composeapp.generated.resources.confirm_delete_download
+import xymusic_kmp.composeapp.generated.resources.delete_24px
+import xymusic_kmp.composeapp.generated.resources.download_completed
+import xymusic_kmp.composeapp.generated.resources.download_failed_with_reason
+import xymusic_kmp.composeapp.generated.resources.download_list
+import xymusic_kmp.composeapp.generated.resources.download_status_queued
+import xymusic_kmp.composeapp.generated.resources.more_vert_24px
+import xymusic_kmp.composeapp.generated.resources.open_selection_function
+import xymusic_kmp.composeapp.generated.resources.open_settings_page_button
+import xymusic_kmp.composeapp.generated.resources.other_operations_button_suffix
+import xymusic_kmp.composeapp.generated.resources.pause_24px
+import xymusic_kmp.composeapp.generated.resources.play_circle_24px
+import xymusic_kmp.composeapp.generated.resources.playlist_add_check_24px
+import xymusic_kmp.composeapp.generated.resources.remove_download_title
+import xymusic_kmp.composeapp.generated.resources.return_home
+import xymusic_kmp.composeapp.generated.resources.settings_24px
+import xymusic_kmp.composeapp.generated.resources.tap_to_resume_download
+import kotlin.math.roundToLong
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DownloadScreen(
-    downloadViewModel: DownloadViewModel = hiltViewModel<DownloadViewModel>()
+    downloadViewModel: DownloadViewModel = koinViewModel<DownloadViewModel>()
 ) {
-    val context = LocalContext.current
 
-   val removeDownloadTitle = stringResource(Res.string.remove_download_title)
+    val removeDownloadTitle = stringResource(Res.string.remove_download_title)
 
     val tasks by downloadViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
-    XyColumnScreen(
-        modifier = Modifier
-            .brashColor(
-                topVerticalColor = downloadViewModel.backgroundConfig.downloadListBrash[0],
-                bottomVerticalColor = downloadViewModel.backgroundConfig.downloadListBrash[0]
-            )
-    ) {
+    XyColumnScreen {
         MultiSelectTopAppEnd(
             isMultiSelectMode = downloadViewModel.isMultiSelectMode,
             isSelectAll = downloadViewModel.isSelectAll,
@@ -288,7 +291,10 @@ fun DownloadItemTrailingContent(
 
                         DownloadStatus.FAILED -> {
                             DownloadPrompt(
-                                text = stringResource(Res.string.download_failed_with_reason, task.error?:""),
+                                text = stringResource(
+                                    Res.string.download_failed_with_reason,
+                                    task.error ?: ""
+                                ),
                                 fontSize = 14.sp,
                             )
                         }
@@ -327,7 +333,7 @@ fun DownloadItemTrailingContent(
                     },
                 ) {
                     Icon(
-                        imageVector = Icons.Default.MoreVert,
+                        painter = painterResource(Res.drawable.more_vert_24px),
                         contentDescription = "${task.title ?: task.fileName}${stringResource(Res.string.other_operations_button_suffix)}"
                     )
                 }
@@ -379,7 +385,7 @@ fun MultiSelectTopAppEnd(
                             onExitMultiSelectMode()
                         }) {
                             Icon(
-                                imageVector = Icons.Rounded.Close,
+                                painter = painterResource(Res.drawable.close_24px),
                                 contentDescription = stringResource(Res.string.close)
                             )
                         }
@@ -396,26 +402,26 @@ fun MultiSelectTopAppEnd(
                         Row() {
                             IconButton(onClick = composeClick(onClick = onPause)) {
                                 Icon(
-                                    imageVector = Icons.Rounded.Pause,
+                                    painter = painterResource(Res.drawable.pause_24px),
                                     contentDescription = "Pause selected"
                                 )
                             }
                             IconButton(onClick = composeClick(onClick = onResume)) {
                                 Icon(
-                                    imageVector = Icons.Rounded.PlayCircle,
+                                    painter = painterResource(Res.drawable.play_circle_24px),
                                     contentDescription = "Resume selected"
                                 )
                             }
                             IconButton(onClick = composeClick(onClick = onCancel)) {
                                 Icon(
-                                    imageVector = Icons.Rounded.Cancel,
+                                    painter = painterResource(Res.drawable.cancel_24px),
                                     contentDescription = "Cancel selected"
                                 )
                             }
 
                             IconButton(onClick = composeClick(onClick = onDelete)) {
                                 Icon(
-                                    imageVector = Icons.Rounded.Delete,
+                                    painter = painterResource(Res.drawable.delete_24px),
                                     contentDescription = "Cancel selected"
                                 )
                             }
@@ -434,7 +440,7 @@ fun MultiSelectTopAppEnd(
 
                     IconButton(onClick = composeClick { navigator.goBack() }) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            painter = painterResource(Res.drawable.arrow_back_24px),
                             contentDescription = stringResource(Res.string.return_home)
                         )
                     }
@@ -448,7 +454,7 @@ fun MultiSelectTopAppEnd(
                             onEnterMultiSelectMode()
                         }) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.PlaylistAddCheck,
+                                painter = painterResource(Res.drawable.playlist_add_check_24px),
                                 contentDescription = stringResource(Res.string.open_selection_function)
                             )
                         }
@@ -457,7 +463,7 @@ fun MultiSelectTopAppEnd(
                             navigator.navigate(Setting)
                         }) {
                             Icon(
-                                imageVector = Icons.Rounded.Settings,
+                                painter = painterResource(Res.drawable.settings_24px),
                                 contentDescription = stringResource(Res.string.open_settings_page_button)
                             )
                         }
@@ -468,16 +474,23 @@ fun MultiSelectTopAppEnd(
     }
 }
 
-//todo 这个考虑使用其他方式
 private fun formatBytes(bytes: Long): String {
     if (bytes <= 0) return "0 B"
-    val units = arrayOf("B", "KB", "MB", "GB", "TB")
-    var digitGroups = (log10(bytes.toDouble()) / log10(1024.0)).toInt()
-    if (digitGroups >= units.size) digitGroups = units.size - 1
-    return String.format(
-        "%.1f %s",
-        bytes / 1024.0.pow(digitGroups.toDouble()),
-        units[digitGroups]
-    )
+    val units = listOf("B", "KB", "MB", "GB", "TB", "PB")
+    var value = bytes.toDouble()
+    var unitIndex = 0
+
+    while (value >= 1024 && unitIndex < units.lastIndex) {
+        value /= 1024
+        unitIndex++
+    }
+
+    val formattedValue = if (unitIndex == 0) {
+        value.toLong().toString()
+    } else {
+        ((value * 10).roundToLong() / 10.0).toString()
+    }
+
+    return "$formattedValue ${units[unitIndex]}"
 }
 

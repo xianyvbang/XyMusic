@@ -21,19 +21,14 @@ package cn.xybbz.viewmodel
 import androidx.paging.PagingData
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.RemoteIdConstants
-import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.data.album.XyAlbum
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
 
-@OptIn(ExperimentalCoroutinesApi::class)
-@HiltViewModel
-class AlbumViewModel @Inject constructor(
-    val dataSourceManager: DataSourceManager,
-    val backgroundConfig: BackgroundConfig
+@KoinViewModel
+class AlbumViewModel (
+    val dataSourceManager: DataSourceManager
 ) : PageListViewModel<XyAlbum>(dataSourceManager, null) {
 
     /**

@@ -6,6 +6,12 @@ import kotlinx.coroutines.flow.asStateFlow
 
 abstract class DownloadCacheCommonController : IoScoped() {
 
+
+    /**
+     * 所有缓存大小
+     */
+    private val _allCacheSizeFlow = MutableStateFlow(0L)
+    val allCacheSizeFlow = _allCacheSizeFlow.asStateFlow()
     /**
      * 当前缓存进度
      */
@@ -20,4 +26,9 @@ abstract class DownloadCacheCommonController : IoScoped() {
      * 清空缓存
      */
     abstract fun clearCache()
+
+    /**
+     * 获得所有缓存大小
+     */
+    abstract fun getCacheSize()
 }
