@@ -3,13 +3,12 @@ package cn.xybbz.viewmodel
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
 
-@HiltViewModel
-class SetBackgroundImageViewModel @Inject constructor(
-    val backgroundConfig: BackgroundConfig
+@KoinViewModel
+class SetBackgroundImageViewModel (
+    val backgroundConfig: BackgroundConfig,
 ): ViewModel() {
 
     fun updateBackgroundImageUri(backgroundImageUri: Uri?) {

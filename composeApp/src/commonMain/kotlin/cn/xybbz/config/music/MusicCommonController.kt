@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 
-abstract class MusicCommonController: IoScoped(),KoinComponent  {
+abstract class MusicCommonController : IoScoped(), KoinComponent {
 
     // 原始歌曲列表
     var originMusicList by mutableStateOf(emptyList<XyPlayMusic>())
@@ -92,7 +92,7 @@ abstract class MusicCommonController: IoScoped(),KoinComponent  {
     /**
      * 列表中添加数据
      */
-   abstract fun addMusicList(
+    abstract fun addMusicList(
         musicList: List<XyPlayMusic>,
         artistId: String? = null,
         isPlayer: Boolean? = null
@@ -102,7 +102,7 @@ abstract class MusicCommonController: IoScoped(),KoinComponent  {
     /**
      * 更新当前音乐的收藏信息->更新UI数据
      */
-  abstract  fun updateCurrentFavorite(isFavorite: Boolean)
+    abstract fun updateCurrentFavorite(isFavorite: Boolean)
 
     /**
      * 清空播放列表
@@ -175,11 +175,16 @@ abstract class MusicCommonController: IoScoped(),KoinComponent  {
      */
     abstract fun replacePlaylistItemUrl()
 
+    /**
+     * 添加音乐到列表
+     */
+    abstract fun addMusic(music: XyPlayMusic, isPlayer: Boolean? = null)
+
 
     /**
      * 设置跳过片头片尾时间
      */
-   open fun setHeadAndEntTime(headTime: Long, endTime: Long) {
+    open fun setHeadAndEntTime(headTime: Long, endTime: Long) {
         this.headTime = headTime
         this.endTime = endTime
     }
@@ -188,7 +193,7 @@ abstract class MusicCommonController: IoScoped(),KoinComponent  {
     /**
      * 设置当前音乐列表
      */
-   abstract fun initMusicList(
+    abstract fun initMusicList(
         musicDataList: List<XyPlayMusic>,
         musicCurrentPositionMapData: Map<String, Long>?,
         originIndex: Int?,

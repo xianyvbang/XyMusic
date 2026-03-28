@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import cn.xybbz.common.utils.formatBytes
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.data.music.XyMusic
@@ -472,25 +473,5 @@ fun MultiSelectTopAppEnd(
                 })
         }
     }
-}
-
-private fun formatBytes(bytes: Long): String {
-    if (bytes <= 0) return "0 B"
-    val units = listOf("B", "KB", "MB", "GB", "TB", "PB")
-    var value = bytes.toDouble()
-    var unitIndex = 0
-
-    while (value >= 1024 && unitIndex < units.lastIndex) {
-        value /= 1024
-        unitIndex++
-    }
-
-    val formattedValue = if (unitIndex == 0) {
-        value.toLong().toString()
-    } else {
-        ((value * 10).roundToLong() / 10.0).toString()
-    }
-
-    return "$formattedValue ${units[unitIndex]}"
 }
 

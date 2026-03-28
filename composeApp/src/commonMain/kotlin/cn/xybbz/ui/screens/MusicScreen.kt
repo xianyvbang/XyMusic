@@ -18,13 +18,7 @@
 
 package cn.xybbz.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.painterResource(Res.drawable.arrow_back_24px)
-import androidx.compose.material.icons.automirrored.rounded.PlaylistAddCheck
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.TopAppBarDefaults
@@ -33,14 +27,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import org.jetbrains.compose.resources.stringResource
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.enums.MusicTypeEnum
+import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.select.SelectControl
@@ -53,16 +45,28 @@ import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.XySelectAllComponent
 import cn.xybbz.ui.components.show
-import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.MusicViewModel
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.close_24px
+import xymusic_kmp.composeapp.generated.resources.close_selection
+import xymusic_kmp.composeapp.generated.resources.music
+import xymusic_kmp.composeapp.generated.resources.open_selection_function
+import xymusic_kmp.composeapp.generated.resources.playlist_add_check_24px
+import xymusic_kmp.composeapp.generated.resources.random_play
+import xymusic_kmp.composeapp.generated.resources.return_home
+import xymusic_kmp.composeapp.generated.resources.shuffle_24px
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @Composable
 fun MusicScreen(
-    musicViewModel: MusicViewModel = hiltViewModel<MusicViewModel>(),
+    musicViewModel: MusicViewModel = koinViewModel<MusicViewModel>(),
 ) {
 
     val coroutineScope = rememberCoroutineScope()
@@ -75,13 +79,7 @@ fun MusicScreen(
     val sortBy by musicViewModel.sortBy.collectAsStateWithLifecycle()
     val ifOpenSelect by musicViewModel.selectControl.uiState.collectAsStateWithLifecycle()
 
-    XyColumnScreen(
-        modifier = Modifier
-            .brashColor(
-                topVerticalColor = musicViewModel.backgroundConfig.musicBrash[0],
-                bottomVerticalColor = musicViewModel.backgroundConfig.musicBrash[1]
-            )
-    ) {
+    XyColumnScreen {
         MusicSelectTopBarComponent(
             modifier = Modifier.statusBarsPadding(),
             title = stringResource(Res.string.music),
@@ -234,7 +232,7 @@ fun MusicSelectTopBarComponent(
                     selectControl.dismiss()
                 }) {
                     Icon(
-                        painter = Icons.Rounded.Close,
+                        painter = painterResource(Res.drawable.close_24px),
                         contentDescription = stringResource(Res.string.close_selection)
                     )
                 }
@@ -243,7 +241,7 @@ fun MusicSelectTopBarComponent(
                     onRandomPlayerClick()
                 }) {
                     Icon(
-                        painter = Icons.Rounded.Shuffle,
+                        painter = painterResource(Res.drawable.shuffle_24px),
                         contentDescription = stringResource(Res.string.random_play)
                     )
                 }
@@ -252,7 +250,7 @@ fun MusicSelectTopBarComponent(
                     musicViewModel.selectControl.show(ifOpenSelect = true)
                 }) {
                     Icon(
-                        painter = Icons.AutoMirrored.Rounded.PlaylistAddCheck,
+                        painter = painterResource(Res.drawable.playlist_add_check_24px),
                         contentDescription = stringResource(Res.string.open_selection_function)
                     )
                 }

@@ -19,12 +19,11 @@
 package cn.xybbz.ui.screens
 
 import android.content.Intent
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -32,11 +31,9 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.painterResource(Res.drawable.arrow_back_24px)
+import androidx.compose.foundation.layout.weight
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -49,28 +46,35 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import org.jetbrains.compose.resources.stringResource
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
+import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
-import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 import cn.xybbz.ui.xy.XyNoData
 import cn.xybbz.viewmodel.SetBackgroundImageViewModel
+import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.background_image_setting
+import xymusic_kmp.composeapp.generated.resources.clear_image
+import xymusic_kmp.composeapp.generated.resources.return_interface_settings
+import xymusic_kmp.composeapp.generated.resources.select_image
 
 /**
  * 设置背景图片界面
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageViewModel = hiltViewModel()) {
+fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageViewModel = koinViewModel<SetBackgroundImageViewModel>()) {
 
     val ifSelectImage by remember {
         derivedStateOf {
-            setBackgroundImageViewModel.backgroundConfig.imageFilePath != null
+            !setBackgroundImageViewModel.backgroundConfig.imageFilePath.isNullOrBlank()
         }
     }
     val navigator = LocalNavigator.current
@@ -80,11 +84,11 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
     // 打开系统相册
     val pickMedia =
         rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-            // Callback is invoked after the user selects a media item or closes the
-            // photo picker.
             if (uri != null) {
                 val flag = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                context.contentResolver.takePersistableUriPermission(uri, flag)
+                runCatching {
+                    context.contentResolver.takePersistableUriPermission(uri, flag)
+                }
                 setBackgroundImageViewModel.updateBackgroundImageUri(uri)
                 Log.d("PhotoPicker", "Selected URI: $uri")
             } else {
@@ -139,11 +143,15 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
             )
 
             Column(
+                modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                if (!ifSelectImage)
+                if (!ifSelectImage) {
                     XyNoData()
+                } else {
+                    Text(text = setBackgroundImageViewModel.backgroundConfig.imageFilePath.orEmpty())
+                }
                 Spacer(
                     modifier = Modifier.height(
                         XyTheme.dimens.snackBarPlayerHeight + WindowInsets.navigationBars.asPaddingValues()

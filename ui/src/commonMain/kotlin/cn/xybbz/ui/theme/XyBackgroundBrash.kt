@@ -11,7 +11,7 @@ class XyBackgroundBrash(
     ifEnabled: Boolean,
     ifChangeOneColor: Boolean,
     ifGlobalBrash: Boolean,
-    backgroundImageUri: ByteArray?,
+    backgroundImageUri: String?,
     globalBrash: List<Color>
 ) {
     /**
@@ -45,7 +45,7 @@ fun xyBackgroundBrash(
     ifEnabled: Boolean = false,
     ifChangeOneColor: Boolean = false,
     ifGlobalBrash: Boolean = false,
-    backgroundImageUri: ByteArray? = null,
+    backgroundImageUri: String? = null,
     globalBrash: List<Color> = listOf(Color(0xFF600015), Color(0xFF04727E))
 ): XyBackgroundBrash = XyBackgroundBrash(
     ifEnabled = ifEnabled,

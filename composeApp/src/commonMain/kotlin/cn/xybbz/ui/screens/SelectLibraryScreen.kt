@@ -25,59 +25,51 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.painterResource(Res.drawable.arrow_back_24px)
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
-import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.SelectLibraryViewModel
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.all_media_libraries
+import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.back_to_connection_info
+import xymusic_kmp.composeapp.generated.resources.media_library_selection
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectLibraryScreen(
     connectionId: Long,
     thisLibraryId: List<String>?,
-    selectLibraryViewModel: SelectLibraryViewModel = hiltViewModel<SelectLibraryViewModel, SelectLibraryViewModel.Factory>(
-        creationCallback = { factory ->
-            factory.create(
-                connectionId = connectionId,
-                thisLibraryId = thisLibraryId
-            )
-        }
-    )
+    selectLibraryViewModel: SelectLibraryViewModel = koinViewModel<SelectLibraryViewModel>() {
+        parametersOf(connectionId, thisLibraryId)
+    }
 ) {
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
     val allLibraryName = stringResource(Res.string.all_media_libraries)
 
-    XyColumnScreen(
-        modifier = Modifier.brashColor(
-            topVerticalColor = selectLibraryViewModel.backgroundConfig.selectLibraryBrash[0],
-            bottomVerticalColor = selectLibraryViewModel.backgroundConfig.selectLibraryBrash[1]
-        )
-    ) {
+    XyColumnScreen {
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
             title = {
@@ -117,9 +109,7 @@ fun SelectLibraryScreen(
                     ) {
 
                         XyTextSubSmall(
-                            text = if (library.id == Constants.MINUS_ONE_INT.toString())
-                                stringResource(library.name.toInt())
-                            else library.name,
+                            text = library.name,
                             modifier = Modifier.weight(1f)
                         )
                         RadioButton(

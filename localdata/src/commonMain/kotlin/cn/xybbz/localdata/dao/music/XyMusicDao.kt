@@ -41,6 +41,7 @@ import cn.xybbz.localdata.data.recommend.XyDailyRecommendHistory
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlin.time.Clock
 
 @Dao
 interface XyMusicDao {
@@ -199,7 +200,7 @@ interface XyMusicDao {
             }
 
             MusicDataTypeEnum.RECOMMEND -> {
-                val now = System.currentTimeMillis()
+                val now = Clock.System.now().toEpochMilliseconds()
                 saveRecommendedMusic(data.mapIndexed { index, item ->
                     XyDailyRecommendHistory(
                         songId = item.itemId,

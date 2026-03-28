@@ -17,6 +17,7 @@ import cn.xybbz.ui.popup.XyPopTipHost
 import cn.xybbz.ui.screens.MainScreen
 import cn.xybbz.ui.theme.XyConfigs
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.theme.xyBackgroundBrash
 import coil3.ImageLoader
 import coil3.annotation.ExperimentalCoilApi
 import coil3.compose.setSingletonImageLoaderFactory
@@ -50,6 +51,9 @@ fun App() {
         xyConfigs = XyConfigs(
             isDarkTheme = isDark,
             isDynamic = settingsManager.isDynamic
+        ),
+        brash = xyBackgroundBrash(
+            backgroundImageUri = settingsManager.imageFilePath
         )
     ) {
         WindowInsets.systemBars.union(WindowInsets.displayCutout)

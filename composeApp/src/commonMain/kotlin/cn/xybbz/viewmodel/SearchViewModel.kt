@@ -18,36 +18,31 @@
 
 package cn.xybbz.viewmodel
 
-import android.util.Log
-import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.util.UnstableApi
 import androidx.room.Transaction
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.common.music.MusicController
+import cn.xybbz.common.utils.Log
+import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.search.SearchHistory
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.core.annotation.KoinViewModel
 
-@HiltViewModel
-class SearchViewModel @OptIn(UnstableApi::class)
-@Inject constructor(
+@KoinViewModel
+class SearchViewModel(
     private val db: DatabaseClient,
     private val dataSourceManager: DataSourceManager,
-    val musicController: MusicController,
-    val backgroundConfig: BackgroundConfig
+    val musicController: MusicCommonController,
 ) : ViewModel() {
 
     val downloadMusicIdsFlow =

@@ -23,10 +23,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cn.xybbz.common.utils.formatBytes
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import kotlinx.coroutines.launch
-import kotlin.math.roundToLong
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
@@ -58,27 +58,6 @@ class CacheLimitViewModel (
     }
 
     fun getAutomaticCacheSize() {
-        cacheSizeInfo = formatSize(settingsManager.maxBytes) ?:""
-
-    }
-
-    fun formatSize(size: Long): String {
-        var suffix = "B"
-        var value = size.toDouble()
-
-        if (value > 1024) {
-            suffix = "KB"
-            value /= 1024.0
-        }
-        if (value > 1024) {
-            suffix = "MB"
-            value /= 1024.0
-        }
-        if (value > 1024) {
-            suffix = "GB"
-            value /= 1024.0
-        }
-
-        return "${value.roundToLong()}$suffix"
+        cacheSizeInfo = formatBytes(settingsManager.maxBytes)
     }
 }

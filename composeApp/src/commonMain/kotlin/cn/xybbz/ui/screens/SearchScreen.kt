@@ -19,26 +19,23 @@
 package cn.xybbz.ui.screens
 
 
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -53,17 +50,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.media3.common.util.UnstableApi
-import xymusic_kmp.composeapp.generated.resources.Res
-import cn.xybbz.common.music.MusicController
+import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
@@ -79,20 +73,38 @@ import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SearchRecordComponent
 import cn.xybbz.ui.components.show
-import cn.xybbz.ui.ext.brashColor
+import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumn
+import cn.xybbz.ui.xy.XyColumnScreen
+import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.SearchViewModel
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.album
+import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.artist
+import xymusic_kmp.composeapp.generated.resources.cancel_24px
+import xymusic_kmp.composeapp.generated.resources.clear
+import xymusic_kmp.composeapp.generated.resources.loading
+import xymusic_kmp.composeapp.generated.resources.music
+import xymusic_kmp.composeapp.generated.resources.return_home
+import xymusic_kmp.composeapp.generated.resources.search_24px
+import xymusic_kmp.composeapp.generated.resources.search_box_icon
+import xymusic_kmp.composeapp.generated.resources.search_history
+import xymusic_kmp.composeapp.generated.resources.search_music_album_artist
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SearchScreen(
-    searchViewModel: SearchViewModel = hiltViewModel<SearchViewModel>()
+    searchViewModel: SearchViewModel = koinViewModel<SearchViewModel>()
 ) {
     val navigator = LocalNavigator.current
 
@@ -109,68 +121,13 @@ fun SearchScreen(
         Log.i("=====", "SearchScreen重载")
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .brashColor(
-                topVerticalColor = searchViewModel.backgroundConfig.searchBrash[0],
-                bottomVerticalColor = searchViewModel.backgroundConfig.searchBrash[1]
-            )
-    ) {
+    XyColumnScreen {
         // 顶部搜索栏
         TopAppBar(
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
             title = {
-                TextField(
-                    value = textFieldValue,
-                    onValueChange = {
-                        textFieldValue = it
 
-                        if (textFieldValue.text.isBlank()) {
-                            searchViewModel.updateIfShowSearchResult(false)
-                        }
-                    },
-                    textStyle = MaterialTheme.typography.bodySmall,
-                    placeholder = { XyTextSub(text = stringResource(Res.string.search_music_album_artist)) },
-                    leadingIcon = {
-                        Icon(
-                            Icons.Rounded.Search,
-                            contentDescription = stringResource(Res.string.search_box_icon),
-                            tint = Color.Gray
-                        )
-                    },
-                    trailingIcon = if (textFieldValue.text.isNotBlank()) {
-                        {
-                            IconButton(onClick = {
-                                textFieldValue = textFieldValue.copy("")
-                                searchViewModel.updateIfShowSearchResult(false)
-                            }) {
-                                Icon(
-                                    Icons.Default.Clear,
-                                    contentDescription = stringResource(Res.string.clear),
-                                    tint = Color.Gray
-                                )
-                            }
-                        }
-                    } else null,
-                    shape = RoundedCornerShape(24.dp),
-                    singleLine = true,
-                    colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        focusedLabelColor = Color.DarkGray,
-                        unfocusedLabelColor = Color.DarkGray,
-                        cursorColor = Color.White,
-                        disabledContainerColor = Color.Transparent
-                    ),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = {
-                        searchViewModel.onSearch(
-                            textFieldValue.text
-                        )
-                    }),
+                XyEdit(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
@@ -178,7 +135,39 @@ fun SearchScreen(
                             1.dp,
                             MaterialTheme.colorScheme.onSurfaceVariant,
                             shape = RoundedCornerShape(XyTheme.dimens.corner)
+                        ),
+                    text = textFieldValue,
+                    onChange = {
+                        textFieldValue = it
+
+                        if (textFieldValue.text.isBlank()) {
+                            searchViewModel.updateIfShowSearchResult(false)
+                        }
+                    },
+                    hint = stringResource(Res.string.search_music_album_artist),
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(Res.drawable.search_24px),
+                            contentDescription = stringResource(Res.string.search_box_icon)
                         )
+                    },
+                    actionContent = if (textFieldValue.text.isNotBlank()) {
+                        {
+                            IconButton(
+                                onClick = composeClick {
+                                    textFieldValue = textFieldValue.copy("")
+                                    searchViewModel.updateIfShowSearchResult(false)
+                                },
+                                modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize)
+                            ) {
+                                Icon(
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    painter = painterResource(Res.drawable.cancel_24px),
+                                    contentDescription = stringResource(Res.string.clear)
+                                )
+                            }
+                        }
+                    } else null
                 )
             },
             navigationIcon = {
@@ -186,7 +175,7 @@ fun SearchScreen(
                     navigator.goBack()
                 }) {
                     Icon(
-                        Icons.AutoMirrored.Rounded.ArrowBack,
+                        painter = painterResource(Res.drawable.arrow_back_24px),
                         contentDescription = stringResource(Res.string.return_home)
                     )
                 }
@@ -262,7 +251,6 @@ private fun HistoryAndHintList(
 /**
  * 搜索结果页面
  */
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun SearchResultScreen(
     musicList: List<XyMusic>,
@@ -272,7 +260,7 @@ fun SearchResultScreen(
     onLoadingState: () -> Boolean,
     onFavoriteList: () -> List<String>,
     onDownloadMusicIdList: () -> List<String>,
-    musicController: MusicController
+    musicController: MusicCommonController
 ) {
     val navigator = LocalNavigator.current
 

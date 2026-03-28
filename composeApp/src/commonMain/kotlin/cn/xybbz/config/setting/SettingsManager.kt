@@ -85,6 +85,12 @@ class SettingsManager(
     var isDynamic by mutableStateOf(false)
         private set
 
+    /**
+     * 背景图片地址
+     */
+    var imageFilePath by mutableStateOf<String?>(null)
+        private set
+
 
     //是否设置转码音质
     private val _transcodingFlow = MutableSharedFlow<TranscodingState>(0, extraBufferCapacity = 1)
@@ -106,6 +112,7 @@ class SettingsManager(
 
         this@SettingsManager.themeType = this@SettingsManager.get().themeType
         this@SettingsManager.isDynamic = this@SettingsManager.get().isDynamic
+        this@SettingsManager.imageFilePath = this@SettingsManager.get().imageFilePath
 
         updateIfConnectionConfig(this@SettingsManager.get().connectionId != null)
         if (this@SettingsManager.get().languageType != null) {
@@ -574,6 +581,21 @@ class SettingsManager(
         } else {
             val settingId =
                 db.settingsDao.save(XySettings(themeType = themeType))
+            settings = get().copy(id = settingId)
+        }
+    }
+
+    /**
+     * 更新背景图片地址
+     */
+    suspend fun setImageFilePath(imageFilePath: String?) {
+        this.imageFilePath = imageFilePath
+        settings = get().copy(imageFilePath = imageFilePath)
+        if (get().id != AllDataEnum.All.code) {
+            db.settingsDao.updateImageFilePath(imageFilePath, get().id)
+        } else {
+            val settingId =
+                db.settingsDao.save(XySettings(imageFilePath = imageFilePath))
             settings = get().copy(id = settingId)
         }
     }

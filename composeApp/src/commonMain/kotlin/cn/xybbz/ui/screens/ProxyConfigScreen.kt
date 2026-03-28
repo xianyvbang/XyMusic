@@ -6,11 +6,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.painterResource(Res.drawable.arrow_back_24px)
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -18,44 +15,47 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.MusicSettingSwitchItemComponent
 import cn.xybbz.ui.components.SettingItemComponent
 import cn.xybbz.ui.components.SettingParentItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
-import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.viewmodel.ProxyConfigViewModel
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.open_proxy
+import xymusic_kmp.composeapp.generated.resources.poxy_config
+import xymusic_kmp.composeapp.generated.resources.proxy_address
+import xymusic_kmp.composeapp.generated.resources.return_setting_screen
+import xymusic_kmp.composeapp.generated.resources.save
+import xymusic_kmp.composeapp.generated.resources.test_connection
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 /**
  * 代理设置页面
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = hiltViewModel()) {
+fun ProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = koinViewModel<ProxyConfigViewModel>()) {
 
 
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
 
-    XyColumnScreen(
-        modifier = Modifier.brashColor(
-            topVerticalColor = proxyConfigViewModel.backgroundConfig.memoryManagementBrash[0],
-            bottomVerticalColor = proxyConfigViewModel.backgroundConfig.memoryManagementBrash[1]
-        )
-    ) {
+    XyColumnScreen {
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
             title = {
@@ -120,7 +120,7 @@ fun ProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = hiltViewModel
                         onClick = {
                             proxyConfigViewModel.testProxyConfig()
                         }
-                    ){}
+                    ) {}
                 }
             }
         }
@@ -160,23 +160,25 @@ fun ProxyConfigComponent(
 ) {
 
     SettingRoundedSurfaceColumn {
-        SettingParentItemComponent(title = stringResource(Res.string.proxy_address), trailingContent = {
-            Row(
-                modifier = Modifier.width(200.dp),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                ProxyConfigInput(
-                    text = addressValue,
-                    onChange = { newValue ->
-                        val newText = newValue.text
-                        updateAddress(newText)
-                    },
-                    hint = "127.0.0.1:8080"
-                )
-            }
+        SettingParentItemComponent(
+            title = stringResource(Res.string.proxy_address),
+            trailingContent = {
+                Row(
+                    modifier = Modifier.width(200.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ProxyConfigInput(
+                        text = addressValue,
+                        onChange = { newValue ->
+                            val newText = newValue.text
+                            updateAddress(newText)
+                        },
+                        hint = "127.0.0.1:8080"
+                    )
+                }
 
-        })
+            })
     }
 }
 

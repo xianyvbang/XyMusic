@@ -19,20 +19,18 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import xymusic_kmp.composeapp.generated.resources.Res
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.TopAppBarComponent
@@ -48,6 +46,9 @@ import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.MemoryManagementViewModel
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.audio_cache
 import xymusic_kmp.composeapp.generated.resources.audio_cache_description
@@ -61,11 +62,13 @@ import xymusic_kmp.composeapp.generated.resources.return_setting_screen
 import xymusic_kmp.composeapp.generated.resources.storage_management
 import xymusic_kmp.composeapp.generated.resources.temporary_cache
 import xymusic_kmp.composeapp.generated.resources.temporary_cache_description
+import xymusic_kmp.composeapp.generated.resources.warning
+import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MemoryManagementScreen(
-    memoryManagementViewModel: MemoryManagementViewModel = hiltViewModel<MemoryManagementViewModel>()
+    memoryManagementViewModel: MemoryManagementViewModel = koinViewModel<MemoryManagementViewModel>()
 ) {
 
     val navigator = LocalNavigator.current
@@ -74,14 +77,9 @@ fun MemoryManagementScreen(
 
 
     LaunchedEffect(Unit) {
-        memoryManagementViewModel.logStorageInfo(context)
+        memoryManagementViewModel.logStorageInfo()
     }
-    XyColumnScreen(
-        modifier = Modifier.brashColor(
-            topVerticalColor = memoryManagementViewModel.backgroundConfig.memoryManagementBrash[0],
-            bottomVerticalColor = memoryManagementViewModel.backgroundConfig.memoryManagementBrash[1]
-        )
-    ) {
+    XyColumnScreen {
         TopAppBarComponent(
             modifier = Modifier.statusBarsPadding(),
             title = {
@@ -115,7 +113,7 @@ fun MemoryManagementScreen(
             item {
                 MemoryManagementItem(
                     cacheSize = memoryManagementViewModel.cacheSize,
-                    onClick = { memoryManagementViewModel.clearAllCache(context) },
+                    onClick = { memoryManagementViewModel.clearAllCache() },
                     text = stringResource(Res.string.temporary_cache),
                     describe = stringResource(Res.string.temporary_cache_description)
                 )

@@ -149,7 +149,8 @@ fun XyEdit(
     textContentAlignment: Alignment = Alignment.TopStart,
     textStyle: TextStyle = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurface),
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    actionContent: (@Composable () -> Unit)? = null
+    actionContent: (@Composable () -> Unit)? = null,
+    leadingContent: (@Composable () -> Unit)? = null,
 ) {
     BasicTextField(
         value = text,
@@ -171,6 +172,8 @@ fun XyEdit(
                     .background(color = backgroundColor),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
+                leadingContent?.invoke()
                 Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
                 Box(
                     modifier = Modifier

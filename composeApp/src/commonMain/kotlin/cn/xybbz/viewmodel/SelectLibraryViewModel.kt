@@ -26,26 +26,21 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.library.XyLibrary
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import org.koin.core.annotation.InjectedParam
+import org.koin.core.annotation.KoinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.all_media_libraries
 
-@HiltViewModel(assistedFactory = SelectLibraryViewModel.Factory::class)
-class SelectLibraryViewModel @AssistedInject constructor(
-    @Assisted private val connectionId: Long,
-    @Assisted private val thisLibraryId: List<String>?,
+@KoinViewModel
+class SelectLibraryViewModel(
+    @InjectedParam private val connectionId: Long,
+    @InjectedParam private val thisLibraryId: List<String>?,
     private val db: DatabaseClient,
-    private val dataSourceManager: DataSourceManager,
-    val backgroundConfig: BackgroundConfig
+    private val dataSourceManager: DataSourceManager
 ) : ViewModel() {
 
-
-    @AssistedFactory
-    interface Factory {
-        fun create(connectionId: Long, thisLibraryId: List<String>?): SelectLibraryViewModel
-    }
 
     //媒体库
     val libraryList = mutableStateListOf<XyLibrary>()
@@ -67,7 +62,12 @@ class SelectLibraryViewModel @AssistedInject constructor(
             val libraryData = db.libraryDao.selectListByDataSourceType()
             if (dataSourceManager.dataSourceType?.ifAllMediaLibrary == true) {
                 libraryList.add(
-                    DefaultObjectUtils.getDefaultXyLibrary(connectionId)
+                    XyLibrary(
+                        id = Constants.MINUS_ONE_INT.toString(),
+                        name = getString(Res.string.all_media_libraries),
+                        connectionId = connectionId,
+                        collectionType = ""
+                    )
                 )
             }
 
