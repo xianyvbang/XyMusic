@@ -12,11 +12,16 @@ import org.koin.mp.KoinPlatform
 @Configuration
 actual class MusicControllerModule {
     @Singleton
-    actual fun musicController(wrapper: ContextWrapper): MusicCommonController {
+    fun concreteMusicController(wrapper: ContextWrapper): MusicController {
         return MusicController(
             wrapper.context,
             KoinPlatform.getKoin().get<AudioFadeController>() as cn.xybbz.music.AudioFadeAndroidController,
             KoinPlatform.getKoin().get()
         )
+    }
+
+    @Singleton
+    actual fun musicController(wrapper: ContextWrapper): MusicCommonController {
+        return KoinPlatform.getKoin().get<MusicController>()
     }
 }

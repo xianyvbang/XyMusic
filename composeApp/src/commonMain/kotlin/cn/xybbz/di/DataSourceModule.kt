@@ -19,6 +19,7 @@
 package cn.xybbz.di
 
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.emby.EmbyApiClient
 import cn.xybbz.api.client.emby.EmbyDatasourceServer
@@ -51,7 +52,7 @@ class DataSourceModule {
         jellyfinApiClient: JellyfinApiClient,
         customMediaApiClient: CustomMediaApiClient,
         contextWrapper: ContextWrapper
-    ): JellyfinDatasourceServer {
+    ): IDataSourceParentServer {
         return JellyfinDatasourceServer(
             db,
             settingsManager,
@@ -69,7 +70,7 @@ class DataSourceModule {
         subsonicApiClient: SubsonicApiClient,
         customMediaApiClient: CustomMediaApiClient,
         contextWrapper: ContextWrapper
-    ): SubsonicDatasourceServer {
+    ): IDataSourceParentServer {
         return SubsonicDatasourceServer(
             db,
             settingsManager,
@@ -87,7 +88,7 @@ class DataSourceModule {
         navidromeApiClient: NavidromeApiClient,
         customMediaApiClient: CustomMediaApiClient,
         contextWrapper: ContextWrapper
-    ): NavidromeDatasourceServer {
+    ): IDataSourceParentServer {
         return NavidromeDatasourceServer(
             db,
             settingsManager,
@@ -105,7 +106,7 @@ class DataSourceModule {
         embyApiClient: EmbyApiClient,
         customMediaApiClient: CustomMediaApiClient,
         contextWrapper: ContextWrapper
-    ): EmbyDatasourceServer {
+    ): IDataSourceParentServer {
         return EmbyDatasourceServer(
             db,
             settingsManager,
@@ -124,7 +125,7 @@ class DataSourceModule {
         plexApiClient: PlexApiClient,
         customMediaApiClient: CustomMediaApiClient,
         contextWrapper: ContextWrapper
-    ): PlexDatasourceServer {
+    ): IDataSourceParentServer {
         return PlexDatasourceServer(
             db,
             settingsManager,

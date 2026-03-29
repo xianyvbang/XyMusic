@@ -84,21 +84,11 @@ class ExampleLibraryPlaybackService : MediaSessionService(), KoinComponent {
 
     var musicController: MusicController = get()
 
-
     var settingsManager: SettingsManager = get()
-
-
-    var db: DatabaseClient = get()
-
 
     var imageApiClient: CacheApiClient = get()
 
-
     var lrcServer: LrcServer = get()
-
-
-    var dataSourceManager: DataSourceManager = get()
-
 
     var fadeController: AudioFadeAndroidController = get()
 
