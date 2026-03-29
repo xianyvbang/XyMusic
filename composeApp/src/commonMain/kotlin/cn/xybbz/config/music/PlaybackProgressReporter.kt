@@ -14,7 +14,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.Singleton
 
-@Singleton
 class PlaybackProgressReporter(
     private val musicController: MusicCommonController,
     private val dataSourceManager: DataSourceManager,

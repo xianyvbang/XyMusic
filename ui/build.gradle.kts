@@ -16,6 +16,9 @@ kotlin {
         namespace = "cn.xybbz.ui"
         compileSdk = 36
         minSdk = 28
+        androidResources {
+            enable = true
+        }
 
         withHostTestBuilder {
         }

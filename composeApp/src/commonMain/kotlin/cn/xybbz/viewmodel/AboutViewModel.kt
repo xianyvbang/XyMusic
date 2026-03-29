@@ -21,13 +21,6 @@ class AboutViewModel(
     private val contextWrapper: ContextWrapper
 ) : ViewModel() {
 
-    val apkDownloadInfo: StateFlow<XyDownload?> = db.downloadDao.getOneApkFlow()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = null
-        )
-
     var versionInfo by mutableStateOf("")
         private set
 

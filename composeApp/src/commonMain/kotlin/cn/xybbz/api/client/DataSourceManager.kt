@@ -326,7 +326,7 @@ open class DataSourceManager(
     fun getDataSourceServerByType(
         dataSourceType: DataSourceType,
         ifTmp: Boolean
-    ): IDataSourceParentServer? {
+    ): IDataSourceParentServer {
         val iDataSourceParentServer: IDataSourceParentServer = get(named(dataSourceType))
         iDataSourceParentServer.updateIfTmpObject(ifTmp)
         return iDataSourceParentServer
