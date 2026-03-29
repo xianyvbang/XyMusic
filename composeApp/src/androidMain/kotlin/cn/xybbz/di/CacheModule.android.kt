@@ -17,7 +17,8 @@ actual class CacheModule {
         return DownloadCacheController(contextWrapper.context)
     }
 
-    @Singleton
+    // todo 这里修改成上面的那样 ,修改名称
+    @Singleton(binds = [DownloadCacheController::class])
     actual fun downloadCacheController(
         contextWrapper: ContextWrapper
     ): DownloadCacheCommonController {

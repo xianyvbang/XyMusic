@@ -1,5 +1,6 @@
 package cn.xybbz.di
 
+import cn.xybbz.StartKoinApp
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.utils.Log
 import cn.xybbz.config.HomeDataRepository
@@ -30,5 +31,3 @@ fun initKoin(config: KoinAppDeclaration? = null): KoinApplication {
     return koin
 }
 
-@org.koin.core.annotation.KoinApplication
-class StartKoinApp
