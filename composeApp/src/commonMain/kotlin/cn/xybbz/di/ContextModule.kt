@@ -12,5 +12,5 @@ expect class ContextWrapper
 expect class ContextModule() {
 
     @Single
-    fun providesContextWrapper(scope : Scope) : ContextWrapper
+    fun providesContextWrapper() : ContextWrapper
 }

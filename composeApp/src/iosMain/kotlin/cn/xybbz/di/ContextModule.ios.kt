@@ -7,9 +7,9 @@ import org.koin.core.scope.Scope
 
 @Module
 @Configuration
-actual class ContextModule actual constructor() {
+actual class ContextModule {
     @Single
-    actual fun providesContextWrapper(scope: Scope): ContextWrapper {
+    actual fun providesContextWrapper(): ContextWrapper {
         return ContextWrapper()
     }
 }
