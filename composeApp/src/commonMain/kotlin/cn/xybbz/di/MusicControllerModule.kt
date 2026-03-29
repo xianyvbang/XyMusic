@@ -20,10 +20,9 @@ package cn.xybbz.di
 
 import cn.xybbz.config.music.MusicCommonController
 import org.koin.core.annotation.Singleton
-import org.koin.core.scope.Scope
 
 expect class MusicControllerModule {
 
     @Singleton
-    fun musicController(wrapper: ContextWrapper, scope: Scope): MusicCommonController
+    fun musicController(wrapper: ContextWrapper): MusicCommonController
 }

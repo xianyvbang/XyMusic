@@ -38,7 +38,7 @@ okhttp = "5.3.2"
 tinypinyin = "3.0.0"
 cryptography = "0.5.0"
 paging = "3.4.2"
-
+multiLanguages = "10.2"
 
 
 [libraries]
@@ -113,6 +113,8 @@ tinypinyin = { module = "com.github.promeg:tinypinyin", version.ref = "tinypinyi
 cryptography-core = { module = "dev.whyoleg.cryptography:cryptography-core", version.ref = "cryptography" }
 cryptography-provider-optimal = { module = "dev.whyoleg.cryptography:cryptography-provider-optimal", version.ref = "cryptography" }
 cryptography-random = { module = "dev.whyoleg.cryptography:cryptography-random", version.ref = "cryptography" }
+
+multi-languages = { module = "com.github.getActivity:MultiLanguages", version.ref = "multiLanguages" }
 
 
 [plugins]

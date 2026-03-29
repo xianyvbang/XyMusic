@@ -97,6 +97,8 @@ import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.logging_in
 import xymusic_kmp.composeapp.generated.resources.server_version_cannot_be_obtained
 import xymusic_kmp.composeapp.generated.resources.server_version_too_low
+import kotlin.concurrent.atomics.AtomicBoolean
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import kotlin.uuid.ExperimentalUuidApi
@@ -127,6 +129,7 @@ abstract class IDataSourceParentServer(
 
 
     private var ifTmpObject = false
+    @OptIn(ExperimentalAtomicApi::class)
     private val loginRetryGate = AtomicBoolean(false)
 
     fun ifTmpObject(): Boolean {
@@ -141,12 +144,14 @@ abstract class IDataSourceParentServer(
         return defaultParentApiClient
     }
 
+    @OptIn(ExperimentalAtomicApi::class)
     fun resetLoginRetry() {
-        loginRetryGate.set(false)
+        loginRetryGate.store(false)
     }
 
+    @OptIn(ExperimentalAtomicApi::class)
     fun tryMarkLoginRetry(): Boolean {
-        return loginRetryGate.compareAndSet(false, true)
+        return loginRetryGate.compareAndSet(expectedValue = false, newValue = true)
     }
 
     /**

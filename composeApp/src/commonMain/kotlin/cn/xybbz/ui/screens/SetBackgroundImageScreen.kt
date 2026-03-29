@@ -67,7 +67,7 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
 
     val ifSelectImage by remember {
         derivedStateOf {
-            !setBackgroundImageViewModel.backgroundConfig.imageFilePath.isNullOrBlank()
+            !setBackgroundImageViewModel.settingsManager.imageFilePath.isNullOrBlank()
         }
     }
     val navigator = LocalNavigator.current
@@ -124,7 +124,7 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
                 if (!ifSelectImage) {
                     XyNoData()
                 } else {
-                    Text(text = setBackgroundImageViewModel.backgroundConfig.imageFilePath.orEmpty())
+                    Text(text = setBackgroundImageViewModel.settingsManager.imageFilePath.orEmpty())
                 }
                 Spacer(
                     modifier = Modifier.height(

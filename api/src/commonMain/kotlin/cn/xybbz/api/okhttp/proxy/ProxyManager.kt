@@ -1,13 +1,24 @@
 package cn.xybbz.api.okhttp.proxy
 
+import io.ktor.client.engine.ProxyConfig
+import kotlin.concurrent.Volatile
+
 object ProxyManager {
 
-    private val proxySelector = DynamicProxySelector()
 
-    fun proxySelector(): DynamicProxySelector = proxySelector
+    @Volatile
+    var config: ProxyConfig? = null
+        private set
+
+    fun proxySelector(): ProxyConfig? = config
+
+
+    fun update(url: String?) {
+        this.config = getProxyConfig(url)
+    }
 
     fun updateProxy(url: String?) {
-        proxySelector.update(url)
+        update(url)
     }
 
     fun clearProxy() {

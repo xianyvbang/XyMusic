@@ -55,7 +55,7 @@
 //        this.calendar = calendar
 //        // 6.0及以上
 //
-//        Log.i("=====", "当前时间${calendar.timeInMillis}, 当前: ${System.currentTimeMillis()}")
+//        Log.i("=====", "当前时间${calendar.timeInMillis}, 当前: ${Clock.System.now().toEpochMilliseconds()}")
 ////        am!!.setExactAndAllowWhileIdle(
 //
 //        val intent = Intent(application, AlertService::class.java).apply {

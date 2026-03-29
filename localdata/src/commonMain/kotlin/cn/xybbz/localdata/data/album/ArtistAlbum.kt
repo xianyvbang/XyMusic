@@ -5,6 +5,7 @@ import androidx.room.ForeignKey
 import androidx.room.ForeignKey.Companion.CASCADE
 import androidx.room.Index
 import cn.xybbz.localdata.data.connection.ConnectionConfig
+import kotlin.time.Clock
 
 
 /**
@@ -13,7 +14,6 @@ import cn.xybbz.localdata.data.connection.ConnectionConfig
  * @date 2025/05/19
  * @constructor 创建[ArtistAlbum]
  * @param [artistId] 艺术家ID
- * @param [musicId] 音乐ID
  * @param [cachedAt] 缓存时间
  */
 @Entity(
@@ -31,5 +31,5 @@ data class ArtistAlbum(
     val albumId: String,
     val connectionId: Long,
     val index: Int,
-    val cachedAt: Long = System.currentTimeMillis()// 缓存时间戳（System.currentTimeMillis）
+    val cachedAt: Long = Clock.System.now().toEpochMilliseconds()// 缓存时间戳（System.currentTimeMillis）
 )

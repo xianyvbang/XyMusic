@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">XyMusic-KMP</string>
+    <string name="favorite_added">已收藏</string>
+    <string name="favorite_removed">未收藏</string>
 </resources>

@@ -42,7 +42,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import cn.xybbz.ui.ext.brashColor
 import cn.xybbz.ui.theme.XyTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -78,7 +77,6 @@ fun ModalBottomSheetExtendComponent(
             }, content = {
                 XyColumn(
                     modifier = Modifier
-                        .brashColor()
                         .navigationBarsPadding(),
                     backgroundColor = Color.Transparent,
                     paddingValues = PaddingValues(

@@ -4,7 +4,7 @@ import cn.xybbz.api.TokenServer
 import cn.xybbz.api.TokenServer.headerMap
 import cn.xybbz.api.TokenServer.queryMap
 import cn.xybbz.api.constants.ApiConstants
-import cn.xybbz.api.okhttp.proxy.ProxyManager
+import cn.xybbz.api.okhttp.proxy.OkhttpProxyManager
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 
@@ -15,7 +15,7 @@ class CacheApiClient{
 
     private fun getOkHttpClient():OkHttpClient {
         return OkHttpClient.Builder()
-            .proxySelector(ProxyManager.proxySelector())
+            .proxySelector(OkhttpProxyManager.proxySelector())
             .addInterceptor{chain ->
                 val request = chain.request()
                 val requestBuilder = request.newBuilder()

@@ -32,7 +32,6 @@ import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
-import cn.xybbz.config.download.core.DownloadRequest
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.volume.VolumeServer
@@ -51,11 +50,11 @@ import kotlinx.datetime.format.FormatStringsInDatetimeFormats
 import kotlinx.datetime.format.byUnicodePattern
 import kotlinx.datetime.toLocalDateTime
 import org.koin.core.annotation.KoinViewModel
-import kotlin.time.Clock
-import kotlin.time.Duration.Companion.minutes
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.add_download_list
 import xymusic_kmp.composeapp.generated.resources.cancel_timer_close_message
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.minutes
 
 @KoinViewModel
 class MusicBottomMenuViewModel(
@@ -216,7 +215,7 @@ class MusicBottomMenuViewModel(
                 !currentItemId.isNullOrBlank() &&
                 (musicController.state == PlayStateEnum.Playing || musicController.state == PlayStateEnum.Loading)
 
-            if (shouldWaitForTrackEnd && currentItemId != null) {
+            if (shouldWaitForTrackEnd) {
                 waitForCurrentTrackToFinish(currentItemId)
             } else {
                 stopPlaybackByTimer()
@@ -262,7 +261,7 @@ class MusicBottomMenuViewModel(
         viewModelScope.launch {
             val downloadTypes =
                 dataSourceManager.dataSourceType?.getDownloadType() ?: DownloadTypes.APK
-            downloadManager.enqueue(
+            /*downloadManager.enqueue(
                 DownloadRequest(
                     url = musicData.downloadUrl,
                     fileName = musicData.name + "." + musicData.container,
@@ -275,7 +274,7 @@ class MusicBottomMenuViewModel(
                     connectionId = dataSourceManager.getConnectionId(),
                     music = musicData
                 )
-            )
+            )*/
             MessageUtils.sendPopTip(Res.string.add_download_list)
         }
 
@@ -341,7 +340,7 @@ class MusicBottomMenuViewModel(
 
                 if (itemChanged || playbackStopped || progressRestarted) {
                     stopPlaybackByTimer()
-                    cancel()
+                    musicController.clearPlayerList()
                 } else {
                     lastPosition = position
                 }

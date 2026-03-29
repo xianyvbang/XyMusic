@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import cn.xybbz.localdata.data.connection.ConnectionConfig
+import kotlin.time.Clock
 
 /**
  * 收藏音乐
@@ -33,5 +34,5 @@ data class FavoriteArtist(
     val artistId: String,
     val connectionId: Long,
     val ifFavorite: Boolean = true,
-    val cachedAt: Long = System.currentTimeMillis()
+    val cachedAt: Long = Clock.System.now().toEpochMilliseconds()
 )

@@ -77,7 +77,7 @@
 //        if (apkDownload?.status == DownloadStatus.DOWNLOADING) return true
 //        val versionName = settingsManager.packageInfo.versionName
 //        var ifGetVersionSuccess = true
-//        val currentTimeMillis = System.currentTimeMillis()
+//        val currentTimeMillis = Clock.System.now().toEpochMilliseconds()
 //        currentVersion = versionName ?: ""
 //        latestVersion = settingsManager.get().latestVersion
 //        try {
@@ -128,7 +128,7 @@
 //        val versionName = settingsManager.packageInfo.versionName
 //        currentVersion = if (versionName.isNullOrBlank()) "" else versionName
 //        val latestVersionTime = settingsManager.get().latestVersionTime
-//        val currentTimeMillis = System.currentTimeMillis()
+//        val currentTimeMillis = Clock.System.now().toEpochMilliseconds()
 //        val ifGetVersion = (currentTimeMillis - latestVersionTime) >= (1 * 60 * 60 * 1000)
 //        return ifCheck && !ifGetVersion
 //    }

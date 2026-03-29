@@ -27,6 +27,7 @@ import androidx.room.TypeConverters
 import cn.xybbz.localdata.converter.StringListTypeConverter
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock
 
 @Entity(
     tableName = "xy_music",
@@ -164,11 +165,11 @@ data class XyMusic(
     /**
      * 最近播放时间
      */
-    val lastPlayedDate: Long = System.currentTimeMillis(),
+    val lastPlayedDate: Long = Clock.System.now().toEpochMilliseconds(),
     /**
      * 创建时间
      */
-    val createTime: Long = System.currentTimeMillis()
+    val createTime: Long = Clock.System.now().toEpochMilliseconds()
 ) {
     fun toPlayMusic(): XyPlayMusic {
         return XyPlayMusic(

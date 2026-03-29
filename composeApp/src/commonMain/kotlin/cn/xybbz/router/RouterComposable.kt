@@ -80,7 +80,7 @@ val entryProvider = entryProvider {
     }
 
     nodeComposable<Home> {
-        HomeScreen(modifier = Modifier)
+        HomeScreen()
     }
 
     nodeComposable<Music> {
@@ -131,8 +131,8 @@ val entryProvider = entryProvider {
 
     nodeComposable<ArtistInfo> { artistInfo ->
         ArtistInfoScreen(
-            artistId = { artistInfo.artistId },
-            artistName = { artistInfo.artistName })
+            artistId = artistInfo.artistId,
+            artistName = artistInfo.artistName)
     }
 
     nodeComposable<InterfaceSetting> {

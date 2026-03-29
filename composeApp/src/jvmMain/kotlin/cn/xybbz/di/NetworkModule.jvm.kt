@@ -5,14 +5,13 @@ import cn.xybbz.config.network.NetWorkMonitor
 import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Singleton
-import org.koin.core.scope.Scope
 
 @Module
 @Configuration
 actual class NetworkModule actual constructor() {
 
     @Singleton
-    actual fun netWorkMonitor(scope: Scope): NetWorkMonitor {
+    actual fun netWorkMonitor(contextWrapper: ContextWrapper): NetWorkMonitor {
         return JvmNetWorkMonitor()
     }
 }

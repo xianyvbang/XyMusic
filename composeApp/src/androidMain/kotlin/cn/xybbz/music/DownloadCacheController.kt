@@ -44,14 +44,11 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
 import cn.xybbz.api.client.CacheApiClient
 import cn.xybbz.config.music.DownloadCacheCommonController
-import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
@@ -63,8 +60,7 @@ import java.util.concurrent.Executors
 @SuppressLint("UnsafeOptInUsageError")
 class DownloadCacheController(
     private val context: Context,
-    private val settingsManager: SettingsManager
-) : DownloadCacheCommonController(), KoinComponent {
+) : DownloadCacheCommonController() {
 
     val cache: Cache
     var cacheDataSourceFactory: CacheDataSource.Factory
@@ -83,7 +79,6 @@ class DownloadCacheController(
     private var currentTaskId: String? = null
 
     private val childPath = "cache"
-
 
 
     init {
@@ -181,7 +176,7 @@ class DownloadCacheController(
         })
     }
 
-    fun cacheMedia(
+    override fun cacheMedia(
         music: XyPlayMusic,
         ifStatic: Boolean
     ) {
@@ -314,7 +309,7 @@ class DownloadCacheController(
     /**
      * 取消所有缓存
      */
-    fun cancelAllCache() {
+    override fun cancelAllCache() {
         DownloadService.sendSetStopReason(
             context,
             ExoPlayerDownloadService::class.java,
@@ -322,6 +317,13 @@ class DownloadCacheController(
             1,
             /* foreground= */ false
         )
+    }
+
+    /**
+     * 根据缓存key获得mediaItem
+     */
+    override fun getMediaItem(cacheKey: String): MediaItem? {
+        return downloadManager.downloadIndex.getDownload(cacheKey)?.request?.toMediaItem()
     }
 
     fun getMediaSourceFactory(): MediaSource.Factory {
@@ -350,32 +352,27 @@ class DownloadCacheController(
     /**
      * 获得所有缓存大小
      */
-    fun getCacheSize() {
+    override fun getCacheSize() {
         val cacheSize = downloadManager.currentDownloads.sumOf {
             it.bytesDownloaded
         }
         Log.i("music", "缓存大小${cacheSize}")
         //缓存大小
-        _allCacheSizeFlow.value = cacheSize
+        updateCacheSizeFlow(cacheSize)
     }
 
-    /**
-     * 获得缓存key
-     */
-    fun getCacheKey(musicId: String): String {
-        return musicId + settingsManager.getStatic() + settingsManager.get().transcodeFormat + settingsManager.getAudioBitRate()
-    }
+
 
     /**
      * 清空缓存
      */
-    fun clearCache() {
+    override fun clearCache() {
         DownloadService.sendRemoveAllDownloads(
             context,
             ExoPlayerDownloadService::class.java,
             /* foreground= */ false
         )
-
+        updateCacheSizeFlow(0)
     }
 
     override fun close() {

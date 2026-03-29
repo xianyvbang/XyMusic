@@ -120,7 +120,7 @@ class CustomMediaApiClient : ApiFactory {
     override fun createHttpClient(baseUrl: String, ifTmp: Boolean) {
         httpClient = provideClient().config {
             engine {
-                proxy = ProxyManager.proxySelector().config
+                proxy = ProxyManager.proxySelector()
             }
             install(Logging) {
                 logger = object : Logger {

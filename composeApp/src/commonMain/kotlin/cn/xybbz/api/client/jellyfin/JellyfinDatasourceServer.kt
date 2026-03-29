@@ -90,7 +90,8 @@ class JellyfinDatasourceServer(
     db,
     settingsManager,
     jellyfinApiClient,
-    customMediaApiClient
+    customMediaApiClient,
+    contextWrapper
 ) {
 
     /**

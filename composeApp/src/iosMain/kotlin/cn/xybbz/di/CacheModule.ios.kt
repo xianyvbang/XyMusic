@@ -1,8 +1,7 @@
 package cn.xybbz.di
 
 import cn.xybbz.config.music.DownloadCacheCommonController
-import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.music.DownloadCacheController
+import cn.xybbz.music.IosDownloadCacheController
 import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Singleton
@@ -14,6 +13,6 @@ actual class CacheModule {
     actual fun downloadCacheController(
         contextWrapper: ContextWrapper
     ): DownloadCacheCommonController {
-        return DownloadCacheController(contextWrapper.context)
+        return IosDownloadCacheController()
     }
 }

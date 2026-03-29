@@ -27,6 +27,7 @@ import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.client.plex.data.Directory
 import cn.xybbz.api.client.plex.data.Metadatum
 import cn.xybbz.api.client.plex.data.PlaylistMetadatum
+import cn.xybbz.api.client.toLatinCompat
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.plex.ImageType
 import cn.xybbz.api.enums.plex.MetadatumType
@@ -86,6 +87,7 @@ class PlexDatasourceServer(
     settingsManager,
     plexApiClient,
     customMediaApiClient,
+    contextWrapper
 ) {
 
     /**

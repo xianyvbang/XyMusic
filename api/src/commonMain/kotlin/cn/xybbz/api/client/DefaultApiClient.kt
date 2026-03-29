@@ -79,7 +79,7 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
         //todo 注意关闭
         httpClient = provideClient().config {
             engine {
-                proxy = ProxyManager.proxySelector().config
+                proxy = ProxyManager.proxySelector()
             }
             install(DefaultRequest) {
                 if (baseUrl.isNotBlank())

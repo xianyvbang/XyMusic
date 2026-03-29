@@ -51,7 +51,7 @@ class VersionApiClient : ApiFactory, DownloadFactory {
     override fun createHttpClient(baseUrl: String, ifTmp: Boolean) {
         httpClient = provideClient().config {
             engine {
-                proxy = ProxyManager.proxySelector().config
+                proxy = ProxyManager.proxySelector()
             }
             install(DefaultRequest) {
                 url("https://api.github.com/")

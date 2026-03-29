@@ -23,6 +23,7 @@ import androidx.room.ForeignKey
 import androidx.room.ForeignKey.Companion.CASCADE
 import androidx.room.Index
 import cn.xybbz.localdata.data.connection.ConnectionConfig
+import kotlin.time.Clock
 
 /**
  * 播放队列音乐
@@ -46,5 +47,5 @@ data class PlayQueueMusic(
     val musicId: String,
     val connectionId: Long,
     val index: Int,
-    val cachedAt: Long = System.currentTimeMillis()
+    val cachedAt: Long = Clock.System.now().toEpochMilliseconds()
 )

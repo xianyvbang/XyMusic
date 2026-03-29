@@ -29,19 +29,17 @@ import androidx.media3.exoplayer.scheduler.Scheduler
 import androidx.media3.exoplayer.workmanager.WorkManagerScheduler
 import cn.xybbz.R
 import cn.xybbz.common.constants.Constants.DOWNLOAD_NOTIFICATION_CHANNEL_ID
-import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 
 
 @UnstableApi
-@AndroidEntryPoint
 class ExoPlayerDownloadService : DownloadService(
     FOREGROUND_NOTIFICATION_ID_NONE,
     DEFAULT_FOREGROUND_NOTIFICATION_UPDATE_INTERVAL,
-) {
+), KoinComponent {
 
-    @Inject
-    lateinit var downloadCacheController: DownloadCacheController
+   var downloadCacheController: DownloadCacheController = get()
 
 
     private
@@ -78,7 +76,7 @@ class ExoPlayerDownloadService : DownloadService(
         return getDownloadNotificationHelper(this)
             .buildProgressNotification(
                 /* context= */ this,
-                R.drawable.ic_download,
+                R.drawable.download_24px,
                 /* contentIntent= */ null,
                 /* message= */ null,
                 downloads,
@@ -95,11 +93,11 @@ class ExoPlayerDownloadService : DownloadService(
     }
 
     @Synchronized
-    fun getDownloadNotificationHelper(context: Context):DownloadNotificationHelper {
-    if (downloadNotificationHelper == null) {
-      downloadNotificationHelper =
-           DownloadNotificationHelper(context, DOWNLOAD_NOTIFICATION_CHANNEL_ID)
+    fun getDownloadNotificationHelper(context: Context): DownloadNotificationHelper {
+        if (downloadNotificationHelper == null) {
+            downloadNotificationHelper =
+                DownloadNotificationHelper(context, DOWNLOAD_NOTIFICATION_CHANNEL_ID)
+        }
+        return downloadNotificationHelper!!
     }
-    return downloadNotificationHelper!!
-  }
 }

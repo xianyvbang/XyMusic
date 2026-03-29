@@ -32,6 +32,7 @@ import cn.xybbz.api.client.subsonic.data.ScrobbleRequest
 import cn.xybbz.api.client.subsonic.data.SongID3
 import cn.xybbz.api.client.subsonic.data.SubsonicArtistsResponse
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
+import cn.xybbz.api.client.toLatinCompat
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.CollectionType
 import cn.xybbz.api.enums.subsonic.AlbumType
@@ -75,6 +76,7 @@ class SubsonicDatasourceServer(
     settingsManager,
     subsonicApiClient,
     customMediaApiClient,
+    contextWrapper
 ) {
     /**
      * 获得当前数据源类型

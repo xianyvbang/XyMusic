@@ -9,7 +9,10 @@ import androidx.compose.runtime.setValue
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.config.scope.IoScoped
+import cn.xybbz.config.setting.OnSettingsChangeListener
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.data.music.XyPlayMusic
+import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -18,8 +21,13 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 
 abstract class MusicCommonController : IoScoped(), KoinComponent {
+
+    val settingsManager = get<SettingsManager>()
+
+    val downloadCacheController: DownloadCacheCommonController = get()
 
     // 原始歌曲列表
     var originMusicList by mutableStateOf(emptyList<XyPlayMusic>())
@@ -47,6 +55,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     var picByte: ByteArray? by mutableStateOf(null)
         private set
 
+    //封面图刷新版本号
     var coverRefreshVersion by mutableIntStateOf(0)
         private set
 
@@ -79,6 +88,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
         protected set
 
     var ifNextPage = true
+        private set
 
     var ifGetNextPageMusicDataIsNullCount: Int = 0
 
@@ -88,6 +98,34 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
         extraBufferCapacity = 16
     )
     val events = _events.asSharedFlow()
+
+
+    init {
+        settingsManager.setOnListener(object : OnSettingsChangeListener {
+            override fun onCacheMaxBytesChanged(
+                cacheUpperLimit: CacheUpperLimitEnum,
+                oldCacheUpperLimit: CacheUpperLimitEnum
+            ) {
+                if (oldCacheUpperLimit == CacheUpperLimitEnum.No && cacheUpperLimit != CacheUpperLimitEnum.No && state == PlayStateEnum.Playing) {
+                    musicInfo?.let {
+                        startCache(it, settingsManager.getStatic())
+                    }
+                }
+            }
+
+            override fun onMusicResourceConfigChanged() {
+                scope.launch {
+                    refreshPlaylistCoverMetadata()
+                }
+            }
+        })
+    }
+
+
+    /**
+     * 初始化播放
+     */
+    abstract fun initController(onRestorePlaylists: (() -> Unit)? = null)
 
     /**
      * 列表中添加数据
@@ -104,10 +142,6 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
      */
     abstract fun updateCurrentFavorite(isFavorite: Boolean)
 
-    /**
-     * 清空播放列表
-     */
-    abstract fun clearPlayerList()
 
     /**
      * 暂停当前播放
@@ -138,6 +172,11 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
      * 跳转至指定index位置音乐
      */
     abstract fun seekToIndex(index: Int)
+
+    /**
+     * 根据音乐id跳转
+     */
+    abstract fun seekToIndex(itemId: String)
 
     /**
      * 删除指定index位置音乐
@@ -178,7 +217,12 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     /**
      * 添加音乐到列表
      */
-    abstract fun addMusic(music: XyPlayMusic, isPlayer: Boolean? = null)
+    fun addMusic(music: XyPlayMusic, isPlayer: Boolean? = null) {
+        addNextPlayer(music)
+        if (isPlayer == true) {
+            seekToNext()
+        }
+    }
 
 
     /**
@@ -204,6 +248,17 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
         musicPlayTypeEnum: MusicPlayTypeEnum
     )
 
+    protected abstract fun refreshPlaylistCoverMetadata()
+
+
+    /**
+     * 开始缓存
+     */
+    fun startCache(music: XyPlayMusic, ifStatic: Boolean) {
+        if (music.filePath.isNullOrBlank())
+            downloadCacheController.cacheMedia(music, ifStatic)
+    }
+
     /**
      * 设置当前播放进度
      */
@@ -215,9 +270,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
      * 调用onFavorite
      */
     fun invokingOnFavorite(itemId: String) {
-        scope.launch {
-            _events.emit(PlayerEvent.Favorite(itemId))
-        }
+        updateEvent(PlayerEvent.Favorite(itemId))
     }
 
     fun updateState(state: PlayStateEnum) {
@@ -266,4 +319,95 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
         this.pageNum = pageNum
     }
 
+
+    fun reportedPlayEvent() {
+        musicInfo?.let {
+            updateEvent(PlayerEvent.Play(it.itemId, settingsManager.get().playSessionId))
+        }
+    }
+
+    fun reportedPauseEvent() {
+        musicInfo?.let {
+            scope.launch {
+                _events.emit(PlayerEvent.Pause(it.itemId, settingsManager.get().playSessionId))
+            }
+        }
+    }
+
+    /**
+     * 更新列表数据
+     */
+    fun updateOriginMusicList(musicList: List<XyPlayMusic>) {
+        originMusicList = musicList
+    }
+
+    /**
+     * 更新coverRefreshVersion版本号
+     */
+    fun updateCoverRefreshVersion(version: Int) {
+        coverRefreshVersion += version
+    }
+
+    /**
+     * 更新当前播放音乐
+     */
+    fun updateCurrentMusic(music: XyPlayMusic?) {
+        this.musicInfo = music
+    }
+
+    /**
+     * 更新当前页面字节码
+     */
+    fun updatePicBytes(picBytes: ByteArray?) {
+        this.picByte = picBytes
+    }
+
+    /**
+     * 更新播放音乐的原始索引
+     */
+    fun updateOriginIndex(index: Int) {
+        curOriginIndex = index
+    }
+
+    /**
+     * 更新分页大小
+     */
+    fun updatePageSize(pageSize: Int) {
+        this.pageSize = pageSize
+    }
+
+    /**
+     * 清空播放列表
+     */
+    open fun clearPlayerList() {
+        pause()
+        downloadCacheController.cancelAllCache()
+        originMusicList = emptyList()
+        musicCurrentPositionMap.clear()
+        curOriginIndex = Constants.MINUS_ONE_INT
+        musicInfo = null
+        updateDuration(Constants.ZERO.toLong())
+        setCurrentPositionData(Constants.ZERO.toLong())
+        updateState(PlayStateEnum.None)
+        headTime = Constants.ZERO.toLong()
+        endTime = Constants.ZERO.toLong()
+        setPageNumData(Constants.ZERO)
+        pageSize = Constants.ZERO
+    }
+
+    override fun close() {
+        pause()
+        originMusicList = emptyList()
+        musicCurrentPositionMap.clear()
+        curOriginIndex = Constants.MINUS_ONE_INT
+        musicInfo = null
+        updateDuration(Constants.ZERO.toLong())
+        setCurrentPositionData(Constants.ZERO.toLong())
+        updateState(PlayStateEnum.None)
+        headTime = Constants.ZERO.toLong()
+        endTime = Constants.ZERO.toLong()
+        setPageNumData(Constants.ZERO)
+        pageSize = Constants.ZERO
+        super.close()
+    }
 }

@@ -32,6 +32,7 @@ import cn.xybbz.api.client.navidrome.data.SongItem
 import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.client.subsonic.data.ArtistID3
 import cn.xybbz.api.client.subsonic.data.ScrobbleRequest
+import cn.xybbz.api.client.toLatinCompat
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.enums.jellyfin.CollectionType
@@ -45,6 +46,7 @@ import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.di.ContextWrapper
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.NavidromeOrder
 import cn.xybbz.entity.data.SearchData
@@ -73,12 +75,14 @@ class NavidromeDatasourceServer(
     private val db: DatabaseClient,
     settingsManager: SettingsManager,
     private val navidromeApiClient: NavidromeApiClient,
-    customMediaApiClient: CustomMediaApiClient
+    customMediaApiClient: CustomMediaApiClient,
+    contextWrapper: ContextWrapper
 ) : IDataSourceParentServer(
     db,
     settingsManager,
     navidromeApiClient,
     customMediaApiClient,
+    contextWrapper
 ) {
     /**
      * 获得当前数据源类型

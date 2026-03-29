@@ -26,6 +26,7 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.localdata.enums.DownloadTypes
+import kotlin.time.Clock
 
 @Entity(tableName = "xy_download")
 data class XyDownload(
@@ -54,8 +55,8 @@ data class XyDownload(
     @field:TypeConverters(XyMusicTypeConverter::class)
     val music: XyMusic? = null,
 
-    val updateTime: Long = System.currentTimeMillis(),
-    val createTime: Long = System.currentTimeMillis(),
+    val updateTime: Long = Clock.System.now().toEpochMilliseconds(),
+    val createTime: Long = Clock.System.now().toEpochMilliseconds(),
 ){
 
     fun toPlayMusic(): XyPlayMusic?{

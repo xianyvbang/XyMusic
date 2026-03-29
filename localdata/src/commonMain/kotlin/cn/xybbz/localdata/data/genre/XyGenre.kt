@@ -6,6 +6,7 @@ import androidx.room.ForeignKey.Companion.CASCADE
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import cn.xybbz.localdata.data.connection.ConnectionConfig
+import kotlin.time.Clock
 
 /**
  * 流派
@@ -38,5 +39,5 @@ data class XyGenre(
     /**
      * 创建时间
      */
-    val createTime: Long = System.currentTimeMillis()
+    val createTime: Long = Clock.System.now().toEpochMilliseconds()
 )

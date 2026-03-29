@@ -25,6 +25,7 @@ import androidx.media3.common.Player.PlayWhenReadyChangeReason
 import androidx.media3.exoplayer.ExoPlayer
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.config.lrc.LrcServer
+import cn.xybbz.config.music.MusicCommonController
 
 class ExoPlayerListener(
     private val musicController: MusicController,

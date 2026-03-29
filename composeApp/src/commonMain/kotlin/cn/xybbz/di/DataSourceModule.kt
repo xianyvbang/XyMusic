@@ -86,12 +86,14 @@ class DataSourceModule {
         settingsManager: SettingsManager,
         navidromeApiClient: NavidromeApiClient,
         customMediaApiClient: CustomMediaApiClient,
+        contextWrapper: ContextWrapper
     ): NavidromeDatasourceServer {
         return NavidromeDatasourceServer(
             db,
             settingsManager,
             navidromeApiClient,
             customMediaApiClient,
+            contextWrapper
         )
     }
 

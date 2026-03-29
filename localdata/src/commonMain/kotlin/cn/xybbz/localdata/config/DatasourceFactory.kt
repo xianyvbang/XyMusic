@@ -20,11 +20,12 @@ package cn.xybbz.localdata.config
 
 import androidx.room.RoomDatabase
 import androidx.room.immediateTransaction
+import androidx.room.migration.Migration
 import androidx.room.useWriterConnection
 
 internal const val DB_FILE_NAME = "appData.db"
 
-val migrations = arrayOf(Migration_1_2)
+val migrations = emptyArray<Migration>()
 
 expect class DatasourceFactory {
     fun createDatabaseClientBuilder(): RoomDatabase.Builder<DatabaseClient>

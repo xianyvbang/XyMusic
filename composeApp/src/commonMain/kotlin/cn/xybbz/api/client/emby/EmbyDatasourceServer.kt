@@ -82,6 +82,7 @@ class EmbyDatasourceServer(
     settingsManager,
     embyApiClient,
     customMediaApiClient,
+    contextWrapper
 ) {
     /**
      * 获得当前数据源类型
@@ -94,8 +95,7 @@ class EmbyDatasourceServer(
      * 创建连接客户端
      * @param [address] 地址
      */
-    override suspend fun initApiClient(
-        address: String,
+    override suspend fun createApiClient(
         deviceId: String,
         username: String,
         password: String
@@ -104,9 +104,6 @@ class EmbyDatasourceServer(
         embyApiClient.createApiClient(
             platformInfo.platformName, platformInfo.platformVersion, deviceId, platformInfo.deviceName
         )
-        //提前写入没有sessionToken的Authenticate请求头,不然登录请求都会报错
-        setToken()
-        embyApiClient.createHttpClient(address, ifTmpObject())
     }
 
     /**

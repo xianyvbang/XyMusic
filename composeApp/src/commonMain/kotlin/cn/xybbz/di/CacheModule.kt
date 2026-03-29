@@ -26,7 +26,6 @@ expect class CacheModule {
 
     @Singleton
     fun downloadCacheController(
-        contextWrapper: ContextWrapper,
-        settingsManager: SettingsManager
+        contextWrapper: ContextWrapper
     ): DownloadCacheCommonController
 }

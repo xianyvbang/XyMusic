@@ -23,7 +23,7 @@ import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import cn.xybbz.localdata.converter.StringListTypeConverter
 import cn.xybbz.localdata.enums.DataSourceType
-import java.time.Instant
+import kotlin.time.Clock
 
 @Entity(tableName = "xy_connection_config")
 data class ConnectionConfig(
@@ -100,15 +100,15 @@ data class ConnectionConfig(
     /**
      * 最后登陆时间
      */
-    val lastLoginTime: Long = Instant.now().toEpochMilli(),
+    val lastLoginTime: Long = Clock.System.now().toEpochMilliseconds(),
     /**
      * 更新数据时间
      */
-    val updateTime: Long = System.currentTimeMillis(),
+    val updateTime: Long = Clock.System.now().toEpochMilliseconds(),
     /**
      * 第一次链接时间
      */
-    val createTime: Long = System.currentTimeMillis(),
+    val createTime: Long = Clock.System.now().toEpochMilliseconds(),
 
     /**
      * navidrome扩展SubsonicToken

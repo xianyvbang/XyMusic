@@ -5,6 +5,7 @@ import androidx.room.ForeignKey
 import androidx.room.ForeignKey.Companion.CASCADE
 import androidx.room.Index
 import cn.xybbz.localdata.data.connection.ConnectionConfig
+import kotlin.time.Clock
 
 /**
  * 专辑音乐
@@ -30,5 +31,5 @@ data class AlbumMusic(
     val musicId: String,
     val connectionId: Long,
     val index: Int,
-    val cachedAt: Long = System.currentTimeMillis()// 缓存时间戳（System.currentTimeMillis）
+    val cachedAt: Long = Clock.System.now().toEpochMilliseconds()// 缓存时间戳（System.currentTimeMillis）
 )

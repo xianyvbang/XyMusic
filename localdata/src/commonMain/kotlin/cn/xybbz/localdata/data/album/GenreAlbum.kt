@@ -6,6 +6,7 @@ import androidx.room.ForeignKey.Companion.CASCADE
 import androidx.room.Index
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.genre.XyGenre
+import kotlin.time.Clock
 
 /**
  * 流派专辑
@@ -35,5 +36,5 @@ data class GenreAlbum(
     val albumId: String,
     val connectionId: Long,
     val index:Int,
-    val cachedAt: Long = System.currentTimeMillis()
+    val cachedAt: Long = Clock.System.now().toEpochMilliseconds()
 )

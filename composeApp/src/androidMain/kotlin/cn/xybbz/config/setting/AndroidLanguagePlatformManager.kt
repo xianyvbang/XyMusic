@@ -1,9 +1,9 @@
 package cn.xybbz.config.setting
 
-import androidx.compose.ui.text.intl.Locale
 import cn.xybbz.di.ContextWrapper
 import cn.xybbz.localdata.enums.LanguageType
 import com.hjq.language.MultiLanguages
+import java.util.Locale
 
 class AndroidLanguagePlatformManager(
     private val contextWrapper: ContextWrapper

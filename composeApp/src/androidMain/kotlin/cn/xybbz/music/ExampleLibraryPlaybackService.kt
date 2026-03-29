@@ -39,75 +39,71 @@ import androidx.media3.exoplayer.audio.AudioTrackAudioOutputProvider
 import androidx.media3.exoplayer.audio.ForwardingAudioOutputProvider
 import androidx.media3.session.CacheBitmapLoader
 import androidx.media3.session.CommandButton
-import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
+import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import cn.xybbz.R
+import cn.xybbz.api.client.CacheApiClient
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.api.client.ImageApiClient
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
 import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.lrc.LrcServer
-import cn.xybbz.media.MediaServer
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.media.MediaServer
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
-import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
-
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 
 @UnstableApi
-@AndroidEntryPoint
 //class ExamplePlaybackService : MediaSessionService() {
-class ExampleLibraryPlaybackService : MediaLibraryService() {
+class ExampleLibraryPlaybackService : MediaSessionService(), KoinComponent {
 
     private var exoPlayer: ExoPlayer? = null
-    private var mediaSession: MediaLibrarySession? = null
+    private var mediaSession: MediaSession? = null
     private val intentFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
     private val myNoisyAudioStreamReceiver = BecomingNoisyReceiver()
 
     //是否注册BecomingNoisyReceiver true:注册, false:未注册
     private var ifRegister: Boolean = false
 
-    lateinit var audioTrack: AudioTrack
 
     val scope = CoroutineScopeUtils.getIo("ExamplePlaybackService")
 
+    lateinit var audioTrack: AudioTrack
 
-    @Inject
-    lateinit var downloadCacheController: DownloadCacheController
+    var downloadCacheController: DownloadCacheController = get()
 
-    @Inject
-    lateinit var musicController: MusicController
+    var musicController: MusicController = get()
 
-    @Inject
-    lateinit var settingsManager: SettingsManager
 
-    @Inject
-    lateinit var db: DatabaseClient
+    var settingsManager: SettingsManager = get()
 
-    @Inject
-    lateinit var imageApiClient: ImageApiClient
 
-    @Inject
-    lateinit var lrcServer: LrcServer
+    var db: DatabaseClient = get()
 
-    @Inject
-    lateinit var dataSourceManager: DataSourceManager
 
-    @Inject
-    lateinit var fadeController: AudioFadeAndroidController
+    var imageApiClient: CacheApiClient = get()
 
-    @Inject
-    lateinit var mediaServer: MediaServer
+
+    var lrcServer: LrcServer = get()
+
+
+    var dataSourceManager: DataSourceManager = get()
+
+
+    var fadeController: AudioFadeAndroidController = get()
+
+
+    var mediaServer: MediaServer = get()
 
     private var exoPlayerListener: ExoPlayerListener? = null
 
@@ -237,71 +233,72 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
         }
         // 基于已创建的ExoPlayer创建MediaSession
 
-        val mediaSessionBuilder = MediaLibrarySession.Builder(
+        val mediaSessionBuilder = MediaSession.Builder(
             this,
             forwardingPlayer,
-            object : MediaLibrarySession.Callback {
+        )
+            .setCustomLayout(ImmutableList.of(favoriteButton))
+        mediaSessionBuilder.setCallback(object : MediaSession.Callback {
 
-                override fun onCustomCommand(
-                    session: MediaSession,
-                    controller: MediaSession.ControllerInfo,
-                    customCommand: SessionCommand,
-                    args: Bundle
-                ): ListenableFuture<SessionResult> {
-                    val argsValue = args.getString(Constants.MUSIC_PLAY_CUSTOM_COMMAND_TYPE_KEY)
-                    //根据args附件参数,进行判断是否是默认行为和主动调用行为
-                    if (customCommand.customAction == SAVE_TO_FAVORITES) {
-                        Log.i("music", "取消收藏音乐")
-                        //更新音乐收藏
-                        if (!argsValue.equals(Constants.MUSIC_PLAY_CUSTOM_COMMAND_TYPE)) {
-                            musicController.musicInfo?.let {
-                                musicController.invokingOnFavorite(
-                                    it.itemId
-                                )
-                            }
+            override fun onCustomCommand(
+                session: MediaSession,
+                controller: MediaSession.ControllerInfo,
+                customCommand: SessionCommand,
+                args: Bundle
+            ): ListenableFuture<SessionResult> {
+                val argsValue = args.getString(Constants.MUSIC_PLAY_CUSTOM_COMMAND_TYPE_KEY)
+                //根据args附件参数,进行判断是否是默认行为和主动调用行为
+                if (customCommand.customAction == SAVE_TO_FAVORITES) {
+                    Log.i("music", "取消收藏音乐")
+                    //更新音乐收藏
+                    if (!argsValue.equals(Constants.MUSIC_PLAY_CUSTOM_COMMAND_TYPE)) {
+                        musicController.musicInfo?.let {
+                            musicController.invokingOnFavorite(
+                                it.itemId
+                            )
                         }
-                        session.setCustomLayout(ImmutableList.of(removeFromFavoritesButton))
+                    }
+                    session.setCustomLayout(ImmutableList.of(removeFromFavoritesButton))
 
-                        return Futures.immediateFuture(
-                            SessionResult(SessionResult.RESULT_SUCCESS)
-                        )
+                    return Futures.immediateFuture(
+                        SessionResult(SessionResult.RESULT_SUCCESS)
+                    )
 
-                    } else if (customCommand.customAction == REMOVE_FROM_FAVORITES) {
-                        //保存收藏
-                        if (!argsValue.equals(Constants.MUSIC_PLAY_CUSTOM_COMMAND_TYPE)) {
-                            musicController.musicInfo?.let {
-                                musicController.invokingOnFavorite(
-                                    it.itemId,
-                                )
-                            }
-
+                } else if (customCommand.customAction == REMOVE_FROM_FAVORITES) {
+                    //保存收藏
+                    if (!argsValue.equals(Constants.MUSIC_PLAY_CUSTOM_COMMAND_TYPE)) {
+                        musicController.musicInfo?.let {
+                            musicController.invokingOnFavorite(
+                                it.itemId,
+                            )
                         }
-                        session.setCustomLayout(ImmutableList.of(favoriteButton))
-
-                        return Futures.immediateFuture(
-                            SessionResult(SessionResult.RESULT_SUCCESS)
-                        )
 
                     }
+                    session.setCustomLayout(ImmutableList.of(favoriteButton))
 
-                    return super.onCustomCommand(session, controller, customCommand, args)
+                    return Futures.immediateFuture(
+                        SessionResult(SessionResult.RESULT_SUCCESS)
+                    )
+
                 }
 
-                override fun onConnect(
-                    session: MediaSession,
-                    controller: MediaSession.ControllerInfo
-                ): MediaSession.ConnectionResult {
-                    return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
-                        .setAvailableSessionCommands(
-                            MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS.buildUpon()
-                                .add(sessionCommand)
-                                .add(removeFavorites)
-                                .build(),
-                        )
-                        .build()
-                }
-            })
-            .setCustomLayout(ImmutableList.of(favoriteButton))
+                return super.onCustomCommand(session, controller, customCommand, args)
+            }
+
+            override fun onConnect(
+                session: MediaSession,
+                controller: MediaSession.ControllerInfo
+            ): MediaSession.ConnectionResult {
+                return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
+                    .setAvailableSessionCommands(
+                        MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS.buildUpon()
+                            .add(sessionCommand)
+                            .add(removeFavorites)
+                            .build(),
+                    )
+                    .build()
+            }
+        })
 
         mediaSessionBuilder.setBitmapLoader(
             CacheBitmapLoader(
@@ -344,7 +341,7 @@ class ExampleLibraryPlaybackService : MediaLibraryService() {
         super.onDestroy()
     }
 
-    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession? {
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
         return mediaSession
     }
 

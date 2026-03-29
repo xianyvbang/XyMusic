@@ -52,6 +52,8 @@ kotlin {
             implementation(libs.androidx.media3.workmanager)
             //拼音相关
             implementation(libs.tinypinyin)
+            //多语种适配框架
+            implementation(libs.multi.languages)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)

@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.androidLint)
     alias(libs.plugins.androidx.room)
     alias(libs.plugins.kotlin.ksp)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 kotlin {
@@ -69,6 +70,7 @@ kotlin {
                 implementation(libs.androidx.room.runtime)
                 implementation(libs.androidx.sqlite.bundled)
                 api(libs.androidx.room.paging)
+                implementation(libs.kotlinx.serialization.json)
                 // Add KMP dependencies here
             }
         }

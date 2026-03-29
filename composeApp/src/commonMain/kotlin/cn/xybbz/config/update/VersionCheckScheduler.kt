@@ -53,6 +53,6 @@
 //
 //    fun shouldCheck(): Boolean {
 //        val latestVersionTime = settingsManager.get().latestVersionTime
-//        return (System.currentTimeMillis() - latestVersionTime) >= Constants.VERSION_INFO_INTERVAL * 60_000
+//        return (Clock.System.now().toEpochMilliseconds() - latestVersionTime) >= Constants.VERSION_INFO_INTERVAL * 60_000
 //    }
 //}
