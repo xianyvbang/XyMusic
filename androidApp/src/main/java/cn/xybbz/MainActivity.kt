@@ -8,6 +8,14 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import cn.xybbz.di.initKoin
 import org.koin.android.ext.koin.androidContext
 
+// this part should be configured only once in the app to use native android logging
+object Static {
+    init {
+        System.setProperty("kotlin-logging-to-android-native", "true")
+    }
+}
+private val static = Static
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()

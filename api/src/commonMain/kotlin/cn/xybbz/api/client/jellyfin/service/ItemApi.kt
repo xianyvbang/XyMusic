@@ -28,6 +28,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.http.parameters
+import io.ktor.http.parseQueryString
 import io.ktor.util.appendAll
 
 /**
@@ -42,9 +43,10 @@ class ItemApi(private val httpClient: HttpClient) : BaseApi {
      */
     suspend fun getItems(itemRequest: ItemRequest): Response<ItemResponse> {
         return httpClient.get("/Items") {
-            parameters {
-                appendAll(*itemRequest.toListMap())
+            url {
+                parameters.appendAll(*itemRequest.toListMap())
             }
+
         }.body()
     }
 

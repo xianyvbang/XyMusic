@@ -78,7 +78,7 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
         TokenServer.updateBaseUrl(baseUrl)
         if (!ifTmp)
             updateTokenHeaderName()
-
+        logger.error { "开始创建 createHttpClient" }
         //todo 注意关闭
         httpClient = provideClient().config {
             engine {

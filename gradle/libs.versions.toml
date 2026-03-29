@@ -20,8 +20,9 @@ kotlinStdlib = "2.3.10"
 runner = "1.7.0"
 core = "1.7.0"
 coil = "3.4.0"
-ktor = "3.4.1"
+ktor = "3.4.2"
 logging = "8.0.01"
+slf4j = "2.0.17"
 serialization = "1.10.0"
 datetime = "0.7.1"
 jetbrainsKotlinJvm = "2.3.20"
@@ -80,6 +81,7 @@ kotlin-ktor-content-negotiation = { module = "io.ktor:ktor-client-content-negoti
 kotlin-ktor-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 
 kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "logging" }
+kotlin-logging-slf4j = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "datetime" }

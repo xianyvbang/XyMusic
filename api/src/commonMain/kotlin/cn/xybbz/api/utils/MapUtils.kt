@@ -66,7 +66,7 @@ fun JsonObject.convertToListPairs(isConvertList: Boolean): List<Pair<String, Ite
                     listOf(key to listOf(value.filter { !it.jsonPrimitive.contentOrNull.isNullOrEmpty() }
                         .joinToString(",") { it.jsonPrimitive.content }))
                 } else {
-                    logger.error {  value.map { it.toString() }.toList().joinToString(" || ") }
+
                     listOf(key to value.map { it.toString() }.toList())
                 }
             }
@@ -76,6 +76,7 @@ fun JsonObject.convertToListPairs(isConvertList: Boolean): List<Pair<String, Ite
             }
         }
     }
+    logger.error {  flatMap.joinToString(" || ") }
     return flatMap
 }
 
