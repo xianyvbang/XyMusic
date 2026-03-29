@@ -18,7 +18,8 @@
 
 package cn.xybbz.api.utils
 
-import cn.xybbz.api.converter.json
+import cn.xybbz.api.converter.jsonSerializer
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -34,7 +35,7 @@ import kotlinx.serialization.json.jsonPrimitive
 inline fun <reified T> T.toStringMap(
     isConvertList: Boolean = false
 ): List<Pair<String, String>> {
-    val jsonElement = json.encodeToJsonElement(this)
+    val jsonElement = jsonSerializer.encodeToJsonElement(this)
     if (jsonElement !is JsonObject) return emptyList()
     //改为Pair
     return jsonElement.convertToPairs(isConvertList)
@@ -44,12 +45,12 @@ inline fun <reified T> T.toStringMap(
 inline fun <reified T> T.toListMap(
     isConvertList: Boolean = false
 ): Array<Pair<String, Iterable<String>>> {
-    val jsonElement = json.encodeToJsonElement(this)
+    val jsonElement = jsonSerializer.encodeToJsonElement(this)
     if (jsonElement !is JsonObject) return emptyArray()
     //改为Pair
     return jsonElement.convertToListPairs(isConvertList).toTypedArray()
 }
-
+private val logger = KotlinLogging.logger("JsonObject")
 
 fun JsonObject.convertToListPairs(isConvertList: Boolean): List<Pair<String, Iterable<String>>> {
     val toMap = this.toMap()
@@ -65,6 +66,7 @@ fun JsonObject.convertToListPairs(isConvertList: Boolean): List<Pair<String, Ite
                     listOf(key to listOf(value.filter { !it.jsonPrimitive.contentOrNull.isNullOrEmpty() }
                         .joinToString(",") { it.jsonPrimitive.content }))
                 } else {
+                    logger.error {  value.map { it.toString() }.toList().joinToString(" || ") }
                     listOf(key to value.map { it.toString() }.toList())
                 }
             }

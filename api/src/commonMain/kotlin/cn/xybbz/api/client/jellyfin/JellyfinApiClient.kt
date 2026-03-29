@@ -280,7 +280,7 @@ class JellyfinApiClient : DefaultParentApiClient() {
         clientLoginInfoReq: ClientLoginInfoReq
     ) {
         updateAccessToken(accessToken)
-        updateTokenOrHeadersOrQuery()
+        updateTokenHeaderValue()
     }
 
     override suspend fun ping(): String {

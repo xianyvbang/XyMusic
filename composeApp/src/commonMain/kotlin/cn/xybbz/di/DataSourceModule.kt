@@ -32,12 +32,13 @@ import cn.xybbz.api.client.plex.PlexDatasourceServer
 import cn.xybbz.api.client.subsonic.SubsonicApiClient
 import cn.xybbz.api.client.subsonic.SubsonicDatasourceServer
 import cn.xybbz.api.client.version.VersionApiClient
+import cn.xybbz.common.enums.DataSourceQualifiers
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
-import cn.xybbz.localdata.enums.DataSourceType
 import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.Module
+import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
 
 @Module
@@ -45,7 +46,7 @@ import org.koin.core.annotation.Singleton
 class DataSourceModule {
 
     @Factory
-    @DataSourceKey(DataSourceType.JELLYFIN)
+    @Named(DataSourceQualifiers.JELLYFIN)
     fun jellyfinApiServer(
         db: DatabaseClient,
         settingsManager: SettingsManager,
@@ -63,7 +64,7 @@ class DataSourceModule {
     }
 
     @Factory
-    @DataSourceKey(DataSourceType.SUBSONIC)
+    @Named(DataSourceQualifiers.SUBSONIC)
     fun subsonicDataSourceServer(
         db: DatabaseClient,
         settingsManager: SettingsManager,
@@ -81,7 +82,7 @@ class DataSourceModule {
     }
 
     @Factory
-    @DataSourceKey(DataSourceType.NAVIDROME)
+    @Named(DataSourceQualifiers.NAVIDROME)
     fun navidromeDatasourceServer(
         db: DatabaseClient,
         settingsManager: SettingsManager,
@@ -99,7 +100,7 @@ class DataSourceModule {
     }
 
     @Factory
-    @DataSourceKey(DataSourceType.EMBY)
+    @Named(DataSourceQualifiers.EMBY)
     fun embyDatasourceServer(
         db: DatabaseClient,
         settingsManager: SettingsManager,
@@ -118,7 +119,7 @@ class DataSourceModule {
 
 
     @Factory
-    @DataSourceKey(DataSourceType.PLEX)
+    @Named(DataSourceQualifiers.PLEX)
     fun plexDatasourceServer(
         db: DatabaseClient,
         settingsManager: SettingsManager,

@@ -32,7 +32,7 @@ val module = SerializersModule {
 }
 */
 
-val json = Json {
+val jsonSerializer = Json {
 //    serializersModule = module
     ignoreUnknownKeys = true  // JSON 多字段不报错
     encodeDefaults = true     // 默认值也写入（可选）

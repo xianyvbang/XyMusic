@@ -39,6 +39,8 @@ tinypinyin = "3.0.0"
 cryptography = "0.5.0"
 paging = "3.4.2"
 multiLanguages = "10.2"
+splashscreen = "1.2.0"
+
 
 
 [libraries]
@@ -67,6 +69,7 @@ androidx-core = { group = "androidx.test", name = "core", version.ref = "core" }
 
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
+coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
 
 kotlin-ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 kotlin-ktor-android = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
@@ -74,6 +77,7 @@ kotlin-ktor-ios = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" 
 kotlin-ktor-apache = { module = "io.ktor:ktor-client-apache5", version.ref = "ktor" }
 kotlin-ktor-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 kotlin-ktor-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+kotlin-ktor-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 
 kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "logging" }
 
@@ -115,6 +119,8 @@ cryptography-provider-optimal = { module = "dev.whyoleg.cryptography:cryptograph
 cryptography-random = { module = "dev.whyoleg.cryptography:cryptography-random", version.ref = "cryptography" }
 
 multi-languages = { module = "com.github.getActivity:MultiLanguages", version.ref = "multiLanguages" }
+
+androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "splashscreen" }
 
 
 [plugins]

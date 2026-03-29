@@ -693,13 +693,6 @@ class SubsonicDatasourceServer(
     }
 
     /**
-     * 设置token
-     */
-    override fun setToken() {
-        subsonicApiClient.updateTokenOrHeadersOrQuery()
-    }
-
-    /**
      * 上报播放
      */
     override suspend fun reportPlaying(

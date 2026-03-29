@@ -13,6 +13,10 @@ kotlin {
         }
     }
 
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
+
     dependencies {
         implementation(projects.composeApp)
         implementation(libs.compose.uiToolingPreview)
@@ -21,6 +25,8 @@ kotlin {
         implementation(project.dependencies.platform(libs.koin.bom))
         implementation(libs.koin.core)
         implementation(libs.koin.android)
+        //启动页面
+        implementation(libs.androidx.core.splashscreen)
     }
 }
 android {

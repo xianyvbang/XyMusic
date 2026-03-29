@@ -830,12 +830,6 @@ class NavidromeDatasourceServer(
         return navidromeApiClient.httpClient
     }
 
-    /**
-     * 设置token
-     */
-    override fun setToken() {
-        navidromeApiClient.updateTokenOrHeadersOrQuery()
-    }
 
     /**
      * 上报播放

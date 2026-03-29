@@ -36,6 +36,7 @@ import cn.xybbz.common.enums.LoginStateType
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.SortTypeEnum
+import cn.xybbz.common.enums.koinQualifier
 import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
@@ -73,7 +74,6 @@ import kotlinx.coroutines.flow.merge
 import org.jetbrains.compose.resources.getString
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
-import org.koin.core.qualifier.named
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.add_music_to_playlist_failed
 import xymusic_kmp.composeapp.generated.resources.add_music_to_playlist_success
@@ -308,7 +308,7 @@ open class DataSourceManager(
     ) {
         updateDataSourceType(dataSourceType)
         Log.i("=====", "数据源开始切换")
-        getDataSourceServerByType(dataSourceType, false)?.let {
+        getDataSourceServerByType(dataSourceType, false).let {
             dataSourceServer = it
             dataSourceServerFlow.value = it
 
@@ -327,7 +327,7 @@ open class DataSourceManager(
         dataSourceType: DataSourceType,
         ifTmp: Boolean
     ): IDataSourceParentServer {
-        val iDataSourceParentServer: IDataSourceParentServer = get(named(dataSourceType))
+        val iDataSourceParentServer: IDataSourceParentServer = get(dataSourceType.koinQualifier())
         iDataSourceParentServer.updateIfTmpObject(ifTmp)
         return iDataSourceParentServer
     }

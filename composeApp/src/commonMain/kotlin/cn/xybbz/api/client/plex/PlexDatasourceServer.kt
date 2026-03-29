@@ -1244,13 +1244,6 @@ class PlexDatasourceServer(
     }
 
     /**
-     * 设置token
-     */
-    override fun setToken() {
-        plexApiClient.updateTokenOrHeadersOrQuery()
-    }
-
-    /**
      * 上报播放状态
      */
     override suspend fun reportPlaying(

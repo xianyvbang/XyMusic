@@ -770,13 +770,6 @@ class JellyfinDatasourceServer(
     }
 
     /**
-     * 获得token
-     */
-    override fun setToken() {
-        jellyfinApiClient.updateTokenOrHeadersOrQuery()
-    }
-
-    /**
      * 上报播放
      */
     override suspend fun reportPlaying(

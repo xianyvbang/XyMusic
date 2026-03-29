@@ -258,7 +258,7 @@ class EmbyApiClient : DefaultParentApiClient() {
         clientLoginInfoReq: ClientLoginInfoReq
     ) {
         updateAccessTokenAndUserId(accessToken, userId)
-        updateTokenOrHeadersOrQuery()
+        updateTokenHeaderValue()
     }
 
     override suspend fun ping() {

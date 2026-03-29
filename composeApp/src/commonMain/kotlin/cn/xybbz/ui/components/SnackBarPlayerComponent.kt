@@ -382,7 +382,6 @@ fun SnackBarPlayerComponent(
                         Icon(
                             painter = painterResource(Res.drawable.queue_music_24px),
                             contentDescription = stringResource(Res.string.music_list),
-                            tint = Color.White,
                             modifier = Modifier
                                 .padding(horizontal = 5.dp)
                                 .debounceClickable(
@@ -561,7 +560,6 @@ private fun CircularProgressIndicatorComp(musicController: MusicCommonController
                 modifier = Modifier
                     .size(30.dp)
                     .clip(CircleShape),
-                color = Color.White,
                 strokeWidth = 2.dp
             )
         } else {
@@ -570,12 +568,10 @@ private fun CircularProgressIndicatorComp(musicController: MusicCommonController
                 modifier = Modifier
                     .size(30.dp)
                     .clip(CircleShape),
-                color = Color.White,
-                trackColor = Color.White,
                 progress = {
                     0.0f
                 },
-                strokeWidth = 1.dp
+                strokeWidth = 1.5.dp
             )
             CircularProgressIndicator(
                 modifier = Modifier
@@ -609,8 +605,7 @@ private fun CircularProgressIndicatorComp(musicController: MusicCommonController
                         musicController.resume()
                     }
 
-                },
-            tint = Color.White,
+                }
         )
     }
 }

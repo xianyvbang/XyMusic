@@ -21,6 +21,8 @@ package cn.xybbz.music
 import android.content.ComponentName
 import android.content.Context
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
@@ -75,6 +77,18 @@ class MusicController(
     private lateinit var controllerFuture: ListenableFuture<MediaController>
     private val mediaController: MediaController?
         get() = if (controllerFuture.isDone) controllerFuture.get() else null
+
+    private fun withMediaControllerOnApplicationThread(block: MediaController.() -> Unit) {
+        val controller = mediaController ?: return
+        if (Looper.myLooper() == controller.applicationLooper) {
+            controller.block()
+            return
+        }
+        Handler(controller.applicationLooper).post {
+            val currentController = mediaController ?: return@post
+            currentController.block()
+        }
+    }
 
 
     override fun replacePlaylistItemUrl() {
@@ -515,8 +529,8 @@ class MusicController(
             downloadCacheController.cancelAllCache()
         }
 
-        // 停止之前播放
-        mediaController?.run {
+        // MediaController methods must run on the controller application thread.
+        withMediaControllerOnApplicationThread {
             clearMediaItems()
             if (!ifInitPlayerList) {
                 updateState(PlayStateEnum.Loading)
@@ -659,7 +673,9 @@ class MusicController(
      */
     override fun clearPlayerList() {
         progressTicker.stop()
-        mediaController?.clearMediaItems()
+        withMediaControllerOnApplicationThread {
+            clearMediaItems()
+        }
         fadeController.release()
         super.clearPlayerList()
     }
@@ -709,10 +725,12 @@ class MusicController(
 
 
     override fun close() {
-        mediaController?.clearMediaItems()
+        withMediaControllerOnApplicationThread {
+            clearMediaItems()
+            removeListener(playerListener)
+            release()
+        }
         fadeController.close()
-        mediaController?.release()
-        mediaController?.removeListener(playerListener)
         progressTicker.close()
         super.close()
     }

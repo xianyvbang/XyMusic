@@ -330,7 +330,6 @@ abstract class IDataSourceParentServer(
         password: String
     ) {
         createApiClient(deviceId, username, password)
-        setToken()
         defaultParentApiClient.createHttpClient(address, ifTmpObject())
     }
 
@@ -434,11 +433,6 @@ abstract class IDataSourceParentServer(
             }
         }
     }
-
-    /**
-     * 设置token
-     */
-    abstract fun setToken()
 
 
     /**

@@ -24,7 +24,7 @@ import cn.xybbz.api.base.IDownLoadApi
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
 import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.constants.ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
-import cn.xybbz.api.converter.json
+import cn.xybbz.api.converter.jsonSerializer
 import cn.xybbz.api.enums.subsonic.Status
 import cn.xybbz.api.events.ReLoginEventBus
 import cn.xybbz.api.exception.ServiceException
@@ -43,7 +43,9 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.http.parameters
+import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.appendAll
+import kotlinx.serialization.json.Json
 
 abstract class DefaultApiClient : ApiFactory, DownloadFactory {
 
@@ -76,6 +78,7 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
         TokenServer.updateBaseUrl(baseUrl)
         if (!ifTmp)
             updateTokenHeaderName()
+
         //todo 注意关闭
         httpClient = provideClient().config {
             engine {
@@ -90,7 +93,7 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
                     if (bool) {
                         append(
                             ApiConstants.AUTHORIZATION,
-                            headers.get(ApiConstants.AUTHORIZATION) ?: ""
+                            headers[ApiConstants.AUTHORIZATION] ?: ""
                         )
                     }
                 }
@@ -106,7 +109,7 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
                 level = LogLevel.HEADERS
             }
             install(ContentNegotiation) {
-                json
+                json(jsonSerializer)
             }
             install(HttpRequestRetry) {
                 maxRetries = 2
@@ -143,7 +146,7 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
                 }
             }
         }
-
+        updateTokenOrHeadersOrQuery()
         downloadApi(true)
     }
 
@@ -154,17 +157,19 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
         token = createToken()
         queryMap = getQueryMapData()
         headerMap = getHeadersMapData()
-        httpClient.config {
-            defaultRequest {
-                headers {
-                    append(tokenHeaderName, token)
-                    appendAll(headerMap)
-                }
-                parameters {
-                    appendAll(queryMap)
+        if (this::httpClient.isInitialized)
+            httpClient.config {
+                defaultRequest {
+                    headers {
+                        if (token.isNotBlank())
+                            append(tokenHeaderName, token)
+                        appendAll(headerMap)
+                    }
+                    parameters {
+                        appendAll(queryMap)
+                    }
                 }
             }
-        }
 
         //todo 有待观察
         if (!ifTmp) {
@@ -173,6 +178,20 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
             TokenServer.setQueryMapData(queryMap)
             TokenServer.setHeaderMapData(headerMap)
         }
+    }
+
+    fun updateTokenHeaderValue() {
+        token = createToken()
+        if (this::httpClient.isInitialized)
+            httpClient.config {
+                defaultRequest {
+                    headers {
+                        append(tokenHeaderName, token)
+                    }
+                }
+            }
+        if (!ifTmp)
+            TokenServer.setTokenData(token)
     }
 
     /**

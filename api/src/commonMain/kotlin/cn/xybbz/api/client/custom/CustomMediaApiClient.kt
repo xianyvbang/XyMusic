@@ -6,7 +6,7 @@ import cn.xybbz.api.client.custom.data.CustomLyricsQuery
 import cn.xybbz.api.client.custom.data.CustomLyricsRequestData
 import cn.xybbz.api.client.provideClient
 import cn.xybbz.api.constants.ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
-import cn.xybbz.api.converter.json
+import cn.xybbz.api.converter.jsonSerializer
 import cn.xybbz.api.okhttp.proxy.ProxyManager
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -21,6 +21,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.headers
 import io.ktor.http.URLBuilder
 import io.ktor.http.parameters
+import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.appendAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -132,7 +133,7 @@ class CustomMediaApiClient : ApiFactory {
                 level = LogLevel.HEADERS
             }
             install(ContentNegotiation) {
-                json
+                json(jsonSerializer)
             }
             install(HttpRequestRetry) {
                 maxRetries = 2

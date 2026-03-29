@@ -106,8 +106,10 @@ object XyPopTipManager {
         currentTipFlow.value = data
         if (data.durationMillis > 0) {
             dismissJob = scope.launch {
-                delay(data.durationMillis)
-                dismiss(data.id)
+                if (data.durationMillis != -1L){
+                    delay(data.durationMillis)
+                    dismiss(data.id)
+                }
             }
         }
         return XyPopTipHandle(data.id, ::dismiss)
