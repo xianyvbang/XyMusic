@@ -27,7 +27,6 @@ fun initKoin(config: KoinAppDeclaration? = null): KoinApplication {
     runBlocking {
         val koinTmp = koin.koin
         koinTmp.get<HomeDataRepository>().initData()
-        koinTmp.get<MusicCommonController>().initController()
 
     }
     appScope.launch {
@@ -35,6 +34,7 @@ fun initKoin(config: KoinAppDeclaration? = null): KoinApplication {
         koinTmp.get<ProxyConfigServer>().initConfig()
         val settings = koinTmp.get<SettingsManager>().setSettingsData()
         koinTmp.get<DataSourceManager>().initDataSource(settings.dataSourceType)
+        koinTmp.get<MusicCommonController>().initController()
         Log.i("init", "musicController加载")
 
     }
