@@ -91,6 +91,12 @@ kotlin {
             implementation(libs.cryptography.provider.optimal)
             implementation(libs.cryptography.random)
 
+            implementation(libs.sketch.compose)
+            implementation(libs.sketch.compose.ext)
+            implementation(libs.sketch.compose.resources)
+            implementation(libs.sketch.compose.resources.ext)
+            implementation(libs.sketch.ktor)
+
             implementation(project(path = ":ui"))
             implementation(project(path = ":api"))
             implementation(project(path = ":localdata"))

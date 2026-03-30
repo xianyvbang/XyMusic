@@ -37,9 +37,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import cn.xybbz.common.utils.copyTextToClipboard
 import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
+import cn.xybbz.common.utils.copyTextToClipboard
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.router.About
 import cn.xybbz.router.CacheLimit
@@ -61,7 +61,6 @@ import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.RoundedSurfaceColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.SettingsViewModel
-import coil3.compose.AsyncImagePainter.State.Empty.painter
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource

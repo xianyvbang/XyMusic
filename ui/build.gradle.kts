@@ -74,6 +74,13 @@ kotlin {
                 implementation(libs.compose.components.resources)
                 implementation(libs.coil.compose)
                 implementation(libs.coil.ktor)
+
+                implementation(libs.sketch.compose)
+                implementation(libs.sketch.compose.ext)
+                implementation(libs.sketch.compose.resources)
+                implementation(libs.sketch.compose.resources.ext)
+                implementation(libs.sketch.ktor)
+                implementation(libs.sketch.gif)
             }
         }
 

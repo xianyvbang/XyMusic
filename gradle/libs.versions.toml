@@ -128,6 +128,7 @@ androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", versi
 sketch-compose = { module = "io.github.panpf.sketch4:sketch-compose", version.ref = "sketch" }
 sketch-compose-resources = { module = "io.github.panpf.sketch4:sketch-compose-resources", version.ref = "sketch" }
 sketch-compose-resources-ext = { module = "io.github.panpf.sketch4:sketch-extensions-compose-resources", version.ref = "sketch" }
+sketch-compose-ext = { module = "io.github.panpf.sketch4:sketch-extensions-compose", version.ref = "sketch" }
 sketch-ktor = { module = "io.github.panpf.sketch4:sketch-http-ktor3", version.ref = "sketch" }
 sketch-gif = { module = "io.github.panpf.sketch4:sketch-animated-gif", version.ref = "sketch" }
 

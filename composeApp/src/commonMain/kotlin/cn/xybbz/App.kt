@@ -20,10 +20,12 @@ import cn.xybbz.ui.theme.XyConfigs
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.theme.xyBackgroundBrash
 import coil3.ImageLoader
+import coil3.PlatformContext
 import coil3.annotation.ExperimentalCoilApi
 import coil3.compose.setSingletonImageLoaderFactory
 import coil3.network.ktor3.KtorNetworkFetcherFactory
 import coil3.request.crossfade
+import io.ktor.client.HttpClient
 import org.koin.compose.getKoin
 
 @OptIn(ExperimentalCoilApi::class)
@@ -41,6 +43,18 @@ fun App() {
                 add(KtorNetworkFetcherFactory(dataSourceManager.getHttpClient()))
             }
             .build()
+    }
+
+    SingletonSketch.setSafe {
+        Sketch.Builder(PlatformContext.INSTANCE).apply {
+            logger(level = Logger.Level.Debug)
+            // There is a lot more...
+            addIgnoreFetcherProvider(KtorHttpUriFetcherProvider::class)
+            addComponents {
+                val httpStack = KtorStack(dataSourceManager.getHttpClient())
+                addFetcher(KtorHttpUriFetcher.Factory(httpStack))
+            }
+        }.build()
     }
 
     val isDark = when (settingsManager.themeType) {
