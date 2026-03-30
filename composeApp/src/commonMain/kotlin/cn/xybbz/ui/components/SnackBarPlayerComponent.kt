@@ -132,7 +132,7 @@ fun SnackBarPlayerComponent(
     val defaultSnackBarColor = MaterialTheme.colorScheme.surfaceContainerLowest
 
     var colorPurple by remember {
-        mutableStateOf(Color.Transparent)
+        mutableStateOf(defaultSnackBarColor)
     }
     val animatedColor by animateColorAsState(
         targetValue = colorPurple.takeIf { it != Color.Transparent } ?: defaultSnackBarColor,
@@ -184,7 +184,7 @@ fun SnackBarPlayerComponent(
 
             }.invokeOnCompletion {
                 snackBarPlayerViewModel.musicController.clearPlayerList()
-                colorPurple = Color.Transparent
+                colorPurple = defaultSnackBarColor
             }
         },
         onSeekToIndex = {
@@ -198,7 +198,7 @@ fun SnackBarPlayerComponent(
                     coroutineScope.launch {
                         mainViewModel.db.playerDao.removeByDatasource()
                     }
-                    colorPurple = Color.Transparent
+                    colorPurple = defaultSnackBarColor
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -352,7 +352,7 @@ fun SnackBarPlayerComponent(
                         musicController = snackBarPlayerViewModel.musicController,
                         onSetColor = {
                             Log.i("=====","加载图片成功1 ${it}")
-                            colorPurple = it ?: Color.Transparent
+                            colorPurple = it ?: defaultSnackBarColor
                         }
                     )
                     Row(
@@ -625,6 +625,7 @@ private fun ImageCover(
     val byteCoverModel = musicController.picByte
     val activeCoverModel = primaryCoverModel ?: fallbackCoverModel ?: byteCoverModel
     val backupCoverModel = if (activeCoverModel == byteCoverModel) null else byteCoverModel
+    val defaultSnackBarColor = MaterialTheme.colorScheme.surfaceContainerLowest
 
     XyImage(
         modifier = Modifier
@@ -640,7 +641,7 @@ private fun ImageCover(
         },
         onError = {
             logger.info { "加载图片失败" }
-            onSetColor.invoke(Color.Transparent)
+            onSetColor.invoke(defaultSnackBarColor)
         },
     )
 }
