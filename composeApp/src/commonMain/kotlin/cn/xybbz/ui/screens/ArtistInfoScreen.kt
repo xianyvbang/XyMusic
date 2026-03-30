@@ -508,9 +508,9 @@ fun ArtistInfoScreen(
                     .height(DefaultImageHeight),
                 model = artistBackdropUrls.primaryUrl ?: artistCoverUrls.primaryUrl,
                 backModel = artistBackdropUrls.fallbackUrl ?: artistCoverUrls.fallbackUrl,
-                placeholder = painterResource(Res.drawable.artrist_info),
-                error = painterResource(Res.drawable.artrist_info),
-                fallback = painterResource(Res.drawable.artrist_info),
+                placeholder = Res.drawable.artrist_info,
+                error = Res.drawable.artrist_info,
+                fallback = Res.drawable.artrist_info,
                 contentDescription = stringResource(Res.string.artist_cover),
 //                alpha = (topBarAlpha - 1) * -1
             )

@@ -630,9 +630,9 @@ private fun ImageCover(
             .size(XyTheme.dimens.snackBarPlayerHeight),
         model = activeCoverModel,
         backModel = backupCoverModel,
-        placeholder = painterResource(Res.drawable.music_xy_placeholder_foreground),
-        error = painterResource(Res.drawable.music_xy_placeholder_foreground),
-        fallback = painterResource(Res.drawable.music_xy_placeholder_foreground),
+        placeholder = Res.drawable.music_xy_placeholder_foreground,
+        error = Res.drawable.music_xy_placeholder_foreground,
+        fallback = Res.drawable.music_xy_placeholder_foreground,
         contentDescription = stringResource(Res.string.music_cover),
         onSuccess = {
             readPaletteColor(it.result.image, onSetColor)

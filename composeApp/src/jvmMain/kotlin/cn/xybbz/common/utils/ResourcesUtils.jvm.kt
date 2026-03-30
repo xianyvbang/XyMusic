@@ -1,6 +1,6 @@
 package cn.xybbz.common.utils
 
-import coil3.Bitmap
+import com.github.panpf.sketch.Bitmap
 
 internal actual fun bitmapWidth(bitmap: Bitmap): Int = bitmap.width
 

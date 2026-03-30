@@ -43,16 +43,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.painter.Painter
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import xymusic_kmp.composeapp.generated.resources.Res
+import cn.xybbz.common.constants.Constants
 import cn.xybbz.config.image.rememberAlbumCoverUrls
 import cn.xybbz.config.image.rememberArtistCoverUrls
 import cn.xybbz.config.image.rememberMusicCoverUrls
-import cn.xybbz.common.constants.Constants
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -63,6 +59,9 @@ import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyItem
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.stringResource
+import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.cover_suffix
 import xymusic_kmp.composeapp.generated.resources.music_xy_placeholder_foreground
 import xymusic_kmp.composeapp.generated.resources.unknown_artist
@@ -88,9 +87,9 @@ fun MusicCardComponent(
         end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
     ),
     shape: Shape,
-    placeholder: Painter? = painterResource(Res.drawable.music_xy_placeholder_foreground),
-    error: Painter? = painterResource(Res.drawable.music_xy_placeholder_foreground),
-    fallback: Painter? = painterResource(Res.drawable.music_xy_placeholder_foreground),
+    placeholder: DrawableResource? = Res.drawable.music_xy_placeholder_foreground,
+    error: DrawableResource? = Res.drawable.music_xy_placeholder_foreground,
+    fallback: DrawableResource? = Res.drawable.music_xy_placeholder_foreground,
     onRouter: (String) -> Unit,
 ) {
     Column(

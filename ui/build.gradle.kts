@@ -72,8 +72,6 @@ kotlin {
                 implementation(libs.compose.material3)
                 implementation(libs.compose.ui)
                 implementation(libs.compose.components.resources)
-                implementation(libs.coil.compose)
-                implementation(libs.coil.ktor)
 
                 implementation(libs.sketch.compose)
                 implementation(libs.sketch.compose.ext)

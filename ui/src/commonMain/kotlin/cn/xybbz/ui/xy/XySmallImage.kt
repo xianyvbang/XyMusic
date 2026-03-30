@@ -32,12 +32,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.DefaultAlpha
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.input.key.Key.Companion.R
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
-import coil3.compose.AsyncImagePainter
+import com.github.panpf.sketch.AsyncImage
+import com.github.panpf.sketch.rememberAsyncImageState
+import com.github.panpf.sketch.request.ComposableImageOptions
+import com.github.panpf.sketch.request.LoadState
+import com.github.panpf.sketch.request.error
+import com.github.panpf.sketch.request.fallback
+import com.github.panpf.sketch.request.placeholder
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import xymusic_kmp.ui.generated.resources.Res
 import xymusic_kmp.ui.generated.resources.default_placeholder
@@ -49,9 +54,9 @@ fun XySmallImage(
     backModel: Any? = null,
     size: Dp = 50.dp,
     contentDescription: String? = null,
-    placeholder: Painter? = painterResource(resource = Res.drawable.default_placeholder),
-    error: Painter? = painterResource(resource = Res.drawable.default_placeholder),
-    fallback: Painter? = painterResource(resource = Res.drawable.default_placeholder),
+    placeholder: DrawableResource? = Res.drawable.default_placeholder,
+    error: DrawableResource? = Res.drawable.default_placeholder,
+    fallback: DrawableResource? = Res.drawable.default_placeholder,
 ) {
     XyImage(
         modifier = Modifier
@@ -73,15 +78,15 @@ fun XyImage(
     modifier: Modifier = Modifier,
     model: Any?,
     backModel: Any? = null,
-    placeholder: Painter? = null,
-    error: Painter? = null,
-    fallback: Painter? = null,
+    placeholder: DrawableResource? = null,
+    error: DrawableResource? = null,
+    fallback: DrawableResource? = null,
     contentScale: ContentScale = ContentScale.Crop,
     alpha: Float = DefaultAlpha,
     contentDescription: String? = null,
-    onSuccess: ((AsyncImagePainter.State.Success) -> Unit)? = null,
-    onLoading: ((AsyncImagePainter.State.Loading) -> Unit)? = null,
-    onError: ((AsyncImagePainter.State.Error) -> Unit)? = null,
+    onSuccess: ((LoadState.Success) -> Unit)? = null,
+    onLoading: ((LoadState.Started) -> Unit)? = null,
+    onError: ((LoadState.Error) -> Unit)? = null,
 ) {
     val fallbackModel = when (backModel) {
         is String -> backModel.trim().takeIf { it.isNotBlank() }
@@ -104,26 +109,48 @@ fun XyImage(
             contentScale = contentScale
         )
 
-        else -> AsyncImage(
-            modifier = Modifier
-                .then(modifier),
-            placeholder = placeholder,
-            error = error,
-            fallback = fallback,
-            model = tempModel,
-            contentDescription = contentDescription,
-            alpha = alpha,
-            contentScale = contentScale,
-            onSuccess = onSuccess,
-            onLoading = onLoading,
-            onError = {
-                if (fallbackModel != null && tempModel != fallbackModel) {
-                    tempModel = fallbackModel
-                } else {
-                    onError?.invoke(it)
+        is String,null -> {
+            val state = rememberAsyncImageState(ComposableImageOptions {
+                placeholder?.let { placeholder(placeholder) }
+                error?.let { error(error) }
+                fallback?.let { fallback(fallback) }
+                // There is a lot more...
+            })
+
+            state.onLoadState = { it ->
+                when (it) {
+                    is LoadState.Success -> {
+                        onSuccess?.invoke(it)
+                    }
+
+                    is LoadState.Started -> {
+                        onLoading?.invoke(it)
+                    }
+
+                    is LoadState.Error -> {
+                        if (fallbackModel != null && tempModel != fallbackModel) {
+                            tempModel = fallbackModel
+                        } else {
+                            onError?.invoke(it)
+                        }
+                    }
+
+                    is LoadState.Canceled -> {
+
+                    }
                 }
             }
-        )
+
+            AsyncImage(
+                modifier = Modifier
+                    .then(modifier),
+                uri = currentModel,
+                state = state,
+                contentDescription = contentDescription,
+                alpha = alpha,
+                contentScale = contentScale,
+            )
+        }
     }
 }
 

@@ -30,7 +30,6 @@ import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.remote.RemoteCurrent
 import cn.xybbz.localdata.enums.DataSourceType
-import coil3.network.HttpException
 import kotlinx.io.IOException
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.DurationUnit
@@ -107,9 +106,6 @@ class ArtistRemoteMediator(
                 endOfPaginationReached = true
             )
         } catch (e: IOException) {
-            e.printStackTrace()
-            MediatorResult.Error(e)
-        } catch (e: HttpException) {
             e.printStackTrace()
             MediatorResult.Error(e)
         } catch (e: Exception) {

@@ -19,47 +19,13 @@ import cn.xybbz.ui.screens.MainScreen
 import cn.xybbz.ui.theme.XyConfigs
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.theme.xyBackgroundBrash
-import coil3.ImageLoader
-import coil3.PlatformContext
-import coil3.annotation.ExperimentalCoilApi
-import coil3.compose.setSingletonImageLoaderFactory
-import coil3.network.ktor3.KtorNetworkFetcherFactory
-import coil3.request.crossfade
-import com.github.panpf.sketch.SingletonSketch
-import com.github.panpf.sketch.Sketch
-import com.github.panpf.sketch.fetch.KtorHttpUriFetcher
-import com.github.panpf.sketch.fetch.internal.KtorHttpUriFetcherProvider
-import com.github.panpf.sketch.http.KtorStack
-import io.ktor.client.HttpClient
 import org.koin.compose.getKoin
 
-@OptIn(ExperimentalCoilApi::class)
 @Composable
 //@Preview
 fun App() {
 
-    val dataSourceManager: DataSourceManager = getKoin().get()
     val settingsManager: SettingsManager = getKoin().get()
-
-    setSingletonImageLoaderFactory { context ->
-        ImageLoader.Builder(context)
-            .crossfade(true)
-            .components {
-                add(KtorNetworkFetcherFactory(dataSourceManager.getHttpClient()))
-            }
-            .build()
-    }
-
-    SingletonSketch.setSafe {
-        Sketch.Builder(PlatformContext.INSTANCE).apply {
-            logger(level = Logger.Level.Debug)
-            addIgnoreFetcherProvider(KtorHttpUriFetcherProvider::class)
-            addComponents {
-                val httpStack = KtorStack(dataSourceManager.getHttpClient())
-                addFetcher(KtorHttpUriFetcher.Factory(httpStack))
-            }
-        }.build()
-    }
 
     val isDark = when (settingsManager.themeType) {
         ThemeTypeEnum.SYSTEM -> isSystemInDarkTheme()

@@ -1,9 +1,9 @@
 package cn.xybbz.common.utils
 
 import androidx.compose.ui.graphics.Color
-import coil3.Bitmap
-import coil3.Image
-import coil3.toBitmap
+import com.github.panpf.sketch.Bitmap
+import com.github.panpf.sketch.Image
+import com.github.panpf.sketch.asBitmapOrNull
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -13,14 +13,14 @@ import kotlin.math.max
 object ResourcesUtils {
 
     /**
-     * Coil 3 的成功结果返回的是 `Image`，这里统一转成 `Bitmap` 供跨平台取色使用。
+     * Sketch 的成功结果返回的是 `Image`，这里统一转成 `Bitmap` 供跨平台取色使用。
      */
     fun drawableToBitmap(drawable: Image?): Bitmap? {
-        return drawable?.toBitmap()
+        return drawable?.asBitmapOrNull()
     }
 
     /**
-     * 从 Coil 3 的图片结果中提取主色调。
+     * 从 Sketch 的图片结果中提取主色调。
      */
     fun readPaletteColor(
         image: Image?,

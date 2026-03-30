@@ -69,8 +69,8 @@ kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", versio
 androidx-runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
 androidx-core = { group = "androidx.test", name = "core", version.ref = "core" }
 
-coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
-coil-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
+#coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+#coil-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
 
 kotlin-ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 kotlin-ktor-android = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
@@ -125,7 +125,7 @@ multi-languages = { module = "com.github.getActivity:MultiLanguages", version.re
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "splashscreen" }
 
 # 新图片组件
-sketch-compose = { module = "io.github.panpf.sketch4:sketch-compose", version.ref = "sketch" }
+sketch-compose = { module = "io.github.panpf.sketch4:sketch-compose-koin", version.ref = "sketch" }
 sketch-compose-resources = { module = "io.github.panpf.sketch4:sketch-compose-resources", version.ref = "sketch" }
 sketch-compose-resources-ext = { module = "io.github.panpf.sketch4:sketch-extensions-compose-resources", version.ref = "sketch" }
 sketch-compose-ext = { module = "io.github.panpf.sketch4:sketch-extensions-compose", version.ref = "sketch" }
