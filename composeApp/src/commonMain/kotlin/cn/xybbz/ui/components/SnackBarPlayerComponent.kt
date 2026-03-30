@@ -60,7 +60,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -85,6 +84,7 @@ import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.viewmodel.SnackBarPlayerViewModel
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -129,11 +129,13 @@ fun SnackBarPlayerComponent(
     val coroutineScope = rememberCoroutineScope()
     val ifOpenSelect by snackBarPlayerViewModel.selectControl.uiState.collectAsStateWithLifecycle()
 
+    val defaultSnackBarColor = MaterialTheme.colorScheme.surfaceContainerLowest
+
     var colorPurple by remember {
         mutableStateOf(Color.Transparent)
     }
     val animatedColor by animateColorAsState(
-        targetValue = colorPurple,
+        targetValue = colorPurple.takeIf { it != Color.Transparent } ?: defaultSnackBarColor,
         animationSpec = tween(durationMillis = 800),
         label = "backgroundColorAnim"
     )
@@ -208,10 +210,7 @@ fun SnackBarPlayerComponent(
             .zIndex(Float.MAX_VALUE)
             .padding(horizontal = XyTheme.dimens.innerHorizontalPadding)
             .clip(shape = RoundedCornerShape(topEnd = 25.dp, bottomEnd = 25.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-            .drawBehind {
-                drawRect(animatedColor)
-            }
+            .background(animatedColor)
     ) {
         AnimatedContent(
             targetState = ifOpenSelect,
@@ -352,6 +351,7 @@ fun SnackBarPlayerComponent(
                     ImageCover(
                         musicController = snackBarPlayerViewModel.musicController,
                         onSetColor = {
+                            Log.i("=====","加载图片成功1 ${it}")
                             colorPurple = it ?: Color.Transparent
                         }
                     )
@@ -543,6 +543,7 @@ fun RowScope.HorizontalPagerSnackBar(
 
 }
 
+private val logger = KotlinLogging.logger("CircularProgressIndicatorComp")
 @Composable
 private fun CircularProgressIndicatorComp(musicController: MusicCommonController) {
 
@@ -638,6 +639,7 @@ private fun ImageCover(
             readPaletteColor(it.result.image, onSetColor)
         },
         onError = {
+            logger.info { "加载图片失败" }
             onSetColor.invoke(Color.Transparent)
         },
     )

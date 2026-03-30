@@ -2,9 +2,10 @@ package cn.xybbz.common.utils
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 
-private val logger = KotlinLogging.logger {}
+
 
 object Log {
+    private val logger = KotlinLogging.logger {}
     fun i(tag: String, msg: String) {
         logger.info { "[$tag] $msg" }
     }

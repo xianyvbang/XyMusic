@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.Color
 import com.github.panpf.sketch.Bitmap
 import com.github.panpf.sketch.Image
 import com.github.panpf.sketch.asBitmapOrNull
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -11,6 +12,8 @@ import kotlin.math.max
  * 资源工具类
  */
 object ResourcesUtils {
+
+    private val logger = KotlinLogging.logger("ResourcesUtils")
 
     /**
      * Sketch 的成功结果返回的是 `Image`，这里统一转成 `Bitmap` 供跨平台取色使用。
@@ -26,12 +29,17 @@ object ResourcesUtils {
         image: Image?,
         onColorReady: (Color) -> Unit
     ) {
+        Log.i("=====","加载图片成功1")
+        logger.info { "加载图片成功" }
         val bitmap = drawableToBitmap(image)
         if (bitmap == null) {
             onColorReady(Color.Transparent)
             return
         }
-        onColorReady(extractDominantColor(bitmap))
+        Color(0.99607843f, 0.99607843f, 0.99607843f, 1.0f,)
+        val dominantColor = extractDominantColor(bitmap)
+        logger.info { "加载图片成功: $dominantColor" }
+        onColorReady(dominantColor)
     }
 }
 
