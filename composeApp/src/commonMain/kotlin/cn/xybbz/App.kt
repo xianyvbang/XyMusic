@@ -25,6 +25,11 @@ import coil3.annotation.ExperimentalCoilApi
 import coil3.compose.setSingletonImageLoaderFactory
 import coil3.network.ktor3.KtorNetworkFetcherFactory
 import coil3.request.crossfade
+import com.github.panpf.sketch.SingletonSketch
+import com.github.panpf.sketch.Sketch
+import com.github.panpf.sketch.fetch.KtorHttpUriFetcher
+import com.github.panpf.sketch.fetch.internal.KtorHttpUriFetcherProvider
+import com.github.panpf.sketch.http.KtorStack
 import io.ktor.client.HttpClient
 import org.koin.compose.getKoin
 
@@ -48,7 +53,6 @@ fun App() {
     SingletonSketch.setSafe {
         Sketch.Builder(PlatformContext.INSTANCE).apply {
             logger(level = Logger.Level.Debug)
-            // There is a lot more...
             addIgnoreFetcherProvider(KtorHttpUriFetcherProvider::class)
             addComponents {
                 val httpStack = KtorStack(dataSourceManager.getHttpClient())
