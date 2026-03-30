@@ -41,6 +41,7 @@ cryptography = "0.5.0"
 paging = "3.4.2"
 multiLanguages = "10.2"
 splashscreen = "1.2.0"
+sketch = "4.4.0-beta02"
 
 
 
@@ -70,7 +71,6 @@ androidx-core = { group = "androidx.test", name = "core", version.ref = "core" }
 
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
-coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
 
 kotlin-ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 kotlin-ktor-android = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
@@ -96,7 +96,7 @@ koin-compose = { module = "io.insert-koin:koin-compose" }
 koin-android = { module = "io.insert-koin:koin-android" }
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel" }
 koin-compose-viewmodel-navigation3 = { module = "io.insert-koin:koin-compose-viewmodel-navigation" }
-koin-annotations = { module = "io.insert-koin:koin-annotations"}
+koin-annotations = { module = "io.insert-koin:koin-annotations" }
 
 androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
@@ -123,6 +123,13 @@ cryptography-random = { module = "dev.whyoleg.cryptography:cryptography-random",
 multi-languages = { module = "com.github.getActivity:MultiLanguages", version.ref = "multiLanguages" }
 
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "splashscreen" }
+
+# 新图片组件
+sketch-compose = { module = "io.github.panpf.sketch4:sketch-compose", version.ref = "sketch" }
+sketch-compose-resources = { module = "io.github.panpf.sketch4:sketch-compose-resources", version.ref = "sketch" }
+sketch-compose-resources-ext = { module = "io.github.panpf.sketch4:sketch-extensions-compose-resources", version.ref = "sketch" }
+sketch-ktor = { module = "io.github.panpf.sketch4:sketch-http-ktor3", version.ref = "sketch" }
+sketch-gif = { module = "io.github.panpf.sketch4:sketch-animated-gif", version.ref = "sketch" }
 
 
 [plugins]

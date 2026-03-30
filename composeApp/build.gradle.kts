@@ -22,7 +22,7 @@ kotlin {
             enable = true
         }
     }
-    
+
     listOf(
         iosArm64(),
         iosSimulatorArm64()
@@ -110,7 +110,9 @@ kotlin {
     }
 }
 
-
+composeCompiler {
+    stabilityConfigurationFiles.add(rootProject.layout.projectDirectory.file("compose_compiler_config.conf"))
+}
 
 dependencies {
     androidRuntimeClasspath(libs.compose.uiTooling)

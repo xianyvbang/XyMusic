@@ -74,7 +74,6 @@ kotlin {
                 implementation(libs.compose.components.resources)
                 implementation(libs.coil.compose)
                 implementation(libs.coil.ktor)
-                implementation(libs.coil.gif)
             }
         }
 

@@ -22,6 +22,12 @@ compose.desktop {
     application {
         mainClass = "cn.xybbz.MainKt"
 
+        buildTypes.release.proguard {
+            obfuscate.set(true)
+            optimize.set(true)
+            joinOutputJars.set(false)
+            configurationFiles.from(project.file("compose-desktop.pro"))
+        }
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "cn.xybbz"
