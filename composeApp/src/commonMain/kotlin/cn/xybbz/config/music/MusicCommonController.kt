@@ -101,6 +101,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
 
 
     init {
+        createScope()
         settingsManager.setOnListener(object : OnSettingsChangeListener {
             override fun onCacheMaxBytesChanged(
                 cacheUpperLimit: CacheUpperLimitEnum,

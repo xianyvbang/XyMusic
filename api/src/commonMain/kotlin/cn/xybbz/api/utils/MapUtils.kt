@@ -66,8 +66,12 @@ fun JsonObject.convertToListPairs(isConvertList: Boolean): List<Pair<String, Ite
                     listOf(key to listOf(value.filter { !it.jsonPrimitive.contentOrNull.isNullOrEmpty() }
                         .joinToString(",") { it.jsonPrimitive.content }))
                 } else {
-
-                    listOf(key to value.map { it.toString() }.toList())
+                    listOf(key to value.map {
+                        when (it) {
+                            is JsonPrimitive -> it.contentOrNull ?: it.toString()
+                            else -> it.toString()
+                        }
+                    })
                 }
             }
             else -> {

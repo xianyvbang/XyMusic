@@ -129,6 +129,7 @@ abstract class IDataSourceParentServer(
 
 
     private var ifTmpObject = false
+
     @OptIn(ExperimentalAtomicApi::class)
     private val loginRetryGate = AtomicBoolean(false)
 
@@ -299,13 +300,14 @@ abstract class IDataSourceParentServer(
 
                 connectionId
             }
-
-
-            emit(ClientLoginInfoState.UserLoginSuccess)
             if (!ifTmpObject()) {
                 connection(connectionConfig.copy(id = connectionId), connectionConfig.id != 0L)
                 MessageUtils.sendDismiss()
             }
+
+            emit(ClientLoginInfoState.UserLoginSuccess)
+            if (!ifTmpObject())
+                initOtherData(connectionId)
         }
 
     }
@@ -1329,14 +1331,21 @@ abstract class IDataSourceParentServer(
         sendLoginCompleted(LoginStateType.SUCCESS)
         val shouldSync = shouldSync()
         if (!shouldSync) return
+
+    }
+
+    /**
+     * 初始化登录后的其他数据
+     */
+    suspend fun initOtherData(connectionId: Long) {
         try {
             Log.i(Constants.LOG_ERROR_PREFIX, "start syncing media library/favorites/counts")
             db.withTransaction {
-                val remoteId = RemoteIdConstants.MEDIA_LIBRARY_AND_FAVORITE + connectionConfig.id
+                val remoteId = RemoteIdConstants.MEDIA_LIBRARY_AND_FAVORITE + connectionId
 
-                initFavoriteData(connectionId = connectionConfig.id)
+                initFavoriteData(connectionId = connectionId)
                 try {
-                    getDataInfoCount(connectionConfig.id)
+                    getDataInfoCount(connectionId)
                 } catch (e: Exception) {
                     Log.e(
                         Constants.LOG_ERROR_PREFIX,
@@ -1358,7 +1367,7 @@ abstract class IDataSourceParentServer(
                         id = remoteId,
                         nextKey = 0,
                         total = 0,
-                        connectionId = connectionConfig.id,
+                        connectionId = connectionId,
                         refresh = false
                     )
                 )

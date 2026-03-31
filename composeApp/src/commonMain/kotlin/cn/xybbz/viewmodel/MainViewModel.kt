@@ -428,7 +428,6 @@ class MainViewModel(
                 musicList = musicList,
                 player = player
             )
-//            musicController.pause()
         }
     }
 

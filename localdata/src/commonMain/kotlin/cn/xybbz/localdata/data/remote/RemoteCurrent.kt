@@ -6,7 +6,7 @@ import androidx.room.ForeignKey.Companion.CASCADE
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import cn.xybbz.localdata.data.connection.ConnectionConfig
-import java.time.Instant
+import kotlin.time.Clock
 
 /**
  * 记录分页信息
@@ -22,12 +22,6 @@ import java.time.Instant
  */
 @Entity(
     tableName = "remote_current",
-    foreignKeys = [ForeignKey(
-        entity = ConnectionConfig::class,
-        parentColumns = ["id"],
-        childColumns = ["connectionId"],
-        onDelete = CASCADE
-    )],
     indices = [Index("connectionId")]
 )
 data class RemoteCurrent(
@@ -42,5 +36,5 @@ data class RemoteCurrent(
      * 连接id
      */
     val connectionId: Long,
-    val createTime: Long = Instant.now().toEpochMilli()
+    val createTime: Long = Clock.System.now().toEpochMilliseconds()
 )

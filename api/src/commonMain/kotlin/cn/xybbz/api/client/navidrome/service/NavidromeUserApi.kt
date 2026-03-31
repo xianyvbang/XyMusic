@@ -68,11 +68,11 @@ class NavidromeUserApi(private val httpClient: HttpClient) : BaseApi {
     }
 
     /**
-     * POST PING系统
-     * @return [String]
+     * 某些服务端会对 POST /rest/ping 返回 301，不会被所有引擎自动跟随。
+     * 这里改用 GET，兼容 Navidrome 的 Subsonic 接口。
      */
     suspend fun postPingSystem(): SubsonicResponse<SubsonicDefaultResponse> {
-        return httpClient.post("/rest/ping") {}.body()
+        return httpClient.get("/rest/ping").body()
     }
 
     /**

@@ -82,6 +82,13 @@ class AlbumInfoViewModel(
     var xyAlbumInfoData by mutableStateOf<XyAlbum?>(null)
         private set
 
+
+    /**
+     * 封面图
+     */
+    var albumPic:String? by mutableStateOf(null)
+        private set
+
     /**
      * 收藏信息
      */
@@ -111,11 +118,15 @@ class AlbumInfoViewModel(
 
                 localAlbumInfoDeferred.await()?.let { localAlbumInfo ->
                     xyAlbumInfoData = localAlbumInfo
+                    albumPic = localAlbumInfo.pic
                     ifFavorite = localAlbumInfo.ifFavorite
                 }
 
                 serverAlbumInfoDeferred.await()?.let { serverAlbumInfo ->
                     xyAlbumInfoData = serverAlbumInfo
+                    if(albumPic.isNullOrBlank()){
+                        albumPic = serverAlbumInfo.pic
+                    }
                     ifFavorite = serverAlbumInfo.ifFavorite
                 }
             }

@@ -33,15 +33,19 @@ import cn.xybbz.api.okhttp.proxy.ProxyManager
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.appendAll
@@ -81,6 +85,8 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
         logger.error { "开始创建 createHttpClient" }
         //todo 注意关闭
         httpClient = provideClient().config {
+            expectSuccess = true
+            followRedirects = true
             engine {
                 proxy = ProxyManager.proxySelector()
             }
@@ -147,6 +153,36 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
                                     message = error?.message ?: "",
                                     code = code
                                 )
+                            }
+                        }
+                    }
+                }
+
+                handleResponseExceptionWithRequest { exception, request ->
+                    when (exception) {
+                        is ServerResponseException -> {
+                            val exceptionResponse = exception.response
+                            val exceptionResponseText = exceptionResponse.bodyAsText()
+                            throw ServiceException(
+                                exceptionResponse.status.value,
+                                exceptionResponseText
+                            ) as Throwable
+                        }
+
+                        is ClientRequestException -> {
+                            val exceptionResponse = exception.response
+                            val exceptionResponseText = exceptionResponse.bodyAsText()
+                            if (exceptionResponse.status == HttpStatusCode.Unauthorized) {
+                                throw UnauthorizedException(
+                                    exceptionResponseText,
+                                    exceptionResponse.status.value,
+                                    exceptionResponseText
+                                ) as Throwable
+                            } else {
+                                throw ServiceException(
+                                    exceptionResponse.status.value,
+                                    exceptionResponseText
+                                ) as Throwable
                             }
                         }
                     }
