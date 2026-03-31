@@ -33,7 +33,7 @@ class SubsonicArtistsApi(private val httpClient: HttpClient) : BaseApi {
         musicFolderId: String?,
     ): SubsonicResponse<SubsonicArtistsResponse> {
         return httpClient.get("/rest/getArtists") {
-            parameters {
+            parametersXy {
                 append("musicFolderId", musicFolderId)
             }
         }.body()
@@ -41,7 +41,7 @@ class SubsonicArtistsApi(private val httpClient: HttpClient) : BaseApi {
 
     suspend fun getArtist(id: String): SubsonicResponse<SubsonicArtistResponse> {
         return httpClient.get("/rest/getArtist") {
-            parameters {
+            parametersXy {
                 append("id", id)
             }
         }.body()
@@ -52,7 +52,7 @@ class SubsonicArtistsApi(private val httpClient: HttpClient) : BaseApi {
         count: Int? = null
     ): SubsonicResponse<SubsonicArtistInfoResponse> {
         return httpClient.get("/rest/getArtistInfo2") {
-            parameters {
+            parametersXy {
                 append("id", id)
                 append("count", count)
             }

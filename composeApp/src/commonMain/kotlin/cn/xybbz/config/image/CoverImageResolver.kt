@@ -2,6 +2,7 @@ package cn.xybbz.config.image
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import cn.xybbz.api.TokenServer
 import cn.xybbz.api.TokenServer.baseUrl
 import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.custom.data.CustomCoverQuery
@@ -12,6 +13,8 @@ import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyPlayMusic
+import io.ktor.http.URLBuilder
+import io.ktor.util.appendAll
 import org.koin.compose.koinInject
 
 data class CoverImageUrls(
@@ -203,14 +206,17 @@ private fun rememberCoverImageResolver(): CoverImageResolver {
 
 fun String?.normalizeCoverUrl(): String? {
     val normalizedValue = this?.trim()?.takeIf { it.isNotBlank() } ?: return null
-    return if (normalizedValue.isAbsoluteNetworkUrl()) {
+    val imageUrl = if (normalizedValue.isAbsoluteNetworkUrl()) {
         normalizedValue
     } else {
         baseUrl + normalizedValue
     }
+    val urlBuilder = URLBuilder(imageUrl)
+    urlBuilder.parameters.appendAll(TokenServer.queryMap)
+    return urlBuilder.buildString()
 }
 
 fun String.isAbsoluteNetworkUrl(): Boolean {
     return startsWith(HTTP, ignoreCase = true) ||
-        startsWith(HTTPS, ignoreCase = true)
+            startsWith(HTTPS, ignoreCase = true)
 }

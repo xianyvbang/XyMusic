@@ -36,7 +36,7 @@ class SubsonicPlaylistsApi(private val httpClient: HttpClient) : BaseApi {
         songId: List<String>? = null
     ): SubsonicResponse<SubsonicPlaylistResponse> {
         return httpClient.get("/rest/createPlaylist") {
-            parameters {
+            parametersXy {
                 append("playlistId", playlistId)
                 append("name", name)
                 appendAll("songId", songId)
@@ -53,7 +53,7 @@ class SubsonicPlaylistsApi(private val httpClient: HttpClient) : BaseApi {
         songIndexToRemove: List<String>? = null
     ): SubsonicResponse<SubsonicDefaultResponse> {
         return httpClient.get("/rest/updatePlaylist") {
-            parameters {
+            parametersXy {
                 append("playlistId", playlistId)
                 append("name", name)
                 append("comment", comment)
@@ -68,7 +68,7 @@ class SubsonicPlaylistsApi(private val httpClient: HttpClient) : BaseApi {
         id: String
     ): SubsonicResponse<SubsonicDefaultResponse> {
         return httpClient.get("/rest/deletePlaylist") {
-            parameters {
+            parametersXy {
                 append("id", id)
             }
         }.body()
@@ -77,7 +77,7 @@ class SubsonicPlaylistsApi(private val httpClient: HttpClient) : BaseApi {
 
     suspend fun getPlaylists(username: String): SubsonicResponse<SubsonicPlaylistsResponse> {
         return httpClient.get("/rest/getPlaylists") {
-            parameters {
+            parametersXy {
                 append("username", username)
             }
         }.body()
@@ -87,7 +87,7 @@ class SubsonicPlaylistsApi(private val httpClient: HttpClient) : BaseApi {
         id: String
     ): SubsonicResponse<SubsonicPlaylistResponse> {
         return httpClient.get("/rest/getPlaylist") {
-            parameters {
+            parametersXy {
                 append("id", id)
             }
         }.body()

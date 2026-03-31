@@ -64,7 +64,7 @@ class EmbyUserLibraryApi(private val httpClient: HttpClient) : BaseApi {
         itemRequest: ItemRequest
     ): List<ItemResponse> {
         return httpClient.get("/emby/Users/$userId/Items/Latest") {
-            parameters {
+            parametersXy {
                 appendAll(*itemRequest.toListMap())
             }
         }.body()

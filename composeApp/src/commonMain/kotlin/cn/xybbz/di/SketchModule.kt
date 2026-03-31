@@ -1,6 +1,5 @@
 package cn.xybbz.di
 
-import androidx.compose.ui.input.key.Key.Companion.R
 import cn.xybbz.api.client.DataSourceManager
 import com.github.panpf.sketch.Sketch
 import com.github.panpf.sketch.fetch.KtorHttpUriFetcher
@@ -27,7 +26,6 @@ class SketchModule {
                 addFetcher(KtorHttpUriFetcher.Factory(httpStack))
             }
             globalImageOptions(ImageOptions {
-
                 crossfade()
                 // more ...
             })

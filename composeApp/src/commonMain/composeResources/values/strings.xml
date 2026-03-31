@@ -84,7 +84,7 @@
     <string name="rename_playlist">重命名歌单</string>
     <string name="delete_playlist">删除歌单</string>
     <string name="modify_playlist_name">修改歌单名称</string>
-    <string name="confirm_delete_playlist">确定要删除 %s 吗?</string>
+    <string name="confirm_delete_playlist">确定要删除 %1$s 吗?</string>
 
     <!--    艺术家详情-->
     <string name="no_description">暂无简介</string>
@@ -95,7 +95,7 @@
     <string name="get_favorite_artists">只获取收藏艺术家</string>
     <!--    缓存设置页面-->
     <string name="music_cache_limit_title">音乐缓存上限</string>
-    <string name="current_auto_cache_limit">当前自动设置缓存上限为%s</string>
+    <string name="current_auto_cache_limit">当前自动设置缓存上限为%1$s</string>
     <string name="auto_cache_limit_description">
        自动设置缓存上限是根据手机可用内存,自动调节音乐缓存上限.\n\n缓存上限自动设置计算规则:\n1.可用存储空间大于100G,音乐缓存上限为16G.\n2.可用空间大于50G,小于等于100G,音乐缓存上限为8G.\n3.可用空间大于10G,小于等于50G,音乐缓存上限为4G.\n4.可用空间小于等于10G,音乐缓存上限为2G.
    </string>
@@ -114,10 +114,10 @@
 
     <!--链接管理页面-->
     <string name="connection_settings_list">连接设置列表</string>
-    <string name="view_connection_info">查看%s中的信息</string>
+    <string name="view_connection_info">查看%1$s中的信息</string>
     <!--链接页面-->
     <string name="server_connection">服务器连接</string>
-    <string name="connect_to_service">连接到%s</string>
+    <string name="connect_to_service">连接到%1$s</string>
     <string name="select_protocol">选择您要使用的协议连接到您的音乐库</string>
     <string name="server_cannot_be_empty">服务端地址不能为空</string>
     <string name="username_cannot_be_empty">用户名不能为空</string>
@@ -131,7 +131,7 @@
     <string name="enter_page">进入页面</string>
     <string name="no_music_service_selected">未选择音乐服务</string>
     <string name="music_service">音乐服务</string>
-    <string name="selected_item">选中%s</string>
+    <string name="selected_item">选中%1$s</string>
     <string name="please_enter_required_content">请输入必填内容</string>
     <string name="back_to_input_credentials">返回输入</string>
     <!--收藏页面-->
@@ -356,7 +356,7 @@
     <string name="year_selection">年份选择</string>
     <string name="can_cancel_favorite_filter">已经进行收藏筛选</string>
     <string name="can_get_favorite_music">已经取消收藏筛选</string>
-    <string name="enter_settings">进入%s设置</string>
+    <string name="enter_settings">进入%1$s设置</string>
 
 
     <string name="please_select">请选择</string>
@@ -413,14 +413,14 @@
     <string name="sort_by_premiere_date_asc">按发行时间正序</string>
     <string name="sort_by_premiere_date_desc">按发行时间倒叙</string>
     <string name="add_to_next_play_success">成功添加到下一首播放</string>
-    <string name="server_version_too_low">服务端版本过低(%s),支持的最低版本: %s</string>
+    <string name="server_version_too_low">服务端版本过低(%1$s),支持的最低版本: %2$s</string>
     <string name="server_version_cannot_be_obtained">服务端版本无法获取</string>
     <string name="plex_resource_error">获得Plex资源地址失败</string>
 
     <string name="unknown">未知</string>
 
     <string name="remove_download_title">批量删除下载</string>
-    <string name="confirm_delete_download">注意! 已完成下载的任务,此处只会删除下载任务,不会删除音乐文件,  确定要删除这%d个下载吗?</string>
+    <string name="confirm_delete_download">注意! 已完成下载的任务,此处只会删除下载任务,不会删除音乐文件,  确定要删除这%1$d个下载吗?</string>
     <string name="download_list">下载列表</string>
     <string name="local_music">本地音乐</string>
     <string name="add_download_list">已添加到下载列表</string>

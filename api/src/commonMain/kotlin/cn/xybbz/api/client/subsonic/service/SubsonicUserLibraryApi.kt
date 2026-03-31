@@ -38,7 +38,7 @@ class SubsonicUserLibraryApi(private val httpClient: HttpClient) : BaseApi {
         artistId: List<String>? = null
     ): SubsonicResponse<SubsonicDefaultResponse> {
         return httpClient.get("/rest/star") {
-            parameters {
+            parametersXy {
                 appendAll("id", id)
                 appendAll("albumId", albumId)
                 appendAll("artistId", artistId)
@@ -56,7 +56,7 @@ class SubsonicUserLibraryApi(private val httpClient: HttpClient) : BaseApi {
         artistId: List<String>? = null
     ): SubsonicResponse<SubsonicDefaultResponse> {
         return httpClient.get("/rest/unstar") {
-            parameters {
+            parametersXy {
                 appendAll("id", id)
                 appendAll("albumId", albumId)
                 appendAll("artistId", artistId)

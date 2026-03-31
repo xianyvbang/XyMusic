@@ -35,7 +35,7 @@ class PlaylistsApi(private val httpClient: HttpClient) : BaseApi {
         userId: String? = null,
     ) {
         httpClient.post("/Playlists/${playlistId}/Items") {
-            parameters {
+            parametersXy {
                 append("ids", ids)
                 append("userId", userId)
             }
@@ -66,7 +66,7 @@ class PlaylistsApi(private val httpClient: HttpClient) : BaseApi {
         entryIds: String
     ) {
         httpClient.delete("/Playlists/${playlistId}/Items") {
-            parameters {
+            parametersXy {
                 append("entryIds", entryIds)
             }
         }

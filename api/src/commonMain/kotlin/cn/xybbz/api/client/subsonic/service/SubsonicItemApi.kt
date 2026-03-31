@@ -52,7 +52,7 @@ class SubsonicItemApi(private val httpClient: HttpClient) : BaseApi {
         musicFolderId: String?,
     ): SubsonicResponse<SubsonicAlbumListResponse> {
         return httpClient.get("/rest/getAlbumList2") {
-            parameters {
+            parametersXy {
                 append("type", type.toString())
                 append("size", size)
                 append("offset", offset)
@@ -66,7 +66,7 @@ class SubsonicItemApi(private val httpClient: HttpClient) : BaseApi {
 
     suspend fun getAlbum(id: String): SubsonicResponse<SubsonicAlbumResponse> {
         return httpClient.get("/rest/getAlbum") {
-            parameters {
+            parametersXy {
                 append("id", id)
             }
         }.body()
@@ -76,7 +76,7 @@ class SubsonicItemApi(private val httpClient: HttpClient) : BaseApi {
         id: String
     ): SubsonicResponse<SubsonicAlbumInfo2Response> {
         return httpClient.get("/rest/getAlbumInfo2") {
-            parameters {
+            parametersXy {
                 append("id", id)
             }
         }.body()
@@ -84,7 +84,7 @@ class SubsonicItemApi(private val httpClient: HttpClient) : BaseApi {
 
     suspend fun getSong(id: String): SubsonicResponse<SubsonicSongResponse> {
         return httpClient.get("/rest/getSong") {
-            parameters {
+            parametersXy {
                 append("id", id)
             }
         }.body()
@@ -101,7 +101,7 @@ class SubsonicItemApi(private val httpClient: HttpClient) : BaseApi {
         musicFolderId: String? = null
     ): SubsonicResponse<SubsonicSearchResponse> {
         return httpClient.get("/rest/search3") {
-            parameters {
+            parametersXy {
                 append("query", query)
                 append("artistCount", artistCount)
                 append("artistOffset", artistOffset)
@@ -122,7 +122,7 @@ class SubsonicItemApi(private val httpClient: HttpClient) : BaseApi {
         musicFolderId: String? = null
     ): SubsonicResponse<SubsonicRandomResponse> {
         return httpClient.get("/rest/getRandomSongs") {
-            parameters {
+            parametersXy {
                 append("size", size)
                 append("genre", genre)
                 append("fromYear", fromYear)
@@ -136,7 +136,7 @@ class SubsonicItemApi(private val httpClient: HttpClient) : BaseApi {
         musicFolderId: String?
     ): SubsonicResponse<SubsonicStarred2Response> {
         return httpClient.get("/rest/getStarred2") {
-            parameters {
+            parametersXy {
                 append("musicFolderId", musicFolderId)
             }
         }.body()
@@ -149,7 +149,7 @@ class SubsonicItemApi(private val httpClient: HttpClient) : BaseApi {
         musicFolderId: String? = null
     ): SubsonicResponse<SubsonicSongsByGenreResponse> {
         return httpClient.get("/rest/getSongsByGenre") {
-            parameters {
+            parametersXy {
                 append("genre", genre)
                 append("count", size)
                 append("offset", offset)
@@ -163,7 +163,7 @@ class SubsonicItemApi(private val httpClient: HttpClient) : BaseApi {
         count: Int = 20
     ): SubsonicResponse<SubsonicTopSongsResponse> {
         return httpClient.get("/rest/getTopSongs") {
-            parameters {
+            parametersXy {
                 append("artist", artistName)
                 append("count", count)
             }
@@ -175,7 +175,7 @@ class SubsonicItemApi(private val httpClient: HttpClient) : BaseApi {
         count: Int = 20
     ): SubsonicResponse<SubsonicSimilarSongsResponse> {
         return httpClient.get("/rest/getSimilarSongs") {
-            parameters {
+            parametersXy {
                 append("id", songId)
                 append("count", count)
             }

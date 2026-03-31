@@ -21,7 +21,7 @@ class GenreApi(private val httpClient: HttpClient) : BaseApi {
      */
     suspend fun getGenres(itemRequest: ItemRequest): Response<ItemResponse>{
         return httpClient.get("Genres"){
-            parameters {
+            parametersXy {
                 appendAll(*itemRequest.toListMap())
             }
         }.body()

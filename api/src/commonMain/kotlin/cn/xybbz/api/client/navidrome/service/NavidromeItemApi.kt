@@ -55,7 +55,7 @@ class NavidromeItemApi(private val httpClient: HttpClient) : BaseApi {
         libraryIds: List<String>? = null
     ): FullResponse<List<AlbumItem>> {
         return httpClient.get("/api/album") {
-            parameters {
+            parametersXy {
                 append("_start", start.toString())
                 append("_end", end.toString())
                 append("_order", order.toString())
@@ -69,6 +69,7 @@ class NavidromeItemApi(private val httpClient: HttpClient) : BaseApi {
                 append("recently_played", recentlyPlayed)
                 appendAll("library_id", libraryIds)
             }
+
         }.toFullResponse()
     }
 
@@ -80,7 +81,7 @@ class NavidromeItemApi(private val httpClient: HttpClient) : BaseApi {
         id: String
     ): SubsonicResponse<SubsonicAlbumInfo2Response> {
         return httpClient.get("/rest/getAlbumInfo2") {
-            parameters {
+            parametersXy {
                 append("id", id)
             }
         }.body()
@@ -101,7 +102,7 @@ class NavidromeItemApi(private val httpClient: HttpClient) : BaseApi {
         libraryIds: List<String>? = null
     ): FullResponse<List<SongItem>> {
         return httpClient.get("/api/song") {
-            parameters {
+            parametersXy {
                 append("_start", start.toString())
                 append("_end", end.toString())
                 append("_order", order.toString())
@@ -124,7 +125,7 @@ class NavidromeItemApi(private val httpClient: HttpClient) : BaseApi {
         libraryIds: List<String>? = null
     ): SubsonicResponse<SubsonicTopSongsResponse> {
         return httpClient.get("/rest/getTopSongs") {
-            parameters {
+            parametersXy {
                 append("artist", artistName)
                 append("count", count.toString())
                 appendAll("library_id", libraryIds)
@@ -138,7 +139,7 @@ class NavidromeItemApi(private val httpClient: HttpClient) : BaseApi {
         libraryIds: List<String>? = null
     ): SubsonicResponse<SubsonicSimilarSongsResponse> {
         return httpClient.get("/rest/getSimilarSongs") {
-            parameters {
+            parametersXy {
                 append("id", songId)
                 append("count", count.toString())
                 appendAll("library_id", libraryIds)

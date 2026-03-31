@@ -43,8 +43,8 @@ class ItemApi(private val httpClient: HttpClient) : BaseApi {
      */
     suspend fun getItems(itemRequest: ItemRequest): Response<ItemResponse> {
         return httpClient.get("/Items") {
-            url {
-                parameters.appendAll(*itemRequest.toListMap())
+            parametersXy {
+                appendAll(*itemRequest.toListMap())
             }
 
         }.body()
@@ -61,7 +61,7 @@ class ItemApi(private val httpClient: HttpClient) : BaseApi {
         fields: String? = null
     ): Response<ItemResponse> {
         return httpClient.get("/Items/$itemId/Similar") {
-            parameters {
+            parametersXy {
                 append("userId", userId)
                 append("Limit", limit.toString())
                 append("Fields", fields)
@@ -77,7 +77,7 @@ class ItemApi(private val httpClient: HttpClient) : BaseApi {
         isFavorite: Boolean? = null
     ): CountsResponse {
         return httpClient.get("/Items/Counts") {
-            parameters {
+            parametersXy {
                 append("userId", userId)
                 append("isFavorite",isFavorite)
             }

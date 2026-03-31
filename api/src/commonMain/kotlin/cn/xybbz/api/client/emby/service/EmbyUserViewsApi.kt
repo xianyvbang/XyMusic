@@ -25,7 +25,7 @@ class EmbyUserViewsApi(private val httpClient: HttpClient) : BaseApi {
         viewRequest: ViewRequest
     ): Response<ItemResponse> {
         return httpClient.get("/emby/Users/$userId/Views") {
-            parameters {
+            parametersXy {
                 appendAll(*viewRequest.toListMap())
             }
         }.body()

@@ -28,7 +28,7 @@ class PlexUserLibraryApi(private val httpClient: HttpClient) : BaseApi {
         uri: String
     ): PlexResponse<ItemInfoResponse> {
         return httpClient.post("/library/collections") {
-            parameters {
+            parametersXy {
                 append(name = "title", value = title)
                 append(name = "type", value = type)
                 append(name = "smart", value = smart)
@@ -51,7 +51,7 @@ class PlexUserLibraryApi(private val httpClient: HttpClient) : BaseApi {
         title: String
     ): PlexResponse<ItemInfoResponse> {
         return httpClient.get("/library/sections/${sectionKey}/collections") {
-            parameters {
+            parametersXy {
                 append(name = "subtype", value = subtype)
                 append(name = "smart", value = smart)
                 append(name = "sectionId", value = sectionId)
@@ -73,7 +73,7 @@ class PlexUserLibraryApi(private val httpClient: HttpClient) : BaseApi {
         uri: String
     ): PlexResponse<ItemInfoResponse> {
         return httpClient.put("/library/collections/${collectionId}/items") {
-            parameters {
+            parametersXy {
                 append(name = "type", value = type)
                 append(name = "uri", value = uri)
             }
@@ -90,7 +90,7 @@ class PlexUserLibraryApi(private val httpClient: HttpClient) : BaseApi {
         excludeAllLeaves: Int? = 1
     ): PlexResponse<ItemInfoResponse> {
         return httpClient.delete("/library/collections/${collectionId}/children/${musicId}") {
-            parameters {
+            parametersXy {
                 append(name = "excludeAllLeaves", value = excludeAllLeaves)
             }
         }.body()
@@ -107,7 +107,7 @@ class PlexUserLibraryApi(private val httpClient: HttpClient) : BaseApi {
         pageSize: Int
     ): PlexResponse<PlexLibraryItemResponse> {
         return httpClient.get("/library/collections/${sectionKey}/children") {
-            parameters {
+            parametersXy {
                 append(name = "excludeAllLeaves", value = excludeAllLeaves)
                 append(name = "includeCollections", value = includeCollections)
                 append(name = "includeMeta", value = includeMeta)
@@ -123,7 +123,7 @@ class PlexUserLibraryApi(private val httpClient: HttpClient) : BaseApi {
         count: Int
     ): PlexResponse<PlexLibraryItemResponse> {
         return httpClient.get("/library/metadata/${ids}/similarsimilar") {
-            parameters {
+            parametersXy {
                 append(name = "count", value = count)
             }
         }.body()

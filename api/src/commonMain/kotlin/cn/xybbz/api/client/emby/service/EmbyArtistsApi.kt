@@ -21,7 +21,7 @@ class EmbyArtistsApi(private val httpClient: HttpClient) : BaseApi {
 
     suspend fun getArtists(itemRequest: ItemRequest): Response<ItemResponse> {
         return httpClient.get("/emby/Artists") {
-            parameters {
+            parametersXy {
                 appendAll(*itemRequest.toListMap())
             }
         }.body<Response<ItemResponse>>()
@@ -35,7 +35,7 @@ class EmbyArtistsApi(private val httpClient: HttpClient) : BaseApi {
         itemRequest: ItemRequest?
     ): Response<ItemResponse> {
         return httpClient.get("/emby/Artists/${artistId}/Similar") {
-            parameters {
+            parametersXy {
                 appendAll(*itemRequest.toListMap())
             }
         }.body<Response<ItemResponse>>()

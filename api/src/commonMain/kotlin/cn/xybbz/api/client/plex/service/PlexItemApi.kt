@@ -38,7 +38,7 @@ class PlexItemApi(private val httpClient: HttpClient) : BaseApi {
         params: Map<String, String>? = null
     ): PlexResponse<PlexLibraryItemResponse> {
         return httpClient.get("/library/sections/${sectionKey}/${selectType}") {
-            parameters {
+            parametersXy {
                 append("type", type)
                 append("sort", sort)
                 append("title", title)
@@ -83,7 +83,7 @@ class PlexItemApi(private val httpClient: HttpClient) : BaseApi {
         asyncRefreshLocalMediaAgent: Int = 1,
     ): PlexResponse<ItemInfoResponse> {
         return httpClient.get("/library/metadata/${sectionKey}") {
-            parameters {
+            parametersXy {
                 append("includeConcerts", includeConcerts)
                 append("includeExtras", includeExtras)
                 append("includeOnDeck", includeOnDeck)
@@ -112,7 +112,7 @@ class PlexItemApi(private val httpClient: HttpClient) : BaseApi {
         pageSize: Int? = null
     ): PlexResponse<PlexLibrary> {
         return httpClient.get("/library/sections/${sectionKey}/genre") {
-            parameters {
+            parametersXy {
                 append("type", type)
                 append("sort", sort)
                 append("title", title)

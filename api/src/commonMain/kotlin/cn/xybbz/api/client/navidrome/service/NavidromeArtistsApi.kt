@@ -45,7 +45,7 @@ class NavidromeArtistsApi(private val httpClient: HttpClient) : BaseApi {
         libraryIds: List<String>? = null
     ): FullResponse<List<ArtistItem>?> {
         val httpResponse = httpClient.get("/api/artist") {
-            parameters {
+            parametersXy {
                 append("_start", start.toString())
                 append("_end", end.toString())
                 append("_order", order.toString())
@@ -69,7 +69,7 @@ class NavidromeArtistsApi(private val httpClient: HttpClient) : BaseApi {
         count: Int? = null
     ): SubsonicResponse<SubsonicArtistInfoResponse> {
         return httpClient.get("/rest/getArtistInfo2") {
-            parameters {
+            parametersXy {
                 append("id", id)
                 append("count", count)
             }

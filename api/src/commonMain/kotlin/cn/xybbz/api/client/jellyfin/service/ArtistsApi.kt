@@ -38,13 +38,11 @@ class ArtistsApi(private val httpClient: HttpClient) : BaseApi {
      * @return [Response<ItemResponse>]
      */
     suspend fun getArtists(
-        itemRequest: ItemRequest?,
+        itemRequest: ItemRequest
     ): Response<ItemResponse> {
         return httpClient.get("/Artists") {
-            parameters {
-                itemRequest?.let {
-                    appendAll(*it.toListMap())
-                }
+            parametersXy {
+                appendAll(*itemRequest.toListMap())
             }
         }.body()
     }
@@ -54,13 +52,11 @@ class ArtistsApi(private val httpClient: HttpClient) : BaseApi {
      */
     suspend fun getSimilarArtists(
         artistId: String,
-        itemRequest: ItemRequest?
+        itemRequest: ItemRequest
     ): Response<ItemResponse> {
         return httpClient.get("/Artists/$artistId/Similar") {
-            parameters {
-                itemRequest?.let {
-                    appendAll(*it.toListMap())
-                }
+            parametersXy {
+                appendAll(*itemRequest.toListMap())
             }
         }.body()
     }

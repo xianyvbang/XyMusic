@@ -4,6 +4,7 @@ import cn.xybbz.api.base.BaseApi
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
 import io.ktor.client.request.parameter
+import io.ktor.util.appendAll
 
 class LibraryApi(private val httpClient: HttpClient) : BaseApi {
 
@@ -21,7 +22,9 @@ class LibraryApi(private val httpClient: HttpClient) : BaseApi {
      */
     suspend fun deleteItems(ids: String){
         httpClient.delete("/Items") {
-            parameter("ids", ids)
+            parametersXy {
+                append("ids", ids)
+            }
         }
     }
 }

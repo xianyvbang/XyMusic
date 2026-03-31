@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import cn.xybbz.ui.theme.XyTheme
 import com.github.panpf.sketch.AsyncImage
 import com.github.panpf.sketch.rememberAsyncImageState
 import com.github.panpf.sketch.request.ComposableImageOptions
@@ -42,6 +43,7 @@ import com.github.panpf.sketch.request.LoadState
 import com.github.panpf.sketch.request.error
 import com.github.panpf.sketch.request.fallback
 import com.github.panpf.sketch.request.placeholder
+import com.github.panpf.sketch.request.repeatCount
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import xymusic_kmp.ui.generated.resources.Res
@@ -52,6 +54,7 @@ fun XySmallImage(
     modifier: Modifier = Modifier,
     model: Any?,
     backModel: Any? = null,
+    shape: Shape = RoundedCornerShape(XyTheme.dimens.corner),
     size: Dp = 50.dp,
     contentDescription: String? = null,
     placeholder: DrawableResource? = Res.drawable.default_placeholder,
@@ -62,10 +65,10 @@ fun XySmallImage(
         modifier = Modifier
             .then(modifier)
             .size(size)
-            .aspectRatio(1F)
-            .clip(RoundedCornerShape(8.dp)),
+            .aspectRatio(1F),
         model = model,
         backModel = backModel,
+        shape = shape,
         placeholder = placeholder,
         error = error,
         fallback = fallback,
@@ -78,6 +81,7 @@ fun XyImage(
     modifier: Modifier = Modifier,
     model: Any?,
     backModel: Any? = null,
+    shape: Shape = RoundedCornerShape(XyTheme.dimens.corner),
     placeholder: DrawableResource? = null,
     error: DrawableResource? = null,
     fallback: DrawableResource? = null,
@@ -102,19 +106,20 @@ fun XyImage(
 
     when (val currentModel = tempModel) {
         is Painter -> Image(
-            modifier = Modifier.then(modifier),
+            modifier = Modifier.then(modifier).clip(shape),
             painter = currentModel,
             contentDescription = contentDescription,
             alpha = alpha,
             contentScale = contentScale
         )
 
-        is String,null -> {
+        is String, null -> {
             val state = rememberAsyncImageState(ComposableImageOptions {
                 placeholder?.let { placeholder(placeholder) }
                 error?.let { error(error) }
                 fallback?.let { fallback(fallback) }
                 // There is a lot more...
+                repeatCount(0)
             })
 
             state.onLoadState = { it ->
@@ -142,7 +147,7 @@ fun XyImage(
             }
 
             AsyncImage(
-                modifier = Modifier
+                modifier = Modifier.clip(shape)
                     .then(modifier),
                 uri = currentModel,
                 state = state,

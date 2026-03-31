@@ -41,7 +41,7 @@ class PlexPlaylistsApi(private val httpClient: HttpClient) : BaseApi {
         smart: Int = 1,
     ): PlexResponse<PlexPlaylistResponse> {
         return httpClient.post("/playlists") {
-            parameters {
+            parametersXy {
                 append("title", title)
                 append("type", type)
                 append("public", smart)
@@ -54,7 +54,7 @@ class PlexPlaylistsApi(private val httpClient: HttpClient) : BaseApi {
         title: String
     ): PlaylistItemData {
         return httpClient.put("/playlists/$playlistId") {
-            parameters {
+            parametersXy {
                 append("title", title)
             }
         }.body()
@@ -73,7 +73,7 @@ class PlexPlaylistsApi(private val httpClient: HttpClient) : BaseApi {
         pageSize: Int
     ): PlexResponse<PlexPlaylistResponse> {
         return httpClient.get("/playlists") {
-            parameters {
+            parametersXy {
                 append("type", order.toString())
                 append("smart", smart)
                 append("X-Plex-Container-Start", start.toString())
@@ -93,7 +93,7 @@ class PlexPlaylistsApi(private val httpClient: HttpClient) : BaseApi {
         uri: String
     ): PlexResponse<PlexPlaylistResponse> {
         return httpClient.put("/playlists/$playlistId/items") {
-            parameters {
+            parametersXy {
                 append("uri", uri)
             }
         }.body()
@@ -121,7 +121,7 @@ class PlexPlaylistsApi(private val httpClient: HttpClient) : BaseApi {
         params: Map<String, String>? = null
     ): PlexResponse<PlexLibraryItemResponse> {
         return httpClient.get("/playlists/$playlistId/items") {
-            parameters {
+            parametersXy {
                 append("type", type)
                 append("X-Plex-Container-Start", start.toString())
                 append("X-Plex-Container-Size", pageSize.toString())

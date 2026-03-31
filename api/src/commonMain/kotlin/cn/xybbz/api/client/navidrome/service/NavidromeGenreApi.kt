@@ -21,7 +21,7 @@ class NavidromeGenreApi(private val httpClient: HttpClient) : BaseApi {
         libraryIds: List<String>? = null
     ): FullResponse<List<Genre>> {
         val httpResponse = httpClient.get("/api/genre") {
-            parameters {
+            parametersXy {
                 append("_start", start.toString())
                 append("_end", end.toString())
                 append("_order", order.toString())

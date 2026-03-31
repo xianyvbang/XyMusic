@@ -57,7 +57,7 @@ class PlexUserApi(private val httpClient: HttpClient) : BaseApi {
         state: PlayState
     ) {
         httpClient.get("/:/timeline") {
-            parameters {
+            parametersXy {
                 append(name = "ratingKey", value = ratingKey)
                 append(name = "time", value = time.toString())
                 append(name = "state", value = state.serialName)
@@ -73,7 +73,7 @@ class PlexUserApi(private val httpClient: HttpClient) : BaseApi {
         identifier: String = ApiConstants.PLEX_PRODUCT_NAME
     ) {
         httpClient.get("/:/scrobble") {
-            parameters {
+            parametersXy {
                 append(name = "key", value = key)
                 append(name = "identifier", value = identifier)
             }

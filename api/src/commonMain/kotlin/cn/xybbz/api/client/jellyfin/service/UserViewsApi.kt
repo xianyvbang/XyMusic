@@ -22,7 +22,7 @@ class UserViewsApi(private val httpClient: HttpClient) : BaseApi {
         viewRequest: ViewRequest
     ): Response<ItemResponse>{
         return httpClient.get("/UserViews"){
-            parameters {
+            parametersXy {
                 appendAll(*viewRequest.toListMap())
             }
         }.body()

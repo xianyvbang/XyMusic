@@ -45,7 +45,7 @@ class EmbyItemApi(private val httpClient: HttpClient) : BaseApi {
         userId: String, itemRequest: ItemRequest
     ): Response<ItemResponse> {
         return httpClient.get("/emby/Users/${userId}/Items") {
-            parameters{
+            parametersXy{
                 appendAll(*itemRequest.toListMap())
             }
         }.body()
@@ -62,7 +62,7 @@ class EmbyItemApi(private val httpClient: HttpClient) : BaseApi {
         fields: String? = null
     ): Response<ItemResponse>{
         return httpClient.get("/emby/Items/${itemId}/Similar"){
-            parameters{
+            parametersXy{
                 append("userId", userId)
                 append("Limit", limit.toString())
                 append("Fields", fields)
@@ -78,7 +78,7 @@ class EmbyItemApi(private val httpClient: HttpClient) : BaseApi {
         isFavorite: Boolean? = null
     ): CountsResponse{
         return httpClient.get("/emby/Items/Counts"){
-            parameters{
+            parametersXy{
                 append("userId", userId)
                 append("isFavorite", isFavorite)
             }

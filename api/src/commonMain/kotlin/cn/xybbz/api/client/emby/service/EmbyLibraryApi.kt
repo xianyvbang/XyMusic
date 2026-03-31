@@ -4,6 +4,7 @@ import cn.xybbz.api.base.BaseApi
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
 import io.ktor.client.request.parameter
+import io.ktor.http.parameters
 
 class EmbyLibraryApi(private val httpClient: HttpClient) : BaseApi {
 
@@ -22,7 +23,9 @@ class EmbyLibraryApi(private val httpClient: HttpClient) : BaseApi {
      */
     suspend fun deleteItems(ids: String) {
         httpClient.delete("/emby/Items") {
-            this.parameter("ids", ids)
+            parametersXy {
+                append("ids", ids)
+            }
         }
     }
 }

@@ -61,7 +61,7 @@ class NavidromeUserApi(private val httpClient: HttpClient) : BaseApi {
      */
     suspend fun getUser(username: String): SubsonicResponse<SubsonicUserResponse> {
         return httpClient.get("/rest/getUser") {
-            parameters {
+            parametersXy {
                 append("username", username)
             }
         }.body()
@@ -80,7 +80,7 @@ class NavidromeUserApi(private val httpClient: HttpClient) : BaseApi {
      */
     suspend fun scrobble(scrobbleRequest: ScrobbleRequest): SubsonicResponse<SubsonicDefaultResponse> {
         return httpClient.get("/rest/scrobble") {
-            parameters {
+            parametersXy {
                 appendAll(*scrobbleRequest.toListMap())
             }
         }.body()
@@ -96,7 +96,7 @@ class NavidromeUserApi(private val httpClient: HttpClient) : BaseApi {
         sort: SortType = SortType.NAME,
     ): FullResponse<List<TranscodingInfo>> {
         return httpClient.get("/api/transcoding") {
-            parameters {
+            parametersXy {
                 append("_start", start.toString())
                 append("_end", end.toString())
                 append("_order", order.toString())

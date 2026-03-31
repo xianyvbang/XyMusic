@@ -42,10 +42,9 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
-import io.ktor.http.parameters
+import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.appendAll
-import kotlinx.serialization.json.Json
 
 abstract class DefaultApiClient : ApiFactory, DownloadFactory {
 
@@ -75,9 +74,10 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
     protected val logger = KotlinLogging.logger {}
     override fun createHttpClient(baseUrl: String, ifTmp: Boolean) {
         this.ifTmp = ifTmp
-        TokenServer.updateBaseUrl(baseUrl)
         if (!ifTmp)
-            updateTokenHeaderName()
+            TokenServer.updateBaseUrl(baseUrl)
+        updateTokenHeaderName()
+        updateTokenOrHeadersOrQuery()
         logger.error { "开始创建 createHttpClient" }
         //todo 注意关闭
         httpClient = provideClient().config {
@@ -85,10 +85,14 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
                 proxy = ProxyManager.proxySelector()
             }
             install(DefaultRequest) {
-                if (baseUrl.isNotBlank())
-                    url(baseUrl)
+                url {
+                    if (baseUrl.isNotBlank())
+                        takeFrom(baseUrl)
+                    parameters.appendAll(queryMap)
+                }
                 headers {
-                    append(tokenHeaderName, createToken())
+                    if (token.isNotBlank())
+                        append(tokenHeaderName, token)
                     val bool = headers.contains(ApiConstants.CUSTOM_IMAGE_HEADER_NAME)
                     if (bool) {
                         append(
@@ -96,8 +100,12 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
                             headers[ApiConstants.AUTHORIZATION] ?: ""
                         )
                     }
+                    appendAll(headerMap)
                 }
+
+
             }
+
 
             install(Logging) {
                 logger = object : Logger {
@@ -119,7 +127,6 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
                 connectTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
                 socketTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
             }
-
             HttpResponseValidator {
                 validateResponse { response ->
                     val any = response.body<Any>()
@@ -146,7 +153,6 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
                 }
             }
         }
-        updateTokenOrHeadersOrQuery()
         downloadApi(true)
     }
 
@@ -157,7 +163,7 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
         token = createToken()
         queryMap = getQueryMapData()
         headerMap = getHeadersMapData()
-        if (this::httpClient.isInitialized)
+        /*if (this::httpClient.isInitialized)
             httpClient.config {
                 defaultRequest {
                     headers {
@@ -165,11 +171,12 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
                             append(tokenHeaderName, token)
                         appendAll(headerMap)
                     }
-                    parameters {
-                        appendAll(queryMap)
+                    url {
+                        parameters.appendAll(queryMap)
                     }
+
                 }
-            }
+            }*/
 
         //todo 有待观察
         if (!ifTmp) {
@@ -226,8 +233,9 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
     }
 
     open fun updateTokenHeaderName() {
-        if (TokenServer.tokenHeaderName != tokenHeaderName)
-            TokenServer.updateTokenHeaderName(tokenHeaderName)
+        if (!ifTmp)
+            if (TokenServer.tokenHeaderName != tokenHeaderName)
+                TokenServer.updateTokenHeaderName(tokenHeaderName)
     }
 
     /**

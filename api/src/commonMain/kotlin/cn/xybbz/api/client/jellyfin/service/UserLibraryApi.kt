@@ -49,7 +49,7 @@ class UserLibraryApi(private val httpClient: HttpClient) : BaseApi {
      */
     suspend fun getLatestMedia(itemRequest: ItemRequest): List<ItemResponse>{
         return httpClient.get("/Items/Latest"){
-            parameters {
+            parametersXy {
                 appendAll(*itemRequest.toListMap())
             }
         }.body()

@@ -5,6 +5,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpMessageBuilder
 import io.ktor.http.ParametersBuilder
 import io.ktor.http.contentType
+import io.ktor.http.parameters
 import io.ktor.util.StringValues
 import io.ktor.util.appendAll
 
@@ -37,15 +38,21 @@ interface BaseApi {
         }
     }
 
-    fun ParametersBuilder.append(name: String, value: Boolean?){
+    fun ParametersBuilder.append(name: String, value: Boolean?) {
         value?.let {
             append(name, value.toString())
         }
     }
 
-    fun ParametersBuilder.appendAll(name: String, values: List<String>?){
+    fun ParametersBuilder.appendAll(name: String, values: List<String>?) {
         values?.let {
             appendAll(name, values)
+        }
+    }
+
+    fun HttpRequestBuilder.parametersXy(builder: ParametersBuilder.() -> Unit) {
+        url { uriBuilder ->
+            parameters.appendAll(parameters { builder() })
         }
     }
 

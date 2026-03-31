@@ -33,7 +33,7 @@ class SubsonicLyricsApi(private val httpClient: HttpClient) : BaseApi {
         title: String? = null
     ): SubsonicResponse<SubsonicLyricsResponse> {
         return httpClient.get("/rest/getLyrics") {
-            parameters {
+            parametersXy {
                 append("artist", artist)
                 append("title", title)
             }

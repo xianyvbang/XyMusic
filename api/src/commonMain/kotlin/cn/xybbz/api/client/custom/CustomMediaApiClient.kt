@@ -90,9 +90,14 @@ class CustomMediaApiClient : ApiFactory {
                 headers {
                     appendAll(requestData.headers.associate { it.fieldName to it.fieldValue })
                 }
-                parameters {
-                    appendAll(requestData.queryParams.associate { it.fieldName to it.fieldValue })
+                url {
+                    parameters.appendAll(
+                        parameters {
+                            appendAll(requestData.queryParams.associate { it.fieldName to it.fieldValue })
+                        }
+                    )
                 }
+
             }
             val lrc: String = response.body()
             return lrc.trim().takeIf { it.isNotBlank() }

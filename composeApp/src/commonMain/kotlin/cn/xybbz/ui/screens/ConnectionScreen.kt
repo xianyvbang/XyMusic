@@ -82,6 +82,7 @@ import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
+import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyItemOutSpacer
 import cn.xybbz.ui.xy.XyItemRadioButton
 import cn.xybbz.ui.xy.XyLoadingItem
@@ -91,6 +92,7 @@ import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.ConnectionViewModel
+import com.github.panpf.sketch.fetch.newComposeResourceUri
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -496,10 +498,10 @@ fun ConnectionScreen(
                                             text = stringResource(Res.string.connection_successful),
                                             style = MaterialTheme.typography.titleLarge,
                                         )
-                                        XySmallImage(
+                                        XyImage(
                                             modifier = Modifier.size(150.dp),
                                             shape = RoundedCornerShape(XyTheme.dimens.corner),
-                                            model = painterResource(Res.drawable.celebrate),
+                                            model = newComposeResourceUri(Res.getUri("drawable/celebrate.gif")),
                                             contentDescription = stringResource(Res.string.connection_success_image)
                                         )
                                     }

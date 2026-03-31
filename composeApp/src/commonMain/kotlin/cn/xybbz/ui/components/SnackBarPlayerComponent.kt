@@ -135,7 +135,7 @@ fun SnackBarPlayerComponent(
         mutableStateOf(defaultSnackBarColor)
     }
     val animatedColor by animateColorAsState(
-        targetValue = colorPurple.takeIf { it != Color.Transparent } ?: defaultSnackBarColor,
+        targetValue = colorPurple,
         animationSpec = tween(durationMillis = 800),
         label = "backgroundColorAnim"
     )

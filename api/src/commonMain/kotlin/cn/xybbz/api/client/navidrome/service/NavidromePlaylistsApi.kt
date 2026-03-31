@@ -73,7 +73,7 @@ class NavidromePlaylistsApi(private val httpClient: HttpClient) : BaseApi {
         libraryIds: List<String>? = null
     ): FullResponse<List<PlaylistItemData>> {
         return httpClient.get("/api/playlist") {
-            parameters {
+            parametersXy {
                 append("_order", order.toString())
                 append("_start", start.toString())
                 append("_end", end.toString())
@@ -98,7 +98,7 @@ class NavidromePlaylistsApi(private val httpClient: HttpClient) : BaseApi {
         id: List<String>
     ): PlaylistRemoveMusicsUpdateResponse {
         return httpClient.delete("/api/playlist/$playlistId/tracks") {
-            parameters {
+            parametersXy {
                 appendAll("id", id)
             }
         }.body()
@@ -114,7 +114,7 @@ class NavidromePlaylistsApi(private val httpClient: HttpClient) : BaseApi {
         starred: Boolean? = null
     ): FullResponse<List<SongItem>> {
         return httpClient.get("/api/playlist/$playlistId/tracks") {
-            parameters {
+            parametersXy {
                 append("_start", start.toString())
                 append("_end", end.toString())
                 append("_order", order.toString())

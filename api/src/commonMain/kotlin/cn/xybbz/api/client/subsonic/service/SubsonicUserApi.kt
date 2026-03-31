@@ -31,7 +31,7 @@ class SubsonicUserApi(private val httpClient: HttpClient) : BaseApi {
      */
     suspend fun getUser(username: String): SubsonicResponse<SubsonicUserResponse> {
         return httpClient.get("/rest/getUser") {
-            parameters {
+            parametersXy {
                 append("username", username)
             }
         }.body()
@@ -42,7 +42,7 @@ class SubsonicUserApi(private val httpClient: HttpClient) : BaseApi {
      */
     suspend fun scrobble(scrobbleRequest: ScrobbleRequest): SubsonicResponse<SubsonicDefaultResponse> {
         return httpClient.get("/rest/scrobble") {
-            parameters {
+            parametersXy {
                 appendAll(*scrobbleRequest.toListMap())
             }
         }.body()

@@ -20,7 +20,7 @@ class EmbyGenreApi(private val httpClient: HttpClient) : BaseApi {
      */
     suspend fun getGenres(itemRequest: ItemRequest): Response<ItemResponse> {
         return httpClient.get("/emby/Genres") {
-            parameters {
+            parametersXy {
                 appendAll(*itemRequest.toListMap())
             }
         }.body<Response<ItemResponse>>()
