@@ -4,12 +4,12 @@ import cn.xybbz.StartKoinApp
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.common.utils.Log
+import cn.xybbz.common.utils.PlayerListRestoreUtils
 import cn.xybbz.config.HomeDataRepository
 import cn.xybbz.config.music.MusicCommonController
-import cn.xybbz.config.music.MusicPlayContext
+import cn.xybbz.config.music.PlayerEventCoordinator
 import cn.xybbz.config.proxy.ProxyConfigServer
 import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.localdata.config.DatabaseClient
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.core.KoinApplication
@@ -36,29 +36,20 @@ fun initKoin(config: KoinAppDeclaration? = null): KoinApplication {
         koinTmp.get<ProxyConfigServer>().initConfig()
         val settings = koinTmp.get<SettingsManager>().setSettingsData()
         koinTmp.get<DataSourceManager>().initDataSource(settings.dataSourceType)
-        koinTmp.get<MusicCommonController>().initController()
-        startPlayerListObserver(koinTmp.get(), koinTmp.get())
+        // 先启动播放器事件协调器，再初始化控制器，确保后续播放器事件有统一接收方。
+        koinTmp.get<PlayerEventCoordinator>().start()
+        koinTmp.get<MusicCommonController>().initController {
+            appScope.launch {
+                // 只有控制器 ready 之后再恢复播放列表，才能避免恢复时机早于播放器初始化。
+                PlayerListRestoreUtils.restoreCurrentDataSourcePlayerList(
+                    koinTmp.get(),
+                    koinTmp.get()
+                )
+            }
+        }
         Log.i("init", "musicController加载")
 
     }
     return koin
-}
-
-/**
- * 加载播放列表里的数据
- */
-private suspend fun startPlayerListObserver(
-    db: DatabaseClient,
-    musicPlayContext: MusicPlayContext
-) {
-    // 先读取播放队列
-    val musicList = db.musicDao.selectPlayQueuePlayMusicList()
-    if (musicList.isNotEmpty()) {
-        val player = db.playerDao.selectPlayerByDataSource()
-        musicPlayContext.initPlayList(
-            musicList = musicList,
-            player = player
-        )
-    }
 }
 

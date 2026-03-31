@@ -20,40 +20,27 @@ package cn.xybbz.viewmodel
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.api.events.ReLoginEvent
 import cn.xybbz.common.enums.LoginType
-import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.common.utils.Log
 import cn.xybbz.config.music.MusicCommonController
-import cn.xybbz.config.music.MusicPlayContext
-import cn.xybbz.config.music.PlaybackProgressReporter
-import cn.xybbz.config.music.PlayerEvent
-import cn.xybbz.config.music.ifNextPageNumList
+import cn.xybbz.config.music.PlayerEventCoordinator
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.setting.TranscodingState
 import cn.xybbz.entity.data.PlayerTypeData
 import cn.xybbz.localdata.config.DatabaseClient
-import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.era.XyEraItem
-import cn.xybbz.localdata.data.music.PlayHistoryMusic
-import cn.xybbz.localdata.data.music.PlayQueueMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
-import cn.xybbz.localdata.data.player.XyPlayer
-import cn.xybbz.localdata.data.progress.Progress
-import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
@@ -77,16 +64,9 @@ class MainViewModel(
     private val musicController: MusicCommonController,
     val dataSourceManager: DataSourceManager,
     val settingsManager: SettingsManager,
-    private val musicPlayContext: MusicPlayContext,
-    private val playbackProgressReporter: PlaybackProgressReporter,
+    private val playerEventCoordinator: PlayerEventCoordinator,
     val selectControl: SelectControl
 ) : ViewModel() {
-
-    /**
-     * 专辑播放历史功能开启数据
-     */
-    private var enableProgressMap = mutableStateMapOf<String, Boolean>()
-
 
     var eraItemList by mutableStateOf<List<XyEraItem>>(emptyList())
         private set
@@ -94,385 +74,45 @@ class MainViewModel(
     //从1900年到当前年份的set列表
     val yearSet by mutableStateOf(DateUtil.getYearSet())
 
-    private var enableProgressJob: Job? = null
-
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     /**
-     * 相似歌曲
+     * 播放页展示的相似歌曲列表。
+     * 数据由 PlayerEventCoordinator 维护，这里只做只读暴露。
      */
-    var similarMusicList by mutableStateOf(emptyList<XyMusicExtend>())
+    val similarMusicList: List<XyMusicExtend>
+        get() = playerEventCoordinator.similarMusicList
 
     /**
-     * 热门歌曲
+     * 播放页展示的热门歌曲列表。
+     * 数据由 PlayerEventCoordinator 维护，这里只做只读暴露。
      */
-    var popularMusicList by mutableStateOf(emptyList<XyMusicExtend>())
+    val popularMusicList: List<XyMusicExtend>
+        get() = playerEventCoordinator.popularMusicList
 
 
     init {
         Log.i("=====", "MainViewModel初始化")
         startLoginEventBus()
-        //加载是否开启专辑播放历史功能数据
-        observeLoginSuccessForAndProgress()
         //初始化年代数据
         initEraData()
-        //音乐服务初始化
-        musicControllerInit()
-        //初始化上次播放列表
-        initLastPlayList()
+        // 这里只监听轻量 UI 信号，不再直接订阅播放器事件总线。
+        initSongChangeObserver()
         //初始化版本信息获取
         initGetVersionInfo()
         //设置转码监听
         initTranscodeListener()
     }
 
-    /**
-     * 初始化音乐播放控制器
-     */
-    private fun musicControllerInit() {
-
+    private fun initSongChangeObserver() {
         viewModelScope.launch {
-            musicController.events.collect {
-                when (it) {
-                    is PlayerEvent.AddMusicList -> {
-                        onAddMusicList(it.artistId, it.ifInitPlayerList)
-                    }
-
-                    PlayerEvent.BeforeChangeMusic -> {
-                        onBeforeChangeMusic()
-                    }
-
-                    is PlayerEvent.ChangeMusic -> {
-                        onOnChangeMusic(it.musicId, it.artistId, it.artistName)
-                    }
-
-                    is PlayerEvent.Favorite -> {
-                        onFavoriteMusic(it.musicId)
-                    }
-
-                    is PlayerEvent.NextList -> {
-                        onNextList()
-                    }
-
-                    is PlayerEvent.Pause -> {
-                        onPause(it.musicId, it.playSessionId)
-                    }
-
-                    is PlayerEvent.Play -> {
-                        onPlay(it.musicId, it.playSessionId)
-                    }
-
-                    is PlayerEvent.PlayerTypeChange -> {
-                        onPlayerTypeChange(it.playerType)
-                    }
-
-                    is PlayerEvent.PositionSeekTo -> {
-                        onPositionSeekTo(it.positionMs)
-                    }
-
-                    is PlayerEvent.RemovePlaybackProgress -> {
-                        removePlaybackProgress(it.musicId)
+            // 切歌后重置跑马灯次数，这属于页面表现层逻辑，仍放在 ViewModel 中处理。
+            snapshotFlow { playerEventCoordinator.songChangeVersion }
+                .collect {
+                    if (it > 0) {
+                        putIterations(0)
                     }
                 }
-            }
-        }
-    }
-
-    private fun initLastPlayList() {
-        viewModelScope.launch {
-            db.settingsDao.selectConnectionId().distinctUntilChanged().collect {
-                Log.i("=====", "MainViewModel: 登录状态改变: $it")
-                startPlayerListObserver()
-            }
-            /*dataSourceManager.loginStateFlow.collect {
-                startPlayerListObserver()
-            }*/
-        }
-    }
-
-    fun removePlaybackProgress(musicId: String) {
-        viewModelScope.launch {
-            db.progressDao.removeByMusicId(musicId)
-        }
-    }
-
-    fun onPlay(musicId: String, playSessionId: String) {
-        if (settingsManager.get().ifEnableSyncPlayProgress) {
-            viewModelScope.launch {
-                dataSourceManager.reportPlaying(
-                    musicId,
-                    playSessionId = playSessionId,
-                    positionTicks = musicController.progressStateFlow.value
-                )
-            }
-            playbackProgressReporter.start()
-
-        }
-    }
-
-    fun onPause(musicId: String, playSessionId: String) {
-        playbackProgressReporter.stop()
-        if (settingsManager.get().ifEnableSyncPlayProgress) {
-            viewModelScope.launch {
-                dataSourceManager.reportPlaying(
-                    musicId,
-                    playSessionId = playSessionId,
-                    true,
-                    musicController.progressStateFlow.value
-                )
-            }
-        }
-
-//        cacheController.pauseCache(musicId)
-        setPlayerProgress(musicController.progressStateFlow.value)
-    }
-
-    fun onPositionSeekTo(millSeconds: Long) {
-        setPlayerProgress(millSeconds)
-        if (settingsManager.get().ifEnableSyncPlayProgress)
-            playbackProgressReporter.reportNow()
-    }
-
-    /**
-     * 设置手动音频切换方法
-     */
-    fun onBeforeChangeMusic() {
-        playbackProgressReporter.stop()
-        setPlayerProgress(musicController.progressStateFlow.value)
-    }
-
-    override fun onCleared() {
-        playbackProgressReporter.stop()
-        super.onCleared()
-    }
-
-    fun onFavoriteMusic(musicId: String) {
-        viewModelScope.launch {
-            FavoriteCoordinator.setFavoriteData(
-                dataSourceManager = dataSourceManager,
-                type = MusicTypeEnum.MUSIC,
-                itemId = musicId,
-                ifFavorite = db.musicDao.selectIfFavoriteByMusic(musicId),
-                musicController = musicController
-            )
-        }
-    }
-
-    fun onOnChangeMusic(musicId: String, artistId: String?, artistName: String?) {
-
-        viewModelScope.launch {
-            similarMusicList = dataSourceManager.getSimilarMusicList(musicId)
-        }
-        viewModelScope.launch {
-            musicController.musicInfo?.let {
-                popularMusicList =
-                    dataSourceManager.getArtistPopularMusicList(
-                        artistId ?: "",
-                        artistName ?: ""
-                    )
-            }
-        }
-        viewModelScope.launch {
-            //数据变化的时候进行数据变化
-            putIterations(0)
-            db.withTransaction {
-                db.musicDao.updateByPlayedCount(
-                    musicId
-                )
-                val recordMusic =
-                    db.musicDao.selectById(musicId)
-
-                if (recordMusic != null) {
-                    val index = db.musicDao.selectPlayHistoryIndexAsc() ?: -1
-                    db.musicDao.savePlayHistoryMusic(
-                        listOf(
-                            PlayHistoryMusic(
-                                musicId = musicId,
-                                index = index - 1,
-                                connectionId = dataSourceManager.getConnectionId()
-                            )
-                        )
-                    )
-                }
-                val recordCount = db.musicDao.selectPlayHistoryCount()
-                if (recordCount > 20) {
-                    db.musicDao.deletePlayHistory()
-                }
-                db.playerDao.updateIndex(musicId)
-            }
-        }
-    }
-
-    fun onPlayerTypeChange(playerTypeEnum: PlayerTypeEnum) {
-        viewModelScope.launch {
-            val player =
-                db.playerDao.selectPlayerByDataSource()
-            if (player != null) {
-                setPlayerType(playerTypeEnum)
-            } else {
-                savePlayerType(playerTypeEnum)
-            }
-        }
-    }
-
-    fun onAddMusicList(artistId: String?, ifInitPlayerList: Boolean) {
-        if (!ifInitPlayerList)
-            viewModelScope.launch {
-                var index = db.musicDao.selectPlayQueueIndex() ?: -1
-                val xyMusicList = musicController.originMusicList.map {
-                    index += 1
-                    PlayQueueMusic(
-                        musicId = it.itemId,
-                        index = index,
-                        connectionId = dataSourceManager.getConnectionId()
-                    )
-                }
-                if (xyMusicList.isNotEmpty()) {
-
-                    //先删除数据
-                    db.musicDao.removeByType(
-                        dataType = MusicDataTypeEnum.PLAY_QUEUE,
-                        ifRemoveMusic = false
-                    )
-                    //存储音乐数据
-                    db.musicDao.savePlayQueueMusic(xyMusicList)
-
-                    //存储player设置
-                    val player =
-                        db.playerDao.selectPlayerByDataSource()
-                    val xyPlayer = XyPlayer(
-                        connectionId = dataSourceManager.getConnectionId(),
-                        dataType = musicController.playDataType,
-                        musicId = musicController.musicInfo?.itemId ?: "",
-                        headTime = musicController.headTime,
-                        endTime = musicController.endTime,
-                        playerType = musicController.playType,
-                        pageNum = musicController.pageNum,
-                        ifSkip = musicController.headTime > 0,
-                        albumId = musicController.musicInfo?.album ?: "",
-                        artistId = artistId,
-                        pageSize = musicController.pageSize
-                    )
-                    if (player != null) {
-                        db.playerDao.updateById(
-                            xyPlayer.copy(
-                                id = player.id,
-                                artistId = player.artistId
-                            )
-                        )
-                    } else {
-                        db.playerDao.save(
-                            xyPlayer
-                        )
-                    }
-                }
-            }
-    }
-
-    fun onNextList() {
-        ifNextPageNumList = true
-        viewModelScope.launch {
-            val newPageNum = musicController.pageNum + 1
-            val newMusicList = musicPlayContext.musicPlayData?.onNextMusicList?.invoke(newPageNum)
-            if (!newMusicList.isNullOrEmpty()) {
-                musicController.setPageNumData(newPageNum)
-                musicController.addMusicList(
-                    newMusicList,
-                    musicPlayContext.musicPlayData?.onMusicPlayParameter?.artistId
-                )
-                musicController.updateRestartCount()
-            } else {
-                musicController.updateIfGetNextPageMusicDataIsNullCount(1)
-            }
-        }.invokeOnCompletion { ifNextPageNumList = false }
-    }
-
-
-    private fun observeLoginSuccessForAndProgress() {
-        viewModelScope.launch {
-            dataSourceManager.loginStateFlow.collect {
-                startEnableProgressObserver()
-            }
-        }
-    }
-
-    /**
-     * 获得专辑是否开启播放历史数据
-     */
-    private fun startEnableProgressObserver() {
-        enableProgressJob?.cancel()
-
-        enableProgressJob = viewModelScope.launch {
-            db.enableProgressDao
-                .getAlbumEnableProgressMap()
-                .distinctUntilChanged()
-                .collect { map ->
-                    if (map.isNotEmpty()) {
-                        enableProgressMap.clear()
-                        enableProgressMap.putAll(map)
-                    }
-                }
-        }
-    }
-
-
-    /**
-     * 加载播放列表里的数据
-     */
-    private suspend fun startPlayerListObserver() {
-        // 先读取播放队列
-        val musicList = db.musicDao.selectPlayQueuePlayMusicList()
-        if (musicList.isNotEmpty()) {
-            val player = db.playerDao.selectPlayerByDataSource()
-            musicPlayContext.initPlayList(
-                musicList = musicList,
-                player = player
-            )
-        }
-    }
-
-    private fun calculateProgressPercentage(progress: Long, duration: Long): Int {
-        if (duration <= 0L) return 0
-
-        val scaledProgress = progress * 100L
-        val quotient = scaledProgress / duration
-        val remainder = scaledProgress % duration
-        val doubledRemainder = remainder * 2L
-
-        val roundedPercentage = when {
-            doubledRemainder < duration -> quotient
-            doubledRemainder > duration -> quotient + 1
-            quotient % 2L == 0L -> quotient
-            else -> quotient + 1
-        }
-
-        return roundedPercentage.toInt()
-    }
-
-
-    //设置播放进度
-    private fun setPlayerProgress(progress: Long) {
-        viewModelScope.launch {
-            musicController.musicInfo?.let {
-                //判断是否需要存储播放历史
-                if (settingsManager.get().ifEnableAlbumHistory || (enableProgressMap.containsKey(
-                        it.album
-                    ) && enableProgressMap[it.album] == true)
-                ) {
-                    savePlayerProgress(
-                        progress = progress,
-                        progressPercentage = if (musicController.duration > 0) {
-                            calculateProgressPercentage(progress, musicController.duration)
-                        } else {
-                            0
-                        },
-                        musicId = it.itemId,
-                        musicName = it.name,
-                        index = musicController.curOriginIndex,
-                        albumId = it.album
-                    )
-                }
-            }
         }
     }
 
@@ -592,53 +232,6 @@ class MainViewModel(
 
 
     /**
-     * 存储播放类型
-     */
-    private suspend fun setPlayerType(playerTypeEnum: PlayerTypeEnum) {
-        db.playerDao.updatePlayType(playerTypeEnum)
-    }
-
-
-    /**
-     * 新增播放类型
-     */
-    private suspend fun savePlayerType(playerTypeEnum: PlayerTypeEnum) {
-        db.playerDao.save(
-            XyPlayer(
-                playerType = playerTypeEnum,
-                connectionId = dataSourceManager.getConnectionId(),
-                dataType = musicController.playDataType,
-                pageSize = 0
-            )
-        )
-    }
-
-    /**
-     * 增加播放历史进度
-     */
-    private suspend fun savePlayerProgress(
-        progress: Long,
-        progressPercentage: Int,
-        musicId: String,
-        musicName: String,
-        index: Int,
-        albumId: String?,
-    ) {
-        db.progressDao.save(
-            Progress(
-                musicId = musicId,
-                albumId = albumId ?: "",
-                progress = progress,
-                progressPercentage = progressPercentage,
-                index = index,
-                musicName = musicName,
-                connectionId = dataSourceManager.getConnectionId()
-            )
-        )
-    }
-
-
-    /**
      * 获得年代数据
      */
     private suspend fun getEraList() {
@@ -662,6 +255,7 @@ class MainViewModel(
                 ) {
                     return@collect
                 }
+                // 转码配置变化后，需要让当前播放列表中的地址重新替换为最新策略。
                 musicController.replacePlaylistItemUrl()
             }
         }

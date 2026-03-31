@@ -317,7 +317,13 @@ class HomeViewModel(
      * 切换连接服务
      */
     suspend fun changeDataSource(connectionConfig: ConnectionConfig) {
-        DataSourceChangeUtils.changeDataSource(connectionConfig, dataSourceManager, musicController)
+        DataSourceChangeUtils.changeDataSource(
+            connectionConfig,
+            dataSourceManager,
+            musicController,
+            db,
+            musicPlayContext
+        )
     }
 
     /**

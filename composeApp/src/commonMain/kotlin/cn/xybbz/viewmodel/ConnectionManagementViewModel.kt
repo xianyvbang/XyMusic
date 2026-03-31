@@ -28,6 +28,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.utils.DataSourceChangeUtils
 import cn.xybbz.common.utils.DatabaseUtils
 import cn.xybbz.config.music.MusicCommonController
+import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
@@ -39,6 +40,7 @@ class ConnectionManagementViewModel (
     val dataSourceManager: DataSourceManager,
     private val db: DatabaseClient,
     private val musicController: MusicCommonController,
+    private val musicPlayContext: MusicPlayContext,
     private val settingsManager: SettingsManager
 ) : ViewModel() {
 
@@ -80,7 +82,9 @@ class ConnectionManagementViewModel (
             DataSourceChangeUtils.changeDataSource(
                 connectionConfig,
                 dataSourceManager,
-                musicController
+                musicController,
+                db,
+                musicPlayContext
             )
         }
     }
