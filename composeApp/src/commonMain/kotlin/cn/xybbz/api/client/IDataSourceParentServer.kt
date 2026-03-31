@@ -42,6 +42,7 @@ import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.config.info.getPlatformInfo
+import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.di.ContextWrapper
 import cn.xybbz.entity.data.EncryptAesData
@@ -92,6 +93,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.logging_in
@@ -111,7 +113,7 @@ abstract class IDataSourceParentServer(
     private val defaultParentApiClient: DefaultParentApiClient,
     private val customMediaApiClient: CustomMediaApiClient,
     private val contextWrapper: ContextWrapper
-) : IDataSourceServer {
+) : IDataSourceServer,IoScoped() {
 
     private var connectionConfig: ConnectionConfig? = null
 
@@ -129,6 +131,10 @@ abstract class IDataSourceParentServer(
 
 
     private var ifTmpObject = false
+
+    init {
+        createScope()
+    }
 
     @OptIn(ExperimentalAtomicApi::class)
     private val loginRetryGate = AtomicBoolean(false)
@@ -307,7 +313,9 @@ abstract class IDataSourceParentServer(
 
             emit(ClientLoginInfoState.UserLoginSuccess)
             if (!ifTmpObject())
-                initOtherData(connectionId)
+                scope.launch {
+                    initOtherData(connectionId)
+                }
         }
 
     }

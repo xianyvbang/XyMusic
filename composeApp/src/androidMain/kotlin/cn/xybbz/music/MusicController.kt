@@ -643,20 +643,24 @@ class MusicController(
      */
     private fun generateRealMusicList() {
         Log.i("music", "设置播放模式${playType}")
-        when (playType) {
-            PlayerTypeEnum.RANDOM_PLAY -> {
-                mediaController?.shuffleModeEnabled = true
-                mediaController?.repeatMode = Player.REPEAT_MODE_ALL
-            }
+        // MediaController 的状态变更必须切回它自己的 application thread 执行，
+        // 否则在恢复播放列表或后台协程里调用时会触发线程校验异常。
+        withMediaControllerOnApplicationThread {
+            when (playType) {
+                PlayerTypeEnum.RANDOM_PLAY -> {
+                    shuffleModeEnabled = true
+                    repeatMode = Player.REPEAT_MODE_ALL
+                }
 
-            PlayerTypeEnum.SINGLE_LOOP -> {
-                mediaController?.shuffleModeEnabled = false
-                mediaController?.repeatMode = Player.REPEAT_MODE_ONE
-            }
+                PlayerTypeEnum.SINGLE_LOOP -> {
+                    shuffleModeEnabled = false
+                    repeatMode = Player.REPEAT_MODE_ONE
+                }
 
-            else -> {
-                mediaController?.shuffleModeEnabled = false
-                mediaController?.repeatMode = Player.REPEAT_MODE_ALL
+                else -> {
+                    shuffleModeEnabled = false
+                    repeatMode = Player.REPEAT_MODE_ALL
+                }
             }
         }
     }
