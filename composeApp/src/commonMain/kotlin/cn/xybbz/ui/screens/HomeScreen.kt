@@ -130,6 +130,7 @@ import xymusic_kmp.composeapp.generated.resources.download_24px
 import xymusic_kmp.composeapp.generated.resources.download_list
 import xymusic_kmp.composeapp.generated.resources.favorite
 import xymusic_kmp.composeapp.generated.resources.favorite_24px
+import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
 import xymusic_kmp.composeapp.generated.resources.genres
 import xymusic_kmp.composeapp.generated.resources.home
 import xymusic_kmp.composeapp.generated.resources.icon
@@ -505,7 +506,7 @@ fun HomeScreen(
                                 ?: stringResource(
                                     Constants.UNKNOWN
                                 ) else null,
-                            painter = painterResource(Res.drawable.favorite_24px),
+                            painter = painterResource(Res.drawable.favorite_border_24px),
                             iconColor = MaterialTheme.colorScheme.onSurface,
                             onClick = {
                                 navigator.navigate(FavoriteList)

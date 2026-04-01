@@ -87,7 +87,7 @@ fun ArtistScreen(
                     }
                 }) {
                     Icon(
-                        painter = painterResource(if (artistViewModel.ifFavorite == true) Res.drawable.favorite_24px else Res.drawable.favorite_border_24px),
+                        painter = painterResource(if (artistViewModel.ifFavorite == true) Res.drawable.favorite_border_24px else Res.drawable.favorite_24px),
                         contentDescription = if (artistViewModel.ifFavorite == true) stringResource(
                             Res.string.get_all_artists
                         ) else stringResource(Res.string.get_favorite_artists),
@@ -123,7 +123,7 @@ fun ArtistScreen(
                             modifier = Modifier,
                             onItem = { artist },
                             enabled = !it
-                        ) {artistId ->
+                        ) { artistId ->
                             navigator.navigate(ArtistInfo(artistId, artist.name ?: ""))
                         }
                     }

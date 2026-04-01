@@ -687,13 +687,13 @@ private fun MusicListOperation(
 @Composable
 private fun MusicAlbumInfoComponent(
     onData: () -> XyAlbum?,
-    albumPic:String?,
+    albumPic: String?,
     onIfSavePlaybackHistory: () -> Boolean,
     onSetIfSavePlaybackHistory: (Boolean) -> Unit,
     ifShowPlaybackHistory: Boolean = true
 ) {
     val album = onData()
-    val coverUrls = rememberAlbumCoverUrls(album,albumPic)
+    val coverUrls = rememberAlbumCoverUrls(album, albumPic)
 
     XyColumn(
         backgroundColor = Color.Transparent,

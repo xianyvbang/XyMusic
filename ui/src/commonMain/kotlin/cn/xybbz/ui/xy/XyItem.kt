@@ -85,6 +85,7 @@ import xymusic_kmp.ui.generated.resources.check_24px
 import xymusic_kmp.ui.generated.resources.download_done_24px
 import xymusic_kmp.ui.generated.resources.downloaded
 import xymusic_kmp.ui.generated.resources.favorite_24px
+import xymusic_kmp.ui.generated.resources.favorite_border_24px
 import xymusic_kmp.ui.generated.resources.favorited
 import xymusic_kmp.ui.generated.resources.image_suffix
 import xymusic_kmp.ui.generated.resources.selected
@@ -139,7 +140,7 @@ fun ItemTrailingContent(
                 )
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.favorite_24px),
+                    painter = painterResource(Res.drawable.favorite_border_24px),
                     contentDescription = stringResource(Res.string.favorited),
                     modifier = Modifier
                         .size(iconSizeDp)

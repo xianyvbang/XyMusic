@@ -289,9 +289,9 @@ fun MusicBottomMenuComponent(
                         ifDownload = music.itemId in downloadMusicIds,
                         backgroundColor = Color.Transparent,
                         trailingIcon = if (favoriteState)
-                            Res.drawable.favorite_24px
+                            Res.drawable.favorite_border_24px
                         else
-                            Res.drawable.favorite_border_24px,
+                            Res.drawable.favorite_24px,
                         trailingOnClick = {
                             coroutineScope.launch {
                                 sheetState.hide()

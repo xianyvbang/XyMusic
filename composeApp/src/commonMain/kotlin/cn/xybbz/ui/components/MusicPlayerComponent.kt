@@ -566,9 +566,11 @@ fun PlayerStateComponent(
     ) {
 
         Icon(
-            painter = painterResource(if (musicController.state == PlayStateEnum.Playing
-                || musicController.state == PlayStateEnum.Loading
-            ) Res.drawable.pause_24px else Res.drawable.play_arrow_24px) ,
+            painter = painterResource(
+                if (musicController.state == PlayStateEnum.Playing
+                    || musicController.state == PlayStateEnum.Loading
+                ) Res.drawable.pause_24px else Res.drawable.play_arrow_24px
+            ),
             contentDescription = if (musicController.state == PlayStateEnum.Playing) stringResource(
                 Res.string.playing
             ) else stringResource(Res.string.pause),
@@ -623,10 +625,12 @@ private fun FavoriteMusicIconComponent(
             modifier = Modifier
                 .size(60.dp),
             painter =
-               painterResource( if (musicDetail.itemId in onFavoriteMusicIdSet())
-                   Res.drawable.favorite_24px
-               else
-                   Res.drawable.favorite_border_24px),
+                painterResource(
+                    if (musicDetail.itemId in onFavoriteMusicIdSet())
+                        Res.drawable.favorite_border_24px
+                    else
+                        Res.drawable.favorite_24px
+                ),
             contentDescription = stringResource(Res.string.favorite_button),
             tint = if (musicDetail.itemId in onFavoriteMusicIdSet()) Color.Red else LocalContentColor.current
         )

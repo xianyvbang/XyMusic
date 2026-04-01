@@ -193,7 +193,7 @@ fun SelectSortBottomSheetComponent(
                     ),
                     trailingIcon = {
                         Icon(
-                            painter = painterResource(if (onIfFavorite()) Res.drawable.favorite_24px else Res.drawable.favorite_border_24px),
+                            painter = painterResource(if (onIfFavorite()) Res.drawable.favorite_border_24px else Res.drawable.favorite_24px),
                             contentDescription = if (onIfFavorite()) stringResource(Res.string.can_cancel_favorite_filter) else stringResource(
                                 Res.string.can_get_favorite_music
                             ),
@@ -242,7 +242,7 @@ fun SelectSortBottomSheetComponent(
                     title = stringResource(Res.string.sort_method),
                     trailingIcon = {
                         Icon(
-                            painter =painterResource(Res.drawable.sort_24px),
+                            painter = painterResource(Res.drawable.sort_24px),
                             contentDescription = stringResource(Res.string.sort_method),
                         )
 
