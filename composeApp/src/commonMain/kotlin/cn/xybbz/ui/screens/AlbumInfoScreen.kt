@@ -464,6 +464,7 @@ fun AlbumInfoScreen(
                         onData = {
                             albumInfoViewModel.xyAlbumInfoData
                         },
+                        albumPic = albumInfoViewModel.albumPic,
                         onIfSavePlaybackHistory = { albumInfoViewModel.ifSavePlaybackHistory },
                         onSetIfSavePlaybackHistory = {
                             albumInfoViewModel.setIfSavePlaybackHistoryData(
@@ -686,12 +687,13 @@ private fun MusicListOperation(
 @Composable
 private fun MusicAlbumInfoComponent(
     onData: () -> XyAlbum?,
+    albumPic:String?,
     onIfSavePlaybackHistory: () -> Boolean,
     onSetIfSavePlaybackHistory: (Boolean) -> Unit,
     ifShowPlaybackHistory: Boolean = true
 ) {
     val album = onData()
-    val coverUrls = rememberAlbumCoverUrls(album)
+    val coverUrls = rememberAlbumCoverUrls(album,albumPic)
 
     XyColumn(
         backgroundColor = Color.Transparent,

@@ -18,6 +18,9 @@
 
 package cn.xybbz.api.client.navidrome.data
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class TranscodingInfo(
     val command:String,
     val defaultBitRate:Int,

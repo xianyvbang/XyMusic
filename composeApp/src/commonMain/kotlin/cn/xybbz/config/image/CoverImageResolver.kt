@@ -165,9 +165,9 @@ fun rememberPlayMusicCoverUrls(music: XyPlayMusic?, refreshKey: Any? = null): Co
 }
 
 @Composable
-fun rememberAlbumCoverUrls(album: XyAlbum?): CoverImageUrls {
+fun rememberAlbumCoverUrls(album: XyAlbum?,albumPic:String? = null): CoverImageUrls {
     val resolver = rememberCoverImageResolver()
-    return remember(album?.itemId, album?.pic, album?.name, album?.artists) {
+    return remember(album?.itemId, albumPic?:album?.pic, album?.name, album?.artists) {
         resolver.resolveAlbum(album)
     }
 }
