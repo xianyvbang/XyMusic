@@ -192,6 +192,7 @@ fun ArtistInfoScreen(
 
     val tabHeightDp = XyTheme.dimens.itemHeight * 0.6f
     val pageBackgroundColor = MaterialTheme.colorScheme.background
+    val surface = MaterialTheme.colorScheme.onSurface
     val headerTextLiftOffsetDp = 8.dp
     val pullDownResistanceDistancePx = with(density) { (DefaultImageHeight * 0.8f).toPx() }
     val defaultImageHeightPx = with(density) { DefaultImageHeight.toPx() }
@@ -473,9 +474,6 @@ fun ArtistInfoScreen(
                     BasicText(
                         text = artistInfoViewModel.artistDescribe ?: "",
                         modifier = Modifier,
-                        color = {
-                            Color.White
-                        },
                         style = MaterialTheme.typography.titleSmall.copy(lineHeight = 15.sp),
                         overflow = TextOverflow.Visible,
 
@@ -534,13 +532,6 @@ fun ArtistInfoScreen(
             ) {
                 stickyHeader {
                     TopAppBarComponent(
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = Color.Transparent,
-                            scrolledContainerColor = Color.Transparent,
-                            navigationIconContentColor = Color.White,
-                            titleContentColor = Color.White,
-                            actionIconContentColor = Color.White
-                        ),
                         title = {
                             Box(
                                 modifier = Modifier
@@ -557,7 +548,7 @@ fun ArtistInfoScreen(
                                         iterations = Int.MAX_VALUE
                                     ),
                                     color = {
-                                        Color.White.copy(alpha = topBarAlpha)
+                                        surface.copy(alpha = topBarAlpha)
                                     },
                                     style = LocalTextStyle.current
 
@@ -693,7 +684,7 @@ fun ArtistInfoScreen(
                                         alpha = headerTitleAlpha
                                     },
                                 color = {
-                                    Color.White.copy(alpha = headerTitleAlpha)
+                                    surface.copy(alpha = headerTitleAlpha)
                                 },
                                 style = LocalTextStyle.current.copy(fontSize = 30.sp)
 
@@ -711,7 +702,7 @@ fun ArtistInfoScreen(
                                         ifOpenDescribe = true
                                     },
                                 color = {
-                                    Color.White.copy(alpha = headerDescriptionAlpha)
+                                    surface.copy(alpha = headerDescriptionAlpha)
                                 },
                                 style = MaterialTheme.typography.titleSmall.copy(lineHeight = 15.sp),
                                 maxLines = 3,

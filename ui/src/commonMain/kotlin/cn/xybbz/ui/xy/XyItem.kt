@@ -59,7 +59,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -82,9 +81,9 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import xymusic_kmp.ui.generated.resources.Res
 import xymusic_kmp.ui.generated.resources.check_24px
+import xymusic_kmp.ui.generated.resources.default_placeholder
 import xymusic_kmp.ui.generated.resources.download_done_24px
 import xymusic_kmp.ui.generated.resources.downloaded
-import xymusic_kmp.ui.generated.resources.favorite_24px
 import xymusic_kmp.ui.generated.resources.favorite_border_24px
 import xymusic_kmp.ui.generated.resources.favorited
 import xymusic_kmp.ui.generated.resources.image_suffix
@@ -225,7 +224,10 @@ fun ItemTrailingContent(
                     model = imgUrl,
                     backModel = backImgUrl,
                     size = picSize,
-                    contentDescription = "${name}${stringResource(Res.string.image_suffix)}"
+                    contentDescription = "${name}${stringResource(Res.string.image_suffix)}",
+                    placeholder = Res.drawable.default_placeholder,
+                    error = Res.drawable.default_placeholder,
+                    fallback = Res.drawable.default_placeholder,
                 )
             }
         } else null, trailingContent = {

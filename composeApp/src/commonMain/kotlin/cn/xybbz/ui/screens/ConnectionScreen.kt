@@ -498,7 +498,7 @@ fun ConnectionScreen(
                                             text = stringResource(Res.string.connection_successful),
                                             style = MaterialTheme.typography.titleLarge,
                                         )
-                                        XyImage(
+                                        XySmallImage(
                                             modifier = Modifier.size(150.dp),
                                             shape = RoundedCornerShape(XyTheme.dimens.corner),
                                             model = newComposeResourceUri(Res.getUri("drawable/celebrate.gif")),

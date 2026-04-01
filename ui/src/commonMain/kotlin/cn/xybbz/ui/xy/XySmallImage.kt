@@ -57,22 +57,27 @@ fun XySmallImage(
     shape: Shape = RoundedCornerShape(XyTheme.dimens.corner),
     size: Dp = 50.dp,
     contentDescription: String? = null,
-    placeholder: DrawableResource? = Res.drawable.default_placeholder,
-    error: DrawableResource? = Res.drawable.default_placeholder,
-    fallback: DrawableResource? = Res.drawable.default_placeholder,
+    placeholder: DrawableResource? = null,
+    error: DrawableResource? = null,
+    fallback: DrawableResource? = null,
+    onSuccess: ((LoadState.Success) -> Unit)? = null,
+    onLoading: ((LoadState.Started) -> Unit)? = null,
+    onError: ((LoadState.Error) -> Unit)? = null,
 ) {
     XyImage(
-        modifier = Modifier
+        modifier = Modifier.clip(shape)
             .then(modifier)
             .size(size)
             .aspectRatio(1F),
         model = model,
         backModel = backModel,
-        shape = shape,
         placeholder = placeholder,
         error = error,
         fallback = fallback,
         contentDescription = contentDescription,
+        onSuccess = onSuccess,
+        onLoading = onLoading,
+        onError = onError
     )
 }
 
@@ -81,7 +86,6 @@ fun XyImage(
     modifier: Modifier = Modifier,
     model: Any?,
     backModel: Any? = null,
-    shape: Shape = RoundedCornerShape(XyTheme.dimens.corner),
     placeholder: DrawableResource? = null,
     error: DrawableResource? = null,
     fallback: DrawableResource? = null,
@@ -106,7 +110,7 @@ fun XyImage(
 
     when (val currentModel = tempModel) {
         is Painter -> Image(
-            modifier = Modifier.then(modifier).clip(shape),
+            modifier = Modifier.then(modifier),
             painter = currentModel,
             contentDescription = contentDescription,
             alpha = alpha,
@@ -147,7 +151,7 @@ fun XyImage(
             }
 
             AsyncImage(
-                modifier = Modifier.clip(shape)
+                modifier = Modifier
                     .then(modifier),
                 uri = currentModel,
                 state = state,

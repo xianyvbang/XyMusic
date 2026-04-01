@@ -110,9 +110,9 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
-import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyItemSwitcher
 import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.xy.XySmallImage
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
@@ -710,7 +710,7 @@ private fun MusicAlbumInfoComponent(
             verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.Start
         ) {
-            XyImage(
+            XySmallImage(
                 modifier = Modifier
                     .aspectRatio(1F)
                     .background(

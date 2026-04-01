@@ -82,7 +82,7 @@ import cn.xybbz.localdata.enums.PlayerTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.XyImage
+import cn.xybbz.ui.xy.XySmallImage
 import cn.xybbz.viewmodel.SnackBarPlayerViewModel
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.launch
@@ -635,7 +635,7 @@ private fun ImageCover(
     val backupCoverModel = if (activeCoverModel == byteCoverModel) null else byteCoverModel
     val defaultSnackBarColor = MaterialTheme.colorScheme.surfaceContainerLowest
 
-    XyImage(
+    XySmallImage(
         modifier = Modifier
             .size(XyTheme.dimens.snackBarPlayerHeight),
         model = activeCoverModel,
