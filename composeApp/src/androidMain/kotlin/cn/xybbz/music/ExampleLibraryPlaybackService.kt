@@ -45,7 +45,6 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import cn.xybbz.R
 import cn.xybbz.api.client.CacheApiClient
-import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.Constants.REMOVE_FROM_FAVORITES
 import cn.xybbz.common.constants.Constants.SAVE_TO_FAVORITES
@@ -54,7 +53,6 @@ import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.localdata.config.DatabaseClient
 import cn.xybbz.media.MediaServer
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
@@ -177,13 +175,13 @@ class ExampleLibraryPlaybackService : MediaSessionService(), KoinComponent {
             CommandButton.Builder(CommandButton.ICON_UNDEFINED)
                 .setEnabled(true)
                 .setDisplayName(this.getString(R.string.favorite_added))
-                .setCustomIconResId(R.drawable.favorite)
+                .setCustomIconResId(R.drawable.favorite_border)
                 .setSessionCommand(sessionCommand)
                 .build()
 
         val removeFromFavoritesButton = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
             .setDisplayName(this.getString(R.string.favorite_removed))
-            .setCustomIconResId(R.drawable.favorite_empty)
+            .setCustomIconResId(R.drawable.favorite)
             .setSessionCommand(removeFavorites)
             .build()
 
