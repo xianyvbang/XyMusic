@@ -19,6 +19,7 @@ object DatabaseUtils {
         db.withTransaction {
             db.eraItemDao.removeByConnectionId()
             db.connectionConfigDao.removeById(connectionId)
+            db.remoteCurrentDao.removeByConnectionId(connectionId)
         }
     }
 
