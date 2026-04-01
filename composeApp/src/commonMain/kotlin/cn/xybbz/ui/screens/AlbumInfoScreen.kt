@@ -439,7 +439,7 @@ fun AlbumInfoScreen(
                             }
                         }) {
                             Icon(
-                                painter = painterResource(if (albumInfoViewModel.ifFavorite) Res.drawable.favorite_24px else Res.drawable.favorite_border_24px),
+                                painter = painterResource(if (albumInfoViewModel.ifFavorite) Res.drawable.favorite_border_24px else Res.drawable.favorite_24px),
                                 contentDescription = if (albumInfoViewModel.ifFavorite) stringResource(
                                     Res.string.favorite_added
                                 ) else stringResource(
