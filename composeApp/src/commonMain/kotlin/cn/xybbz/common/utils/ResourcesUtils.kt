@@ -7,6 +7,7 @@ import com.github.panpf.sketch.asBitmapOrNull
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.math.abs
 import kotlin.math.max
+import kotlin.math.sqrt
 
 /**
  * 资源工具类
@@ -36,7 +37,6 @@ object ResourcesUtils {
             onColorReady(Color.Transparent)
             return
         }
-        Color(0.99607843f, 0.99607843f, 0.99607843f, 1.0f,)
         val dominantColor = extractDominantColor(bitmap)
         logger.info { "加载图片成功: $dominantColor" }
         onColorReady(dominantColor)
@@ -66,7 +66,7 @@ internal fun extractDominantColor(bitmap: Bitmap): Color {
     )
 }
 
-private fun sampleDominantColor(
+internal fun sampleDominantColor(
     width: Int,
     height: Int,
     colorAt: (Int, Int) -> Int
@@ -77,7 +77,8 @@ private fun sampleDominantColor(
 
     val stepX = max(1, width / 24)
     val stepY = max(1, height / 24)
-    val buckets = LinkedHashMap<Int, ColorBucket>()
+    val visibleBuckets = LinkedHashMap<Int, ColorBucket>()
+    val accentBuckets = LinkedHashMap<Int, ColorBucket>()
 
     for (y in 0 until height step stepY) {
         for (x in 0 until width step stepX) {
@@ -96,23 +97,32 @@ private fun sampleDominantColor(
                 continue
             }
 
-            val bucketKey = ((red shr 4) shl 8) or ((green shr 4) shl 4) or (blue shr 4)
-            val bucket = buckets.getOrPut(bucketKey) { ColorBucket() }
-            bucket.count++
-            bucket.red += red
-            bucket.green += green
-            bucket.blue += blue
-            bucket.saturation += saturation
-            bucket.value += value
+            addToBucket(
+                buckets = visibleBuckets,
+                red = red,
+                green = green,
+                blue = blue,
+                saturation = saturation,
+                value = value
+            )
+
+            val isAccentCandidate = saturation >= 0.18f && value in 0.12f..0.92f
+            if (isAccentCandidate) {
+                addToBucket(
+                    buckets = accentBuckets,
+                    red = red,
+                    green = green,
+                    blue = blue,
+                    saturation = saturation,
+                    value = value
+                )
+            }
         }
     }
 
-    val bestBucket = buckets.values.maxByOrNull { bucket ->
-        val averageSaturation = bucket.saturation / bucket.count
-        val averageValue = bucket.value / bucket.count
-        val darknessFit = (1f - abs(averageValue - 0.35f) / 0.35f).coerceIn(0f, 1f)
-        bucket.count * (0.65f + averageSaturation * 0.35f + darknessFit * 0.25f)
-    } ?: return Color.Transparent
+    val bestBucket = pickBestBucket(accentBuckets.values, preferAccent = true)
+        ?: pickBestBucket(visibleBuckets.values, preferAccent = false)
+        ?: return Color.Transparent
 
     val averageRed = bestBucket.red / bestBucket.count
     val averageGreen = bestBucket.green / bestBucket.count
@@ -123,6 +133,45 @@ private fun sampleDominantColor(
         blue = averageBlue,
         alpha = 255
     )
+}
+
+private fun addToBucket(
+    buckets: MutableMap<Int, ColorBucket>,
+    red: Int,
+    green: Int,
+    blue: Int,
+    saturation: Float,
+    value: Float
+) {
+    val bucketKey = ((red shr 4) shl 8) or ((green shr 4) shl 4) or (blue shr 4)
+    val bucket = buckets.getOrPut(bucketKey) { ColorBucket() }
+    bucket.count++
+    bucket.red += red
+    bucket.green += green
+    bucket.blue += blue
+    bucket.saturation += saturation
+    bucket.value += value
+}
+
+private fun pickBestBucket(
+    buckets: Collection<ColorBucket>,
+    preferAccent: Boolean
+): ColorBucket? {
+    return buckets.maxByOrNull { bucket ->
+        val averageSaturation = bucket.saturation / bucket.count
+        val averageValue = bucket.value / bucket.count
+        val countWeight = sqrt(bucket.count.toFloat())
+        val saturationWeight = if (preferAccent) {
+            ((averageSaturation - 0.12f) / 0.88f).coerceIn(0f, 1f)
+        } else {
+            (0.2f + averageSaturation * 0.8f).coerceIn(0f, 1f)
+        }
+        val midtoneFit = (1f - abs(averageValue - 0.55f) / 0.55f).coerceIn(0f, 1f)
+        val whitePenalty = if (averageValue > 0.94f && averageSaturation < 0.12f) 0.15f else 1f
+        val blackPenalty = if (averageValue < 0.14f && averageSaturation < 0.18f) 0.15f else 1f
+
+        countWeight * (0.55f + saturationWeight * 0.75f + midtoneFit * 0.45f) * whitePenalty * blackPenalty
+    }
 }
 
 private fun rgbToHsv(red: Int, green: Int, blue: Int): Triple<Float, Float, Float> {
