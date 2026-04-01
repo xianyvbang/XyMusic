@@ -38,7 +38,6 @@ import androidx.media3.exoplayer.offline.Download
 import androidx.media3.exoplayer.offline.DownloadHelper
 import androidx.media3.exoplayer.offline.DownloadManager
 import androidx.media3.exoplayer.offline.DownloadRequest
-import androidx.media3.exoplayer.offline.DownloadService
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
@@ -219,12 +218,8 @@ class DownloadCacheController(
         }
         if (ifStatic) {
             val downloadRequest = DownloadRequest.Builder(itemId, url.toUri()).build()
-            DownloadService.sendAddDownload(
-                context,
-                ExoPlayerDownloadService::class.java,
-                downloadRequest,
-                /* foreground= */ false
-            )
+            downloadManager.addDownload(downloadRequest)
+            downloadManager.resumeDownloads()
             downloadCacheProgressTicker.start(itemId)
         } else {
             val downloadHelper =
@@ -240,12 +235,8 @@ class DownloadCacheController(
                     val data = ByteArray(8 * 1024)
 
                     val downloadRequest = helper.getDownloadRequest(itemId, data)
-                    DownloadService.sendAddDownload(
-                        context,
-                        ExoPlayerDownloadService::class.java,
-                        downloadRequest,
-                        false
-                    )
+                    downloadManager.addDownload(downloadRequest)
+                    downloadManager.resumeDownloads()
                     Log.i("music", "开始缓存: $itemId")
 
                     download = downloadManager.downloadIndex.getDownload(itemId)
@@ -279,13 +270,7 @@ class DownloadCacheController(
      * 暂停当前缓存
      */
     fun pauseCache() {
-        DownloadService.sendSetStopReason(
-            context,
-            ExoPlayerDownloadService::class.java,
-            currentTaskId,
-            1,
-            /* foreground= */ false
-        )
+        downloadManager.setStopReason(currentTaskId, 1)
         downloadCacheProgressTicker.stop()
     }
 
@@ -294,13 +279,8 @@ class DownloadCacheController(
      */
     fun resumeCache() {
         currentTaskId?.let {
-            DownloadService.sendSetStopReason(
-                context,
-                ExoPlayerDownloadService::class.java,
-                it,
-                Download.STOP_REASON_NONE,
-                /* foreground= */ false
-            )
+            downloadManager.setStopReason(it, Download.STOP_REASON_NONE)
+            downloadManager.resumeDownloads()
             downloadCacheProgressTicker.start(it)
         }
 
@@ -310,13 +290,7 @@ class DownloadCacheController(
      * 取消所有缓存
      */
     override fun cancelAllCache() {
-        DownloadService.sendSetStopReason(
-            context,
-            ExoPlayerDownloadService::class.java,
-            null,
-            1,
-            /* foreground= */ false
-        )
+        downloadManager.setStopReason(null, 1)
     }
 
     /**
@@ -367,11 +341,7 @@ class DownloadCacheController(
      * 清空缓存
      */
     override fun clearCache() {
-        DownloadService.sendRemoveAllDownloads(
-            context,
-            ExoPlayerDownloadService::class.java,
-            /* foreground= */ false
-        )
+        downloadManager.removeAllDownloads()
         updateCacheSizeFlow(0)
     }
 
