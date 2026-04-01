@@ -246,11 +246,11 @@ class HomeViewModel(
     ) {
         val connectionId = dataSourceManager.getConnectionId()
         val key = RemoteIdConstants.HOME_REFRESH + connectionId
-        //todo 创建的有问题 所以没有刷新
-        if (!DataRefreshEstimateUtils.shouldRefresh(reason, db, key)) {
+        //todo 别忘记解开
+        /*if (!DataRefreshEstimateUtils.shouldRefresh(reason, db, key)) {
             onEnd?.invoke(false)
             return
-        }
+        }*/
         refreshDataAll(onEnd, isRefresh)
         DataRefreshEstimateUtils.updateHomeRefreshTime(connectionId, db, key)
     }

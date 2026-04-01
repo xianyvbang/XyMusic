@@ -312,10 +312,10 @@ abstract class IDataSourceParentServer(
             }
 
             emit(ClientLoginInfoState.UserLoginSuccess)
-            if (!ifTmpObject())
-                scope.launch {
-                    initOtherData(connectionId)
-                }
+            // 登录成功后立刻返回结果，剩余初始化任务放到后台执行，避免阻塞当前登录流程
+            if (!ifTmpObject()) {
+                launchPostLoginTasks(connectionId)
+            }
         }
 
     }
@@ -481,22 +481,32 @@ abstract class IDataSourceParentServer(
     }
 
     /**
-     * 获得媒体库列表
+     * 同步读取本地媒体库数据
+     * 登录流程中只做本地读取，保证依赖媒体库数据的页面可以立即使用本地缓存
      */
     protected suspend fun selectMediaLibrary(connectionId: Long) {
         try {
-            val libraryCount = db.libraryDao.selectLibraryCount(connectionId)
-            if (libraryCount <= 0)
-                db.withTransaction {
-                    db.libraryDao.remove(connectionId)
-                    val libraries =
-                        selectMediaLibraryList(connectionId)
-                    if (!libraries.isNullOrEmpty()) {
-                        db.libraryDao.saveBatch(libraries)
-                    }
-                }
+            db.libraryDao.selectListByConnectionId(connectionId)
         } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获得媒体库列表失败", e)
+            Log.e(Constants.LOG_ERROR_PREFIX, "读取本地媒体库列表失败", e)
+        }
+    }
+
+    /**
+     * 从远程刷新媒体库列表
+     * 该方法放到后台执行，避免登录时因远程请求阻塞主流程
+     */
+    protected suspend fun refreshMediaLibraryFromRemote(connectionId: Long) {
+        try {
+            val libraries = selectMediaLibraryList(connectionId)
+            db.withTransaction {
+                db.libraryDao.remove(connectionId)
+                if (!libraries.isNullOrEmpty()) {
+                    db.libraryDao.saveBatch(libraries)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(Constants.LOG_ERROR_PREFIX, "从远程刷新媒体库列表失败", e)
         }
     }
 
@@ -1333,13 +1343,39 @@ abstract class IDataSourceParentServer(
     suspend fun connection(connectionConfig: ConnectionConfig, ifAutoLogin: Boolean) {
         if (!ifAutoLogin)
             this.connectionConfig = connectionConfig
+        // 登录阶段同步读取本地媒体库缓存，保证依赖媒体库数据的页面能立即加载
         selectMediaLibrary(connectionId = connectionConfig.id)
         updateLibraryIds(this.connectionConfig?.libraryIds, true)
         settingsManager.saveConnectionId(connectionId = connectionConfig.id, connectionConfig.type)
         sendLoginCompleted(LoginStateType.SUCCESS)
-        val shouldSync = shouldSync()
-        if (!shouldSync) return
+    }
 
+    /**
+     * 登录完成后后台执行的初始化任务
+     * 这里统一处理媒体库、收藏和统计信息的异步预加载
+     */
+    private fun launchPostLoginTasks(connectionId: Long) {
+        scope.launch {
+            // 登录成功后后台刷新远程媒体库，避免阻塞当前登录流程
+            runCatching {
+                refreshMediaLibraryFromRemote(connectionId = connectionId)
+            }.onFailure {
+                Log.e(Constants.LOG_ERROR_PREFIX, "refresh media library after login failed", it)
+            }
+
+            // 根据当前连接的同步状态决定是否继续执行后续数据同步
+            val shouldSync = runCatching {
+                shouldSync(connectionId)
+            }.getOrElse {
+                Log.e(Constants.LOG_ERROR_PREFIX, "check post login sync state failed", it)
+                false
+            }
+
+            // 只有需要同步时才继续拉取收藏、统计等附加数据
+            if (shouldSync) {
+                initOtherData(connectionId)
+            }
+        }
     }
 
     /**
@@ -1385,8 +1421,13 @@ abstract class IDataSourceParentServer(
         }
     }
 
-    suspend fun shouldSync(): Boolean {
-        val state = db.remoteCurrentDao.remoteKeyById(RemoteIdConstants.MEDIA_LIBRARY_AND_FAVORITE)
+    /**
+     * 判断当前连接是否需要执行登录后的附加同步
+     */
+    suspend fun shouldSync(connectionId: Long = getConnectionId()): Boolean {
+        val state = db.remoteCurrentDao.remoteKeyById(
+            RemoteIdConstants.MEDIA_LIBRARY_AND_FAVORITE + connectionId
+        )
         return (state == null) ||
                 ((Clock.System.now()
                     .toEpochMilliseconds() - state.createTime) > 10.minutes.inWholeMilliseconds)

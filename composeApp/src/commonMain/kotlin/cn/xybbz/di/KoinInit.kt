@@ -36,6 +36,12 @@ fun initKoin(config: KoinAppDeclaration? = null): KoinApplication {
         koinTmp.get<ProxyConfigServer>().initConfig()
         val settings = koinTmp.get<SettingsManager>().setSettingsData()
         koinTmp.get<DataSourceManager>().initDataSource(settings.dataSourceType)
+
+
+    }
+
+    appScope.launch {
+        val koinTmp = koin.koin
         // 先启动播放器事件协调器，再初始化控制器，确保后续播放器事件有统一接收方。
         koinTmp.get<PlayerEventCoordinator>().start()
         koinTmp.get<MusicCommonController>().initController {
@@ -48,7 +54,6 @@ fun initKoin(config: KoinAppDeclaration? = null): KoinApplication {
             }
         }
         Log.i("init", "musicController加载")
-
     }
     return koin
 }
