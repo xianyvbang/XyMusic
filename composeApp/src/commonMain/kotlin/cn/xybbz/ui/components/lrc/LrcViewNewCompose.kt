@@ -343,7 +343,7 @@ fun LrcViewNewCompose(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .padding(start = XyTheme.dimens.outerHorizontalPadding),
-                colors = SuggestionChipDefaults.suggestionChipColors(containerColor = Color.Gray),
+//                colors = SuggestionChipDefaults.suggestionChipColors(containerColor = Color.Gray),
                 onClick = {
                     //生成调整事件
                     fabMenuExpanded = !fabMenuExpanded

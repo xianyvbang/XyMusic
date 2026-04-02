@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.MenuItemColors
 import androidx.compose.runtime.Composable
@@ -32,10 +33,7 @@ fun XyDropdownMenu(
         onDismissRequest = { onSetIfShowMenu(false) },
         shape = RoundedCornerShape(XyTheme.dimens.corner),
         modifier = modifier.background(
-            Brush.horizontalGradient(
-                colors = listOf(Color(0xFF5A524C), Color(0xFF726B66)),
-                tileMode = TileMode.Repeated
-            )
+            MaterialTheme.colorScheme.onBackground
         ),
         containerColor = containerColor
     ) {
