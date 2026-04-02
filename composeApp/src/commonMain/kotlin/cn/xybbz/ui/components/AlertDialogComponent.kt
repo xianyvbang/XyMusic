@@ -32,7 +32,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -75,7 +74,6 @@ data class AlertDialogObject(
     val content: @Composable ((AlertDialogObject) -> Unit)? = null,
     val modifier: Modifier = Modifier,
     val ifWarning: Boolean = false,
-    val brashColors: List<Color>? = null,
     val onCloseRequest: (() -> Unit)? = null,
     val onDismissRequest: (() -> Unit)? = null,
     val onConfirmation: (() -> Unit)? = null,
@@ -103,14 +101,9 @@ fun AlertDialogComponent() {
             XyColumn(
                 paddingValues = PaddingValues(0.dp),
                 clipSize = XyTheme.dimens.dialogCorner,
-//                backgroundColor = Color.Transparent,
                 modifier = Modifier
-                    .clip(RoundedCornerShape(XyTheme.dimens.corner))
-//                    .background(defaultDialogColor)
-                    /*.brashColor(
-                        dialogBrashColors[0],
-                        dialogBrashColors[1]
-                    )*/
+                    .clip(RoundedCornerShape(XyTheme.dimens.corner)),
+                backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest
             ) {
                 XyItemOutSpacer()
                 it.title?.let { title ->

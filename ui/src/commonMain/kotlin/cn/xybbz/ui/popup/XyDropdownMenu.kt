@@ -11,9 +11,7 @@ import androidx.compose.material3.MenuItemColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.theme.XyTheme
@@ -33,7 +31,7 @@ fun XyDropdownMenu(
         onDismissRequest = { onSetIfShowMenu(false) },
         shape = RoundedCornerShape(XyTheme.dimens.corner),
         modifier = modifier.background(
-            MaterialTheme.colorScheme.onBackground
+            MaterialTheme.colorScheme.surfaceContainerLowest
         ),
         containerColor = containerColor
     ) {
