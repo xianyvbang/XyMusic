@@ -25,14 +25,15 @@ fun initKoin(config: KoinAppDeclaration? = null): KoinApplication {
         modules(
         )
     }
-
+/*
     runBlocking {
         val koinTmp = koin.koin
         koinTmp.get<HomeDataRepository>().initData()
 
-    }
+    }*/
     appScope.launch {
         val koinTmp = koin.koin
+        koinTmp.get<HomeDataRepository>().initData()
         koinTmp.get<ProxyConfigServer>().initConfig()
         val settings = koinTmp.get<SettingsManager>().setSettingsData()
         koinTmp.get<DataSourceManager>().initDataSource(settings.dataSourceType)
