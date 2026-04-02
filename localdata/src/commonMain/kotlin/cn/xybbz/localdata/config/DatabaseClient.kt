@@ -40,7 +40,6 @@ import cn.xybbz.localdata.dao.remote.RemoteCurrentDao
 import cn.xybbz.localdata.dao.search.SearchHistoryDao
 import cn.xybbz.localdata.dao.setting.SettingsDao
 import cn.xybbz.localdata.dao.setting.SkipTimeDao
-import cn.xybbz.localdata.dao.setting.XyBackgroundConfigDao
 import cn.xybbz.localdata.data.album.ArtistAlbum
 import cn.xybbz.localdata.data.album.FavoriteAlbum
 import cn.xybbz.localdata.data.album.GenreAlbum
@@ -76,7 +75,6 @@ import cn.xybbz.localdata.data.recommend.XyDailyRecommendHistory
 import cn.xybbz.localdata.data.remote.RemoteCurrent
 import cn.xybbz.localdata.data.search.SearchHistory
 import cn.xybbz.localdata.data.setting.SkipTime
-import cn.xybbz.localdata.data.setting.XyBackgroundConfig
 import cn.xybbz.localdata.data.setting.XySettings
 
 
@@ -89,7 +87,7 @@ import cn.xybbz.localdata.data.setting.XySettings
         FavoriteMusic::class, GenreAlbum::class, HomeAlbum::class, HomeMusic::class,
         MaximumPlayMusic::class, NewestAlbum::class, NewestMusic::class, PlayHistoryMusic::class,
         PlaylistMusic::class, PlayQueueMusic::class, XyDataCount::class, PlayHistoryAlbum::class,
-        MaximumPlayAlbum::class, FavoriteAlbum::class, FavoriteArtist::class, XyBackgroundConfig::class,
+        MaximumPlayAlbum::class, FavoriteAlbum::class, FavoriteArtist::class,
         XyDailyRecommendHistory::class, XyDownload::class, XyProxyConfig::class,
         XyLrcConfig::class],
     exportSchema = true
@@ -126,8 +124,6 @@ abstract class DatabaseClient : RoomDatabase() {
     val genreDao: XyGenreDao by lazy { createXyGenreDao() }
 
     val dataCountDao: XyDataCountDao by lazy { createXyDataCountDao() }
-
-    val backgroundConfigDao: XyBackgroundConfigDao by lazy { createXyBackgroundConfigDao() }
 
     val recentHistoryDao: XyRecentHistoryDao by lazy { createXyRecentHistoryDao() }
 
@@ -167,8 +163,6 @@ abstract class DatabaseClient : RoomDatabase() {
     abstract fun createXyGenreDao(): XyGenreDao
 
     abstract fun createXyDataCountDao(): XyDataCountDao
-
-    abstract fun createXyBackgroundConfigDao(): XyBackgroundConfigDao
 
     abstract fun createXyRecentHistoryDao(): XyRecentHistoryDao
 
