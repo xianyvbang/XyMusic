@@ -2,17 +2,17 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
     alias(libs.plugins.androidLint)
-    alias(libs.plugins.kotlin.serialization)
 }
 
 kotlin {
 
     jvm()
+
     // Target declarations - add or remove as needed below. These define
     // which platforms this KMP module supports.
     // See: https://kotlinlang.org/docs/multiplatform-discover-project.html#targets
     android {
-        namespace = "cn.xybbz.api"
+        namespace = "cn.xybbz.download"
         compileSdk {
             version = release(libs.versions.android.compileSdk.get().toInt()) {
                 minorApiLevel = 1
@@ -28,9 +28,6 @@ kotlin {
         }.configure {
             instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         }
-        androidResources {
-            enable = true
-        }
     }
 
     // For iOS targets, this is also where you should
@@ -40,7 +37,7 @@ kotlin {
     // A step-by-step guide on how to include this library in an XCode
     // project can be found here:
     // https://developer.android.com/kotlin/multiplatform/migrate
-    val xcfName = "apiKit"
+    val xcfName = "downloadKit"
 
     iosX64 {
         binaries.framework {
@@ -69,42 +66,50 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.kotlin.stdlib)
+                // Add KMP dependencies here
                 implementation(libs.kotlin.ktor.client.core)
                 implementation(libs.kotlin.ktor.logging)
                 implementation(libs.kotlin.ktor.content.negotiation)
                 implementation(libs.kotlin.ktor.json)
-                implementation(libs.kotlin.logging)
-                implementation(libs.kotlin.logging.slf4j)
-                implementation(libs.kotlinx.serialization.json)
-                implementation(libs.kotlinx.datetime)
-
-
-                // Add KMP dependencies here
             }
         }
 
+        commonTest {
+            dependencies {
+                implementation(libs.kotlin.test)
+
+            }
+        }
 
         androidMain {
             dependencies {
-                implementation(libs.squareup.okhttp)
                 // Add Android-specific dependencies here. Note that this source set depends on
                 // commonMain by default and will correctly pull the Android artifacts of any KMP
                 // dependencies declared in commonMain.
                 implementation(libs.kotlin.ktor.android)
+
             }
         }
 
+        getByName("androidDeviceTest") {
+            dependencies {
+                implementation(libs.androidx.runner)
+                implementation(libs.androidx.core)
+                implementation(libs.androidx.testExt.junit)
+            }
+        }
 
         iosMain {
             dependencies {
+                implementation(libs.kotlin.ktor.ios)
                 // Add iOS-specific dependencies here. This a source set created by Kotlin Gradle
                 // Plugin (KGP) that each specific iOS target (e.g., iosX64) depends on as
                 // part of KMP’s default source set hierarchy. Note that this source set depends
                 // on common by default and will correctly pull the iOS artifacts of any
                 // KMP dependencies declared in commonMain.
-                implementation(libs.kotlin.ktor.ios)
             }
         }
+
         jvmMain {
             dependencies {
                 implementation(libs.kotlin.ktor.apache)
