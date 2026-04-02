@@ -116,7 +116,6 @@ class MemoryManagementViewModel(
                 db.searchHistoryDao.deleteAll()
                 db.skipTimeDao.removeAll()
                 db.settingsDao.remove()
-                db.backgroundConfigDao.remove()
             }
             databaseSize = "0B"
             settingsManager.setSettingsData()
