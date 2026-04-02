@@ -60,6 +60,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -134,6 +135,7 @@ fun SnackBarPlayerComponent(
     var colorPurple by remember {
         mutableStateOf(defaultSnackBarColor)
     }
+    val isDarkTheme = XyTheme.configs.isDarkTheme
     val animatedColor by animateColorAsState(
         targetValue = colorPurple,
         animationSpec = tween(durationMillis = 800),
@@ -217,7 +219,10 @@ fun SnackBarPlayerComponent(
                     bottomEnd = 25.dp
                 )
             )
-            .background(animatedColor)
+            .background(defaultSnackBarColor)
+            .drawBehind {
+                drawRect(animatedColor)
+            }
     ) {
         AnimatedContent(
             targetState = ifOpenSelect,
@@ -286,7 +291,6 @@ fun SnackBarPlayerComponent(
                         } else {
                             snackBarPlayerViewModel.selectControl.onAddPlaylistSelect()
                         }
-
                     }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
                         Icon(
                             painter = painterResource(Res.drawable.playlist_add_24px),
@@ -357,9 +361,12 @@ fun SnackBarPlayerComponent(
 
                     ImageCover(
                         musicController = snackBarPlayerViewModel.musicController,
+                        isDarkTheme = isDarkTheme,
                         onSetColor = {
                             Log.i("=====", "加载图片成功1 ${it}")
-                            colorPurple = it ?: defaultSnackBarColor
+                            colorPurple = it
+                                ?.takeUnless { color -> color.alpha == 0f }
+                                ?: defaultSnackBarColor
                         }
                     )
                     Row(
@@ -400,7 +407,6 @@ fun SnackBarPlayerComponent(
                                     }
                                 }
                         )
-
                     }
                 }
             }
@@ -622,6 +628,7 @@ private fun CircularProgressIndicatorComp(musicController: MusicCommonController
 @Composable
 private fun ImageCover(
     musicController: MusicCommonController,
+    isDarkTheme: Boolean,
     onSetColor: (Color?) -> Unit
 ) {
     val coverUrls = rememberPlayMusicCoverUrls(
@@ -645,7 +652,11 @@ private fun ImageCover(
         fallback = Res.drawable.music_xy_placeholder_foreground,
         contentDescription = stringResource(Res.string.music_cover),
         onSuccess = {
-            readPaletteColor(it.result.image, onSetColor)
+            readPaletteColor(
+                image = it.result.image,
+                isDarkTheme = isDarkTheme,
+                onColorReady = onSetColor
+            )
         },
         onError = {
             logger.info { "加载图片失败" }

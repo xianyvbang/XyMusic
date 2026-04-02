@@ -1,9 +1,10 @@
 package cn.xybbz.common.utils
 
 import androidx.compose.ui.graphics.Color
-import kotlin.math.abs
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.math.abs
 
 class ResourcesUtilsTest {
 
@@ -27,6 +28,37 @@ class ResourcesUtilsTest {
         }
 
         assertColorClose(dominant, red = 233, green = 179, blue = 0)
+    }
+
+    @Test
+    fun sanitizePaletteColorForThemeReturnsTransparentForNearBlackColorInLightTheme() {
+        val adjusted = sanitizePaletteColorForTheme(
+            color = Color(0xFF121212),
+            isDarkTheme = false
+        )
+
+        assertEquals(Color.Transparent, adjusted)
+    }
+
+    @Test
+    fun sanitizePaletteColorForThemeKeepsNearBlackColorInDarkTheme() {
+        val original = Color(0xFF121212)
+        val adjusted = sanitizePaletteColorForTheme(
+            color = original,
+            isDarkTheme = true
+        )
+
+        assertEquals(original, adjusted)
+    }
+
+    @Test
+    fun sanitizePaletteColorForThemeReturnsTransparentForNearWhiteColorInDarkTheme() {
+        val adjusted = sanitizePaletteColorForTheme(
+            color = Color(0xFFF7F7F7),
+            isDarkTheme = true
+        )
+
+        assertEquals(Color.Transparent, adjusted)
     }
 
     private fun assertColorClose(color: Color, red: Int, green: Int, blue: Int) {

@@ -1,10 +1,10 @@
 package cn.xybbz.common.utils
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import com.github.panpf.sketch.Bitmap
 import com.github.panpf.sketch.Image
 import com.github.panpf.sketch.asBitmapOrNull
-import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.sqrt
@@ -14,7 +14,6 @@ import kotlin.math.sqrt
  */
 object ResourcesUtils {
 
-    private val logger = KotlinLogging.logger("ResourcesUtils")
 
     /**
      * Sketch 的成功结果返回的是 `Image`，这里统一转成 `Bitmap` 供跨平台取色使用。
@@ -28,17 +27,18 @@ object ResourcesUtils {
      */
     fun readPaletteColor(
         image: Image?,
+        isDarkTheme: Boolean,
         onColorReady: (Color) -> Unit
     ) {
-        Log.i("=====","加载图片成功1")
-        logger.info { "加载图片成功" }
         val bitmap = drawableToBitmap(image)
         if (bitmap == null) {
             onColorReady(Color.Transparent)
             return
         }
-        val dominantColor = extractDominantColor(bitmap)
-        logger.info { "加载图片成功: $dominantColor" }
+        val dominantColor = sanitizePaletteColorForTheme(
+            color = extractDominantColor(bitmap),
+            isDarkTheme = isDarkTheme
+        )
         onColorReady(dominantColor)
     }
 }
@@ -64,6 +64,19 @@ internal fun extractDominantColor(bitmap: Bitmap): Color {
         height = bitmapHeight(bitmap),
         colorAt = { x, y -> bitmapColor(bitmap, x, y) }
     )
+}
+
+internal fun sanitizePaletteColorForTheme(color: Color, isDarkTheme: Boolean): Color {
+    if (color.alpha == 0f) {
+        return color
+    }
+
+    val luminance = color.luminance()
+    val shouldUseDefaultColor =
+        (!isDarkTheme && luminance < 0.2f) ||
+                (isDarkTheme && luminance > 0.88f)
+
+    return if (shouldUseDefaultColor) Color.Transparent else color
 }
 
 internal fun sampleDominantColor(
