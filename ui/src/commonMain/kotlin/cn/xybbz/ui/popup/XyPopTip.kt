@@ -50,6 +50,8 @@ data class XyPopTipData(
     val durationMillis: Long = 1_500L
 )
 
+private const val NEVER_DISMISS_DURATION = -1L
+
 class XyPopTipHandle internal constructor(
     private val id: Long,
     private val onDismiss: (Long) -> Unit
@@ -103,13 +105,15 @@ object XyPopTipManager {
 
     private fun showInternal(data: XyPopTipData): XyPopTipHandle {
         dismissJob?.cancel()
+        dismissJob = null
         currentTipFlow.value = data
+        if (data.durationMillis == NEVER_DISMISS_DURATION) {
+            return XyPopTipHandle(data.id, ::dismiss)
+        }
         if (data.durationMillis > 0) {
             dismissJob = scope.launch {
-                if (data.durationMillis != -1L){
-                    delay(data.durationMillis)
-                    dismiss(data.id)
-                }
+                delay(data.durationMillis)
+                dismiss(data.id)
             }
         }
         return XyPopTipHandle(data.id, ::dismiss)
