@@ -1,6 +1,6 @@
 package cn.xybbz.config.recommender
 
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.Dispatchers
@@ -8,7 +8,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 
 class RecentHistoryCache(
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     private val maxSize: Int = 100
 ) {
 

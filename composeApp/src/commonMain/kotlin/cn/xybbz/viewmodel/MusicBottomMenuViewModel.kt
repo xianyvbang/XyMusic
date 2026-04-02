@@ -35,7 +35,7 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.volume.VolumeServer
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.setting.SkipTime
@@ -59,7 +59,7 @@ import kotlin.time.Duration.Companion.minutes
 @KoinViewModel
 class MusicBottomMenuViewModel(
     private val settingsManager: SettingsManager,
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     val musicController: MusicCommonController,
     val dataSourceManager: DataSourceManager,
     val volumeServer: VolumeServer,

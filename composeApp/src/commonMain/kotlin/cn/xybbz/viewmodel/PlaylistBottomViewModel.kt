@@ -25,7 +25,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.utils.Log
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -37,7 +37,7 @@ import org.koin.core.annotation.KoinViewModel
  */
 @KoinViewModel
 class PlaylistBottomViewModel(
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     val dataSourceManager: DataSourceManager
 ) : ViewModel() {
 

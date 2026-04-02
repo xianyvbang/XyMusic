@@ -28,7 +28,7 @@ import androidx.paging.cachedIn
 import androidx.paging.filter
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.entity.data.ArtistFilter
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtistExt
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -46,7 +46,7 @@ import org.koin.core.annotation.KoinViewModel
 @KoinViewModel
 class ArtistViewModel (
     private val dataSourceManager: DataSourceManager,
-    private val db: DatabaseClient
+    private val db: LocalDatabaseClient
 ) : ViewModel() {
 
 

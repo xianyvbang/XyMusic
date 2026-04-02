@@ -4,7 +4,7 @@ import androidx.paging.ExperimentalPagingApi
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.common.constants.RemoteIdConstants
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 
@@ -12,7 +12,7 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 class ArtistAlbumListRemoteMediator(
     private val artistId: String,
     private val datasourceServer: IDataSourceParentServer,
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     private val connectionId: Long
 ) : DefaultRemoteMediator<XyAlbum,XyAlbum>(
     db,

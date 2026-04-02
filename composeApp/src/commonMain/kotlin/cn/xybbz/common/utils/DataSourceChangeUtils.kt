@@ -4,7 +4,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 
 /**
@@ -16,7 +16,7 @@ object DataSourceChangeUtils {
         connectionConfig: ConnectionConfig,
         dataSourceManager: DataSourceManager,
         musicController: MusicCommonController,
-        db: DatabaseClient,
+        db: LocalDatabaseClient,
         musicPlayContext: MusicPlayContext
     ) {
         if (connectionConfig.id != dataSourceManager.getConnectionId()) {

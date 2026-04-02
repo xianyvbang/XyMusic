@@ -1,4 +1,4 @@
-package cn.xybbz.localdata.config
+package cn.xybbz.database
 
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -8,9 +8,9 @@ import platform.Foundation.NSFileManager
 import platform.Foundation.NSUserDomainMask
 
 actual class DatasourceFactory {
-    actual fun createDatabaseClientBuilder(): RoomDatabase.Builder<DatabaseClient> {
-        val dbFilePath = documentDirectory() + "/${DB_FILE_NAME}"
-        return Room.databaseBuilder<DatabaseClient>(
+    actual inline fun <reified T : DatabaseClient> createDatabaseClientBuilder(dbFileName:String): RoomDatabase.Builder<T> {
+        val dbFilePath = documentDirectory() + "/${dbFileName}"
+        return Room.databaseBuilder<T>(
             name = dbFilePath,
         )
     }

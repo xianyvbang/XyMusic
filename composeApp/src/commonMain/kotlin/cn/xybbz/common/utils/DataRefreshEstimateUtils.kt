@@ -20,7 +20,7 @@ package cn.xybbz.common.utils
 
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.HomeRefreshReason
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.remote.RemoteCurrent
 import kotlin.time.Clock
 
@@ -41,7 +41,7 @@ object DataRefreshEstimateUtils {
      */
     suspend fun shouldRefresh(
         reason: HomeRefreshReason,
-        db: DatabaseClient,
+        db: LocalDatabaseClient,
         key: String,
         intervalMinutes: Long = Constants.HOME_PAGE_TIME_FAILURE,
     ): Boolean {
@@ -59,7 +59,7 @@ object DataRefreshEstimateUtils {
     /**
      * 更新刷新时间
      */
-    suspend fun updateHomeRefreshTime(connectionId: Long?, db: DatabaseClient, key: String) {
+    suspend fun updateHomeRefreshTime(connectionId: Long?, db: LocalDatabaseClient, key: String) {
         db.remoteCurrentDao.insertOrReplace(
             RemoteCurrent(
                 id = key,

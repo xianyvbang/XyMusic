@@ -1,7 +1,6 @@
 package cn.xybbz.di
 
-import cn.xybbz.localdata.config.DatabaseClient
-import cn.xybbz.localdata.config.DatasourceFactory
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
@@ -11,5 +10,5 @@ import org.koin.core.annotation.Single
 expect class DatabaseModule {
 
     @Single
-    fun db(contextWrapper:ContextWrapper): DatabaseClient
+    fun db(contextWrapper:ContextWrapper): LocalDatabaseClient
 }

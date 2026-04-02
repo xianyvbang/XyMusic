@@ -16,27 +16,28 @@
  *
  */
 
-package cn.xybbz.localdata.config
+package cn.xybbz.database
 
 import androidx.room.RoomDatabase
 import androidx.room.immediateTransaction
 import androidx.room.migration.Migration
 import androidx.room.useWriterConnection
 
-internal const val DB_FILE_NAME = "appData.db"
 
-val migrations = emptyArray<Migration>()
 
 expect class DatasourceFactory {
-    fun createDatabaseClientBuilder(): RoomDatabase.Builder<DatabaseClient>
+    inline fun <reified T : DatabaseClient> createDatabaseClientBuilder(dbFileName: String): RoomDatabase.Builder<T>
 }
 
-fun getRoomDatabase(builder: RoomDatabase.Builder<DatabaseClient>): DatabaseClient {
+fun <T:DatabaseClient> getRoomDatabase(
+    builder: RoomDatabase.Builder<T>,
+    vararg migrations: Migration
+): T {
     return builder.addMigrations(*migrations).build()
 }
 
 suspend fun <R> RoomDatabase.withTransaction(block: suspend () -> R): R {
-   return this.useWriterConnection { transactor ->
+    return this.useWriterConnection { transactor ->
         transactor.immediateTransaction {
             block()
         }

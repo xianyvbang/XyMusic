@@ -1,4 +1,4 @@
-package cn.xybbz.localdata.config
+package cn.xybbz.database
 
 import androidx.room.RoomDatabaseConstructor
 

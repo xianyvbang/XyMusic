@@ -26,7 +26,7 @@ import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.Sort
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -36,7 +36,7 @@ import org.koin.core.annotation.KoinViewModel
 @KoinViewModel
 class MusicViewModel(
     val dataSourceManager: DataSourceManager,
-    val db: DatabaseClient,
+    val db: LocalDatabaseClient,
     val settingsManager: SettingsManager,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicCommonController,

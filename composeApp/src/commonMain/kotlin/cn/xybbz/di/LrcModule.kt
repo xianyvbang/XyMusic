@@ -5,7 +5,7 @@ import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Singleton
@@ -18,7 +18,7 @@ class LrcModule {
     fun lrcServer(
         musicController: MusicCommonController,
         dataSourceManager: DataSourceManager,
-        db: DatabaseClient,
+        db: LocalDatabaseClient,
         settingsManager: SettingsManager,
         customMediaApiClient: CustomMediaApiClient
     ): LrcServer {

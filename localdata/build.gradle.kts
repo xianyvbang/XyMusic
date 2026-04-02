@@ -16,11 +16,11 @@ kotlin {
     android {
         namespace = "cn.xybbz.localdata"
         compileSdk {
-            version = release(36) {
+            version = release(libs.versions.android.compileSdk.get().toInt()) {
                 minorApiLevel = 1
             }
         }
-        minSdk = 28
+        minSdk = libs.versions.android.minSdk.get().toInt()
 
         withHostTestBuilder {
         }
@@ -72,6 +72,7 @@ kotlin {
                 api(libs.androidx.room.paging)
                 implementation(libs.kotlinx.serialization.json)
                 // Add KMP dependencies here
+                implementation(project(path = ":xy-database"))
             }
         }
 
@@ -111,7 +112,7 @@ kotlin {
         jvmMain {
             dependencies {
                 implementation(libs.kotlin.stdlib)
-                api(libs.androidx.room.compiler)
+                implementation(libs.androidx.room.compiler)
             }
         }
     }

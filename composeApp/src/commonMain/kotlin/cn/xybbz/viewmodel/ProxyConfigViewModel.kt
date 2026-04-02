@@ -10,7 +10,7 @@ import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.proxy.ProxyConfigServer
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.proxy.XyProxyConfig
 import io.ktor.client.request.request
 import io.ktor.client.statement.HttpResponse
@@ -27,7 +27,7 @@ import xymusic_kmp.composeapp.generated.resources.test_connection_success
 
 @KoinViewModel
 class ProxyConfigViewModel(
-    val db: DatabaseClient,
+    val db: LocalDatabaseClient,
     val poxyConfigServer: ProxyConfigServer,
     private val dataSourceManager: DataSourceManager
 ) : ViewModel() {

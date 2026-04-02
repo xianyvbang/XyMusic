@@ -29,7 +29,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.Log
 import cn.xybbz.config.music.MusicCommonController
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
@@ -40,7 +40,7 @@ import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
 class SearchViewModel(
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     private val dataSourceManager: DataSourceManager,
     val musicController: MusicCommonController,
 ) : ViewModel() {

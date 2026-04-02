@@ -20,7 +20,6 @@ package cn.xybbz.localdata.data.music
 
 import androidx.room.Ignore
 import androidx.room.TypeConverters
-import cn.xybbz.localdata.converter.StringListTypeConverter
 
 /**
  * 音乐播放类

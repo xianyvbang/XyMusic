@@ -56,7 +56,7 @@ import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.toSearchAndOrder
 import cn.xybbz.localdata.common.LocalConstants
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -81,7 +81,7 @@ import xymusic_kmp.composeapp.generated.resources.unknown_artist
  * @date 2024/06/12
  */
 class JellyfinDatasourceServer(
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     settingsManager: SettingsManager,
     private val jellyfinApiClient: JellyfinApiClient,
     customMediaApiClient: CustomMediaApiClient,

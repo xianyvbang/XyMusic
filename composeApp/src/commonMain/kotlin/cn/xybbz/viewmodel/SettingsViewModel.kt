@@ -12,7 +12,7 @@ import cn.xybbz.common.utils.Log
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.PlaybackProgressReporter
 import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
@@ -20,7 +20,7 @@ import org.koin.core.annotation.KoinViewModel
 @KoinViewModel
 class SettingsViewModel(
     val settingsManager: SettingsManager,
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     private val musicController: MusicCommonController,
     private val playbackProgressReporter: PlaybackProgressReporter,
     private val dataSourceManager: DataSourceManager

@@ -2,12 +2,12 @@ package cn.xybbz.config.storage
 
 import android.os.Environment
 import cn.xybbz.di.ContextWrapper
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import java.io.File
 
 actual fun getMemoryStorageInfo(
     contextWrapper: ContextWrapper,
-    db: DatabaseClient,
+    db: LocalDatabaseClient,
 ): MemoryStorageInfo {
     val context = contextWrapper.context
     val databasePath = runCatching { db.openHelper.writableDatabase.path }.getOrNull().orEmpty()

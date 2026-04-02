@@ -35,7 +35,7 @@ import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.Sort
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.progress.EnableProgress
@@ -54,7 +54,7 @@ class AlbumInfoViewModel(
     @InjectedParam private val itemId: String,
     @InjectedParam private val dataType: MusicDataTypeEnum,
     val dataSourceManager: DataSourceManager,
-    val db: DatabaseClient,
+    val db: LocalDatabaseClient,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicCommonController,
     val selectControl: SelectControl,

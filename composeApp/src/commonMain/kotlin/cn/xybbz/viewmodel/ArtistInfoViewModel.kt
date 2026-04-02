@@ -28,7 +28,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.select.SelectControl
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtist
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -47,7 +47,7 @@ class ArtistInfoViewModel(
     val dataSourceManager: DataSourceManager,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicCommonController,
-    val db: DatabaseClient,
+    val db: LocalDatabaseClient,
     val selectControl: SelectControl
 ) : ViewModel() {
 

@@ -33,7 +33,7 @@ import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LrcEntryData
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.lrc.XyLrcConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,7 +46,7 @@ import kotlin.coroutines.CoroutineContext
 class LrcServer(
     private val musicController: MusicCommonController,
     private val dataSourceManager: DataSourceManager,
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     private val settingsManager: SettingsManager,
     private val customMediaApiClient: CustomMediaApiClient
 ) : IoScoped() {

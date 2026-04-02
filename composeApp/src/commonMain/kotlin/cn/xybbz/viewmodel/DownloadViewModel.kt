@@ -25,7 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.data.music.XyMusic
 import kotlinx.coroutines.FlowPreview
@@ -38,7 +38,7 @@ import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
 class DownloadViewModel(
-    val db: DatabaseClient,
+    val db: LocalDatabaseClient,
     private val datasourceServer: DataSourceManager,
 ) : ViewModel() {
 

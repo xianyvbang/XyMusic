@@ -30,7 +30,7 @@ import cn.xybbz.common.utils.DatabaseUtils
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
@@ -38,7 +38,7 @@ import org.koin.core.annotation.KoinViewModel
 @KoinViewModel
 class ConnectionManagementViewModel (
     val dataSourceManager: DataSourceManager,
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     private val musicController: MusicCommonController,
     private val musicPlayContext: MusicPlayContext,
     private val settingsManager: SettingsManager

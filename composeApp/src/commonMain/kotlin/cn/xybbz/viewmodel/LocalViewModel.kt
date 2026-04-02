@@ -23,7 +23,7 @@ import androidx.lifecycle.viewModelScope
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.localdata.enums.PlayerTypeEnum
@@ -35,7 +35,7 @@ import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
 class LocalViewModel(
-    val db: DatabaseClient,
+    val db: LocalDatabaseClient,
     val musicController: MusicCommonController,
     val musicPlayContext: MusicPlayContext
 ) : ViewModel() {

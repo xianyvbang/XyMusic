@@ -10,7 +10,7 @@ import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.music.PlayHistoryMusic
 import cn.xybbz.localdata.data.music.PlayQueueMusic
@@ -29,7 +29,7 @@ import org.koin.core.annotation.Single
  * 负责承接 musicController 发出的业务事件，并完成持久化、上报、补充数据加载等非 UI 工作。
  */
 class PlayerEventCoordinator(
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     private val musicController: MusicCommonController,
     private val dataSourceManager: DataSourceManager,
     private val settingsManager: SettingsManager,

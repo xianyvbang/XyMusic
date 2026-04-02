@@ -1,7 +1,7 @@
 package cn.xybbz.common.utils
 
 import cn.xybbz.config.music.MusicPlayContext
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 
 object PlayerListRestoreUtils {
 
@@ -10,7 +10,7 @@ object PlayerListRestoreUtils {
      * 这个方法必须在播放器控制器已经完成初始化后调用，否则恢复出来的数据可能不完整。
      */
     suspend fun restoreCurrentDataSourcePlayerList(
-        db: DatabaseClient,
+        db: LocalDatabaseClient,
         musicPlayContext: MusicPlayContext
     ) {
         val musicList = db.musicDao.selectPlayQueuePlayMusicList()

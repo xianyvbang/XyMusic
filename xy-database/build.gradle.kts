@@ -2,9 +2,13 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
     alias(libs.plugins.androidLint)
+    alias(libs.plugins.androidx.room)
+    alias(libs.plugins.kotlin.ksp)
 }
 
 kotlin {
+
+    jvm()
 
     // Target declarations - add or remove as needed below. These define
     // which platforms this KMP module supports.
@@ -12,11 +16,11 @@ kotlin {
     android {
         namespace = "cn.xybbz.database"
         compileSdk {
-            version = release(36) {
+            version = release(libs.versions.android.compileSdk.get().toInt()) {
                 minorApiLevel = 1
             }
         }
-        minSdk = 34
+        minSdk = libs.versions.android.minSdk.get().toInt()
 
         withHostTestBuilder {
         }
@@ -65,6 +69,8 @@ kotlin {
             dependencies {
                 implementation(libs.kotlin.stdlib)
                 // Add KMP dependencies here
+                implementation(libs.androidx.room.runtime)
+                implementation(libs.androidx.sqlite.bundled)
             }
         }
 
@@ -79,6 +85,7 @@ kotlin {
                 // Add Android-specific dependencies here. Note that this source set depends on
                 // commonMain by default and will correctly pull the Android artifacts of any KMP
                 // dependencies declared in commonMain.
+                implementation(libs.androidx.room.sqlite.wrapper)
             }
         }
 
@@ -99,6 +106,25 @@ kotlin {
                 // KMP dependencies declared in commonMain.
             }
         }
+        jvmMain {
+            dependencies {
+                implementation(libs.kotlin.stdlib)
+                implementation(libs.androidx.room.compiler)
+            }
+        }
     }
 
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
+dependencies {
+    add("kspAndroid", libs.androidx.room.compiler)
+    add("kspIosSimulatorArm64", libs.androidx.room.compiler)
+    add("kspIosX64", libs.androidx.room.compiler)
+    add("kspIosArm64", libs.androidx.room.compiler)
+
+    // Add any other platform target you use in your project, for example kspDesktop
 }

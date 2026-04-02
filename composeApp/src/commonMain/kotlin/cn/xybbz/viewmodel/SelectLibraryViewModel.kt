@@ -24,7 +24,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.library.XyLibrary
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
@@ -37,7 +37,7 @@ import xymusic_kmp.composeapp.generated.resources.all_media_libraries
 class SelectLibraryViewModel(
     @InjectedParam private val connectionId: Long,
     @InjectedParam private val thisLibraryId: List<String>?,
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     private val dataSourceManager: DataSourceManager
 ) : ViewModel() {
 

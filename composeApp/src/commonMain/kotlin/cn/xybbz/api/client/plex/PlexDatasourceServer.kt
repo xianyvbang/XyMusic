@@ -52,7 +52,7 @@ import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.toPlexOrder
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -77,7 +77,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 class PlexDatasourceServer(
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     settingsManager: SettingsManager,
     private val plexApiClient: PlexApiClient,
     customMediaApiClient: CustomMediaApiClient,

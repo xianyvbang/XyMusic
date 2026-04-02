@@ -27,7 +27,7 @@ import cn.xybbz.common.utils.Log
 import cn.xybbz.config.music.AudioFadeController
 import cn.xybbz.config.network.NetWorkMonitor
 import cn.xybbz.config.network.OnNetworkChangeListener
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.setting.XySettings
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.localdata.enums.DataSourceType
@@ -40,7 +40,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.withContext
 
 class SettingsManager(
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     private val audioFadeController: AudioFadeController,
     private val netWorkMonitor: NetWorkMonitor,
     private val languagePlatformManager: LanguagePlatformManager

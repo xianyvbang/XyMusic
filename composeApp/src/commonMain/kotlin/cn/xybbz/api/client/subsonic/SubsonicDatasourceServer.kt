@@ -52,7 +52,7 @@ import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.ext.convertToArtist
 import cn.xybbz.entity.data.ext.toXyMusic
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -66,7 +66,7 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import io.ktor.client.HttpClient
 
 class SubsonicDatasourceServer(
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     settingsManager: SettingsManager,
     private val subsonicApiClient: SubsonicApiClient,
     customMediaApiClient: CustomMediaApiClient,

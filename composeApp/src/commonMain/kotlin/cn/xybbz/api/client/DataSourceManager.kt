@@ -47,7 +47,7 @@ import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.Sort
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.artist.XyArtistExt
@@ -109,7 +109,7 @@ import xymusic_kmp.composeapp.generated.resources.server_connection_timeout
  * @date 2024/06/12
  */
 open class DataSourceManager(
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     private val versionApiClient: VersionApiClient,
 ) : IDataSourceServer, IoScoped(), KoinComponent {
 

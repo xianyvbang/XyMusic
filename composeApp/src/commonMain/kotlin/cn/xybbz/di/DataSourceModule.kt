@@ -34,7 +34,7 @@ import cn.xybbz.api.client.subsonic.SubsonicDatasourceServer
 import cn.xybbz.api.client.version.VersionApiClient
 import cn.xybbz.common.enums.DataSourceQualifiers
 import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.Module
@@ -48,7 +48,7 @@ class DataSourceModule {
     @Factory
     @Named(DataSourceQualifiers.JELLYFIN)
     fun jellyfinApiServer(
-        db: DatabaseClient,
+        db: LocalDatabaseClient,
         settingsManager: SettingsManager,
         jellyfinApiClient: JellyfinApiClient,
         customMediaApiClient: CustomMediaApiClient,
@@ -66,7 +66,7 @@ class DataSourceModule {
     @Factory
     @Named(DataSourceQualifiers.SUBSONIC)
     fun subsonicDataSourceServer(
-        db: DatabaseClient,
+        db: LocalDatabaseClient,
         settingsManager: SettingsManager,
         subsonicApiClient: SubsonicApiClient,
         customMediaApiClient: CustomMediaApiClient,
@@ -84,7 +84,7 @@ class DataSourceModule {
     @Factory
     @Named(DataSourceQualifiers.NAVIDROME)
     fun navidromeDatasourceServer(
-        db: DatabaseClient,
+        db: LocalDatabaseClient,
         settingsManager: SettingsManager,
         navidromeApiClient: NavidromeApiClient,
         customMediaApiClient: CustomMediaApiClient,
@@ -102,7 +102,7 @@ class DataSourceModule {
     @Factory
     @Named(DataSourceQualifiers.EMBY)
     fun embyDatasourceServer(
-        db: DatabaseClient,
+        db: LocalDatabaseClient,
         settingsManager: SettingsManager,
         embyApiClient: EmbyApiClient,
         customMediaApiClient: CustomMediaApiClient,
@@ -121,7 +121,7 @@ class DataSourceModule {
     @Factory
     @Named(DataSourceQualifiers.PLEX)
     fun plexDatasourceServer(
-        db: DatabaseClient,
+        db: LocalDatabaseClient,
         settingsManager: SettingsManager,
         plexApiClient: PlexApiClient,
         customMediaApiClient: CustomMediaApiClient,
@@ -139,7 +139,7 @@ class DataSourceModule {
 
     @Singleton
     fun dataSourceManager(
-        db: DatabaseClient,
+        db: LocalDatabaseClient,
 //        alarmConfig: AlarmConfig,
         versionApiClient: VersionApiClient,
     ): DataSourceManager {

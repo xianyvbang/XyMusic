@@ -16,20 +16,13 @@
  *
  */
 
-package cn.xybbz.localdata.converter
+package cn.xybbz.database
 
-import androidx.room.TypeConverter
-import cn.xybbz.localdata.common.LocalConstants
+import androidx.room.ConstructedBy
+import androidx.room.RoomDatabase
 
-class IntListTypeConverter {
 
-    @TypeConverter
-    fun intListToString(list: List<Int>?): String? {
-        return list?.joinToString(LocalConstants.ARTIST_DELIMITER)
-    }
+@ConstructedBy(AppDatabaseConstructor::class)
+abstract class DatabaseClient : RoomDatabase() {
 
-    @TypeConverter
-    fun stringToIntList(value: String?): List<Int>? {
-        return value?.split(LocalConstants.ARTIST_DELIMITER)?.map { it.toInt() }
-    }
 }

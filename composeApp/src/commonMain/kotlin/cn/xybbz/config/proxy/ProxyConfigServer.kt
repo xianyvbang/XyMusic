@@ -20,10 +20,10 @@ package cn.xybbz.config.proxy
 
 import cn.xybbz.api.okhttp.proxy.ProxyManager
 import cn.xybbz.common.enums.AllDataEnum
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.proxy.XyProxyConfig
 
-class ProxyConfigServer(private val db: DatabaseClient) {
+class ProxyConfigServer(private val db: LocalDatabaseClient) {
 
     lateinit var proxyConfig: XyProxyConfig
 

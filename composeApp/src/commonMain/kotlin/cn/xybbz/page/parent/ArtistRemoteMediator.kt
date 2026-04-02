@@ -25,7 +25,7 @@ import androidx.paging.RemoteMediator
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.RemoteIdConstants
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.remote.RemoteCurrent
@@ -43,7 +43,7 @@ import kotlin.time.DurationUnit
  */
 @OptIn(ExperimentalPagingApi::class)
 class ArtistRemoteMediator(
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     private val datasourceServer: IDataSourceParentServer,
     private val dataSource: DataSourceType,
     private val connectionId: Long

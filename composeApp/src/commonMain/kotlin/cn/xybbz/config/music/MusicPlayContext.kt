@@ -29,7 +29,7 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.MusicListIndexUtils
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.data.player.XyPlayer
 import cn.xybbz.localdata.data.progress.Progress
@@ -63,7 +63,7 @@ var ifNextPageNumList by mutableStateOf(false)
 class MusicPlayContext(
     private val dataSourceManager: DataSourceManager,
     private val musicController: MusicCommonController,
-    private val db: DatabaseClient
+    private val db: LocalDatabaseClient
 ) : IoScoped() {
 
     var musicPlayData: MusicPlayData? = null

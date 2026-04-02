@@ -27,7 +27,7 @@ import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.config.music.MusicCommonController
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.ui.components.AddPlaylistBottomData
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.show
@@ -102,7 +102,7 @@ class SelectControl() {
         }
 
     //增加选中音乐到播放列表
-    val onAddPlaySelect: suspend (MusicCommonController, DatabaseClient) -> Unit =
+    val onAddPlaySelect: suspend (MusicCommonController, LocalDatabaseClient) -> Unit =
         { musicController, db ->
             addPlayerList(musicController, db)
         }
@@ -235,7 +235,7 @@ class SelectControl() {
     /**
      * 播放选中列表
      */
-    suspend fun addPlayerList(musicController: MusicCommonController, db: DatabaseClient) {
+    suspend fun addPlayerList(musicController: MusicCommonController, db: LocalDatabaseClient) {
         val xyMusics = db.musicDao.selectExtendByIds(selectMusicIdList.toList())
         musicController.addMusicList(
             musicList = xyMusics,

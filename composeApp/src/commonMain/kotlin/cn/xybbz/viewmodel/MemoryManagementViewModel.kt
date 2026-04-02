@@ -32,7 +32,7 @@ import cn.xybbz.config.storage.MemoryStorageInfo
 import cn.xybbz.config.storage.clearPlatformCache
 import cn.xybbz.config.storage.getMemoryStorageInfo
 import cn.xybbz.di.ContextWrapper
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.config.withTransaction
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
@@ -41,7 +41,7 @@ import org.koin.core.annotation.KoinViewModel
 class MemoryManagementViewModel(
     private val contextWrapper: ContextWrapper,
     private val downloadCacheController: DownloadCacheCommonController,
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     private val settingsManager: SettingsManager,
     private val dataSourceManager: DataSourceManager,
     private val musicController: MusicCommonController,

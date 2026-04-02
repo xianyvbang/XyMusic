@@ -18,9 +18,6 @@
 
 package cn.xybbz.viewmodel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
@@ -29,7 +26,7 @@ import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.music.DownloadCacheCommonController
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.entity.data.ext.toPlayerMusic
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
@@ -44,7 +41,7 @@ class MusicPlayerViewModel (
     val dataSourceManager: DataSourceManager,
     val downloadCacheController: DownloadCacheCommonController,
     val lrcServer: LrcServer,
-    private val db: DatabaseClient
+    private val db: LocalDatabaseClient
 ) : ViewModel() {
 
 

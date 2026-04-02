@@ -1,6 +1,6 @@
 package cn.xybbz.common.utils
 
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.config.withTransaction
 
 /**
@@ -13,7 +13,7 @@ object DatabaseUtils {
      * todo 清除新增的几个关联表
      */
     suspend fun clearDatabaseByConnectionConfig(
-        db: DatabaseClient,
+        db: LocalDatabaseClient,
         connectionId: Long
     ) {
         db.withTransaction {

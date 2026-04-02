@@ -24,10 +24,9 @@ import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.entity.data.Sort
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.DurationUnit
 
@@ -35,7 +34,7 @@ import kotlin.time.DurationUnit
 class AlbumOrPlaylistMusicListRemoteMediator(
     private val itemId: String,
     private val datasourceServer: IDataSourceParentServer,
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     private val dataType: MusicDataTypeEnum,
     private val connectionId: Long,
     private val sort: Sort

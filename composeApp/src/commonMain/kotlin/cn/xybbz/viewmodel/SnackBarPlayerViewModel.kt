@@ -25,14 +25,14 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.music.DownloadCacheCommonController
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.select.SelectControl
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
 class SnackBarPlayerViewModel (
     val musicController: MusicCommonController,
-    val db: DatabaseClient,
+    val db: LocalDatabaseClient,
     private val downloadCacheController: DownloadCacheCommonController,
     val dataSourceManager: DataSourceManager,
     val selectControl: SelectControl,

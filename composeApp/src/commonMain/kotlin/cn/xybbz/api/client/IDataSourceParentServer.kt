@@ -48,7 +48,7 @@ import cn.xybbz.di.ContextWrapper
 import cn.xybbz.entity.data.EncryptAesData
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.common.LocalConstants
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.album.FavoriteAlbum
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -108,7 +108,7 @@ import kotlin.uuid.Uuid
 
 
 abstract class IDataSourceParentServer(
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     private val settingsManager: SettingsManager,
     private val defaultParentApiClient: DefaultParentApiClient,
     private val customMediaApiClient: CustomMediaApiClient,

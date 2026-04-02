@@ -23,7 +23,6 @@ import androidx.room.ForeignKey
 import androidx.room.ForeignKey.Companion.CASCADE
 import androidx.room.Index
 import androidx.room.TypeConverters
-import cn.xybbz.localdata.converter.StringListTypeConverter
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import kotlin.time.Clock
 

@@ -38,7 +38,7 @@ import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.recommender.DailyRecommender
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.enums.DownloadStatus
@@ -51,7 +51,7 @@ import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
 class HomeViewModel(
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     val dataSourceManager: DataSourceManager,
     val musicPlayContext: MusicPlayContext,
     private val musicController: MusicCommonController,

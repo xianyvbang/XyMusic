@@ -4,13 +4,13 @@ import androidx.paging.ExperimentalPagingApi
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.common.constants.RemoteIdConstants
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.genre.XyGenre
 
 @OptIn(ExperimentalPagingApi::class)
 class GenresRemoteMediator(
     private val datasourceServer: IDataSourceParentServer,
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     private val connectionId: Long
 ) : DefaultRemoteMediator<XyGenre,XyGenre>(
     db,

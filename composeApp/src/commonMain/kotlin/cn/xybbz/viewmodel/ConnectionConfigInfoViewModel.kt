@@ -28,7 +28,7 @@ import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.entity.data.EncryptAesData
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.InjectedParam
@@ -42,7 +42,7 @@ import xymusic_kmp.composeapp.generated.resources.modify_success
 class ConnectionConfigInfoViewModel(
     @InjectedParam private val connectionId: Long,
     private val dataSourceManager: DataSourceManager,
-    private val db: DatabaseClient
+    private val db: LocalDatabaseClient
 ) : ViewModel() {
     var connectionConfig by mutableStateOf<ConnectionConfig?>(null)
         private set

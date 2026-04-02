@@ -54,7 +54,7 @@ import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.toSearchAndOrder
 import cn.xybbz.localdata.common.LocalConstants
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -72,7 +72,7 @@ import kotlinx.coroutines.supervisorScope
 import org.jetbrains.compose.resources.getString
 
 class EmbyDatasourceServer(
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     settingsManager: SettingsManager,
     private val embyApiClient: EmbyApiClient,
     customMediaApiClient: CustomMediaApiClient,

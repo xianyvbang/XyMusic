@@ -23,7 +23,7 @@ import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.entity.data.Sort
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -39,7 +39,7 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 @OptIn(ExperimentalPagingApi::class)
 class AlbumRemoteMediator(
     private val dataSource: DataSourceType,
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     private val datasourceServer: IDataSourceParentServer,
     private val connectionId: Long,
     private val sort: Sort

@@ -4,14 +4,14 @@ import androidx.paging.ExperimentalPagingApi
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.common.constants.RemoteIdConstants
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 
 @OptIn(ExperimentalPagingApi::class)
 class FavoriteMusicRemoteMediator(
     private val datasourceServer: IDataSourceParentServer,
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     private val connectionId: Long
 ) : DefaultRemoteMediator<XyMusic,XyMusic>(
     db,

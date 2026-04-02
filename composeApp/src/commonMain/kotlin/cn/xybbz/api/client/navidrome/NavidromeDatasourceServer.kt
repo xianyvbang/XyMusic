@@ -55,7 +55,7 @@ import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.ext.toXyMusic
 import cn.xybbz.entity.data.toNavidromeOrder
 import cn.xybbz.entity.data.toNavidromeOrder2
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -72,7 +72,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 
 class NavidromeDatasourceServer(
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     settingsManager: SettingsManager,
     private val navidromeApiClient: NavidromeApiClient,
     customMediaApiClient: CustomMediaApiClient,

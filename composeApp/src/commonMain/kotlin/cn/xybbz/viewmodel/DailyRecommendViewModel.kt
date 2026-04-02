@@ -30,7 +30,7 @@ import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.recommender.DailyRecommender
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -39,7 +39,7 @@ import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
 class DailyRecommendViewModel (
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     private val dataSourceManager: DataSourceManager,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicCommonController,

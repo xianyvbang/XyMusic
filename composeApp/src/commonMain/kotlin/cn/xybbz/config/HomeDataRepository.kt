@@ -19,9 +19,8 @@
 package cn.xybbz.config
 
 import cn.xybbz.api.TokenServer
-import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.utils.Log
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.count.XyDataCount
 import cn.xybbz.localdata.data.music.XyMusicExtend
@@ -33,7 +32,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 class HomeDataRepository(
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
 ) {
 
     private val _mostPlayedMusic = MutableStateFlow<List<XyMusicExtend>>(emptyList())

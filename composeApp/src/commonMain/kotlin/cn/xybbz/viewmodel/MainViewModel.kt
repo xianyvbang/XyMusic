@@ -36,7 +36,7 @@ import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.setting.TranscodingState
 import cn.xybbz.entity.data.PlayerTypeData
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.era.XyEraItem
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.enums.PlayerTypeEnum
@@ -60,7 +60,7 @@ import xymusic_kmp.composeapp.generated.resources.single_loop
 
 @KoinViewModel
 class MainViewModel(
-    val db: DatabaseClient,
+    val db: LocalDatabaseClient,
     private val musicController: MusicCommonController,
     val dataSourceManager: DataSourceManager,
     val settingsManager: SettingsManager,

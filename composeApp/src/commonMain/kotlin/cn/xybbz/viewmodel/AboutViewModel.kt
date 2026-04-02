@@ -7,17 +7,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.config.info.getPlatformInfo
 import cn.xybbz.di.ContextWrapper
-import cn.xybbz.localdata.config.DatabaseClient
-import cn.xybbz.localdata.data.download.XyDownload
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
 class AboutViewModel(
-    private val db: DatabaseClient,
+    private val db: LocalDatabaseClient,
     private val contextWrapper: ContextWrapper
 ) : ViewModel() {
 

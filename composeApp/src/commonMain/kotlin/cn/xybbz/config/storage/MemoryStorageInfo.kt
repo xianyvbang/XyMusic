@@ -1,7 +1,7 @@
 package cn.xybbz.config.storage
 
 import cn.xybbz.di.ContextWrapper
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.localdata.config.LocalDatabaseClient
 
 data class MemoryStorageInfo(
     val cacheSize: Long = 0L,
@@ -11,7 +11,7 @@ data class MemoryStorageInfo(
 
 expect fun getMemoryStorageInfo(
     contextWrapper: ContextWrapper,
-    db: DatabaseClient,
+    db: LocalDatabaseClient,
 ): MemoryStorageInfo
 
 expect fun clearPlatformCache(contextWrapper: ContextWrapper)
