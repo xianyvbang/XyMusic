@@ -71,6 +71,7 @@ kotlin {
                 implementation(libs.kotlin.ktor.logging)
                 implementation(libs.kotlin.ktor.content.negotiation)
                 implementation(libs.kotlin.ktor.json)
+                implementation(project(path = ":xy-database"))
             }
         }
 

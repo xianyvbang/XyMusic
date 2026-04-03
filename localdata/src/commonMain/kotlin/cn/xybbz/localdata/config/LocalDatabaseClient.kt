@@ -18,6 +18,7 @@
 
 package cn.xybbz.localdata.config
 
+import androidx.room.ConstructedBy
 import androidx.room.Database
 import cn.xybbz.database.DatabaseClient
 import cn.xybbz.localdata.dao.album.AlbumDao
@@ -91,6 +92,7 @@ import cn.xybbz.localdata.data.setting.XySettings
         XyLrcConfig::class],
     exportSchema = true
 )
+@ConstructedBy(AppDatabaseConstructor::class)
 abstract class LocalDatabaseClient : DatabaseClient() {
 
     val musicDao: XyMusicDao by lazy { createMusicDao() }

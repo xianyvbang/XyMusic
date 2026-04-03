@@ -106,7 +106,7 @@ kotlin {
         }
         jvmMain {
             dependencies {
-                implementation(libs.kotlin.stdlib)
+//                implementation(libs.kotlin.stdlib)
             }
         }
     }

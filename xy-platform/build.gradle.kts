@@ -2,19 +2,15 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
     alias(libs.plugins.androidLint)
-    alias(libs.plugins.androidx.room)
-    alias(libs.plugins.kotlin.ksp)
-    alias(libs.plugins.kotlin.serialization)
 }
 
 kotlin {
-
     jvm()
     // Target declarations - add or remove as needed below. These define
     // which platforms this KMP module supports.
     // See: https://kotlinlang.org/docs/multiplatform-discover-project.html#targets
     android {
-        namespace = "cn.xybbz.localdata"
+        namespace = "cn.xybbz.platform"
         compileSdk {
             version = release(libs.versions.android.compileSdk.get().toInt()) {
                 minorApiLevel = 1
@@ -39,7 +35,7 @@ kotlin {
     // A step-by-step guide on how to include this library in an XCode
     // project can be found here:
     // https://developer.android.com/kotlin/multiplatform/migrate
-    val xcfName = "localdataKit"
+    val xcfName = "xy-platformKit"
 
     iosX64 {
         binaries.framework {
@@ -67,20 +63,14 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(libs.androidx.room.runtime)
-                implementation(libs.androidx.sqlite.bundled)
-                api(libs.androidx.room.paging)
-                implementation(libs.kotlinx.serialization.json)
+                implementation(libs.kotlin.stdlib)
                 // Add KMP dependencies here
-                api(project(path = ":xy-database"))
-                implementation(project(path = ":xy-platform"))
             }
         }
 
         commonTest {
             dependencies {
                 implementation(libs.kotlin.test)
-
             }
         }
 
@@ -89,7 +79,6 @@ kotlin {
                 // Add Android-specific dependencies here. Note that this source set depends on
                 // commonMain by default and will correctly pull the Android artifacts of any KMP
                 // dependencies declared in commonMain.
-                implementation(libs.androidx.room.sqlite.wrapper)
             }
         }
 
@@ -110,6 +99,7 @@ kotlin {
                 // KMP dependencies declared in commonMain.
             }
         }
+
         jvmMain {
             dependencies {
 //                implementation(libs.kotlin.stdlib)
@@ -117,18 +107,4 @@ kotlin {
         }
     }
 
-}
-
-room {
-    schemaDirectory("$projectDir/schemas")
-}
-
-dependencies {
-    add("kspAndroid", libs.androidx.room.compiler)
-    add("kspJvm", libs.androidx.room.compiler)
-    add("kspIosSimulatorArm64", libs.androidx.room.compiler)
-    add("kspIosX64", libs.androidx.room.compiler)
-    add("kspIosArm64", libs.androidx.room.compiler)
-
-    // Add any other platform target you use in your project, for example kspDesktop
 }
