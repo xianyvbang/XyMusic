@@ -2,9 +2,8 @@ package cn.xybbz.database
 
 import androidx.room.RoomDatabaseConstructor
 
-@Suppress("KotlinNoActualForExpect")
-expect object AppDatabaseConstructor : RoomDatabaseConstructor<DatabaseClient> {
+abstract class AppDatabaseConstructor<T: DatabaseClient> : RoomDatabaseConstructor<T> {
 
-    override fun initialize(): DatabaseClient
+    abstract override fun initialize(): T
 }
 

@@ -97,6 +97,7 @@ kotlin {
             implementation(project(path = ":ui"))
             implementation(project(path = ":api"))
             implementation(project(path = ":localdata"))
+//            implementation(project(path = ":xy-database"))
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

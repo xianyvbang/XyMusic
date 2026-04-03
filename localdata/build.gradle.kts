@@ -72,7 +72,7 @@ kotlin {
                 api(libs.androidx.room.paging)
                 implementation(libs.kotlinx.serialization.json)
                 // Add KMP dependencies here
-                implementation(project(path = ":xy-database"))
+                api(project(path = ":xy-database"))
             }
         }
 

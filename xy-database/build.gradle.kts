@@ -2,8 +2,6 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
     alias(libs.plugins.androidLint)
-    alias(libs.plugins.androidx.room)
-    alias(libs.plugins.kotlin.ksp)
 }
 
 kotlin {
@@ -109,23 +107,7 @@ kotlin {
         jvmMain {
             dependencies {
                 implementation(libs.kotlin.stdlib)
-                implementation(libs.androidx.room.compiler)
             }
         }
     }
-
-}
-
-room {
-    schemaDirectory("$projectDir/schemas")
-}
-
-dependencies {
-    add("kspAndroid", libs.androidx.room.compiler)
-    add("kspJvm", libs.androidx.room.compiler)
-    add("kspIosSimulatorArm64", libs.androidx.room.compiler)
-    add("kspIosX64", libs.androidx.room.compiler)
-    add("kspIosArm64", libs.androidx.room.compiler)
-
-    // Add any other platform target you use in your project, for example kspDesktop
 }

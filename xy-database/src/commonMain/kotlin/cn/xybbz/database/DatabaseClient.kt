@@ -22,6 +22,4 @@ import androidx.room.ConstructedBy
 import androidx.room.RoomDatabase
 
 @ConstructedBy(AppDatabaseConstructor::class)
-abstract class DatabaseClient : RoomDatabase() {
-
-}
+abstract class DatabaseClient : RoomDatabase()
