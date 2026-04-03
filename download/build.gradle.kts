@@ -100,7 +100,6 @@ kotlin {
                 implementation(libs.kotlin.ktor.android)
                 implementation(libs.androidx.room.sqlite.wrapper)
                 implementation(libs.androidx.work.runtime.ktx)
-                implementation(project(path = ":composeApp"))
 
             }
         }
