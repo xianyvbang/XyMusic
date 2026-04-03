@@ -23,8 +23,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import cn.xybbz.download.database.data.XyDownload
-import cn.xybbz.download.database.enums.DownloadStatus
-import cn.xybbz.download.database.enums.DownloadTypes
+import cn.xybbz.download.enums.DownloadStatus
+import cn.xybbz.download.enums.DownloadTypes
 import kotlinx.coroutines.flow.Flow
 
 @Dao

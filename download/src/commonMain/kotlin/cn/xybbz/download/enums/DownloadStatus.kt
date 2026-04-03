@@ -1,4 +1,4 @@
-package cn.xybbz.download.database.enums
+package cn.xybbz.download.enums
 
 /**
  * 下载状态枚举

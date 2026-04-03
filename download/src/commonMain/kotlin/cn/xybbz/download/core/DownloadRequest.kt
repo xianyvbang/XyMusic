@@ -1,6 +1,6 @@
 package cn.xybbz.download.core
 
-import cn.xybbz.download.database.enums.DownloadTypes
+import cn.xybbz.download.enums.DownloadTypes
 
 
 data class DownloadRequest(

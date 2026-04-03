@@ -18,65 +18,57 @@
 
 package cn.xybbz.download.core
 
-import cn.xybbz.common.constants.Constants
-import cn.xybbz.config.download.notification.NotificationController
-import cn.xybbz.config.download.work.DownloadWork
-import cn.xybbz.database.DatabaseClient
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.download.database.data.XyDownload
-import cn.xybbz.download.database.enums.DownloadStatus
-import io.ktor.http.ContentDisposition.Companion.File
+import cn.xybbz.download.enums.DownloadStatus
+import cn.xybbz.download.internal.DownloadIoScoped
+import cn.xybbz.download.internal.DownloadLogger
+import cn.xybbz.download.notification.DownloadNotificationDelegate
+import cn.xybbz.platform.ContextWrapper
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-
+import kotlin.time.Clock
 
 class DownloadDispatcherImpl(
-    private val db: DatabaseClient,
-    private val workManager: WorkManager,
-    var config: DownloaderConfig,
-    private val notificationController: NotificationController,
-//    private val netWorkMonitor: NetWorkMonitor
-) : IDownloadDispatcher, IoScoped() {
+    private val db: DownloadDatabaseClient,
+    private val contextWrapper: ContextWrapper,
+    private val taskScheduler: DownloadTaskScheduler = DownloadTaskScheduler(contextWrapper),
+    var config: DownloaderConfig = DownloaderConfig.Builder(contextWrapper).build(),
+    private val notificationDelegate: DownloadNotificationDelegate = DownloadNotificationDelegate(contextWrapper),
+) : IDownloadDispatcher, DownloadIoScoped() {
 
+    // 任务状态切换统一收敛到这把锁里，保证内存态和数据库态的切换顺序一致。
     private val globalMutex = Mutex()
 
-    private val readyTasks = ConcurrentLinkedQueue<XyDownload>()
-    private val runningTasks = ConcurrentHashMap<Long, XyDownload>()
-    private val pausedTasks = ConcurrentHashMap<Long, XyDownload>()
-    private val failedTasks = ConcurrentHashMap<Long, XyDownload>()
+    private val readyTasks = ArrayDeque<XyDownload>()
+    private val runningTasks = mutableMapOf<Long, XyDownload>()
+    private val pausedTasks = mutableMapOf<Long, XyDownload>()
+    private val failedTasks = mutableMapOf<Long, XyDownload>()
 
-    // 创建一个用于广播任务更新事件的 SharedFlow
-    private val _taskUpdateEventFlow = MutableSharedFlow<XyDownload>()
+    private val _taskUpdateEventFlow = MutableSharedFlow<XyDownload>(extraBufferCapacity = 64)
     val taskUpdateEventFlow = _taskUpdateEventFlow.asSharedFlow()
     private var lastDbUpdateTime = 0L
     private val dbUpdateInterval = 1000L
 
-    /**
-     * 初始化加载数据库中的信息
-     * todo 这里需要修改,改为初始化所有数据都是暂停状态
-     */
+    init {
+        createScope()
+    }
+
     suspend fun rehydrate(connectionId: Long) =
         withContext(Dispatchers.IO) {
+            readyTasks.clear()
+            runningTasks.clear()
+            pausedTasks.clear()
+            failedTasks.clear()
 
-            // Only rehydrate once
-            if (readyTasks.isNotEmpty() || runningTasks.isNotEmpty() || pausedTasks.isNotEmpty() || failedTasks.isNotEmpty()) {
-                readyTasks.clear()
-                runningTasks.clear()
-                pausedTasks.clear()
-                failedTasks.clear()
-            }
-
-            val allTasks =
-                db.downloadDao.getAllTasksSuspend(connectionId)
-            allTasks.forEach { task ->
+            db.downloadDao.getAllTasksSuspend(connectionId).forEach { task ->
                 when (task.status) {
                     DownloadStatus.QUEUED -> readyTasks.add(task)
-
                     DownloadStatus.DOWNLOADING -> {
                         task.status = DownloadStatus.QUEUED
                         readyTasks.add(task)
@@ -84,8 +76,7 @@ class DownloadDispatcherImpl(
 
                     DownloadStatus.PAUSED -> pausedTasks[task.id] = task
                     DownloadStatus.FAILED -> failedTasks[task.id] = task
-                    else -> {
-                    }
+                    else -> Unit
                 }
             }
             promoteAndExecute()
@@ -93,13 +84,14 @@ class DownloadDispatcherImpl(
 
     fun enqueue(newTasks: List<XyDownload>) {
         scope.launch {
+            // 新任务先进入 ready 队列，再尝试补位执行。
             readyTasks.addAll(newTasks)
             promoteAndExecute()
         }
     }
 
     fun updateConfig(newConfig: DownloaderConfig) {
-        this.config = newConfig
+        config = newConfig
         promoteAndExecute()
     }
 
@@ -107,7 +99,7 @@ class DownloadDispatcherImpl(
         scope.launch {
             ids.forEach { id ->
                 var task: XyDownload? = null
-                readyTasks.find { it.id == id }?.let {
+                readyTasks.firstOrNull { it.id == id }?.let {
                     task = it
                     readyTasks.remove(it)
                 }
@@ -130,13 +122,11 @@ class DownloadDispatcherImpl(
                 pausedTasks.remove(id)?.let {
                     it.status = DownloadStatus.QUEUED
                     readyTasks.add(it)
-                    // Key Node: Persist state change
                     db.downloadDao.updateStatus(it.id, DownloadStatus.QUEUED)
                 }
                 failedTasks.remove(id)?.let {
                     it.status = DownloadStatus.QUEUED
                     readyTasks.add(it)
-                    // Key Node: Persist state change
                     db.downloadDao.updateStatus(it.id, DownloadStatus.QUEUED)
                 }
             }
@@ -146,10 +136,10 @@ class DownloadDispatcherImpl(
 
     fun cancel(ids: List<Long>) {
         scope.launch {
-            val time = System.currentTimeMillis()
+            val time = Clock.System.now().toEpochMilliseconds()
             val tasksToCancel = mutableListOf<XyDownload>()
             ids.forEach { id ->
-                readyTasks.find { it.id == id }
+                readyTasks.firstOrNull { it.id == id }
                     ?.also { readyTasks.remove(it); tasksToCancel.add(it) }
                 runningTasks.remove(id)?.also { tasksToCancel.add(it) }
                 pausedTasks.remove(id)?.also { tasksToCancel.add(it) }
@@ -158,16 +148,15 @@ class DownloadDispatcherImpl(
 
             if (tasksToCancel.isNotEmpty()) {
                 val taskIds = tasksToCancel.map { it.id }
-                // Key Node: Persist state change
                 db.downloadDao.updateStatuses(taskIds, DownloadStatus.CANCEL, time)
 
                 tasksToCancel.forEach { task ->
-                    workManager.cancelAllWorkByTag(task.id.toString())
+                    taskScheduler.cancel(task.id)
                     try {
-                        File(task.tempFilePath).delete()
+                        DownloadPlatformFiles.deleteFile(task.tempFilePath)
                         cleanupTaskFiles(task)
                     } catch (e: Exception) {
-                        Log.d(Constants.LOG_ERROR_PREFIX, "$e")
+                        DownloadLogger.d(DownloadConstants.LOG_TAG, e.toString())
                     }
                 }
             }
@@ -185,23 +174,25 @@ class DownloadDispatcherImpl(
 
     fun delete(ids: List<Long>, deleteFile: Boolean) {
         scope.launch {
-            val tasksToCancel = mutableListOf<XyDownload>()
+            val tasksToDelete = mutableListOf<XyDownload>()
             ids.forEach { id ->
-                readyTasks.find { it.id == id }
-                    ?.also { readyTasks.remove(it); tasksToCancel.add(it) }
-                runningTasks.remove(id)?.also { tasksToCancel.add(it) }
-                pausedTasks.remove(id)?.also { tasksToCancel.add(it) }
-                failedTasks.remove(id)?.also { tasksToCancel.add(it) }
+                readyTasks.firstOrNull { it.id == id }
+                    ?.also { readyTasks.remove(it); tasksToDelete.add(it) }
+                runningTasks.remove(id)?.also { tasksToDelete.add(it) }
+                pausedTasks.remove(id)?.also { tasksToDelete.add(it) }
+                failedTasks.remove(id)?.also { tasksToDelete.add(it) }
             }
 
-            if (tasksToCancel.isNotEmpty()) {
-                tasksToCancel.forEach { task ->
-                    workManager.cancelAllWorkByTag(task.id.toString())
+            if (tasksToDelete.isNotEmpty()) {
+                tasksToDelete.forEach { task ->
+                    taskScheduler.cancel(task.id)
                     try {
                         cleanupTaskFiles(task)
-                        if (deleteFile) File(task.filePath).delete()
+                        if (deleteFile) {
+                            DownloadPlatformFiles.deleteFile(task.filePath)
+                        }
                     } catch (e: Exception) {
-                        Log.d(Constants.LOG_ERROR_PREFIX, "$e")
+                        DownloadLogger.d(DownloadConstants.LOG_TAG, e.toString())
                     }
                 }
             }
@@ -212,9 +203,9 @@ class DownloadDispatcherImpl(
 
     private fun promoteAndExecute() = scope.launch {
         globalMutex.withLock {
+            // 只要并发槽位有空闲，就持续从 ready 队列提升任务。
             while (runningTasks.size < config.maxConcurrentDownloads) {
-                val task = readyTasks.poll() ?: break // No more tasks to run
-
+                val task = readyTasks.removeFirstOrNull() ?: break
                 task.status = DownloadStatus.DOWNLOADING
                 runningTasks[task.id] = task
                 startDownloadWorker(task)
@@ -223,19 +214,10 @@ class DownloadDispatcherImpl(
     }
 
     private suspend fun startDownloadWorker(task: XyDownload) {
-        // Key Node: Persist state change just before starting
+        // 真正的后台执行细节交给平台调度器，这里只负责切状态和触发。
         db.downloadDao.updateStatus(task.id, DownloadStatus.DOWNLOADING)
-        val workRequest = OneTimeWorkRequestBuilder<DownloadWork>()
-            .setInputData(workDataOf(Constants.DOWNLOAD_ID to task.id))
-            .addTag(task.id.toString())
-            .build()
-        workManager.enqueueUniqueWork(
-            task.id.toString(),
-            ExistingWorkPolicy.KEEP,
-            workRequest
-        )
+        taskScheduler.enqueue(task.id)
     }
-
 
     override fun onProgress(
         downloadId: Long,
@@ -243,55 +225,42 @@ class DownloadDispatcherImpl(
         downloadedBytes: Long,
         totalBytes: Long,
         speedBps: Long,
-        isSendNotice: Boolean
+        isSendNotice: Boolean,
     ) {
-
-        //更新map的数据
         val download = runningTasks[downloadId]
         download?.let {
             it.progress = progress
             it.downloadedBytes = downloadedBytes
             it.totalBytes = totalBytes
         }
-        val currentTime = System.currentTimeMillis()
+        val currentTime = Clock.System.now().toEpochMilliseconds()
 
         if (download != null) {
             scope.launch {
                 if (isSendNotice) {
-                    notificationController.cancel(download.id.toInt() + 100000)
-                    val notificationBuilder =
-                        notificationController.buildNotification(
-                            download,
-                            speedBps
-                        )
-                    notificationController.show(
-                        downloadId.toInt(),
-                        notificationBuilder
-                    )
+                    notificationDelegate.showProgress(download, speedBps)
                 }
-
-                scope.launch { _taskUpdateEventFlow.emit(download.copy(updateTime = currentTime)) }
+                // UI 层只关心最新快照，这里把更新后的任务重新广播出去。
+                _taskUpdateEventFlow.emit(download.copy(updateTime = currentTime))
             }
         }
-        //更新数据库数据
+
         scope.launch {
             if (currentTime - lastDbUpdateTime >= dbUpdateInterval) {
                 lastDbUpdateTime = currentTime
                 scope.launch(Dispatchers.IO) {
-                    // 批量更新所有正在运行任务的进度
                     runningTasks.values.forEach { runningTask ->
                         db.downloadDao.updateProgress(
                             runningTask.id,
                             runningTask.progress,
                             runningTask.downloadedBytes,
                             runningTask.totalBytes,
-                            currentTime
+                            currentTime,
                         )
                     }
                 }
             }
         }
-
     }
 
     override fun onStateChanged(
@@ -299,93 +268,69 @@ class DownloadDispatcherImpl(
         status: DownloadStatus,
         finalPath: String?,
         error: String?,
-        isSendNotice: Boolean
+        isSendNotice: Boolean,
     ) {
         scope.launch {
             var updateTask: XyDownload? = null
 
             globalMutex.withLock {
-                val time = System.currentTimeMillis()
+                val time = Clock.System.now().toEpochMilliseconds()
                 val task = runningTasks.remove(downloadId)
-                // 如果任务是从 runningTasks 中移除的，才进行后续操作
                 if (task != null) {
                     updateTask = task
                     task.status = status
                     _taskUpdateEventFlow.emit(task.copy(updateTime = time))
-                    // 使用更全面的数据库更新方法
                     when (status) {
                         DownloadStatus.COMPLETED -> {
                             if (finalPath != null) {
-                                db.downloadDao.updateOnSuccess(
-                                    downloadId,
-                                    status,
-                                    finalPath,
-                                    time
-                                ) // 假设 repo 方法已更新
+                                db.downloadDao.updateOnSuccess(downloadId, status, finalPath, time)
                             }
                         }
 
-                        DownloadStatus.PAUSED -> db.downloadDao.updateStatus(downloadId, status)
-                        DownloadStatus.FAILED -> {
+                        DownloadStatus.PAUSED -> {
                             pausedTasks[task.id] = task
-                            db.downloadDao.updateOnError(
-                                downloadId,
-                                status,
-                                error,
-                                time
-                            )
+                            db.downloadDao.updateStatus(downloadId, status)
+                        }
+
+                        DownloadStatus.FAILED -> {
+                            failedTasks[task.id] = task
+                            db.downloadDao.updateOnError(downloadId, status, error, time)
                         }
 
                         DownloadStatus.CANCEL -> db.downloadDao.updateStatus(downloadId, status)
-                        else -> {}
+                        else -> Unit
                     }
                 }
             }
 
             updateTask?.let {
                 if (isSendNotice) {
-                    val staticNotificationId = it.id.toInt() + 100000
+                    // commonMain 只分发状态，具体怎么展示由 Android 通知层自己决定。
                     when (it.status) {
-                        DownloadStatus.PAUSED -> {
-                            // 显示一个“已暂停”的通知
-                            val builder = notificationController.buildNotification(it, 0L)
-                            notificationController.show(staticNotificationId, builder)
-                        }
-
-                        DownloadStatus.COMPLETED, DownloadStatus.FAILED, DownloadStatus.CANCEL -> {
-                            // 任务结束后，移除通知
-                            notificationController.cancel(it.id.toInt())
-                            notificationController.cancel(staticNotificationId)
+                        DownloadStatus.PAUSED -> notificationDelegate.showPaused(it)
+                        DownloadStatus.COMPLETED,
+                        DownloadStatus.FAILED,
+                        DownloadStatus.CANCEL -> {
+                            notificationDelegate.showFinished(it)
                             cleanupTaskFiles(it)
                         }
 
-                        else -> {
-                            notificationController.cancel(staticNotificationId)
-                        }
+                        else -> notificationDelegate.clear(it.id)
                     }
                 }
 
                 promoteAndExecute()
             }
         }
-
     }
 
     private fun cleanupTaskFiles(task: XyDownload) {
         try {
-            // 清理临时文件
-            val tempFile = File(task.tempFilePath)
-            if (tempFile.exists()) {
-                tempFile.delete()
-            }
-
-            // 清理最终目录中的占位文件
-            val finalFile = File(task.filePath)
-            if (finalFile.exists() && finalFile.length() == 0L) { // 只删除 0 字节的占位文件，以防万一
-                finalFile.delete()
-            }
+            // 临时文件始终删掉；最终文件只清理 0 字节占位文件，避免误删正常结果。
+            DownloadPlatformFiles.deleteFile(task.tempFilePath)
+            DownloadPlatformFiles.deleteFileIfEmpty(task.filePath)
         } catch (e: Exception) {
-            Log.d(Constants.LOG_ERROR_PREFIX, "$e")
+            DownloadLogger.d(DownloadConstants.LOG_TAG, e.toString())
         }
     }
 

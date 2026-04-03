@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!--    前台通知使用-->
+    <uses-permission
+        android:name="android.permission.POST_NOTIFICATIONS"
+        android:minSdkVersion="33" />
+
+    <application>
+        <receiver
+            android:name="cn.xybbz.config.download.notification.DownloadNotificationReceiver"
+            android:exported="false" />
+    </application>
 </manifest>

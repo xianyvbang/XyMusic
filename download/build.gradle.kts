@@ -20,6 +20,9 @@ kotlin {
                 minorApiLevel = 1
             }
         }
+        androidResources {
+            enable = true
+        }
         minSdk = libs.versions.android.minSdk.get().toInt()
 
         withHostTestBuilder {
@@ -68,6 +71,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.kotlin.stdlib)
+                implementation(libs.compose.components.resources)
                 // Add KMP dependencies here
                 implementation(libs.kotlin.ktor.client.core)
                 implementation(libs.kotlin.ktor.logging)
@@ -75,6 +79,8 @@ kotlin {
                 implementation(libs.kotlin.ktor.json)
                 implementation(libs.androidx.room.runtime)
                 implementation(libs.androidx.sqlite.bundled)
+                //work 后台调度-定时任务
+                implementation(libs.androidx.work.runtime.ktx)
                 implementation(project(path = ":xy-database"))
                 implementation(project(path = ":xy-platform"))
             }
@@ -94,7 +100,7 @@ kotlin {
                 // dependencies declared in commonMain.
                 implementation(libs.kotlin.ktor.android)
                 implementation(libs.androidx.room.sqlite.wrapper)
-
+                implementation(project(path = ":composeApp"))
 
             }
         }

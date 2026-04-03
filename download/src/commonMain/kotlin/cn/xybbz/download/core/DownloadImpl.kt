@@ -19,62 +19,51 @@
 package cn.xybbz.download.core
 
 import cn.xybbz.config.download.core.IDownloader
-import cn.xybbz.database.DatabaseClient
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.download.database.data.XyDownload
-import cn.xybbz.download.database.enums.DownloadStatus
-import io.ktor.http.ContentDisposition.Companion.File
+import cn.xybbz.download.enums.DownloadStatus
+import cn.xybbz.download.internal.DownloadIoScoped
+import cn.xybbz.download.internal.DownloadLogger
+import cn.xybbz.download.utils.FileNameResolver
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.time.Clock
 
 class DownloadImpl(
     private val downloadDispatcher: DownloadDispatcherImpl,
-    private val db: DatabaseClient,
-) : IDownloader {
+    private val db: DownloadDatabaseClient,
+) : IDownloader, DownloadIoScoped() {
 
-    private val listeners = CopyOnWriteArrayList<DownloadListener>()
-
+    // 监听器只在模块内维护一份快照列表，避免把平台并发容器带进 commonMain。
+    private val listeners = mutableListOf<DownloadListener>()
 
     init {
         createScope()
     }
 
     override suspend fun initData(connectionId: Long) {
-
+        // 先把调度层的任务更新桥接给监听器，再做任务恢复。
         scope.launch {
             downloadDispatcher.taskUpdateEventFlow.collect { updatedTask ->
                 notifyListeners(updatedTask)
             }
         }
         downloadDispatcher.rehydrate(connectionId)
-
     }
 
-    /**
-     * Adds a listener to receive download task updates.
-     * @param listener The listener to add.
-     */
     override fun addListener(listener: DownloadListener) {
         if (!listeners.contains(listener)) {
             listeners.add(listener)
         }
     }
 
-    /**
-     * Removes a previously added listener.
-     * @param listener The listener to remove.
-     */
     override fun removerListener(listener: DownloadListener) {
         listeners.remove(listener)
     }
 
-    /**
-     * Internal method to notify all registered listeners about a task update.
-     */
     internal fun notifyListeners(task: XyDownload) {
-        // CopyOnWriteArrayList 使得遍历操作是线程安全的
-        listeners.forEach {
+        listeners.toList().forEach {
             it.onTaskUpdated(task)
         }
     }
@@ -85,30 +74,26 @@ class DownloadImpl(
         }
         val failTasks = mutableListOf<XyDownload>()
         val successTasksToInsert = mutableListOf<XyDownload>()
-        var tempFile: File? = null
-        // 1. 准备阶段：创建所有 Task 实体
+
         for (request in requests) {
+            var tempFilePath: String? = null
             try {
+                // 最终文件路径在 commonMain 里只做解析，真正的临时文件创建交给平台 actual。
                 val resolved = FileNameResolver.resolve(
                     request = request,
                     globalFinalDir = downloadDispatcher.config.finalDirectory,
                 )
-                val tempDir = File(applicationContext.cacheDir, "downloads")
-
-                // 2. 确保这个稳定目录存在
-                if (!tempDir.exists()) {
-                    tempDir.mkdirs()
-                }
-
-                // 3. 在这个稳定目录中创建临时文件
-                tempFile = withContext(Dispatchers.IO) {
-                    File.createTempFile("download_", ".tmp", tempDir)
+                tempFilePath = withContext(Dispatchers.IO) {
+                    DownloadPlatformFiles.createTempDownloadFilePath()
                 }
 
                 if (!request.uid.isNullOrBlank()) {
                     val downloadTask = db.downloadDao.getMusicTaskByUid(uid = request.uid)
                     if (downloadTask != null) {
-                        if (downloadTask.status != DownloadStatus.CANCEL && downloadTask.status != DownloadStatus.FAILED && downloadTask.status != DownloadStatus.PAUSED) {
+                        if (downloadTask.status != DownloadStatus.CANCEL &&
+                            downloadTask.status != DownloadStatus.FAILED &&
+                            downloadTask.status != DownloadStatus.PAUSED
+                        ) {
                             continue
                         } else if (downloadTask.status == DownloadStatus.PAUSED) {
                             resume(downloadTask.id)
@@ -117,53 +102,56 @@ class DownloadImpl(
                     }
                 }
 
+                // 这里只落库下载任务元数据，真正执行由 dispatcher 决定何时启动。
                 val task = XyDownload(
                     url = request.url,
                     fileName = resolved.fileName,
                     filePath = resolved.finalPath,
                     fileSize = request.fileSize,
-                    tempFilePath = tempFile.absolutePath,
+                    tempFilePath = tempFilePath,
                     typeData = request.type,
                     uid = request.uid,
                     title = request.title,
                     cover = request.cover,
                     duration = request.duration,
                     connectionId = request.connectionId,
-                    music = request.music
+                    extend = request.extend,
+                    data = request.data,
                 )
 
                 successTasksToInsert.add(task)
-            } catch (e: IOException) {
-                // --- 捕获异常，创建“失败”任务 ---
-                // 1. 记录详细错误
-                Log.e(
-                    "Downloader",
-                    "Failed to resolve/reserve filename for ${request.url}: ${e.message}",
-                    e
+            } catch (e: Throwable) {
+                DownloadLogger.e(
+                    DownloadConstants.LOG_TAG,
+                    "Failed to prepare download for ${request.url}: ${e.message}",
+                    e,
                 )
-                tempFile?.delete()
-                val time = System.currentTimeMillis()
+                tempFilePath?.let(DownloadPlatformFiles::deleteFile)
+                val time = Clock.System.now().toEpochMilliseconds()
 
-                // 2. 创建一个状态为 FAILED 的任务实体
-                val failedTask = XyDownload(
-                    url = request.url,
-                    filePath = "",
-                    tempFilePath = "",
-                    fileName = request.fileName.ifBlank { "unknown file" },
-                    status = DownloadStatus.FAILED,
-                    createTime = time,
-                    updateTime = time,
-                    uid = request.uid,
-                    cover = request.cover,
-                    duration = request.duration,
-                    fileSize = request.fileSize,
-                    title = request.title,
-                    connectionId = request.connectionId
+                failTasks.add(
+                    XyDownload(
+                        url = request.url,
+                        filePath = "",
+                        tempFilePath = "",
+                        fileName = request.fileName.ifBlank { "unknown file" },
+                        status = DownloadStatus.FAILED,
+                        createTime = time,
+                        updateTime = time,
+                        uid = request.uid,
+                        cover = request.cover,
+                        duration = request.duration,
+                        fileSize = request.fileSize,
+                        title = request.title,
+                        connectionId = request.connectionId,
+                        extend = request.extend,
+                        data = request.data,
+                    )
                 )
-                failTasks.add(failedTask)
             }
         }
-        // 2. 将预处理失败的任务直接插入数据库
+
+        // 预处理失败的任务也直接入库，便于上层看到失败状态。
         if (failTasks.isNotEmpty()) {
             db.downloadDao.insert(*failTasks.toTypedArray())
         }

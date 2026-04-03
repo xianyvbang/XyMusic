@@ -1,27 +1,30 @@
 package cn.xybbz.download.core
 
-import android.content.Context
-import android.os.Environment
-import java.io.File
+import cn.xybbz.platform.ContextWrapper
 
 class DownloaderConfig(
     val maxConcurrentDownloads: Int,
-    val finalDirectory: String
+    val finalDirectory: String,
 ) {
 
-    class Builder(context: Context) {
+    // Builder 保留在 commonMain，但默认目录解析走平台 actual。
+    class Builder(contextWrapper: ContextWrapper? = null) {
         private var maxConcurrentDownloads: Int = 3
         private var finalDirectory: String =
-            (context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
-                ?: File(context.filesDir, "downloads")).absolutePath
-        fun setMaxConcurrentDownloads(count: Int) = apply { this.maxConcurrentDownloads = count }
-        fun setFinalDirectory(dirPath: String) =
-            apply { this.finalDirectory = dirPath } // [CHANGE] File -> String
+            DownloadPlatformFiles.defaultDownloadDirectory(contextWrapper)
+
+        fun setMaxConcurrentDownloads(count: Int) = apply {
+            maxConcurrentDownloads = count
+        }
+
+        fun setFinalDirectory(dirPath: String) = apply {
+            finalDirectory = dirPath
+        }
 
         fun build(): DownloaderConfig {
             return DownloaderConfig(
                 maxConcurrentDownloads = maxConcurrentDownloads,
-                finalDirectory = finalDirectory
+                finalDirectory = finalDirectory,
             )
         }
     }

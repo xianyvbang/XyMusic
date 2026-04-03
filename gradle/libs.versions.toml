@@ -42,6 +42,7 @@ paging = "3.4.2"
 multiLanguages = "10.2"
 splashscreen = "1.2.0"
 sketch = "4.4.0-beta02"
+work = "2.11.1"
 
 
 
@@ -131,6 +132,8 @@ sketch-compose-resources-ext = { module = "io.github.panpf.sketch4:sketch-extens
 sketch-compose-ext = { module = "io.github.panpf.sketch4:sketch-extensions-compose", version.ref = "sketch" }
 sketch-ktor = { module = "io.github.panpf.sketch4:sketch-http-ktor3", version.ref = "sketch" }
 sketch-gif = { module = "io.github.panpf.sketch4:sketch-animated-gif", version.ref = "sketch" }
+
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 
 
 [plugins]

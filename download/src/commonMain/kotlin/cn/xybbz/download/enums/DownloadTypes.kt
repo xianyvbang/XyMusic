@@ -1,4 +1,4 @@
-package cn.xybbz.download.database.enums
+package cn.xybbz.download.enums
 
 enum class DownloadTypes() {
 

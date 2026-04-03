@@ -18,7 +18,7 @@
 
 package cn.xybbz.download.core
 
-import cn.xybbz.download.database.enums.DownloadStatus
+import cn.xybbz.download.enums.DownloadStatus
 
 
 interface IDownloadDispatcher {

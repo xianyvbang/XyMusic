@@ -20,8 +20,8 @@ package cn.xybbz.download.database.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import cn.xybbz.download.database.enums.DownloadStatus
-import cn.xybbz.download.database.enums.DownloadTypes
+import cn.xybbz.download.enums.DownloadStatus
+import cn.xybbz.download.enums.DownloadTypes
 import kotlin.time.Clock
 
 @Entity(tableName = "xy_download")
@@ -46,11 +46,10 @@ data class XyDownload(
     val title: String? = null,
     val cover: String? = null,
     val duration: Long? = null,
-    //分库id 用来分数据源下载使用,可以不写入
+    val connectionId: Long? = null,
     val libraryId: String? = null,
-    val extend:String? = null,
-    //下载主体数据json
-    val data:String? = null,
+    val extend: String? = null,
+    val data: String? = null,
 
     val updateTime: Long = Clock.System.now().toEpochMilliseconds(),
     val createTime: Long = Clock.System.now().toEpochMilliseconds(),
