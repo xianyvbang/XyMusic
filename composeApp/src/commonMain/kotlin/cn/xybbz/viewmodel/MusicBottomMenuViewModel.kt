@@ -270,7 +270,7 @@ class MusicBottomMenuViewModel(
                     type = downloadTypes,
                     cover = musicData.pic,
                     duration = musicData.runTimeTicks,
-                    connectionId = dataSourceManager.getConnectionId(),
+                    mediaLibraryId = dataSourceManager.getConnectionId(),
                     music = musicData
                 )
             )*/

@@ -14,7 +14,7 @@ data class DownloadRequest(
     val type: DownloadTypes = DownloadTypes.APK,
     val cover: String? = null,
     val duration: Long = 0L,
-    val connectionId: Long? = null,
+    val mediaLibraryId: Long? = null,
     val extend: String? = null,
     val data: String? = null,
 )

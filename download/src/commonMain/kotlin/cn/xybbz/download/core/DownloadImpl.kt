@@ -114,7 +114,7 @@ class DownloadImpl(
                     title = request.title,
                     cover = request.cover,
                     duration = request.duration,
-                    connectionId = request.connectionId,
+                    mediaLibraryId = request.mediaLibraryId,
                     extend = request.extend,
                     data = request.data,
                 )
@@ -143,7 +143,7 @@ class DownloadImpl(
                         duration = request.duration,
                         fileSize = request.fileSize,
                         title = request.title,
-                        connectionId = request.connectionId,
+                        mediaLibraryId = request.mediaLibraryId,
                         extend = request.extend,
                         data = request.data,
                     )

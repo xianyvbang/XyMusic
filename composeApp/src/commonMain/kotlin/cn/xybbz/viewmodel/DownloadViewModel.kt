@@ -25,8 +25,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.localdata.config.LocalDatabaseClient
-import cn.xybbz.localdata.data.download.XyDownload
+import cn.xybbz.download.database.DownloadDatabaseClient
+import cn.xybbz.download.database.data.XyDownload
 import cn.xybbz.localdata.data.music.XyMusic
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.SharingStarted
@@ -38,13 +38,13 @@ import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
 class DownloadViewModel(
-    val db: LocalDatabaseClient,
+    val downloadDb: DownloadDatabaseClient,
     private val datasourceServer: DataSourceManager,
 ) : ViewModel() {
 
 
     @OptIn(FlowPreview::class)
-    val musicDownloadInfo: StateFlow<List<XyDownload>> = db.downloadDao.getAllMusicTasksFlow()
+    val musicDownloadInfo: StateFlow<List<XyDownload>> = downloadDb.downloadDao.getAllMusicTasksFlow()
         .sample(200)
         .stateIn(
             scope = viewModelScope,

@@ -18,6 +18,7 @@
 
 package cn.xybbz.download.database.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import cn.xybbz.download.enums.DownloadStatus
@@ -46,7 +47,8 @@ data class XyDownload(
     val title: String? = null,
     val cover: String? = null,
     val duration: Long? = null,
-    val connectionId: Long? = null,
+    //资源id
+    val mediaLibraryId: String? = null,
     val libraryId: String? = null,
     val extend: String? = null,
     val data: String? = null,

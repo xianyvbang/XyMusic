@@ -8,6 +8,6 @@ internal const val DB_FILE_NAME = "downloadData.db"
 /**
  * 创建DownloadDatabaseClient对象
  */
-fun getLocalRoomDatabase(contextWrapper: ContextWrapper): DownloadDatabaseClient {
+fun getDownloadRoomDatabase(contextWrapper: ContextWrapper): DownloadDatabaseClient {
     return getRoomDatabase(DB_FILE_NAME, contextWrapper)
 }

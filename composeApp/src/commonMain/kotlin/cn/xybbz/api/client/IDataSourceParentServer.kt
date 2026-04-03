@@ -1228,7 +1228,7 @@ abstract class IDataSourceParentServer(
 
     suspend fun transitionPlayMusic(musicList: List<XyMusic>?): List<XyPlayMusic>? {
         val downloads = musicList?.map { it.itemId }?.let {
-            downloadDb.downloadDao.getMusicByMusicIds(it)
+            downloadDb.downloadDao.getDataByUids(it)
         }
         val downloadMap = downloads?.associateBy { it.uid }
 
@@ -1240,7 +1240,7 @@ abstract class IDataSourceParentServer(
 
     suspend fun transitionMusicExtend(musicList: List<XyMusic>?): List<XyMusicExtend>? {
         val downloads = musicList?.map { it.itemId }?.let {
-            downloadDb.downloadDao.getMusicByMusicIds(it)
+            downloadDb.downloadDao.getDataByUids(it)
         }
         val downloadMap = downloads?.associateBy { it.uid }
 
