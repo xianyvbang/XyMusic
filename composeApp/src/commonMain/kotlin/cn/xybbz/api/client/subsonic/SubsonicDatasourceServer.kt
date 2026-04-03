@@ -21,7 +21,6 @@ package cn.xybbz.api.client.subsonic
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.RemoteMediator
 import cn.xybbz.api.client.IDataSourceParentServer
-import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.client.subsonic.data.AlbumID3
@@ -46,14 +45,11 @@ import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.info.getPlatformInfo
-import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.di.ContextWrapper
+import cn.xybbz.database.withTransaction
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.ext.convertToArtist
 import cn.xybbz.entity.data.ext.toXyMusic
-import cn.xybbz.localdata.config.LocalDatabaseClient
-import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
@@ -66,17 +62,9 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import io.ktor.client.HttpClient
 
 class SubsonicDatasourceServer(
-    private val db: LocalDatabaseClient,
-    settingsManager: SettingsManager,
     private val subsonicApiClient: SubsonicApiClient,
-    customMediaApiClient: CustomMediaApiClient,
-    val contextWrapper: ContextWrapper
 ) : IDataSourceParentServer(
-    db,
-    settingsManager,
     subsonicApiClient,
-    customMediaApiClient,
-    contextWrapper
 ) {
     /**
      * 获得当前数据源类型

@@ -19,7 +19,6 @@
 package cn.xybbz.api.client.plex
 
 import cn.xybbz.api.client.IDataSourceParentServer
-import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.LoginSuccessData
 import cn.xybbz.api.client.data.XyResponse
@@ -44,16 +43,13 @@ import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.info.getPlatformInfo
-import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.di.ContextWrapper
+import cn.xybbz.database.withTransaction
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.PlexOrder
 import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.toPlexOrder
-import cn.xybbz.localdata.config.LocalDatabaseClient
-import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
@@ -77,17 +73,9 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 class PlexDatasourceServer(
-    private val db: LocalDatabaseClient,
-    settingsManager: SettingsManager,
     private val plexApiClient: PlexApiClient,
-    customMediaApiClient: CustomMediaApiClient,
-    val contextWrapper: ContextWrapper
 ) : IDataSourceParentServer(
-    db,
-    settingsManager,
     plexApiClient,
-    customMediaApiClient,
-    contextWrapper
 ) {
 
     /**

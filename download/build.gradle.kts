@@ -80,7 +80,6 @@ kotlin {
                 implementation(libs.androidx.room.runtime)
                 implementation(libs.androidx.sqlite.bundled)
                 //work 后台调度-定时任务
-                implementation(libs.androidx.work.runtime.ktx)
                 implementation(project(path = ":xy-database"))
                 implementation(project(path = ":xy-platform"))
             }
@@ -100,6 +99,7 @@ kotlin {
                 // dependencies declared in commonMain.
                 implementation(libs.kotlin.ktor.android)
                 implementation(libs.androidx.room.sqlite.wrapper)
+                implementation(libs.androidx.work.runtime.ktx)
                 implementation(project(path = ":composeApp"))
 
             }

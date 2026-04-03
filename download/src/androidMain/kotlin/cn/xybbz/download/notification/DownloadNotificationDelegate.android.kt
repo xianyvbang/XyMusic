@@ -1,6 +1,5 @@
 package cn.xybbz.download.notification
 
-import cn.xybbz.config.download.notification.NotificationController
 import cn.xybbz.download.database.data.XyDownload
 import cn.xybbz.platform.ContextWrapper
 
@@ -8,7 +7,7 @@ import cn.xybbz.platform.ContextWrapper
 actual class DownloadNotificationDelegate actual constructor(
     contextWrapper: ContextWrapper?,
 ) {
-    private val notificationController = NotificationController(
+    val notificationController = NotificationController(
         contextWrapper?.context
             ?: error("Android DownloadNotificationDelegate requires ContextWrapper."),
     )

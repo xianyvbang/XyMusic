@@ -1,4 +1,4 @@
-package cn.xybbz.config.download.notification
+package cn.xybbz.download.notification
 
 import android.Manifest
 import android.app.Notification

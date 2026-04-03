@@ -44,6 +44,7 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.flow.Flow
+import org.koin.core.component.KoinComponent
 
 /**
  * 本地用户接口类
@@ -51,7 +52,7 @@ import kotlinx.coroutines.flow.Flow
  * @date 2024/06/12
  * @constructor 创建[IDataSourceServer]
  */
-interface IDataSourceServer : AutoCloseable {
+interface IDataSourceServer : AutoCloseable, KoinComponent {
 
     // region 鉴权与连接
     /**
@@ -458,7 +459,7 @@ interface IDataSourceServer : AutoCloseable {
     /**
      * 取消上报播放进度
      */
-    suspend fun cancelReportProgress(musicId:String)
+    suspend fun cancelReportProgress(musicId: String)
 
     /**
      * 获得相似歌曲列表

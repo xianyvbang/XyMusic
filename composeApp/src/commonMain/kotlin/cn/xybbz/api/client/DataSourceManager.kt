@@ -42,6 +42,7 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.scope.IoScoped
+import cn.xybbz.download.enums.DownloadTypes
 import cn.xybbz.entity.data.LoginStateData
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.ResourceData
@@ -71,7 +72,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import org.jetbrains.compose.resources.getString
-import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.add_music_to_playlist_failed
@@ -110,7 +110,7 @@ import xymusic_kmp.composeapp.generated.resources.server_connection_timeout
 open class DataSourceManager(
     private val db: LocalDatabaseClient,
     private val versionApiClient: VersionApiClient,
-) : IDataSourceServer, IoScoped(), KoinComponent {
+) : IDataSourceServer, IoScoped() {
 
 
     var dataSourceType by mutableStateOf<DataSourceType?>(null)

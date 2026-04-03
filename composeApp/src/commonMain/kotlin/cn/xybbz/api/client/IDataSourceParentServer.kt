@@ -24,8 +24,6 @@ import androidx.paging.RemoteMediator
 import androidx.paging.map
 import androidx.room.Transaction
 import cn.xybbz.api.TokenServer
-import cn.xybbz.api.client.custom.CustomMediaApiClient
-import cn.xybbz.api.client.custom.data.CustomCoverQuery
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.exception.ConnectionException
@@ -44,12 +42,13 @@ import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.config.info.getPlatformInfo
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.di.ContextWrapper
+import cn.xybbz.database.withTransaction
+import cn.xybbz.download.DownloaderManager
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.entity.data.EncryptAesData
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.config.LocalDatabaseClient
-import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.album.FavoriteAlbum
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.FavoriteArtist
@@ -59,7 +58,6 @@ import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.count.XyDataCount
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
-import cn.xybbz.localdata.data.music.HomeMusic
 import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
@@ -78,6 +76,7 @@ import cn.xybbz.page.parent.FavoriteMusicRemoteMediator
 import cn.xybbz.page.parent.GenreAlbumListRemoteMediator
 import cn.xybbz.page.parent.GenresRemoteMediator
 import cn.xybbz.page.parent.MusicRemoteMediator
+import cn.xybbz.platform.ContextWrapper
 import io.ktor.client.network.sockets.SocketTimeoutException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -95,6 +94,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
+import org.koin.core.component.get
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.logging_in
 import xymusic_kmp.composeapp.generated.resources.server_version_cannot_be_obtained
@@ -108,12 +108,14 @@ import kotlin.uuid.Uuid
 
 
 abstract class IDataSourceParentServer(
-    private val db: LocalDatabaseClient,
-    private val settingsManager: SettingsManager,
     private val defaultParentApiClient: DefaultParentApiClient,
-    private val customMediaApiClient: CustomMediaApiClient,
-    private val contextWrapper: ContextWrapper
-) : IDataSourceServer,IoScoped() {
+) : IDataSourceServer, IoScoped() {
+
+    protected val db: LocalDatabaseClient = get()
+    private val downloadDb: DownloadDatabaseClient = get()
+    protected val settingsManager: SettingsManager = get()
+    protected val contextWrapper: ContextWrapper = get()
+    protected val downloaderManager: DownloaderManager = get()
 
     private var connectionConfig: ConnectionConfig? = null
 
@@ -573,7 +575,7 @@ abstract class IDataSourceParentServer(
     override fun selectMusicFlowList(
         sort: Sort
     ): Flow<PagingData<XyMusic>> {
-        return defaultPager<Int, HomeMusic>(
+        return defaultPager(
             remoteMediator = MusicRemoteMediator(
                 db = db,
                 datasourceServer = this,
@@ -1226,7 +1228,7 @@ abstract class IDataSourceParentServer(
 
     suspend fun transitionPlayMusic(musicList: List<XyMusic>?): List<XyPlayMusic>? {
         val downloads = musicList?.map { it.itemId }?.let {
-            db.downloadDao.getMusicByMusicIds(it)
+            downloadDb.downloadDao.getMusicByMusicIds(it)
         }
         val downloadMap = downloads?.associateBy { it.uid }
 
@@ -1238,7 +1240,7 @@ abstract class IDataSourceParentServer(
 
     suspend fun transitionMusicExtend(musicList: List<XyMusic>?): List<XyMusicExtend>? {
         val downloads = musicList?.map { it.itemId }?.let {
-            db.downloadDao.getMusicByMusicIds(it)
+            downloadDb.downloadDao.getMusicByMusicIds(it)
         }
         val downloadMap = downloads?.associateBy { it.uid }
 
@@ -1383,6 +1385,7 @@ abstract class IDataSourceParentServer(
      */
     suspend fun initOtherData(connectionId: Long) {
         try {
+            downloaderManager.initData(connectionId)
             Log.i(Constants.LOG_ERROR_PREFIX, "start syncing media library/favorites/counts")
             db.withTransaction {
                 val remoteId = RemoteIdConstants.MEDIA_LIBRARY_AND_FAVORITE + connectionId
@@ -1488,29 +1491,6 @@ abstract class IDataSourceParentServer(
         } else {
             db.remoteCurrentDao.updateByConnectionId(getConnectionId())
         }
-    }
-
-    /**
-     * 从自定义封面 API 获取封面地址
-     */
-    protected fun getMusicCoverUrlByCustomApi(
-        musicTitle: String? = null,
-        album: String? = null,
-        artist: String? = null
-    ): String? {
-        val settings = settingsManager.get()
-        val customCoverApi = settings.customCoverApi.trim()
-        if (customCoverApi.isBlank()) {
-            return null
-        }
-        val query = CustomCoverQuery(
-            coverApi = customCoverApi,
-            authKey = settings.customLrcApiAuth,
-            title = musicTitle,
-            artist = artist,
-            album = album
-        )
-        return customMediaApiClient.getCoverUrl(query)
     }
 
     override fun close() {

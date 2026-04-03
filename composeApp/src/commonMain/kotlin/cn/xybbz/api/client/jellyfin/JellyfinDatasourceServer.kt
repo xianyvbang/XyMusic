@@ -19,7 +19,6 @@
 package cn.xybbz.api.client.jellyfin
 
 import cn.xybbz.api.client.IDataSourceParentServer
-import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.jellyfin.data.CreatePlaylistRequest
 import cn.xybbz.api.client.jellyfin.data.ItemRequest
@@ -48,16 +47,13 @@ import cn.xybbz.common.utils.CharUtils
 import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.info.getPlatformInfo
-import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.di.ContextWrapper
+import cn.xybbz.database.withTransaction
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchAndOrder
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.toSearchAndOrder
 import cn.xybbz.localdata.common.LocalConstants
-import cn.xybbz.localdata.config.LocalDatabaseClient
-import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
@@ -81,17 +77,9 @@ import xymusic_kmp.composeapp.generated.resources.unknown_artist
  * @date 2024/06/12
  */
 class JellyfinDatasourceServer(
-    private val db: LocalDatabaseClient,
-    settingsManager: SettingsManager,
     private val jellyfinApiClient: JellyfinApiClient,
-    customMediaApiClient: CustomMediaApiClient,
-    val contextWrapper: ContextWrapper
 ) : IDataSourceParentServer(
-    db,
-    settingsManager,
     jellyfinApiClient,
-    customMediaApiClient,
-    contextWrapper
 ) {
 
     /**

@@ -16,11 +16,7 @@
  *
  */
 
-package cn.xybbz.config.download.core
-
-import cn.xybbz.download.core.DownloadListener
-import cn.xybbz.download.core.DownloadRequest
-import cn.xybbz.download.core.DownloaderConfig
+package cn.xybbz.download.core
 
 
 interface IDownloader: AutoCloseable {

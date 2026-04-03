@@ -19,7 +19,6 @@
 package cn.xybbz.api.client.navidrome
 
 import cn.xybbz.api.client.IDataSourceParentServer
-import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.navidrome.data.AlbumItem
 import cn.xybbz.api.client.navidrome.data.ArtistItem
@@ -45,8 +44,7 @@ import cn.xybbz.common.utils.CharUtils
 import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.LrcUtils
 import cn.xybbz.common.utils.PlaylistParser
-import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.di.ContextWrapper
+import cn.xybbz.database.withTransaction
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.NavidromeOrder
 import cn.xybbz.entity.data.SearchData
@@ -55,8 +53,6 @@ import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.ext.toXyMusic
 import cn.xybbz.entity.data.toNavidromeOrder
 import cn.xybbz.entity.data.toNavidromeOrder2
-import cn.xybbz.localdata.config.LocalDatabaseClient
-import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
@@ -72,17 +68,9 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 
 class NavidromeDatasourceServer(
-    private val db: LocalDatabaseClient,
-    settingsManager: SettingsManager,
     private val navidromeApiClient: NavidromeApiClient,
-    customMediaApiClient: CustomMediaApiClient,
-    contextWrapper: ContextWrapper
 ) : IDataSourceParentServer(
-    db,
-    settingsManager,
     navidromeApiClient,
-    customMediaApiClient,
-    contextWrapper
 ) {
     /**
      * 获得当前数据源类型

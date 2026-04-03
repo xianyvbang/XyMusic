@@ -26,6 +26,7 @@ import cn.xybbz.download.internal.DownloadLogger
 import cn.xybbz.download.notification.DownloadNotificationDelegate
 import cn.xybbz.platform.ContextWrapper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -35,11 +36,13 @@ import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 
 class DownloadDispatcherImpl(
-    private val db: DownloadDatabaseClient,
     private val contextWrapper: ContextWrapper,
+    private val db: DownloadDatabaseClient,
     private val taskScheduler: DownloadTaskScheduler = DownloadTaskScheduler(contextWrapper),
-    var config: DownloaderConfig = DownloaderConfig.Builder(contextWrapper).build(),
-    private val notificationDelegate: DownloadNotificationDelegate = DownloadNotificationDelegate(contextWrapper),
+    var config: DownloaderConfig,
+    val notificationDelegate: DownloadNotificationDelegate = DownloadNotificationDelegate(
+        contextWrapper
+    ),
 ) : IDownloadDispatcher, DownloadIoScoped() {
 
     // 任务状态切换统一收敛到这把锁里，保证内存态和数据库态的切换顺序一致。

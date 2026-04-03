@@ -24,7 +24,6 @@ import cn.xybbz.database.DatabaseClient
 import cn.xybbz.localdata.dao.album.AlbumDao
 import cn.xybbz.localdata.dao.connection.ConnectionConfigDao
 import cn.xybbz.localdata.dao.count.XyDataCountDao
-import cn.xybbz.localdata.dao.download.XyDownloadDao
 import cn.xybbz.localdata.dao.era.XyEraItemDao
 import cn.xybbz.localdata.dao.genre.XyGenreDao
 import cn.xybbz.localdata.dao.library.XyLibraryDao
@@ -52,7 +51,6 @@ import cn.xybbz.localdata.data.artist.FavoriteArtist
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.count.XyDataCount
-import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.data.era.XyEraItem
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
@@ -88,7 +86,7 @@ import cn.xybbz.localdata.data.setting.XySettings
         MaximumPlayMusic::class, NewestAlbum::class, NewestMusic::class, PlayHistoryMusic::class,
         PlaylistMusic::class, PlayQueueMusic::class, XyDataCount::class, PlayHistoryAlbum::class,
         MaximumPlayAlbum::class, FavoriteAlbum::class, FavoriteArtist::class,
-        XyDailyRecommendHistory::class, XyDownload::class, XyProxyConfig::class,
+        XyDailyRecommendHistory::class, XyProxyConfig::class,
         XyLrcConfig::class],
     exportSchema = true
 )
@@ -127,8 +125,6 @@ abstract class LocalDatabaseClient : DatabaseClient() {
 
     val recentHistoryDao: XyRecentHistoryDao by lazy { createXyRecentHistoryDao() }
 
-    val downloadDao: XyDownloadDao by lazy { createXyDownloadDao() }
-
     val proxyConfigDao: XyProxyConfigDao by lazy { createXyProxyConfigDao() }
 
     val lrcConfigDao: XyLrcConfigDao by lazy { createXyLrcConfigDao() }
@@ -165,8 +161,6 @@ abstract class LocalDatabaseClient : DatabaseClient() {
     abstract fun createXyDataCountDao(): XyDataCountDao
 
     abstract fun createXyRecentHistoryDao(): XyRecentHistoryDao
-
-    abstract fun createXyDownloadDao(): XyDownloadDao
 
     abstract fun createXyProxyConfigDao(): XyProxyConfigDao
 

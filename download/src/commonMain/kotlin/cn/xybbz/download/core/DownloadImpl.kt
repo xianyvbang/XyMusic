@@ -18,7 +18,6 @@
 
 package cn.xybbz.download.core
 
-import cn.xybbz.config.download.core.IDownloader
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.download.database.data.XyDownload
 import cn.xybbz.download.enums.DownloadStatus
@@ -26,6 +25,7 @@ import cn.xybbz.download.internal.DownloadIoScoped
 import cn.xybbz.download.internal.DownloadLogger
 import cn.xybbz.download.utils.FileNameResolver
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.time.Clock

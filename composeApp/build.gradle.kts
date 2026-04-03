@@ -98,6 +98,7 @@ kotlin {
             implementation(project(path = ":api"))
             implementation(project(path = ":localdata"))
             implementation(project(path = ":xy-platform"))
+            implementation(project(path = ":download"))
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

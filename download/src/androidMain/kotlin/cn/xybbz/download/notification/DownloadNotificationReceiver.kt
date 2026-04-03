@@ -1,4 +1,4 @@
-package cn.xybbz.config.download.notification
+package cn.xybbz.download.notification
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -8,11 +8,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 // 通知动作只做转发，不在广播接收器里承载业务逻辑。
-@AndroidEntryPoint
 class DownloadNotificationReceiver : BroadcastReceiver() {
-
-    @Inject
-    lateinit var downLoadManager: DownloaderManager
 
     companion object {
         const val ACTION_PAUSE = "downloader.action.PAUSE"

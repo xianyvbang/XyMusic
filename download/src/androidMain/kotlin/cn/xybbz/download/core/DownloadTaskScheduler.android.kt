@@ -4,7 +4,7 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import cn.xybbz.config.download.work.DownloadWork
+import cn.xybbz.download.work.DownloadWork
 import cn.xybbz.platform.ContextWrapper
 
 // Android 端直接在 actual 里接 WorkManager，其它公共层无需再感知平台调度细节。
