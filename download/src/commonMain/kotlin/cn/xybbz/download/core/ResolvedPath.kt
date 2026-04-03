@@ -1,4 +1,4 @@
-package cn.xybbz.config.download.core
+package cn.xybbz.download.core
 
 /**
  * FileName: AppDatabase

@@ -41,7 +41,6 @@ import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.music.XyMusicExtend
-import cn.xybbz.localdata.enums.DownloadStatus
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async

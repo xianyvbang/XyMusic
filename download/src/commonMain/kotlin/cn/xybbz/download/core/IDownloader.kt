@@ -18,6 +18,10 @@
 
 package cn.xybbz.config.download.core
 
+import cn.xybbz.download.core.DownloadListener
+import cn.xybbz.download.core.DownloadRequest
+import cn.xybbz.download.core.DownloaderConfig
+
 
 interface IDownloader: AutoCloseable {
     suspend fun initData(connectionId: Long)

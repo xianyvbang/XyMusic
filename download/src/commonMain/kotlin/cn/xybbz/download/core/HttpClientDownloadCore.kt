@@ -1,28 +1,19 @@
 package cn.xybbz.config.download.core
 
-import android.content.Context
-import android.icu.math.BigDecimal
-import android.util.Log
-import cn.xybbz.R
-import cn.xybbz.api.client.ApiFactory
-import cn.xybbz.api.client.DownloadFactory
-import cn.xybbz.common.constants.Constants
-import cn.xybbz.common.exception.CancelDownloadException
-import cn.xybbz.common.utils.FileUtil
 import cn.xybbz.config.download.state.DownloadState
-import cn.xybbz.localdata.data.download.XyDownload
-import cn.xybbz.localdata.enums.DownloadStatus
+import cn.xybbz.database.common.Constants
+import cn.xybbz.download.core.IDownloadCore
+import cn.xybbz.download.database.data.XyDownload
+import cn.xybbz.download.database.enums.DownloadStatus
+import io.ktor.client.HttpClient
+import io.ktor.http.ContentDisposition.Companion.File
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import retrofit2.awaitResponse
-import java.io.File
-import java.io.RandomAccessFile
-import java.math.RoundingMode
 
-class OkhttpDownloadCore(
-    private val context: Context
+class HttpClientDownloadCore(
 ) : IDownloadCore {
     companion object {
         private const val UPDATE_PROGRESS_INTERVAL = 1000L
@@ -35,7 +26,7 @@ class OkhttpDownloadCore(
      * @param [statusChange] 状态变更信息
      */
     override suspend fun download(
-        client: DownloadFactory,
+        client: HttpClient,
         statusChange: suspend () -> DownloadStatus?,
         xyDownload: XyDownload
     ): Flow<DownloadState> = flow {

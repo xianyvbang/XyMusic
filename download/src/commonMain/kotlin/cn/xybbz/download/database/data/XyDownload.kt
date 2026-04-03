@@ -16,16 +16,12 @@
  *
  */
 
-package cn.xybbz.localdata.data.download
+package cn.xybbz.download.database.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import androidx.room.TypeConverters
-import cn.xybbz.localdata.converter.XyMusicTypeConverter
-import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.localdata.data.music.XyPlayMusic
-import cn.xybbz.localdata.enums.DownloadStatus
-import cn.xybbz.localdata.enums.DownloadTypes
+import cn.xybbz.download.database.enums.DownloadStatus
+import cn.xybbz.download.database.enums.DownloadTypes
 import kotlin.time.Clock
 
 @Entity(tableName = "xy_download")
@@ -50,31 +46,12 @@ data class XyDownload(
     val title: String? = null,
     val cover: String? = null,
     val duration: Long? = null,
-    val connectionId: Long? = null,
+    //分库id 用来分数据源下载使用,可以不写入
+    val libraryId: String? = null,
     val extend:String? = null,
-    @field:TypeConverters(XyMusicTypeConverter::class)
-    val music: XyMusic? = null,
+    //下载主体数据json
+    val data:String? = null,
 
     val updateTime: Long = Clock.System.now().toEpochMilliseconds(),
     val createTime: Long = Clock.System.now().toEpochMilliseconds(),
-){
-
-    fun toPlayMusic(): XyPlayMusic?{
-        return music?.let {
-            XyPlayMusic(
-                itemId = music.itemId,
-                pic = music.pic,
-                name = music.name,
-                album = music.album,
-                albumName = music.albumName,
-                container = music.container,
-                artists = music.artists,
-                size = music.size,
-                filePath = filePath,
-                runTimeTicks = music.runTimeTicks,
-                plexPlayKey = music.plexPlayKey,
-                artistIds = music.artistIds
-            )
-        }
-    }
-}
+)

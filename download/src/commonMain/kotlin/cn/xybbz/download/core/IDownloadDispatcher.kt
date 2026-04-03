@@ -16,9 +16,10 @@
  *
  */
 
-package cn.xybbz.config.download.core
+package cn.xybbz.download.core
 
-import cn.xybbz.localdata.enums.DownloadStatus
+import cn.xybbz.download.database.enums.DownloadStatus
+
 
 interface IDownloadDispatcher {
 

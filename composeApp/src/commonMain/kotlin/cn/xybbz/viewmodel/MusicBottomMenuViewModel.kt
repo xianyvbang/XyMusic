@@ -39,7 +39,6 @@ import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.setting.SkipTime
-import cn.xybbz.localdata.enums.DownloadTypes
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged

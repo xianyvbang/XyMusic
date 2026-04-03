@@ -1,6 +1,7 @@
-package cn.xybbz.config.download.core
+package cn.xybbz.download.core
 
-import cn.xybbz.localdata.data.download.XyDownload
+import cn.xybbz.download.database.data.XyDownload
+
 
 /**
  * FileName: AppDatabase

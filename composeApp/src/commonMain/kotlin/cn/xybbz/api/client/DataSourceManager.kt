@@ -57,7 +57,6 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
-import cn.xybbz.localdata.enums.DownloadTypes
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import io.ktor.client.HttpClient
 import io.ktor.client.network.sockets.SocketTimeoutException

@@ -18,20 +18,13 @@
 
 package cn.xybbz.download.core
 
-import android.util.Log
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.workDataOf
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.config.download.core.DownloaderConfig
-import cn.xybbz.config.download.core.IDownloadDispatcher
 import cn.xybbz.config.download.notification.NotificationController
 import cn.xybbz.config.download.work.DownloadWork
-import cn.xybbz.config.scope.IoScoped
-import cn.xybbz.localdata.config.DatabaseClient
-import cn.xybbz.localdata.data.download.XyDownload
-import cn.xybbz.localdata.enums.DownloadStatus
+import cn.xybbz.database.DatabaseClient
+import cn.xybbz.download.database.data.XyDownload
+import cn.xybbz.download.database.enums.DownloadStatus
+import io.ktor.http.ContentDisposition.Companion.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -40,10 +33,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import java.io.File
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentLinkedQueue
-import kotlin.collections.get
 
 
 class DownloadDispatcherImpl(

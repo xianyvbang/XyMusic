@@ -8,7 +8,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.exception.CancelDownloadException
 import cn.xybbz.download.core.DownloadDispatcherImpl
-import cn.xybbz.config.download.core.OkhttpDownloadCore
+import cn.xybbz.config.download.core.HttpClientDownloadCore
 import cn.xybbz.config.download.notification.NotificationController
 import cn.xybbz.config.download.state.DownloadState
 import cn.xybbz.localdata.config.DatabaseClient
@@ -36,7 +36,7 @@ class DownloadWork @AssistedInject constructor(
             db.downloadDao.getStatusById(downloadId)
         }
         val notificationId = downloadId.toInt() // 使用 taskId 作为通知 ID
-        val okhttpDownloadCore = OkhttpDownloadCore(
+        val httpClientDownloadCore = HttpClientDownloadCore(
             applicationContext
         )
         val initialNotification = notificationController.buildNotification(downloadTask, 0L).build()
@@ -46,7 +46,7 @@ class DownloadWork @AssistedInject constructor(
         setForeground(foregroundInfo)
         val client = dataSourceManager.getApiClient(downloadTask.typeData)
         try {
-            okhttpDownloadCore.download(client, statusChange, downloadTask).collect { state ->
+            httpClientDownloadCore.download(client, statusChange, downloadTask).collect { state ->
                 when (state) {
                     is DownloadState.InProgress -> {
                         callback.onProgress(

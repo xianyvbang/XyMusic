@@ -18,15 +18,10 @@
 
 package cn.xybbz.download.core
 
-import android.util.Log
-import cn.xybbz.common.utils.FileNameResolver
-import cn.xybbz.config.download.core.DownloadListener
-import cn.xybbz.config.download.core.DownloadRequest
-import cn.xybbz.config.download.core.DownloaderConfig
 import cn.xybbz.config.download.core.IDownloader
 import cn.xybbz.database.DatabaseClient
-import cn.xybbz.localdata.data.download.XyDownload
-import cn.xybbz.localdata.enums.DownloadStatus
+import cn.xybbz.download.database.data.XyDownload
+import cn.xybbz.download.database.enums.DownloadStatus
 import io.ktor.http.ContentDisposition.Companion.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO

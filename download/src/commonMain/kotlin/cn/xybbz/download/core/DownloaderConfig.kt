@@ -1,4 +1,4 @@
-package cn.xybbz.config.download.core
+package cn.xybbz.download.core
 
 import android.content.Context
 import android.os.Environment

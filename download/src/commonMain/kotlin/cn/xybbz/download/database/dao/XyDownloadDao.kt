@@ -16,15 +16,15 @@
  *
  */
 
-package cn.xybbz.localdata.dao.download
+package cn.xybbz.download.database.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import cn.xybbz.localdata.data.download.XyDownload
-import cn.xybbz.localdata.enums.DownloadStatus
-import cn.xybbz.localdata.enums.DownloadTypes
+import cn.xybbz.download.database.data.XyDownload
+import cn.xybbz.download.database.enums.DownloadStatus
+import cn.xybbz.download.database.enums.DownloadTypes
 import kotlinx.coroutines.flow.Flow
 
 @Dao
