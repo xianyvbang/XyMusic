@@ -69,6 +69,8 @@ kotlin {
                 // Add KMP dependencies here
                 implementation(libs.androidx.room.runtime)
                 implementation(libs.androidx.sqlite.bundled)
+                api(project(path = ":xy-platform"))
+
             }
         }
 

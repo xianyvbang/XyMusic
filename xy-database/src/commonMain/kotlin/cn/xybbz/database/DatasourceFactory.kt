@@ -22,17 +22,21 @@ import androidx.room.RoomDatabase
 import androidx.room.immediateTransaction
 import androidx.room.migration.Migration
 import androidx.room.useWriterConnection
+import cn.xybbz.platform.ContextWrapper
 
 
-expect class DatasourceFactory {
-    inline fun <reified T : DatabaseClient> createDatabaseClientBuilder(dbFileName: String): RoomDatabase.Builder<T>
-}
+expect inline fun <reified T : DatabaseClient> createDatabaseClientBuilder(
+    dbFileName: String,
+    contextWrapper: ContextWrapper
+): RoomDatabase.Builder<T>
 
-fun <T : DatabaseClient> getRoomDatabase(
-    builder: RoomDatabase.Builder<T>,
+inline fun <reified T : DatabaseClient> getRoomDatabase(
+    dbFileName: String,
+    contextWrapper: ContextWrapper,
     vararg migrations: Migration
 ): T {
-    return builder.addMigrations(*migrations).build()
+    return createDatabaseClientBuilder<T>(dbFileName, contextWrapper).addMigrations(*migrations)
+        .build()
 }
 
 suspend fun <R> RoomDatabase.withTransaction(block: suspend () -> R): R {

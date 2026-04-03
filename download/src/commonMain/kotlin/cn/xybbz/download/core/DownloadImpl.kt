@@ -18,34 +18,28 @@
 
 package cn.xybbz.download.core
 
-import android.content.Context
 import android.util.Log
 import cn.xybbz.common.utils.FileNameResolver
 import cn.xybbz.config.download.core.DownloadListener
 import cn.xybbz.config.download.core.DownloadRequest
 import cn.xybbz.config.download.core.DownloaderConfig
 import cn.xybbz.config.download.core.IDownloader
-import cn.xybbz.config.scope.IoScoped
-import cn.xybbz.localdata.config.DatabaseClient
+import cn.xybbz.database.DatabaseClient
 import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.enums.DownloadStatus
+import io.ktor.http.ContentDisposition.Companion.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
-import java.io.IOException
-import java.util.concurrent.CopyOnWriteArrayList
 
 class DownloadImpl(
     private val downloadDispatcher: DownloadDispatcherImpl,
-    private val applicationContext: Context,
     private val db: DatabaseClient,
-) : IDownloader, IoScoped() {
+) : IDownloader {
 
     private val listeners = CopyOnWriteArrayList<DownloadListener>()
 
-    val scope =
 
     init {
         createScope()
@@ -210,7 +204,7 @@ class DownloadImpl(
     }
 
     override fun cancelAll() {
-       downloadDispatcher.cancelAll()
+        downloadDispatcher.cancelAll()
     }
 
     override fun delete(vararg ids: Long, deleteFile: Boolean) {

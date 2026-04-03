@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
     alias(libs.plugins.androidLint)
+    alias(libs.plugins.androidx.room)
+    alias(libs.plugins.kotlin.ksp)
 }
 
 kotlin {
@@ -71,7 +73,10 @@ kotlin {
                 implementation(libs.kotlin.ktor.logging)
                 implementation(libs.kotlin.ktor.content.negotiation)
                 implementation(libs.kotlin.ktor.json)
+                implementation(libs.androidx.room.runtime)
+                implementation(libs.androidx.sqlite.bundled)
                 implementation(project(path = ":xy-database"))
+                implementation(project(path = ":xy-platform"))
             }
         }
 
@@ -88,6 +93,8 @@ kotlin {
                 // commonMain by default and will correctly pull the Android artifacts of any KMP
                 // dependencies declared in commonMain.
                 implementation(libs.kotlin.ktor.android)
+                implementation(libs.androidx.room.sqlite.wrapper)
+
 
             }
         }
@@ -118,4 +125,18 @@ kotlin {
         }
     }
 
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
+dependencies {
+    add("kspAndroid", libs.androidx.room.compiler)
+    add("kspJvm", libs.androidx.room.compiler)
+    add("kspIosSimulatorArm64", libs.androidx.room.compiler)
+    add("kspIosX64", libs.androidx.room.compiler)
+    add("kspIosArm64", libs.androidx.room.compiler)
+
+    // Add any other platform target you use in your project, for example kspDesktop
 }
