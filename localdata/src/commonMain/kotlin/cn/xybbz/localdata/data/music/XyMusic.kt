@@ -24,6 +24,7 @@ import androidx.room.ForeignKey.Companion.CASCADE
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
+import cn.xybbz.database.converter.StringListTypeConverter
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import kotlinx.serialization.Serializable
 import kotlin.time.Clock

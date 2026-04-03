@@ -110,7 +110,7 @@ interface ArtistDao {
         limit 50
     """
     )
-    fun searchPagingSource(
+    suspend fun searchPagingSource(
         searchQuery: String,
     ): List<XyArtist>
 

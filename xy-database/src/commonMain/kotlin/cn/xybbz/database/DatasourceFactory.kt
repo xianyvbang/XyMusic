@@ -24,12 +24,11 @@ import androidx.room.migration.Migration
 import androidx.room.useWriterConnection
 
 
-
 expect class DatasourceFactory {
     inline fun <reified T : DatabaseClient> createDatabaseClientBuilder(dbFileName: String): RoomDatabase.Builder<T>
 }
 
-fun <T:DatabaseClient> getRoomDatabase(
+fun <T : DatabaseClient> getRoomDatabase(
     builder: RoomDatabase.Builder<T>,
     vararg migrations: Migration
 ): T {

@@ -18,6 +18,7 @@
 
 package cn.xybbz.localdata.config
 
+import androidx.room.ConstructedBy
 import androidx.room.Database
 import cn.xybbz.database.DatabaseClient
 import cn.xybbz.localdata.dao.album.AlbumDao

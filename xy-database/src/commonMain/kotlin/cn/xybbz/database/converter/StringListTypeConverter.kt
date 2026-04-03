@@ -19,17 +19,17 @@
 package cn.xybbz.database.converter
 
 import androidx.room.TypeConverter
-import cn.xybbz.localdata.common.LocalConstants
+import cn.xybbz.database.common.Constants
 
 class StringListTypeConverter {
 
     @TypeConverter
     fun listToString(list: List<String>?): String? {
-        return list?.joinToString(LocalConstants.ARTIST_DELIMITER)
+        return list?.joinToString(Constants.ARTIST_DELIMITER)
     }
 
     @TypeConverter
     fun stringToList(value: String?): List<String>? {
-        return value?.split(LocalConstants.ARTIST_DELIMITER)
+        return value?.split(Constants.ARTIST_DELIMITER)
     }
 }

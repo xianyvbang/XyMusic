@@ -21,6 +21,7 @@ package cn.xybbz.localdata.data.era
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
+import cn.xybbz.database.converter.IntListTypeConverter
 
 /**
  * 年代数据

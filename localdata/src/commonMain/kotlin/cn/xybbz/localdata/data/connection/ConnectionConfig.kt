@@ -21,6 +21,7 @@ package cn.xybbz.localdata.data.connection
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
+import cn.xybbz.database.converter.StringListTypeConverter
 import cn.xybbz.localdata.enums.DataSourceType
 import kotlin.time.Clock
 
@@ -38,7 +39,7 @@ data class ConnectionConfig(
     /**
      * 服务端名称
      */
-    val serverName:String = "",
+    val serverName: String = "",
     /**
      * 服务端版本
      */
@@ -47,7 +48,7 @@ data class ConnectionConfig(
     /**
      * 连接设备标识
      */
-    val deviceId:String = "",
+    val deviceId: String = "",
 
     /**
      * 链接名称
@@ -122,7 +123,7 @@ data class ConnectionConfig(
     /**
      * plex的机器标识符
      */
-    val machineIdentifier:String? = null,
+    val machineIdentifier: String? = null,
     /**
      * 是否开启下载功能
      */

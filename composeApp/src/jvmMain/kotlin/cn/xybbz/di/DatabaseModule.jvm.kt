@@ -12,6 +12,6 @@ import org.koin.core.annotation.Single
 actual class DatabaseModule {
     @Single
     actual fun db(contextWrapper: ContextWrapper): LocalDatabaseClient {
-        return getLocalRoomDatabase { DatasourceFactory().createDatabaseClientBuilder() }
+        return getLocalRoomDatabase { DatasourceFactory().createDatabaseClientBuilder(it) }
     }
 }
