@@ -81,12 +81,13 @@ actual object FileUtil {
         sourceFile: File,
         displayName: String,
     ): String {
+        val publicDownloadsSubdirectory = resolvePublicDownloadsSubdirectory(contextWrapper)
         val contentResolver = contextWrapper.context.contentResolver
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
             put(
                 MediaStore.MediaColumns.RELATIVE_PATH,
-                "${Environment.DIRECTORY_DOWNLOADS}/${BuildConfig.LIBRARY_PACKAGE_NAME}",
+                "${Environment.DIRECTORY_DOWNLOADS}/$publicDownloadsSubdirectory",
             )
         }
 
@@ -100,6 +101,19 @@ actual object FileUtil {
         }
         sourceFile.delete()
         return displayName
+    }
+
+    private fun resolvePublicDownloadsSubdirectory(contextWrapper: ContextWrapper): String {
+        val context = contextWrapper.context
+        val appName = context.packageManager
+            .getApplicationLabel(context.applicationInfo)
+            .toString()
+            .trim()
+
+        return appName
+            .ifBlank { context.packageName }
+            .replace('/', '_')
+            .replace('\\', '_')
     }
 
     /**
