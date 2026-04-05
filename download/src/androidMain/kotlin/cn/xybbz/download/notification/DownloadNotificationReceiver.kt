@@ -3,13 +3,12 @@ package cn.xybbz.download.notification
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import cn.xybbz.download.DownloaderManager
-import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
+import cn.xybbz.download.DownloadGlobal
 
 // 通知动作只做转发，不在广播接收器里承载业务逻辑。
 class DownloadNotificationReceiver : BroadcastReceiver() {
 
+   val downloaderManager = DownloadGlobal.downloaderManagerGlobal
     companion object {
         const val ACTION_PAUSE = "downloader.action.PAUSE"
         const val ACTION_RESUME = "downloader.action.RESUME"
@@ -22,9 +21,9 @@ class DownloadNotificationReceiver : BroadcastReceiver() {
         if (taskId == -1L) return
 
         when (intent.action) {
-            ACTION_PAUSE -> downLoadManager.pause(taskId)
-            ACTION_RESUME -> downLoadManager.resume(taskId)
-            ACTION_CANCEL -> downLoadManager.cancel(taskId)
+            ACTION_PAUSE -> downloaderManager.pause(taskId)
+            ACTION_RESUME -> downloaderManager.resume(taskId)
+            ACTION_CANCEL -> downloaderManager.cancel(taskId)
         }
     }
 }

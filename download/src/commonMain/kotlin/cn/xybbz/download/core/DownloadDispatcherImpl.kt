@@ -62,14 +62,14 @@ class DownloadDispatcherImpl(
         createScope()
     }
 
-    suspend fun rehydrate(connectionId: Long) =
+    suspend fun rehydrate(mediaLibraryId: String?) =
         withContext(Dispatchers.IO) {
             readyTasks.clear()
             runningTasks.clear()
             pausedTasks.clear()
             failedTasks.clear()
 
-            db.downloadDao.getAllTasksSuspend(connectionId).forEach { task ->
+            db.downloadDao.getAllTasksSuspend(mediaLibraryId).forEach { task ->
                 when (task.status) {
                     DownloadStatus.QUEUED -> readyTasks.add(task)
                     DownloadStatus.DOWNLOADING -> {

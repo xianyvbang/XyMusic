@@ -42,14 +42,14 @@ class DownloadImpl(
         createScope()
     }
 
-    override suspend fun initData(connectionId: Long) {
+    override suspend fun initData(mediaLibraryId: String?) {
         // 先把调度层的任务更新桥接给监听器，再做任务恢复。
         scope.launch {
             downloadDispatcher.taskUpdateEventFlow.collect { updatedTask ->
                 notifyListeners(updatedTask)
             }
         }
-        downloadDispatcher.rehydrate(connectionId)
+        downloadDispatcher.rehydrate(mediaLibraryId)
     }
 
     override fun addListener(listener: DownloadListener) {

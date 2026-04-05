@@ -20,7 +20,7 @@ package cn.xybbz.download.core
 
 
 interface IDownloader: AutoCloseable {
-    suspend fun initData(connectionId: Long)
+    suspend fun initData(mediaLibraryId: String?)
     suspend fun enqueue(vararg requests: DownloadRequest)
     fun pause(vararg ids: Long)
     fun pauseAll()
