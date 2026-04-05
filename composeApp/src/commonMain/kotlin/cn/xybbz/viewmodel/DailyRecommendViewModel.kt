@@ -23,12 +23,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.Log
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.recommender.DailyRecommender
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
@@ -40,6 +42,7 @@ import org.koin.core.annotation.KoinViewModel
 @KoinViewModel
 class DailyRecommendViewModel (
     private val db: LocalDatabaseClient,
+    private val downloadDb: DownloadDatabaseClient,
     private val dataSourceManager: DataSourceManager,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicCommonController,
@@ -79,7 +82,10 @@ class DailyRecommendViewModel (
                 .selectRecommendedMusicExtendListFlow(50)
                 .distinctUntilChanged()
                 .collect { list ->
-                    recommendedMusicList = list
+                    recommendedMusicList = MusicPlayAssembler.attachFilePath(
+                        musicExtendList = list,
+                        downloadDb = downloadDb
+                    ) ?: emptyList()
                 }
         }
     }

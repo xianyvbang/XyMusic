@@ -60,12 +60,12 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.shareMusicResource
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
-import cn.xybbz.di.ContextWrapper
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.setting.SkipTime
 import cn.xybbz.localdata.enums.DataSourceType
+import cn.xybbz.platform.ContextWrapper
 import cn.xybbz.router.ArtistInfo
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnBottomSheetComponent
@@ -257,6 +257,12 @@ fun MusicBottomMenuComponent(
         }
 
 
+        val permissionState = downloadPermission {
+            musicBottomMenuViewModel.downloadMusic(music)
+            ifShowBottom = false
+            music.dismiss()
+        }
+
         MusicInfoBottomComponent(
             musicInfo = music,
             onIfShowMusicInfo = { ifShowMusicInfo },
@@ -311,10 +317,10 @@ fun MusicBottomMenuComponent(
                 item {
                     XyItemIcon(
                         painter = painterResource(Res.drawable.download_24px),
-//                        enabled = musicBottomMenuViewModel.dataSourceManager.getCanDownload(),
+                        enabled = musicBottomMenuViewModel.dataSourceManager.getCanDownload(),
                         text = stringResource(Res.string.download),
                         onClick = {
-//                            permissionState?.launchMultiplePermissionRequest()
+                            permissionState?.launchMultiplePermissionRequest()
                         })
                 }
 

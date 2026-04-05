@@ -18,8 +18,10 @@
 
 package cn.xybbz.config
 
+import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.api.TokenServer
 import cn.xybbz.common.utils.Log
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.count.XyDataCount
@@ -33,6 +35,7 @@ import kotlinx.coroutines.launch
 
 class HomeDataRepository(
     private val db: LocalDatabaseClient,
+    private val downloadDb: DownloadDatabaseClient,
 ) {
 
     private val _mostPlayedMusic = MutableStateFlow<List<XyMusicExtend>>(emptyList())
@@ -70,7 +73,10 @@ class HomeDataRepository(
         Log.i("HomeDataRepository", "loadOnce1 ${TokenServer.baseUrl}")
         launch {
             _mostPlayedMusic.value =
-                db.musicDao.selectMaximumPlayMusicExtendList(20)
+                MusicPlayAssembler.attachFilePath(
+                    musicExtendList = db.musicDao.selectMaximumPlayMusicExtendList(20),
+                    downloadDb = downloadDb
+                ) ?: emptyList()
         }
         launch {
             _newestAlbums.value =
@@ -78,7 +84,10 @@ class HomeDataRepository(
         }
         launch {
             _recentMusic.value =
-                db.musicDao.selectPlayHistoryMusicExtendList(20)
+                MusicPlayAssembler.attachFilePath(
+                    musicExtendList = db.musicDao.selectPlayHistoryMusicExtendList(20),
+                    downloadDb = downloadDb
+                ) ?: emptyList()
         }
         launch {
             _recentAlbums.value =
@@ -90,7 +99,10 @@ class HomeDataRepository(
         }
         launch {
             _recommendedMusic.value =
-                db.musicDao.selectRecommendedMusicExtendList(20)
+                MusicPlayAssembler.attachFilePath(
+                    musicExtendList = db.musicDao.selectRecommendedMusicExtendList(20),
+                    downloadDb = downloadDb
+                ) ?: emptyList()
         }
         launch {
             _playlists.value =
@@ -108,7 +120,10 @@ class HomeDataRepository(
                 .selectLimitMusicListFlow(MusicDataTypeEnum.MAXIMUM_PLAY, 20)
                 .distinctUntilChanged()
                 .collect {
-                    _mostPlayedMusic.value = it
+                    _mostPlayedMusic.value = MusicPlayAssembler.attachFilePath(
+                        musicExtendList = it,
+                        downloadDb = downloadDb
+                    ) ?: emptyList()
                 }
         }
 
@@ -123,7 +138,12 @@ class HomeDataRepository(
             db.musicDao
                 .selectLimitMusicListFlow(MusicDataTypeEnum.PLAY_HISTORY, 20)
                 .distinctUntilChanged()
-                .collect { _recentMusic.value = it }
+                .collect {
+                    _recentMusic.value = MusicPlayAssembler.attachFilePath(
+                        musicExtendList = it,
+                        downloadDb = downloadDb
+                    ) ?: emptyList()
+                }
         }
 
         launch {
@@ -147,7 +167,10 @@ class HomeDataRepository(
                 .selectRecommendedMusicExtendListFlow(20)
                 .distinctUntilChanged()
                 .collect {
-                    _recommendedMusic.value = it
+                    _recommendedMusic.value = MusicPlayAssembler.attachFilePath(
+                        musicExtendList = it,
+                        downloadDb = downloadDb
+                    ) ?: emptyList()
                 }
         }
 

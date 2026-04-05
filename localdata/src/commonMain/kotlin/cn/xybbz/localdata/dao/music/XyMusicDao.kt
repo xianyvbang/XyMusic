@@ -608,10 +608,9 @@ interface XyMusicDao {
     @Query(
         """
          select itemId,mi.pic,mi.name,mi.album,mi.albumName as albumName,mi.container,mi.artists,mi.artistIds,fm.ifFavorite as ifFavoriteStatus,
-                mi.size,xd.filePath,mi.runTimeTicks,mi.plexPlayKey as plexPlayKey
+                mi.size,null as filePath,mi.runTimeTicks,mi.plexPlayKey as plexPlayKey
         from HomeMusic hm
         inner join xy_music mi on hm.musicId = mi.itemId
-        left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
         left join favoritemusic fm on hm.musicId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
         where hm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
@@ -629,9 +628,8 @@ interface XyMusicDao {
      */
     @Query(
         """
-        select mi.*,xd.filePath from PlayHistoryMusic phm
+        select mi.*,null as filePath from PlayHistoryMusic phm
         inner join xy_music mi on phm.musicId = mi.itemId
-        left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
          where phm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
         order by phm.`index`
@@ -644,9 +642,8 @@ interface XyMusicDao {
 
     @Query(
         """
-        select mi.*,xd.filePath from PlayHistoryMusic phm
+        select mi.*,null as filePath from PlayHistoryMusic phm
         inner join xy_music mi on phm.musicId = mi.itemId
-        left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
          where phm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
         order by phm.`index`
@@ -678,11 +675,10 @@ interface XyMusicDao {
      */
     @Query(
         """
-        select itemId,mi.pic,mi.name,mi.album,mi.albumName as albumName,mi.container,mi.artists,mi.artistIds,fm.ifFavorite as ifFavoriteStatus,mi.size,xd.filePath,
+        select itemId,mi.pic,mi.name,mi.album,mi.albumName as albumName,mi.container,mi.artists,mi.artistIds,fm.ifFavorite as ifFavoriteStatus,mi.size,null as filePath,
                 mi.runTimeTicks,mi.plexPlayKey as plexPlayKey
         from playqueuemusic pqm
         inner join xy_music mi on pqm.musicId = mi.itemId
-        left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
         left join favoritemusic fm on pqm.musicId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
         where pqm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
@@ -717,9 +713,8 @@ interface XyMusicDao {
      */
     @Query(
         """
-        select mi.*,xd.filePath as filePath from maximumplaymusic mpm
+        select mi.*,null as filePath from maximumplaymusic mpm
         inner join xy_music mi on mpm.musicId = mi.itemId
-        left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
          where mpm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
         order by mpm.`index`
@@ -733,9 +728,8 @@ interface XyMusicDao {
 
     @Query(
         """
-        select mi.*,xd.filePath as filePath from maximumplaymusic mpm
+        select mi.*,null as filePath from maximumplaymusic mpm
         inner join xy_music mi on mpm.musicId = mi.itemId
-        left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
          where mpm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
         order by mpm.`index`
@@ -749,11 +743,10 @@ interface XyMusicDao {
 
     @Query(
         """
-        select mi.*,xd.filePath from xy_daily_recommend_history mpm
+        select mi.*,null as filePath from xy_daily_recommend_history mpm
         inner join xy_music mi on mpm.songId = mi.itemId
         inner join xy_settings xs on mpm.connectionId = xs.connectionId
         inner join xy_connection_config xcc on xcc.id = xs.connectionId
-        left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
         where mi.connectionId = xs.connectionId
         and (
             (mpm.mediaLibraryId is null and xcc.libraryIds is null)
@@ -769,9 +762,8 @@ interface XyMusicDao {
 
     @Query(
         """
-        select mi.*,xd.filePath from xy_daily_recommend_history mpm
+        select mi.*,null as filePath from xy_daily_recommend_history mpm
         inner join xy_music mi on mpm.songId = mi.itemId
-        left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
         where mpm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
         and (
@@ -799,11 +791,10 @@ interface XyMusicDao {
 
     @Query(
         """
-        select itemId,mi.pic,mi.name,mi.album,mi.albumName as albumName,mi.container,mi.artists,mi.artistIds,fm.ifFavorite as ifFavoriteStatus,mi.size,xd.filePath,
+        select itemId,mi.pic,mi.name,mi.album,mi.albumName as albumName,mi.container,mi.artists,mi.artistIds,fm.ifFavorite as ifFavoriteStatus,mi.size,null as filePath,
                 mi.runTimeTicks,mi.plexPlayKey as plexPlayKey
         from xy_music mi 
         left join favoritemusic fm on mi.itemId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
-        left join xy_download xd on xd.uid = mi.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
         where mi.itemId = :itemId
         and mi.connectionId = (select connectionId from xy_settings)
         limit 1
@@ -820,11 +811,10 @@ interface XyMusicDao {
 
     @Query(
         """
-        select itemId,xm.pic,xm.name,xm.album,xm.albumName as albumName,xm.container,xm.artists,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
+        select itemId,xm.pic,xm.name,xm.album,xm.albumName as albumName,xm.container,xm.artists,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,null as filePath,
                 xm.runTimeTicks,xm.plexPlayKey as plexPlayKey
         from xy_music xm 
         left join favoritemusic fm on xm.itemId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
-        left join xy_download xd on xd.uid = xm.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
         where xm.itemId in (:itemIds) 
         and xm.connectionId = (select connectionId from xy_settings)
     """
@@ -1061,11 +1051,10 @@ interface XyMusicDao {
 
     @Query(
         """
-        select itemId,xm.pic,xm.name,xm.album,xm.albumName as albumName,xm.container,xm.artists,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
+        select itemId,xm.pic,xm.name,xm.album,xm.albumName as albumName,xm.container,xm.artists,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,null as filePath,
                 xm.runTimeTicks,xm.plexPlayKey as plexPlayKey
         from albummusic am
         inner join xy_music xm on am.musicId = xm.itemId
-        left join xy_download xd on xd.uid = xm.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
         left join favoritemusic fm on xm.itemId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
         where am.connectionId = (select connectionId from xy_settings)
         and xm.connectionId = (select connectionId from xy_settings)
@@ -1102,11 +1091,10 @@ interface XyMusicDao {
 
     @Query(
         """
-        select itemId,xm.pic,xm.name,xm.album,xm.albumName as albumName,xm.container,xm.artists,xm.artistIds,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
+        select itemId,xm.pic,xm.name,xm.album,xm.albumName as albumName,xm.container,xm.artists,xm.artistIds,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,null as filePath,
                 xm.runTimeTicks,xm.plexPlayKey as plexPlayKey
         from artistmusic am
         inner join xy_music xm on am.musicId = xm.itemId
-        left join xy_download xd on xd.uid = xm.itemId and xd.status = 'COMPLETED' and xd.connectionId = (select connectionId from xy_settings)
         left join favoritemusic fm on xm.itemId = fm.musicId and fm.connectionId = (select connectionId from xy_settings)
         where am.connectionId = (select connectionId from xy_settings)
         and xm.connectionId = (select connectionId from xy_settings)
@@ -1140,11 +1128,10 @@ interface XyMusicDao {
 
     @Query(
         """
-        select itemId,xm.pic,xm.name,xm.album,xm.albumName as albumName,xm.container,xm.artists,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,xd.filePath,
+        select itemId,xm.pic,xm.name,xm.album,xm.albumName as albumName,xm.container,xm.artists,xm.artistIds,fm.ifFavorite as ifFavoriteStatus,xm.size,null as filePath,
                 xm.runTimeTicks,xm.plexPlayKey as plexPlayKey
         from favoritemusic fm
         inner join xy_music xm on fm.musicId = xm.itemId
-        left join xy_download xd on xd.uid = xm.itemId and xd.status = 'COMPLETED'  and xd.connectionId = (select connectionId from xy_settings)
         where fm.connectionId = (select connectionId from xy_settings)
         and xm.connectionId = (select connectionId from xy_settings)
         order by fm.`index`

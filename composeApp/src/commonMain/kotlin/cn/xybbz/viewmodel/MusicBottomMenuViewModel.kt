@@ -32,9 +32,11 @@ import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
+import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.volume.VolumeServer
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
@@ -59,6 +61,7 @@ import kotlin.time.Duration.Companion.minutes
 class MusicBottomMenuViewModel(
     private val settingsManager: SettingsManager,
     private val db: LocalDatabaseClient,
+    private val downloadDb: DownloadDatabaseClient,
     val musicController: MusicCommonController,
     val dataSourceManager: DataSourceManager,
     val volumeServer: VolumeServer,
@@ -281,7 +284,10 @@ class MusicBottomMenuViewModel(
 
     fun addNextPlayer(itemId: String) {
         viewModelScope.launch {
-            val playMusic = db.musicDao.selectExtendById(itemId)
+            val playMusic = MusicPlayAssembler.attachFilePath(
+                playMusic = db.musicDao.selectExtendById(itemId),
+                downloadDb = downloadDb
+            )
             playMusic?.let {
                 musicController.addNextPlayer(it)
             }

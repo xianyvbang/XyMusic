@@ -22,20 +22,29 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.Transaction
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.music.DownloadCacheCommonController
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.select.SelectControl
+import cn.xybbz.download.DownloaderManager
+import cn.xybbz.download.core.DownloadRequest
+import cn.xybbz.download.database.DownloadDatabaseClient
+import cn.xybbz.download.enums.DownloadTypes
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.add_download_list
 
 @KoinViewModel
-class SnackBarPlayerViewModel (
+class SnackBarPlayerViewModel(
     val musicController: MusicCommonController,
     val db: LocalDatabaseClient,
+    val downloadDb: DownloadDatabaseClient,
     private val downloadCacheController: DownloadCacheCommonController,
     val dataSourceManager: DataSourceManager,
     val selectControl: SelectControl,
+    private val downloaderManager: DownloaderManager
 ) : ViewModel() {
 
 
@@ -53,7 +62,30 @@ class SnackBarPlayerViewModel (
 
     fun downloadMusics() {
         viewModelScope.launch {
-
+            val downloadTypes =
+                dataSourceManager.dataSourceType?.getDownloadType() ?: DownloadTypes.APK
+            val itemIds = selectControl.selectMusicIdList.toList()
+            val musicList = db.musicDao.selectByIds(itemIds)
+            val requests = musicList.map { musicData ->
+                DownloadRequest(
+                    url = musicData.downloadUrl,
+                    fileName = musicData.name + "." + musicData.container,
+                    fileSize = musicData.size ?: 0,
+                    uid = musicData.itemId,
+                    title = musicData.name,
+                    type = downloadTypes,
+                    cover = musicData.pic,
+                    duration = musicData.runTimeTicks,
+                    mediaLibraryId = dataSourceManager.getConnectionId(),
+                    data = musicData
+                )
+            }
+            if (requests.isNotEmpty()) {
+                downloaderManager.enqueue(
+                    *requests.toTypedArray()
+                )
+                MessageUtils.sendPopTip(Res.string.add_download_list)
+            }
         }.invokeOnCompletion { selectControl.dismiss() }
 
     }

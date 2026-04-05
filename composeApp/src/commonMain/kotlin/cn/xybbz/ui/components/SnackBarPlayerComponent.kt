@@ -142,6 +142,9 @@ fun SnackBarPlayerComponent(
         label = "backgroundColorAnim"
     )
 
+    val permissionState = downloadPermission {
+        snackBarPlayerViewModel.downloadMusics()
+    }
 
     val playerSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -274,7 +277,8 @@ fun SnackBarPlayerComponent(
                             coroutineScope.launch {
                                 snackBarPlayerViewModel.selectControl.onAddPlaySelect(
                                     snackBarPlayerViewModel.musicController,
-                                    snackBarPlayerViewModel.db
+                                    snackBarPlayerViewModel.db,
+                                    snackBarPlayerViewModel.downloadDb
                                 )
                             }
                         }
@@ -334,7 +338,7 @@ fun SnackBarPlayerComponent(
                             if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
                                 MessageUtils.sendPopTip(pleaseSelect)
                             } else {
-                                MessageUtils.sendPopTipError("下载功能暂时不可用")
+                                permissionState?.launchMultiplePermissionRequest()
                             }
 
                         }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {

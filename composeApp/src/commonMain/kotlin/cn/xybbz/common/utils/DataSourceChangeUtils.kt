@@ -4,6 +4,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 
@@ -17,13 +18,14 @@ object DataSourceChangeUtils {
         dataSourceManager: DataSourceManager,
         musicController: MusicCommonController,
         db: LocalDatabaseClient,
+        downloadDb: DownloadDatabaseClient,
         musicPlayContext: MusicPlayContext
     ) {
         if (connectionConfig.id != dataSourceManager.getConnectionId()) {
             //清空所有下载
             musicController.clearPlayerList()
             dataSourceManager.changeDataSource(connectionConfig)
-            PlayerListRestoreUtils.restoreCurrentDataSourcePlayerList(db, musicPlayContext)
+            PlayerListRestoreUtils.restoreCurrentDataSourcePlayerList(db, downloadDb, musicPlayContext)
         }
     }
 

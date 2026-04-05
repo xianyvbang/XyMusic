@@ -23,6 +23,7 @@ import androidx.paging.PagingData
 import androidx.paging.RemoteMediator
 import androidx.paging.map
 import androidx.room.Transaction
+import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
@@ -729,7 +730,11 @@ abstract class IDataSourceParentServer(
         pageSize: Int,
         pageNum: Int
     ): List<XyPlayMusic>? {
-        return db.musicDao.selectMusicExtendList(pageSize, pageNum * pageSize)
+        return MusicPlayAssembler.toPlayMusicList(
+            musicList = db.musicDao.selectHomeMusicList(pageSize, pageNum * pageSize),
+            downloadDb = downloadDb,
+            mediaLibraryId = currentMediaLibraryId()
+        )
     }
 
     /**
@@ -740,7 +745,11 @@ abstract class IDataSourceParentServer(
         pageSize: Int,
         pageNum: Int
     ): List<XyPlayMusic>? {
-        return db.musicDao.selectMusicExtendListByAlbumId(albumId, pageSize, pageNum * pageSize)
+        return MusicPlayAssembler.toPlayMusicList(
+            musicList = db.musicDao.selectMusicListByAlbumId(albumId, pageSize, pageNum * pageSize),
+            downloadDb = downloadDb,
+            mediaLibraryId = currentMediaLibraryId()
+        )
     }
 
     /**
@@ -751,7 +760,11 @@ abstract class IDataSourceParentServer(
         pageSize: Int,
         pageNum: Int
     ): List<XyPlayMusic>? {
-        return db.musicDao.selectMusicExtendListByArtistId(artistId, pageSize, pageNum * pageSize)
+        return MusicPlayAssembler.toPlayMusicList(
+            musicList = db.musicDao.selectMusicListByArtistId(artistId, pageSize, pageNum * pageSize),
+            downloadDb = downloadDb,
+            mediaLibraryId = currentMediaLibraryId()
+        )
     }
 
     /**
@@ -761,7 +774,11 @@ abstract class IDataSourceParentServer(
         pageSize: Int,
         pageNum: Int
     ): List<XyPlayMusic>? {
-        return db.musicDao.selectMusicExtendListByFavorite(pageSize, pageNum * pageSize)
+        return MusicPlayAssembler.toPlayMusicList(
+            musicList = db.musicDao.selectMusicListByFavorite(pageSize, pageNum * pageSize),
+            downloadDb = downloadDb,
+            mediaLibraryId = currentMediaLibraryId()
+        )
     }
 
     /**
@@ -1227,28 +1244,24 @@ abstract class IDataSourceParentServer(
     ): XyResponse<XyMusic>
 
     suspend fun transitionPlayMusic(musicList: List<XyMusic>?): List<XyPlayMusic>? {
-        val downloads = musicList?.map { it.itemId }?.let {
-            downloadDb.downloadDao.getDataByUids(it)
-        }
-        val downloadMap = downloads?.associateBy { it.uid }
-
-        return musicList?.map { music ->
-            music.toPlayMusic()
-                .copy(filePath = if (downloadMap?.containsKey(music.itemId) == true) downloadMap[music.itemId]?.filePath else null)
-        }
+        return MusicPlayAssembler.toPlayMusicList(
+            musicList = musicList,
+            downloadDb = downloadDb,
+            mediaLibraryId = currentMediaLibraryId()
+        )
     }
 
     suspend fun transitionMusicExtend(musicList: List<XyMusic>?): List<XyMusicExtend>? {
-        val downloads = musicList?.map { it.itemId }?.let {
-            downloadDb.downloadDao.getDataByUids(it)
-        }
-        val downloadMap = downloads?.associateBy { it.uid }
+        return MusicPlayAssembler.toMusicExtendList(
+            musicList = musicList,
+            downloadDb = downloadDb,
+            mediaLibraryId = currentMediaLibraryId()
+        )
+    }
 
-        return musicList?.map { music ->
-            XyMusicExtend(
-                music = music,
-                filePath = if (downloadMap?.containsKey(music.itemId) == true) downloadMap[music.itemId]?.filePath else null
-            )
+    private fun currentMediaLibraryId(): String? {
+        return mediaLibraryIdFlow.value?.takeUnless {
+            it == Constants.MINUS_ONE_INT.toString()
         }
     }
 

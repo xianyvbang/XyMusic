@@ -50,6 +50,7 @@ fun initKoin(config: KoinAppDeclaration? = null): KoinApplication {
                 // 只有控制器 ready 之后再恢复播放列表，才能避免恢复时机早于播放器初始化。
                 PlayerListRestoreUtils.restoreCurrentDataSourcePlayerList(
                     koinTmp.get(),
+                    koinTmp.get(),
                     koinTmp.get()
                 )
             }
