@@ -320,7 +320,7 @@ fun MusicBottomMenuComponent(
                         enabled = musicBottomMenuViewModel.dataSourceManager.getCanDownload(),
                         text = stringResource(Res.string.download),
                         onClick = {
-                            permissionState?.launchMultiplePermissionRequest()
+                            permissionState.launchMultiplePermissionRequest()
                         })
                 }
 

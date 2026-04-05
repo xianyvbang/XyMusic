@@ -43,6 +43,7 @@ multiLanguages = "10.2"
 splashscreen = "1.2.0"
 sketch = "4.4.0-beta02"
 work = "2.11.1"
+accompanist = "0.37.3"
 
 
 
@@ -134,6 +135,8 @@ sketch-ktor = { module = "io.github.panpf.sketch4:sketch-http-ktor3", version.re
 sketch-gif = { module = "io.github.panpf.sketch4:sketch-animated-gif", version.ref = "sketch" }
 
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
+
+accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
 
 
 [plugins]

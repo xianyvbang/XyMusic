@@ -338,7 +338,7 @@ fun SnackBarPlayerComponent(
                             if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
                                 MessageUtils.sendPopTip(pleaseSelect)
                             } else {
-                                permissionState?.launchMultiplePermissionRequest()
+                                permissionState.launchMultiplePermissionRequest()
                             }
 
                         }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
