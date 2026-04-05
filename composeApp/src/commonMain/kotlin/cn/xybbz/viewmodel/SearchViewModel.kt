@@ -29,6 +29,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.Log
 import cn.xybbz.config.music.MusicCommonController
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -41,12 +42,15 @@ import org.koin.core.annotation.KoinViewModel
 @KoinViewModel
 class SearchViewModel(
     private val db: LocalDatabaseClient,
+    private val downloadDb: DownloadDatabaseClient,
     private val dataSourceManager: DataSourceManager,
     val musicController: MusicCommonController,
 ) : ViewModel() {
 
     val downloadMusicIdsFlow =
-        db.downloadDao.getAllMusicTaskUidsFlow()
+        downloadDb.downloadDao.getAllMusicTaskUidsFlow(
+            mediaLibraryId = dataSourceManager.getConnectionId().toString()
+        )
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     /**
@@ -145,7 +149,10 @@ class SearchViewModel(
 
     fun addMusic(music: XyMusic) {
         viewModelScope.launch {
-            val download = db.downloadDao.getMusicCompleteTaskByUid(music.itemId)
+            val download = downloadDb.downloadDao.getMusicCompleteTaskByUid(
+                uid = music.itemId,
+                mediaLibraryId = dataSourceManager.getConnectionId().toString()
+            )
             val playMusic = music.toPlayMusic().copy(
                 ifFavoriteStatus = db.musicDao.selectIfFavoriteByMusic(music.itemId),
                 filePath = download?.filePath

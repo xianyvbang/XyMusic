@@ -24,6 +24,7 @@ import androidx.paging.cachedIn
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -34,12 +35,15 @@ import org.koin.core.annotation.KoinViewModel
 class FavoriteViewModel(
     private val dataSourceManager: DataSourceManager,
     db: LocalDatabaseClient,
+    downloadDb: DownloadDatabaseClient,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicCommonController
 ) : ViewModel() {
 
     val downloadMusicIdsFlow =
-        db.downloadDao.getAllMusicTaskUidsFlow()
+        downloadDb.downloadDao.getAllMusicTaskUidsFlow(
+            mediaLibraryId = dataSourceManager.getConnectionId().toString()
+        )
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)

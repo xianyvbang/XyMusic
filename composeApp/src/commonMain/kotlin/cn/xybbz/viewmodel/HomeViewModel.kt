@@ -38,6 +38,7 @@ import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.recommender.DailyRecommender
 import cn.xybbz.download.database.DownloadDatabaseClient
+import cn.xybbz.download.enums.DownloadStatus
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
@@ -122,8 +123,11 @@ class HomeViewModel(
 
         // 本地音乐数量
         localMusicCountJob = viewModelScope.launch {
-            db.downloadDao
-                .getAllMusicTasksCountFlow(status = DownloadStatus.COMPLETED)
+            downloadDb.downloadDao
+                .getAllMusicTasksCountFlow(
+                    status = DownloadStatus.COMPLETED,
+                    mediaLibraryId = dataSourceManager.getConnectionId().toString()
+                )
                 .collect { count ->
                     localCount = if (count == 0) null else count.toString()
                 }
@@ -131,9 +135,10 @@ class HomeViewModel(
 
         // 下载列表数量
         downloadCountJob = viewModelScope.launch {
-            db.downloadDao
+            downloadDb.downloadDao
                 .getAllMusicTasksDownloadCountFlow(
-                    status = listOf(DownloadStatus.QUEUED, DownloadStatus.DOWNLOADING)
+                    status = listOf(DownloadStatus.QUEUED, DownloadStatus.DOWNLOADING),
+                    mediaLibraryId = dataSourceManager.getConnectionId().toString()
                 )
                 .collect { count ->
                     downloadCount = count

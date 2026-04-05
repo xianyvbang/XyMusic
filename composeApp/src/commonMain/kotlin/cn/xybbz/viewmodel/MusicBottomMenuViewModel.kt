@@ -37,6 +37,7 @@ import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.volume.VolumeServer
 import cn.xybbz.download.database.DownloadDatabaseClient
+import cn.xybbz.download.enums.DownloadTypes
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
@@ -68,7 +69,7 @@ class MusicBottomMenuViewModel(
 ) : ViewModel() {
 
     val downloadMusicIdsFlow =
-        db.downloadDao.getAllMusicTaskUidsFlow()
+        downloadDb.downloadDao.getAllMusicTaskUidsFlow(mediaLibraryId = dataSourceManager.getConnectionId().toString())
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     var volumeValue by mutableStateOf(0f)
@@ -286,7 +287,8 @@ class MusicBottomMenuViewModel(
         viewModelScope.launch {
             val playMusic = MusicPlayAssembler.attachFilePath(
                 playMusic = db.musicDao.selectExtendById(itemId),
-                downloadDb = downloadDb
+                downloadDb = downloadDb,
+                mediaLibraryId = dataSourceManager.getConnectionId().toString()
             )
             playMusic?.let {
                 musicController.addNextPlayer(it)

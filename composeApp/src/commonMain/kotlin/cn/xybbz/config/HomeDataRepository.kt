@@ -20,6 +20,7 @@ package cn.xybbz.config
 
 import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.api.TokenServer
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.utils.Log
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
@@ -36,6 +37,7 @@ import kotlinx.coroutines.launch
 class HomeDataRepository(
     private val db: LocalDatabaseClient,
     private val downloadDb: DownloadDatabaseClient,
+    private val dataSourceManager: DataSourceManager,
 ) {
 
     private val _mostPlayedMusic = MutableStateFlow<List<XyMusicExtend>>(emptyList())
@@ -75,7 +77,8 @@ class HomeDataRepository(
             _mostPlayedMusic.value =
                 MusicPlayAssembler.attachFilePath(
                     musicExtendList = db.musicDao.selectMaximumPlayMusicExtendList(20),
-                    downloadDb = downloadDb
+                    downloadDb = downloadDb,
+                    mediaLibraryId = dataSourceManager.getConnectionId().toString()
                 ) ?: emptyList()
         }
         launch {
@@ -86,7 +89,8 @@ class HomeDataRepository(
             _recentMusic.value =
                 MusicPlayAssembler.attachFilePath(
                     musicExtendList = db.musicDao.selectPlayHistoryMusicExtendList(20),
-                    downloadDb = downloadDb
+                    downloadDb = downloadDb,
+                    mediaLibraryId = dataSourceManager.getConnectionId().toString()
                 ) ?: emptyList()
         }
         launch {
@@ -101,7 +105,8 @@ class HomeDataRepository(
             _recommendedMusic.value =
                 MusicPlayAssembler.attachFilePath(
                     musicExtendList = db.musicDao.selectRecommendedMusicExtendList(20),
-                    downloadDb = downloadDb
+                    downloadDb = downloadDb,
+                    mediaLibraryId = dataSourceManager.getConnectionId().toString()
                 ) ?: emptyList()
         }
         launch {
@@ -122,7 +127,8 @@ class HomeDataRepository(
                 .collect {
                     _mostPlayedMusic.value = MusicPlayAssembler.attachFilePath(
                         musicExtendList = it,
-                        downloadDb = downloadDb
+                        downloadDb = downloadDb,
+                        mediaLibraryId = dataSourceManager.getConnectionId().toString()
                     ) ?: emptyList()
                 }
         }
@@ -141,7 +147,8 @@ class HomeDataRepository(
                 .collect {
                     _recentMusic.value = MusicPlayAssembler.attachFilePath(
                         musicExtendList = it,
-                        downloadDb = downloadDb
+                        downloadDb = downloadDb,
+                        mediaLibraryId = dataSourceManager.getConnectionId().toString()
                     ) ?: emptyList()
                 }
         }
@@ -169,7 +176,8 @@ class HomeDataRepository(
                 .collect {
                     _recommendedMusic.value = MusicPlayAssembler.attachFilePath(
                         musicExtendList = it,
-                        downloadDb = downloadDb
+                        downloadDb = downloadDb,
+                        mediaLibraryId = dataSourceManager.getConnectionId().toString()
                     ) ?: emptyList()
                 }
         }

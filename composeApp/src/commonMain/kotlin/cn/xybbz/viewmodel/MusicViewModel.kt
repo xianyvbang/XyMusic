@@ -25,6 +25,7 @@ import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
@@ -37,6 +38,7 @@ import org.koin.core.annotation.KoinViewModel
 class MusicViewModel(
     val dataSourceManager: DataSourceManager,
     val db: LocalDatabaseClient,
+    val downloadDb: DownloadDatabaseClient,
     val settingsManager: SettingsManager,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicCommonController,
@@ -44,7 +46,9 @@ class MusicViewModel(
 ) : PageListViewModel<XyMusic>(dataSourceManager, null) {
 
     val downloadMusicIdsFlow =
-        db.downloadDao.getAllMusicTaskUidsFlow()
+        downloadDb.downloadDao.getAllMusicTaskUidsFlow(
+            mediaLibraryId = dataSourceManager.getConnectionId().toString()
+        )
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     suspend fun getMusicInfoById(musicId: String): XyMusic? = db.musicDao.selectById(musicId)

@@ -34,6 +34,7 @@ import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.select.SelectControl
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -55,13 +56,14 @@ class AlbumInfoViewModel(
     @InjectedParam private val dataType: MusicDataTypeEnum,
     val dataSourceManager: DataSourceManager,
     val db: LocalDatabaseClient,
+    val downloadDb: DownloadDatabaseClient,
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicCommonController,
     val selectControl: SelectControl,
 ) : PageListViewModel<XyMusic>(dataSourceManager, SortTypeEnum.MUSIC_NAME_ASC) {
 
     val downloadMusicIdsFlow =
-        db.downloadDao.getAllMusicTaskUidsFlow()
+        downloadDb.downloadDao.getAllMusicTaskUidsFlow(mediaLibraryId = dataSourceManager.getConnectionId().toString())
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     /**

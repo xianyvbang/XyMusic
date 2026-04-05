@@ -25,7 +25,12 @@ object DataSourceChangeUtils {
             //清空所有下载
             musicController.clearPlayerList()
             dataSourceManager.changeDataSource(connectionConfig)
-            PlayerListRestoreUtils.restoreCurrentDataSourcePlayerList(db, downloadDb, musicPlayContext)
+            PlayerListRestoreUtils.restoreCurrentDataSourcePlayerList(
+                db,
+                downloadDb,
+                musicPlayContext,
+                dataSourceManager
+            )
         }
     }
 

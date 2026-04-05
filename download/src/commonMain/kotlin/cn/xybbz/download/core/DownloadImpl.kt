@@ -88,7 +88,10 @@ class DownloadImpl(
                 }
 
                 if (!request.uid.isNullOrBlank()) {
-                    val downloadTask = db.downloadDao.getMusicTaskByUid(uid = request.uid)
+                    val downloadTask = db.downloadDao.getMusicTaskByUid(
+                        uid = request.uid,
+                        mediaLibraryId = request.mediaLibraryId?.toString()
+                    )
                     if (downloadTask != null) {
                         if (downloadTask.status != DownloadStatus.CANCEL &&
                             downloadTask.status != DownloadStatus.FAILED &&

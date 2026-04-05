@@ -20,11 +20,14 @@ package cn.xybbz.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
+import cn.xybbz.download.database.DownloadDatabaseClient
+import cn.xybbz.download.database.data.XyDownload
+import cn.xybbz.download.enums.DownloadStatus
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.LocalDatabaseClient
-import cn.xybbz.localdata.data.download.XyDownload
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -35,6 +38,8 @@ import org.koin.core.annotation.KoinViewModel
 @KoinViewModel
 class LocalViewModel(
     val db: LocalDatabaseClient,
+    val downloadDb: DownloadDatabaseClient,
+    private val dataSourceManager: DataSourceManager,
     val musicController: MusicCommonController,
     val musicPlayContext: MusicPlayContext
 ) : ViewModel() {
@@ -42,7 +47,10 @@ class LocalViewModel(
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     val musicDownloadInfo: StateFlow<List<XyDownload>> =
-        db.downloadDao.getAllMusicTasksFlow(status = DownloadStatus.COMPLETED)
+        downloadDb.downloadDao.getAllMusicTasksFlow(
+            status = DownloadStatus.COMPLETED,
+            mediaLibraryId = dataSourceManager.getConnectionId().toString()
+        )
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5000),

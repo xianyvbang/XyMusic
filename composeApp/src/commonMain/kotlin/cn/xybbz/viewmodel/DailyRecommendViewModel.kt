@@ -50,7 +50,9 @@ class DailyRecommendViewModel (
 ) : ViewModel() {
 
     val downloadMusicIdsFlow =
-        db.downloadDao.getAllMusicTaskUidsFlow()
+        downloadDb.downloadDao.getAllMusicTaskUidsFlow(
+            mediaLibraryId = dataSourceManager.getConnectionId().toString()
+        )
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     /**
@@ -84,7 +86,8 @@ class DailyRecommendViewModel (
                 .collect { list ->
                     recommendedMusicList = MusicPlayAssembler.attachFilePath(
                         musicExtendList = list,
-                        downloadDb = downloadDb
+                        downloadDb = downloadDb,
+                        mediaLibraryId = dataSourceManager.getConnectionId().toString()
                     ) ?: emptyList()
                 }
         }

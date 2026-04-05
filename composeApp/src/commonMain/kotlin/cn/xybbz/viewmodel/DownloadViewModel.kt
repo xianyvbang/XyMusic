@@ -44,7 +44,9 @@ class DownloadViewModel(
 
 
     @OptIn(FlowPreview::class)
-    val musicDownloadInfo: StateFlow<List<XyDownload>> = downloadDb.downloadDao.getAllMusicTasksFlow()
+    val musicDownloadInfo: StateFlow<List<XyDownload>> = downloadDb.downloadDao.getAllMusicTasksFlow(
+        mediaLibraryId = datasourceServer.getConnectionId().toString()
+    )
         .sample(200)
         .stateIn(
             scope = viewModelScope,

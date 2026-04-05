@@ -51,6 +51,7 @@ fun initKoin(config: KoinAppDeclaration? = null): KoinApplication {
                 PlayerListRestoreUtils.restoreCurrentDataSourcePlayerList(
                     koinTmp.get(),
                     koinTmp.get(),
+                    koinTmp.get(),
                     koinTmp.get()
                 )
             }

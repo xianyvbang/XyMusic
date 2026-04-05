@@ -733,7 +733,7 @@ abstract class IDataSourceParentServer(
         return MusicPlayAssembler.toPlayMusicList(
             musicList = db.musicDao.selectHomeMusicList(pageSize, pageNum * pageSize),
             downloadDb = downloadDb,
-            mediaLibraryId = currentMediaLibraryId()
+            mediaLibraryId = getConnectionId().toString()
         )
     }
 
@@ -748,7 +748,7 @@ abstract class IDataSourceParentServer(
         return MusicPlayAssembler.toPlayMusicList(
             musicList = db.musicDao.selectMusicListByAlbumId(albumId, pageSize, pageNum * pageSize),
             downloadDb = downloadDb,
-            mediaLibraryId = currentMediaLibraryId()
+            mediaLibraryId = getConnectionId().toString()
         )
     }
 
@@ -763,7 +763,7 @@ abstract class IDataSourceParentServer(
         return MusicPlayAssembler.toPlayMusicList(
             musicList = db.musicDao.selectMusicListByArtistId(artistId, pageSize, pageNum * pageSize),
             downloadDb = downloadDb,
-            mediaLibraryId = currentMediaLibraryId()
+            mediaLibraryId = getConnectionId().toString()
         )
     }
 
@@ -777,7 +777,7 @@ abstract class IDataSourceParentServer(
         return MusicPlayAssembler.toPlayMusicList(
             musicList = db.musicDao.selectMusicListByFavorite(pageSize, pageNum * pageSize),
             downloadDb = downloadDb,
-            mediaLibraryId = currentMediaLibraryId()
+            mediaLibraryId = getConnectionId().toString()
         )
     }
 
@@ -1247,7 +1247,7 @@ abstract class IDataSourceParentServer(
         return MusicPlayAssembler.toPlayMusicList(
             musicList = musicList,
             downloadDb = downloadDb,
-            mediaLibraryId = currentMediaLibraryId()
+            mediaLibraryId = getConnectionId().toString()
         )
     }
 
@@ -1255,14 +1255,8 @@ abstract class IDataSourceParentServer(
         return MusicPlayAssembler.toMusicExtendList(
             musicList = musicList,
             downloadDb = downloadDb,
-            mediaLibraryId = currentMediaLibraryId()
+            mediaLibraryId = getConnectionId().toString()
         )
-    }
-
-    private fun currentMediaLibraryId(): String? {
-        return mediaLibraryIdFlow.value?.takeUnless {
-            it == Constants.MINUS_ONE_INT.toString()
-        }
     }
 
     /**

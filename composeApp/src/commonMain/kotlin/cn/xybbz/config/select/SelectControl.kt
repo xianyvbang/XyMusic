@@ -51,7 +51,9 @@ import xymusic_kmp.composeapp.generated.resources.delete_warning
  * @date 2025/01/18
  * @constructor 创建[SelectControl]
  */
-class SelectControl() {
+class SelectControl(
+    private val dataSourceManager: DataSourceManager
+) {
 
 
     //选中音乐列表id
@@ -244,7 +246,8 @@ class SelectControl() {
     ) {
         val xyMusics = MusicPlayAssembler.attachFilePath(
             playMusicList = db.musicDao.selectExtendByIds(selectMusicIdList.toList()),
-            downloadDb = downloadDb
+            downloadDb = downloadDb,
+            mediaLibraryId = dataSourceManager.getConnectionId().toString()
         ) ?: emptyList()
         musicController.addMusicList(
             musicList = xyMusics,
