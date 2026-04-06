@@ -20,14 +20,15 @@ package cn.xybbz.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.utils.Log
 import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.music.DownloadCacheCommonController
 import cn.xybbz.config.music.MusicCommonController
-import cn.xybbz.entity.data.ext.toPlayerMusic
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
-import cn.xybbz.localdata.data.music.XyMusicExtend
+import cn.xybbz.localdata.data.music.XyMusic
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
@@ -41,6 +42,7 @@ class MusicPlayerViewModel (
     val dataSourceManager: DataSourceManager,
     val downloadCacheController: DownloadCacheCommonController,
     val lrcServer: LrcServer,
+    private val downloadDb: DownloadDatabaseClient,
     private val db: LocalDatabaseClient
 ) : ViewModel() {
 
@@ -49,12 +51,18 @@ class MusicPlayerViewModel (
 
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
-    fun addNextPlayer(musicExtend: XyMusicExtend) {
+    fun addNextPlayer(music: XyMusic) {
         viewModelScope.launch {
             Log.i("=====", "添加到列表")
-            db.musicDao.save(musicExtend.music)
+            db.musicDao.save(music)
+            MusicPlayAssembler.toPlayMusic(
+                music = music,
+                downloadDb = downloadDb,
+                mediaLibraryId = dataSourceManager.getConnectionId().toString()
+            )?.let {
+                musicController.addNextPlayer(it)
+            }
         }
-        musicController.addNextPlayer(musicExtend.toPlayerMusic())
     }
 
 }

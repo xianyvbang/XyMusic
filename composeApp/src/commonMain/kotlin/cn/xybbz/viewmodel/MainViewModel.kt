@@ -38,7 +38,7 @@ import cn.xybbz.config.setting.TranscodingState
 import cn.xybbz.entity.data.PlayerTypeData
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.era.XyEraItem
-import cn.xybbz.localdata.data.music.XyMusicExtend
+import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.filterNotNull
@@ -80,14 +80,14 @@ class MainViewModel(
      * 播放页展示的相似歌曲列表。
      * 数据由 PlayerEventCoordinator 维护，这里只做只读暴露。
      */
-    val similarMusicList: List<XyMusicExtend>
+    val similarMusicList: List<XyMusic>
         get() = playerEventCoordinator.similarMusicList
 
     /**
      * 播放页展示的热门歌曲列表。
      * 数据由 PlayerEventCoordinator 维护，这里只做只读暴露。
      */
-    val popularMusicList: List<XyMusicExtend>
+    val popularMusicList: List<XyMusic>
         get() = playerEventCoordinator.popularMusicList
 
 

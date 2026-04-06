@@ -14,7 +14,7 @@ import cn.xybbz.database.withTransaction
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.PlayHistoryMusic
 import cn.xybbz.localdata.data.music.PlayQueueMusic
-import cn.xybbz.localdata.data.music.XyMusicExtend
+import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.player.XyPlayer
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
@@ -40,13 +40,13 @@ class PlayerEventCoordinator(
     /**
      * 当前歌曲的相似歌曲，供 UI 直接读取展示。
      */
-    var similarMusicList by mutableStateOf(emptyList<XyMusicExtend>())
+    var similarMusicList by mutableStateOf(emptyList<XyMusic>())
         private set
 
     /**
      * 当前歌曲所属歌手的热门歌曲，供 UI 直接读取展示。
      */
-    var popularMusicList by mutableStateOf(emptyList<XyMusicExtend>())
+    var popularMusicList by mutableStateOf(emptyList<XyMusic>())
         private set
 
     /**

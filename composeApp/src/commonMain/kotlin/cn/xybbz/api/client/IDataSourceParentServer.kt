@@ -61,7 +61,6 @@ import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.data.remote.RemoteCurrent
 import cn.xybbz.localdata.enums.DataSourceType
@@ -1251,12 +1250,8 @@ abstract class IDataSourceParentServer(
         )
     }
 
-    suspend fun transitionMusicExtend(musicList: List<XyMusic>?): List<XyMusicExtend>? {
-        return MusicPlayAssembler.toMusicExtendList(
-            musicList = musicList,
-            downloadDb = downloadDb,
-            mediaLibraryId = getConnectionId().toString()
-        )
+    suspend fun transitionMusic(musicList: List<XyMusic>?): List<XyMusic>? {
+        return musicList
     }
 
     /**

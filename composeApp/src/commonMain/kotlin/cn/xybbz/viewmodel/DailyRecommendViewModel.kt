@@ -35,7 +35,6 @@ import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.localdata.data.music.XyMusicExtend
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
@@ -60,7 +59,7 @@ class DailyRecommendViewModel (
     /**
      * 推荐音乐
      */
-    var recommendedMusicList by mutableStateOf<List<XyMusicExtend>>(emptyList())
+    var recommendedMusicList by mutableStateOf<List<XyMusic>>(emptyList())
         private set
 
 
@@ -86,11 +85,7 @@ class DailyRecommendViewModel (
                 .selectRecommendedMusicExtendListFlow(50)
                 .distinctUntilChanged()
                 .collect { list ->
-                    recommendedMusicList = MusicPlayAssembler.attachFilePathToMusicExtendList(
-                        musicExtendList = list,
-                        downloadDb = downloadDb,
-                        mediaLibraryId = dataSourceManager.getConnectionId().toString()
-                    ) ?: emptyList()
+                    recommendedMusicList = list
                 }
         }
     }
@@ -118,11 +113,15 @@ class DailyRecommendViewModel (
         onMusicPlayParameter: OnMusicPlayParameter
     ) {
         viewModelScope.launch {
+            val playMusicList = MusicPlayAssembler.toPlayMusicList(
+                musicList = recommendedMusicList,
+                downloadDb = downloadDb,
+                mediaLibraryId = dataSourceManager.getConnectionId().toString()
+            ) ?: emptyList()
             musicPlayContext.musicList(
                 onMusicPlayParameter,
-                recommendedMusicList.map {
-                    it.toPlayMusic()
-                        .copy(ifFavoriteStatus = db.musicDao.selectIfFavoriteByMusic(it.music.itemId))
+                playMusicList.map {
+                    it.copy(ifFavoriteStatus = db.musicDao.selectIfFavoriteByMusic(it.itemId))
                 }
             )
         }

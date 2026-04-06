@@ -56,7 +56,6 @@ import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -1294,7 +1293,7 @@ class PlexDatasourceServer(
     /**
      * 获得相似歌曲列表
      */
-    override suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend>? {
+    override suspend fun getSimilarMusicList(musicId: String): List<XyMusic>? {
         return null
     }
 
@@ -1304,7 +1303,7 @@ class PlexDatasourceServer(
     override suspend fun getArtistPopularMusicList(
         artistId: String?,
         artistName: String?
-    ): List<XyMusicExtend>? {
+    ): List<XyMusic>? {
         val response = getServerMusicList(
             plexListType = PlexListType.all,
             startIndex = 0,
@@ -1314,7 +1313,7 @@ class PlexDatasourceServer(
             params = mapOf(Pair("viewCount>>=0", "")),
             artistId = artistId
         )
-        return transitionMusicExtend(response.items)
+        return transitionMusic(response.items)
     }
 
     /**

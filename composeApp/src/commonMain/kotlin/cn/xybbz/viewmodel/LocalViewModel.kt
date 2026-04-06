@@ -20,6 +20,7 @@ package cn.xybbz.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.converter.jsonSerializer
 import cn.xybbz.common.enums.DownloadTypes
@@ -84,7 +85,8 @@ class LocalViewModel(
             musicPlayContext.musicList(
                 onMusicPlayParameter,
                 downloadList.map { music ->
-                    music.toPlayMusic().copy(
+                    MusicPlayAssembler.toPlayMusic(
+                        music = music,
                         ifFavoriteStatus = db.musicDao.selectIfFavoriteByMusic(music.itemId),
                         filePath = downloadPathMap[music.itemId]
                     )

@@ -35,7 +35,6 @@ import cn.xybbz.localdata.data.music.PlayHistoryMusic
 import cn.xybbz.localdata.data.music.PlayQueueMusic
 import cn.xybbz.localdata.data.music.PlaylistMusic
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.data.recommend.XyDailyRecommendHistory
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -542,7 +541,7 @@ interface XyMusicDao {
     fun selectLimitMusicListFlow(
         dataType: MusicDataTypeEnum,
         limit: Int
-    ): Flow<List<XyMusicExtend>> {
+    ): Flow<List<XyMusic>> {
         return when (dataType) {
             MusicDataTypeEnum.HOME -> {
                 flow {}
@@ -628,7 +627,7 @@ interface XyMusicDao {
      */
     @Query(
         """
-        select mi.*,null as filePath from PlayHistoryMusic phm
+        select mi.* from PlayHistoryMusic phm
         inner join xy_music mi on phm.musicId = mi.itemId
          where phm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
@@ -638,11 +637,11 @@ interface XyMusicDao {
     )
     fun selectPlayHistoryMusicExtendListFlow(
         limit: Int
-    ): Flow<List<XyMusicExtend>>
+    ): Flow<List<XyMusic>>
 
     @Query(
         """
-        select mi.*,null as filePath from PlayHistoryMusic phm
+        select mi.* from PlayHistoryMusic phm
         inner join xy_music mi on phm.musicId = mi.itemId
          where phm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
@@ -652,7 +651,7 @@ interface XyMusicDao {
     )
     suspend fun selectPlayHistoryMusicExtendList(
         limit: Int
-    ): List<XyMusicExtend>
+    ): List<XyMusic>
 
     /**
      * 获得播放历史的limit条数据
@@ -713,7 +712,7 @@ interface XyMusicDao {
      */
     @Query(
         """
-        select mi.*,null as filePath from maximumplaymusic mpm
+        select mi.* from maximumplaymusic mpm
         inner join xy_music mi on mpm.musicId = mi.itemId
          where mpm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
@@ -723,12 +722,12 @@ interface XyMusicDao {
     )
     fun selectMaximumPlayMusicExtendListFlow(
         limit: Int
-    ): Flow<List<XyMusicExtend>>
+    ): Flow<List<XyMusic>>
 
 
     @Query(
         """
-        select mi.*,null as filePath from maximumplaymusic mpm
+        select mi.* from maximumplaymusic mpm
         inner join xy_music mi on mpm.musicId = mi.itemId
          where mpm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
@@ -738,12 +737,12 @@ interface XyMusicDao {
     )
     suspend fun selectMaximumPlayMusicExtendList(
         limit: Int
-    ): List<XyMusicExtend>
+    ): List<XyMusic>
 
 
     @Query(
         """
-        select mi.*,null as filePath from xy_daily_recommend_history mpm
+        select mi.* from xy_daily_recommend_history mpm
         inner join xy_music mi on mpm.songId = mi.itemId
         inner join xy_settings xs on mpm.connectionId = xs.connectionId
         inner join xy_connection_config xcc on xcc.id = xs.connectionId
@@ -758,11 +757,11 @@ interface XyMusicDao {
     )
     fun selectRecommendedMusicExtendListFlow(
         limit: Int
-    ): Flow<List<XyMusicExtend>>
+    ): Flow<List<XyMusic>>
 
     @Query(
         """
-        select mi.*,null as filePath from xy_daily_recommend_history mpm
+        select mi.* from xy_daily_recommend_history mpm
         inner join xy_music mi on mpm.songId = mi.itemId
         where mpm.connectionId = (select connectionId from xy_settings)
         and mi.connectionId = (select connectionId from xy_settings)
@@ -776,7 +775,7 @@ interface XyMusicDao {
     )
     suspend fun selectRecommendedMusicExtendList(
         limit: Int
-    ): List<XyMusicExtend>
+    ): List<XyMusic>
 
 
     /**

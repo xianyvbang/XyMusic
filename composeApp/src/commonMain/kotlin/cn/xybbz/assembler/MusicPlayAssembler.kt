@@ -2,10 +2,31 @@ package cn.xybbz.assembler
 
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 
 object MusicPlayAssembler {
+
+    fun toPlayMusic(
+        music: XyMusic,
+        filePath: String? = null,
+        ifFavoriteStatus: Boolean = music.ifFavoriteStatus
+    ): XyPlayMusic {
+        return XyPlayMusic(
+            itemId = music.itemId,
+            pic = music.pic,
+            name = music.name,
+            album = music.album,
+            albumName = music.albumName,
+            container = music.container,
+            artists = music.artists,
+            artistIds = music.artistIds,
+            ifFavoriteStatus = ifFavoriteStatus,
+            size = music.size,
+            filePath = filePath,
+            runTimeTicks = music.runTimeTicks,
+            plexPlayKey = music.plexPlayKey
+        )
+    }
 
     suspend fun toPlayMusicList(
         musicList: List<XyMusic>?,
@@ -20,47 +41,23 @@ object MusicPlayAssembler {
         )
 
         return safeMusicList.map { music ->
-            music.toPlayMusic().copy(
-                filePath = downloadMap[music.itemId]
-            )
-        }
-    }
-
-    suspend fun toMusicExtendList(
-        musicList: List<XyMusic>?,
-        downloadDb: DownloadDatabaseClient,
-        mediaLibraryId: String? = null
-    ): List<XyMusicExtend>? {
-        val safeMusicList = musicList ?: return null
-        val downloadMap = buildDownloadMap(
-            itemIds = safeMusicList.map { it.itemId },
-            downloadDb = downloadDb,
-            mediaLibraryId = mediaLibraryId
-        )
-
-        return safeMusicList.map { music ->
-            XyMusicExtend(
+            toPlayMusic(
                 music = music,
                 filePath = downloadMap[music.itemId]
             )
         }
     }
 
-    suspend fun attachFilePathToMusicExtendList(
-        musicExtendList: List<XyMusicExtend>?,
+    suspend fun toPlayMusic(
+        music: XyMusic?,
         downloadDb: DownloadDatabaseClient,
         mediaLibraryId: String? = null
-    ): List<XyMusicExtend>? {
-        val safeMusicExtendList = musicExtendList ?: return null
-        val downloadMap = buildDownloadMap(
-            itemIds = safeMusicExtendList.map { it.music.itemId },
+    ): XyPlayMusic? {
+        return toPlayMusicList(
+            musicList = music?.let(::listOf),
             downloadDb = downloadDb,
             mediaLibraryId = mediaLibraryId
-        )
-
-        return safeMusicExtendList.map { musicExtend ->
-            musicExtend.copy(filePath = downloadMap[musicExtend.music.itemId])
-        }
+        )?.firstOrNull()
     }
 
     suspend fun attachFilePath(

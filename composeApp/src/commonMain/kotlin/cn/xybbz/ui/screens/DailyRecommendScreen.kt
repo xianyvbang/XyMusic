@@ -103,16 +103,16 @@ fun DailyRecommendScreen(
             ScreenLazyColumn {
                 items(
                     dailyRecommendViewModel.recommendedMusicList,
-                    key = { extend -> extend.music.itemId },
+                    key = { music -> music.itemId },
                     contentType = { _ -> MusicTypeEnum.MUSIC }
-                ) { musicExtend ->
+                ) { music ->
                     MusicItemComponent(
-                        music = musicExtend.music,
+                        music = music,
                         onIfFavorite = {
-                            musicExtend.music.itemId in favoriteList
+                            music.itemId in favoriteList
                         },
-                        ifDownload = musicExtend.music.itemId in downloadMusicIds,
-                        ifPlay = dailyRecommendViewModel.musicController.musicInfo?.itemId == musicExtend.music.itemId,
+                        ifDownload = music.itemId in downloadMusicIds,
+                        ifPlay = dailyRecommendViewModel.musicController.musicInfo?.itemId == music.itemId,
                         backgroundColor = Color.Transparent,
                         onMusicPlay = {
                             coroutineScope.launch {
@@ -122,11 +122,11 @@ fun DailyRecommendScreen(
                             }
                         },
                         trailingOnClick = {
-                            musicExtend.music.show()
+                            music.show()
                         },
                         trailingOnSelectClick = {
                             coroutineScope.launch {
-                                dailyRecommendViewModel.getMusicInfo(musicExtend.music.itemId)
+                                dailyRecommendViewModel.getMusicInfo(music.itemId)
                                     ?.show()
                             }
                         }

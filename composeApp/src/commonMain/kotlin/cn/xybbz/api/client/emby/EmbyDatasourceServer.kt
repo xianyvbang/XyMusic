@@ -57,7 +57,6 @@ import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -894,7 +893,7 @@ class EmbyDatasourceServer(
     /**
      * 获得相似歌曲列表
      */
-    override suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend>? {
+    override suspend fun getSimilarMusicList(musicId: String): List<XyMusic>? {
         val response = embyApiClient.itemApi().getSimilarItems(
             itemId = musicId,
             userId = getUserId(),
@@ -907,7 +906,7 @@ class EmbyDatasourceServer(
                 ItemFields.GENRES
             ).joinToString(LocalConstants.ARTIST_DELIMITER)
         )
-        return transitionMusicExtend(convertToMusicList(response.items))
+        return transitionMusic(convertToMusicList(response.items))
     }
 
     /**
@@ -916,7 +915,7 @@ class EmbyDatasourceServer(
     override suspend fun getArtistPopularMusicList(
         artistId: String?,
         artistName: String?
-    ): List<XyMusicExtend>? {
+    ): List<XyMusic>? {
         val items = getServerMusicList(
             startIndex = 0,
             pageSize = Constants.ARTIST_HOT_MUSIC_LIST_PAGE,
@@ -925,7 +924,7 @@ class EmbyDatasourceServer(
             sortOrder = listOf(SortOrder.DESCENDING),
             artistIds = artistId?.let { listOf(artistId) }
         ).items
-        return transitionMusicExtend(items)
+        return transitionMusic(items)
     }
 
     /**

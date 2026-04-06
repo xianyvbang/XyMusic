@@ -39,7 +39,6 @@ import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import io.ktor.client.HttpClient
@@ -373,7 +372,7 @@ interface IDataSourceServer : AutoCloseable, KoinComponent {
     suspend fun getArtistPopularMusicList(
         artistId: String?,
         artistName: String? = null
-    ): List<XyMusicExtend>?
+    ): List<XyMusic>?
 
     /**
      * 远程获得相似艺术家
@@ -464,7 +463,7 @@ interface IDataSourceServer : AutoCloseable, KoinComponent {
     /**
      * 获得相似歌曲列表
      */
-    suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend>?
+    suspend fun getSimilarMusicList(musicId: String): List<XyMusic>?
     // endregion
 
     // region 转码能力

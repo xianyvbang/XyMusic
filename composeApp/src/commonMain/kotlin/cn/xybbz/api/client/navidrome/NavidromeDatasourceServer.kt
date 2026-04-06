@@ -58,7 +58,6 @@ import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -875,7 +874,7 @@ class NavidromeDatasourceServer(
     /**
      * 获得相似歌曲列表
      */
-    override suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend>? {
+    override suspend fun getSimilarMusicList(musicId: String): List<XyMusic>? {
         val items =
             navidromeApiClient.itemApi().getSimilarSongs(
                 songId = musicId,
@@ -893,7 +892,7 @@ class NavidromeDatasourceServer(
                         )
                 }
             )
-        return transitionMusicExtend(items)
+        return transitionMusic(items)
     }
 
     /**
@@ -902,7 +901,7 @@ class NavidromeDatasourceServer(
     override suspend fun getArtistPopularMusicList(
         artistId: String?,
         artistName: String?
-    ): List<XyMusicExtend>? {
+    ): List<XyMusic>? {
         val items =
             navidromeApiClient.itemApi().getTopSongs(
                 artistName = artistName ?: "",
@@ -920,7 +919,7 @@ class NavidromeDatasourceServer(
                         )
                 }
             )
-        return transitionMusicExtend(items)
+        return transitionMusic(items)
     }
 
     /**

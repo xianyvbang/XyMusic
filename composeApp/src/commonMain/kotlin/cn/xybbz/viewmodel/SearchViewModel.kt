@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.Transaction
+import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.DownloadTypes
@@ -156,7 +157,8 @@ class SearchViewModel(
                 uid = music.itemId,
                 mediaLibraryId = dataSourceManager.getConnectionId().toString()
             )
-            val playMusic = music.toPlayMusic().copy(
+            val playMusic = MusicPlayAssembler.toPlayMusic(
+                music = music,
                 ifFavoriteStatus = db.musicDao.selectIfFavoriteByMusic(music.itemId),
                 filePath = download?.filePath
             )

@@ -23,8 +23,6 @@ import cn.xybbz.api.client.subsonic.data.Songs
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.localdata.data.music.XyMusicExtend
-import cn.xybbz.localdata.data.music.XyPlayMusic
 
 fun SongID3.toXyMusic(pic: String?, downloadUrl: String, connectionId: Long): XyMusic {
     return XyMusic(
@@ -56,24 +54,6 @@ fun SongID3.toXyMusic(pic: String?, downloadUrl: String, connectionId: Long): Xy
         playlistItemId = this.id,
         lastPlayedDate = 0L,
         createTime = this.created
-    )
-}
-
-fun XyMusicExtend.toPlayerMusic(): XyPlayMusic {
-    return XyPlayMusic(
-        itemId = this.music.itemId,
-        pic = music.pic,
-        name = music.name,
-        album = music.album,
-        albumName = music.albumName,
-        container = music.container,
-        artists = music.artists,
-        artistIds = music.artistIds,
-        ifFavoriteStatus = music.ifFavoriteStatus,
-        size = music.size,
-        filePath = filePath,
-        runTimeTicks = music.runTimeTicks,
-        plexPlayKey = music.plexPlayKey
     )
 }
 

@@ -18,6 +18,7 @@
 
 package cn.xybbz.viewmodel
 
+import cn.xybbz.assembler.MusicPlayAssembler
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -43,7 +44,7 @@ import cn.xybbz.download.enums.DownloadStatus
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
-import cn.xybbz.localdata.data.music.XyMusicExtend
+import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -359,13 +360,18 @@ class HomeViewModel(
      */
     fun musicList(
         onMusicPlayParameter: OnMusicPlayParameter,
-        musicList: List<XyMusicExtend>,
+        musicList: List<XyMusic>,
         playerTypeEnum: PlayerTypeEnum? = null
     ) {
         viewModelScope.launch {
+            val playMusicList = MusicPlayAssembler.toPlayMusicList(
+                musicList = musicList,
+                downloadDb = downloadDb,
+                mediaLibraryId = dataSourceManager.getConnectionId().toString()
+            ) ?: emptyList()
             musicPlayContext.musicList(
                 onMusicPlayParameter,
-                musicList.map { it.toPlayMusic() },
+                playMusicList,
                 playerTypeEnum
             )
         }

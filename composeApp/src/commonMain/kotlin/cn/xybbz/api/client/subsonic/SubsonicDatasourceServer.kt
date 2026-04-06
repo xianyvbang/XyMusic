@@ -55,7 +55,6 @@ import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -735,7 +734,7 @@ class SubsonicDatasourceServer(
     /**
      * 获得相似歌曲列表
      */
-    override suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend>? {
+    override suspend fun getSimilarMusicList(musicId: String): List<XyMusic>? {
         val items =
             subsonicApiClient.itemApi().getSimilarSongs(
                 songId = musicId,
@@ -752,7 +751,7 @@ class SubsonicDatasourceServer(
                         )
                 }
             )
-        return transitionMusicExtend(items)
+        return transitionMusic(items)
     }
 
     /**
@@ -761,7 +760,7 @@ class SubsonicDatasourceServer(
     override suspend fun getArtistPopularMusicList(
         artistId: String?,
         artistName: String?
-    ): List<XyMusicExtend>? {
+    ): List<XyMusic>? {
         val items =
             subsonicApiClient.itemApi().getTopSongs(
                 artistName = artistName ?: "",
@@ -778,7 +777,7 @@ class SubsonicDatasourceServer(
                         )
                 }
             )
-        return transitionMusicExtend(items)
+        return transitionMusic(items)
     }
 
     /**

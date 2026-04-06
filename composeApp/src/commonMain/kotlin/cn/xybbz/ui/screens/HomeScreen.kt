@@ -70,7 +70,7 @@ import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.data.album.XyAlbum
-import cn.xybbz.localdata.data.music.XyMusicExtend
+import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import cn.xybbz.router.Album
@@ -864,7 +864,7 @@ fun HomeScreen(
 
 @Composable
 private fun HomeMusicItemLazyRow(
-    musicList: List<XyMusicExtend>,
+    musicList: List<XyMusic>,
     homeViewModel: HomeViewModel
 ) {
     LazyRow(
@@ -874,17 +874,16 @@ private fun HomeMusicItemLazyRow(
     ) {
         items(
             musicList,
-            key = { item -> item.music.itemId }) { musicExtend ->
+            key = { item -> item.itemId }) { music ->
             MusicMusicCardComponent(
-                onItem = { musicExtend.music },
+                onItem = { music },
                 imageSize = MusicCardImageSize,
                 onRouter = {
                     //点击播放
                     homeViewModel.musicList(
                         onMusicPlayParameter = OnMusicPlayParameter(
-                            musicId = musicExtend.music.itemId,
-                            albumId = musicExtend.music
-                                .album
+                            musicId = music.itemId,
+                            albumId = music.album
                         ),
                         musicList
                     )

@@ -55,7 +55,6 @@ import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.localdata.data.music.XyMusicExtend
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -968,7 +967,7 @@ open class DataSourceManager(
     override suspend fun getArtistPopularMusicList(
         artistId: String?,
         artistName: String?
-    ): List<XyMusicExtend> {
+    ): List<XyMusic> {
         return try {
             dataSourceServer.getArtistPopularMusicList(artistId, artistName)
         } catch (e: Exception) {
@@ -1147,7 +1146,7 @@ open class DataSourceManager(
     /**
      * 获得相似歌曲列表
      */
-    override suspend fun getSimilarMusicList(musicId: String): List<XyMusicExtend> {
+    override suspend fun getSimilarMusicList(musicId: String): List<XyMusic> {
         return try {
             dataSourceServer.getSimilarMusicList(musicId) ?: emptyList()
         } catch (e: Exception) {

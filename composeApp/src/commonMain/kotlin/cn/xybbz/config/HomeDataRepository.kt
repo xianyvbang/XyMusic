@@ -18,7 +18,6 @@
 
 package cn.xybbz.config
 
-import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.utils.Log
@@ -26,7 +25,7 @@ import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.count.XyDataCount
-import cn.xybbz.localdata.data.music.XyMusicExtend
+import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,21 +39,21 @@ class HomeDataRepository(
     private val dataSourceManager: DataSourceManager,
 ) {
 
-    private val _mostPlayedMusic = MutableStateFlow<List<XyMusicExtend>>(emptyList())
+    private val _mostPlayedMusic = MutableStateFlow<List<XyMusic>>(emptyList())
     private val _newestAlbums = MutableStateFlow<List<XyAlbum>>(emptyList())
-    private val _recentMusic = MutableStateFlow<List<XyMusicExtend>>(emptyList())
+    private val _recentMusic = MutableStateFlow<List<XyMusic>>(emptyList())
     private val _recentAlbums = MutableStateFlow<List<XyAlbum>>(emptyList())
     private val _mostPlayedAlbums = MutableStateFlow<List<XyAlbum>>(emptyList())
-    private val _recommendedMusic = MutableStateFlow<List<XyMusicExtend>>(emptyList())
+    private val _recommendedMusic = MutableStateFlow<List<XyMusic>>(emptyList())
     private val _playlists = MutableStateFlow<List<XyAlbum>>(emptyList())
     private val _dataCount = MutableStateFlow<XyDataCount?>(null)
 
-    val mostPlayedMusic: StateFlow<List<XyMusicExtend>> get() = _mostPlayedMusic
+    val mostPlayedMusic: StateFlow<List<XyMusic>> get() = _mostPlayedMusic
     val newestAlbums: StateFlow<List<XyAlbum>> get() = _newestAlbums
-    val recentMusic: StateFlow<List<XyMusicExtend>> get() = _recentMusic
+    val recentMusic: StateFlow<List<XyMusic>> get() = _recentMusic
     val recentAlbums: StateFlow<List<XyAlbum>> get() = _recentAlbums
     val mostPlayedAlbums: StateFlow<List<XyAlbum>> get() = _mostPlayedAlbums
-    val recommendedMusic: StateFlow<List<XyMusicExtend>> get() = _recommendedMusic
+    val recommendedMusic: StateFlow<List<XyMusic>> get() = _recommendedMusic
     val playlists: StateFlow<List<XyAlbum>> get() = _playlists
     val dataCount: StateFlow<XyDataCount?> get() = _dataCount
 
@@ -74,24 +73,14 @@ class HomeDataRepository(
     private suspend fun loadOnce() = coroutineScope {
         Log.i("HomeDataRepository", "loadOnce1 ${TokenServer.baseUrl}")
         launch {
-            _mostPlayedMusic.value =
-                MusicPlayAssembler.attachFilePathToMusicExtendList(
-                    musicExtendList = db.musicDao.selectMaximumPlayMusicExtendList(20),
-                    downloadDb = downloadDb,
-                    mediaLibraryId = dataSourceManager.getConnectionId().toString()
-                ) ?: emptyList()
+            _mostPlayedMusic.value = db.musicDao.selectMaximumPlayMusicExtendList(20)
         }
         launch {
             _newestAlbums.value =
                 db.albumDao.selectNewestList(20)
         }
         launch {
-            _recentMusic.value =
-                MusicPlayAssembler.attachFilePathToMusicExtendList(
-                    musicExtendList = db.musicDao.selectPlayHistoryMusicExtendList(20),
-                    downloadDb = downloadDb,
-                    mediaLibraryId = dataSourceManager.getConnectionId().toString()
-                ) ?: emptyList()
+            _recentMusic.value = db.musicDao.selectPlayHistoryMusicExtendList(20)
         }
         launch {
             _recentAlbums.value =
@@ -102,12 +91,7 @@ class HomeDataRepository(
                 db.albumDao.selectMaximumPlayAlbumList(20)
         }
         launch {
-            _recommendedMusic.value =
-                MusicPlayAssembler.attachFilePathToMusicExtendList(
-                    musicExtendList = db.musicDao.selectRecommendedMusicExtendList(20),
-                    downloadDb = downloadDb,
-                    mediaLibraryId = dataSourceManager.getConnectionId().toString()
-                ) ?: emptyList()
+            _recommendedMusic.value = db.musicDao.selectRecommendedMusicExtendList(20)
         }
         launch {
             _playlists.value =
@@ -125,11 +109,7 @@ class HomeDataRepository(
                 .selectLimitMusicListFlow(MusicDataTypeEnum.MAXIMUM_PLAY, 20)
                 .distinctUntilChanged()
                 .collect {
-                    _mostPlayedMusic.value = MusicPlayAssembler.attachFilePathToMusicExtendList(
-                        musicExtendList = it,
-                        downloadDb = downloadDb,
-                        mediaLibraryId = dataSourceManager.getConnectionId().toString()
-                    ) ?: emptyList()
+                    _mostPlayedMusic.value = it
                 }
         }
 
@@ -145,11 +125,7 @@ class HomeDataRepository(
                 .selectLimitMusicListFlow(MusicDataTypeEnum.PLAY_HISTORY, 20)
                 .distinctUntilChanged()
                 .collect {
-                    _recentMusic.value = MusicPlayAssembler.attachFilePathToMusicExtendList(
-                        musicExtendList = it,
-                        downloadDb = downloadDb,
-                        mediaLibraryId = dataSourceManager.getConnectionId().toString()
-                    ) ?: emptyList()
+                    _recentMusic.value = it
                 }
         }
 
@@ -174,11 +150,7 @@ class HomeDataRepository(
                 .selectRecommendedMusicExtendListFlow(20)
                 .distinctUntilChanged()
                 .collect {
-                    _recommendedMusic.value = MusicPlayAssembler.attachFilePathToMusicExtendList(
-                        musicExtendList = it,
-                        downloadDb = downloadDb,
-                        mediaLibraryId = dataSourceManager.getConnectionId().toString()
-                    ) ?: emptyList()
+                    _recommendedMusic.value = it
                 }
         }
 

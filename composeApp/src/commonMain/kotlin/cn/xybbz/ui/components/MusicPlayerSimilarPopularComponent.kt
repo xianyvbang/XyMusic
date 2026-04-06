@@ -28,7 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import cn.xybbz.compositionLocal.LocalMainViewModel
-import cn.xybbz.localdata.data.music.XyMusicExtend
+import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
@@ -46,7 +46,7 @@ fun MusicPlayerSimilarPopularComponent(
     onFavoriteSet: () -> Set<String>,
     onDownloadMusicIds: () -> List<String>,
     playMusicList: List<XyPlayMusic>,
-    onAddPlayMusic: (XyMusicExtend) -> Unit
+    onAddPlayMusic: (XyMusic) -> Unit
 ) {
     val mainViewModel = LocalMainViewModel.current
 
@@ -74,25 +74,25 @@ fun MusicPlayerSimilarPopularComponent(
             item {
                 XyNoData()
             }
-        items(mainViewModel.popularMusicList) { musicExt ->
+        items(mainViewModel.popularMusicList) { music ->
 
             MusicItemComponent(
-                music = musicExt.music,
+                music = music,
                 onIfFavorite = {
-                    musicExt.music.itemId in onFavoriteSet()
+                    music.itemId in onFavoriteSet()
                 },
-                ifDownload = musicExt.music.itemId in onDownloadMusicIds(),
+                ifDownload = music.itemId in onDownloadMusicIds(),
                 ifPlay = false,
                 onMusicPlay = {
-                    if (musicExt.music.itemId !in playIdSet)
-                        onAddPlayMusic(musicExt)
+                    if (music.itemId !in playIdSet)
+                        onAddPlayMusic(music)
                 },
                 backgroundColor = Color.Transparent,
-                ifShowTrailingContent = musicExt.music.itemId !in playIdSet,
+                ifShowTrailingContent = music.itemId !in playIdSet,
                 trailingIcon = Res.drawable.playlist_add_24px,
                 trailingOnClick = {
-                    if (musicExt.music.itemId !in playIdSet)
-                        onAddPlayMusic(musicExt)
+                    if (music.itemId !in playIdSet)
+                        onAddPlayMusic(music)
                 }
             )
         }
@@ -111,25 +111,25 @@ fun MusicPlayerSimilarPopularComponent(
                 XyNoData()
             }
 
-        items(mainViewModel.similarMusicList) { musicExt ->
+        items(mainViewModel.similarMusicList) { music ->
 
             MusicItemComponent(
-                music = musicExt.music,
+                music = music,
                 onIfFavorite = {
-                    musicExt.music.itemId in onFavoriteSet()
+                    music.itemId in onFavoriteSet()
                 },
-                ifDownload = musicExt.music.itemId in onDownloadMusicIds(),
+                ifDownload = music.itemId in onDownloadMusicIds(),
                 ifPlay = false,
                 onMusicPlay = {
-                    if (musicExt.music.itemId !in playIdSet)
-                        onAddPlayMusic(musicExt)
+                    if (music.itemId !in playIdSet)
+                        onAddPlayMusic(music)
                 },
                 backgroundColor = Color.Transparent,
-                ifShowTrailingContent = musicExt.music.itemId !in playIdSet,
+                ifShowTrailingContent = music.itemId !in playIdSet,
                 trailingIcon = Res.drawable.playlist_add_24px,
                 trailingOnClick = {
-                    if (musicExt.music.itemId !in playIdSet)
-                        onAddPlayMusic(musicExt)
+                    if (music.itemId !in playIdSet)
+                        onAddPlayMusic(music)
                 }
             )
         }
