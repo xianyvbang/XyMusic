@@ -5,8 +5,6 @@ import cn.xybbz.download.enums.DownloadStatus
 import cn.xybbz.platform.ContextWrapper
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.readAvailable
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.RandomAccessFile
 
@@ -50,6 +48,7 @@ internal actual object DownloadPlatformFiles {
         return file.exists() && file.length() == 0L && file.delete()
     }
 
+    @Suppress("BlockingMethodInNonBlockingContext")
     actual suspend fun writeResponseToFile(
         path: String,
         startOffset: Long,
@@ -61,6 +60,7 @@ internal actual object DownloadPlatformFiles {
         val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
         var currentBytes = startOffset
 
+        // 调用方已经通过 flowOn(Dispatchers.IO) 保证这段阻塞文件 IO 运行在 IO 线程池。
         RandomAccessFile(targetFile, "rw").use { output ->
             // 从断点位置继续写，保持和旧 Android 下载逻辑一致。
             output.seek(startOffset)

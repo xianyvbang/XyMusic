@@ -84,7 +84,7 @@ class HttpClientDownloadCore : IDownloadCore {
                         lastDownloadBytes = currentBytes
                     }
 
-                    statusChange()?: DownloadStatus.DOWNLOADING
+                    statusChange() ?: DownloadStatus.DOWNLOADING
                 }
 
                 when (writeResult.status) {
