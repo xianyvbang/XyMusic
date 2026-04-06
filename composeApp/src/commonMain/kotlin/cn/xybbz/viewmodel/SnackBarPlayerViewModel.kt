@@ -22,6 +22,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.Transaction
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.api.converter.jsonSerializer
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.music.DownloadCacheCommonController
 import cn.xybbz.config.music.MusicCommonController
@@ -29,7 +30,8 @@ import cn.xybbz.config.select.SelectControl
 import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.core.DownloadRequest
 import cn.xybbz.download.database.DownloadDatabaseClient
-import cn.xybbz.download.enums.DownloadTypes
+import cn.xybbz.common.enums.DownloadTypes
+import cn.xybbz.common.enums.getDownloadType
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
@@ -63,7 +65,7 @@ class SnackBarPlayerViewModel(
     fun downloadMusics() {
         viewModelScope.launch {
             val downloadTypes =
-                dataSourceManager.dataSourceType?.getDownloadType() ?: DownloadTypes.APK
+                getDownloadType(dataSourceManager.dataSourceType)
             val itemIds = selectControl.selectMusicIdList.toList()
             val musicList = db.musicDao.selectByIds(itemIds)
             val requests = musicList.map { musicData ->
@@ -73,11 +75,11 @@ class SnackBarPlayerViewModel(
                     fileSize = musicData.size ?: 0,
                     uid = musicData.itemId,
                     title = musicData.name,
-                    type = downloadTypes,
+                    type = downloadTypes.toString(),
                     cover = musicData.pic,
                     duration = musicData.runTimeTicks,
-                    mediaLibraryId = dataSourceManager.getConnectionId(),
-                    data = musicData
+                    mediaLibraryId = dataSourceManager.getConnectionId().toString(),
+                    data = jsonSerializer.encodeToString(musicData)
                 )
             }
             if (requests.isNotEmpty()) {

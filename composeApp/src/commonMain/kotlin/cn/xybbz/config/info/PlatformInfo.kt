@@ -1,6 +1,6 @@
 package cn.xybbz.config.info
 
-import cn.xybbz.di.ContextWrapper
+import cn.xybbz.platform.ContextWrapper
 
 data class PlatformInfo(
     //应用名称

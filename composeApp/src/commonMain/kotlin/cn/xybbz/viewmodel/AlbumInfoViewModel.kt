@@ -27,6 +27,7 @@ import androidx.paging.PagingData
 import androidx.room.Transaction
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.RemoteIdConstants
+import cn.xybbz.common.enums.DownloadTypes
 import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.PlaylistFileUtils
@@ -63,7 +64,10 @@ class AlbumInfoViewModel(
 ) : PageListViewModel<XyMusic>(dataSourceManager, SortTypeEnum.MUSIC_NAME_ASC) {
 
     val downloadMusicIdsFlow =
-        downloadDb.downloadDao.getAllMusicTaskUidsFlow(mediaLibraryId = dataSourceManager.getConnectionId().toString())
+        downloadDb.downloadDao.getAllMusicTaskUidsFlow(
+            notTypeData = DownloadTypes.APK.toString(),
+            mediaLibraryId = dataSourceManager.getConnectionId().toString()
+        )
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     /**
@@ -88,7 +92,7 @@ class AlbumInfoViewModel(
     /**
      * 封面图
      */
-    var albumPic:String? by mutableStateOf(null)
+    var albumPic: String? by mutableStateOf(null)
         private set
 
     /**
@@ -126,7 +130,7 @@ class AlbumInfoViewModel(
 
                 serverAlbumInfoDeferred.await()?.let { serverAlbumInfo ->
                     xyAlbumInfoData = serverAlbumInfo
-                    if(albumPic.isNullOrBlank()){
+                    if (albumPic.isNullOrBlank()) {
                         albumPic = serverAlbumInfo.pic
                     }
                     ifFavorite = serverAlbumInfo.ifFavorite

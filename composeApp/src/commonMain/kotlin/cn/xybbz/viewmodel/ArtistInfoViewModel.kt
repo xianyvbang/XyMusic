@@ -25,6 +25,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.enums.DownloadTypes
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.select.SelectControl
@@ -55,6 +56,7 @@ class ArtistInfoViewModel(
 
     val downloadMusicIdsFlow =
         downloadDb.downloadDao.getAllMusicTaskUidsFlow(
+            notTypeData = DownloadTypes.APK.toString(),
             mediaLibraryId = dataSourceManager.getConnectionId().toString()
         )
     val favoriteSet = db.musicDao.selectFavoriteListFlow()

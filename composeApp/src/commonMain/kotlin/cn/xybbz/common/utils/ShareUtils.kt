@@ -1,6 +1,6 @@
 package cn.xybbz.common.utils
 
-import cn.xybbz.di.ContextWrapper
+import cn.xybbz.platform.ContextWrapper
 
 /**
  * 分享音乐资源。

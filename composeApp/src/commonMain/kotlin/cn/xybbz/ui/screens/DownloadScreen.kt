@@ -58,7 +58,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.common.utils.formatBytes
 import cn.xybbz.compositionLocal.LocalNavigator
-import cn.xybbz.localdata.data.download.XyDownload
+import cn.xybbz.download.database.data.XyDownload
+import cn.xybbz.download.enums.DownloadStatus
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.router.Setting
 import cn.xybbz.ui.components.AlertDialogObject

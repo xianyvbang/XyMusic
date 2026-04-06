@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.config.info.getPlatformInfo
-import cn.xybbz.di.ContextWrapper
+import cn.xybbz.platform.ContextWrapper
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel

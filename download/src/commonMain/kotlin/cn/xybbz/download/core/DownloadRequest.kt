@@ -1,7 +1,5 @@
 package cn.xybbz.download.core
 
-import cn.xybbz.download.enums.DownloadTypes
-
 
 data class DownloadRequest(
     val url: String,
@@ -11,10 +9,10 @@ data class DownloadRequest(
     // --- 选填元数据 ---
     val uid: String? = null,     // 用于业务方追踪任务
     val title: String? = null,
-    val type: DownloadTypes = DownloadTypes.APK,
+    val type: String,
     val cover: String? = null,
     val duration: Long = 0L,
-    val mediaLibraryId: Long? = null,
+    val mediaLibraryId: String? = null,
     val extend: String? = null,
     val data: String? = null,
 )

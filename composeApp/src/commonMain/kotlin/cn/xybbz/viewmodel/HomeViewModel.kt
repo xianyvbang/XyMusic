@@ -28,6 +28,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.state.Source
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.RemoteIdConstants
+import cn.xybbz.common.enums.DownloadTypes
 import cn.xybbz.common.enums.HomeRefreshReason
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.utils.DataRefreshEstimateUtils
@@ -125,6 +126,7 @@ class HomeViewModel(
         localMusicCountJob = viewModelScope.launch {
             downloadDb.downloadDao
                 .getAllMusicTasksCountFlow(
+                    notTypeData = DownloadTypes.APK.toString(),
                     status = DownloadStatus.COMPLETED,
                     mediaLibraryId = dataSourceManager.getConnectionId().toString()
                 )
@@ -137,6 +139,7 @@ class HomeViewModel(
         downloadCountJob = viewModelScope.launch {
             downloadDb.downloadDao
                 .getAllMusicTasksDownloadCountFlow(
+                    notTypeData = DownloadTypes.APK.toString(),
                     status = listOf(DownloadStatus.QUEUED, DownloadStatus.DOWNLOADING),
                     mediaLibraryId = dataSourceManager.getConnectionId().toString()
                 )

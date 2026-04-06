@@ -27,6 +27,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.room.Transaction
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.enums.DownloadTypes
 import cn.xybbz.common.utils.Log
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.download.database.DownloadDatabaseClient
@@ -49,6 +50,7 @@ class SearchViewModel(
 
     val downloadMusicIdsFlow =
         downloadDb.downloadDao.getAllMusicTaskUidsFlow(
+            notTypeData = DownloadTypes.APK.toString(),
             mediaLibraryId = dataSourceManager.getConnectionId().toString()
         )
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
@@ -150,6 +152,7 @@ class SearchViewModel(
     fun addMusic(music: XyMusic) {
         viewModelScope.launch {
             val download = downloadDb.downloadDao.getMusicCompleteTaskByUid(
+                notTypeData = DownloadTypes.APK.toString(),
                 uid = music.itemId,
                 mediaLibraryId = dataSourceManager.getConnectionId().toString()
             )

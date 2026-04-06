@@ -3,7 +3,7 @@ package cn.xybbz.common.utils
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import cn.xybbz.di.ContextWrapper
+import cn.xybbz.platform.ContextWrapper
 import org.koin.mp.KoinPlatform
 
 actual fun copyTextToClipboard(text: String) {

@@ -4,7 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.webkit.URLUtil
-import cn.xybbz.di.ContextWrapper
+import cn.xybbz.platform.ContextWrapper
 import java.io.File
 
 actual fun shareMusicResource(

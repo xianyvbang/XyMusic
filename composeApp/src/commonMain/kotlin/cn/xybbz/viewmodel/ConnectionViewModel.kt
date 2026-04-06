@@ -35,7 +35,7 @@ import cn.xybbz.common.utils.extractPortOrNull
 import cn.xybbz.config.image.isAbsoluteNetworkUrl
 import cn.xybbz.config.info.getPlatformInfo
 import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.di.ContextWrapper
+import cn.xybbz.platform.ContextWrapper
 import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.localdata.enums.DataSourceType
 import kotlinx.coroutines.flow.launchIn

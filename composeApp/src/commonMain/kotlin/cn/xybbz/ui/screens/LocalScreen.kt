@@ -77,36 +77,34 @@ fun LocalScreen(localViewModel: LocalViewModel = koinViewModel<LocalViewModel>()
         ScreenLazyColumn {
             itemsIndexed(
                 downloadMusicList,
-                key = { _, item -> item.id },
+                key = { _, item -> item.itemId },
                 contentType = { _, _ -> MusicTypeEnum.MUSIC }
-            ) { _, download ->
-                download.music?.let { music ->
-                    MusicItemComponent(
-                        music = music,
-                        enabledPic = false,
-                        onIfFavorite = {
-                            music.itemId in favoriteSet
-                        },
-                        ifDownload = true,
-                        ifPlay = localViewModel.musicController.musicInfo?.itemId == music.itemId,
-                        backgroundColor = Color.Transparent,
-                        onMusicPlay = {
-                            localViewModel.musicList(
-                                it,
-                                downloadList = downloadMusicList,
-                                playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
-                            )
-                        },
-                        trailingOnClick = {
+            ) { _, music ->
+                MusicItemComponent(
+                    music = music,
+                    enabledPic = false,
+                    onIfFavorite = {
+                        music.itemId in favoriteSet
+                    },
+                    ifDownload = true,
+                    ifPlay = localViewModel.musicController.musicInfo?.itemId == music.itemId,
+                    backgroundColor = Color.Transparent,
+                    onMusicPlay = {
+                        localViewModel.musicList(
+                            it,
+                            downloadList = downloadMusicList,
+                            playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
+                        )
+                    },
+                    trailingOnClick = {
+                        music.show()
+                    },
+                    trailingOnSelectClick = {
+                        coroutineScope.launch {
                             music.show()
-                        },
-                        trailingOnSelectClick = {
-                            coroutineScope.launch {
-                                music.show()
-                            }
                         }
-                    )
-                }
+                    }
+                )
             }
         }
     }

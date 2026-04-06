@@ -24,7 +24,6 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import cn.xybbz.download.database.data.XyDownload
 import cn.xybbz.download.enums.DownloadStatus
-import cn.xybbz.download.enums.DownloadTypes
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -88,55 +87,55 @@ interface XyDownloadDao {
     @Query("SELECT * FROM xy_download where ((:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) or typeData = :typeData)")
     suspend fun getAllTasksSuspend(
         mediaLibraryId: String?,
-        typeData: DownloadTypes = DownloadTypes.APK
+        typeData: String? = null
     ): List<XyDownload>
 
     @Query("SELECT * FROM xy_download where typeData =:typeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC")
-    fun getAllTasksFlow(typeData: DownloadTypes, mediaLibraryId: String?): Flow<List<XyDownload>>
+    fun getAllTasksFlow(typeData: String, mediaLibraryId: String?): Flow<List<XyDownload>>
 
     @Query("SELECT * FROM xy_download where typeData != :notTypeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC")
     fun getAllMusicTasksFlow(
-        notTypeData: DownloadTypes = DownloadTypes.APK,
+        notTypeData: String? = null,
         mediaLibraryId: String?
     ): Flow<List<XyDownload>>
 
     @Query("SELECT * FROM xy_download where status = :status and typeData != :notTypeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC")
     fun getAllMusicTasksFlow(
-        notTypeData: DownloadTypes = DownloadTypes.APK,
+        notTypeData: String,
         status: DownloadStatus,
         mediaLibraryId: String?
     ): Flow<List<XyDownload>>
 
     @Query("SELECT uid FROM xy_download where status = :status and typeData != :notTypeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC")
     fun getAllMusicTaskUidsFlow(
-        notTypeData: DownloadTypes = DownloadTypes.APK,
+        notTypeData: String,
         status: DownloadStatus = DownloadStatus.COMPLETED,
         mediaLibraryId: String?
     ): Flow<List<String>>
 
     @Query("SELECT count(id) FROM xy_download where status = :status and typeData != :notTypeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC")
     fun getAllMusicTasksCountFlow(
-        notTypeData: DownloadTypes = DownloadTypes.APK,
+        notTypeData: String,
         status: DownloadStatus,
         mediaLibraryId: String?
     ): Flow<Int>
 
     @Query("SELECT count(id) FROM xy_download where status in (:status) and typeData != :notTypeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC")
     fun getAllMusicTasksDownloadCountFlow(
-        notTypeData: DownloadTypes = DownloadTypes.APK,
+        notTypeData: String,
         status: List<DownloadStatus>,
         mediaLibraryId: String?
     ): Flow<Int>
 
     @Query("SELECT * FROM xy_download where typeData != :notTypeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC")
     suspend fun getAllMusicTasks(
-        notTypeData: DownloadTypes = DownloadTypes.APK,
+        notTypeData: String,
         mediaLibraryId: String?
     ): List<XyDownload>
 
     @Query("SELECT * FROM xy_download where uid = :uid and typeData != :notTypeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC limit 1")
     suspend fun getMusicTaskByUid(
-        notTypeData: DownloadTypes = DownloadTypes.APK,
+        notTypeData: String,
         uid: String,
         mediaLibraryId: String?
     ): XyDownload?
@@ -144,28 +143,28 @@ interface XyDownloadDao {
     @Query("SELECT * FROM xy_download where uid = :uid and typeData != :notTypeData and status = :status and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC limit 1")
     suspend fun getMusicCompleteTaskByUid(
         uid: String,
-        notTypeData: DownloadTypes = DownloadTypes.APK,
+        notTypeData: String,
         status: DownloadStatus = DownloadStatus.COMPLETED,
         mediaLibraryId: String?
     ): XyDownload?
 
     @Query("select * from xy_download where typeData = :typeData and url = :url and status != :notStatus limit 1")
     suspend fun getByTypeAndUrl(
-        typeData: DownloadTypes,
+        typeData: String,
         url: String,
         notStatus: DownloadStatus = DownloadStatus.CANCEL
     ): XyDownload?
 
 
     @Query("SELECT * FROM xy_download where typeData = :typeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC limit 1")
-    fun getOneFlow(typeData: DownloadTypes, mediaLibraryId: String?): Flow<XyDownload?>
+    fun getOneFlow(typeData: String, mediaLibraryId: String?): Flow<XyDownload?>
 
     @Query("SELECT * FROM xy_download where typeData = :typeData and status != :notStatus ORDER BY createTime DESC limit 1")
     fun getOneApkFlow(
-        typeData: DownloadTypes = DownloadTypes.APK,
+        typeData: String,
         notStatus: DownloadStatus = DownloadStatus.CANCEL
     ): Flow<XyDownload?>
 
     @Query("SELECT * FROM xy_download where typeData = :typeData and (:mediaLibraryId IS NULL OR mediaLibraryId = :mediaLibraryId) ORDER BY createTime DESC limit 1")
-    suspend fun getOne(typeData: DownloadTypes, mediaLibraryId: String?): XyDownload?
+    suspend fun getOne(typeData: String, mediaLibraryId: String?): XyDownload?
 }

@@ -3,6 +3,7 @@ package cn.xybbz.di
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.AudioFadeController
 import cn.xybbz.music.MusicController
+import cn.xybbz.platform.ContextWrapper
 import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Singleton

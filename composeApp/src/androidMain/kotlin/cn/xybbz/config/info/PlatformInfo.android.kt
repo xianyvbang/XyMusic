@@ -1,7 +1,7 @@
 package cn.xybbz.config.info
 
 import android.os.Build
-import cn.xybbz.di.ContextWrapper
+import cn.xybbz.platform.ContextWrapper
 import kotlin.toString
 
 actual fun getPlatformInfo(contextWrapper: ContextWrapper): PlatformInfo {

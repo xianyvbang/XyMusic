@@ -1392,7 +1392,7 @@ abstract class IDataSourceParentServer(
      */
     suspend fun initOtherData(connectionId: Long) {
         try {
-            downloaderManager.initData(connectionId)
+            downloaderManager.initData(connectionId.toString())
             Log.i(Constants.LOG_ERROR_PREFIX, "start syncing media library/favorites/counts")
             db.withTransaction {
                 val remoteId = RemoteIdConstants.MEDIA_LIBRARY_AND_FAVORITE + connectionId

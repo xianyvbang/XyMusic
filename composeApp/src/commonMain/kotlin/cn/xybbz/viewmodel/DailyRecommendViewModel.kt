@@ -26,6 +26,7 @@ import androidx.lifecycle.viewModelScope
 import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.enums.DownloadTypes
 import cn.xybbz.common.utils.Log
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
@@ -51,6 +52,7 @@ class DailyRecommendViewModel (
 
     val downloadMusicIdsFlow =
         downloadDb.downloadDao.getAllMusicTaskUidsFlow(
+            notTypeData = DownloadTypes.APK.toString(),
             mediaLibraryId = dataSourceManager.getConnectionId().toString()
         )
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
@@ -84,7 +86,7 @@ class DailyRecommendViewModel (
                 .selectRecommendedMusicExtendListFlow(50)
                 .distinctUntilChanged()
                 .collect { list ->
-                    recommendedMusicList = MusicPlayAssembler.attachFilePath(
+                    recommendedMusicList = MusicPlayAssembler.attachFilePathToMusicExtendList(
                         musicExtendList = list,
                         downloadDb = downloadDb,
                         mediaLibraryId = dataSourceManager.getConnectionId().toString()

@@ -10,8 +10,8 @@ import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.database.withTransaction
 import cn.xybbz.localdata.config.LocalDatabaseClient
-import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.music.PlayHistoryMusic
 import cn.xybbz.localdata.data.music.PlayQueueMusic
 import cn.xybbz.localdata.data.music.XyMusicExtend

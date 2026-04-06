@@ -20,7 +20,6 @@ package cn.xybbz.di
 
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.IDataSourceParentServer
-import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.emby.EmbyApiClient
 import cn.xybbz.api.client.emby.EmbyDatasourceServer
 import cn.xybbz.api.client.jellyfin.JellyfinApiClient
@@ -33,7 +32,6 @@ import cn.xybbz.api.client.subsonic.SubsonicApiClient
 import cn.xybbz.api.client.subsonic.SubsonicDatasourceServer
 import cn.xybbz.api.client.version.VersionApiClient
 import cn.xybbz.common.enums.DataSourceQualifiers
-import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Factory
@@ -48,72 +46,40 @@ class DataSourceModule {
     @Factory
     @Named(DataSourceQualifiers.JELLYFIN)
     fun jellyfinApiServer(
-        db: LocalDatabaseClient,
-        settingsManager: SettingsManager,
         jellyfinApiClient: JellyfinApiClient,
-        customMediaApiClient: CustomMediaApiClient,
-        contextWrapper: ContextWrapper
     ): IDataSourceParentServer {
         return JellyfinDatasourceServer(
-            db,
-            settingsManager,
             jellyfinApiClient,
-            customMediaApiClient,
-            contextWrapper
         )
     }
 
     @Factory
     @Named(DataSourceQualifiers.SUBSONIC)
     fun subsonicDataSourceServer(
-        db: LocalDatabaseClient,
-        settingsManager: SettingsManager,
         subsonicApiClient: SubsonicApiClient,
-        customMediaApiClient: CustomMediaApiClient,
-        contextWrapper: ContextWrapper
     ): IDataSourceParentServer {
         return SubsonicDatasourceServer(
-            db,
-            settingsManager,
             subsonicApiClient,
-            customMediaApiClient,
-            contextWrapper
         )
     }
 
     @Factory
     @Named(DataSourceQualifiers.NAVIDROME)
     fun navidromeDatasourceServer(
-        db: LocalDatabaseClient,
-        settingsManager: SettingsManager,
         navidromeApiClient: NavidromeApiClient,
-        customMediaApiClient: CustomMediaApiClient,
-        contextWrapper: ContextWrapper
     ): IDataSourceParentServer {
         return NavidromeDatasourceServer(
-            db,
-            settingsManager,
             navidromeApiClient,
-            customMediaApiClient,
-            contextWrapper
         )
     }
 
     @Factory
     @Named(DataSourceQualifiers.EMBY)
     fun embyDatasourceServer(
-        db: LocalDatabaseClient,
-        settingsManager: SettingsManager,
         embyApiClient: EmbyApiClient,
-        customMediaApiClient: CustomMediaApiClient,
-        contextWrapper: ContextWrapper
     ): IDataSourceParentServer {
         return EmbyDatasourceServer(
-            db,
-            settingsManager,
             embyApiClient,
-            customMediaApiClient,
-            contextWrapper
         )
     }
 
@@ -121,18 +87,10 @@ class DataSourceModule {
     @Factory
     @Named(DataSourceQualifiers.PLEX)
     fun plexDatasourceServer(
-        db: LocalDatabaseClient,
-        settingsManager: SettingsManager,
         plexApiClient: PlexApiClient,
-        customMediaApiClient: CustomMediaApiClient,
-        contextWrapper: ContextWrapper
     ): IDataSourceParentServer {
         return PlexDatasourceServer(
-            db,
-            settingsManager,
             plexApiClient,
-            customMediaApiClient,
-            contextWrapper
         )
     }
 

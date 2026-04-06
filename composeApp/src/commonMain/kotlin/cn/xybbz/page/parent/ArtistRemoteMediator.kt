@@ -25,8 +25,8 @@ import androidx.paging.RemoteMediator
 import cn.xybbz.api.client.IDataSourceParentServer
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.RemoteIdConstants
+import cn.xybbz.database.withTransaction
 import cn.xybbz.localdata.config.LocalDatabaseClient
-import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.artist.XyArtistExt
 import cn.xybbz.localdata.data.remote.RemoteCurrent
 import cn.xybbz.localdata.enums.DataSourceType

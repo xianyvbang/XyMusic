@@ -31,9 +31,9 @@ import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.storage.MemoryStorageInfo
 import cn.xybbz.config.storage.clearPlatformCache
 import cn.xybbz.config.storage.getMemoryStorageInfo
-import cn.xybbz.di.ContextWrapper
+import cn.xybbz.database.withTransaction
 import cn.xybbz.localdata.config.LocalDatabaseClient
-import cn.xybbz.localdata.config.withTransaction
+import cn.xybbz.platform.ContextWrapper
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
 

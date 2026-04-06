@@ -1,7 +1,7 @@
 package cn.xybbz.config.info
 
 import cn.xybbz.common.constants.Constants
-import cn.xybbz.di.ContextWrapper
+import cn.xybbz.platform.ContextWrapper
 import platform.Foundation.NSBundle
 import platform.UIKit.UIDevice
 

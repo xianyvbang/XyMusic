@@ -1,6 +1,6 @@
 package cn.xybbz.config.setting
 
-import cn.xybbz.di.ContextWrapper
+import cn.xybbz.platform.ContextWrapper
 import cn.xybbz.localdata.enums.LanguageType
 import com.hjq.language.MultiLanguages
 import java.util.Locale

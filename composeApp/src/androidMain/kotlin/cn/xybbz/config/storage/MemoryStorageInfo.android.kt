@@ -1,7 +1,7 @@
 package cn.xybbz.config.storage
 
 import android.os.Environment
-import cn.xybbz.di.ContextWrapper
+import cn.xybbz.platform.ContextWrapper
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import java.io.File
 

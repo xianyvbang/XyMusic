@@ -1,7 +1,7 @@
 package cn.xybbz.common.utils
 
+import cn.xybbz.database.withTransaction
 import cn.xybbz.localdata.config.LocalDatabaseClient
-import cn.xybbz.localdata.config.withTransaction
 
 /**
  * 通用操作数据库方法

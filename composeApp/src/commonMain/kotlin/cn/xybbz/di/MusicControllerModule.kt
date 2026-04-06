@@ -19,6 +19,7 @@
 package cn.xybbz.di
 
 import cn.xybbz.config.music.MusicCommonController
+import cn.xybbz.platform.ContextWrapper
 import org.koin.core.annotation.Singleton
 
 expect class MusicControllerModule {

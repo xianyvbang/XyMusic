@@ -30,6 +30,8 @@ import cn.xybbz.common.utils.DatabaseUtils
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.download.DownloaderManager
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import kotlinx.coroutines.launch
@@ -39,6 +41,8 @@ import org.koin.core.annotation.KoinViewModel
 class ConnectionManagementViewModel (
     val dataSourceManager: DataSourceManager,
     private val db: LocalDatabaseClient,
+    private val downloadDb: DownloadDatabaseClient,
+    private val downloaderManager: DownloaderManager,
     private val musicController: MusicCommonController,
     private val musicPlayContext: MusicPlayContext,
     private val settingsManager: SettingsManager
@@ -84,8 +88,19 @@ class ConnectionManagementViewModel (
                 dataSourceManager,
                 musicController,
                 db,
+                downloadDb,
                 musicPlayContext
             )
+        }
+    }
+
+    private suspend fun clearDownloadDataByConnectionId(connectionId: Long) {
+        val mediaLibraryId = connectionId.toString()
+        val downloadTasks = downloadDb.downloadDao.getAllTasksSuspend(mediaLibraryId = mediaLibraryId)
+        val downloadIds = downloadTasks.map { it.id }.toLongArray()
+
+        if (downloadIds.isNotEmpty()) {
+            downloaderManager.delete(*downloadIds)
         }
     }
 
@@ -94,6 +109,7 @@ class ConnectionManagementViewModel (
      * 删除当前连接
      */
     suspend fun removeConnection(connectionId: Long) {
+        clearDownloadDataByConnectionId(connectionId)
         DatabaseUtils.clearDatabaseByConnectionConfig(
             db,
             connectionId

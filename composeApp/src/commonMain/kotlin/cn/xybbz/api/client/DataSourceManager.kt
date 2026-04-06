@@ -42,7 +42,7 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.scope.IoScoped
-import cn.xybbz.download.enums.DownloadTypes
+import cn.xybbz.common.enums.DownloadTypes
 import cn.xybbz.entity.data.LoginStateData
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.ResourceData

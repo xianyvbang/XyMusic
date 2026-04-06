@@ -18,11 +18,9 @@
 
 package cn.xybbz.download.database.data
 
-import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import cn.xybbz.download.enums.DownloadStatus
-import cn.xybbz.download.enums.DownloadTypes
 import kotlin.time.Clock
 
 @Entity(tableName = "xy_download")
@@ -35,7 +33,7 @@ data class XyDownload(
     val fileSize: Long,
     val tempFilePath: String,
 
-    val typeData: DownloadTypes = DownloadTypes.APK,
+    val typeData: String,
     var progress: Float = 0f,
     var totalBytes: Long = 0L,
     var downloadedBytes: Long = 0L,

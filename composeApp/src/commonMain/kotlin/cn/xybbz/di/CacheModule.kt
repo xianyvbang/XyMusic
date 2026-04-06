@@ -20,6 +20,7 @@ package cn.xybbz.di
 
 import cn.xybbz.config.music.DownloadCacheCommonController
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.platform.ContextWrapper
 import org.koin.core.annotation.Singleton
 
 expect class CacheModule {

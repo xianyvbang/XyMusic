@@ -27,17 +27,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.FavoriteCoordinator
+import cn.xybbz.api.converter.jsonSerializer
+import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.enums.DownloadTypes
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
+import cn.xybbz.common.enums.getDownloadType
 import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
-import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.volume.VolumeServer
+import cn.xybbz.download.DownloaderManager
+import cn.xybbz.download.core.DownloadRequest
 import cn.xybbz.download.database.DownloadDatabaseClient
-import cn.xybbz.download.enums.DownloadTypes
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
@@ -66,10 +70,14 @@ class MusicBottomMenuViewModel(
     val musicController: MusicCommonController,
     val dataSourceManager: DataSourceManager,
     val volumeServer: VolumeServer,
+    val downloaderManager: DownloaderManager
 ) : ViewModel() {
 
     val downloadMusicIdsFlow =
-        downloadDb.downloadDao.getAllMusicTaskUidsFlow(mediaLibraryId = dataSourceManager.getConnectionId().toString())
+        downloadDb.downloadDao.getAllMusicTaskUidsFlow(
+            notTypeData = DownloadTypes.APK.toString(),
+            mediaLibraryId = dataSourceManager.getConnectionId().toString()
+        )
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
     var volumeValue by mutableStateOf(0f)
@@ -215,8 +223,8 @@ class MusicBottomMenuViewModel(
 
             val currentItemId = musicController.musicInfo?.itemId
             val shouldWaitForTrackEnd = ifPlayEndClose &&
-                !currentItemId.isNullOrBlank() &&
-                (musicController.state == PlayStateEnum.Playing || musicController.state == PlayStateEnum.Loading)
+                    !currentItemId.isNullOrBlank() &&
+                    (musicController.state == PlayStateEnum.Playing || musicController.state == PlayStateEnum.Loading)
 
             if (shouldWaitForTrackEnd) {
                 waitForCurrentTrackToFinish(currentItemId)
@@ -262,22 +270,21 @@ class MusicBottomMenuViewModel(
 
     fun downloadMusic(musicData: XyMusic) {
         viewModelScope.launch {
-            val downloadTypes =
-                dataSourceManager.dataSourceType?.getDownloadType() ?: DownloadTypes.APK
-            /*downloadManager.enqueue(
+            val downloadTypes = getDownloadType(dataSourceManager.dataSourceType)
+            downloaderManager.enqueue(
                 DownloadRequest(
                     url = musicData.downloadUrl,
                     fileName = musicData.name + "." + musicData.container,
                     fileSize = musicData.size ?: 0,
                     uid = musicData.itemId,
                     title = musicData.name,
-                    type = downloadTypes,
+                    type = downloadTypes.toString(),
                     cover = musicData.pic,
                     duration = musicData.runTimeTicks,
-                    mediaLibraryId = dataSourceManager.getConnectionId(),
-                    music = musicData
+                    mediaLibraryId = dataSourceManager.getConnectionId().toString(),
+                    data = jsonSerializer.encodeToString(musicData)
                 )
-            )*/
+            )
             MessageUtils.sendPopTip(Res.string.add_download_list)
         }
 

@@ -75,7 +75,7 @@ class HomeDataRepository(
         Log.i("HomeDataRepository", "loadOnce1 ${TokenServer.baseUrl}")
         launch {
             _mostPlayedMusic.value =
-                MusicPlayAssembler.attachFilePath(
+                MusicPlayAssembler.attachFilePathToMusicExtendList(
                     musicExtendList = db.musicDao.selectMaximumPlayMusicExtendList(20),
                     downloadDb = downloadDb,
                     mediaLibraryId = dataSourceManager.getConnectionId().toString()
@@ -87,7 +87,7 @@ class HomeDataRepository(
         }
         launch {
             _recentMusic.value =
-                MusicPlayAssembler.attachFilePath(
+                MusicPlayAssembler.attachFilePathToMusicExtendList(
                     musicExtendList = db.musicDao.selectPlayHistoryMusicExtendList(20),
                     downloadDb = downloadDb,
                     mediaLibraryId = dataSourceManager.getConnectionId().toString()
@@ -103,7 +103,7 @@ class HomeDataRepository(
         }
         launch {
             _recommendedMusic.value =
-                MusicPlayAssembler.attachFilePath(
+                MusicPlayAssembler.attachFilePathToMusicExtendList(
                     musicExtendList = db.musicDao.selectRecommendedMusicExtendList(20),
                     downloadDb = downloadDb,
                     mediaLibraryId = dataSourceManager.getConnectionId().toString()
@@ -125,7 +125,7 @@ class HomeDataRepository(
                 .selectLimitMusicListFlow(MusicDataTypeEnum.MAXIMUM_PLAY, 20)
                 .distinctUntilChanged()
                 .collect {
-                    _mostPlayedMusic.value = MusicPlayAssembler.attachFilePath(
+                    _mostPlayedMusic.value = MusicPlayAssembler.attachFilePathToMusicExtendList(
                         musicExtendList = it,
                         downloadDb = downloadDb,
                         mediaLibraryId = dataSourceManager.getConnectionId().toString()
@@ -145,7 +145,7 @@ class HomeDataRepository(
                 .selectLimitMusicListFlow(MusicDataTypeEnum.PLAY_HISTORY, 20)
                 .distinctUntilChanged()
                 .collect {
-                    _recentMusic.value = MusicPlayAssembler.attachFilePath(
+                    _recentMusic.value = MusicPlayAssembler.attachFilePathToMusicExtendList(
                         musicExtendList = it,
                         downloadDb = downloadDb,
                         mediaLibraryId = dataSourceManager.getConnectionId().toString()
@@ -174,7 +174,7 @@ class HomeDataRepository(
                 .selectRecommendedMusicExtendListFlow(20)
                 .distinctUntilChanged()
                 .collect {
-                    _recommendedMusic.value = MusicPlayAssembler.attachFilePath(
+                    _recommendedMusic.value = MusicPlayAssembler.attachFilePathToMusicExtendList(
                         musicExtendList = it,
                         downloadDb = downloadDb,
                         mediaLibraryId = dataSourceManager.getConnectionId().toString()

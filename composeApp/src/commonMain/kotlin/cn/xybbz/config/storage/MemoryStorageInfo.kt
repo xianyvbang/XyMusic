@@ -1,6 +1,6 @@
 package cn.xybbz.config.storage
 
-import cn.xybbz.di.ContextWrapper
+import cn.xybbz.platform.ContextWrapper
 import cn.xybbz.localdata.config.LocalDatabaseClient
 
 data class MemoryStorageInfo(

@@ -89,8 +89,9 @@ class DownloadImpl(
 
                 if (!request.uid.isNullOrBlank()) {
                     val downloadTask = db.downloadDao.getMusicTaskByUid(
+                        notTypeData = request.type,
                         uid = request.uid,
-                        mediaLibraryId = request.mediaLibraryId?.toString()
+                        mediaLibraryId = request.mediaLibraryId
                     )
                     if (downloadTask != null) {
                         if (downloadTask.status != DownloadStatus.CANCEL &&
@@ -149,6 +150,7 @@ class DownloadImpl(
                         mediaLibraryId = request.mediaLibraryId,
                         extend = request.extend,
                         data = request.data,
+                        typeData = request.type
                     )
                 )
             }

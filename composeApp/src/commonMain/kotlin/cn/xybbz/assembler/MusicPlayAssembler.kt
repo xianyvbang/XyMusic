@@ -46,7 +46,7 @@ object MusicPlayAssembler {
         }
     }
 
-    suspend fun attachFilePath(
+    suspend fun attachFilePathToMusicExtendList(
         musicExtendList: List<XyMusicExtend>?,
         downloadDb: DownloadDatabaseClient,
         mediaLibraryId: String? = null

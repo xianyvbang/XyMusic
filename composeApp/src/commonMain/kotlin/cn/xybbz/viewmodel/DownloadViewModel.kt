@@ -25,6 +25,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.enums.DownloadTypes
+import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.download.database.data.XyDownload
 import cn.xybbz.localdata.data.music.XyMusic
@@ -40,19 +42,22 @@ import org.koin.core.annotation.KoinViewModel
 class DownloadViewModel(
     val downloadDb: DownloadDatabaseClient,
     private val datasourceServer: DataSourceManager,
+    private val downloaderManager: DownloaderManager
 ) : ViewModel() {
 
 
     @OptIn(FlowPreview::class)
-    val musicDownloadInfo: StateFlow<List<XyDownload>> = downloadDb.downloadDao.getAllMusicTasksFlow(
-        mediaLibraryId = datasourceServer.getConnectionId().toString()
-    )
-        .sample(200)
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
+    val musicDownloadInfo: StateFlow<List<XyDownload>> =
+        downloadDb.downloadDao.getAllMusicTasksFlow(
+            notTypeData = DownloadTypes.APK.toString(),
+            mediaLibraryId = datasourceServer.getConnectionId().toString()
         )
+            .sample(200)
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
+            )
 
 
     var isMultiSelectMode by mutableStateOf(false)
@@ -64,10 +69,10 @@ class DownloadViewModel(
 
     val selectedTaskIds = mutableStateSetOf<Long>()
 
-    fun pauseDownload(id: Long) = { -> }
-    fun resumeDownload(id: Long) = { -> }
-    fun cancelDownload(id: Long) = { -> }
-    fun deleteDownload(id: Long) = { -> }
+    fun pauseDownload(id: Long) = downloaderManager.pause(id)
+    fun resumeDownload(id: Long) = downloaderManager.resume(id)
+    fun cancelDownload(id: Long) = downloaderManager.cancel(id)
+    fun deleteDownload(id: Long) = downloaderManager.delete(id)
 
 
     fun enterMultiSelectMode() {
@@ -120,7 +125,7 @@ class DownloadViewModel(
     fun performBatchPause() {
         val idsToPause = selectedTaskIds
         if (idsToPause.isNotEmpty()) {
-//            downLoadManager.pause(*idsToPause.toLongArray())
+            downloaderManager.pause(*idsToPause.toLongArray())
         }
         exitMultiSelectMode()
     }
@@ -128,7 +133,7 @@ class DownloadViewModel(
     fun performBatchResume() {
         val idsToResume = selectedTaskIds
         if (idsToResume.isNotEmpty()) {
-//            downLoadManager.resume(*idsToResume.toLongArray())
+            downloaderManager.resume(*idsToResume.toLongArray())
         }
         exitMultiSelectMode()
     }
@@ -136,7 +141,7 @@ class DownloadViewModel(
     fun performBatchCancel() {
         val idsToCancel = selectedTaskIds
         if (idsToCancel.isNotEmpty()) {
-//            downLoadManager.cancel(*idsToCancel.toLongArray())
+            downloaderManager.cancel(*idsToCancel.toLongArray())
         }
         exitMultiSelectMode()
     }
@@ -144,7 +149,7 @@ class DownloadViewModel(
     fun performBatchDelete() {
         val idsToCancel = selectedTaskIds
         if (idsToCancel.isNotEmpty()) {
-//            downLoadManager.delete(*idsToCancel.toLongArray())
+            downloaderManager.delete(*idsToCancel.toLongArray())
         }
         exitMultiSelectMode()
     }

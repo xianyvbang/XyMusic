@@ -1,7 +1,7 @@
 package cn.xybbz.common.utils
 
 import cn.xybbz.config.image.isAbsoluteNetworkUrl
-import cn.xybbz.di.ContextWrapper
+import cn.xybbz.platform.ContextWrapper
 import platform.Foundation.NSURL
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication

@@ -24,8 +24,8 @@ import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.database.withTransaction
 import cn.xybbz.localdata.config.LocalDatabaseClient
-import cn.xybbz.localdata.config.withTransaction
 import cn.xybbz.localdata.data.remote.RemoteCurrent
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.DurationUnit
