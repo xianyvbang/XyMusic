@@ -449,8 +449,7 @@ fun MusicPlayerScreen(
                                         coroutineScope.launch {
                                             onSeekBack()
                                         }
-                                    },
-                                tint = Color.White
+                                    }
                             )
 
                             PlayerStateComponent(musicController = musicPlayerViewModel.musicController)
@@ -464,8 +463,7 @@ fun MusicPlayerScreen(
                                         coroutineScope.launch {
                                             onSeekToNext()
                                         }
-                                    },
-                                tint = Color.White,
+                                    }
                             )
 
                             IconButton(

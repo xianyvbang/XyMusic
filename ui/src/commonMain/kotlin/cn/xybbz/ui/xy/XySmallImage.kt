@@ -117,7 +117,7 @@ fun XyImage(
             contentScale = contentScale
         )
 
-        is String, null -> {
+        is String -> {
             val state = rememberAsyncImageState(ComposableImageOptions {
                 placeholder?.let { placeholder(placeholder) }
                 error?.let { error(error) }
@@ -159,6 +159,20 @@ fun XyImage(
                 alpha = alpha,
                 contentScale = contentScale,
             )
+        }
+        else -> {
+            error?.let {
+                Image(
+                    modifier = Modifier.then(modifier),
+                    painter = painterResource(error),
+                    contentDescription = contentDescription,
+                    alpha = alpha,
+                    contentScale = contentScale
+                )
+            }
+
+//            Res.drawable.music_xy_placeholder_foreground
+
         }
     }
 }

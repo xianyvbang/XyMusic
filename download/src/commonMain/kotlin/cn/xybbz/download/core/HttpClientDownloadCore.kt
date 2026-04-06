@@ -124,6 +124,7 @@ class HttpClientDownloadCore : IDownloadCore {
             } catch (e: DownloadCancellationException) {
                 throw e
             } catch (e: Exception) {
+                e.printStackTrace()
                 emit(DownloadState.Error("Download failed: ${e.message ?: "unknown error"}", e))
             }
         }

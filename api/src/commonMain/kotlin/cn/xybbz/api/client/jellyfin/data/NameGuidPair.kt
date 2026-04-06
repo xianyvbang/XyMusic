@@ -18,11 +18,39 @@
 
 package cn.xybbz.api.client.jellyfin.data
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 
 @Serializable
 data class NameGuidPair(
     @SerialName(value = "Name") val name: String? = null,
+    @Serializable(NameGuidPairIdSerializer::class)
     @SerialName(value = "Id") val id: String,
 )
+
+object NameGuidPairIdSerializer : KSerializer<String> {
+
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("NameGuidPairId", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: String) {
+        encoder.encodeString(value)
+    }
+
+    override fun deserialize(decoder: Decoder): String {
+        val jsonDecoder = decoder as? JsonDecoder
+            ?: return decoder.decodeString()
+
+        val element = jsonDecoder.decodeJsonElement()
+        return (element as? JsonPrimitive)?.contentOrNull ?: element.toString()
+    }
+}

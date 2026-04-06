@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -221,6 +222,7 @@ fun ItemTrailingContent(
         leadingContent = if (enabledPic) {
             {
                 XySmallImage(
+                    modifier = Modifier.aspectRatio(1F),
                     model = imgUrl,
                     backModel = backImgUrl,
                     size = picSize,

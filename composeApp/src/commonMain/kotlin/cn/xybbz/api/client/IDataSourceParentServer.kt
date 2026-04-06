@@ -23,7 +23,6 @@ import androidx.paging.PagingData
 import androidx.paging.RemoteMediator
 import androidx.paging.map
 import androidx.room.Transaction
-import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
@@ -31,6 +30,7 @@ import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.exception.UnauthorizedException
 import cn.xybbz.api.state.ClientLoginInfoState
+import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.common.enums.LoginStateType
@@ -450,8 +450,8 @@ abstract class IDataSourceParentServer(
     /**
      * 获得连接id
      */
-    override fun getConnectionId(): Long? {
-        return connectionConfig?.id
+    override fun getConnectionId(): Long {
+        return connectionConfig?.id ?: 0
     }
 
     /**
@@ -1250,7 +1250,7 @@ abstract class IDataSourceParentServer(
         )
     }
 
-    suspend fun transitionMusic(musicList: List<XyMusic>?): List<XyMusic>? {
+    fun transitionMusic(musicList: List<XyMusic>?): List<XyMusic>? {
         return musicList
     }
 
