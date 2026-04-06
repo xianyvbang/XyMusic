@@ -60,35 +60,34 @@ internal actual object DownloadPlatformFiles {
         targetFile.parentFile?.mkdirs()
         val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
         var currentBytes = startOffset
-        return withContext(Dispatchers.IO) {
-            RandomAccessFile(targetFile, "rw").use { output ->
-                // 从断点位置继续写，保持和旧 Android 下载逻辑一致。
-                output.seek(startOffset)
-                while (true) {
-                    val bytesRead = source.readAvailable(buffer, 0, buffer.size)
-                    if (bytesRead == -1) {
-                        break
-                    }
-                    if (bytesRead == 0) {
-                        continue
-                    }
 
-                    output.write(buffer, 0, bytesRead)
-                    currentBytes += bytesRead
+        RandomAccessFile(targetFile, "rw").use { output ->
+            // 从断点位置继续写，保持和旧 Android 下载逻辑一致。
+            output.seek(startOffset)
+            while (true) {
+                val bytesRead = source.readAvailable(buffer, 0, buffer.size)
+                if (bytesRead == -1) {
+                    break
+                }
+                if (bytesRead == 0) {
+                    continue
+                }
 
-                    // 每个分片写完都把控制权还给上层，便于暂停/取消即时生效。
-                    when (onChunkWritten(currentBytes)) {
-                        DownloadStatus.PAUSED ->
-                            return@withContext DownloadWriteResult(DownloadStatus.PAUSED, currentBytes)
+                output.write(buffer, 0, bytesRead)
+                currentBytes += bytesRead
 
-                        DownloadStatus.CANCEL ->
-                            return@withContext DownloadWriteResult(DownloadStatus.CANCEL, currentBytes)
+                // 每个分片写完都把控制权还给上层，便于暂停/取消即时生效。
+                when (onChunkWritten(currentBytes)) {
+                    DownloadStatus.PAUSED ->
+                        return DownloadWriteResult(DownloadStatus.PAUSED, currentBytes)
 
-                        else -> Unit
-                    }
+                    DownloadStatus.CANCEL ->
+                        return DownloadWriteResult(DownloadStatus.CANCEL, currentBytes)
+
+                    else -> Unit
                 }
             }
-            DownloadWriteResult(DownloadStatus.COMPLETED, currentBytes)
         }
+        return DownloadWriteResult(DownloadStatus.COMPLETED, currentBytes)
     }
 }

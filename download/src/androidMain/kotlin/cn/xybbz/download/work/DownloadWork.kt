@@ -3,7 +3,7 @@ package cn.xybbz.download.work
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import cn.xybbz.config.download.core.HttpClientDownloadCore
+import cn.xybbz.download.core.HttpClientDownloadCore
 import cn.xybbz.config.download.state.DownloadState
 import cn.xybbz.download.DownloadGlobal
 import cn.xybbz.download.core.DownloadConstants

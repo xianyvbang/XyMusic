@@ -1,9 +1,6 @@
-package cn.xybbz.config.download.core
+package cn.xybbz.download.core
 
 import cn.xybbz.config.download.state.DownloadState
-import cn.xybbz.download.core.DownloadConstants
-import cn.xybbz.download.core.DownloadPlatformFiles
-import cn.xybbz.download.core.IDownloadCore
 import cn.xybbz.download.database.data.XyDownload
 import cn.xybbz.download.enums.DownloadStatus
 import cn.xybbz.download.internal.DownloadCancellationException
