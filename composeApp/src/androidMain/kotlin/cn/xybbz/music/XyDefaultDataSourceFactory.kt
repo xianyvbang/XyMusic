@@ -16,7 +16,7 @@ class XyDefaultDataSourceFactory(private val delegate: DataSource.Factory) : Dat
             override fun open(dataSpec: DataSpec): Long {
                 val originalUri = dataSpec.uri
 
-                val newUri = if (originalUri.scheme == null) {
+                val newUri = if (originalUri.scheme == null && !isLocalUri(originalUri.toString())) {
                     (baseUrl + originalUri.toString()).toUri()
                 } else {
                     originalUri
@@ -25,6 +25,19 @@ class XyDefaultDataSourceFactory(private val delegate: DataSource.Factory) : Dat
                 val newDataSpec = dataSpec.withUri(newUri)
                 return upstream.open(newDataSpec)
             }
+
+            override fun getResponseHeaders(): Map<String, List<String>> {
+                return upstream.responseHeaders
+            }
         }
+    }
+
+    //todo 这里要直接判断downloadConfig里的设置
+    private fun isLocalUri(uri: String): Boolean {
+        val normalizedUri = uri.trim()
+        return normalizedUri.startsWith("/storage/") ||
+                normalizedUri.startsWith("/sdcard/") ||
+                normalizedUri.startsWith("/mnt/") ||
+                normalizedUri.startsWith("/data/")
     }
 }
