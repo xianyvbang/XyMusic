@@ -12,7 +12,7 @@ import java.io.RandomAccessFile
 internal actual object DownloadPlatformFiles {
     actual fun defaultDownloadDirectory(contextWrapper: ContextWrapper?): String {
         val context = contextWrapper?.context ?: return ""
-        return (context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+        return (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             ?: File(context.filesDir, "downloads")).absolutePath
     }
 
