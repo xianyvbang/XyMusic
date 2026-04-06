@@ -19,11 +19,9 @@
 package cn.xybbz.localdata.data.artist
 
 import androidx.room.Entity
-import androidx.room.ForeignKey
 import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import cn.xybbz.localdata.data.connection.ConnectionConfig
 
 /**
  * 艺术家项目
@@ -38,12 +36,6 @@ import cn.xybbz.localdata.data.connection.ConnectionConfig
  */
 @Entity(
     tableName = "xy_artist",
-    foreignKeys = [ForeignKey(
-        entity = ConnectionConfig::class,
-        parentColumns = ["id"],
-        childColumns = ["connectionId"],
-        onDelete = ForeignKey.Companion.CASCADE
-    )],
     indices = [Index("connectionId")]
 )
 data class XyArtist(

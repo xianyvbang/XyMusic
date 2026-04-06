@@ -361,11 +361,77 @@ interface AlbumDao {
     @Query("delete from xy_album")
     suspend fun removeAll()
 
+    @Transaction
+    suspend fun removeAllWithReferences() {
+        removeHomeAlbumAll()
+        removeArtistAlbumAll()
+        removeNewestAlbumAll()
+        removePlayHistoryAlbumAll()
+        removeMaximumPlayAlbumAll()
+        removeGenreAlbumAll()
+        removeFavoriteAlbumAll()
+        removeAll()
+    }
+
+    @Transaction
+    suspend fun removeByConnectionIdWithReferences(connectionId: Long) {
+        removeHomeAlbumByConnectionId(connectionId)
+        removeArtistAlbumByConnectionId(connectionId)
+        removeNewestAlbumByConnectionId(connectionId)
+        removePlayHistoryAlbumByConnectionId(connectionId)
+        removeMaximumPlayAlbumByConnectionId(connectionId)
+        removeGenreAlbumByConnectionId(connectionId)
+        removeFavoriteAlbumByConnectionId(connectionId)
+        removeByConnectionId(connectionId)
+    }
+
     /**
      * 根据链接id删除专辑
      */
     @Query("delete from xy_album where connectionId = :connectionId")
     suspend fun removeByConnectionId(connectionId: Long)
+
+    @Query("delete from homealbum")
+    suspend fun removeHomeAlbumAll()
+
+    @Query("delete from homealbum where connectionId = :connectionId")
+    suspend fun removeHomeAlbumByConnectionId(connectionId: Long)
+
+    @Query("delete from artistalbum")
+    suspend fun removeArtistAlbumAll()
+
+    @Query("delete from artistalbum where connectionId = :connectionId")
+    suspend fun removeArtistAlbumByConnectionId(connectionId: Long)
+
+    @Query("delete from newestalbum")
+    suspend fun removeNewestAlbumAll()
+
+    @Query("delete from newestalbum where connectionId = :connectionId")
+    suspend fun removeNewestAlbumByConnectionId(connectionId: Long)
+
+    @Query("delete from playhistoryalbum")
+    suspend fun removePlayHistoryAlbumAll()
+
+    @Query("delete from playhistoryalbum where connectionId = :connectionId")
+    suspend fun removePlayHistoryAlbumByConnectionId(connectionId: Long)
+
+    @Query("delete from maximumplayalbum")
+    suspend fun removeMaximumPlayAlbumAll()
+
+    @Query("delete from maximumplayalbum where connectionId = :connectionId")
+    suspend fun removeMaximumPlayAlbumByConnectionId(connectionId: Long)
+
+    @Query("delete from genrealbum")
+    suspend fun removeGenreAlbumAll()
+
+    @Query("delete from genrealbum where connectionId = :connectionId")
+    suspend fun removeGenreAlbumByConnectionId(connectionId: Long)
+
+    @Query("delete from favoritealbum")
+    suspend fun removeFavoriteAlbumAll()
+
+    @Query("delete from favoritealbum where connectionId = :connectionId")
+    suspend fun removeFavoriteAlbumByConnectionId(connectionId: Long)
 
     @Query("delete from xy_album where itemId = :itemId and connectionId = (select connectionId from xy_settings)")
     suspend fun removeById(itemId: String)

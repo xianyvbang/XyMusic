@@ -121,13 +121,6 @@ class EmbyApiClient : DefaultParentApiClient() {
     }
 
     /**
-     * token的header名称
-     */
-    override val tokenHeaderName: String
-        get() = ApiConstants.EMBY_AUTHORIZATION
-
-
-    /**
      * 创建令牌
      * @return [String]
      */

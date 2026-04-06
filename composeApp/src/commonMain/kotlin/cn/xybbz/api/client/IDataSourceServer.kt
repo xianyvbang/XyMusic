@@ -86,7 +86,7 @@ interface IDataSourceServer : AutoCloseable, KoinComponent {
     /**
      * 获得连接id
      */
-    fun getConnectionId(): Long
+    fun getConnectionId(): Long?
 
     /**
      * 获得连接地址

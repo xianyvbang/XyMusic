@@ -1,22 +1,13 @@
 package cn.xybbz.localdata.data.album
 
 import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.ForeignKey.Companion.CASCADE
 import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import cn.xybbz.localdata.data.connection.ConnectionConfig
 import java.time.Instant
 
 @Entity(
     tableName = "xy_album",
-    foreignKeys = [ForeignKey(
-        entity = ConnectionConfig::class,
-        parentColumns = ["id"],
-        childColumns = ["connectionId"],
-        onDelete = CASCADE
-    )],
     indices = [Index("connectionId")]
 )
 data class XyAlbum(

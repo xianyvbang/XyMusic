@@ -19,12 +19,9 @@
 package cn.xybbz.localdata.data.music
 
 import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.ForeignKey.Companion.CASCADE
 import androidx.room.Index
 import androidx.room.TypeConverters
 import cn.xybbz.database.converter.StringListTypeConverter
-import cn.xybbz.localdata.data.connection.ConnectionConfig
 import kotlin.time.Clock
 
 /**
@@ -37,12 +34,6 @@ import kotlin.time.Clock
  */
 @Entity(
     primaryKeys = ["musicId","connectionId"],
-    foreignKeys = [ ForeignKey(
-        entity = ConnectionConfig::class,
-        parentColumns = ["id"],
-        childColumns = ["connectionId"],
-        onDelete = CASCADE
-    )],
     indices = [Index("connectionId"), Index("musicId")]
 )
 @TypeConverters(StringListTypeConverter::class)

@@ -254,6 +254,36 @@ interface XyMusicDao {
     suspend fun removeAll()
 
     @Transaction
+    suspend fun removeAllWithReferences() {
+        removeHomeMusicAll()
+        removeFavoriteMusicAll()
+        removeAlbumMusicAll()
+        removeArtistMusicAll()
+        removePlayHistoryMusicAll()
+        removePlayQueueMusicAll()
+        removeMaximumPlayMusicAll()
+        removeNewestMusicAll()
+        removePlaylistMusicAll()
+        removeRecommendedMusicAll()
+        removeAll()
+    }
+
+    @Transaction
+    suspend fun removeByConnectionId(connectionId: Long) {
+        removeHomeMusicByConnectionId(connectionId)
+        removeFavoriteMusicByConnectionId(connectionId)
+        removeAlbumMusicByConnectionId(connectionId)
+        removeArtistMusicByConnectionId(connectionId)
+        removePlayHistoryMusicByConnectionId(connectionId)
+        removePlayQueueMusicByConnectionId(connectionId)
+        removeMaximumPlayMusicByConnectionId(connectionId)
+        removeNewestMusicByConnectionId(connectionId)
+        removePlaylistMusicByConnectionId(connectionId)
+        removeRecommendedMusicByConnectionId(connectionId)
+        removeMusicByConnectionId(connectionId)
+    }
+
+    @Transaction
     suspend fun removeByType(
         dataType: MusicDataTypeEnum,
         artistId: String? = null,
@@ -403,6 +433,69 @@ interface XyMusicDao {
     """
     )
     suspend fun removeRecommendedMusicByItems(itemIds: List<String>)
+
+    @Query("delete from homemusic")
+    suspend fun removeHomeMusicAll()
+
+    @Query("delete from homemusic where connectionId = :connectionId")
+    suspend fun removeHomeMusicByConnectionId(connectionId: Long)
+
+    @Query("delete from favoritemusic")
+    suspend fun removeFavoriteMusicAll()
+
+    @Query("delete from favoritemusic where connectionId = :connectionId")
+    suspend fun removeFavoriteMusicByConnectionId(connectionId: Long)
+
+    @Query("delete from albummusic")
+    suspend fun removeAlbumMusicAll()
+
+    @Query("delete from albummusic where connectionId = :connectionId")
+    suspend fun removeAlbumMusicByConnectionId(connectionId: Long)
+
+    @Query("delete from artistmusic")
+    suspend fun removeArtistMusicAll()
+
+    @Query("delete from artistmusic where connectionId = :connectionId")
+    suspend fun removeArtistMusicByConnectionId(connectionId: Long)
+
+    @Query("delete from playhistorymusic")
+    suspend fun removePlayHistoryMusicAll()
+
+    @Query("delete from playhistorymusic where connectionId = :connectionId")
+    suspend fun removePlayHistoryMusicByConnectionId(connectionId: Long)
+
+    @Query("delete from playqueuemusic")
+    suspend fun removePlayQueueMusicAll()
+
+    @Query("delete from playqueuemusic where connectionId = :connectionId")
+    suspend fun removePlayQueueMusicByConnectionId(connectionId: Long)
+
+    @Query("delete from maximumplaymusic")
+    suspend fun removeMaximumPlayMusicAll()
+
+    @Query("delete from maximumplaymusic where connectionId = :connectionId")
+    suspend fun removeMaximumPlayMusicByConnectionId(connectionId: Long)
+
+    @Query("delete from newestmusic")
+    suspend fun removeNewestMusicAll()
+
+    @Query("delete from newestmusic where connectionId = :connectionId")
+    suspend fun removeNewestMusicByConnectionId(connectionId: Long)
+
+    @Query("delete from playlistmusic")
+    suspend fun removePlaylistMusicAll()
+
+    @Query("delete from playlistmusic where connectionId = :connectionId")
+    suspend fun removePlaylistMusicByConnectionId(connectionId: Long)
+
+    @Query("delete from xy_daily_recommend_history")
+    suspend fun removeRecommendedMusicAll()
+
+    @Query("delete from xy_daily_recommend_history where connectionId = :connectionId")
+    suspend fun removeRecommendedMusicByConnectionId(connectionId: Long)
+
+    @Query("delete from xy_music where connectionId = :connectionId")
+    suspend fun removeMusicByConnectionId(connectionId: Long)
 
 
     /**

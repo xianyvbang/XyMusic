@@ -1,11 +1,8 @@
 package cn.xybbz.localdata.data.player
 
 import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.ForeignKey.Companion.CASCADE
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 
@@ -28,12 +25,6 @@ import cn.xybbz.localdata.enums.PlayerTypeEnum
  */
 @Entity(
     tableName = "xy_player",
-    foreignKeys = [ForeignKey(
-        entity = ConnectionConfig::class,
-        parentColumns = ["id"],
-        childColumns = ["connectionId"],
-        onDelete = CASCADE
-    )],
     indices = [Index("connectionId")]
 )
 data class XyPlayer(

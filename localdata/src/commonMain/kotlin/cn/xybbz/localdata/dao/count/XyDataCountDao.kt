@@ -27,4 +27,10 @@ interface XyDataCountDao {
 
     @Query("select * from xy_data_count where connectionId = :connectionId")
     fun selectOneByConnectionId(connectionId: Long): Flow<XyDataCount?>
+
+    @Query("delete from xy_data_count where connectionId = :connectionId")
+    suspend fun removeByConnectionId(connectionId: Long)
+
+    @Query("delete from xy_data_count")
+    suspend fun removeAll()
 }

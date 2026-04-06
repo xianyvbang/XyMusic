@@ -83,4 +83,10 @@ interface XyRecentHistoryDao {
     """
     )
     suspend fun trimToMaxSize(maxSize: Int)
+
+    @Query("delete from xy_daily_recommend_history where connectionId = :connectionId")
+    suspend fun removeByConnectionId(connectionId: Long)
+
+    @Query("delete from xy_daily_recommend_history")
+    suspend fun removeAll()
 }

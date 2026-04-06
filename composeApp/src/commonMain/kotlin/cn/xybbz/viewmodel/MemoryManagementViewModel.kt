@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.utils.DatabaseUtils
 import cn.xybbz.common.utils.formatBytes
 import cn.xybbz.config.music.DownloadCacheCommonController
 import cn.xybbz.config.music.MusicCommonController
@@ -31,7 +32,6 @@ import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.storage.MemoryStorageInfo
 import cn.xybbz.config.storage.clearPlatformCache
 import cn.xybbz.config.storage.getMemoryStorageInfo
-import cn.xybbz.database.withTransaction
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.platform.ContextWrapper
 import kotlinx.coroutines.launch
@@ -101,22 +101,7 @@ class MemoryManagementViewModel(
         viewModelScope.launch {
             musicController.clearPlayerList()
             dataSourceManager.release()
-            db.withTransaction {
-                db.musicDao.removeAll()
-                db.albumDao.removeAll()
-                db.artistDao.removeAll()
-                db.playerDao.removeAll()
-                db.progressDao.removeAll()
-                db.enableProgressDao.removeAll()
-                db.connectionConfigDao.removeAll()
-                db.libraryDao.removeAll()
-                db.genreDao.removeAll()
-                db.eraItemDao.removeAll()
-                db.remoteCurrentDao.removeAll()
-                db.searchHistoryDao.deleteAll()
-                db.skipTimeDao.removeAll()
-                db.settingsDao.remove()
-            }
+            DatabaseUtils.clearAllDatabaseData(db)
             databaseSize = "0B"
             settingsManager.setSettingsData()
             refreshStorageInfo()

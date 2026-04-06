@@ -129,7 +129,6 @@ import xymusic_kmp.composeapp.generated.resources.delete_playlist
 import xymusic_kmp.composeapp.generated.resources.download_24px
 import xymusic_kmp.composeapp.generated.resources.download_list
 import xymusic_kmp.composeapp.generated.resources.favorite
-import xymusic_kmp.composeapp.generated.resources.favorite_24px
 import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
 import xymusic_kmp.composeapp.generated.resources.genres
 import xymusic_kmp.composeapp.generated.resources.home

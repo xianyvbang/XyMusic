@@ -28,8 +28,7 @@ object DataSourceChangeUtils {
             PlayerListRestoreUtils.restoreCurrentDataSourcePlayerList(
                 db,
                 downloadDb,
-                musicPlayContext,
-                dataSourceManager
+                musicPlayContext
             )
         }
     }

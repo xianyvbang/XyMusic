@@ -27,4 +27,7 @@ interface XyProxyConfigDao {
 
     @Query("UPDATE xy_proxy_config SET address = :address, enabled = :enabled WHERE id = :id")
     suspend fun updateAddressAndEnabled(address: String, enabled: Boolean, id: Long)
+
+    @Query("delete from xy_proxy_config")
+    suspend fun removeAll()
 }

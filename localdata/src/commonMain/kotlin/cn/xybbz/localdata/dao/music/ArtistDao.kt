@@ -23,6 +23,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import cn.xybbz.localdata.data.artist.FavoriteArtist
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -80,6 +81,18 @@ interface ArtistDao {
 
     @Query("delete from xy_artist where connectionId = :connectionId")
     suspend fun removeByConnectionId(connectionId: Long)
+
+    @Transaction
+    suspend fun removeAllWithReferences() {
+        removeFavoriteArtistAll()
+        removeAll()
+    }
+
+    @Transaction
+    suspend fun removeByConnectionIdWithReferences(connectionId: Long) {
+        removeFavoriteArtistByConnectionId(connectionId)
+        removeByConnectionId(connectionId)
+    }
 
     @Query(
         """
@@ -163,6 +176,12 @@ interface ArtistDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveFavoriteArtist(data: FavoriteArtist)
+
+    @Query("delete from favoriteartist")
+    suspend fun removeFavoriteArtistAll()
+
+    @Query("delete from favoriteartist where connectionId = :connectionId")
+    suspend fun removeFavoriteArtistByConnectionId(connectionId: Long)
 
 
     @Query("""

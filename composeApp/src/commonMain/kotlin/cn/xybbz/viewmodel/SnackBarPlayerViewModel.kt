@@ -30,7 +30,6 @@ import cn.xybbz.config.select.SelectControl
 import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.core.DownloadRequest
 import cn.xybbz.download.database.DownloadDatabaseClient
-import cn.xybbz.common.enums.DownloadTypes
 import cn.xybbz.common.enums.getDownloadType
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import kotlinx.coroutines.launch

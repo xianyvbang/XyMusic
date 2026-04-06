@@ -450,8 +450,8 @@ abstract class IDataSourceParentServer(
     /**
      * 获得连接id
      */
-    override fun getConnectionId(): Long {
-        return connectionConfig?.id ?: Constants.ZERO.toLong()
+    override fun getConnectionId(): Long? {
+        return connectionConfig?.id
     }
 
     /**

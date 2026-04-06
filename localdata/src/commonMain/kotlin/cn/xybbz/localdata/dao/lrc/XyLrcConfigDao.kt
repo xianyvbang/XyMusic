@@ -36,4 +36,10 @@ interface XyLrcConfigDao {
 
     @Query("select * from xy_lrc_config where itemId = :itemId and connectionId = (select connectionId from xy_settings)")
     suspend fun getLrcConfig(itemId: String): XyLrcConfig?
+
+    @Query("delete from xy_lrc_config where connectionId = :connectionId")
+    suspend fun removeByConnectionId(connectionId: Long)
+
+    @Query("delete from xy_lrc_config")
+    suspend fun removeAll()
 }

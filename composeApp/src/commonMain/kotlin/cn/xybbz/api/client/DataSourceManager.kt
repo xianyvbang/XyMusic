@@ -383,7 +383,7 @@ open class DataSourceManager(
     /**
      * 获得连接id
      */
-    override fun getConnectionId(): Long {
+    override fun getConnectionId(): Long? {
         return dataSourceServer.getConnectionId()
     }
 

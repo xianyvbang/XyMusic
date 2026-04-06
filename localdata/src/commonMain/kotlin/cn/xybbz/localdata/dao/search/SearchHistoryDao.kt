@@ -26,4 +26,7 @@ interface SearchHistoryDao {
     @Query("delete from search_history")
     suspend fun deleteAll()
 
+    @Query("delete from search_history where connectionId = :connectionId")
+    suspend fun removeByConnectionId(connectionId: Long)
+
 }
