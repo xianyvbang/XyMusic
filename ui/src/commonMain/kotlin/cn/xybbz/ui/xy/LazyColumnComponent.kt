@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.theme.XyTheme
+import com.github.panpf.sketch.ability.bindPauseLoadWhenScrolling
 
 /**
  * 通用LazyColumn
@@ -114,6 +115,7 @@ fun LazyColumnParentComponent(
     horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     content: LazyListScope.() -> Unit
 ) {
+    bindPauseLoadWhenScrolling(lazyListState)
     LazyColumn(
         state = lazyListState,
         modifier = modifier,

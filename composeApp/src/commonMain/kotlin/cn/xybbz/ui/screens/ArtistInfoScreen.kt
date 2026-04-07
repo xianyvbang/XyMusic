@@ -125,6 +125,7 @@ import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.ArtistInfoViewModel
+import com.github.panpf.sketch.ability.bindPauseLoadWhenScrolling
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -185,6 +186,10 @@ fun ArtistInfoScreen(
     val lazyListState1 = rememberLazyListState()
     val lazyListState = rememberLazyListState()
     val parentState = rememberLazyListState()
+
+    bindPauseLoadWhenScrolling(lazyListState1)
+    bindPauseLoadWhenScrolling(lazyListState)
+    bindPauseLoadWhenScrolling(parentState)
 
     // 渐变高度占图片高度的比例（原 0.4f，降低为一半）
     val gradientHeight = 0.3f

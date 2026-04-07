@@ -365,7 +365,6 @@ fun MusicPlayerScreen(
                         ) {
                             Text(
                                 text = musicDetail.name,
-                                color = Color.White,
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.W700,
                                 lineHeight = 31.86.sp,

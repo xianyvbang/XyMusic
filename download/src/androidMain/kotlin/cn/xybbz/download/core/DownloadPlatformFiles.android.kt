@@ -2,6 +2,7 @@ package cn.xybbz.download.core
 
 import android.os.Environment
 import cn.xybbz.download.enums.DownloadStatus
+import cn.xybbz.download.utils.FileUtil
 import cn.xybbz.platform.ContextWrapper
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.readAvailable
@@ -12,7 +13,9 @@ import java.io.RandomAccessFile
 internal actual object DownloadPlatformFiles {
     actual fun defaultDownloadDirectory(contextWrapper: ContextWrapper?): String {
         val context = contextWrapper?.context ?: return ""
+        val publicDownloadsSubdirectory = FileUtil.resolvePublicDownloadsSubdirectory(contextWrapper)
         return (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            ?.let { File(it, publicDownloadsSubdirectory) }
             ?: File(context.filesDir, "downloads")).absolutePath
     }
 

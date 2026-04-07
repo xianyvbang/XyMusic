@@ -103,7 +103,7 @@ actual object FileUtil {
         return displayName
     }
 
-    private fun resolvePublicDownloadsSubdirectory(contextWrapper: ContextWrapper): String {
+    fun resolvePublicDownloadsSubdirectory(contextWrapper: ContextWrapper): String {
         val context = contextWrapper.context
         val appName = context.packageManager
             .getApplicationLabel(context.applicationInfo)

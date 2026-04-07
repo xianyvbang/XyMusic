@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -107,6 +108,7 @@ import cn.xybbz.ui.xy.XyScreenTitle
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.HomeViewModel
+import com.github.panpf.sketch.ability.bindPauseLoadWhenScrolling
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -866,7 +868,10 @@ private fun HomeMusicItemLazyRow(
     musicList: List<XyMusic>,
     homeViewModel: HomeViewModel
 ) {
+    val lazyListState = rememberLazyListState()
+    bindPauseLoadWhenScrolling(lazyListState)
     LazyRow(
+        state = lazyListState,
         modifier = Modifier.height(MusicCardImageSize + 50.dp),
         contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
         horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
@@ -916,6 +921,8 @@ private fun HomeAlbumItemLazyRow(
     albumList: List<XyAlbum>
 ) {
     val navigator = LocalNavigator.current
+    val lazyListState = rememberLazyListState()
+    bindPauseLoadWhenScrolling(lazyListState)
     LazyRow(
         modifier = Modifier.height(MusicCardImageSize + 50.dp),
         contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),

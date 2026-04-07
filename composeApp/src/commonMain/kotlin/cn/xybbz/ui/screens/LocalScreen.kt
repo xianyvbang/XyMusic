@@ -77,7 +77,7 @@ fun LocalScreen(localViewModel: LocalViewModel = koinViewModel<LocalViewModel>()
         ScreenLazyColumn {
             itemsIndexed(
                 downloadMusicList,
-                key = { _, item -> item.itemId },
+                key = { index, item -> item.itemId + index },
                 contentType = { _, _ -> MusicTypeEnum.MUSIC }
             ) { _, music ->
                 MusicItemComponent(

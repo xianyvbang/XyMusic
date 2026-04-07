@@ -32,6 +32,7 @@ import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -42,6 +43,7 @@ import org.jetbrains.compose.resources.stringResource
 import androidx.paging.compose.LazyPagingItems
 import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.theme.XyTheme
+import com.github.panpf.sketch.ability.bindPauseLoadWhenScrolling
 
 /**
  * LazyVerticalGrid组件抽取-可以拖拽
@@ -134,6 +136,8 @@ fun LazyVerticalGridComponent(
     lazyGridState: LazyGridState = rememberLazyGridState(),
     content: LazyGridScope.() -> Unit
 ) {
+
+    bindPauseLoadWhenScrolling(lazyGridState)
     LazyVerticalGrid(
         state = lazyGridState,
         columns = GridCells.Adaptive(MusicCardImageSize),
