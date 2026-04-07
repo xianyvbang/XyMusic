@@ -195,7 +195,9 @@ class MusicController(
         onsetPicByte = { updatePicBytes(it) },
         onGetMusicInfo = { musicInfo },
         onSetMusicInfo = { updateCurrentMusic(originMusicList[curOriginIndex]) },
-        onSeekToNext = { seekToNext() },
+        onSeekToNext = {
+//            seekToNext()
+        },
         onEventEmit = {
             updateEvent(it)
             updateCurrentFavorite(musicInfo?.ifFavoriteStatus ?: false)
