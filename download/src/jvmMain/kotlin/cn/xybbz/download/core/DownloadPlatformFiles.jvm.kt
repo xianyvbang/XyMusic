@@ -8,7 +8,7 @@ import io.ktor.utils.io.ByteReadChannel
 internal actual object DownloadPlatformFiles {
     actual fun defaultDownloadDirectory(contextWrapper: ContextWrapper?): String = ""
 
-    actual fun createTempDownloadFilePath(): String = ""
+    actual fun createTempDownloadFilePath(contextWrapper: ContextWrapper): String = ""
 
     actual fun fileLength(path: String): Long = 0L
 

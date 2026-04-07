@@ -15,7 +15,7 @@ internal expect object DownloadPlatformFiles {
     fun defaultDownloadDirectory(contextWrapper: ContextWrapper? = null): String
 
     // 创建下载使用的临时文件路径。
-    fun createTempDownloadFilePath(): String
+    fun createTempDownloadFilePath(contextWrapper: ContextWrapper): String
 
     fun fileLength(path: String): Long
     fun deleteFile(path: String): Boolean

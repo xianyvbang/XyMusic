@@ -6,6 +6,7 @@ import cn.xybbz.download.utils.FileUtil
 import cn.xybbz.platform.ContextWrapper
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.readAvailable
+import okhttp3.internal.platform.PlatformRegistry.applicationContext
 import java.io.File
 import java.io.RandomAccessFile
 
@@ -19,8 +20,10 @@ internal actual object DownloadPlatformFiles {
             ?: File(context.filesDir, "downloads")).absolutePath
     }
 
-    actual fun createTempDownloadFilePath(): String {
-        val directory = File(System.getProperty("java.io.tmpdir"), "xy-downloads")
+    actual fun createTempDownloadFilePath(contextWrapper: ContextWrapper): String {
+
+        val directory = File(contextWrapper.context.cacheDir, "xy-downloads")
+//        val directory = File(System.getProperty("java.io.tmpdir"), "xy-downloads")
         if (!directory.exists()) {
             directory.mkdirs()
         }
