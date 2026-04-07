@@ -7,7 +7,10 @@ import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DataSpec
 import cn.xybbz.api.TokenServer.baseUrl
 
-class XyDefaultDataSourceFactory(private val delegate: DataSource.Factory) : DataSource.Factory {
+class XyDefaultDataSourceFactory(
+    private val delegate: DataSource.Factory,
+    private val downloadDirectoryProvider: () -> String? = { null }
+) : DataSource.Factory {
     @OptIn(UnstableApi::class)
     override fun createDataSource(): DataSource {
         val upstream = delegate.createDataSource()
@@ -32,12 +35,19 @@ class XyDefaultDataSourceFactory(private val delegate: DataSource.Factory) : Dat
         }
     }
 
-    //todo 这里要直接判断downloadConfig里的设置
     private fun isLocalUri(uri: String): Boolean {
-        val normalizedUri = uri.trim()
-        return normalizedUri.startsWith("/storage/") ||
-                normalizedUri.startsWith("/sdcard/") ||
-                normalizedUri.startsWith("/mnt/") ||
-                normalizedUri.startsWith("/data/")
+        val normalizedUri = normalizePath(uri)
+        val normalizedDownloadDirectory = normalizePath(downloadDirectoryProvider().orEmpty())
+
+        if (normalizedUri.isBlank() || normalizedDownloadDirectory.isBlank()) {
+            return false
+        }
+
+        return normalizedUri == normalizedDownloadDirectory ||
+                normalizedUri.startsWith("$normalizedDownloadDirectory/")
+    }
+
+    private fun normalizePath(path: String): String {
+        return path.trim().replace('\\', '/').trimEnd('/')
     }
 }

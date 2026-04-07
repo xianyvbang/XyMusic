@@ -53,6 +53,7 @@ import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.download.DownloaderManager
 import cn.xybbz.media.MediaServer
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
@@ -83,6 +84,8 @@ class ExampleLibraryPlaybackService : MediaSessionService(), KoinComponent {
     var musicController: MusicController = get()
 
     var settingsManager: SettingsManager = get()
+
+    private val xyDownloaderManager: DownloaderManager = get()
 
     var imageApiClient: CacheApiClient = get()
 
@@ -302,7 +305,8 @@ class ExampleLibraryPlaybackService : MediaSessionService(), KoinComponent {
                             DefaultDataSource.Factory(
                                 this,
                                 OkHttpDataSource.Factory(imageApiClient.okhttpClientFunction())
-                            )
+                            ),
+                            downloadDirectoryProvider = { xyDownloaderManager.config.finalDirectory }
                         )
 
                     ).build()

@@ -45,6 +45,7 @@ import cn.xybbz.api.client.CacheApiClient
 import cn.xybbz.config.music.DownloadCacheCommonController
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.download.DownloaderManager
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import kotlinx.coroutines.Dispatchers
@@ -60,6 +61,8 @@ import java.util.concurrent.Executors
 class DownloadCacheController(
     private val context: Context,
 ) : DownloadCacheCommonController() {
+
+    private val xyDownloaderManager: DownloaderManager = get()
 
     val cache: Cache
     var cacheDataSourceFactory: CacheDataSource.Factory
@@ -110,7 +113,10 @@ class DownloadCacheController(
             context,
             OkHttpDataSource.Factory(cacheApiClient.okhttpClientFunction())
         )
-        upstreamDataSourceFactory = XyDefaultDataSourceFactory(factory)
+        upstreamDataSourceFactory = XyDefaultDataSourceFactory(
+            factory,
+            downloadDirectoryProvider = { xyDownloaderManager.config.finalDirectory }
+        )
         cacheDataSourceFactory = CacheDataSource.Factory()
             .setCache(cache)
             .setUpstreamDataSourceFactory(
