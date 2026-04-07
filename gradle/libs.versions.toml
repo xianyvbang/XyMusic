@@ -44,6 +44,7 @@ splashscreen = "1.2.0"
 sketch = "4.4.0-beta02"
 work = "2.11.1"
 accompanist = "0.37.3"
+vlcj = "5.0.0-M4"
 
 
 
@@ -137,6 +138,9 @@ sketch-gif = { module = "io.github.panpf.sketch4:sketch-animated-gif", version.r
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
+
+# jvm 媒体播放器
+jvm-vlcj = { module = "uk.co.caprica:vlcj", version.ref = "vlcj" }
 
 
 [plugins]

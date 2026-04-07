@@ -112,6 +112,7 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
             implementation(libs.kotlin.ktor.apache)
+            implementation(libs.jvm.vlcj)
         }
     }
 }
