@@ -15,6 +15,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.readAvailable
 import java.io.File
+import cn.xybbz.common.utils.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -28,9 +29,8 @@ import uk.co.caprica.vlcj.player.component.AudioPlayerComponent
 
 class JvmMusicController : MusicCommonController() {
 
-    private val mediaPlayerComponent = AudioPlayerComponent()
-    private val mediaPlayer: MediaPlayer
-        get() = mediaPlayerComponent.mediaPlayer()
+    private var mediaPlayerComponent: AudioPlayerComponent? = null
+    private var mediaPlayerListenerRegistered = false
 
     private var currentRemoteSession: RemotePlaybackSession? = null
     private var playbackJob: Job? = null
@@ -95,7 +95,6 @@ class JvmMusicController : MusicCommonController() {
      * 初始化 JVM 播放器监听器与进度轮询任务。
      */
     override fun initController(onRestorePlaylists: (() -> Unit)?) {
-        mediaPlayer.events().addMediaPlayerEventListener(playerListener)
         startProgressObserver()
         onRestorePlaylists?.invoke()
     }
@@ -151,7 +150,7 @@ class JvmMusicController : MusicCommonController() {
      * 暂停当前 vlcj 播放器。
      */
     override fun pause() {
-        mediaPlayer.controls().pause()
+        currentMediaPlayer()?.controls()?.pause()
     }
 
     /**
@@ -159,7 +158,7 @@ class JvmMusicController : MusicCommonController() {
      */
     override fun resume() {
         if (state == PlayStateEnum.Pause || state == PlayStateEnum.Loading) {
-            mediaPlayer.controls().play()
+            ensureMediaPlayer()?.controls()?.play()
             return
         }
 
@@ -176,6 +175,7 @@ class JvmMusicController : MusicCommonController() {
             return
         }
 
+        val mediaPlayer = ensureMediaPlayer() ?: return
         if (mediaPlayer.controls().setTime(millSeconds)) {
             setCurrentPositionData(millSeconds)
             musicInfo?.let {
@@ -245,6 +245,12 @@ class JvmMusicController : MusicCommonController() {
                 music.artists?.firstOrNull()
             )
         )
+
+        val mediaPlayer = ensureMediaPlayer()
+        if (mediaPlayer == null) {
+            updateState(PlayStateEnum.None)
+            return
+        }
 
         val localPath = music.filePath
         if (!localPath.isNullOrBlank()) {
@@ -316,7 +322,7 @@ class JvmMusicController : MusicCommonController() {
      * 设置当前播放器倍速。
      */
     override fun setDoubleSpeed(value: Float) {
-        mediaPlayer.controls().setRate(value)
+        ensureMediaPlayer()?.controls()?.setRate(value)
     }
 
     /**
@@ -440,8 +446,11 @@ class JvmMusicController : MusicCommonController() {
         progressJob?.cancel()
         progressJob = null
         stopCurrentPlayback()
-        mediaPlayer.events().removeMediaPlayerEventListener(playerListener)
-        mediaPlayerComponent.release()
+        currentMediaPlayer()?.takeIf { mediaPlayerListenerRegistered }?.events()
+            ?.removeMediaPlayerEventListener(playerListener)
+        mediaPlayerListenerRegistered = false
+        mediaPlayerComponent?.release()
+        mediaPlayerComponent = null
         super.close()
     }
 
@@ -459,7 +468,7 @@ class JvmMusicController : MusicCommonController() {
         ignoreNextStoppedEvent = true
         playbackJob?.cancel()
         playbackJob = null
-        runCatching { mediaPlayer.controls().stop() }
+        runCatching { currentMediaPlayer()?.controls()?.stop() }
         closeRemoteSession()
     }
 
@@ -469,7 +478,7 @@ class JvmMusicController : MusicCommonController() {
     }
 
     private fun syncDurationFromPlayer() {
-        val duration = mediaPlayer.status().length()
+        val duration = currentMediaPlayer()?.status()?.length() ?: 0L
         if (duration > 0) {
             updateDuration(duration)
         } else {
@@ -485,13 +494,40 @@ class JvmMusicController : MusicCommonController() {
         progressJob = scope.launch {
             while (isActive) {
                 if (state == PlayStateEnum.Playing || state == PlayStateEnum.Pause) {
-                    val currentPosition = mediaPlayer.status().time().coerceAtLeast(0L)
+                    val currentPosition = currentMediaPlayer()?.status()?.time()?.coerceAtLeast(0L) ?: 0L
                     setCurrentPositionData(currentPosition)
                     syncDurationFromPlayer()
                 }
                 delay(MUSIC_POSITION_UPDATE_INTERVAL.coerceAtLeast(100L))
             }
         }
+    }
+
+    private fun ensureMediaPlayer(): MediaPlayer? {
+        return ensureMediaPlayerComponent()?.mediaPlayer()
+    }
+
+    private fun currentMediaPlayer(): MediaPlayer? {
+        return mediaPlayerComponent?.mediaPlayer()
+    }
+
+    private fun ensureMediaPlayerComponent(): AudioPlayerComponent? {
+        mediaPlayerComponent?.let { return it }
+
+        if (!VlcBootstrap.ensureConfigured()) {
+            return null
+        }
+
+        val component = runCatching {
+            AudioPlayerComponent()
+        }.onFailure {
+            Log.e("vlc", "创建 VLC 播放器失败", it)
+        }.getOrNull() ?: return null
+
+        component.mediaPlayer().events().addMediaPlayerEventListener(playerListener)
+        mediaPlayerListenerRegistered = true
+        mediaPlayerComponent = component
+        return component
     }
 
     private class RemotePlaybackSession(
