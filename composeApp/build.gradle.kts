@@ -113,6 +113,8 @@ kotlin {
             implementation(libs.kotlinx.coroutinesSwing)
             implementation(libs.kotlin.ktor.apache)
             implementation(libs.jvm.vlcj)
+            //拼音相关
+            implementation(libs.tinypinyin)
         }
     }
 }

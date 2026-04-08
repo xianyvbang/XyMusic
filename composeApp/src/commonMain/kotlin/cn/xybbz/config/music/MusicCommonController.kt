@@ -6,11 +6,14 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.entity.data.music.TranscodingAndMusicUrlData
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
@@ -28,6 +31,8 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     val settingsManager = get<SettingsManager>()
 
     val downloadCacheController: DownloadCacheCommonController = get()
+
+    val dataSourceManager: DataSourceManager = get()
 
     // 原始歌曲列表
     var originMusicList by mutableStateOf(emptyList<XyPlayMusic>())
@@ -375,6 +380,23 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
      */
     fun updatePageSize(pageSize: Int) {
         this.pageSize = pageSize
+    }
+
+    protected fun getMusicUrl(musicId: String, plexPlayKey: String?): TranscodingAndMusicUrlData {
+        val audioBitRate = settingsManager.getAudioBitRate()
+
+        val static: Boolean =
+            settingsManager.getStatic()
+
+        val musicUrl = dataSourceManager.getMusicPlayUrl(
+            if (static) musicId else plexPlayKey ?: musicId,
+            static,
+            AudioCodecEnum.getAudioCodec(settingsManager.get().transcodeFormat),
+            audioBitRate,
+            settingsManager.get().playSessionId
+        )
+
+        return TranscodingAndMusicUrlData(audioBitRate, static, musicUrl)
     }
 
     /**

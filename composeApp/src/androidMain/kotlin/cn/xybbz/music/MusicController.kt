@@ -65,8 +65,7 @@ import org.koin.core.component.get
 @OptIn(UnstableApi::class)
 class MusicController(
     private val application: Context,
-    private val fadeController: AudioFadeAndroidController,
-    private val dataSourceManager: DataSourceManager
+    private val fadeController: AudioFadeAndroidController
 ) : MusicCommonController() {
 
     private val coverImageResolver: CoverImageResolver = get()
@@ -623,22 +622,7 @@ class MusicController(
             .build()
     }
 
-    private fun getMusicUrl(musicId: String, plexPlayKey: String?): TranscodingAndMusicUrlData {
-        val audioBitRate = settingsManager.getAudioBitRate()
 
-        val static: Boolean =
-            settingsManager.getStatic()
-
-        val musicUrl = dataSourceManager.getMusicPlayUrl(
-            if (static) musicId else plexPlayKey ?: musicId,
-            static,
-            AudioCodecEnum.getAudioCodec(settingsManager.get().transcodeFormat),
-            audioBitRate,
-            settingsManager.get().playSessionId
-        )
-
-        return TranscodingAndMusicUrlData(audioBitRate, static, musicUrl)
-    }
 
     /**
      * 生成当前播放模式下的歌曲列表

@@ -84,7 +84,7 @@ class DownloadImpl(
                     globalFinalDir = downloadDispatcher.config.finalDirectory,
                 )
                 tempFilePath = withContext(Dispatchers.IO) {
-                    DownloadPlatformFiles.createTempDownloadFilePath()
+                    DownloadPlatformFiles.createTempDownloadFilePath(downloadDispatcher.contextWrapper)
                 }
 
                 if (!request.uid.isNullOrBlank()) {

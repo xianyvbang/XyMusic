@@ -34,9 +34,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 class HomeDataRepository(
-    private val db: LocalDatabaseClient,
-    private val downloadDb: DownloadDatabaseClient,
-    private val dataSourceManager: DataSourceManager,
+    private val db: LocalDatabaseClient
 ) {
 
     private val _mostPlayedMusic = MutableStateFlow<List<XyMusic>>(emptyList())

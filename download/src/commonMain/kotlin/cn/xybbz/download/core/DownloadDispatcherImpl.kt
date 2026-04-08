@@ -36,7 +36,7 @@ import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 
 class DownloadDispatcherImpl(
-    private val contextWrapper: ContextWrapper,
+    internal val contextWrapper: ContextWrapper,
     private val db: DownloadDatabaseClient,
     private val taskScheduler: DownloadTaskScheduler = DownloadTaskScheduler(contextWrapper),
     var config: DownloaderConfig,

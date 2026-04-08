@@ -1,7 +1,7 @@
 package cn.xybbz.di
 
-import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.AudioFadeController
+import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.music.MusicController
 import cn.xybbz.platform.ContextWrapper
 import org.koin.core.annotation.Configuration
@@ -16,8 +16,8 @@ actual class MusicControllerModule {
     fun concreteMusicController(wrapper: ContextWrapper): MusicController {
         return MusicController(
             wrapper.context,
-            KoinPlatform.getKoin().get<AudioFadeController>() as cn.xybbz.music.AudioFadeAndroidController,
-            KoinPlatform.getKoin().get()
+            KoinPlatform.getKoin()
+                .get<AudioFadeController>() as cn.xybbz.music.AudioFadeAndroidController
         )
     }
 
