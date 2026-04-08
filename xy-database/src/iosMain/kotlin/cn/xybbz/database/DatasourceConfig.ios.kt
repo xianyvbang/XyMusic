@@ -2,8 +2,11 @@ package cn.xybbz.database
 
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import cn.xybbz.platform.ContextWrapper
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSUserDomainMask
@@ -16,6 +19,8 @@ actual inline fun <reified T : DatabaseClient> createDatabaseClientBuilder(
     return Room.databaseBuilder<T>(
         name = dbFilePath,
     )
+        .setDriver(BundledSQLiteDriver())
+        .setQueryCoroutineContext(Dispatchers.IO)
 }
 
 @OptIn(ExperimentalForeignApi::class)
