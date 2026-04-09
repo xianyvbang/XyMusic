@@ -754,7 +754,8 @@ private fun ConnectionDataInfoInputEdit(
     XyEdit(
         text = text,
         modifier = modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .height(XyTheme.dimens.itemHeight),
         paddingValues = PaddingValues(
             vertical = XyTheme.dimens.outerVerticalPadding
         ),
