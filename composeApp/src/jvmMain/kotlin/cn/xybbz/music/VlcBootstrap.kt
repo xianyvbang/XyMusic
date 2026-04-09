@@ -1,7 +1,12 @@
 package cn.xybbz.music
 
 import cn.xybbz.common.utils.Log
+import com.sun.jna.Native
 import com.sun.jna.NativeLibrary
+import com.sun.jna.Pointer
+import com.sun.jna.WString
+import com.sun.jna.win32.StdCallLibrary
+import com.sun.jna.win32.W32APIOptions
 import java.io.File
 import uk.co.caprica.vlcj.factory.discovery.NativeDiscovery
 
@@ -53,7 +58,9 @@ object VlcBootstrap {
             val absolutePath = discoveredDirectory.absolutePath
             // 告诉 JNA 优先从当前目录加载 libvlc。
             NativeLibrary.addSearchPath("libvlc", absolutePath)
+            NativeLibrary.addSearchPath("libvlccore", absolutePath)
             System.setProperty("jna.library.path", appendLibraryPath(absolutePath))
+            configureWindowsDllDirectory(discoveredDirectory)
 
             // VLC 的插件目录单独通过环境属性指定，确保解码/输出模块可被发现。
             val pluginDirectory = File(discoveredDirectory, "plugins")
@@ -131,5 +138,56 @@ object VlcBootstrap {
             .flatMap { it.split(File.pathSeparatorChar).asSequence() }
             .distinct()
             .joinToString(File.pathSeparator)
+    }
+
+    /**
+     * Windows 下仅设置 `jna.library.path` 不足以让插件解析它们的二级依赖；
+     * 这里显式把 VLC 根目录加入系统 DLL 搜索目录，避免插件扫描时命中 error 126。
+     */
+    private fun configureWindowsDllDirectory(directory: File) {
+        if (!isWindows()) {
+            return
+        }
+
+        val absolutePath = directory.absolutePath
+        runCatching {
+            val kernel32 = WindowsKernel32.instance
+            val addDirectoryEnabled = kernel32.SetDefaultDllDirectories(
+                WindowsKernel32.LOAD_LIBRARY_SEARCH_DEFAULT_DIRS or
+                    WindowsKernel32.LOAD_LIBRARY_SEARCH_USER_DIRS
+            )
+
+            val configured = if (addDirectoryEnabled) {
+                kernel32.AddDllDirectory(WString(absolutePath)) != null
+            } else {
+                kernel32.SetDllDirectoryW(WString(absolutePath))
+            }
+
+            if (!configured) {
+                Log.i("vlc", "注册 Windows DLL 搜索目录失败: $absolutePath, error=${Native.getLastError()}")
+            }
+        }.onFailure {
+            Log.e("vlc", "配置 Windows DLL 搜索目录失败", it)
+        }
+    }
+
+    private fun isWindows(): Boolean =
+        System.getProperty("os.name").orEmpty().startsWith("Windows", ignoreCase = true)
+
+    private interface Kernel32Library : StdCallLibrary {
+        fun SetDefaultDllDirectories(directoryFlags: Int): Boolean
+
+        fun AddDllDirectory(newDirectory: WString): Pointer?
+
+        fun SetDllDirectoryW(pathName: WString?): Boolean
+    }
+
+    private object WindowsKernel32 {
+        const val LOAD_LIBRARY_SEARCH_DEFAULT_DIRS = 0x00001000
+        const val LOAD_LIBRARY_SEARCH_USER_DIRS = 0x00000400
+
+        val instance: Kernel32Library by lazy {
+            Native.load("kernel32", Kernel32Library::class.java, W32APIOptions.DEFAULT_OPTIONS)
+        }
     }
 }
