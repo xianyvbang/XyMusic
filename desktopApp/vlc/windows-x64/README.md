@@ -1,5 +1,7 @@
 Place the bundled Windows VLC runtime archive here as `vlc-runtime.zip`.
 
+Download url: https://get.videolan.org/vlc/
+
 Expected archive contents:
 - `libvlc.dll`
 - `libvlccore.dll`
