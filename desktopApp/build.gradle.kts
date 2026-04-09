@@ -19,7 +19,7 @@ kotlin {
 }
 
 tasks.withType<JavaExec>().configureEach {
-    systemProperty("compose.application.resources.dir", project.layout.projectDirectory.dir("resources"))
+    systemProperty("compose.application.resources.dir", project.layout.projectDirectory.dir("resources/windows-x64"))
 }
 
 compose.desktop {
