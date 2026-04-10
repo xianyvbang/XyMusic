@@ -19,4 +19,3 @@ captures
 node_modules/
 .gradle-user-home/
 .serena/
-desktopApp/vlc/windows-x64/*.zip

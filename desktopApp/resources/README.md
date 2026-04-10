@@ -7,7 +7,6 @@ Download url: https://get.videolan.org/vlc/
 
 Expected runtime contents:
 - `libvlc.dll`
-- `libvlccore.dll`
 - `plugins/`
 
 You can also point Gradle to another runtime directory:

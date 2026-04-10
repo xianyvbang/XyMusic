@@ -43,6 +43,7 @@ class JvmMusicController : MusicCommonController() {
          * 播放开始时同步时长并更新播放状态。
          */
         override fun playing(mediaPlayer: MediaPlayer?) {
+            Log.i("vlc", "播放开始")
             syncDurationFromPlayer()
             if (state != PlayStateEnum.Playing) {
                 reportedPlayEvent()
@@ -86,6 +87,7 @@ class JvmMusicController : MusicCommonController() {
          * 播放异常时关闭当前远程流并回退为空闲状态。
          */
         override fun error(mediaPlayer: MediaPlayer?) {
+            Log.i("vlc", "播放异常111111111111111111111111111111111111111111111111111")
             closeRemoteSession()
             updateState(PlayStateEnum.None)
         }
@@ -399,7 +401,7 @@ class JvmMusicController : MusicCommonController() {
         playbackJob = null
         stopCurrentPlayback()
 
-        if (musicCurrentPositionMapData != null) {
+        if (!musicCurrentPositionMapData.isNullOrEmpty()) {
             musicCurrentPositionMap.clear()
             musicCurrentPositionMap.putAll(musicCurrentPositionMapData)
         }
@@ -564,6 +566,7 @@ class JvmMusicController : MusicCommonController() {
 
             /**
              * 当前远程流播放不支持 seek，统一返回 false。
+             * //todo 应该改为支持
              */
             override fun onSeek(offset: Long): Boolean = false
 
