@@ -32,9 +32,7 @@ class JvmMusicController : MusicCommonController() {
     private var currentRemoteSession: RemotePlaybackSession? = null
     private var playbackJob: Job? = null
     private var playRequestVersion = 0L
-    private var ignoreNextStoppedEvent = false
-    // 标记当前 VLC 是否已经装载了可继续播放/暂停恢复的媒体。
-    private var hasPreparedPlayback = false
+//    private var ignoreNextStoppedEvent = false
     // 记录下一次真正开始播放时需要跳转到的恢复进度。
     private var pendingStartPositionMs: Long? = null
 
@@ -67,12 +65,7 @@ class JvmMusicController : MusicCommonController() {
          * 播放停止时重置进度和播放状态。
          */
         override fun stopped(mediaPlayer: MediaPlayer?) {
-            hasPreparedPlayback = false
             pendingStartPositionMs = null
-            if (ignoreNextStoppedEvent) {
-                ignoreNextStoppedEvent = false
-                return
-            }
             setCurrentPositionData(0L)
             updateState(PlayStateEnum.None)
         }
@@ -81,7 +74,6 @@ class JvmMusicController : MusicCommonController() {
          * 播放自然结束时释放远程会话并重置状态。
          */
         override fun finished(mediaPlayer: MediaPlayer?) {
-            hasPreparedPlayback = false
             pendingStartPositionMs = null
             closeRemoteSession()
             setCurrentPositionData(0L)
@@ -93,7 +85,6 @@ class JvmMusicController : MusicCommonController() {
          */
         override fun error(mediaPlayer: MediaPlayer?) {
             Log.i("vlc", "播放异常111111111111111111111111111111111111111111111111111")
-            hasPreparedPlayback = false
             pendingStartPositionMs = null
             closeRemoteSession()
             updateState(PlayStateEnum.None)
@@ -183,7 +174,8 @@ class JvmMusicController : MusicCommonController() {
      */
     override fun resume() {
         if (state == PlayStateEnum.Pause || state == PlayStateEnum.Loading) {
-            if (hasPreparedPlayback) {
+            val playable = ensureMediaPlayer()?.status()?.isPlayable
+            if (playable == true) {
                 ensureMediaPlayer()?.controls()?.play()
             } else if (curOriginIndex in originMusicList.indices) {
                 // 恢复列表场景下仅同步了上层状态，此时需要重新装载当前歌曲后再播放。
@@ -292,7 +284,6 @@ class JvmMusicController : MusicCommonController() {
 
         val mediaPlayer = ensureMediaPlayer()
         if (mediaPlayer == null) {
-            hasPreparedPlayback = false
             pendingStartPositionMs = null
             updateState(PlayStateEnum.None)
             return
@@ -303,7 +294,6 @@ class JvmMusicController : MusicCommonController() {
             stopCurrentPlayback(clearPendingStartPosition = false)
             val mediaPath = File(localPath).toURI().toString()
             val started = mediaPlayer.media().play(mediaPath)
-            hasPreparedPlayback = started
             if (!started) {
                 pendingStartPositionMs = null
                 updateState(PlayStateEnum.None)
@@ -325,7 +315,6 @@ class JvmMusicController : MusicCommonController() {
             stopCurrentPlayback(clearPendingStartPosition = false)
             currentRemoteSession = session
             val started = mediaPlayer.media().play(session.callbackMedia)
-            hasPreparedPlayback = started
             if (!started) {
                 pendingStartPositionMs = null
                 closeRemoteSession()
@@ -474,7 +463,6 @@ class JvmMusicController : MusicCommonController() {
         updateEvent(PlayerEvent.AddMusicList(artistId, ifInitPlayerList))
 
         if (ifInitPlayerList) {
-            hasPreparedPlayback = false
             pendingStartPositionMs = null
             updateState(PlayStateEnum.Pause)
             setCurrentPositionData(musicCurrentPositionMapData?.get(musicDataList[targetIndex].itemId) ?: 0L)
@@ -518,12 +506,9 @@ class JvmMusicController : MusicCommonController() {
 
     private fun stopCurrentPlayback(clearPendingStartPosition: Boolean = true) {
         // 只有当前播放器确实处于已装载状态时，才需要忽略 stop() 主动触发的 stopped 回调。
-        val shouldIgnoreStoppedEvent = hasPreparedPlayback
-        hasPreparedPlayback = false
         if (clearPendingStartPosition) {
             pendingStartPositionMs = null
         }
-        ignoreNextStoppedEvent = shouldIgnoreStoppedEvent
         playbackJob?.cancel()
         playbackJob = null
         runCatching { currentMediaPlayer()?.controls()?.stop() }
