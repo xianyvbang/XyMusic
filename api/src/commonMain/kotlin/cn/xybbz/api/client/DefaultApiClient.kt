@@ -129,9 +129,9 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
                 maxRetries = 2
             }
             install(HttpTimeout) {
-                requestTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
-                connectTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
-                socketTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
+//                requestTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
+//                connectTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
+//                socketTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
             }
             HttpResponseValidator {
                 validateResponse { response ->

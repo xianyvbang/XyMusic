@@ -3,19 +3,18 @@ package cn.xybbz.music
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.Constants.MUSIC_POSITION_UPDATE_INTERVAL
 import cn.xybbz.common.enums.PlayStateEnum
+import cn.xybbz.common.utils.Log
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.PlayerEvent
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
-import io.ktor.client.request.get
+import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.HttpHeaders
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.readAvailable
-import java.io.File
-import cn.xybbz.common.utils.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -26,6 +25,7 @@ import uk.co.caprica.vlcj.media.callback.DefaultCallbackMedia
 import uk.co.caprica.vlcj.player.base.MediaPlayer
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter
 import uk.co.caprica.vlcj.player.component.AudioPlayerComponent
+import java.io.File
 
 class JvmMusicController : MusicCommonController() {
 
@@ -486,8 +486,6 @@ class JvmMusicController : MusicCommonController() {
     override fun close() {
         playbackJob?.cancel()
         playbackJob = null
-        progressJob?.cancel()
-        progressJob = null
         stopCurrentPlayback()
         pendingStartPositionMs = null
         currentMediaPlayer()?.takeIf { mediaPlayerListenerRegistered }?.events()
@@ -499,9 +497,9 @@ class JvmMusicController : MusicCommonController() {
     }
 
     private suspend fun createRemoteSession(music: XyPlayMusic): RemotePlaybackSession {
-        val resolvedUrl = getMusicUrl(music.itemId, music.plexPlayKey).musicUrl
-        music.setMusicUrl(resolvedUrl)
-        val response = dataSourceManager.getHttpClient().get(resolvedUrl)
+        val url = getMusicUrl(music.itemId, music.plexPlayKey).musicUrl
+        music.setMusicUrl(url)
+        val response = dataSourceManager.getHttpClient().prepareGet(url).execute()
         return RemotePlaybackSession(
             response = response,
             channel = response.bodyAsChannel()
