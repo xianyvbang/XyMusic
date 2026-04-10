@@ -23,7 +23,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.Single
 
-@Single
 /**
  * 播放器事件协调器。
  * 负责承接 musicController 发出的业务事件，并完成持久化、上报、补充数据加载等非 UI 工作。
