@@ -19,6 +19,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import uk.co.caprica.vlcj.media.callback.DefaultCallbackMedia
+import uk.co.caprica.vlcj.factory.MediaPlayerFactory
 import uk.co.caprica.vlcj.player.base.MediaPlayer
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter
 import uk.co.caprica.vlcj.player.component.AudioPlayerComponent
@@ -26,6 +27,7 @@ import java.io.File
 
 class JvmMusicController : MusicCommonController() {
 
+    private var mediaPlayerFactory: MediaPlayerFactory? = null
     private var mediaPlayerComponent: AudioPlayerComponent? = null
     private var mediaPlayerListenerRegistered = false
 
@@ -43,7 +45,12 @@ class JvmMusicController : MusicCommonController() {
         override fun playing(mediaPlayer: MediaPlayer?) {
             Log.i("vlc", "播放开始")
             submitMediaPlayerTask(mediaPlayer) { player ->
-                applyPendingStartPosition(player)
+                val appliedPendingStartPosition = applyPendingStartPosition(player)
+                if (!appliedPendingStartPosition) {
+                    // 没有显式恢复历史进度时，也主动拉一次底层真实时间，
+                    // 避免 VLC 已经跳到某个位置而 UI 还停留在 0。
+                    syncCurrentPositionFromPlayer(player)
+                }
                 if (state != PlayStateEnum.Playing) {
                     reportedPlayEvent()
                 }
@@ -91,11 +98,24 @@ class JvmMusicController : MusicCommonController() {
         }
 
         /**
-         * 仅依赖 VLC 主动推送的时间事件更新进度，避免在播放器尚未准备好时主动查询 timer。
+         * 优先使用 VLC 主动推送的时间事件更新进度。
          */
         override fun timeChanged(mediaPlayer: MediaPlayer?, newTime: Long) {
             if (newTime >= 0L) {
                 setCurrentPositionData(newTime)
+            }
+        }
+
+        /**
+         * VLC 有时会先更新内部 position，再迟一点才分发 timeChanged。
+         * 这里补一层基于真实播放器状态的同步，避免听感已跳播但 UI 进度还停在旧值。
+         */
+        override fun positionChanged(mediaPlayer: MediaPlayer?, newPosition: Float) {
+            if (newPosition < 0f) {
+                return
+            }
+            submitMediaPlayerTask(mediaPlayer) { player ->
+                syncCurrentPositionFromPlayer(player, newPosition)
             }
         }
 
@@ -491,6 +511,8 @@ class JvmMusicController : MusicCommonController() {
         mediaPlayerListenerRegistered = false
         mediaPlayerComponent?.release()
         mediaPlayerComponent = null
+        mediaPlayerFactory?.release()
+        mediaPlayerFactory = null
         super.close()
     }
 
@@ -552,16 +574,43 @@ class JvmMusicController : MusicCommonController() {
     /**
      * 等 VLC 真正进入播放态后再执行跳转，避免在媒体尚未装载完成时设置时间无效。
      */
-    private fun applyPendingStartPosition(mediaPlayer: MediaPlayer?) {
-        val startPositionMs = pendingStartPositionMs ?: return
+    private fun applyPendingStartPosition(mediaPlayer: MediaPlayer?): Boolean {
+        val startPositionMs = pendingStartPositionMs ?: return false
         pendingStartPositionMs = null
 
         if (currentRemoteSession != null || startPositionMs == 0L) {
-            return
+            return false
         }
 
         mediaPlayer?.controls()?.setTime(startPositionMs)
         setCurrentPositionData(startPositionMs)
+        return true
+    }
+
+    private fun syncCurrentPositionFromPlayer(
+        mediaPlayer: MediaPlayer,
+        newPosition: Float? = null
+    ) {
+        // 优先相信 libVLC 返回的真实毫秒数；这是和实际听感最一致的来源。
+        val actualTime = mediaPlayer.status().time()
+        if (actualTime >= 0L) {
+            if (actualTime != progressStateFlow.value) {
+                setCurrentPositionData(actualTime)
+            }
+            return
+        }
+
+        // 某些时序下 time() 还没准备好，但 positionChanged 已经到了。
+        // 这时退回用百分比和总时长估算一次，先把 UI 纠正到接近真实位置。
+        val estimatedTime = newPosition
+            ?.takeIf { it in 0f..1f }
+            ?.let { position -> (duration * position).toLong() }
+            ?.coerceAtLeast(0L)
+            ?: return
+
+        if (estimatedTime != progressStateFlow.value) {
+            setCurrentPositionData(estimatedTime)
+        }
     }
 
     private fun currentMediaPlayer(): MediaPlayer? {
@@ -575,16 +624,39 @@ class JvmMusicController : MusicCommonController() {
             return null
         }
 
-        val component = runCatching {
-            AudioPlayerComponent()
+        val factory = runCatching {
+            // 独立于用户本机 VLC 配置创建 libVLC，避免继承“继续播放/记住上次位置”等桌面端设置。
+            MediaPlayerFactory(*VLC_FACTORY_ARGUMENTS)
         }.onFailure {
+            Log.e("vlc", "创建 VLC 播放器工厂失败", it)
+        }.getOrNull() ?: return null
+
+        val component = runCatching {
+            AudioPlayerComponent(factory)
+        }.onFailure {
+            runCatching { factory.release() }
             Log.e("vlc", "创建 VLC 播放器失败", it)
         }.getOrNull() ?: return null
 
         component.mediaPlayer().events().addMediaPlayerEventListener(playerListener)
         mediaPlayerListenerRegistered = true
+        mediaPlayerFactory = factory
         mediaPlayerComponent = component
         return component
+    }
+
+    companion object {
+        /**
+         * 使用隔离的 libVLC 参数，避免读取用户本机 VLC 的历史配置。
+         * 其中 `--ignore-config` 用来屏蔽续播等偏好设置，
+         * `--no-media-library` 则避免媒体库相关的额外状态介入当前播放器实例。
+         */
+        private val VLC_FACTORY_ARGUMENTS = arrayOf(
+            "--quiet",
+            "--intf=dummy",
+            "--ignore-config",
+            "--no-media-library"
+        )
     }
 
     private class RemotePlaybackSession(
