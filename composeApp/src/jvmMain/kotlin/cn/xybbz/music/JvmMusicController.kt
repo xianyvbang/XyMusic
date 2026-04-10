@@ -37,6 +37,10 @@ class JvmMusicController : MusicCommonController() {
     private var progressJob: Job? = null
     private var playRequestVersion = 0L
     private var ignoreNextStoppedEvent = false
+    // 标记当前 VLC 是否已经装载了可继续播放/暂停恢复的媒体。
+    private var hasPreparedPlayback = false
+    // 记录下一次真正开始播放时需要跳转到的恢复进度。
+    private var pendingStartPositionMs: Long? = null
 
     private val playerListener = object : MediaPlayerEventAdapter() {
         /**
@@ -44,6 +48,7 @@ class JvmMusicController : MusicCommonController() {
          */
         override fun playing(mediaPlayer: MediaPlayer?) {
             Log.i("vlc", "播放开始")
+            applyPendingStartPosition(mediaPlayer)
             syncDurationFromPlayer()
             if (state != PlayStateEnum.Playing) {
                 reportedPlayEvent()
@@ -66,6 +71,8 @@ class JvmMusicController : MusicCommonController() {
          * 播放停止时重置进度和播放状态。
          */
         override fun stopped(mediaPlayer: MediaPlayer?) {
+            hasPreparedPlayback = false
+            pendingStartPositionMs = null
             if (ignoreNextStoppedEvent) {
                 ignoreNextStoppedEvent = false
                 return
@@ -78,6 +85,8 @@ class JvmMusicController : MusicCommonController() {
          * 播放自然结束时释放远程会话并重置状态。
          */
         override fun finished(mediaPlayer: MediaPlayer?) {
+            hasPreparedPlayback = false
+            pendingStartPositionMs = null
             closeRemoteSession()
             setCurrentPositionData(0L)
             updateState(PlayStateEnum.None)
@@ -88,6 +97,8 @@ class JvmMusicController : MusicCommonController() {
          */
         override fun error(mediaPlayer: MediaPlayer?) {
             Log.i("vlc", "播放异常111111111111111111111111111111111111111111111111111")
+            hasPreparedPlayback = false
+            pendingStartPositionMs = null
             closeRemoteSession()
             updateState(PlayStateEnum.None)
         }
@@ -145,6 +156,7 @@ class JvmMusicController : MusicCommonController() {
         playbackJob?.cancel()
         playbackJob = null
         stopCurrentPlayback()
+        pendingStartPositionMs = null
         super.clearPlayerList()
     }
 
@@ -160,7 +172,15 @@ class JvmMusicController : MusicCommonController() {
      */
     override fun resume() {
         if (state == PlayStateEnum.Pause || state == PlayStateEnum.Loading) {
-            ensureMediaPlayer()?.controls()?.play()
+            if (hasPreparedPlayback) {
+                ensureMediaPlayer()?.controls()?.play()
+            } else if (curOriginIndex in originMusicList.indices) {
+                // 恢复列表场景下仅同步了上层状态，此时需要重新装载当前歌曲后再播放。
+                startPlaybackAtIndex(
+                    index = curOriginIndex,
+                    startPositionMs = restoredPositionForCurrentMusic()
+                )
+            }
             return
         }
 
@@ -223,6 +243,17 @@ class JvmMusicController : MusicCommonController() {
             return
         }
 
+        startPlaybackAtIndex(index)
+    }
+
+    /**
+     * 装载并播放指定索引歌曲；如提供恢复进度，则在真正开始播放后跳转到对应位置。
+     */
+    private fun startPlaybackAtIndex(index: Int, startPositionMs: Long = 0L) {
+        if (index !in originMusicList.indices) {
+            return
+        }
+
         val music = originMusicList[index]
         val previousMusicId = musicInfo?.itemId
 
@@ -236,6 +267,7 @@ class JvmMusicController : MusicCommonController() {
         updateOriginIndex(index)
         updateCurrentMusic(music)
         updateDuration(music.runTimeTicks)
+        pendingStartPositionMs = startPositionMs.takeIf { it > 0L }
 
         if (previousMusicId != null && previousMusicId != music.itemId) {
             updateEvent(PlayerEvent.BeforeChangeMusic)
@@ -250,16 +282,20 @@ class JvmMusicController : MusicCommonController() {
 
         val mediaPlayer = ensureMediaPlayer()
         if (mediaPlayer == null) {
+            hasPreparedPlayback = false
+            pendingStartPositionMs = null
             updateState(PlayStateEnum.None)
             return
         }
 
         val localPath = music.filePath
         if (!localPath.isNullOrBlank()) {
-            stopCurrentPlayback()
+            stopCurrentPlayback(clearPendingStartPosition = false)
             val mediaPath = File(localPath).toURI().toString()
             val started = mediaPlayer.media().play(mediaPath)
+            hasPreparedPlayback = started
             if (!started) {
+                pendingStartPositionMs = null
                 updateState(PlayStateEnum.None)
             }
             return
@@ -269,16 +305,19 @@ class JvmMusicController : MusicCommonController() {
             val session = runCatching { createRemoteSession(music) }.getOrNull()
             if (session == null || requestVersion != playRequestVersion) {
                 session?.close()
+                pendingStartPositionMs = null
                 if (requestVersion == playRequestVersion) {
                     updateState(PlayStateEnum.None)
                 }
                 return@launch
             }
 
-            stopCurrentPlayback()
+            stopCurrentPlayback(clearPendingStartPosition = false)
             currentRemoteSession = session
             val started = mediaPlayer.media().play(session.callbackMedia)
+            hasPreparedPlayback = started
             if (!started) {
+                pendingStartPositionMs = null
                 closeRemoteSession()
                 updateState(PlayStateEnum.None)
             }
@@ -425,6 +464,8 @@ class JvmMusicController : MusicCommonController() {
         updateEvent(PlayerEvent.AddMusicList(artistId, ifInitPlayerList))
 
         if (ifInitPlayerList) {
+            hasPreparedPlayback = false
+            pendingStartPositionMs = null
             updateState(PlayStateEnum.Pause)
             setCurrentPositionData(musicCurrentPositionMapData?.get(musicDataList[targetIndex].itemId) ?: 0L)
             return
@@ -448,6 +489,7 @@ class JvmMusicController : MusicCommonController() {
         progressJob?.cancel()
         progressJob = null
         stopCurrentPlayback()
+        pendingStartPositionMs = null
         currentMediaPlayer()?.takeIf { mediaPlayerListenerRegistered }?.events()
             ?.removeMediaPlayerEventListener(playerListener)
         mediaPlayerListenerRegistered = false
@@ -466,8 +508,14 @@ class JvmMusicController : MusicCommonController() {
         )
     }
 
-    private fun stopCurrentPlayback() {
-        ignoreNextStoppedEvent = true
+    private fun stopCurrentPlayback(clearPendingStartPosition: Boolean = true) {
+        // 只有当前播放器确实处于已装载状态时，才需要忽略 stop() 主动触发的 stopped 回调。
+        val shouldIgnoreStoppedEvent = hasPreparedPlayback
+        hasPreparedPlayback = false
+        if (clearPendingStartPosition) {
+            pendingStartPositionMs = null
+        }
+        ignoreNextStoppedEvent = shouldIgnoreStoppedEvent
         playbackJob?.cancel()
         playbackJob = null
         runCatching { currentMediaPlayer()?.controls()?.stop() }
@@ -495,7 +543,7 @@ class JvmMusicController : MusicCommonController() {
 
         progressJob = scope.launch {
             while (isActive) {
-                if (state == PlayStateEnum.Playing || state == PlayStateEnum.Pause) {
+                if (hasPreparedPlayback && (state == PlayStateEnum.Playing || state == PlayStateEnum.Pause)) {
                     val currentPosition = currentMediaPlayer()?.status()?.time()?.coerceAtLeast(0L) ?: 0L
                     setCurrentPositionData(currentPosition)
                     syncDurationFromPlayer()
@@ -507,6 +555,31 @@ class JvmMusicController : MusicCommonController() {
 
     private fun ensureMediaPlayer(): MediaPlayer? {
         return ensureMediaPlayerComponent()?.mediaPlayer()
+    }
+
+    /**
+     * 优先使用持久化的歌曲历史进度；若当前歌曲尚未来得及写回 map，则退回到界面中的当前进度。
+     */
+    private fun restoredPositionForCurrentMusic(): Long {
+        val currentMusicId = musicInfo?.itemId ?: return 0L
+        return musicCurrentPositionMap[currentMusicId]
+            ?: progressStateFlow.value
+    }
+
+    /**
+     * 等 VLC 真正进入播放态后再执行跳转，避免在媒体尚未装载完成时设置时间无效。
+     */
+    private fun applyPendingStartPosition(mediaPlayer: MediaPlayer?) {
+        val startPositionMs = pendingStartPositionMs ?: return
+        pendingStartPositionMs = null
+
+        if (currentRemoteSession != null) {
+            return
+        }
+
+        if (mediaPlayer?.controls()?.setTime(startPositionMs) == true) {
+            setCurrentPositionData(startPositionMs)
+        }
     }
 
     private fun currentMediaPlayer(): MediaPlayer? {
