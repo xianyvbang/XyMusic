@@ -60,7 +60,7 @@ object VlcBootstrap {
         if (!discovered) {
             Log.i(
                 "vlc",
-                "未找到 VLC 本地库，请安装桌面版 VLC，或设置 VLC_HOME/VLC_DIR 指向包含 libvlc.dll 的目录"
+                "未找到 VLC 本地库，请安装稳定版 VLC 3.0.x，或设置 VLC_HOME/VLC_DIR 指向包含 libvlc.dll 的目录"
             )
         }
 
