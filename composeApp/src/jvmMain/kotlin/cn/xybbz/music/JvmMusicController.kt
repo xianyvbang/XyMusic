@@ -592,7 +592,7 @@ class JvmMusicController : MusicCommonController() {
         val startPositionMs = pendingStartPositionMs ?: return
         pendingStartPositionMs = null
 
-        if (currentRemoteSession != null) {
+        if (currentRemoteSession != null || startPositionMs == 0L) {
             return
         }
 
