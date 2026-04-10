@@ -48,23 +48,27 @@ class JvmMusicController : MusicCommonController() {
          */
         override fun playing(mediaPlayer: MediaPlayer?) {
             Log.i("vlc", "播放开始")
-            applyPendingStartPosition(mediaPlayer)
-            syncDurationFromPlayer()
-            if (state != PlayStateEnum.Playing) {
-                reportedPlayEvent()
+            submitMediaPlayerTask(mediaPlayer) { player ->
+                applyPendingStartPosition(player)
+                syncDurationFromPlayer(player)
+                if (state != PlayStateEnum.Playing) {
+                    reportedPlayEvent()
+                }
+                updateState(PlayStateEnum.Playing)
             }
-            updateState(PlayStateEnum.Playing)
         }
 
         /**
          * 播放暂停时上报暂停事件并刷新状态。
          */
         override fun paused(mediaPlayer: MediaPlayer?) {
-            if (state == PlayStateEnum.Playing) {
-                reportedPauseEvent()
+            submitMediaPlayerTask(mediaPlayer) { player ->
+                if (state == PlayStateEnum.Playing) {
+                    reportedPauseEvent()
+                }
+                syncDurationFromPlayer(player)
+                updateState(PlayStateEnum.Pause)
             }
-            syncDurationFromPlayer()
-            updateState(PlayStateEnum.Pause)
         }
 
         /**
@@ -525,8 +529,25 @@ class JvmMusicController : MusicCommonController() {
         currentRemoteSession = null
     }
 
+    private fun submitMediaPlayerTask(mediaPlayer: MediaPlayer?, task: (MediaPlayer) -> Unit) {
+        mediaPlayer?.let { player ->
+            player.submit {
+                task(player)
+            }
+        }
+    }
+
     private fun syncDurationFromPlayer() {
         val duration = currentMediaPlayer()?.status()?.length() ?: 0L
+        if (duration > 0) {
+            updateDuration(duration)
+        } else {
+            updateDuration(musicInfo?.runTimeTicks ?: 0L)
+        }
+    }
+
+    private fun syncDurationFromPlayer(mediaPlayer: MediaPlayer?) {
+        val duration = mediaPlayer?.status()?.length() ?: 0L
         if (duration > 0) {
             updateDuration(duration)
         } else {
