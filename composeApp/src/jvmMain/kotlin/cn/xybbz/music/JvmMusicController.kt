@@ -349,11 +349,7 @@ class JvmMusicController : MusicCommonController() {
                 return@launch
             }
 
-            val started = listPlayer.controls().play(index)
-            if (!started && requestVersion == playRequestVersion) {
-                pendingStartPositionMs = null
-                updateState(PlayStateEnum.None)
-            }
+            listPlayer.controls().play(index)
         }
     }
 
