@@ -14,6 +14,10 @@ object Log {
         logger.debug { "[$tag] $msg" }
     }
 
+    fun e(tag: String, msg: String?) {
+        logger.error { "[$tag] $msg" }
+    }
+
     fun e(tag: String, msg: String?, e: Throwable) {
         logger.error(e) { "[$tag] $msg" }
     }

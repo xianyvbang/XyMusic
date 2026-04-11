@@ -1,37 +1,36 @@
 package cn.xybbz.music
 
+import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.Log
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.PlayerEvent
+import cn.xybbz.entity.data.music.TranscodingAndMusicUrlData
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
-import io.ktor.client.request.prepareGet
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsChannel
-import io.ktor.http.HttpHeaders
-import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.readAvailable
+import cn.xybbz.proxy.JvmReverseProxyServer
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import uk.co.caprica.vlcj.media.callback.DefaultCallbackMedia
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory
+import uk.co.caprica.vlcj.log.LogLevel
+import uk.co.caprica.vlcj.log.NativeLog
 import uk.co.caprica.vlcj.player.base.MediaPlayer
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter
 import uk.co.caprica.vlcj.player.component.AudioPlayerComponent
 import java.io.File
 
 class JvmMusicController : MusicCommonController() {
+    val logger = KotlinLogging.logger("jvmMusic")
 
     private var mediaPlayerFactory: MediaPlayerFactory? = null
     private var mediaPlayerComponent: AudioPlayerComponent? = null
+    private var nativeLog: NativeLog? = null
     private var mediaPlayerListenerRegistered = false
 
-    private var currentRemoteSession: RemotePlaybackSession? = null
     private var playbackJob: Job? = null
     private var playRequestVersion = 0L
 //    private var ignoreNextStoppedEvent = false
@@ -82,7 +81,6 @@ class JvmMusicController : MusicCommonController() {
          */
         override fun finished(mediaPlayer: MediaPlayer?) {
             pendingStartPositionMs = null
-            closeRemoteSession()
             setCurrentPositionData(0L)
             updateState(PlayStateEnum.None)
         }
@@ -93,7 +91,6 @@ class JvmMusicController : MusicCommonController() {
         override fun error(mediaPlayer: MediaPlayer?) {
             Log.i("vlc", "播放异常111111111111111111111111111111111111111111111111111")
             pendingStartPositionMs = null
-            closeRemoteSession()
             updateState(PlayStateEnum.None)
         }
 
@@ -213,13 +210,9 @@ class JvmMusicController : MusicCommonController() {
     }
 
     /**
-     * 跳转到指定进度；远程流式播放本轮暂不支持拖动。
+     * 跳转到指定进度。
      */
     override fun seekTo(millSeconds: Long) {
-        if (currentRemoteSession != null) {
-            return
-        }
-
         val mediaPlayer = ensureMediaPlayer() ?: return
         mediaPlayer.controls().setTime(millSeconds)
         setCurrentPositionData(millSeconds)
@@ -322,9 +315,8 @@ class JvmMusicController : MusicCommonController() {
         }
 
         playbackJob = scope.launch(Dispatchers.IO) {
-            val session = runCatching { createRemoteSession(music) }.getOrNull()
-            if (session == null || requestVersion != playRequestVersion) {
-                session?.close()
+            val mediaUrl = runCatching { resolveRemotePlaybackUrl(music) }.getOrNull()
+            if (mediaUrl.isNullOrBlank() || requestVersion != playRequestVersion) {
                 pendingStartPositionMs = null
                 if (requestVersion == playRequestVersion) {
                     updateState(PlayStateEnum.None)
@@ -333,11 +325,9 @@ class JvmMusicController : MusicCommonController() {
             }
 
             stopCurrentPlayback(clearPendingStartPosition = false)
-            currentRemoteSession = session
-            val started = mediaPlayer.media().play(session.callbackMedia)
+            val started = mediaPlayer.media().play(mediaUrl)
             if (!started) {
                 pendingStartPositionMs = null
-                closeRemoteSession()
                 updateState(PlayStateEnum.None)
             }
         }
@@ -434,7 +424,9 @@ class JvmMusicController : MusicCommonController() {
      */
     override fun replacePlaylistItemUrl() {
         musicInfo?.takeIf { it.filePath.isNullOrBlank() }?.let { currentMusic ->
-            val refreshedUrl = getMusicUrl(currentMusic.itemId, currentMusic.plexPlayKey).musicUrl
+            val refreshedUrl = buildProxyPlaybackUrl(
+                getMusicUrl(currentMusic.itemId, currentMusic.plexPlayKey).musicUrl
+            )
             currentMusic.setMusicUrl(refreshedUrl)
         }
     }
@@ -498,8 +490,23 @@ class JvmMusicController : MusicCommonController() {
     override fun refreshPlaylistCoverMetadata() {
     }
 
+    override fun getMusicUrl(
+        musicId: String,
+        plexPlayKey: String?
+    ): TranscodingAndMusicUrlData {
+        val musicUrl = dataSourceManager.getMusicPlayUrl(
+            musicId,
+            true,
+            AudioCodecEnum.ROW,
+            null,
+            settingsManager.get().playSessionId
+        )
+
+        return TranscodingAndMusicUrlData(0, true, musicUrl)
+    }
+
     /**
-     * 关闭控制器并释放播放器、协程与远程流资源。
+     * 关闭控制器并释放播放器与协程资源。
      */
     override fun close() {
         playbackJob?.cancel()
@@ -516,14 +523,22 @@ class JvmMusicController : MusicCommonController() {
         super.close()
     }
 
-    private suspend fun createRemoteSession(music: XyPlayMusic): RemotePlaybackSession {
-        val url = getMusicUrl(music.itemId, music.plexPlayKey).musicUrl
-        music.setMusicUrl(url)
-        val response = dataSourceManager.getHttpClient().prepareGet(url).execute()
-        return RemotePlaybackSession(
-            response = response,
-            channel = response.bodyAsChannel()
-        )
+    private fun resolveRemotePlaybackUrl(music: XyPlayMusic): String {
+        val originUrl = getMusicUrl(music.itemId, music.plexPlayKey).musicUrl
+        val proxyUrl = buildProxyPlaybackUrl(originUrl)
+        music.setMusicUrl(proxyUrl)
+        return proxyUrl
+    }
+
+    /**
+     * 将远程音频地址包装成本地代理地址。
+     * 这样 VLC 访问的永远是本地 8080 代理，从而统一复用鉴权头、Range 与流式转发能力。
+     */
+    private fun buildProxyPlaybackUrl(originUrl: String): String {
+        if (originUrl.isBlank()) {
+            return originUrl
+        }
+        return JvmReverseProxyServer.wrapTargetUrl(originUrl)
     }
 
     private fun stopCurrentPlayback(clearPendingStartPosition: Boolean = true) {
@@ -534,12 +549,6 @@ class JvmMusicController : MusicCommonController() {
         playbackJob?.cancel()
         playbackJob = null
         runCatching { currentMediaPlayer()?.controls()?.stop() }
-        closeRemoteSession()
-    }
-
-    private fun closeRemoteSession() {
-        currentRemoteSession?.close()
-        currentRemoteSession = null
     }
 
     private fun submitMediaPlayerTask(mediaPlayer: MediaPlayer?, task: (MediaPlayer) -> Unit) {
@@ -578,7 +587,7 @@ class JvmMusicController : MusicCommonController() {
         val startPositionMs = pendingStartPositionMs ?: return false
         pendingStartPositionMs = null
 
-        if (currentRemoteSession != null || startPositionMs == 0L) {
+        if (startPositionMs == 0L) {
             return false
         }
 
@@ -657,63 +666,5 @@ class JvmMusicController : MusicCommonController() {
             "--ignore-config",
             "--no-media-library"
         )
-    }
-
-    private class RemotePlaybackSession(
-        private val response: HttpResponse,
-        private val channel: ByteReadChannel
-    ) : AutoCloseable {
-
-        @Volatile
-        private var closed = false
-
-        val callbackMedia = object : DefaultCallbackMedia(false) {
-            /**
-             * 返回当前响应头中的媒体长度，供 VLC 读取元信息。
-             */
-            override fun onGetSize(): Long =
-                response.headers[HttpHeaders.ContentLength]?.toLongOrNull() ?: 0L
-
-            /**
-             * 打开远程回调媒体时仅校验当前会话未关闭。
-             */
-            override fun onOpen(): Boolean = !closed
-
-            /**
-             * 从 Ktor 响应流中持续读取字节并喂给 VLC。
-             */
-            override fun onRead(buffer: ByteArray, bufferSize: Int): Int {
-                if (closed) {
-                    return -1
-                }
-                return runBlocking(Dispatchers.IO) {
-                    channel.readAvailable(buffer, 0, bufferSize)
-                }
-            }
-
-            /**
-             * 当前远程流播放不支持 seek，统一返回 false。
-             * //todo 应该改为支持
-             */
-            override fun onSeek(offset: Long): Boolean = false
-
-            /**
-             * VLC 关闭媒体时同步关闭底层远程会话。
-             */
-            override fun onClose() {
-                close()
-            }
-        }
-
-        /**
-         * 关闭当前远程读取通道，停止后续流式读取。
-         */
-        override fun close() {
-            if (closed) {
-                return
-            }
-            closed = true
-            runCatching { channel.cancel(null) }
-        }
     }
 }

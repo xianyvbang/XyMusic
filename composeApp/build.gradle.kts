@@ -112,6 +112,8 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
             implementation(libs.kotlin.ktor.apache)
+            implementation(libs.kotlin.ktor.server.core)
+            implementation(libs.kotlin.ktor.server.netty)
             implementation(libs.jvm.vlcj)
             //拼音相关
             implementation(libs.tinypinyin)

@@ -382,7 +382,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
         this.pageSize = pageSize
     }
 
-    protected fun getMusicUrl(musicId: String, plexPlayKey: String?): TranscodingAndMusicUrlData {
+    protected open fun getMusicUrl(musicId: String, plexPlayKey: String?): TranscodingAndMusicUrlData {
         val audioBitRate = settingsManager.getAudioBitRate()
 
         val static: Boolean =

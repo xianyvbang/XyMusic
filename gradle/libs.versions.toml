@@ -79,6 +79,8 @@ kotlin-ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "
 kotlin-ktor-android = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 kotlin-ktor-ios = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 kotlin-ktor-apache = { module = "io.ktor:ktor-client-apache5", version.ref = "ktor" }
+kotlin-ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
+kotlin-ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
 kotlin-ktor-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 kotlin-ktor-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 kotlin-ktor-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
