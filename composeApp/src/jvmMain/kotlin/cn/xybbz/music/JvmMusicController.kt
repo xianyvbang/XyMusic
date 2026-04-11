@@ -94,6 +94,9 @@ class JvmMusicController : MusicCommonController() {
          * 播放自然结束时回退为空闲状态。
          */
         override fun finished(mediaPlayer: MediaPlayer?) {
+            //todo 这个是自动切换
+            updateEvent(PlayerEvent.RemovePlaybackProgress(it.itemId))
+
             pendingStartPositionMs = null
             setCurrentPositionData(0L)
             updateState(PlayStateEnum.None)
@@ -104,8 +107,38 @@ class JvmMusicController : MusicCommonController() {
             media: MediaRef?
         ) {
             Log.i("vlc", "播放变化: ${media}")
-            super.mediaChanged(mediaPlayer, media)
+//            media?.duplicateMedia()
+            updatePicBytes(it)
+            updateOriginIndex(mediaController?.currentMediaItemIndex ?: 0)
+
+            if (originMusicList.isNotEmpty() && curOriginIndex >= originMusicList.size - 1 && ifNextPage){
+                updateEvent(PlayerEvent.NextList(pageNum))
+            }
+            updateCurrentMusic(originMusicList[curOriginIndex])
+            updateCurrentFavorite(musicInfo?.ifFavoriteStatus ?: false)
+            updateEvent(
+                PlayerEvent.ChangeMusic(
+                    music.itemId,
+                    music.artistIds?.firstOrNull(),
+                    music.artists?.firstOrNull()
+                )
+            )
+
+            if (musicCurrentPositionMap.containsKey(it.itemId)) {
+                musicCurrentPositionMap[it.itemId]?.let { position ->
+                    if (position > 0 && position > mediaController?.currentPosition!!) {
+                        seekTo(position)
+                    } else if (headTime > 0 && headTime > mediaController?.currentPosition!!) {
+                        seekTo(headTime)
+                    }
+                }
+
+            } else {
+                android.util.Log.i("music", "音乐 ${it.name}没有播放进度")
+            }
         }
+
+
 
 
 
@@ -338,13 +371,7 @@ class JvmMusicController : MusicCommonController() {
         updateDuration(music.runTimeTicks)
         pendingStartPositionMs = startPositionMs.takeIf { it > 0L }
 
-        updateEvent(
-            PlayerEvent.ChangeMusic(
-                music.itemId,
-                music.artistIds?.firstOrNull(),
-                music.artists?.firstOrNull()
-            )
-        )
+
 
         playbackJob = scope.launch(Dispatchers.IO) {
             // 远程地址需要先解析为最终可播地址；准备期间如果用户又切了别的歌，

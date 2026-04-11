@@ -199,11 +199,11 @@ class MusicController(
         },
         onEventEmit = {
             updateEvent(it)
-            updateCurrentFavorite(musicInfo?.ifFavoriteStatus ?: false)
         },
         onSetCurOriginIndex = {
             setCurrentPositionData(0)
             updateOriginIndex(mediaController?.currentMediaItemIndex ?: 0)
+            updateCurrentFavorite(musicInfo?.ifFavoriteStatus ?: false)
         },
         onOriginMusicListIsNotEmptyAndIndexEnd = {
             originMusicList.isNotEmpty() && curOriginIndex >= originMusicList.size - 1 && ifNextPage
