@@ -298,7 +298,7 @@ class JvmMusicController : MusicCommonController() {
         if (index !in originMusicList.indices) {
             return
         }
-
+        updateEvent(PlayerEvent.BeforeChangeMusic)
         startPlaybackAtIndex(index)
     }
 
@@ -338,9 +338,6 @@ class JvmMusicController : MusicCommonController() {
         updateDuration(music.runTimeTicks)
         pendingStartPositionMs = startPositionMs.takeIf { it > 0L }
 
-        if (previousMusicId != null && previousMusicId != music.itemId) {
-            updateEvent(PlayerEvent.BeforeChangeMusic)
-        }
         updateEvent(
             PlayerEvent.ChangeMusic(
                 music.itemId,
