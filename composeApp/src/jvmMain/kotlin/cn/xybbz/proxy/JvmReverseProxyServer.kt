@@ -1,6 +1,5 @@
 package cn.xybbz.proxy
 
-import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.DataSourceManager
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -47,12 +46,12 @@ import java.nio.charset.StandardCharsets
 
 /**
  * JVM 端本地反向代理服务。
- * 该服务固定监听 localhost:8080，并将请求按原始方法、头信息与请求体转发到目标地址。
+ * 该服务固定监听 localhost:19180，并将请求按原始方法、头信息与请求体转发到目标地址。
  */
 object JvmReverseProxyServer : KoinComponent {
 
     private const val PROXY_HOST = "localhost"
-    private const val PROXY_PORT = 8080
+    private const val PROXY_PORT = 19180
 
     /**
      * 需要从下游请求中过滤掉的受限请求头。
@@ -282,7 +281,7 @@ object JvmReverseProxyServer : KoinComponent {
 
     /**
      * 判断目标地址是否再次指向当前代理入口。
-     * 该校验可以防止 /proxy?url=http://localhost:8080/proxy?... 造成递归代理。
+     * 该校验可以防止 /proxy?url=http://localhost:19180/proxy?... 造成递归代理。
      */
     private fun isSelfProxyUrl(targetUrl: Url): Boolean {
         val normalizedHost = targetUrl.host.lowercase()

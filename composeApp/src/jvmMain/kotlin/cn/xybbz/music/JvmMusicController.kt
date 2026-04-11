@@ -536,7 +536,7 @@ class JvmMusicController : MusicCommonController() {
 
     /**
      * 将远程音频地址包装成本地代理地址。
-     * 这样 VLC 访问的永远是本地 8080 代理，从而统一复用鉴权头、Range 与流式转发能力。
+     * 这样 VLC 访问的永远是本地 19180 代理，从而统一复用鉴权头、Range 与流式转发能力。
      */
     private fun buildProxyPlaybackUrl(originUrl: String): String {
         if (originUrl.isBlank()) {

@@ -174,7 +174,7 @@ fun ProxyConfigComponent(
                             val newText = newValue.text
                             updateAddress(newText)
                         },
-                        hint = "127.0.0.1:8080"
+                        hint = "127.0.0.1:19180"
                     )
                 }
 
