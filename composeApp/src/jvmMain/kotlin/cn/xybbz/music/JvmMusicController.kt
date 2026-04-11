@@ -1,5 +1,6 @@
 package cn.xybbz.music
 
+import cn.xybbz.api.TokenServer
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.PlayStateEnum
@@ -16,7 +17,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory
-import uk.co.caprica.vlcj.log.LogLevel
 import uk.co.caprica.vlcj.log.NativeLog
 import uk.co.caprica.vlcj.player.base.MediaPlayer
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter
@@ -33,7 +33,8 @@ class JvmMusicController : MusicCommonController() {
 
     private var playbackJob: Job? = null
     private var playRequestVersion = 0L
-//    private var ignoreNextStoppedEvent = false
+
+    //    private var ignoreNextStoppedEvent = false
     // 记录下一次真正开始播放时需要跳转到的恢复进度。
     private var pendingStartPositionMs: Long? = null
 
@@ -143,11 +144,12 @@ class JvmMusicController : MusicCommonController() {
             return
         }
 
-        val insertIndex = if (originMusicList.isNotEmpty() && curOriginIndex != Constants.MINUS_ONE_INT) {
-            curOriginIndex + 1
-        } else {
-            originMusicList.size
-        }
+        val insertIndex =
+            if (originMusicList.isNotEmpty() && curOriginIndex != Constants.MINUS_ONE_INT) {
+                curOriginIndex + 1
+            } else {
+                originMusicList.size
+            }
 
         val updatedList = originMusicList.toMutableList().apply {
             addAll(insertIndex, musicList)
@@ -477,7 +479,9 @@ class JvmMusicController : MusicCommonController() {
         if (ifInitPlayerList) {
             pendingStartPositionMs = null
             updateState(PlayStateEnum.Pause)
-            setCurrentPositionData(musicCurrentPositionMapData?.get(musicDataList[targetIndex].itemId) ?: 0L)
+            setCurrentPositionData(
+                musicCurrentPositionMapData?.get(musicDataList[targetIndex].itemId) ?: 0L
+            )
             return
         }
 
@@ -538,7 +542,7 @@ class JvmMusicController : MusicCommonController() {
         if (originUrl.isBlank()) {
             return originUrl
         }
-        return JvmReverseProxyServer.wrapTargetUrl(originUrl)
+        return JvmReverseProxyServer.wrapTargetUrl(TokenServer.baseUrl + originUrl)
     }
 
     private fun stopCurrentPlayback(clearPendingStartPosition: Boolean = true) {

@@ -1,11 +1,10 @@
 package cn.xybbz.proxy
 
 import cn.xybbz.api.TokenServer
-import cn.xybbz.api.constants.ApiConstants
-import cn.xybbz.api.utils.appendCustomRequestHeaders
+import cn.xybbz.api.client.DataSourceManager
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.apache5.Apache5
+import io.ktor.client.plugins.expectSuccess
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.prepareRequest
 import io.ktor.client.request.setBody
@@ -19,6 +18,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLProtocol
 import io.ktor.http.Url
 import io.ktor.http.content.OutgoingContent
+import io.ktor.http.takeFrom
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.engine.EmbeddedServer
@@ -40,7 +40,8 @@ import io.ktor.server.routing.routing
 import io.ktor.utils.io.ByteWriteChannel
 import io.ktor.utils.io.copyTo
 import kotlinx.coroutines.CancellationException
-import io.ktor.http.takeFrom
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -48,7 +49,7 @@ import java.nio.charset.StandardCharsets
  * JVM 端本地反向代理服务。
  * 该服务固定监听 localhost:8080，并将请求按原始方法、头信息与请求体转发到目标地址。
  */
-object JvmReverseProxyServer {
+object JvmReverseProxyServer : KoinComponent {
 
     private const val PROXY_HOST = "localhost"
     private const val PROXY_PORT = 8080
@@ -93,9 +94,6 @@ object JvmReverseProxyServer {
     @Volatile
     private var proxyEngine: EmbeddedServer<*, *>? = null
 
-    @Volatile
-    private var proxyHttpClient: HttpClient? = null
-
     /**
      * 启动本地反向代理服务。
      * 若服务已经启动，则直接复用现有实例，避免重复占用端口。
@@ -106,34 +104,24 @@ object JvmReverseProxyServer {
             return
         }
 
-        val client = HttpClient(Apache5) {
-            expectSuccess = false
-            followRedirects = true
-        }
-        proxyHttpClient = client
-
         try {
             proxyEngine = embeddedServer(Netty, host = PROXY_HOST, port = PROXY_PORT) {
                 installProxyRoutes()
             }.start(wait = false)
             logger.info { "本地反向代理服务已启动：http://$PROXY_HOST:$PROXY_PORT/proxy" }
         } catch (throwable: Throwable) {
-            client.close()
-            proxyHttpClient = null
             logger.error(throwable) { "启动本地反向代理服务失败" }
         }
     }
 
     /**
-     * 停止本地反向代理服务，并释放底层 HttpClient 资源。
+     * 停止本地反向代理服务。
+     * HttpClient 由 DataSourceManager 统一托管，这里只关闭本地 Netty 服务。
      */
     @Synchronized
     fun stop() {
         proxyEngine?.stop(gracePeriodMillis = 1_000, timeoutMillis = 3_000)
         proxyEngine = null
-
-        proxyHttpClient?.close()
-        proxyHttpClient = null
     }
 
     /**
@@ -186,10 +174,10 @@ object JvmReverseProxyServer {
             return
         }
 
-        val httpClient = proxyHttpClient
+        val httpClient = currentProxyHttpClient()
         if (httpClient == null) {
             call.respondText(
-                text = "代理服务尚未完成初始化。",
+                text = "代理服务尚未拿到可用的数据源客户端。",
                 status = HttpStatusCode.ServiceUnavailable
             )
             return
@@ -199,17 +187,15 @@ object JvmReverseProxyServer {
             val upstreamRequest = HttpRequestBuilder().apply {
                 url.takeFrom(targetUrl.toString())
                 method = call.request.httpMethod
+                // DataSourceManager 返回的 HttpClient 默认 expectSuccess=true，
+                // 代理场景需要按原样回传 4xx/5xx，因此这里对单次请求显式关闭。
+                expectSuccess = false
 
                 // 先透传原始请求头，再补充业务要求中的自定义请求头。
                 copyHeaders(
                     source = call.request.headers,
                     target = headers,
                     restrictedHeaders = restrictedRequestHeaders
-                )
-                headers.appendCustomRequestHeaders(
-                    sourceHeaders = call.request.headers,
-                    token = TokenServer.token,
-                    tokenHeaderName = TokenServer.tokenHeaderName
                 )
 
                 // 仅在可能存在请求体的方法中透传输入流，避免额外消费无意义的空流。
@@ -301,11 +287,23 @@ object JvmReverseProxyServer {
     private fun isSelfProxyUrl(targetUrl: Url): Boolean {
         val normalizedHost = targetUrl.host.lowercase()
         val isLocalHost = normalizedHost == "localhost" ||
-            normalizedHost == "127.0.0.1" ||
-            normalizedHost == "::1"
+                normalizedHost == "127.0.0.1" ||
+                normalizedHost == "::1"
         val targetPort = if (targetUrl.port > 0) targetUrl.port else targetUrl.protocol.defaultPort
 
         return isLocalHost && targetPort == PROXY_PORT && targetUrl.encodedPath == "/proxy"
+    }
+
+    /**
+     * 从 DataSourceManager 获取当前可用的 HttpClient。
+     * 这里按请求实时读取，确保切换数据源后代理自动复用新的客户端配置。
+     */
+    private fun currentProxyHttpClient(): HttpClient? {
+        return runCatching {
+            get<DataSourceManager>().getHttpClient()
+        }.onFailure { throwable ->
+            logger.warn(throwable) { "当前没有可用的数据源 HttpClient" }
+        }.getOrNull()
     }
 
     /**
@@ -333,7 +331,7 @@ object JvmReverseProxyServer {
      */
     private fun shouldForwardRequestBody(method: HttpMethod): Boolean {
         return method != HttpMethod.Get &&
-            method != HttpMethod.Head &&
-            method != HttpMethod.Options
+                method != HttpMethod.Head &&
+                method != HttpMethod.Options
     }
 }
