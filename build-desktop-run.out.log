@@ -1,0 +1,130 @@
+
+C:\AndroidPro\XyMusic-KMP>if "Windows_NT" == "Windows_NT" setlocal
+
+C:\AndroidPro\XyMusic-KMP>set DIRNAME=C:\AndroidPro\XyMusic-KMP\ 
+
+C:\AndroidPro\XyMusic-KMP>if "C:\AndroidPro\XyMusic-KMP\" == "" set DIRNAME=. 
+
+C:\AndroidPro\XyMusic-KMP>set APP_BASE_NAME=gradlew 
+
+C:\AndroidPro\XyMusic-KMP>set APP_HOME=C:\AndroidPro\XyMusic-KMP\ 
+
+C:\AndroidPro\XyMusic-KMP>for %i in ("C:\AndroidPro\XyMusic-KMP\") do set APP_HOME=%~fi 
+
+C:\AndroidPro\XyMusic-KMP>set APP_HOME=C:\AndroidPro\XyMusic-KMP\ 
+
+C:\AndroidPro\XyMusic-KMP>set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m" 
+
+C:\AndroidPro\XyMusic-KMP>if defined JAVA_HOME goto findJavaFromJavaHome 
+
+C:\AndroidPro\XyMusic-KMP>set JAVA_HOME=C:\Program Files\Android\Android Studio\jbr 
+
+C:\AndroidPro\XyMusic-KMP>set JAVA_EXE=C:\Program Files\Android\Android Studio\jbr/bin/java.exe 
+
+C:\AndroidPro\XyMusic-KMP>if exist "C:\Program Files\Android\Android Studio\jbr/bin/java.exe" goto execute 
+
+C:\AndroidPro\XyMusic-KMP>set CLASSPATH= 
+
+C:\AndroidPro\XyMusic-KMP>"C:\Program Files\Android\Android Studio\jbr/bin/java.exe" "-Xmx64m" "-Xms64m"   "-Dorg.gradle.appname=gradlew" -classpath "" -jar "C:\AndroidPro\XyMusic-KMP\\gradle\wrapper\gradle-wrapper.jar" :desktopApp:run --console=plain 
+Reusing configuration cache.
+> Task :composeApp:generateComposeResClass UP-TO-DATE
+> Task :xy-platform:jvmProcessResources NO-SOURCE
+> Task :xy-platform:processJvmMainResources SKIPPED
+> Task :composeApp:generateExpectResourceCollectorsForCommonMain UP-TO-DATE
+> Task :xy-platform:kmpPartiallyResolvedDependenciesChecker
+> Task :composeApp:copyNonXmlValueResourcesForJvmMain NO-SOURCE
+> Task :api:jvmProcessResources NO-SOURCE
+> Task :xy-database:jvmProcessResources NO-SOURCE
+> Task :api:kmpPartiallyResolvedDependenciesChecker
+> Task :download:kmpPartiallyResolvedDependenciesChecker
+> Task :composeApp:kmpPartiallyResolvedDependenciesChecker
+> Task :xy-platform:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :ui:kmpPartiallyResolvedDependenciesChecker
+> Task :download:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :xy-database:kmpPartiallyResolvedDependenciesChecker
+> Task :api:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :composeApp:copyNonXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :localdata:kmpPartiallyResolvedDependenciesChecker
+> Task :ui:convertXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :api:processJvmMainResources SKIPPED
+> Task :composeApp:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :localdata:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :xy-database:processJvmMainResources SKIPPED
+> Task :composeApp:convertXmlValueResourcesForJvmMain NO-SOURCE
+> Task :xy-database:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :ui:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :ui:copyNonXmlValueResourcesForJvmMain NO-SOURCE
+> Task :composeApp:convertXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :ui:generateComposeResClass UP-TO-DATE
+> Task :ui:convertXmlValueResourcesForJvmMain NO-SOURCE
+> Task :ui:prepareComposeResourcesTaskForJvmMain NO-SOURCE
+> Task :ui:generateExpectResourceCollectorsForCommonMain UP-TO-DATE
+> Task :composeApp:prepareComposeResourcesTaskForJvmMain NO-SOURCE
+> Task :composeApp:prepareComposeResourcesTaskForCommonMain UP-TO-DATE
+> Task :ui:copyNonXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :xy-platform:compileKotlinJvm UP-TO-DATE
+> Task :desktopApp:generateComposeResClass SKIPPED
+> Task :composeApp:generateResourceAccessorsForJvmMain NO-SOURCE
+> Task :desktopApp:prepareAppResources NO-SOURCE
+> Task :ui:generateResourceAccessorsForJvmMain NO-SOURCE
+> Task :desktopApp:convertXmlValueResourcesForMain NO-SOURCE
+> Task :desktopApp:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :desktopApp:copyNonXmlValueResourcesForMain NO-SOURCE
+> Task :xy-platform:compileJvmMainJava NO-SOURCE
+> Task :composeApp:generateResourceAccessorsForCommonMain UP-TO-DATE
+> Task :xy-platform:jvmMainClasses UP-TO-DATE
+> Task :ui:prepareComposeResourcesTaskForCommonMain UP-TO-DATE
+> Task :composeApp:generateActualResourceCollectorsForJvmMain UP-TO-DATE
+> Task :ui:generateResourceAccessorsForCommonMain UP-TO-DATE
+> Task :desktopApp:prepareComposeResourcesTaskForMain NO-SOURCE
+> Task :desktopApp:generateResourceAccessorsForMain SKIPPED
+> Task :ui:assembleJvmMainResources UP-TO-DATE
+> Task :ui:generateActualResourceCollectorsForJvmMain UP-TO-DATE
+> Task :xy-platform:jvmJar UP-TO-DATE
+> Task :ui:jvmProcessResources UP-TO-DATE
+> Task :api:compileKotlinJvm UP-TO-DATE
+> Task :desktopApp:assembleMainResources UP-TO-DATE
+> Task :ui:processJvmMainResources SKIPPED
+> Task :desktopApp:generateActualResourceCollectorsForMain SKIPPED
+> Task :api:compileJvmMainJava NO-SOURCE
+> Task :api:jvmMainClasses UP-TO-DATE
+> Task :api:jvmJar UP-TO-DATE
+> Task :desktopApp:processResources UP-TO-DATE
+> Task :composeApp:assembleJvmMainResources UP-TO-DATE
+> Task :xy-database:compileKotlinJvm UP-TO-DATE
+> Task :xy-database:compileJvmMainJava NO-SOURCE
+> Task :xy-database:jvmMainClasses UP-TO-DATE
+> Task :xy-database:jvmJar UP-TO-DATE
+> Task :composeApp:jvmProcessResources UP-TO-DATE
+> Task :composeApp:processJvmMainResources SKIPPED
+> Task :ui:compileKotlinJvm UP-TO-DATE
+> Task :localdata:kspKotlinJvm UP-TO-DATE
+> Task :download:kspKotlinJvm UP-TO-DATE
+> Task :localdata:jvmProcessResources NO-SOURCE
+> Task :localdata:copyRoomSchemas NO-SOURCE
+> Task :ui:compileJvmMainJava NO-SOURCE
+> Task :download:jvmProcessResources NO-SOURCE
+> Task :download:copyRoomSchemas NO-SOURCE
+> Task :localdata:processJvmMainResources SKIPPED
+> Task :ui:jvmMainClasses UP-TO-DATE
+> Task :download:processJvmMainResources SKIPPED
+> Task :ui:jvmJar UP-TO-DATE
+> Task :localdata:compileKotlinJvm UP-TO-DATE
+> Task :localdata:compileJvmMainJava NO-SOURCE
+> Task :download:compileKotlinJvm UP-TO-DATE
+> Task :localdata:jvmMainClasses UP-TO-DATE
+> Task :download:compileJvmMainJava NO-SOURCE
+> Task :download:jvmMainClasses UP-TO-DATE
+> Task :localdata:jvmJar UP-TO-DATE
+> Task :download:jvmJar UP-TO-DATE
+> Task :composeApp:compileKotlinJvm UP-TO-DATE
+> Task :composeApp:compileJvmMainJava NO-SOURCE
+> Task :composeApp:jvmMainClasses UP-TO-DATE
+> Task :composeApp:jvmJar UP-TO-DATE
+> Task :desktopApp:compileKotlin UP-TO-DATE
+> Task :desktopApp:compileJava NO-SOURCE
+> Task :desktopApp:classes UP-TO-DATE
+> Task :desktopApp:jar UP-TO-DATE
+
+> Task :desktopApp:run
+kotlin-logging: initializing... active logger factory: Slf4jLoggerFactory
