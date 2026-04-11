@@ -1,5 +1,0 @@
-[DefaultDispatcher-worker-1] INFO cn.xybbz.common.utils.Log - [HomeDataRepository] loadOnce1 
-[DefaultDispatcher-worker-10] INFO cn.xybbz.common.utils.Log - [=====] 开始存储设置
-[DefaultDispatcher-worker-10] INFO cn.xybbz.common.utils.Log - [api] 动态设置数据--读取配置
-[DefaultDispatcher-worker-10] INFO cn.xybbz.common.utils.Log - [=====] 开始自动登录
-^C
