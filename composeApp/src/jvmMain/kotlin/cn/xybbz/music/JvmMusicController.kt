@@ -17,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory
+import uk.co.caprica.vlcj.media.MediaRef
 import uk.co.caprica.vlcj.medialist.MediaList
 import uk.co.caprica.vlcj.player.base.MediaPlayer
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter
@@ -97,6 +98,17 @@ class JvmMusicController : MusicCommonController() {
             setCurrentPositionData(0L)
             updateState(PlayStateEnum.None)
         }
+
+        override fun mediaChanged(
+            mediaPlayer: MediaPlayer?,
+            media: MediaRef?
+        ) {
+            Log.i("vlc", "播放变化: ${media}")
+            super.mediaChanged(mediaPlayer, media)
+        }
+
+
+
 
         /**
          * 播放异常时回退为空闲状态。
