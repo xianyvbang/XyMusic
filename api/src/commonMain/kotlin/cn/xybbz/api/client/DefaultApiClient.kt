@@ -30,6 +30,7 @@ import cn.xybbz.api.events.ReLoginEventBus
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.exception.UnauthorizedException
 import cn.xybbz.api.okhttp.proxy.ProxyManager
+import cn.xybbz.api.utils.appendCustomRequestHeaders
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -76,7 +77,7 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
 
     private lateinit var defaultDownloadApi: IDownLoadApi
     protected val logger = KotlinLogging.logger {}
-    override fun createHttpClient(baseUrl: String, ifTmp: Boolean) {
+        override fun createHttpClient(baseUrl: String, ifTmp: Boolean) {
         this.ifTmp = ifTmp
         if (!ifTmp)
             TokenServer.updateBaseUrl(baseUrl)
@@ -97,15 +98,11 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
                     parameters.appendAll(queryMap)
                 }
                 headers {
-                    if (token.isNotBlank())
-                        append(tokenHeaderName, token)
-                    val bool = headers.contains(ApiConstants.CUSTOM_IMAGE_HEADER_NAME)
-                    if (bool) {
-                        append(
-                            ApiConstants.AUTHORIZATION,
-                            headers[ApiConstants.AUTHORIZATION] ?: ""
-                        )
-                    }
+                    appendCustomRequestHeaders(
+                        sourceHeaders = build(),
+                        token = token,
+                        tokenHeaderName = tokenHeaderName
+                    )
                     appendAll(headerMap)
                 }
 

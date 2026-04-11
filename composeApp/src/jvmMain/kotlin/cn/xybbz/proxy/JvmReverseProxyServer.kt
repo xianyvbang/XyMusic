@@ -2,6 +2,7 @@ package cn.xybbz.proxy
 
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.constants.ApiConstants
+import cn.xybbz.api.utils.appendCustomRequestHeaders
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache5.Apache5
@@ -205,9 +206,10 @@ object JvmReverseProxyServer {
                     target = headers,
                     restrictedHeaders = restrictedRequestHeaders
                 )
-                appendCustomRequestHeaders(
+                headers.appendCustomRequestHeaders(
                     sourceHeaders = call.request.headers,
-                    targetHeaders = headers
+                    token = TokenServer.token,
+                    tokenHeaderName = TokenServer.tokenHeaderName
                 )
 
                 // 仅在可能存在请求体的方法中透传输入流，避免额外消费无意义的空流。
@@ -322,29 +324,6 @@ object JvmReverseProxyServer {
             source.getAll(headerName)?.forEach { headerValue ->
                 target.append(headerName, headerValue)
             }
-        }
-    }
-
-    /**
-     * 补充业务要求中的自定义请求头。
-     * 该逻辑与现有 DefaultApiClient 保持一致，保证图片等场景的鉴权行为不变。
-     */
-    private fun appendCustomRequestHeaders(
-        sourceHeaders: Headers,
-        targetHeaders: HeadersBuilder
-    ) {
-        val token = TokenServer.token
-        val tokenHeaderName = TokenServer.tokenHeaderName
-
-        if (token.isNotBlank()) {
-            targetHeaders.append(tokenHeaderName, token)
-        }
-
-        if (sourceHeaders.contains(ApiConstants.CUSTOM_IMAGE_HEADER_NAME)) {
-            targetHeaders.append(
-                ApiConstants.AUTHORIZATION,
-                sourceHeaders[ApiConstants.AUTHORIZATION] ?: ""
-            )
         }
     }
 
