@@ -17,11 +17,10 @@ import cn.xybbz.localdata.data.music.PlayQueueMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.player.XyPlayer
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import cn.xybbz.localdata.enums.PlayerTypeEnum
+import cn.xybbz.localdata.enums.PlayerModeEnum
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import org.koin.core.annotation.Single
 
 /**
  * 播放器事件协调器。
@@ -255,15 +254,15 @@ class PlayerEventCoordinator(
         }
     }
 
-    private fun onPlayerTypeChange(playerTypeEnum: PlayerTypeEnum) {
+    private fun onPlayerTypeChange(playerModeEnum: PlayerModeEnum) {
         scope.launch {
             val player = db.playerDao.selectPlayerByDataSource()
             if (player != null) {
-                db.playerDao.updatePlayType(playerTypeEnum)
+                db.playerDao.updatePlayType(playerModeEnum)
             } else {
                 db.playerDao.save(
                     XyPlayer(
-                        playerType = playerTypeEnum,
+                        playerType = playerModeEnum,
                         connectionId = dataSourceManager.getConnectionId(),
                         dataType = musicController.playDataType,
                         pageSize = 0
@@ -303,7 +302,7 @@ class PlayerEventCoordinator(
                     musicId = musicController.musicInfo?.itemId ?: "",
                     headTime = musicController.headTime,
                     endTime = musicController.endTime,
-                    playerType = musicController.playType,
+                    playerType = musicController.playMode,
                     pageNum = musicController.pageNum,
                     ifSkip = musicController.headTime > 0,
                     albumId = musicController.musicInfo?.album ?: "",

@@ -32,7 +32,7 @@ import cn.xybbz.download.enums.DownloadStatus
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.localdata.enums.PlayerTypeEnum
+import cn.xybbz.localdata.enums.PlayerModeEnum
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -77,7 +77,7 @@ class LocalViewModel(
     fun musicList(
         onMusicPlayParameter: OnMusicPlayParameter,
         downloadList: List<XyMusic>,
-        playerTypeEnum: PlayerTypeEnum? = null
+        playerModeEnum: PlayerModeEnum? = null
     ) {
         viewModelScope.launch {
             val downloadPathMap = downloadMusicTasks.value.associate { it.uid to it.filePath }
@@ -91,7 +91,7 @@ class LocalViewModel(
                         filePath = downloadPathMap[music.itemId]
                     )
                 },
-                playerTypeEnum
+                playerModeEnum
             )
         }
     }

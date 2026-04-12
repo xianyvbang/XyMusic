@@ -18,7 +18,7 @@
 
 package cn.xybbz.config.music
 
-import cn.xybbz.localdata.enums.PlayerTypeEnum
+import cn.xybbz.localdata.enums.PlayerModeEnum
 
 sealed class PlayerEvent {
     //设置删除播放历史进度
@@ -40,5 +40,5 @@ sealed class PlayerEvent {
     //播放列表增加数据,传值是艺术家id
     data class AddMusicList(val artistId: String?,/*是否为还原播放列表*/val ifInitPlayerList: Boolean = false) : PlayerEvent()
     //设置播放模式变化监听方法
-    data class PlayerTypeChange(val playerType: PlayerTypeEnum) : PlayerEvent()
+    data class PlayerTypeChange(val playerType: PlayerModeEnum) : PlayerEvent()
 }

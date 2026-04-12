@@ -4,11 +4,11 @@ package cn.xybbz.localdata.enums
  * 播放器类型
  * @author 刘梦龙
  * @date 2024/01/22
- * @constructor 创建[PlayerTypeEnum]
+ * @constructor 创建[PlayerModeEnum]
  * @param [code] 密码
  * @param [message] 消息
  */
-enum class PlayerTypeEnum(val code:Int, val message:String) {
+enum class PlayerModeEnum(val code:Int, val message:String) {
 
     /**
      * 单曲循环

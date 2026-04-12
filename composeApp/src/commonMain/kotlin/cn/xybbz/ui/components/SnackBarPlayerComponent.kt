@@ -79,7 +79,7 @@ import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.extension.playProgress
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import cn.xybbz.localdata.enums.PlayerTypeEnum
+import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
@@ -508,7 +508,7 @@ fun RowScope.HorizontalPagerSnackBar(
                 basePage,
                 originMusicListIsEmpty,
                 musicController.curOriginIndex,
-                musicController.playType
+                musicController.playMode
             ) {
                 derivedStateOf {
                     if (originMusicListIsEmpty.isEmpty()) {
@@ -521,7 +521,7 @@ fun RowScope.HorizontalPagerSnackBar(
                         val fallbackIndex =
                             (page % listSize + listSize) % listSize
 
-                        if (musicController.playType != PlayerTypeEnum.RANDOM_PLAY) {
+                        if (musicController.playMode != PlayerModeEnum.RANDOM_PLAY) {
                             fallbackIndex
                         } else {
                             when (page - basePage) {

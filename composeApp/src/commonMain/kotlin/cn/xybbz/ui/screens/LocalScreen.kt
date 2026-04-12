@@ -30,7 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalNavigator
-import cn.xybbz.localdata.enums.PlayerTypeEnum
+import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.TopAppBarComponent
@@ -93,7 +93,7 @@ fun LocalScreen(localViewModel: LocalViewModel = koinViewModel<LocalViewModel>()
                         localViewModel.musicList(
                             it,
                             downloadList = downloadMusicList,
-                            playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
+                            playerModeEnum = PlayerModeEnum.SEQUENTIAL_PLAYBACK
                         )
                     },
                     trailingOnClick = {

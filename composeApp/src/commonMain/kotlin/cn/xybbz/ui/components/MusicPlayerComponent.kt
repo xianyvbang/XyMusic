@@ -82,7 +82,7 @@ import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
-import cn.xybbz.localdata.enums.PlayerTypeEnum
+import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.ui.components.lrc.LrcViewNewCompose
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
@@ -503,12 +503,12 @@ private fun PlayerTypeComponent(
         },
     ) {
         Box(contentAlignment = Alignment.Center) {
-            if (musicController.playType.code == PlayerTypeEnum.SINGLE_LOOP.code) {
+            if (musicController.playMode.code == PlayerModeEnum.SINGLE_LOOP.code) {
                 Text(text = "1", fontSize = 10.sp)
             }
             Icon(
-                painter = painterResource(mainViewModel.iconList[musicController.playType.code].icon),
-                contentDescription = stringResource(mainViewModel.iconList[musicController.playType.code].message),
+                painter = painterResource(mainViewModel.iconList[musicController.playMode.code].icon),
+                contentDescription = stringResource(mainViewModel.iconList[musicController.playMode.code].message),
             )
         }
 

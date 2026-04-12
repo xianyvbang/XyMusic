@@ -35,7 +35,7 @@ import cn.xybbz.localdata.data.player.XyPlayer
 import cn.xybbz.localdata.data.progress.Progress
 import cn.xybbz.localdata.data.setting.SkipTime
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
-import cn.xybbz.localdata.enums.PlayerTypeEnum
+import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.ui.components.LoadingObject
 import cn.xybbz.ui.components.dismiss
 import cn.xybbz.ui.components.show
@@ -79,11 +79,11 @@ class MusicPlayContext(
     fun musicList(
         onMusicPlayParameter: OnMusicPlayParameter,
         musicList: List<XyPlayMusic>,
-        playerTypeEnum: PlayerTypeEnum? = null
+        playerModeEnum: PlayerModeEnum? = null
     ) {
 
-        if (playerTypeEnum != null)
-            musicController.setPlayTypeData(playerTypeEnum)
+        if (playerModeEnum != null)
+            musicController.setPlayTypeData(playerModeEnum)
         musicOperate(
             musicPlayData = MusicPlayData(
                 onMusicPlayParameter = onMusicPlayParameter,

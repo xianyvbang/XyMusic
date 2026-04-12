@@ -73,7 +73,7 @@ import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
-import cn.xybbz.localdata.enums.PlayerTypeEnum
+import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.router.Album
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.router.Artist
@@ -548,7 +548,7 @@ fun HomeScreen(
                                     homeViewModel.musicList(
                                         musicList = mostPlayerMusicList,
                                         onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
-                                        playerTypeEnum = PlayerTypeEnum.RANDOM_PLAY
+                                        playerModeEnum = PlayerModeEnum.RANDOM_PLAY
                                     )
                             }) {
                                 Icon(
@@ -563,7 +563,7 @@ fun HomeScreen(
                                     homeViewModel.musicList(
                                         musicList = mostPlayerMusicList,
                                         onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
-                                        playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
+                                        playerModeEnum = PlayerModeEnum.SEQUENTIAL_PLAYBACK
                                     )
                             }) {
                                 Icon(
@@ -592,7 +592,7 @@ fun HomeScreen(
                                     homeViewModel.musicList(
                                         musicList = recommendedMusicList,
                                         onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
-                                        playerTypeEnum = PlayerTypeEnum.RANDOM_PLAY
+                                        playerModeEnum = PlayerModeEnum.RANDOM_PLAY
                                     )
                             }) {
                                 Icon(
@@ -607,7 +607,7 @@ fun HomeScreen(
                                     homeViewModel.musicList(
                                         musicList = recommendedMusicList,
                                         onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
-                                        playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
+                                        playerModeEnum = PlayerModeEnum.SEQUENTIAL_PLAYBACK
                                     )
                             }) {
                                 Icon(
@@ -663,7 +663,7 @@ fun HomeScreen(
                                     homeViewModel.musicList(
                                         musicList = musicRecentlyList,
                                         onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
-                                        playerTypeEnum = PlayerTypeEnum.RANDOM_PLAY
+                                        playerModeEnum = PlayerModeEnum.RANDOM_PLAY
                                     )
                             }) {
                                 Icon(
@@ -678,7 +678,7 @@ fun HomeScreen(
                                     homeViewModel.musicList(
                                         musicList = musicRecentlyList,
                                         onMusicPlayParameter = OnMusicPlayParameter(musicId = ""),
-                                        playerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK
+                                        playerModeEnum = PlayerModeEnum.SEQUENTIAL_PLAYBACK
                                     )
                             }) {
                                 Icon(

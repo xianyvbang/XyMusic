@@ -18,7 +18,7 @@ import cn.xybbz.entity.data.music.TranscodingAndMusicUrlData
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
-import cn.xybbz.localdata.enums.PlayerTypeEnum
+import cn.xybbz.localdata.enums.PlayerModeEnum
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -99,7 +99,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
         protected set
 
     //当前播放模式
-    var playType by mutableStateOf(PlayerTypeEnum.SEQUENTIAL_PLAYBACK)
+    var playMode by mutableStateOf(PlayerModeEnum.SEQUENTIAL_PLAYBACK)
         protected set
 
     var ifNextPage = true
@@ -211,9 +211,9 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     /**
      * 设置播放类型
      */
-    protected open fun setPlayTypeData(playerTypeEnum: PlayerTypeEnum) {
-        playType = playerTypeEnum
-        updateEvent(PlayerEvent.PlayerTypeChange(playerTypeEnum))
+    protected open fun setPlayTypeData(playerModeEnum: PlayerModeEnum) {
+        playMode = playerModeEnum
+        updateEvent(PlayerEvent.PlayerTypeChange(playerModeEnum))
         updatePlayerMode()
     }
 
@@ -287,7 +287,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
             musicCurrentPositionMap.clear()
             musicCurrentPositionMap.putAll(musicCurrentPositionMapData)
         }
-        replacePlaylist(musicDataList)
+        replacePlaylist(musicDataList,)
         setPageNumData(pageNum)
         updatePageSize(pageSize)
     }
@@ -405,7 +405,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
         return playIndex
     }
 
-    fun insertMusicList(musicList: List<XyPlayMusic>): Int {
+    fun addMusicList(musicList: List<XyPlayMusic>): Int {
         val insertIndex = curOriginIndex + 1
         _originMusicList.addAll(insertIndex, musicList)
         val playIndex = curRealIndex + 1
@@ -486,9 +486,18 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
      * 更新播放列表数据
      */
     private fun insertPlayMusicList(musicList: List<XyPlayMusic>) {
-        //todo 判断播放列表是否为随机播放,如果是随机播放,则打乱顺序
-        /*_originMusicList.clear()
-        _originMusicList.addAll(musicList)*/
+        _playMusicList.clear()
+        when (playMode) {
+            PlayerModeEnum.SINGLE_LOOP -> {
+                _playMusicList.addAll(musicList)
+            }
+            PlayerModeEnum.SEQUENTIAL_PLAYBACK -> {
+                _playMusicList.addAll(musicList)
+            }
+            PlayerModeEnum.RANDOM_PLAY -> {
+                _playMusicList.addAll(musicList.shuffled())
+            }
+         }
     }
 
 

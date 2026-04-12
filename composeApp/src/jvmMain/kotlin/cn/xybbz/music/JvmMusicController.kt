@@ -9,7 +9,7 @@ import cn.xybbz.config.music.PlayerEvent
 import cn.xybbz.entity.data.music.TranscodingAndMusicUrlData
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
-import cn.xybbz.localdata.enums.PlayerTypeEnum
+import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.proxy.JvmReverseProxyServer
 import io.github.oshai.kotlinlogging.KotlinLogging
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory
@@ -170,7 +170,7 @@ class JvmMusicController : MusicCommonController() {
         if (musicList.isEmpty()) {
             return
         }
-        val playIndex = insertMusicList(musicList)
+        val playIndex = addMusicList(musicList)
         insertPlaylistItems(playIndex, musicList)
         if (isPlayer == true) {
             seekToIndex(playIndex)
@@ -314,7 +314,7 @@ class JvmMusicController : MusicCommonController() {
      * 转码策略或网络环境变化后，需要把整份 MediaList 里的远程地址重建一遍。
      */
     override fun replacePlaylistItemUrl() {
-        val snapshot = originMusicList.toList()
+        val snapshot = playMusicList.toList()
         if (snapshot.isEmpty()) {
             return
         }
@@ -375,10 +375,8 @@ class JvmMusicController : MusicCommonController() {
         updateDuration(musicDataList[targetIndex].runTimeTicks)
         updateEvent(PlayerEvent.AddMusicList(artistId, ifInitPlayerList))
 
-
         // 远程地址需要先解析为最终可播地址；准备期间如果用户又切了别的歌，
-        // 则通过 requestVersion 放弃这次过期的准备结果。
-        ensurePlaylistPrepared(originMusicList)
+        ensurePlaylistPrepared(playMusicList)
         if (ifInitPlayerList) {
             updateState(PlayStateEnum.Pause)
             setCurrentPositionData(
@@ -400,11 +398,12 @@ class JvmMusicController : MusicCommonController() {
      * 生成当前播放模式下的歌曲列表
      */
     override fun updatePlayerMode() {
-        val mode = when (playType) {
-            PlayerTypeEnum.SINGLE_LOOP -> PlaybackMode.REPEAT
+        val mode = when (playMode) {
+            PlayerModeEnum.SINGLE_LOOP -> PlaybackMode.REPEAT
             else -> PlaybackMode.LOOP
         }
         currentMediaListPlayer()?.controls()?.setMode(mode)
+        currentMediaListPlayer()?.
     }
 
     override fun getMusicUrl(
@@ -418,7 +417,6 @@ class JvmMusicController : MusicCommonController() {
             null,
             settingsManager.get().playSessionId
         )
-
         return TranscodingAndMusicUrlData(0, true, musicUrl)
     }
 
@@ -688,7 +686,7 @@ class JvmMusicController : MusicCommonController() {
         insertIndex: Int,
         musicList: List<XyPlayMusic>
     ) {
-        val preparedSources = musicList.map { preparePlaylistSource(it) }
+        val preparedSources = musicList.map { preparePlaylistSource(it,address) }
         val mediaApi = ensureMediaList()?.media() ?: return
         val boundedIndex = insertIndex.coerceIn(0, originMusicList.size)
 
@@ -793,7 +791,6 @@ class JvmMusicController : MusicCommonController() {
         mediaPlayer = createdPlayer
         mediaListPlayer = createdListPlayer
         mediaList = createdMediaList
-        applyPlaybackMode(playType)
         return createdPlayer
     }
 

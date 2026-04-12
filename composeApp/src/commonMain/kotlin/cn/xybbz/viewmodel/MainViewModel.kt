@@ -39,7 +39,7 @@ import cn.xybbz.entity.data.PlayerTypeData
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.era.XyEraItem
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.localdata.enums.PlayerTypeEnum
+import cn.xybbz.localdata.enums.PlayerModeEnum
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
@@ -149,13 +149,13 @@ class MainViewModel(
 
 
     fun setNowPlayerTypeData() {
-        Log.i("=====", "当前播放类型${musicController.playType}")
+        Log.i("=====", "当前播放类型${musicController.playMode}")
 
-        when (musicController.playType) {
-            PlayerTypeEnum.RANDOM_PLAY -> musicController.setPlayTypeData(PlayerTypeEnum.SINGLE_LOOP)
-            PlayerTypeEnum.SINGLE_LOOP -> musicController.setPlayTypeData(PlayerTypeEnum.SEQUENTIAL_PLAYBACK)
-            PlayerTypeEnum.SEQUENTIAL_PLAYBACK -> musicController.setPlayTypeData(
-                PlayerTypeEnum.RANDOM_PLAY
+        when (musicController.playMode) {
+            PlayerModeEnum.RANDOM_PLAY -> musicController.setPlayTypeData(PlayerModeEnum.SINGLE_LOOP)
+            PlayerModeEnum.SINGLE_LOOP -> musicController.setPlayTypeData(PlayerModeEnum.SEQUENTIAL_PLAYBACK)
+            PlayerModeEnum.SEQUENTIAL_PLAYBACK -> musicController.setPlayTypeData(
+                PlayerModeEnum.RANDOM_PLAY
             )
         }
     }

@@ -50,9 +50,8 @@ import cn.xybbz.config.music.PlayerEvent
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
-import cn.xybbz.localdata.enums.PlayerTypeEnum
+import cn.xybbz.localdata.enums.PlayerModeEnum
 import com.google.common.util.concurrent.ListenableFuture
-import kotlinx.coroutines.launch
 import org.koin.core.component.get
 
 
@@ -90,15 +89,17 @@ class MusicController(
     override fun replacePlaylistItemUrl() {
         if (originMusicList.isNotEmpty()) {
 
-            replacePlaylist(originMusicList.map {
-                it.setMusicUrl(
-                    getMusicUrl(
-                        it.itemId,
-                        it.plexPlayKey
-                    ).musicUrl
-                )
-                it
-            })
+            replacePlaylist(
+                originMusicList.map {
+                    it.setMusicUrl(
+                        getMusicUrl(
+                            it.itemId,
+                            it.plexPlayKey
+                        ).musicUrl
+                    )
+                    it
+                }
+            )
 
             if (state == PlayStateEnum.Pause) {
                 mediaController?.stop()
@@ -339,7 +340,7 @@ class MusicController(
 
         //这里进行缓存数据替换
         updateState(PlayStateEnum.Loading)
-        if (playType == PlayerTypeEnum.SINGLE_LOOP && mediaController?.hasPreviousMediaItem() != true) {
+        if (playMode == PlayerModeEnum.SINGLE_LOOP && mediaController?.hasPreviousMediaItem() != true) {
             seekToIndex((mediaController?.mediaItemCount ?: 1) - 1)
         } else {
             fadeController.fadeOut {
@@ -356,7 +357,7 @@ class MusicController(
      */
     override fun seekToNext() {
         updateState(PlayStateEnum.Loading)
-        if (playType == PlayerTypeEnum.SINGLE_LOOP && mediaController?.hasNextMediaItem() != true) {
+        if (playMode == PlayerModeEnum.SINGLE_LOOP && mediaController?.hasNextMediaItem() != true) {
             seekToIndex(0)
         } else {
             fadeController.fadeOut {
@@ -586,17 +587,17 @@ class MusicController(
      * 生成当前播放模式下的歌曲列表
      */
     override fun updatePlayerMode() {
-        Log.i("music", "设置播放模式${playType}")
+        Log.i("music", "设置播放模式${playMode}")
         // MediaController 的状态变更必须切回它自己的 application thread 执行，
         // 否则在恢复播放列表或后台协程里调用时会触发线程校验异常。
         withMediaControllerOnApplicationThread {
-            when (playType) {
-                PlayerTypeEnum.RANDOM_PLAY -> {
+            when (playMode) {
+                PlayerModeEnum.RANDOM_PLAY -> {
                     shuffleModeEnabled = true
                     repeatMode = Player.REPEAT_MODE_ALL
                 }
 
-                PlayerTypeEnum.SINGLE_LOOP -> {
+                PlayerModeEnum.SINGLE_LOOP -> {
                     shuffleModeEnabled = false
                     repeatMode = Player.REPEAT_MODE_ONE
                 }

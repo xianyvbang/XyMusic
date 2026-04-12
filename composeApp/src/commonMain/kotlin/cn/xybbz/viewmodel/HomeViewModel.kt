@@ -45,7 +45,7 @@ import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.localdata.enums.PlayerTypeEnum
+import cn.xybbz.localdata.enums.PlayerModeEnum
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -356,12 +356,12 @@ class HomeViewModel(
      * 播放音乐列表
      * @param [musicList] 音乐清单
      * @param [onMusicPlayParameter] 关于音乐播放参数
-     * @param [playerTypeEnum] 播放顺序类型
+     * @param [playerModeEnum] 播放顺序类型
      */
     fun musicList(
         onMusicPlayParameter: OnMusicPlayParameter,
         musicList: List<XyMusic>,
-        playerTypeEnum: PlayerTypeEnum? = null
+        playerModeEnum: PlayerModeEnum? = null
     ) {
         viewModelScope.launch {
             val playMusicList = MusicPlayAssembler.toPlayMusicList(
@@ -372,7 +372,7 @@ class HomeViewModel(
             musicPlayContext.musicList(
                 onMusicPlayParameter,
                 playMusicList,
-                playerTypeEnum
+                playerModeEnum
             )
         }
     }

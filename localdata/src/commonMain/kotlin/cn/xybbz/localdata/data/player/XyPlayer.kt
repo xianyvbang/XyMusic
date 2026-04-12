@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
-import cn.xybbz.localdata.enums.PlayerTypeEnum
+import cn.xybbz.localdata.enums.PlayerModeEnum
 
 /**
  * 正在播放配置存储实体类
@@ -53,7 +53,7 @@ data class XyPlayer(
     /**
      * 当前播放顺序类型
      */
-    val playerType: PlayerTypeEnum = PlayerTypeEnum.SEQUENTIAL_PLAYBACK,
+    val playerType: PlayerModeEnum = PlayerModeEnum.SEQUENTIAL_PLAYBACK,
     /**
      * 页码
      */

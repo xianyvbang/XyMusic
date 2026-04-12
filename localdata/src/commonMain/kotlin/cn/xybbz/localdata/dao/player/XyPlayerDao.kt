@@ -7,7 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import cn.xybbz.localdata.data.player.XyPlayer
-import cn.xybbz.localdata.enums.PlayerTypeEnum
+import cn.xybbz.localdata.enums.PlayerModeEnum
 
 @Dao
 interface XyPlayerDao {
@@ -29,7 +29,7 @@ interface XyPlayerDao {
     suspend fun selectPlayerByDataSource(): XyPlayer?
 
     @Query("update xy_player set playerType = :code where connectionId = (select connectionId from xy_settings)")
-    suspend fun updatePlayType(code: PlayerTypeEnum)
+    suspend fun updatePlayType(code: PlayerModeEnum)
 
     @Query("update xy_player set musicId = :musicId where connectionId = (select connectionId from xy_settings) ")
     suspend fun updateIndex(musicId: String)
