@@ -15,7 +15,6 @@ import cn.xybbz.proxy.JvmReverseProxyServer
 import io.github.oshai.kotlinlogging.KotlinLogging
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory
 import uk.co.caprica.vlcj.media.Media
-import uk.co.caprica.vlcj.media.MediaEventAdapter as VlcMediaEventAdapter
 import uk.co.caprica.vlcj.media.MediaParsedStatus
 import uk.co.caprica.vlcj.media.MediaRef
 import uk.co.caprica.vlcj.media.Meta
@@ -30,6 +29,7 @@ import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.Base64
+import uk.co.caprica.vlcj.media.MediaEventAdapter as VlcMediaEventAdapter
 
 class JvmMusicController : MusicCommonController() {
     val logger = KotlinLogging.logger("jvmMusic")
@@ -466,30 +466,11 @@ class JvmMusicController : MusicCommonController() {
         ifInitPlayerList: Boolean,
         musicPlayTypeEnum: MusicPlayTypeEnum
     ) {
-        playDataType = musicPlayTypeEnum
-        updateRestartCount()
-
+        super.initMusicList(musicDataList, musicCurrentPositionMapData, originIndex, pageNum, pageSize, artistId, ifInitPlayerList, musicPlayTypeEnum)
         stopCurrentPlayback()
         clearPlaylistMirror()
 
-        if (!musicCurrentPositionMapData.isNullOrEmpty()) {
-            musicCurrentPositionMap.clear()
-            musicCurrentPositionMap.putAll(musicCurrentPositionMapData)
-        }
-
-        updateOriginMusicList(musicDataList.toList())
-        setPageNumData(pageNum)
-        updatePageSize(pageSize)
-
-        if (musicDataList.isEmpty()) {
-            updateOriginIndex(Constants.MINUS_ONE_INT)
-            updateCurrentMusic(null)
-            updateState(PlayStateEnum.None)
-            updateEvent(PlayerEvent.AddMusicList(artistId, ifInitPlayerList))
-            return
-        }
-
-        val targetIndex = (originIndex ?: 0).coerceIn(0, musicDataList.lastIndex)
+        val targetIndex = originIndex ?: 0
         updateOriginIndex(targetIndex)
         updateCurrentMusic(musicDataList[targetIndex])
         updateDuration(musicDataList[targetIndex].runTimeTicks)
@@ -582,9 +563,7 @@ class JvmMusicController : MusicCommonController() {
      * `ignoreStoppedEvent=true` 时会预先登记一次忽略标记，
      * 用来屏蔽 MediaListPlayer 内部切换带来的中间 stopped 事件。
      */
-    private fun stopCurrentPlayback(
-    ) {
-
+    private fun stopCurrentPlayback() {
         runCatching { currentMediaListPlayer()?.controls()?.stop() }
     }
 
@@ -843,9 +822,6 @@ class JvmMusicController : MusicCommonController() {
      * 从 VLC 的 MediaList 中删除单条媒体，并同步更新镜像缓存。
      */
     private fun removePlaylistItem(index: Int): Boolean {
-        if (index !in originMusicList.indices) {
-            return false
-        }
 
         val mediaApi = ensureMediaList()?.media() ?: return false
         val removed = runCatching { mediaApi.remove(index) }.getOrDefault(false)

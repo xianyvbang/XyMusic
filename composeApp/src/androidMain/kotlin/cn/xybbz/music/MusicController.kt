@@ -37,8 +37,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionToken
-import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.Constants.MUSIC_PLAY_CUSTOM_COMMAND_TYPE
 import cn.xybbz.common.constants.Constants.MUSIC_PLAY_CUSTOM_COMMAND_TYPE_KEY
@@ -50,7 +48,6 @@ import cn.xybbz.config.image.CoverImageResolver
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.PlayerEvent
 import cn.xybbz.entity.data.ext.joinToString
-import cn.xybbz.entity.data.music.TranscodingAndMusicUrlData
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
@@ -507,28 +504,9 @@ class MusicController(
         ifInitPlayerList: Boolean,
         musicPlayTypeEnum: MusicPlayTypeEnum
     ) {
-        playDataType = musicPlayTypeEnum
-
-        Log.i("music", "初始化音乐列表开始播放")
-        updateRestartCount()
-        updateOriginMusicList(emptyList())
-
-        if (musicCurrentPositionMapData != null) {
-            musicCurrentPositionMap.clear()
-            musicCurrentPositionMap.putAll(musicCurrentPositionMapData)
-        }
-        updateOriginIndex(originIndex ?: 0)
+       super.initMusicList(musicDataList, musicCurrentPositionMapData, originIndex, pageNum, pageSize, artistId, ifInitPlayerList, musicPlayTypeEnum)
 
         downloadCacheController.cancelAllCache()
-        val tmpList = mutableListOf<XyPlayMusic>()
-        tmpList.addAll(musicDataList)
-        updateOriginMusicList(tmpList)
-        setPageNumData(pageNum)
-        updatePageSize(pageSize)
-
-        if (musicDataList.isNotEmpty()) {
-            downloadCacheController.cancelAllCache()
-        }
 
         // MediaController methods must run on the controller application thread.
         withMediaControllerOnApplicationThread {

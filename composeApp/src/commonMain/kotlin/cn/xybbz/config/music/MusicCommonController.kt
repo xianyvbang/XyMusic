@@ -38,6 +38,10 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     var originMusicList by mutableStateOf(emptyList<XyPlayMusic>())
         private set
 
+    //播放音乐列表
+    var playMusicList by mutableStateOf(emptyList<XyPlayMusic>())
+        private set
+
     //当前播放歌曲的进度
     var musicCurrentPositionMap = mutableStateMapOf<String, Long>()
         private set
@@ -243,7 +247,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     /**
      * 设置当前音乐列表
      */
-    abstract fun initMusicList(
+    open fun initMusicList(
         musicDataList: List<XyPlayMusic>,
         musicCurrentPositionMapData: Map<String, Long>?,
         originIndex: Int?,
@@ -252,7 +256,18 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
         artistId: String?,
         ifInitPlayerList: Boolean = false,
         musicPlayTypeEnum: MusicPlayTypeEnum
-    )
+    ){
+        playDataType = musicPlayTypeEnum
+        updateRestartCount()
+        updateOriginMusicList(emptyList())
+        if (musicCurrentPositionMapData != null) {
+            musicCurrentPositionMap.clear()
+            musicCurrentPositionMap.putAll(musicCurrentPositionMapData)
+        }
+        updateOriginMusicList(musicDataList.toList())
+        setPageNumData(pageNum)
+        updatePageSize(pageSize)
+    }
 
     protected abstract fun refreshPlaylistCoverMetadata()
 
