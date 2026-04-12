@@ -403,7 +403,6 @@ class JvmMusicController : MusicCommonController() {
             else -> PlaybackMode.LOOP
         }
         currentMediaListPlayer()?.controls()?.setMode(mode)
-        currentMediaListPlayer()?.
     }
 
     override fun getMusicUrl(
