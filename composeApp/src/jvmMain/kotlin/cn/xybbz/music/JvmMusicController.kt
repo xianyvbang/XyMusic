@@ -108,6 +108,7 @@ class JvmMusicController : MusicCommonController() {
                 retainedMedia.release()
                 return
             }
+//            updatePicBytes(it)
             submitMediaPlayerTask(mediaPlayer) {
                 try {
                     syncCurrentMusicFromMedia(retainedMedia)
@@ -121,40 +122,7 @@ class JvmMusicController : MusicCommonController() {
                     retainedMedia.release()
                 }
             }
-//            media?.duplicateMedia()
-            /*updatePicBytes(it)
-            updateOriginIndex(mediaController?.currentMediaItemIndex ?: 0)
-
-            if (originMusicList.isNotEmpty() && curOriginIndex >= originMusicList.size - 1 && ifNextPage){
-                updateEvent(PlayerEvent.NextList(pageNum))
-            }
-            updateCurrentMusic(originMusicList[curOriginIndex])
-            updateCurrentFavorite(musicInfo?.ifFavoriteStatus ?: false)
-            updateEvent(
-                PlayerEvent.ChangeMusic(
-                    music.itemId,
-                    music.artistIds?.firstOrNull(),
-                    music.artists?.firstOrNull()
-                )
-            )
-
-            if (musicCurrentPositionMap.containsKey(it.itemId)) {
-                musicCurrentPositionMap[it.itemId]?.let { position ->
-                    if (position > 0 && position > mediaController?.currentPosition!!) {
-                        seekTo(position)
-                    } else if (headTime > 0 && headTime > mediaController?.currentPosition!!) {
-                        seekTo(headTime)
-                    }
-                }
-
-            } else {
-                android.util.Log.i("music", "音乐 ${it.name}没有播放进度")
-            }*/
         }
-
-
-
-
 
 
         /**
@@ -361,7 +329,6 @@ class JvmMusicController : MusicCommonController() {
         }
 
         val music = snapshot[index]
-        val previousMusicId = musicInfo?.itemId
         ensureMediaPlayer() ?: run {
             pendingStartPositionMs = null
             updateState(PlayStateEnum.None)
@@ -1051,13 +1018,13 @@ class JvmMusicController : MusicCommonController() {
             return
         }
 
-        val previousMusicId = musicInfo?.itemId
-        if (previousMusicId != null && previousMusicId != currentMusic.itemId) {
-            updateEvent(PlayerEvent.BeforeChangeMusic)
+        if (originMusicList.isNotEmpty() && curOriginIndex >= originMusicList.size - 1 && ifNextPage){
+            updateEvent(PlayerEvent.NextList(pageNum))
         }
 
         updateOriginIndex(currentIndex)
         updateCurrentMusic(currentMusic)
+        updateCurrentFavorite(musicInfo?.ifFavoriteStatus ?: false)
         updateDuration(currentMusic.runTimeTicks)
         updateEvent(
             PlayerEvent.ChangeMusic(
