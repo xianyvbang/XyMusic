@@ -17,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory
+import uk.co.caprica.vlcj.media.Media
 import uk.co.caprica.vlcj.media.MediaRef
 import uk.co.caprica.vlcj.medialist.MediaList
 import uk.co.caprica.vlcj.player.base.MediaPlayer
@@ -57,13 +58,6 @@ class JvmMusicController : MusicCommonController() {
         override fun playing(mediaPlayer: MediaPlayer?) {
             Log.i("vlc", "播放开始")
             submitMediaPlayerTask(mediaPlayer) { player ->
-                syncCurrentMusicFromPlayer(player)
-                val appliedPendingStartPosition = applyPendingStartPosition(player)
-                if (!appliedPendingStartPosition) {
-                    // 没有显式恢复历史进度时，也主动拉一次底层真实时间，
-                    // 避免 VLC 已经跳到某个位置而 UI 还停留在 0。
-                    syncCurrentPositionFromPlayer(player)
-                }
                 if (state != PlayStateEnum.Playing) {
                     reportedPlayEvent()
                 }
@@ -95,11 +89,13 @@ class JvmMusicController : MusicCommonController() {
          */
         override fun finished(mediaPlayer: MediaPlayer?) {
             //todo 这个是自动切换
-            updateEvent(PlayerEvent.RemovePlaybackProgress(it.itemId))
+            musicInfo?.let {
+                updateEvent(PlayerEvent.RemovePlaybackProgress(it.itemId))
+            }
 
-            pendingStartPositionMs = null
+//            pendingStartPositionMs = null
             setCurrentPositionData(0L)
-            updateState(PlayStateEnum.None)
+//            updateState(PlayStateEnum.None)
         }
 
         override fun mediaChanged(
@@ -107,8 +103,26 @@ class JvmMusicController : MusicCommonController() {
             media: MediaRef?
         ) {
             Log.i("vlc", "播放变化: ${media}")
+            val retainedMedia = media?.newMedia() ?: return
+            val player = mediaPlayer ?: run {
+                retainedMedia.release()
+                return
+            }
+            submitMediaPlayerTask(mediaPlayer) {
+                try {
+                    syncCurrentMusicFromMedia(retainedMedia)
+                    val appliedPendingStartPosition = applyPendingStartPosition(player)
+                    if (!appliedPendingStartPosition) {
+                        // 没有显式恢复历史进度时，也主动拉一次底层真实时间，
+                        // 避免 VLC 已经跳到某个位置而 UI 还停留在 0。
+                        syncCurrentPositionFromPlayer(player)
+                    }
+                } finally {
+                    retainedMedia.release()
+                }
+            }
 //            media?.duplicateMedia()
-            updatePicBytes(it)
+            /*updatePicBytes(it)
             updateOriginIndex(mediaController?.currentMediaItemIndex ?: 0)
 
             if (originMusicList.isNotEmpty() && curOriginIndex >= originMusicList.size - 1 && ifNextPage){
@@ -135,7 +149,7 @@ class JvmMusicController : MusicCommonController() {
 
             } else {
                 android.util.Log.i("music", "音乐 ${it.name}没有播放进度")
-            }
+            }*/
         }
 
 
@@ -1025,8 +1039,8 @@ class JvmMusicController : MusicCommonController() {
      * MediaListPlayer 自动切到下一首后，业务层的 curOriginIndex/musicInfo 不会自动更新，
      * 这里通过当前媒体的 mrl 反查回应用层索引，并补发切歌事件。
      */
-    private fun syncCurrentMusicFromPlayer(mediaPlayer: MediaPlayer) {
-        val currentMrl = mediaPlayer.media().info()?.mrl() ?: return
+    private fun syncCurrentMusicFromMedia(media: Media) {
+        val currentMrl = media.info().mrl() ?: return
         val currentIndex = resolvePlaylistIndex(currentMrl)
         if (currentIndex !in originMusicList.indices) {
             return
