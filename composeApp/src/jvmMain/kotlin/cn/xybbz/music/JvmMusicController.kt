@@ -1,5 +1,6 @@
 package cn.xybbz.music
 
+import cn.xybbz.api.TokenServer
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.PlayStateEnum
@@ -40,7 +41,7 @@ class JvmMusicController : MusicCommonController() {
     private var mediaPlayerListenerRegistered = false
 
     //服务地址
-    val address: String = ""
+    val address: String get() = TokenServer.baseUrl
 
     private val playerListener = object : MediaPlayerEventAdapter() {
         /**
@@ -403,6 +404,7 @@ class JvmMusicController : MusicCommonController() {
             else -> PlaybackMode.LOOP
         }
         currentMediaListPlayer()?.controls()?.setMode(mode)
+//        mediaPlayer?.controls()?.repeat = false
     }
 
     override fun getMusicUrl(
@@ -830,11 +832,11 @@ class JvmMusicController : MusicCommonController() {
             return
         }
 
-        val currentMusic = originMusicList[currentIndex]
-        if (currentIndex == curOriginIndex && musicInfo?.itemId == currentMusic.itemId) {
+        val currentMusic = playMusicList[currentIndex]
+        if (currentIndex == curRealIndex && musicInfo?.itemId == currentMusic.itemId) {
             return
         }
-        updateOriginIndex(currentIndex)
+        updateRealIndex(currentIndex)
     }
 
     /**
@@ -885,7 +887,6 @@ class JvmMusicController : MusicCommonController() {
      * 清空 VLC 内部播放列表及其镜像缓存。
      */
     private fun clearPlaylistMirror() {
-        invalidatePlaylistCache()
         runCatching { mediaList?.media()?.clear() }
     }
 

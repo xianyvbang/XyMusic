@@ -211,7 +211,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     /**
      * 设置播放类型
      */
-    protected open fun setPlayTypeData(playerModeEnum: PlayerModeEnum) {
+    open fun setPlayTypeData(playerModeEnum: PlayerModeEnum) {
         playMode = playerModeEnum
         updateEvent(PlayerEvent.PlayerTypeChange(playerModeEnum))
         updatePlayerMode()
