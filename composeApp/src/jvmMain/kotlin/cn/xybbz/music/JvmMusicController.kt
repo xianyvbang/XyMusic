@@ -13,7 +13,6 @@ import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerTypeEnum
 import cn.xybbz.proxy.JvmReverseProxyServer
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Job
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory
 import uk.co.caprica.vlcj.media.Media
 import uk.co.caprica.vlcj.media.MediaRef
@@ -80,10 +79,7 @@ class JvmMusicController : MusicCommonController() {
             musicInfo?.let {
                 updateEvent(PlayerEvent.RemovePlaybackProgress(it.itemId))
             }
-
-//            pendingStartPositionMs = null
             setCurrentPositionData(0L)
-//            updateState(PlayStateEnum.None)
         }
 
 
@@ -477,7 +473,7 @@ class JvmMusicController : MusicCommonController() {
         }
 
         // 地址刷新后直接整表重建，避免旧 mrl 残留在 VLC 内部列表里。
-        val applied = applyFullPlaylist(snapshot, refreshedSources)
+        val applied = applyFullPlaylist(refreshedSources)
         if (!applied) {
             invalidatePlaylistCache()
             return
@@ -601,7 +597,6 @@ class JvmMusicController : MusicCommonController() {
     private fun resolveRemotePlaybackUrl(music: XyPlayMusic): String {
         val originUrl = getMusicUrl(music.itemId, music.plexPlayKey).musicUrl
         val proxyUrl = buildProxyPlaybackUrl(originUrl)
-        music.setMusicUrl(proxyUrl)
         return proxyUrl
     }
 
@@ -681,14 +676,13 @@ class JvmMusicController : MusicCommonController() {
             return false
         }
 
-        return applyFullPlaylist(musicList, preparedSources)
+        return applyFullPlaylist(preparedSources)
     }
 
     /**
      * 用最新的业务列表整表覆盖 VLC 的 MediaList，并同步更新本地镜像缓存。
      */
     private fun applyFullPlaylist(
-        musicList: List<XyPlayMusic>,
         preparedSources: List<String>
     ): Boolean {
         val mediaApi = ensureMediaList()?.media() ?: return false
