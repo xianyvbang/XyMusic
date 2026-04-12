@@ -90,7 +90,7 @@ class MusicController(
     override fun replacePlaylistItemUrl() {
         if (originMusicList.isNotEmpty()) {
 
-            updateOriginMusicList(originMusicList.map {
+            replacePlaylist(originMusicList.map {
                 it.setMusicUrl(
                     getMusicUrl(
                         it.itemId,
@@ -190,7 +190,6 @@ class MusicController(
         onUpdateState = { updateState(it) },
         onsetPicByte = { updatePicBytes(it) },
         onGetMusicInfo = { musicInfo },
-        onSetMusicInfo = { updateCurrentMusic(originMusicList[curOriginIndex]) },
         onSeekToNext = {
 //            seekToNext()
         },
@@ -206,9 +205,6 @@ class MusicController(
             originMusicList.isNotEmpty() && curOriginIndex >= originMusicList.size - 1 && ifNextPage
         },
         onPageNumber = { pageNum },
-        onUpdateDuration = {
-            updateDuration(musicInfo?.runTimeTicks ?: 0)
-        },
         onMusicStartCache = {
             startCache(originMusicList[curOriginIndex], settingsManager.getStatic())
         },
@@ -383,17 +379,12 @@ class MusicController(
 
 
     override fun removeItem(index: Int) {
-        //判断要删除的索引和当前索引是否一致
-        val tmpList = mutableListOf<XyPlayMusic>()
-        tmpList.addAll(originMusicList)
-        tmpList.removeAt(index)
-        updateOriginMusicList(tmpList)
+        removeMusic(index)
         mediaController?.removeMediaItem(index)
         updateOriginIndex(mediaController?.currentMediaItemIndex ?: 0)
         if (originMusicList.isEmpty()) {
             clearPlayerList()
         }
-        //需要重新计算索引
         Log.i("music", "删除索引位置$index")
     }
 
@@ -605,7 +596,7 @@ class MusicController(
     /**
      * 生成当前播放模式下的歌曲列表
      */
-    private fun generateRealMusicList() {
+    override fun generateRealMusicList() {
         Log.i("music", "设置播放模式${playType}")
         // MediaController 的状态变更必须切回它自己的 application thread 执行，
         // 否则在恢复播放列表或后台协程里调用时会触发线程校验异常。

@@ -3,6 +3,7 @@ package cn.xybbz.config.music
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -35,12 +36,12 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     val dataSourceManager: DataSourceManager = get()
 
     // 原始歌曲列表
-    var originMusicList by mutableStateOf(emptyList<XyPlayMusic>())
-        private set
+    private val _originMusicList = mutableStateListOf<XyPlayMusic>()
 
-    //播放音乐列表
-    var playMusicList by mutableStateOf(emptyList<XyPlayMusic>())
-        private set
+    val originMusicList: List<XyPlayMusic> get() = _originMusicList
+
+    //播放音乐列表 todo 应该存放拼接后的连接
+    private val playMusicList = mutableStateListOf<XyPlayMusic>()
 
     //当前播放歌曲的进度
     var musicCurrentPositionMap = mutableStateMapOf<String, Long>()
@@ -48,6 +49,10 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
 
     // 当前播放的歌曲在原始歌曲列表中的索引
     var curOriginIndex by mutableIntStateOf(Constants.MINUS_ONE_INT)
+        private set
+
+    // 当前播放的歌曲在当前播放模式下的实际歌曲列表中的索引
+    var curRealIndex by mutableStateOf(Constants.MINUS_ONE_INT)
         private set
 
     //加载的音乐最大页码
@@ -82,7 +87,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
 
     //当前播放数据类型
     var playDataType by mutableStateOf(MusicPlayTypeEnum.FOUNDATION)
-        protected set
+        private set
 
     //片头跳过时间
     var headTime by mutableLongStateOf(0L)
@@ -191,7 +196,9 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     /**
      * 删除指定index位置音乐
      */
-    abstract fun removeItem(index: Int)
+    open fun removeItem(index: Int) {
+        removeMusic(index)
+    }
 
     /**
      * 设置倍速
@@ -256,20 +263,24 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
         artistId: String?,
         ifInitPlayerList: Boolean = false,
         musicPlayTypeEnum: MusicPlayTypeEnum
-    ){
-        playDataType = musicPlayTypeEnum
+    ) {
+        updatePlayDataType(musicPlayTypeEnum)
         updateRestartCount()
-        updateOriginMusicList(emptyList())
         if (musicCurrentPositionMapData != null) {
             musicCurrentPositionMap.clear()
             musicCurrentPositionMap.putAll(musicCurrentPositionMapData)
         }
-        updateOriginMusicList(musicDataList.toList())
+        replacePlaylist(musicDataList)
         setPageNumData(pageNum)
         updatePageSize(pageSize)
     }
 
     protected abstract fun refreshPlaylistCoverMetadata()
+
+    /**
+     * 生成当前播放模式下的歌曲列表
+     */
+    protected abstract fun generateRealMusicList()
 
 
     /**
@@ -358,8 +369,49 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     /**
      * 更新列表数据
      */
-    fun updateOriginMusicList(musicList: List<XyPlayMusic>) {
-        originMusicList = musicList
+    fun replacePlaylist(musicList: List<XyPlayMusic>) {
+        _originMusicList.clear()
+        _originMusicList.addAll(musicList)
+        insertPlayMusicList(musicList)
+    }
+
+    fun addMusic(music: XyPlayMusic) {
+        _originMusicList.add(music)
+        playMusicList.add(music)
+    }
+
+    fun insertMusic(index: Int, music: XyPlayMusic) {
+        _originMusicList.add(index, music)
+        val playIndex = playMusicList.indexOf(music)
+        if (playIndex != Constants.MINUS_ONE_INT) {
+            playMusicList.add(playIndex, music)
+        }
+    }
+
+    fun removeMusic(music: XyPlayMusic) {
+        _originMusicList.remove(music)
+        playMusicList.remove(music)
+    }
+
+    /**
+     * 删除指定索引位置的数据
+     */
+    fun removeMusic(index: Int) {
+        if (index !in _originMusicList.indices) {
+            return
+        }
+        val playMusic = _originMusicList.removeAt(index)
+        playMusicList.remove(playMusic)
+    }
+
+
+    /**
+     * 更新播放列表数据
+     */
+    private fun insertPlayMusicList(musicList: List<XyPlayMusic>) {
+        //todo 判断播放列表是否为随机播放,如果是随机播放,则打乱顺序
+        /*_originMusicList.clear()
+        _originMusicList.addAll(musicList)*/
     }
 
     /**
@@ -372,7 +424,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     /**
      * 更新当前播放音乐
      */
-    fun updateCurrentMusic(music: XyPlayMusic?) {
+    private fun updateCurrentMusic(music: XyPlayMusic?) {
         this.musicInfo = music
     }
 
@@ -386,8 +438,26 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     /**
      * 更新播放音乐的原始索引
      */
-    fun updateOriginIndex(index: Int) {
-        curOriginIndex = index
+    fun updateOriginIndex(originIndex: Int) {
+        if (originIndex != Constants.MINUS_ONE_INT){
+            curOriginIndex = originIndex
+            curRealIndex = playMusicList.indexOfFirst { it.itemId == originMusicList[originIndex].itemId }
+            updateCurrentMusic(originMusicList[originIndex])
+            updateDuration(musicInfo?.runTimeTicks ?: 0L)
+        }
+
+    }
+
+    /**
+     * 更新播放索引
+     */
+    fun updateRealIndex(realIndex: Int){
+        if (realIndex != Constants.MINUS_ONE_INT){
+            curRealIndex = realIndex
+            curOriginIndex = originMusicList.indexOfFirst { it.itemId == playMusicList[realIndex].itemId }
+            updateCurrentMusic(originMusicList[curOriginIndex])
+            updateDuration(musicInfo?.runTimeTicks ?: 0L)
+        }
     }
 
     /**
@@ -397,7 +467,27 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
         this.pageSize = pageSize
     }
 
-    protected open fun getMusicUrl(musicId: String, plexPlayKey: String?): TranscodingAndMusicUrlData {
+    /**
+     * 更新当前播放数据类型
+     */
+    open fun updatePlayDataType(playDataType: MusicPlayTypeEnum) {
+        this.playDataType = playDataType
+    }
+
+    /**
+     * 获得下一个播放的索引
+     */
+    fun getMusicNextIndex(): Int {
+        if (curRealIndex == Constants.MINUS_ONE_INT) {
+            return Constants.MINUS_ONE_INT
+        }
+        return if (curRealIndex == playMusicList.lastIndex) 0 else curRealIndex + 1
+    }
+
+    protected open fun getMusicUrl(
+        musicId: String,
+        plexPlayKey: String?
+    ): TranscodingAndMusicUrlData {
         val audioBitRate = settingsManager.getAudioBitRate()
 
         val static: Boolean =
@@ -420,7 +510,8 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     open fun clearPlayerList() {
         pause()
         downloadCacheController.cancelAllCache()
-        originMusicList = emptyList()
+        _originMusicList.clear()
+        playMusicList.clear()
         musicCurrentPositionMap.clear()
         curOriginIndex = Constants.MINUS_ONE_INT
         musicInfo = null
@@ -435,7 +526,8 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
 
     override fun close() {
         pause()
-        originMusicList = emptyList()
+        _originMusicList.clear()
+        playMusicList.clear()
         musicCurrentPositionMap.clear()
         curOriginIndex = Constants.MINUS_ONE_INT
         musicInfo = null

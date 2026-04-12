@@ -325,30 +325,20 @@ class JvmMusicController : MusicCommonController() {
         if (index !in originMusicList.indices) {
             return
         }
-
-        val currentList = originMusicList.toList()
-        val updatedList = currentList.toMutableList().apply {
-            removeAt(index)
-        }
-        updateOriginMusicList(updatedList)
+        removeMusic(index)
         removePlaylistItem(index)
         when {
-            updatedList.isEmpty() -> {
+            originMusicList.isEmpty() -> {
                 clearPlayerList()
             }
-
             index < curOriginIndex -> {
                 updateOriginIndex(curOriginIndex - 1)
             }
-
             index == curOriginIndex -> {
                 stopCurrentPlayback()
-                val nextIndex = index.coerceAtMost(updatedList.lastIndex)
-                updateOriginIndex(nextIndex)
-                updateCurrentMusic(updatedList.getOrNull(nextIndex))
-                updateDuration(updatedList.getOrNull(nextIndex)?.runTimeTicks ?: 0L)
+                val nextIndex = getMusicNextIndex()
+                updateRealIndex(nextIndex)
             }
-
             else -> {
             }
         }
@@ -472,7 +462,6 @@ class JvmMusicController : MusicCommonController() {
 
         val targetIndex = originIndex ?: 0
         updateOriginIndex(targetIndex)
-        updateCurrentMusic(musicDataList[targetIndex])
         updateDuration(musicDataList[targetIndex].runTimeTicks)
         updateEvent(PlayerEvent.AddMusicList(artistId, ifInitPlayerList))
 
@@ -821,15 +810,10 @@ class JvmMusicController : MusicCommonController() {
     /**
      * 从 VLC 的 MediaList 中删除单条媒体，并同步更新镜像缓存。
      */
-    private fun removePlaylistItem(index: Int): Boolean {
-
-        val mediaApi = ensureMediaList()?.media() ?: return false
-        val removed = runCatching { mediaApi.remove(index) }.getOrDefault(false)
-        if (!removed) {
-            return false
-        }
+    private fun removePlaylistItem(index: Int) {
+        val mediaApi = ensureMediaList()?.media() ?: return
+        runCatching { mediaApi.remove(index) }
         playlistMediaSources.removeAt(index)
-        return true
     }
 
     /**

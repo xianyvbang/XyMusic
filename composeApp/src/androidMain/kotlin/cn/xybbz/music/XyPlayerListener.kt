@@ -37,13 +37,11 @@ class XyPlayerListener(
     private val onUpdateState: (PlayStateEnum) -> Unit,
     private val onsetPicByte: (ByteArray?) -> Unit,
     private val onGetMusicInfo: () -> XyPlayMusic?,
-    private val onSetMusicInfo: () -> Unit,
     private val onSeekToNext: () -> Unit,
     private val onEventEmit: (PlayerEvent) -> Unit,
     private val onSetCurOriginIndex: () -> Unit,
     private val onOriginMusicListIsNotEmptyAndIndexEnd: () -> Boolean,
     private val onPageNumber: () -> Int,
-    private val onUpdateDuration: () -> Unit,
     private val onMusicStartCache: () -> Unit,
     private val onUpdatePlayerHistory: (XyPlayMusic) -> Unit,
     private val onPlaySessionId: () -> String
@@ -130,9 +128,6 @@ class XyPlayerListener(
                 if (onOriginMusicListIsNotEmptyAndIndexEnd()) {
                     onEventEmit(PlayerEvent.NextList(onPageNumber()))
                 }
-                onSetMusicInfo()
-                onUpdateDuration()
-
 
                 //todo 替换mediaitem的位置
                 //如果状态是播放的话
