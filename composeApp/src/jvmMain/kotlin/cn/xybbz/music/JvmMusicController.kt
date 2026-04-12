@@ -45,7 +45,7 @@ class JvmMusicController : MusicCommonController() {
          */
         override fun playing(mediaPlayer: MediaPlayer?) {
             Log.i("vlc", "播放开始")
-            submitMediaPlayerTask(mediaPlayer) { player ->
+            submitMediaPlayerTask(mediaPlayer) { _ ->
                 if (state != PlayStateEnum.Playing) {
                     reportedPlayEvent()
                 }
@@ -75,7 +75,6 @@ class JvmMusicController : MusicCommonController() {
          * 播放自然结束时回退为空闲状态。
          */
         override fun finished(mediaPlayer: MediaPlayer?) {
-            //todo 这个是自动切换
             musicInfo?.let {
                 updateEvent(PlayerEvent.RemovePlaybackProgress(it.itemId))
             }
