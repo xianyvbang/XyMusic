@@ -15,13 +15,21 @@ import cn.xybbz.proxy.JvmReverseProxyServer
 import io.github.oshai.kotlinlogging.KotlinLogging
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory
 import uk.co.caprica.vlcj.media.Media
+import uk.co.caprica.vlcj.media.MediaEventAdapter as VlcMediaEventAdapter
+import uk.co.caprica.vlcj.media.MediaParsedStatus
 import uk.co.caprica.vlcj.media.MediaRef
+import uk.co.caprica.vlcj.media.Meta
+import uk.co.caprica.vlcj.media.ParseFlag
 import uk.co.caprica.vlcj.medialist.MediaList
 import uk.co.caprica.vlcj.player.base.MediaPlayer
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter
 import uk.co.caprica.vlcj.player.list.MediaListPlayer
 import uk.co.caprica.vlcj.player.list.PlaybackMode
 import java.io.File
+import java.net.URI
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.util.Base64
 
 class JvmMusicController : MusicCommonController() {
     val logger = KotlinLogging.logger("jvmMusic")
@@ -97,6 +105,7 @@ class JvmMusicController : MusicCommonController() {
             submitMediaPlayerTask(mediaPlayer) {
                 try {
                     syncCurrentMusicFromMedia(retainedMedia)
+                    refreshArtworkBytes(retainedMedia, player)
                     val appliedPendingStartPosition = applyPendingStartPosition()
                     if (!appliedPendingStartPosition) {
                         // 没有显式恢复历史进度时，也主动拉一次底层真实时间，
@@ -179,17 +188,11 @@ class JvmMusicController : MusicCommonController() {
         val updatedList = currentList.toMutableList().apply {
             addAll(insertIndex, musicList)
         }
-        val hadValidPlaylist = isPlaylistCacheValid(currentList)
         updateOriginMusicList(updatedList)
-
+        insertPlaylistItems(insertIndex, musicList)
         if (isPlayer == true) {
-            //todo 这里不应该清空
-            invalidatePlaylistCache()
             seekToIndex(insertIndex)
-        } else if (hadValidPlaylist) {
-            schedulePlaylistInsert(insertIndex, musicList, updatedList)
         }
-
         updateEvent(PlayerEvent.AddMusicList(artistId))
     }
 
@@ -324,34 +327,22 @@ class JvmMusicController : MusicCommonController() {
         }
 
         val currentList = originMusicList.toList()
-        val hadValidPlaylist = isPlaylistCacheValid(currentList)
         val updatedList = currentList.toMutableList().apply {
             removeAt(index)
         }
         updateOriginMusicList(updatedList)
-
+        removePlaylistItem(index)
         when {
             updatedList.isEmpty() -> {
-                if (hadValidPlaylist) {
-                    removePlaylistItem(index)
-                }
                 clearPlayerList()
             }
 
             index < curOriginIndex -> {
-                if (hadValidPlaylist) {
-                    removePlaylistItem(index)
-                }
                 updateOriginIndex(curOriginIndex - 1)
             }
 
             index == curOriginIndex -> {
                 stopCurrentPlayback()
-                if (hadValidPlaylist) {
-                    removePlaylistItem(index)
-                } else {
-                    invalidatePlaylistCache()
-                }
                 val nextIndex = index.coerceAtMost(updatedList.lastIndex)
                 updateOriginIndex(nextIndex)
                 updateCurrentMusic(updatedList.getOrNull(nextIndex))
@@ -359,9 +350,6 @@ class JvmMusicController : MusicCommonController() {
             }
 
             else -> {
-                if (hadValidPlaylist) {
-                    removePlaylistItem(index)
-                }
             }
         }
     }
@@ -400,16 +388,12 @@ class JvmMusicController : MusicCommonController() {
         }
         val targetIndex = insertIndex.coerceAtMost(updatedList.size)
         updatedList.add(targetIndex, music)
-        val hadValidPlaylist = isPlaylistCacheValid(currentList)
         updateOriginMusicList(updatedList)
-        if (hadValidPlaylist) {
-            scheduleMoveOrInsertPlaylistItem(
-                music = music,
-                existingIndex = originMusicList.indexOfFirst { it.itemId == music.itemId },
-                targetIndex = targetIndex,
-                expectedList = updatedList
-            )
-        }
+        scheduleMoveOrInsertPlaylistItem(
+            music = music,
+            existingIndex = originMusicList.indexOfFirst { it.itemId == music.itemId },
+            targetIndex = targetIndex
+        )
         updateEvent(PlayerEvent.AddMusicList(music.artistIds?.firstOrNull()))
     }
 
@@ -453,9 +437,6 @@ class JvmMusicController : MusicCommonController() {
         }
 
         val refreshedSources = snapshot.map { preparePlaylistSource(it) }
-        if (!matchesPlaylistSnapshot(snapshot)) {
-            return
-        }
 
         // 地址刷新后直接整表重建，避免旧 mrl 残留在 VLC 内部列表里。
         val applied = applyFullPlaylist(refreshedSources)
@@ -620,6 +601,132 @@ class JvmMusicController : MusicCommonController() {
     }
 
     /**
+     * 尝试从当前媒体的元数据里提取封面图。
+     * 如果 ARTWORK_URL 还没准备好，则异步触发一次 parse，待 VLC 回填元数据后再读取。
+     */
+    private fun refreshArtworkBytes(media: Media, mediaPlayer: MediaPlayer) {
+        updatePicBytes(null)
+        readArtworkBytesFromMedia(media)?.let { bytes ->
+            updatePicBytes(bytes)
+            return
+        }
+
+        parseArtworkBytesAsync(media, mediaPlayer)
+    }
+
+    /**
+     * 从 VLC 元数据里的 ARTWORK_URL 读取封面图内容。
+     */
+    private fun readArtworkBytesFromMedia(media: Media): ByteArray? {
+        val artworkUrl = media.meta().get(Meta.ARTWORK_URL)
+            ?.takeIf { it.isNotBlank() }
+            ?: return null
+        return readArtworkBytesFromLocation(artworkUrl)
+    }
+
+    /**
+     * 解析 ARTWORK_URL，兼容 file/http/data URI，并统一转成字节数组。
+     */
+    private fun readArtworkBytesFromLocation(location: String): ByteArray? {
+        val trimmedLocation = location.trim()
+        if (trimmedLocation.isEmpty()) {
+            return null
+        }
+
+        if (trimmedLocation.startsWith("data:", ignoreCase = true)) {
+            return decodeDataUri(trimmedLocation)
+        }
+
+        val parsedUri = runCatching { URI(trimmedLocation) }.getOrNull()
+        return when (parsedUri?.scheme?.lowercase()) {
+            "file" -> runCatching {
+                Files.readAllBytes(Paths.get(parsedUri))
+            }.onFailure {
+                Log.e("vlc", "读取本地封面失败: $trimmedLocation", it)
+            }.getOrNull()
+
+            "http", "https" -> runCatching {
+                parsedUri.toURL().openStream().use { it.readBytes() }
+            }.onFailure {
+                Log.e("vlc", "下载封面失败: $trimmedLocation", it)
+            }.getOrNull()
+
+            else -> runCatching {
+                Files.readAllBytes(Paths.get(trimmedLocation))
+            }.onFailure {
+                Log.e("vlc", "读取封面路径失败: $trimmedLocation", it)
+            }.getOrNull()
+        }
+    }
+
+    /**
+     * 处理 data URI 形式的图片元数据。
+     */
+    private fun decodeDataUri(dataUri: String): ByteArray? {
+        val commaIndex = dataUri.indexOf(',')
+        if (commaIndex <= 0 || commaIndex >= dataUri.lastIndex) {
+            return null
+        }
+
+        val metadata = dataUri.substring(0, commaIndex)
+        val payload = dataUri.substring(commaIndex + 1)
+
+        return if (metadata.contains(";base64", ignoreCase = true)) {
+            runCatching { Base64.getDecoder().decode(payload) }.onFailure {
+                Log.e("vlc", "解析 base64 封面失败", it)
+            }.getOrNull()
+        } else {
+            payload.toByteArray()
+        }
+    }
+
+    /**
+     * 触发一次异步 parse，等待 VLC 回填元数据后再取封面。
+     */
+    private fun parseArtworkBytesAsync(
+        media: Media,
+        mediaPlayer: MediaPlayer
+    ) {
+        val parsingMedia = media.newMedia()
+        lateinit var listener: VlcMediaEventAdapter
+        listener = object : VlcMediaEventAdapter() {
+            override fun mediaParsedChanged(media: Media, newStatus: MediaParsedStatus) {
+                submitMediaPlayerTask(mediaPlayer) {
+                    updatePicBytes(null)
+                    try {
+                        if (newStatus == MediaParsedStatus.DONE) {
+                            val bytes = readArtworkBytesFromMedia(parsingMedia)
+                            updatePicBytes(bytes)
+                        }
+                    } finally {
+                        parsingMedia.events().removeMediaEventListener(listener)
+                        parsingMedia.release()
+                    }
+                }
+            }
+        }
+
+        parsingMedia.events().addMediaEventListener(listener)
+
+        val parseStarted = runCatching {
+            parsingMedia.parsing().parse(
+                5_000,
+                ParseFlag.PARSE_LOCAL,
+                ParseFlag.PARSE_NETWORK,
+                ParseFlag.FETCH_LOCAL,
+                ParseFlag.FETCH_NETWORK
+            )
+        }.onFailure {
+            Log.e("vlc", "触发封面元数据解析失败", it)
+        }.getOrDefault(false)
+
+        if (!parseStarted) {
+            parsingMedia.events().removeMediaEventListener(listener)
+            parsingMedia.release()
+        }
+    }
+
+    /**
      * 优先使用 VLC 的时长事件更新总时长；
      * 如果事件值无效，则退回使用业务层歌曲本身记录的时长。
      */
@@ -643,11 +750,6 @@ class JvmMusicController : MusicCommonController() {
         musicList: List<XyPlayMusic>,
         requestVersion: Long
     ): Boolean {
-        // 当前应用层列表和 VLC 内部列表仍然一致时，直接复用，避免每次切歌都重建。
-        if (isPlaylistCacheValid(musicList)) {
-            return true
-        }
-
         val preparedSources = mutableListOf<String>()
         musicList.forEach { music ->
             if (requestVersion != playRequestVersion) {
@@ -657,7 +759,7 @@ class JvmMusicController : MusicCommonController() {
             preparedSources += preparePlaylistSource(music)
         }
 
-        if (requestVersion != playRequestVersion || !matchesPlaylistSnapshot(musicList)) {
+        if (requestVersion != playRequestVersion) {
             return false
         }
 
@@ -675,7 +777,6 @@ class JvmMusicController : MusicCommonController() {
             Log.e("vlc", "清空 MediaList 失败", it)
             return false
         }
-
         preparedSources.forEach { source ->
             val added = runCatching { mediaApi.add(source) }.getOrDefault(false)
             if (!added) {
@@ -689,33 +790,12 @@ class JvmMusicController : MusicCommonController() {
     }
 
     /**
-     * 在当前播放位置后插入一批歌曲时，尽量只做增量同步；
-     * 如果增量失败，再由上层在下次播放时触发整表重建。
-     */
-    private fun schedulePlaylistInsert(
-        insertIndex: Int,
-        musicList: List<XyPlayMusic>,
-        expectedList: List<XyPlayMusic>
-    ) {
-        val preparedSources = musicList.map { preparePlaylistSource(it) }
-        if (!matchesPlaylistSnapshot(expectedList)) {
-            return
-        }
-
-        val inserted = insertPlaylistItems(insertIndex, preparedSources)
-        if (!inserted) {
-            invalidatePlaylistCache()
-        }
-    }
-
-    /**
      * “下一首播放”场景下，如果歌曲已存在则移动，否则插入到目标位置。
      */
     private fun scheduleMoveOrInsertPlaylistItem(
         music: XyPlayMusic,
         existingIndex: Int,
-        targetIndex: Int,
-        expectedList: List<XyPlayMusic>
+        targetIndex: Int
     ) {
         var adjustedTargetIndex = targetIndex
         if (existingIndex != Constants.MINUS_ONE_INT) {
@@ -728,19 +808,10 @@ class JvmMusicController : MusicCommonController() {
                 adjustedTargetIndex -= 1
             }
         }
-
-        val preparedSource = preparePlaylistSource(music)
-        if (!matchesPlaylistSnapshot(expectedList)) {
-            return
-        }
-
-        val inserted = insertPlaylistItems(
+        insertPlaylistItems(
             adjustedTargetIndex,
-            listOf(preparedSource)
+            listOf(music)
         )
-        if (!inserted) {
-            invalidatePlaylistCache()
-        }
     }
 
     /**
@@ -748,27 +819,24 @@ class JvmMusicController : MusicCommonController() {
      */
     private fun insertPlaylistItems(
         insertIndex: Int,
-        preparedSources: List<String>
-    ): Boolean {
-        val mediaApi = ensureMediaList()?.media() ?: return false
+        musicList: List<XyPlayMusic>
+    ) {
+        val preparedSources = musicList.map { preparePlaylistSource(it) }
+        val mediaApi = ensureMediaList()?.media() ?: return
         val boundedIndex = insertIndex.coerceIn(0, originMusicList.size)
 
         preparedSources.forEachIndexed { offset, source ->
             val actualIndex = boundedIndex + offset
-            val inserted = runCatching {
+            runCatching {
                 if (actualIndex >= originMusicList.size + offset) {
                     mediaApi.add(source)
                 } else {
                     mediaApi.insert(actualIndex, source)
                 }
-            }.getOrDefault(false)
-            if (!inserted) {
-                return false
             }
-        }
 
+        }
         playlistMediaSources.addAll(boundedIndex, preparedSources)
-        return true
     }
 
     /**
@@ -998,26 +1066,11 @@ class JvmMusicController : MusicCommonController() {
     }
 
     /**
-     * 判断异步准备期间，业务层列表是否已经发生变化。
-     * 如果用户中途又改了播放列表，就放弃这次旧快照的同步结果。
+     * 清空 VLC 内部播放列表及其镜像缓存。
      */
-    private fun matchesPlaylistSnapshot(snapshot: List<XyPlayMusic>): Boolean {
-        if (snapshot.size != originMusicList.size) {
-            return false
-        }
-        return snapshot.indices.all { snapshot[it].itemId == originMusicList[it].itemId }
-    }
-
-    /**
-     * 判断当前 VLC 内部列表镜像是否还能和业务层列表一一对应。
-     */
-    private fun isPlaylistCacheValid(musicList: List<XyPlayMusic>): Boolean {
-        if (originMusicList.size != musicList.size ||
-            playlistMediaSources.size != musicList.size
-        ) {
-            return false
-        }
-        return musicList.indices.all { originMusicList[it].itemId == musicList[it].itemId }
+    private fun clearPlaylistMirror() {
+        invalidatePlaylistCache()
+        runCatching { mediaList?.media()?.clear() }
     }
 
     /**
@@ -1026,14 +1079,6 @@ class JvmMusicController : MusicCommonController() {
      */
     private fun invalidatePlaylistCache() {
         playlistMediaSources.clear()
-    }
-
-    /**
-     * 清空 VLC 内部播放列表及其镜像缓存。
-     */
-    private fun clearPlaylistMirror() {
-        invalidatePlaylistCache()
-        runCatching { mediaList?.media()?.clear() }
     }
 
     companion object {
