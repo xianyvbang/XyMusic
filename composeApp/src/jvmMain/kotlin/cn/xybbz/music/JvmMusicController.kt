@@ -379,7 +379,6 @@ class JvmMusicController : MusicCommonController() {
         // 远程地址需要先解析为最终可播地址；准备期间如果用户又切了别的歌，
         // 则通过 requestVersion 放弃这次过期的准备结果。
         ensurePlaylistPrepared(originMusicList)
-        setPlayTypeData(playType)
         if (ifInitPlayerList) {
             updateState(PlayStateEnum.Pause)
             setCurrentPositionData(
