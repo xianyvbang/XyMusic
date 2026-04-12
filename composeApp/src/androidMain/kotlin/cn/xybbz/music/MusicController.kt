@@ -318,7 +318,7 @@ class MusicController(
     /**
      * 根据音乐id跳转
      */
-    override fun seekToIndex(itemId: String) {
+    override fun seekToItemId(itemId: String) {
         Log.i("music", "调用seekToIndex(id)")
         setCurrentPositionData(Constants.ZERO.toLong())
         val indexOfFirst = originMusicList.indexOfFirst { it.itemId == itemId }
@@ -386,17 +386,6 @@ class MusicController(
             clearPlayerList()
         }
         Log.i("music", "删除索引位置$index")
-    }
-
-    /**
-     * 设置播放类型
-     */
-    override fun setPlayTypeData(playerTypeEnum: PlayerTypeEnum) {
-        playType = playerTypeEnum
-        scope.launch {
-            updateEvent(PlayerEvent.PlayerTypeChange(playerTypeEnum))
-        }
-        generateRealMusicList()
     }
 
     /**
@@ -596,7 +585,7 @@ class MusicController(
     /**
      * 生成当前播放模式下的歌曲列表
      */
-    override fun generateRealMusicList() {
+    override fun updatePlayerMode() {
         Log.i("music", "设置播放模式${playType}")
         // MediaController 的状态变更必须切回它自己的 application thread 执行，
         // 否则在恢复播放列表或后台协程里调用时会触发线程校验异常。
@@ -659,7 +648,7 @@ class MusicController(
      */
     override fun updateCurrentFavorite(isFavorite: Boolean) {
         Log.i("music", "收藏响应${isFavorite}")
-        updateCurrentMusic(musicInfo?.copy(ifFavoriteStatus = isFavorite))
+        super.updateCurrentFavorite(isFavorite)
         musicInfo?.let {
             updateButtonCommend(isFavorite)
         }

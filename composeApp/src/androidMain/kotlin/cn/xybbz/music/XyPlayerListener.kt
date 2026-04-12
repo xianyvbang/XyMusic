@@ -135,13 +135,6 @@ class XyPlayerListener(
                 if (onGetState() != PlayStateEnum.Pause && onGetState() != PlayStateEnum.None)
                     onMusicStartCache()
                 onGetMusicInfo()?.let {
-                    onEventEmit(
-                        PlayerEvent.ChangeMusic(
-                            it.itemId,
-                            it.artistIds?.get(0),
-                            it.artists?.get(0)
-                        )
-                    )
                     //判断音乐播放进度是否为0,如果为0则不处理,不为0则需要跳转到相应的进度
                     onUpdatePlayerHistory(it)
                 }

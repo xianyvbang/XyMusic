@@ -1,6 +1,5 @@
 package cn.xybbz.music
 
-import cn.xybbz.api.TokenServer
 import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.PlayStateEnum
@@ -40,12 +39,8 @@ class JvmMusicController : MusicCommonController() {
     private var mediaList: MediaList? = null
     private var mediaPlayerListenerRegistered = false
 
-
-    //防止“过期的异步播放请求”把新的播放状态覆盖掉。
-    private var playRequestVersion = 0L
-
-    // 应用层列表与 VLC 内部 MediaList 保持一份轻量镜像，
-    private val playlistMediaSources = mutableListOf<String>()
+    //服务地址
+    val address: String = ""
 
     private val playerListener = object : MediaPlayerEventAdapter() {
         /**
@@ -101,7 +96,6 @@ class JvmMusicController : MusicCommonController() {
                 retainedMedia.release()
                 return
             }
-//            updatePicBytes(it)
             submitMediaPlayerTask(mediaPlayer) {
                 try {
                     syncCurrentMusicFromMedia(retainedMedia)
@@ -176,40 +170,12 @@ class JvmMusicController : MusicCommonController() {
         if (musicList.isEmpty()) {
             return
         }
-
-        val currentList = originMusicList.toList()
-        val insertIndex =
-            if (currentList.isNotEmpty() && curOriginIndex != Constants.MINUS_ONE_INT) {
-                curOriginIndex + 1
-            } else {
-                currentList.size
-            }
-
-        val updatedList = currentList.toMutableList().apply {
-            addAll(insertIndex, musicList)
-        }
-        updateOriginMusicList(updatedList)
-        insertPlaylistItems(insertIndex, musicList)
+        val playIndex = insertMusicList(musicList)
+        insertPlaylistItems(playIndex, musicList)
         if (isPlayer == true) {
-            seekToIndex(insertIndex)
+            seekToIndex(playIndex)
         }
         updateEvent(PlayerEvent.AddMusicList(artistId))
-    }
-
-    /**
-     * 更新当前歌曲的收藏状态，供界面即时刷新。
-     */
-    override fun updateCurrentFavorite(isFavorite: Boolean) {
-        updateCurrentMusic(musicInfo?.copy(ifFavoriteStatus = isFavorite))
-    }
-
-    /**
-     * 清空播放列表并停止当前本地/远程播放会话。
-     */
-    override fun clearPlayerList() {
-        clearPlaylistMirror()
-        stopCurrentPlayback()
-        super.clearPlayerList()
     }
 
     /**
@@ -280,38 +246,13 @@ class JvmMusicController : MusicCommonController() {
         }
         updateState(PlayStateEnum.Loading)
         updateEvent(PlayerEvent.BeforeChangeMusic)
-        startPlaybackAtIndex(index)
-    }
-
-    /**
-     * 装载并播放指定索引歌曲；如提供恢复进度，则在真正开始播放后跳转到对应位置。
-     * 这里不再直接给 MediaPlayer 喂单条 url，而是先确保 MediaList 已准备好，
-     * 再交给 MediaListPlayer 按索引播放。
-     */
-    private fun startPlaybackAtIndex(index: Int) {
-        val snapshot = originMusicList.toList()
-        if (index !in snapshot.indices) {
-            return
-        }
-
-        ensureMediaPlayer() ?: run {
-            updateState(PlayStateEnum.None)
-            return
-        }
-        val listPlayer = currentMediaListPlayer() ?: run {
-            updateState(PlayStateEnum.None)
-            return
-        }
-
-        playRequestVersion += 1
-        updateState(PlayStateEnum.Loading)
-        listPlayer.controls().play(index)
+        currentMediaListPlayer()?.controls()?.play(index)
     }
 
     /**
      * 根据歌曲 id 查找索引并切换播放。
      */
-    override fun seekToIndex(itemId: String) {
+    override fun seekToItemId(itemId: String) {
         val index = originMusicList.indexOfFirst { it.itemId == itemId }
         if (index != Constants.MINUS_ONE_INT) {
             seekToIndex(index)
@@ -331,14 +272,18 @@ class JvmMusicController : MusicCommonController() {
             originMusicList.isEmpty() -> {
                 clearPlayerList()
             }
+
             index < curOriginIndex -> {
                 updateOriginIndex(curOriginIndex - 1)
             }
+
             index == curOriginIndex -> {
                 stopCurrentPlayback()
-                val nextIndex = getMusicNextIndex()
-                updateRealIndex(nextIndex)
+                val nextIndex = getNextPlayableIndex()
+                if (nextIndex != Constants.MINUS_ONE_INT)
+                    updateRealIndex(nextIndex)
             }
+
             else -> {
             }
         }
@@ -352,61 +297,16 @@ class JvmMusicController : MusicCommonController() {
     }
 
     /**
-     * 更新当前播放模式并向外发送模式变化事件。
-     */
-    override fun setPlayTypeData(playerTypeEnum: PlayerTypeEnum) {
-        playType = playerTypeEnum
-        applyPlaybackMode(playerTypeEnum)
-        updateEvent(PlayerEvent.PlayerTypeChange(playerTypeEnum))
-    }
-
-    /**
      * 将歌曲插入到“下一首播放”位置。
      */
     override fun addNextPlayer(music: XyPlayMusic) {
-        val currentList = originMusicList.toList()
-        val insertIndex = when {
-            currentList.isEmpty() -> 0
-            curOriginIndex == Constants.MINUS_ONE_INT -> currentList.size
-            else -> curOriginIndex + 1
-        }
-
-        val updatedList = currentList.toMutableList()
-        val existingIndex = updatedList.indexOfFirst { it.itemId == music.itemId }
-        if (existingIndex != Constants.MINUS_ONE_INT) {
-            updatedList.removeAt(existingIndex)
-        }
-        val targetIndex = insertIndex.coerceAtMost(updatedList.size)
-        updatedList.add(targetIndex, music)
-        updateOriginMusicList(updatedList)
+        val nextIndex = addNextMusic(music)
         scheduleMoveOrInsertPlaylistItem(
             music = music,
-            existingIndex = originMusicList.indexOfFirst { it.itemId == music.itemId },
-            targetIndex = targetIndex
+            oldIndex = nextIndex.second,
+            targetIndex = nextIndex.first
         )
         updateEvent(PlayerEvent.AddMusicList(music.artistIds?.firstOrNull()))
-    }
-
-    /**
-     * 获取当前列表中可播放的下一首索引。
-     */
-    override fun getNextPlayableIndex(): Int? {
-        if (originMusicList.isEmpty()) {
-            return null
-        }
-        val currentIndex = curOriginIndex.takeIf { it in originMusicList.indices } ?: 0
-        return if (currentIndex >= originMusicList.lastIndex) 0 else currentIndex + 1
-    }
-
-    /**
-     * 获取当前列表中可播放的上一首索引。
-     */
-    override fun getPreviousPlayableIndex(): Int? {
-        if (originMusicList.isEmpty()) {
-            return null
-        }
-        val currentIndex = curOriginIndex.takeIf { it in originMusicList.indices } ?: 0
-        return if (currentIndex <= 0) originMusicList.lastIndex else currentIndex - 1
     }
 
     /**
@@ -426,19 +326,20 @@ class JvmMusicController : MusicCommonController() {
             stopCurrentPlayback()
         }
 
-        val refreshedSources = snapshot.map { preparePlaylistSource(it) }
+        val refreshedSources = snapshot.map { preparePlaylistSource(it, address) }
 
         // 地址刷新后直接整表重建，避免旧 mrl 残留在 VLC 内部列表里。
         val applied = applyFullPlaylist(refreshedSources)
         if (!applied) {
-            invalidatePlaylistCache()
+            //todo 这里需要试验一下会不会发出声音的问题
+            seekToIndex(currentIndex)
+            pause()
             return
         }
 
         if ((currentState == PlayStateEnum.Playing || currentState == PlayStateEnum.Loading) &&
             currentIndex in snapshot.indices
         ) {
-
             currentMediaListPlayer()?.controls()?.play(currentIndex)
         }
     }
@@ -456,7 +357,16 @@ class JvmMusicController : MusicCommonController() {
         ifInitPlayerList: Boolean,
         musicPlayTypeEnum: MusicPlayTypeEnum
     ) {
-        super.initMusicList(musicDataList, musicCurrentPositionMapData, originIndex, pageNum, pageSize, artistId, ifInitPlayerList, musicPlayTypeEnum)
+        super.initMusicList(
+            musicDataList,
+            musicCurrentPositionMapData,
+            originIndex,
+            pageNum,
+            pageSize,
+            artistId,
+            ifInitPlayerList,
+            musicPlayTypeEnum
+        )
         stopCurrentPlayback()
         clearPlaylistMirror()
 
@@ -465,16 +375,11 @@ class JvmMusicController : MusicCommonController() {
         updateDuration(musicDataList[targetIndex].runTimeTicks)
         updateEvent(PlayerEvent.AddMusicList(artistId, ifInitPlayerList))
 
-        val requestVersion = playRequestVersion
 
         // 远程地址需要先解析为最终可播地址；准备期间如果用户又切了别的歌，
         // 则通过 requestVersion 放弃这次过期的准备结果。
-        val playlistReady = ensurePlaylistPrepared(originMusicList, requestVersion)
-        if (!playlistReady || requestVersion != playRequestVersion) {
-            if (requestVersion == playRequestVersion) {
-                updateState(PlayStateEnum.None)
-            }
-        }
+        ensurePlaylistPrepared(originMusicList)
+        setPlayTypeData(playType)
         if (ifInitPlayerList) {
             updateState(PlayStateEnum.Pause)
             setCurrentPositionData(
@@ -492,6 +397,17 @@ class JvmMusicController : MusicCommonController() {
     override fun refreshPlaylistCoverMetadata() {
     }
 
+    /**
+     * 生成当前播放模式下的歌曲列表
+     */
+    override fun updatePlayerMode() {
+        val mode = when (playType) {
+            PlayerTypeEnum.SINGLE_LOOP -> PlaybackMode.REPEAT
+            else -> PlaybackMode.LOOP
+        }
+        currentMediaListPlayer()?.controls()?.setMode(mode)
+    }
+
     override fun getMusicUrl(
         musicId: String,
         plexPlayKey: String?
@@ -505,6 +421,15 @@ class JvmMusicController : MusicCommonController() {
         )
 
         return TranscodingAndMusicUrlData(0, true, musicUrl)
+    }
+
+    /**
+     * 清空播放列表并停止当前本地/远程播放会话。
+     */
+    override fun clearPlayerList() {
+        clearPlaylistMirror()
+        stopCurrentPlayback()
+        super.clearPlayerList()
     }
 
     /**
@@ -530,21 +455,14 @@ class JvmMusicController : MusicCommonController() {
      * 为远程歌曲解析最终播放地址，并把结果回写到业务对象上。
      * 这样后续无论是列表重建还是当前歌曲地址刷新，都能复用同一套代理地址。
      */
-    private fun resolveRemotePlaybackUrl(music: XyPlayMusic): String {
+    private fun resolveRemotePlaybackUrl(music: XyPlayMusic, address: String): String {
         val originUrl = getMusicUrl(music.itemId, music.plexPlayKey).musicUrl
-        val proxyUrl = buildProxyPlaybackUrl(originUrl)
+        music.setMusicUrl(originUrl)
+        val proxyUrl = if (originUrl.isBlank()) {
+            originUrl
+        } else JvmReverseProxyServer.wrapTargetUrl(address + originUrl)
+        music.setMusicUrl(proxyUrl)
         return proxyUrl
-    }
-
-    /**
-     * 将远程音频地址包装成本地代理地址。
-     * 这样 VLC 访问的永远是本地 19180 代理，从而统一复用鉴权头、Range 与流式转发能力。
-     */
-    private fun buildProxyPlaybackUrl(originUrl: String): String {
-        if (originUrl.isBlank()) {
-            return originUrl
-        }
-        return JvmReverseProxyServer.wrapTargetUrl(TokenServer.baseUrl + originUrl)
     }
 
     /**
@@ -715,22 +633,13 @@ class JvmMusicController : MusicCommonController() {
      * 一旦发现这次准备结果已经过期，就直接放弃，不把旧数据写回播放器。
      */
     private fun ensurePlaylistPrepared(
-        musicList: List<XyPlayMusic>,
-        requestVersion: Long
+        musicList: List<XyPlayMusic>
     ): Boolean {
         val preparedSources = mutableListOf<String>()
         musicList.forEach { music ->
-            if (requestVersion != playRequestVersion) {
-                return false
-            }
             // 远程歌曲在这里解析成最终代理地址，本地歌曲则直接转成 file uri。
-            preparedSources += preparePlaylistSource(music)
+            preparedSources += preparePlaylistSource(music,address)
         }
-
-        if (requestVersion != playRequestVersion) {
-            return false
-        }
-
         return applyFullPlaylist(preparedSources)
     }
 
@@ -752,8 +661,6 @@ class JvmMusicController : MusicCommonController() {
             }
         }
 
-        playlistMediaSources.clear()
-        playlistMediaSources.addAll(preparedSources)
         return true
     }
 
@@ -762,22 +669,15 @@ class JvmMusicController : MusicCommonController() {
      */
     private fun scheduleMoveOrInsertPlaylistItem(
         music: XyPlayMusic,
-        existingIndex: Int,
+        oldIndex: Int,
         targetIndex: Int
     ) {
-        var adjustedTargetIndex = targetIndex
-        if (existingIndex != Constants.MINUS_ONE_INT) {
-            val removed = removePlaylistItem(existingIndex)
-            if (!removed) {
-                invalidatePlaylistCache()
-                return
-            }
-            if (existingIndex < adjustedTargetIndex) {
-                adjustedTargetIndex -= 1
-            }
+        if (oldIndex != Constants.MINUS_ONE_INT) {
+            removePlaylistItem(oldIndex)
+
         }
         insertPlaylistItems(
-            adjustedTargetIndex,
+            targetIndex,
             listOf(music)
         )
     }
@@ -804,7 +704,6 @@ class JvmMusicController : MusicCommonController() {
             }
 
         }
-        playlistMediaSources.addAll(boundedIndex, preparedSources)
     }
 
     /**
@@ -813,19 +712,18 @@ class JvmMusicController : MusicCommonController() {
     private fun removePlaylistItem(index: Int) {
         val mediaApi = ensureMediaList()?.media() ?: return
         runCatching { mediaApi.remove(index) }
-        playlistMediaSources.removeAt(index)
     }
 
     /**
      * 统一把业务歌曲对象转换成 VLC 可消费的媒体地址。
      * 本地歌曲直接返回 file uri，远程歌曲先转成本地代理地址。
      */
-    private fun preparePlaylistSource(music: XyPlayMusic): String {
+    private fun preparePlaylistSource(music: XyPlayMusic, address: String): String {
         val localPath = music.filePath
         if (!localPath.isNullOrBlank()) {
             return File(localPath).toURI().toString()
         }
-        return resolveRemotePlaybackUrl(music)
+        return resolveRemotePlaybackUrl(music, address)
     }
 
     /**
@@ -928,12 +826,11 @@ class JvmMusicController : MusicCommonController() {
     }
 
     /**
-     * MediaListPlayer 自动切到下一首后，业务层的 curOriginIndex/musicInfo 不会自动更新，
-     * 这里通过当前媒体的 mrl 反查回应用层索引，并补发切歌事件。
+     * 音频切换的时候更新索引和播放对象
      */
     private fun syncCurrentMusicFromMedia(media: Media) {
         val currentMrl = media.info().mrl() ?: return
-        val currentIndex = resolvePlaylistIndex(currentMrl)
+        val currentIndex = playMusicList.indexOfFirst { it.getPlayerUrl() == currentMrl }
         if (currentIndex !in originMusicList.indices) {
             return
         }
@@ -942,22 +839,7 @@ class JvmMusicController : MusicCommonController() {
         if (currentIndex == curOriginIndex && musicInfo?.itemId == currentMusic.itemId) {
             return
         }
-
-        if (originMusicList.isNotEmpty() && curOriginIndex >= originMusicList.size - 1 && ifNextPage) {
-            updateEvent(PlayerEvent.NextList(pageNum))
-        }
-
         updateOriginIndex(currentIndex)
-        updateCurrentMusic(currentMusic)
-        updateCurrentFavorite(musicInfo?.ifFavoriteStatus ?: false)
-        updateDuration(currentMusic.runTimeTicks)
-        updateEvent(
-            PlayerEvent.ChangeMusic(
-                currentMusic.itemId,
-                currentMusic.artistIds?.firstOrNull(),
-                currentMusic.artists?.firstOrNull()
-            )
-        )
     }
 
     /**
@@ -1005,40 +887,11 @@ class JvmMusicController : MusicCommonController() {
     }
 
     /**
-     * 将应用层播放模式映射到 VLC 的列表播放模式。
-     * 当前实现里：
-     * SINGLE_LOOP -> REPEAT
-     * 其他模式 -> LOOP
-     */
-    private fun applyPlaybackMode(playerTypeEnum: PlayerTypeEnum) {
-        val mode = when (playerTypeEnum) {
-            PlayerTypeEnum.SINGLE_LOOP -> PlaybackMode.REPEAT
-            else -> PlaybackMode.LOOP
-        }
-        currentMediaListPlayer()?.controls()?.setMode(mode)
-    }
-
-    /**
-     * 通过 VLC 当前播放媒体的 mrl，反查它在业务层列表中的索引。
-     */
-    private fun resolvePlaylistIndex(mrl: String): Int {
-        return playlistMediaSources.indexOf(mrl)
-    }
-
-    /**
      * 清空 VLC 内部播放列表及其镜像缓存。
      */
     private fun clearPlaylistMirror() {
         invalidatePlaylistCache()
         runCatching { mediaList?.media()?.clear() }
-    }
-
-    /**
-     * 仅清空应用层维护的播放列表镜像缓存，
-     * 不直接修改 VLC 内部列表，供上层决定何时重建。
-     */
-    private fun invalidatePlaylistCache() {
-        playlistMediaSources.clear()
     }
 
     companion object {

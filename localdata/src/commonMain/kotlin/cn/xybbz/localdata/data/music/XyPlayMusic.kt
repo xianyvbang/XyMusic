@@ -85,11 +85,22 @@ data class XyPlayMusic(
     @Ignore
     private var musicUrl: String = ""
 
+    @Ignore
+    private var playerUrl: String = ""
+
     fun getMusicUrl(): String {
         return musicUrl
     }
 
     fun setMusicUrl(musicUrl: String) {
         this.musicUrl = musicUrl
+    }
+
+    fun getPlayerUrl(): String {
+        return playerUrl
+    }
+
+    fun setPlayerUrl(playerUrl: String) {
+        this.playerUrl = playerUrl
     }
 }
