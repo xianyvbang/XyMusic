@@ -184,6 +184,7 @@ class JvmMusicController : MusicCommonController() {
         updateOriginMusicList(updatedList)
 
         if (isPlayer == true) {
+            //todo 这里不应该清空
             invalidatePlaylistCache()
             seekToIndex(insertIndex)
         } else if (hadValidPlaylist) {
@@ -220,22 +221,9 @@ class JvmMusicController : MusicCommonController() {
      * 恢复播放；若当前为空闲状态则重新播放当前索引歌曲。
      */
     override fun resume() {
-        if (state == PlayStateEnum.Pause || state == PlayStateEnum.Loading) {
-            val playable = currentMediaPlayer()?.status()?.isPlayable
-            if (playable == true) {
-                currentMediaPlayer()?.controls()?.play()
-            } else if (curOriginIndex in originMusicList.indices) {
-                // 恢复列表场景下仅同步了上层状态，此时需要重新装载当前歌曲后再播放。
-                startPlaybackAtIndex(
-                    index = curOriginIndex
-                )
-            }
-            return
-        }
-
-        if (state == PlayStateEnum.None && curOriginIndex in originMusicList.indices) {
-            seekToIndex(curOriginIndex)
-        }
+        Log.i("music", "恢复播放")
+        updateState(PlayStateEnum.Loading)
+        currentMediaPlayer()?.controls()?.play()
     }
 
     /**
@@ -266,6 +254,7 @@ class JvmMusicController : MusicCommonController() {
         if (originMusicList.isEmpty()) {
             return
         }
+        updateState(PlayStateEnum.Loading)
         currentMediaListPlayer()?.controls()?.playNext()
     }
 
@@ -276,6 +265,7 @@ class JvmMusicController : MusicCommonController() {
         if (originMusicList.isEmpty()) {
             return
         }
+        updateState(PlayStateEnum.Loading)
         currentMediaListPlayer()?.controls()?.playPrevious()
     }
 
@@ -286,6 +276,7 @@ class JvmMusicController : MusicCommonController() {
         if (index !in originMusicList.indices) {
             return
         }
+        updateState(PlayStateEnum.Loading)
         updateEvent(PlayerEvent.BeforeChangeMusic)
         startPlaybackAtIndex(index)
     }
@@ -301,7 +292,6 @@ class JvmMusicController : MusicCommonController() {
             return
         }
 
-        val music = snapshot[index]
         ensureMediaPlayer() ?: run {
             updateState(PlayStateEnum.None)
             return
@@ -313,10 +303,6 @@ class JvmMusicController : MusicCommonController() {
 
         playRequestVersion += 1
         updateState(PlayStateEnum.Loading)
-        setCurrentPositionData(0L)
-        updateOriginIndex(index)
-        updateCurrentMusic(music)
-        updateDuration(music.runTimeTicks)
         listPlayer.controls().play(index)
     }
 
