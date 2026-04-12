@@ -40,12 +40,11 @@ class JvmMusicController : MusicCommonController() {
 
     //播放列表变换携程
     private var playlistSyncJob: Job? = null
+
     //防止“过期的异步播放请求”把新的播放状态覆盖掉。
     private var playRequestVersion = 0L
 
     // 应用层列表与 VLC 内部 MediaList 保持一份轻量镜像，
-    // 通过 itemId/mrl 对照来判断当前缓存的播放列表是否仍然有效。
-    private val playlistItemIds = mutableListOf<String>()
     private val playlistMediaSources = mutableListOf<String>()
 
     // 记录下一次真正开始播放时需要跳转到的恢复进度。
@@ -470,7 +469,7 @@ class JvmMusicController : MusicCommonController() {
         if (hadValidPlaylist) {
             scheduleMoveOrInsertPlaylistItem(
                 music = music,
-                existingIndex = playlistItemIds.indexOf(music.itemId),
+                existingIndex = originMusicList.indexOfFirst { it.itemId == music.itemId },
                 targetIndex = targetIndex,
                 expectedList = updatedList
             )
@@ -765,8 +764,6 @@ class JvmMusicController : MusicCommonController() {
             }
         }
 
-        playlistItemIds.clear()
-        playlistItemIds.addAll(musicList.map { it.itemId })
         playlistMediaSources.clear()
         playlistMediaSources.addAll(preparedSources)
         return true
@@ -788,7 +785,7 @@ class JvmMusicController : MusicCommonController() {
                 return@launch
             }
 
-            val inserted = insertPlaylistItems(insertIndex, musicList, preparedSources)
+            val inserted = insertPlaylistItems(insertIndex, preparedSources)
             if (!inserted) {
                 invalidatePlaylistCache()
             }
@@ -825,7 +822,6 @@ class JvmMusicController : MusicCommonController() {
 
             val inserted = insertPlaylistItems(
                 adjustedTargetIndex,
-                listOf(music),
                 listOf(preparedSource)
             )
             if (!inserted) {
@@ -839,16 +835,15 @@ class JvmMusicController : MusicCommonController() {
      */
     private fun insertPlaylistItems(
         insertIndex: Int,
-        musicList: List<XyPlayMusic>,
         preparedSources: List<String>
     ): Boolean {
         val mediaApi = ensureMediaList()?.media() ?: return false
-        val boundedIndex = insertIndex.coerceIn(0, playlistItemIds.size)
+        val boundedIndex = insertIndex.coerceIn(0, originMusicList.size)
 
         preparedSources.forEachIndexed { offset, source ->
             val actualIndex = boundedIndex + offset
             val inserted = runCatching {
-                if (actualIndex >= playlistItemIds.size + offset) {
+                if (actualIndex >= originMusicList.size + offset) {
                     mediaApi.add(source)
                 } else {
                     mediaApi.insert(actualIndex, source)
@@ -859,7 +854,6 @@ class JvmMusicController : MusicCommonController() {
             }
         }
 
-        playlistItemIds.addAll(boundedIndex, musicList.map { it.itemId })
         playlistMediaSources.addAll(boundedIndex, preparedSources)
         return true
     }
@@ -868,7 +862,7 @@ class JvmMusicController : MusicCommonController() {
      * 从 VLC 的 MediaList 中删除单条媒体，并同步更新镜像缓存。
      */
     private fun removePlaylistItem(index: Int): Boolean {
-        if (index !in playlistItemIds.indices) {
+        if (index !in originMusicList.indices) {
             return false
         }
 
@@ -877,8 +871,6 @@ class JvmMusicController : MusicCommonController() {
         if (!removed) {
             return false
         }
-
-        playlistItemIds.removeAt(index)
         playlistMediaSources.removeAt(index)
         return true
     }
@@ -1018,7 +1010,7 @@ class JvmMusicController : MusicCommonController() {
             return
         }
 
-        if (originMusicList.isNotEmpty() && curOriginIndex >= originMusicList.size - 1 && ifNextPage){
+        if (originMusicList.isNotEmpty() && curOriginIndex >= originMusicList.size - 1 && ifNextPage) {
             updateEvent(PlayerEvent.NextList(pageNum))
         }
 
@@ -1115,12 +1107,12 @@ class JvmMusicController : MusicCommonController() {
      * 判断当前 VLC 内部列表镜像是否还能和业务层列表一一对应。
      */
     private fun isPlaylistCacheValid(musicList: List<XyPlayMusic>): Boolean {
-        if (playlistItemIds.size != musicList.size ||
+        if (originMusicList.size != musicList.size ||
             playlistMediaSources.size != musicList.size
         ) {
             return false
         }
-        return musicList.indices.all { playlistItemIds[it] == musicList[it].itemId }
+        return musicList.indices.all { originMusicList[it].itemId == musicList[it].itemId }
     }
 
     /**
@@ -1128,7 +1120,6 @@ class JvmMusicController : MusicCommonController() {
      * 不直接修改 VLC 内部列表，供上层决定何时重建。
      */
     private fun invalidatePlaylistCache() {
-        playlistItemIds.clear()
         playlistMediaSources.clear()
     }
 
