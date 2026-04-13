@@ -12,7 +12,6 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.proxy.JvmReverseProxyServer
-import io.github.oshai.kotlinlogging.KotlinLogging
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory
 import uk.co.caprica.vlcj.media.Media
 import uk.co.caprica.vlcj.media.MediaParsedStatus
@@ -29,7 +28,6 @@ import java.util.Base64
 import uk.co.caprica.vlcj.media.MediaEventAdapter as VlcMediaEventAdapter
 
 class JvmMusicController : MusicCommonController() {
-    val logger = KotlinLogging.logger("jvmMusic")
 
     private var mediaPlayerFactory: MediaPlayerFactory? = null
     private var mediaPlayer: MediaPlayer? = null
@@ -96,7 +94,7 @@ class JvmMusicController : MusicCommonController() {
             mediaPlayer: MediaPlayer?,
             media: MediaRef?
         ) {
-            Log.i("vlc", "播放变化: ${media}")
+            Log.i("vlc", "播放变化: $media")
             clearIgnoredStoppedEvent()
 
             val retainedMedia = media?.newMedia() ?: return
