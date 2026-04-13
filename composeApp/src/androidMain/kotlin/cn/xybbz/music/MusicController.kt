@@ -220,7 +220,7 @@ class MusicController(
     /**
      * 初始化播放
      */
-    override fun initController(onRestorePlaylists: (() -> Unit)?) {
+    override fun initController(onRestorePlaylists: (MusicCommonController.() -> Unit)?) {
         controllerFuture = MediaController.Builder(
             application,
             SessionToken(
@@ -247,7 +247,7 @@ class MusicController(
                     playWhenReady = true
                 }
             }
-            onRestorePlaylists?.invoke()
+            onRestorePlaylists?.invoke(this)
         }, ContextCompat.getMainExecutor(application))
     }
 
