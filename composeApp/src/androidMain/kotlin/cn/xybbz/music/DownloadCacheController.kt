@@ -188,7 +188,7 @@ class DownloadCacheController(
         if (settingsManager.get().cacheUpperLimit == CacheUpperLimitEnum.No || !settingsManager.get().ifEnableEdgeDownload) return
 
         val itemId = getCacheKey(music.itemId)
-        val url = music.getMusicUrl()
+        val url = music.musicUrl
         scope.launch(Dispatchers.IO) {
             Log.i("music", "开始缓存1 ${music.name}")
             /** 切换缓存 → 取消旧任务 */

@@ -9,7 +9,7 @@ object MusicPlayAssembler {
     fun toPlayMusic(
         music: XyMusic,
         filePath: String? = null,
-        ifFavoriteStatus: Boolean = music.ifFavoriteStatus
+        ifFavoriteStatus: Boolean
     ): XyPlayMusic {
         return XyPlayMusic(
             itemId = music.itemId,
@@ -24,7 +24,11 @@ object MusicPlayAssembler {
             size = music.size,
             filePath = filePath,
             runTimeTicks = music.runTimeTicks,
-            plexPlayKey = music.plexPlayKey
+            plexPlayKey = music.plexPlayKey,
+            ifHls = false,
+            musicUrl = "",
+            static = true,
+            audioBitRate = 0
         )
     }
 
@@ -43,7 +47,8 @@ object MusicPlayAssembler {
         return safeMusicList.map { music ->
             toPlayMusic(
                 music = music,
-                filePath = downloadMap[music.itemId]
+                filePath = downloadMap[music.itemId],
+                music.ifFavoriteStatus
             )
         }
     }

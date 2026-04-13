@@ -819,7 +819,7 @@ class JellyfinDatasourceServer(
         audioCodec: AudioCodecEnum?,
         audioBitRate: Int?,
         session: String?
-    ): TranscodingAndMusicUrlData {
+    ): String {
         return jellyfinApiClient.createAudioUrl(
             musicId,
             audioCodec,

@@ -730,8 +730,8 @@ abstract class IDataSourceParentServer(
         pageSize: Int,
         pageNum: Int
     ): List<XyPlayMusic>? {
-        return MusicPlayAssembler.toPlayMusicList(
-            musicList = db.musicDao.selectHomeMusicList(pageSize, pageNum * pageSize),
+        return MusicPlayAssembler.attachFilePath(
+            playMusicList = db.musicDao.selectMusicExtendList(pageSize, pageNum * pageSize),
             downloadDb = downloadDb,
             mediaLibraryId = getConnectionId().toString()
         )
@@ -745,8 +745,8 @@ abstract class IDataSourceParentServer(
         pageSize: Int,
         pageNum: Int
     ): List<XyPlayMusic>? {
-        return MusicPlayAssembler.toPlayMusicList(
-            musicList = db.musicDao.selectMusicListByAlbumId(albumId, pageSize, pageNum * pageSize),
+        return MusicPlayAssembler.attachFilePath(
+            playMusicList = db.musicDao.selectMusicExtendListByAlbumId(albumId, pageSize, pageNum * pageSize),
             downloadDb = downloadDb,
             mediaLibraryId = getConnectionId().toString()
         )
@@ -760,8 +760,8 @@ abstract class IDataSourceParentServer(
         pageSize: Int,
         pageNum: Int
     ): List<XyPlayMusic>? {
-        return MusicPlayAssembler.toPlayMusicList(
-            musicList = db.musicDao.selectMusicListByArtistId(
+        return MusicPlayAssembler.attachFilePath(
+            playMusicList = db.musicDao.selectMusicExtendListByArtistId(
                 artistId,
                 pageSize,
                 pageNum * pageSize
@@ -778,8 +778,8 @@ abstract class IDataSourceParentServer(
         pageSize: Int,
         pageNum: Int
     ): List<XyPlayMusic>? {
-        return MusicPlayAssembler.toPlayMusicList(
-            musicList = db.musicDao.selectMusicListByFavorite(pageSize, pageNum * pageSize),
+        return MusicPlayAssembler.attachFilePath(
+            playMusicList = db.musicDao.selectMusicExtendListByFavorite(pageSize, pageNum * pageSize),
             downloadDb = downloadDb,
             mediaLibraryId = getConnectionId().toString()
         )

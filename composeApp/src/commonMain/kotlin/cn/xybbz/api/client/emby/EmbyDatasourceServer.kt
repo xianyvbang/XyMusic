@@ -882,7 +882,7 @@ class EmbyDatasourceServer(
         audioCodec: AudioCodecEnum?,
         audioBitRate: Int?,
         session: String?
-    ): TranscodingAndMusicUrlData {
+    ): String {
         return embyApiClient.createAudioUrl(
             musicId,
             audioCodec,

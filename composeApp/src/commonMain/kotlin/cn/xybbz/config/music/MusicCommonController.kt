@@ -26,8 +26,6 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
 
     val downloadCacheController: DownloadCacheCommonController = get()
 
-    val dataSourceManager: DataSourceManager = get()
-
     // 原始歌曲列表
     private val _originMusicList = mutableStateListOf<XyPlayMusic>()
 

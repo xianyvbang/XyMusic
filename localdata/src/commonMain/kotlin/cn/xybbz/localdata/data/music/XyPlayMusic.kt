@@ -83,7 +83,6 @@ data class XyPlayMusic(
      * 是否可以hls播放
      */
     val ifHls: Boolean = false,
-
     /**
      * 音乐地址
      */

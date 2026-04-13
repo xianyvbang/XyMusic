@@ -1101,18 +1101,10 @@ open class DataSourceManager(
         musicId: String,
         plexPlayKey: String?
     ): TranscodingAndMusicUrlData {
-        return try {
-            dataSourceServer.getMusicPlayUrl(
-                musicId,
-                static,
-                audioCodec,
-                audioBitRate,
-                session,
-            )
-        } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获取播放连接失败", e)
-            ""
-        }
+        return dataSourceServer.getMusicPlayUrl(
+            musicId,
+            plexPlayKey
+        )
     }
 
     /**

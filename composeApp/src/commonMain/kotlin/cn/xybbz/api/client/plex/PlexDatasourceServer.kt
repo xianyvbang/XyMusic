@@ -1285,7 +1285,7 @@ class PlexDatasourceServer(
         audioCodec: AudioCodecEnum?,
         audioBitRate: Int?,
         session: String?
-    ): TranscodingAndMusicUrlData {
+    ): String {
         return if (static) plexApiClient.createAudioUrl(musicId)
         else
             plexApiClient.createUniversalAudioUrl(musicId, audioBitRate ?: 0, session ?: "")

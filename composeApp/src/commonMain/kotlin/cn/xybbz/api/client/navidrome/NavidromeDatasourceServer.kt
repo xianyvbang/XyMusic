@@ -864,7 +864,7 @@ class NavidromeDatasourceServer(
         audioCodec: AudioCodecEnum?,
         audioBitRate: Int?,
         session: String?
-    ): TranscodingAndMusicUrlData {
+    ): String {
         var audioCodec = audioCodec ?: AudioCodecEnum.ROW
         if (static) {
             audioCodec = AudioCodecEnum.ROW

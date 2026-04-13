@@ -136,7 +136,7 @@ class CacheController(
         if (settingsManager.get().cacheUpperLimit == CacheUpperLimitEnum.No) return
 
         val itemId = music.itemId
-        val url = music.getMusicUrl()
+        val url = music.musicUrl
         cacheCoroutineScope.launch(Dispatchers.IO) {
             Log.i("music", "开始缓存1")
             Log.i("music", "开始缓存2")
