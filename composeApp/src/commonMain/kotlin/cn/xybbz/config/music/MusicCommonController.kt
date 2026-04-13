@@ -148,7 +148,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     /**
      * 初始化播放
      */
-    abstract fun initController(onRestorePlaylists: (() -> Unit)? = null)
+    abstract fun initController(onRestorePlaylists: (() -> Unit)? = null, address: String?)
 
     /**
      * 列表中添加数据

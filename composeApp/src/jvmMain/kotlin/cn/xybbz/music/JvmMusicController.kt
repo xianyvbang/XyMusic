@@ -36,8 +36,9 @@ class JvmMusicController : MusicCommonController() {
     private var mediaPlayerListenerRegistered = false
     private var ignoreNextStoppedEvent = false
 
-    //服务地址
-    val address: String get() = TokenServer.baseUrl
+    // 服务地址优先取 TokenServer，启动竞态下再退回当前数据源配置的连接地址。
+    val address: String
+        get() = TokenServer.baseUrl.ifBlank { dataSourceManager.getConnectionAddress() }
 
     private val playerListener = object : MediaPlayerEventAdapter() {
         /**
@@ -143,7 +144,7 @@ class JvmMusicController : MusicCommonController() {
          * VLC 有时会先更新内部 position，再迟一点才分发 timeChanged。
          * 这里补一层基于真实播放器状态的同步，避免听感已跳播但 UI 进度还停在旧值。
          */
-        override fun positionChanged(mediaPlayer: MediaPlayer?, newPosition: Double) {
+        override fun positionChanged(mediaPlayer: MediaPlayer?, newPosition: Float) {
             if (newPosition < 0f) {
                 return
             }
@@ -169,7 +170,7 @@ class JvmMusicController : MusicCommonController() {
     /**
      * 初始化 JVM 播放器监听器与进度轮询任务。
      */
-    override fun initController(onRestorePlaylists: (() -> Unit)?) {
+    override fun initController(onRestorePlaylists: (() -> Unit)?, address: String?) {
         onRestorePlaylists?.invoke()
     }
 
@@ -468,9 +469,11 @@ class JvmMusicController : MusicCommonController() {
     private fun resolveRemotePlaybackUrl(music: XyPlayMusic, address: String): String {
         val originUrl = getMusicUrl(music.itemId, music.plexPlayKey).musicUrl
         music.setMusicUrl(originUrl)
-        val proxyUrl = if (originUrl.isBlank()) {
-            originUrl
-        } else JvmReverseProxyServer.wrapTargetUrl(address + originUrl)
+        val proxyUrl = when {
+            originUrl.isBlank() -> originUrl
+            address.isBlank() -> music.getPlayerUrl()
+            else -> JvmReverseProxyServer.wrapTargetUrl(address + originUrl)
+        }
         music.setPlayerUrl(proxyUrl)
         return proxyUrl
     }
@@ -640,6 +643,9 @@ class JvmMusicController : MusicCommonController() {
     private fun ensurePlaylistPrepared(
         musicList: List<XyPlayMusic>
     ): Boolean {
+        if (address.isBlank()) {
+            return false
+        }
         musicList.forEach { music ->
             preparePlaylistSource(music, address)
         }
@@ -732,7 +738,7 @@ class JvmMusicController : MusicCommonController() {
      */
     private fun syncCurrentPositionFromPlayer(
         mediaPlayer: MediaPlayer,
-        newPosition: Double? = null
+        newPosition: Float? = null
     ) {
         // 优先相信 libVLC 返回的真实毫秒数；这是和实际听感最一致的来源。
         val actualTime = mediaPlayer.status().time()
