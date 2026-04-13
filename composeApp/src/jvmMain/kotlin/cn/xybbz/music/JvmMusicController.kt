@@ -143,7 +143,7 @@ class JvmMusicController : MusicCommonController() {
          * VLC 有时会先更新内部 position，再迟一点才分发 timeChanged。
          * 这里补一层基于真实播放器状态的同步，避免听感已跳播但 UI 进度还停在旧值。
          */
-        override fun positionChanged(mediaPlayer: MediaPlayer?, newPosition: Float) {
+        override fun positionChanged(mediaPlayer: MediaPlayer?, newPosition: Double) {
             if (newPosition < 0f) {
                 return
             }
@@ -693,7 +693,7 @@ class JvmMusicController : MusicCommonController() {
     private fun syncCurrentMusicFromMedia(media: Media) {
         val currentMrl = media.info().mrl() ?: return
         val currentIndex = playMusicList.indexOfFirst { it.getPlayerUrl() == currentMrl }
-        if (currentIndex !in originMusicList.indices) {
+        if (currentIndex !in playMusicList.indices) {
             return
         }
 
@@ -710,7 +710,7 @@ class JvmMusicController : MusicCommonController() {
      */
     private fun syncCurrentPositionFromPlayer(
         mediaPlayer: MediaPlayer,
-        newPosition: Float? = null
+        newPosition: Double? = null
     ) {
         // 优先相信 libVLC 返回的真实毫秒数；这是和实际听感最一致的来源。
         val actualTime = mediaPlayer.status().time()
