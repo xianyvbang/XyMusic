@@ -168,7 +168,7 @@ class JvmMusicController : MusicCommonController() {
     /**
      * 初始化 JVM 播放器监听器与进度轮询任务。
      */
-    override fun initController(onRestorePlaylists: (() -> Unit)?, address: String?) {
+    override fun initController(onRestorePlaylists: (() -> Unit)?) {
         onRestorePlaylists?.invoke()
     }
 

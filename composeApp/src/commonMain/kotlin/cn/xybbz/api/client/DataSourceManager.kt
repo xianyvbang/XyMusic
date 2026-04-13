@@ -32,6 +32,7 @@ import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.api.state.Source
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.enums.DownloadTypes
 import cn.xybbz.common.enums.LoginStateType
 import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.MusicTypeEnum
@@ -42,7 +43,6 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.scope.IoScoped
-import cn.xybbz.common.enums.DownloadTypes
 import cn.xybbz.entity.data.LoginStateData
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.ResourceData
@@ -172,16 +172,30 @@ open class DataSourceManager(
     var errorMessage by mutableStateOf("")
         private set
 
+
+    /**
+     * 事件监听
+     */
+    private val listeners = mutableListOf<OnDatasourceListener>()
+
     /**
      * 初始化对象信息
      */
-    suspend fun initDataSource(dataSourceType: DataSourceType?) {
-
+    suspend fun initDataSource(dataSourceType: DataSourceType?, connectionId: Long?) {
         Log.i("=====", "开始自动登录")
-        if (dataSourceType != null) {
+        if (dataSourceType != null && connectionId != null) {
             Log.i("=====", "开始自动登录中")
+            //获得启用的连接信息
+            val connectionConfig =
+                db.connectionConfigDao.selectById(connectionId)
             switchDataSource(dataSourceType)
-            serverLogin(LoginType.TOKEN, null)
+            for (listener in listeners) {
+                listener.autoLoginBefore(connectionConfig)
+            }
+            serverLogin(LoginType.TOKEN, connectionConfig)
+            for (listener in listeners) {
+                listener.autoLoginSuccessAfter(connectionConfig)
+            }
         }
     }
 
@@ -210,7 +224,6 @@ open class DataSourceManager(
         ifLoginError = false
         autoLogin(loginType, connectionConfig).collect { loginState ->
             loginStatus = loginState
-            //                ifLoginError = false
             val loginSateInfo = getLoginSateInfo(loginState)
             errorHint = loginSateInfo.errorHint ?: Res.string.empty_info
             errorMessage = loginSateInfo.errorMessage ?: ""
@@ -309,7 +322,6 @@ open class DataSourceManager(
         getDataSourceServerByType(dataSourceType, false).let {
             dataSourceServer = it
             dataSourceServerFlow.value = it
-
         }
         Log.i("=====", "数据源切换完成")
     }
@@ -336,7 +348,13 @@ open class DataSourceManager(
     suspend fun changeDataSource(connectionConfig: ConnectionConfig) {
         release()
         switchDataSource(connectionConfig.type)
+        for (listener in listeners) {
+            listener.autoLoginBefore(connectionConfig)
+        }
         serverLogin(connectionConfig = connectionConfig)
+        for (listener in listeners) {
+            listener.autoLoginSuccessAfter(connectionConfig)
+        }
     }
 
 
@@ -1235,6 +1253,15 @@ open class DataSourceManager(
 
 
     fun dataSourceScope() = scope
+
+
+    fun addListener(listener: OnDatasourceListener) {
+        listeners.add(listener)
+    }
+
+    fun removeListener(listener: OnDatasourceListener) {
+        listeners.remove(listener)
+    }
 
     fun release() {
         dataSourceServer.close()

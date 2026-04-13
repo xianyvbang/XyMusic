@@ -231,7 +231,7 @@ class MusicController(
     /**
      * 初始化播放
      */
-    override fun initController(onRestorePlaylists: (() -> Unit)?, address: String?) {
+    override fun initController(onRestorePlaylists: (() -> Unit)?) {
         controllerFuture = MediaController.Builder(
             application,
             SessionToken(

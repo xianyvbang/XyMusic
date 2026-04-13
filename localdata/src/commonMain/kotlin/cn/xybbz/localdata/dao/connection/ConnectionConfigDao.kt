@@ -71,7 +71,7 @@ interface ConnectionConfigDao {
     fun selectAllDataFlow(): Flow<List<ConnectionConfig>>
 
     @Query("select * from xy_connection_config where id = :id")
-    suspend fun selectById(id: Long): ConnectionConfig?
+    suspend fun selectById(id: Long): ConnectionConfig
 
     @Query("select * from xy_connection_config where id = :id")
     fun selectByIdFlow(id: Long): Flow<ConnectionConfig?>

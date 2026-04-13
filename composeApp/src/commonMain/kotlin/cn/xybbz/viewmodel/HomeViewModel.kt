@@ -18,7 +18,6 @@
 
 package cn.xybbz.viewmodel
 
-import cn.xybbz.assembler.MusicPlayAssembler
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -27,6 +26,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.state.Source
+import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.common.enums.DownloadTypes
@@ -329,10 +329,7 @@ class HomeViewModel(
         DataSourceChangeUtils.changeDataSource(
             connectionConfig,
             dataSourceManager,
-            musicController,
-            db,
-            downloadDb,
-            musicPlayContext
+            musicController
         )
     }
 
@@ -379,7 +376,9 @@ class HomeViewModel(
 
     fun autoLogin() {
         viewModelScope.launch {
-            dataSourceManager.serverLogin(LoginType.API, null)
+            dataSourceManager.serverLogin(
+                LoginType.API,
+                db.connectionConfigDao.selectConnectionConfig())
         }
     }
 }

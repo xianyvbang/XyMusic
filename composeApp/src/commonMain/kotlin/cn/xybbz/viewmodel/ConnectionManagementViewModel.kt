@@ -86,10 +86,7 @@ class ConnectionManagementViewModel (
             DataSourceChangeUtils.changeDataSource(
                 connectionConfig,
                 dataSourceManager,
-                musicController,
-                db,
-                downloadDb,
-                musicPlayContext
+                musicController
             )
         }
     }

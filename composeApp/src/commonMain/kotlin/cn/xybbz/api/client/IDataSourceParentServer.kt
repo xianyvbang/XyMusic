@@ -425,7 +425,6 @@ abstract class IDataSourceParentServer(
                 emitAll(loginAfter(connectionConfig))
             }
 
-
         }.flowOn(Dispatchers.IO).catch {
             Log.e(Constants.LOG_ERROR_PREFIX, "自动登录异常 ${it.message}", it)
             if (loginType == LoginType.TOKEN)
@@ -760,7 +759,11 @@ abstract class IDataSourceParentServer(
         pageNum: Int
     ): List<XyPlayMusic>? {
         return MusicPlayAssembler.toPlayMusicList(
-            musicList = db.musicDao.selectMusicListByArtistId(artistId, pageSize, pageNum * pageSize),
+            musicList = db.musicDao.selectMusicListByArtistId(
+                artistId,
+                pageSize,
+                pageNum * pageSize
+            ),
             downloadDb = downloadDb,
             mediaLibraryId = getConnectionId().toString()
         )
@@ -1494,6 +1497,7 @@ abstract class IDataSourceParentServer(
             db.remoteCurrentDao.updateByConnectionId(getConnectionId())
         }
     }
+
 
     override fun close() {
         defaultParentApiClient.release()

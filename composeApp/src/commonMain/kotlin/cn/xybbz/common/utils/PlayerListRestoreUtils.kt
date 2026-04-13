@@ -1,8 +1,8 @@
 package cn.xybbz.common.utils
 
 import cn.xybbz.assembler.MusicPlayAssembler
-import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.config.music.MusicPlayContext
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 
 object PlayerListRestoreUtils {
@@ -14,9 +14,10 @@ object PlayerListRestoreUtils {
     suspend fun restoreCurrentDataSourcePlayerList(
         db: LocalDatabaseClient,
         downloadDb: DownloadDatabaseClient,
-        musicPlayContext: MusicPlayContext
+        musicPlayContext: MusicPlayContext,
+        connectionId: String?
     ) {
-        val connectionId = db.settingsDao.selectOneData()?.connectionId?.toString() ?: return
+        if (connectionId.isNullOrBlank()) return
         val musicList = MusicPlayAssembler.attachFilePath(
             playMusicList = db.musicDao.selectPlayQueuePlayMusicList(),
             downloadDb = downloadDb,
