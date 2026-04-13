@@ -418,41 +418,27 @@ class MusicController(
      */
     override fun addNextPlayer(music: XyPlayMusic) {
         val mediaItem = musicSetMediaItem(music)
-
         if (originMusicList.isEmpty()) {
             addMusic(music)
             mediaController?.addMediaItem(mediaItem)
             thisPlay()
-        } else {
-            //判断是否存在
-            val indexOfFirst =
-                originMusicList.indexOfFirst { it.itemId == music.itemId }
-            if (indexOfFirst != -1 && indexOfFirst != curOriginIndex && indexOfFirst != curOriginIndex + 1) {
-                removeMusic(indexOfFirst)
-                if (indexOfFirst < curOriginIndex){
-                    updateOriginIndex(curOriginIndex - 1)
-                }
-                addMusic(music)
-                mediaController?.let { controller ->
-                    controller.removeMediaItem(indexOfFirst)
-                    controller.addMediaItem(
-                        controller.nextMediaItemIndex,
-                        mediaItem
-                    )
-                    controller.removeMediaItem(indexOfFirst)
-                }
-            } else {
-                addMusic(music)
-                mediaController?.let { media ->
-                    media.addMediaItem(
-                        media.nextMediaItemIndex,
-                        mediaItem
-                    )
-                }
-            }
-
+            updateEvent(PlayerEvent.AddMusicList(music.artistIds?.firstOrNull()))
+            return
         }
-        updateEvent(PlayerEvent.AddMusicList(music.artistIds?.get(0)))
+
+        val existingOriginIndex = originMusicList.indexOfFirst { it.itemId == music.itemId }
+
+        if (existingOriginIndex != Constants.MINUS_ONE_INT &&
+            existingOriginIndex != curOriginIndex &&
+            existingOriginIndex != curOriginIndex + 1
+        ) {
+            removeMusic(existingOriginIndex)
+            mediaController?.removeMediaItem(existingOriginIndex)
+            updateOriginIndex(mediaController?.currentMediaItemIndex?:0)
+        }
+        insertMusic(music)
+        mediaController?.addMediaItem(curOriginIndex + 1, mediaItem)
+        updateEvent(PlayerEvent.AddMusicList(music.artistIds?.firstOrNull()))
     }
 
     /**
@@ -468,7 +454,16 @@ class MusicController(
         ifInitPlayerList: Boolean,
         musicPlayTypeEnum: MusicPlayTypeEnum
     ) {
-       super.initMusicList(musicDataList, musicCurrentPositionMapData, originIndex, pageNum, pageSize, artistId, ifInitPlayerList, musicPlayTypeEnum)
+        super.initMusicList(
+            musicDataList,
+            musicCurrentPositionMapData,
+            originIndex,
+            pageNum,
+            pageSize,
+            artistId,
+            ifInitPlayerList,
+            musicPlayTypeEnum
+        )
 
         downloadCacheController.cancelAllCache()
 
@@ -563,7 +558,6 @@ class MusicController(
         return mediaItemBuilder.setMediaId(itemId)
             .build()
     }
-
 
 
     /**

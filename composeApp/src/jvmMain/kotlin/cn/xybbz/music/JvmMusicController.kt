@@ -310,11 +310,29 @@ class JvmMusicController : MusicCommonController() {
      * 将歌曲插入到“下一首播放”位置。
      */
     override fun addNextPlayer(music: XyPlayMusic) {
-        preparePlaylistSource(
-            music = music,
-            address = address
-        )
-        addMusic(music)
+        preparePlaylistSource(music, address)
+        if (originMusicList.isEmpty()) {
+            addMusic(music)
+            playMusicAtRealIndex(0)
+            return
+        }
+
+        val existingOriginIndex = originMusicList.indexOfFirst { it.itemId == music.itemId }
+        if (existingOriginIndex != Constants.MINUS_ONE_INT &&
+            existingOriginIndex != curOriginIndex &&
+            existingOriginIndex != curOriginIndex + 1
+        ) {
+            removeMusic(existingOriginIndex)
+            if (curOriginIndex != Constants.MINUS_ONE_INT && originMusicList.isNotEmpty()) {
+                val adjustedOriginIndex = if (existingOriginIndex < curOriginIndex) {
+                    curOriginIndex - 1
+                } else {
+                    curOriginIndex
+                }
+                updateOriginIndex(adjustedOriginIndex)
+            }
+        }
+        insertMusic(music)
         updateEvent(PlayerEvent.AddMusicList(music.artistIds?.firstOrNull()))
     }
 
@@ -620,15 +638,6 @@ class JvmMusicController : MusicCommonController() {
             preparePlaylistSource(music, address)
         }
         return true
-    }
-
-    /**
-     * “下一首播放”场景下，如果歌曲已存在则移动，否则确保它的播放地址已准备完成。
-     */
-    private fun scheduleMoveOrInsertPlaylistItem(
-        music: XyPlayMusic
-    ) {
-        preparePlaylistSource(music, address)
     }
 
     /**
