@@ -36,6 +36,16 @@ fun initKoin(config: KoinAppDeclaration? = null): KoinApplication {
         // 先启动播放器事件协调器，再初始化控制器，确保后续播放器事件有统一接收方。
         koinTmp.get<PlayerEventCoordinator>().start()
         koinTmp.get<MusicCommonController>().initController {
+
+            appScope.launch {
+                PlayerListRestoreUtils.restoreCurrentDataSourcePlayerList(
+                    koinTmp.get(),
+                    koinTmp.get(),
+                    koinTmp.get(),
+                    settings.connectionId.toString()
+                )
+            }
+
             settingsManager.setOnListener(object : OnSettingsChangeListener {
                 override fun onCacheMaxBytesChanged(
                     cacheUpperLimit: CacheUpperLimitEnum,
@@ -53,22 +63,7 @@ fun initKoin(config: KoinAppDeclaration? = null): KoinApplication {
                 }
             })
         }
-
-
         val dataSourceManager = koinTmp.get<DataSourceManager>()
-        dataSourceManager.addListener(object : OnDatasourceListener {
-            /**
-             * 自动登陆后
-             */
-            override suspend fun autoLoginSuccessAfter(connectionConfig: cn.xybbz.localdata.data.connection.ConnectionConfig) {
-                PlayerListRestoreUtils.restoreCurrentDataSourcePlayerList(
-                    koinTmp.get(),
-                    koinTmp.get(),
-                    koinTmp.get(),
-                    connectionConfig.id.toString()
-                )
-            }
-        })
         dataSourceManager.initDataSource(settings.dataSourceType, settings.connectionId)
     }
     return koin

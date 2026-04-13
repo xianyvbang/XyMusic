@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import cn.xybbz.api.TokenServer
 import cn.xybbz.common.enums.AllDataEnum
 import cn.xybbz.common.utils.Log
 import cn.xybbz.config.music.AudioFadeController
@@ -110,11 +111,20 @@ class SettingsManager(
         Log.i("=====", "开始存储设置")
         this@SettingsManager.settings = db.settingsDao.selectOneData() ?: XySettings()
 
+
+
         this@SettingsManager.themeType = this@SettingsManager.get().themeType
         this@SettingsManager.isDynamic = this@SettingsManager.get().isDynamic
         this@SettingsManager.imageFilePath = this@SettingsManager.get().imageFilePath
 
-        updateIfConnectionConfig(this@SettingsManager.get().connectionId != null)
+        val connectionId = this@SettingsManager.get().connectionId
+        val ifConnectionId = connectionId != null
+        updateIfConnectionConfig(ifConnectionId)
+        if (connectionId != null){
+            TokenServer.updateBaseUrl(db.connectionConfigDao.selectById(connectionId).address)
+        }
+
+
         if (this@SettingsManager.get().languageType != null) {
             this@SettingsManager.languageType = this@SettingsManager.get().languageType
         } else {
