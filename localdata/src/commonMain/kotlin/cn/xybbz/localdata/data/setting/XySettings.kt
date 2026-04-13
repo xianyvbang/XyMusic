@@ -25,10 +25,11 @@ import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.localdata.enums.LanguageType
 import cn.xybbz.localdata.enums.ThemeTypeEnum
-import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 @Entity(tableName = "xy_settings")
-data class XySettings(
+data class XySettings @OptIn(ExperimentalUuidApi::class) constructor(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     /**
@@ -133,7 +134,7 @@ data class XySettings(
     /**
      * 播放会话ID
      */
-    val playSessionId: String = UUID.randomUUID().toString(),
+    val playSessionId: String = Uuid.random().toString(),
     /**
      *  主题类型
      */

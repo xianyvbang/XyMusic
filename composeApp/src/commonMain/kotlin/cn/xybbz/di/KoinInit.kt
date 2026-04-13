@@ -3,13 +3,16 @@ package cn.xybbz.di
 import cn.xybbz.StartKoinApp
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.OnDatasourceListener
+import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.common.utils.PlayerListRestoreUtils
 import cn.xybbz.config.HomeDataRepository
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.PlayerEventCoordinator
 import cn.xybbz.config.proxy.ProxyConfigServer
+import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import kotlinx.coroutines.launch
 import org.koin.core.KoinApplication
 import org.koin.dsl.KoinAppDeclaration
@@ -28,10 +31,30 @@ fun initKoin(config: KoinAppDeclaration? = null): KoinApplication {
         val koinTmp = koin.koin
         koinTmp.get<HomeDataRepository>().initData()
         koinTmp.get<ProxyConfigServer>().initConfig()
-        val settings = koinTmp.get<SettingsManager>().setSettingsData()
+        val settingsManager = koinTmp.get<SettingsManager>()
+        val settings = settingsManager.setSettingsData()
         // 先启动播放器事件协调器，再初始化控制器，确保后续播放器事件有统一接收方。
         koinTmp.get<PlayerEventCoordinator>().start()
-        koinTmp.get<MusicCommonController>().initController()
+        koinTmp.get<MusicCommonController>().initController {
+            settingsManager.setOnListener(object : OnSettingsChangeListener {
+                override fun onCacheMaxBytesChanged(
+                    cacheUpperLimit: CacheUpperLimitEnum,
+                    oldCacheUpperLimit: CacheUpperLimitEnum
+                ) {
+                    if (oldCacheUpperLimit == CacheUpperLimitEnum.No && cacheUpperLimit != CacheUpperLimitEnum.No && state == PlayStateEnum.Playing) {
+                        musicInfo?.let {
+                            startCache(it, settingsManager.getStatic())
+                        }
+                    }
+                }
+
+                override suspend fun onMusicResourceConfigChanged() {
+                    refreshPlaylistCoverMetadata()
+                }
+            })
+        }
+
+
         val dataSourceManager = koinTmp.get<DataSourceManager>()
         dataSourceManager.addListener(object : OnDatasourceListener {
             /**

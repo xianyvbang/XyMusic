@@ -1,13 +1,10 @@
 package cn.xybbz.music
 
-import cn.xybbz.api.TokenServer
-import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.Log
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.PlayerEvent
-import cn.xybbz.entity.data.music.TranscodingAndMusicUrlData
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerModeEnum
@@ -33,10 +30,6 @@ class JvmMusicController : MusicCommonController() {
     private var mediaPlayer: MediaPlayer? = null
     private var mediaPlayerListenerRegistered = false
     private var ignoreNextStoppedEvent = false
-
-    // 服务地址优先取 TokenServer，启动竞态下再退回当前数据源配置的连接地址。
-    val address: String
-        get() = TokenServer.baseUrl.ifBlank { dataSourceManager.getConnectionAddress() }
 
     private val playerListener = object : MediaPlayerEventAdapter() {
         /**
@@ -168,8 +161,8 @@ class JvmMusicController : MusicCommonController() {
     /**
      * 初始化 JVM 播放器监听器与进度轮询任务。
      */
-    override fun initController(onRestorePlaylists: (() -> Unit)?) {
-        onRestorePlaylists?.invoke()
+    override fun initController(onRestorePlaylists: (MusicCommonController.() -> Unit)?) {
+        onRestorePlaylists?.invoke(this)
     }
 
     /**
@@ -219,8 +212,7 @@ class JvmMusicController : MusicCommonController() {
             updateEvent(
                 PlayerEvent.PositionSeekTo(
                     millSeconds,
-                    it.itemId,
-                    settingsManager.get().playSessionId
+                    it.itemId
                 )
             )
         }
@@ -315,7 +307,7 @@ class JvmMusicController : MusicCommonController() {
      * 将歌曲插入到“下一首播放”位置。
      */
     override fun addNextPlayer(music: XyPlayMusic) {
-        preparePlaylistSource(music, address)
+        preparePlaylistSource(music)
         if (originMusicList.isEmpty()) {
             addMusic(music)
             playMusicAtRealIndex(0)
@@ -345,7 +337,7 @@ class JvmMusicController : MusicCommonController() {
      * 刷新当前远程歌曲的播放地址。
      * 转码策略或网络环境变化后，需要把业务层维护的可播地址重新解析一遍。
      */
-    override fun replacePlaylistItemUrl() {
+    override fun replacePlaylistItemUrl(updateMusicUrlFun: (XyPlayMusic) -> XyPlayMusic) {
         val snapshot = playMusicList.toList()
         if (snapshot.isEmpty()) {
             return
@@ -354,7 +346,7 @@ class JvmMusicController : MusicCommonController() {
         val currentIndex = curOriginIndex
         val currentState = state
 
-        snapshot.forEach { preparePlaylistSource(it, address) }
+        snapshot.forEach { preparePlaylistSource(it) }
 
         if ((currentState == PlayStateEnum.Playing ||
                     currentState == PlayStateEnum.Loading ||
@@ -423,20 +415,6 @@ class JvmMusicController : MusicCommonController() {
     override fun updatePlayerMode() {
     }
 
-    override fun getMusicUrl(
-        musicId: String,
-        plexPlayKey: String?
-    ): TranscodingAndMusicUrlData {
-        val musicUrl = dataSourceManager.getMusicPlayUrl(
-            musicId,
-            true,
-            AudioCodecEnum.ROW,
-            null,
-            settingsManager.get().playSessionId
-        )
-        return TranscodingAndMusicUrlData(0, true, musicUrl)
-    }
-
     /**
      * 清空播放列表并停止当前本地/远程播放会话。
      */
@@ -464,16 +442,8 @@ class JvmMusicController : MusicCommonController() {
      * 为远程歌曲解析最终播放地址，并把结果回写到业务对象上。
      * 这样后续无论是列表重建还是当前歌曲地址刷新，都能复用同一套代理地址。
      */
-    private fun resolveRemotePlaybackUrl(music: XyPlayMusic, address: String): String {
-        val originUrl = getMusicUrl(music.itemId, music.plexPlayKey).musicUrl
-        music.setMusicUrl(originUrl)
-        val proxyUrl = when {
-            originUrl.isBlank() -> originUrl
-            address.isBlank() -> music.getPlayerUrl()
-            else -> JvmReverseProxyServer.wrapTargetUrl(address + originUrl)
-        }
-        music.setPlayerUrl(proxyUrl)
-        return proxyUrl
+    private fun resolveRemotePlaybackUrl(music: XyPlayMusic): String {
+        return JvmReverseProxyServer.wrapTargetUrl(music.musicUrl)
     }
 
     /**
@@ -641,11 +611,8 @@ class JvmMusicController : MusicCommonController() {
     private fun ensurePlaylistPrepared(
         musicList: List<XyPlayMusic>
     ): Boolean {
-        if (address.isBlank()) {
-            return false
-        }
         musicList.forEach { music ->
-            preparePlaylistSource(music, address)
+            preparePlaylistSource(music)
         }
         return true
     }
@@ -654,13 +621,14 @@ class JvmMusicController : MusicCommonController() {
      * 统一把业务歌曲对象转换成 VLC 可消费的媒体地址。
      * 本地歌曲直接返回 file uri，远程歌曲先转成本地代理地址。
      */
-    private fun preparePlaylistSource(music: XyPlayMusic, address: String): String {
+    private fun preparePlaylistSource(music: XyPlayMusic): String {
         val localPath = music.filePath
         val playerUrl = if (!localPath.isNullOrBlank()) {
             File(localPath).toURI().toString()
         } else {
-            resolveRemotePlaybackUrl(music, address)
+            resolveRemotePlaybackUrl(music)
         }
+        music.setPlayerUrl(playerUrl)
         return playerUrl
     }
 
@@ -718,7 +686,7 @@ class JvmMusicController : MusicCommonController() {
      */
     private fun syncCurrentMusicFromMedia(media: Media) {
         val currentMrl = media.info().mrl() ?: return
-        val currentIndex = playMusicList.indexOfFirst { it.getPlayerUrl() == currentMrl }
+        val currentIndex = playMusicList.indexOfFirst { resolveRemotePlaybackUrl(it) == currentMrl }
         if (currentIndex !in playMusicList.indices) {
             return
         }
@@ -778,7 +746,7 @@ class JvmMusicController : MusicCommonController() {
     private fun playMusicAtRealIndex(realIndex: Int) {
         val player = ensureMediaPlayer() ?: return
         val music = playMusicList.getOrNull(realIndex) ?: return
-        val mediaSource = preparePlaylistSource(music, address)
+        val mediaSource = preparePlaylistSource(music)
 
         updateState(PlayStateEnum.Loading)
         setCurrentPositionData(0L)

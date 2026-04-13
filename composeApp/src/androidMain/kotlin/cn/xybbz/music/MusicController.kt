@@ -86,18 +86,11 @@ class MusicController(
     }
 
 
-    override fun replacePlaylistItemUrl() {
+    override fun replacePlaylistItemUrl(updateMusicUrlFun: (XyPlayMusic) -> XyPlayMusic) {
         if (originMusicList.isNotEmpty()) {
-
             replacePlaylist(
                 originMusicList.map {
-                    it.setMusicUrl(
-                        getMusicUrl(
-                            it.itemId,
-                            it.plexPlayKey
-                        ).musicUrl
-                    )
-                    it
+                    updateMusicUrlFun(it)
                 }
             )
 
@@ -112,14 +105,10 @@ class MusicController(
                 mediaController?.prepare()
                 mediaController?.pause()
             } else {
-
                 musicInfo?.let {
-                    it.setMusicUrl(
-                        getMusicUrl(
-                            it.itemId,
-                            it.plexPlayKey
-                        ).musicUrl
-                    )
+                    updateCurrentMusic(updateMusicUrlFun(
+                        it
+                    ))
                 }
 
                 val (left, right) = splitListExcludeIndex(originMusicList, curOriginIndex)
@@ -207,7 +196,8 @@ class MusicController(
         },
         onPageNumber = { pageNum },
         onMusicStartCache = {
-            startCache(originMusicList[curOriginIndex], settingsManager.getStatic())
+            val playMusic = originMusicList[curOriginIndex]
+            startCache(playMusic, playMusic.static)
         },
         onUpdatePlayerHistory = {
             if (musicCurrentPositionMap.containsKey(it.itemId)) {
@@ -222,8 +212,7 @@ class MusicController(
             } else {
                 Log.i("music", "音乐 ${it.name}没有播放进度")
             }
-        },
-        onPlaySessionId = { settingsManager.get().playSessionId }
+        }
     )
 
     //https://developer.android.google.cn/guide/topics/media/exoplayer/listening-to-player-events?hl=zh-cn
@@ -274,7 +263,7 @@ class MusicController(
                 }
                 musicInfo?.let { music ->
                     Log.i("music", "回复播放开始缓存")
-                    startCache(music, settingsManager.getStatic())
+                    startCache(music, music.static)
                 }
 
             }
@@ -509,16 +498,13 @@ class MusicController(
         val pic = coverImageResolver.resolveMusic(playMusic).primaryUrl
 
         if (playMusic.filePath.isNullOrBlank()) {
-            val transcodingAndMusicUrlInfo =
-                getMusicUrl(itemId, playMusic.plexPlayKey)
-            playMusic.setMusicUrl(transcodingAndMusicUrlInfo.musicUrl)
-            mediaItemBuilder.setUri(transcodingAndMusicUrlInfo.musicUrl)
+            mediaItemBuilder.setUri(playMusic.musicUrl)
             val normalizeMimeType =
                 MimeTypes.normalizeMimeType(MimeTypes.BASE_TYPE_AUDIO + "/${playMusic.container}")
             val mimeType =
-                if (dataSourceManager.dataSourceType?.ifHls == true && !transcodingAndMusicUrlInfo.static) {
+                if (playMusic.ifHls && !playMusic.static) {
                     MimeTypes.APPLICATION_M3U8
-                } else if (dataSourceManager.dataSourceType?.ifHls == false && !transcodingAndMusicUrlInfo.static) {
+                } else if (!playMusic.ifHls && !playMusic.static) {
                     normalizeMimeType
                 } else {
                     val inferFileTypeFromMimeType =

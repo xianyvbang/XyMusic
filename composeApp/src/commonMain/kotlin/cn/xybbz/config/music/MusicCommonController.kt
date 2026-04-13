@@ -8,15 +8,10 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.config.scope.IoScoped
-import cn.xybbz.config.setting.OnSettingsChangeListener
-import cn.xybbz.config.setting.SettingsManager
-import cn.xybbz.entity.data.music.TranscodingAndMusicUrlData
 import cn.xybbz.localdata.data.music.XyPlayMusic
-import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerModeEnum
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -28,8 +23,6 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 
 abstract class MusicCommonController : IoScoped(), KoinComponent {
-
-    val settingsManager = get<SettingsManager>()
 
     val downloadCacheController: DownloadCacheCommonController = get()
 
@@ -124,31 +117,14 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
 
     init {
         createScope()
-        settingsManager.setOnListener(object : OnSettingsChangeListener {
-            override fun onCacheMaxBytesChanged(
-                cacheUpperLimit: CacheUpperLimitEnum,
-                oldCacheUpperLimit: CacheUpperLimitEnum
-            ) {
-                if (oldCacheUpperLimit == CacheUpperLimitEnum.No && cacheUpperLimit != CacheUpperLimitEnum.No && state == PlayStateEnum.Playing) {
-                    musicInfo?.let {
-                        startCache(it, settingsManager.getStatic())
-                    }
-                }
-            }
 
-            override fun onMusicResourceConfigChanged() {
-                scope.launch {
-                    refreshPlaylistCoverMetadata()
-                }
-            }
-        })
     }
 
 
     /**
      * 初始化播放
      */
-    abstract fun initController(onRestorePlaylists: (() -> Unit)? = null)
+    abstract fun initController(onRestorePlaylists: (MusicCommonController.() -> Unit)? = null)
 
     /**
      * 列表中添加数据
@@ -277,7 +253,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     /**
      * 替换音乐播放连接
      */
-    abstract fun replacePlaylistItemUrl()
+    abstract fun replacePlaylistItemUrl(updateMusicUrlFun: (XyPlayMusic) -> XyPlayMusic)
 
     /**
      * 添加音乐到列表
@@ -323,7 +299,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
         updatePageSize(pageSize)
     }
 
-    protected abstract fun refreshPlaylistCoverMetadata()
+    abstract fun refreshPlaylistCoverMetadata()
 
     /**
      * 各自播放器播放模式设置
@@ -402,14 +378,14 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
 
     fun reportedPlayEvent() {
         musicInfo?.let {
-            updateEvent(PlayerEvent.Play(it.itemId, settingsManager.get().playSessionId))
+            updateEvent(PlayerEvent.Play(it.itemId))
         }
     }
 
     fun reportedPauseEvent() {
         musicInfo?.let {
             scope.launch {
-                _events.emit(PlayerEvent.Pause(it.itemId, settingsManager.get().playSessionId))
+                _events.emit(PlayerEvent.Pause(it.itemId))
             }
         }
     }
@@ -539,7 +515,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     /**
      * 更新当前播放音乐
      */
-    private fun updateCurrentMusic(music: XyPlayMusic?) {
+    protected fun updateCurrentMusic(music: XyPlayMusic?) {
         this.musicInfo = music
     }
 
@@ -562,26 +538,6 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
      */
     open fun updatePlayDataType(playDataType: MusicPlayTypeEnum) {
         this.playDataType = playDataType
-    }
-
-    protected open fun getMusicUrl(
-        musicId: String,
-        plexPlayKey: String?
-    ): TranscodingAndMusicUrlData {
-        val audioBitRate = settingsManager.getAudioBitRate()
-
-        val static: Boolean =
-            settingsManager.getStatic()
-
-        val musicUrl = dataSourceManager.getMusicPlayUrl(
-            if (static) musicId else plexPlayKey ?: musicId,
-            static,
-            AudioCodecEnum.getAudioCodec(settingsManager.get().transcodeFormat),
-            audioBitRate,
-            settingsManager.get().playSessionId
-        )
-
-        return TranscodingAndMusicUrlData(audioBitRate, static, musicUrl)
     }
 
     /**

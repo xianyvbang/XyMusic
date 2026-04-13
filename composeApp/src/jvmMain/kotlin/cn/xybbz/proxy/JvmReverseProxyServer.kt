@@ -184,7 +184,7 @@ object JvmReverseProxyServer : KoinComponent {
 
         try {
             val upstreamRequest = HttpRequestBuilder().apply {
-                url.takeFrom(targetUrl.toString())
+                url.takeFrom(targetUrl)
                 method = call.request.httpMethod
                 // DataSourceManager 返回的 HttpClient 默认 expectSuccess=true，
                 // 代理场景需要按原样回传 4xx/5xx，因此这里对单次请求显式关闭。
@@ -261,7 +261,7 @@ object JvmReverseProxyServer : KoinComponent {
      * 校验并解析目标地址。
      * 仅允许代理 http/https 绝对地址，并阻止请求再次回到当前代理服务导致死循环。
      */
-    private fun validateTargetUrl(rawUrl: String?): Url? {
+    private fun validateTargetUrl(rawUrl: String?): String? {
         if (rawUrl.isNullOrBlank()) {
             return null
         }
@@ -276,7 +276,7 @@ object JvmReverseProxyServer : KoinComponent {
         if (isSelfProxyUrl(parsedUrl)) {
             return null
         }
-        return parsedUrl
+        return rawUrl
     }
 
     /**

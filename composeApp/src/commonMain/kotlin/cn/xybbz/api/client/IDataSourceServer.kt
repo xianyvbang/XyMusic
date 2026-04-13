@@ -22,7 +22,6 @@ import androidx.paging.PagingData
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.navidrome.data.TranscodingInfo
-import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.LoginType
@@ -33,6 +32,7 @@ import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.Sort
+import cn.xybbz.entity.data.music.TranscodingAndMusicUrlData
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.artist.XyArtistExt
@@ -434,11 +434,8 @@ interface IDataSourceServer : AutoCloseable, KoinComponent {
      */
     fun getMusicPlayUrl(
         musicId: String,
-        static: Boolean = true,
-        audioCodec: AudioCodecEnum? = null,
-        audioBitRate: Int? = null,
-        session: String? = null
-    ): String
+        plexPlayKey: String?
+    ): TranscodingAndMusicUrlData
 
     /**
      * 上报播放状态

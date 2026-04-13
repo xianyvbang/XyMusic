@@ -31,6 +31,7 @@ import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.common.utils.Log
 import cn.xybbz.config.music.MusicCommonController
+import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.music.PlayerEventCoordinator
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.config.setting.SettingsManager
@@ -65,7 +66,8 @@ class MainViewModel(
     val dataSourceManager: DataSourceManager,
     val settingsManager: SettingsManager,
     private val playerEventCoordinator: PlayerEventCoordinator,
-    val selectControl: SelectControl
+    val selectControl: SelectControl,
+    private val musicPlayContext:MusicPlayContext
 ) : ViewModel() {
 
     var eraItemList by mutableStateOf<List<XyEraItem>>(emptyList())
@@ -256,7 +258,7 @@ class MainViewModel(
                     return@collect
                 }
                 // 转码配置变化后，需要让当前播放列表中的地址重新替换为最新策略。
-                musicController.replacePlaylistItemUrl()
+                musicPlayContext.changeMusicPlaylist()
             }
         }
     }

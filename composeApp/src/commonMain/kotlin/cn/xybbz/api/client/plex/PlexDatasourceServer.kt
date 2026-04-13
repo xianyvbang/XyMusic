@@ -49,6 +49,7 @@ import cn.xybbz.entity.data.PlexOrder
 import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.ext.joinToString
+import cn.xybbz.entity.data.music.TranscodingAndMusicUrlData
 import cn.xybbz.entity.data.toPlexOrder
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -1278,13 +1279,13 @@ class PlexDatasourceServer(
     /**
      * 获得播放连接
      */
-    override fun getMusicPlayUrl(
+    override fun getChildMusicUrl(
         musicId: String,
         static: Boolean,
         audioCodec: AudioCodecEnum?,
         audioBitRate: Int?,
         session: String?
-    ): String {
+    ): TranscodingAndMusicUrlData {
         return if (static) plexApiClient.createAudioUrl(musicId)
         else
             plexApiClient.createUniversalAudioUrl(musicId, audioBitRate ?: 0, session ?: "")

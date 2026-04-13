@@ -28,5 +28,5 @@ interface OnSettingsChangeListener {
 
     fun onHandleAudioFocusChanged(ifHandleAudioFocus: Boolean){}
 
-    fun onMusicResourceConfigChanged(){}
+    suspend fun onMusicResourceConfigChanged(){}
 }

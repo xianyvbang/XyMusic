@@ -368,6 +368,22 @@ class MusicPlayContext(
     }
 
     /**
+     * 音乐播放地址更新
+     */
+    fun changeMusicPlaylist(){
+        musicController.replacePlaylistItemUrl{
+            val andMusicUrlData =
+                dataSourceManager.getMusicPlayUrl(it.itemId, it.plexPlayKey)
+            it.copy(
+                ifHls = andMusicUrlData.ifHls,
+                musicUrl = andMusicUrlData.musicUrl,
+                static = andMusicUrlData.static,
+                audioBitRate = andMusicUrlData.audioBitRate,
+            )
+        }
+    }
+
+    /**
      * 音乐操作
      * @param [coroutineScope] 协程作用域
      * @param [ifSkip] 如果跳过头尾
@@ -390,7 +406,20 @@ class MusicPlayContext(
                 if (musicPlayData.onMusicPlayParameter.musicId.isNotBlank())
                     tmpIndex = xyMusicList
                         .indexOfFirst { item -> item.itemId == musicPlayData.onMusicPlayParameter.musicId }
-                tmpMusicList.addAll(xyMusicList)
+                tmpMusicList.addAll(xyMusicList.map {
+                    val andMusicUrlData =
+                        dataSourceManager.getMusicPlayUrl(it.itemId, it.plexPlayKey)
+                    it.copy(
+                        ifHls = andMusicUrlData.ifHls,
+                        musicUrl = andMusicUrlData.musicUrl,
+                        static = andMusicUrlData.static,
+                        audioBitRate = andMusicUrlData.audioBitRate,
+                    )
+                })
+
+            } else {
+                MessageUtils.sendPopTipError("请选择要播放的歌曲")
+                return@launch
             }
             //解决专辑点击播放未从接口获取问题,还有专辑未打开的时候默认是播放历史位置
             //需要解决下一页的问题

@@ -43,8 +43,7 @@ class XyPlayerListener(
     private val onOriginMusicListIsNotEmptyAndIndexEnd: () -> Boolean,
     private val onPageNumber: () -> Int,
     private val onMusicStartCache: () -> Unit,
-    private val onUpdatePlayerHistory: (XyPlayMusic) -> Unit,
-    private val onPlaySessionId: () -> String
+    private val onUpdatePlayerHistory: (XyPlayMusic) -> Unit
 ) : Player.Listener {
 
     override fun onPlaybackStateChanged(playbackState: Int) {
@@ -155,8 +154,7 @@ class XyPlayerListener(
                 onEventEmit(
                     PlayerEvent.PositionSeekTo(
                         newPosition.positionMs,
-                        it.itemId,
-                        onPlaySessionId()
+                        it.itemId
                     )
                 )
             }

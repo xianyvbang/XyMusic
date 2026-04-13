@@ -26,6 +26,7 @@ import androidx.room.Transaction
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
+import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.exception.ConnectionException
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.exception.UnauthorizedException
@@ -48,6 +49,7 @@ import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.entity.data.EncryptAesData
 import cn.xybbz.entity.data.Sort
+import cn.xybbz.entity.data.music.TranscodingAndMusicUrlData
 import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.album.FavoriteAlbum
@@ -1134,6 +1136,40 @@ abstract class IDataSourceParentServer(
             db.musicDao.selectFavoriteMusicListPage()
         }.flow
     }
+
+    /**
+     * 获得播放连接
+     */
+    override fun getMusicPlayUrl(
+        musicId: String,
+        plexPlayKey: String?
+    ): TranscodingAndMusicUrlData {
+        val audioBitRate = settingsManager.getAudioBitRate()
+
+        val static: Boolean =
+            settingsManager.getStatic()
+
+        val musicUrl = getChildMusicUrl(
+            if (static) musicId else plexPlayKey ?: musicId,
+            static,
+            AudioCodecEnum.getAudioCodec(settingsManager.get().transcodeFormat),
+            audioBitRate,
+            settingsManager.get().playSessionId
+        )
+
+        return TranscodingAndMusicUrlData(audioBitRate, static, musicUrl, getDataSourceType().ifHls)
+    }
+
+    /**
+     * 获得播放链接
+     */
+    abstract fun getChildMusicUrl(
+        musicId: String,
+        static: Boolean,
+        audioCodec: AudioCodecEnum?,
+        audioBitRate: Int?,
+        session: String?
+    ): String
 
     /**
      * 删除数据

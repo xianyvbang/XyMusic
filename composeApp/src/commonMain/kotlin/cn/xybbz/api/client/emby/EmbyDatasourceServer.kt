@@ -50,6 +50,7 @@ import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.SearchAndOrder
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.ext.joinToString
+import cn.xybbz.entity.data.music.TranscodingAndMusicUrlData
 import cn.xybbz.entity.data.toSearchAndOrder
 import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -875,13 +876,13 @@ class EmbyDatasourceServer(
     /**
      * 获得播放连接
      */
-    override fun getMusicPlayUrl(
+    override fun getChildMusicUrl(
         musicId: String,
         static: Boolean,
         audioCodec: AudioCodecEnum?,
         audioBitRate: Int?,
         session: String?
-    ): String {
+    ): TranscodingAndMusicUrlData {
         return embyApiClient.createAudioUrl(
             musicId,
             audioCodec,

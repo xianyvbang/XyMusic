@@ -95,11 +95,11 @@ class PlayerEventCoordinator(
                     }
 
                     is PlayerEvent.Pause -> {
-                        onPause(it.musicId, it.playSessionId)
+                        onPause(it.musicId)
                     }
 
                     is PlayerEvent.Play -> {
-                        onPlay(it.musicId, it.playSessionId)
+                        onPlay(it.musicId)
                     }
 
                     is PlayerEvent.PlayerTypeChange -> {
@@ -143,12 +143,12 @@ class PlayerEventCoordinator(
         }
     }
 
-    private fun onPlay(musicId: String, playSessionId: String) {
+    private fun onPlay(musicId: String) {
         if (settingsManager.get().ifEnableSyncPlayProgress) {
             scope.launch {
                 dataSourceManager.reportPlaying(
                     musicId,
-                    playSessionId = playSessionId,
+                    playSessionId = settingsManager.get().playSessionId,
                     positionTicks = musicController.progressStateFlow.value
                 )
             }
@@ -156,13 +156,13 @@ class PlayerEventCoordinator(
         }
     }
 
-    private fun onPause(musicId: String, playSessionId: String) {
+    private fun onPause(musicId: String) {
         playbackProgressReporter.stop()
         if (settingsManager.get().ifEnableSyncPlayProgress) {
             scope.launch {
                 dataSourceManager.reportPlaying(
                     musicId,
-                    playSessionId = playSessionId,
+                    playSessionId = settingsManager.get().playSessionId,
                     true,
                     musicController.progressStateFlow.value
                 )

@@ -27,7 +27,6 @@ import cn.xybbz.api.client.data.ClientLoginInfoReq
 import cn.xybbz.api.client.data.XyResponse
 import cn.xybbz.api.client.navidrome.data.TranscodingInfo
 import cn.xybbz.api.client.version.VersionApiClient
-import cn.xybbz.api.enums.AudioCodecEnum
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.api.state.Source
@@ -48,6 +47,7 @@ import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.Sort
+import cn.xybbz.entity.data.music.TranscodingAndMusicUrlData
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -1099,18 +1099,15 @@ open class DataSourceManager(
      */
     override fun getMusicPlayUrl(
         musicId: String,
-        static: Boolean,
-        audioCodec: AudioCodecEnum?,
-        audioBitRate: Int?,
-        session: String?
-    ): String {
+        plexPlayKey: String?
+    ): TranscodingAndMusicUrlData {
         return try {
             dataSourceServer.getMusicPlayUrl(
                 musicId,
                 static,
                 audioCodec,
                 audioBitRate,
-                session
+                session,
             )
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获取播放连接失败", e)

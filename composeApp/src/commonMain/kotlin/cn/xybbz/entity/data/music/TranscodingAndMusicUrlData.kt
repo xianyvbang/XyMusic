@@ -21,5 +21,6 @@ package cn.xybbz.entity.data.music
 data class TranscodingAndMusicUrlData(
     val audioBitRate: Int,
     val static:Boolean,
-    val musicUrl:String
+    val musicUrl:String,
+    val ifHls: Boolean
 )

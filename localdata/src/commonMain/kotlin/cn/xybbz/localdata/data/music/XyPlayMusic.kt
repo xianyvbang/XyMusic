@@ -54,7 +54,7 @@ data class XyPlayMusic(
      */
     val artists: List<String>?,
     /**
-     * 艺术家id
+     * 艺术家id todo 研究一下这个有没有用到
      */
     val artistIds: List<String>?,
 
@@ -77,30 +77,38 @@ data class XyPlayMusic(
     /**
      * plex播放key
      */
-    val plexPlayKey: String?
-) {
+    val plexPlayKey: String?,
+
+    /**
+     * 是否可以hls播放
+     */
+    val ifHls: Boolean = false,
+
     /**
      * 音乐地址
      */
-    @Ignore
-    private var musicUrl: String = ""
+    val musicUrl: String = "",
+    /**
+     * 是否为静态资源
+     */
+    val static:Boolean,
 
+    /**
+     * 转码比特率
+     */
+    val audioBitRate: Int,
+
+){
+    /**
+     * 播放连接 只在桌面端使用
+     */
     @Ignore
     private var playerUrl: String = ""
 
-    fun getMusicUrl(): String {
-        return musicUrl
+    fun setPlayerUrl(url: String) {
+        playerUrl = url
     }
-
-    fun setMusicUrl(musicUrl: String) {
-        this.musicUrl = musicUrl
-    }
-
     fun getPlayerUrl(): String {
         return playerUrl
-    }
-
-    fun setPlayerUrl(playerUrl: String) {
-        this.playerUrl = playerUrl
     }
 }
