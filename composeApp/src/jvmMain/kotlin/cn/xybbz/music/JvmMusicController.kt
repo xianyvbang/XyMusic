@@ -438,7 +438,7 @@ class JvmMusicController : MusicCommonController() {
         val proxyUrl = if (originUrl.isBlank()) {
             originUrl
         } else JvmReverseProxyServer.wrapTargetUrl(address + originUrl)
-        music.setMusicUrl(proxyUrl)
+        music.setPlayerUrl(proxyUrl)
         return proxyUrl
     }
 
@@ -760,16 +760,17 @@ class JvmMusicController : MusicCommonController() {
         updateRealIndex(realIndex)
 
         ignoreStoppedEventOnce()
-        val played = runCatching {
+        //todo 需要试验断网后这里的逻辑
+        /*val played = */runCatching {
             player.media().play(mediaSource)
         }.onFailure {
             clearIgnoredStoppedEvent()
             Log.e("vlc", "直接播放媒体失败: $mediaSource", it)
         }.getOrDefault(false)
-        if (!played) {
+        /*if (!played) {
             clearIgnoredStoppedEvent()
             updateState(PlayStateEnum.None)
-        }
+        }*/
     }
 
     /**
