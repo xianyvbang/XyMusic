@@ -198,7 +198,11 @@ class JvmMusicController : MusicCommonController() {
     override fun resume() {
         Log.i("music", "恢复播放")
         updateState(PlayStateEnum.Loading)
-        currentMediaPlayer()?.controls()?.play()
+        val mrl = currentMediaPlayer()?.media()?.info()?.mrl()
+        if (mrl.isNullOrBlank()) {
+            seekToIndex(curOriginIndex)
+        } else
+            currentMediaPlayer()?.controls()?.play()
     }
 
     /**
