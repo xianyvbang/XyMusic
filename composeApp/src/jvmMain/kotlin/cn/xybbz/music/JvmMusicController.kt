@@ -19,11 +19,8 @@ import uk.co.caprica.vlcj.media.MediaParsedStatus
 import uk.co.caprica.vlcj.media.MediaRef
 import uk.co.caprica.vlcj.media.Meta
 import uk.co.caprica.vlcj.media.ParseFlag
-import uk.co.caprica.vlcj.medialist.MediaList
 import uk.co.caprica.vlcj.player.base.MediaPlayer
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter
-import uk.co.caprica.vlcj.player.list.MediaListPlayer
-import uk.co.caprica.vlcj.player.list.PlaybackMode
 import java.io.File
 import java.net.URI
 import java.nio.file.Files
@@ -36,9 +33,8 @@ class JvmMusicController : MusicCommonController() {
 
     private var mediaPlayerFactory: MediaPlayerFactory? = null
     private var mediaPlayer: MediaPlayer? = null
-    private var mediaListPlayer: MediaListPlayer? = null
-    private var mediaList: MediaList? = null
     private var mediaPlayerListenerRegistered = false
+    private var ignoreNextStoppedEvent = false
 
     //服务地址
     val address: String get() = TokenServer.baseUrl
@@ -49,6 +45,7 @@ class JvmMusicController : MusicCommonController() {
          */
         override fun playing(mediaPlayer: MediaPlayer?) {
             Log.i("vlc", "播放开始")
+            clearIgnoredStoppedEvent()
             submitMediaPlayerTask(mediaPlayer) { _ ->
                 if (state != PlayStateEnum.Playing) {
                     reportedPlayEvent()
@@ -61,6 +58,7 @@ class JvmMusicController : MusicCommonController() {
          * 播放暂停时上报暂停事件并刷新状态。
          */
         override fun paused(mediaPlayer: MediaPlayer?) {
+            clearIgnoredStoppedEvent()
             if (state == PlayStateEnum.Playing) {
                 reportedPauseEvent()
             }
@@ -71,6 +69,10 @@ class JvmMusicController : MusicCommonController() {
          * 播放停止时重置进度和播放状态。
          */
         override fun stopped(mediaPlayer: MediaPlayer?) {
+            if (ignoreNextStoppedEvent) {
+                clearIgnoredStoppedEvent()
+                return
+            }
             setCurrentPositionData(0L)
             updateState(PlayStateEnum.None)
         }
@@ -83,6 +85,9 @@ class JvmMusicController : MusicCommonController() {
                 updateEvent(PlayerEvent.RemovePlaybackProgress(it.itemId))
             }
             setCurrentPositionData(0L)
+            submitMediaPlayerTask(mediaPlayer) {
+                handlePlaybackFinished()
+            }
         }
 
 
@@ -91,6 +96,7 @@ class JvmMusicController : MusicCommonController() {
             media: MediaRef?
         ) {
             Log.i("vlc", "播放变化: ${media}")
+            clearIgnoredStoppedEvent()
 
             val retainedMedia = media?.newMedia() ?: return
             val player = mediaPlayer ?: run {
@@ -120,6 +126,7 @@ class JvmMusicController : MusicCommonController() {
          */
         override fun error(mediaPlayer: MediaPlayer?) {
             Log.i("vlc", "播放异常")
+            clearIgnoredStoppedEvent()
             updateState(PlayStateEnum.None)
         }
 
@@ -171,10 +178,11 @@ class JvmMusicController : MusicCommonController() {
         if (musicList.isEmpty()) {
             return
         }
-        val playIndex = addMusicList(musicList)
-        insertPlaylistItems(playIndex, musicList)
-        if (isPlayer == true) {
-            seekToIndex(playIndex)
+        addMusicList(musicList)
+        val originIndex = originMusicList.indexOfFirst { it.itemId == musicList.first().itemId }
+        ensurePlaylistPrepared(musicList)
+        if (isPlayer == true && originIndex != Constants.MINUS_ONE_INT) {
+            seekToIndex(originIndex)
         }
         updateEvent(PlayerEvent.AddMusicList(artistId))
     }
@@ -220,34 +228,26 @@ class JvmMusicController : MusicCommonController() {
      * 播放列表内跳转到下一首歌曲。
      */
     override fun seekToNext() {
-        if (originMusicList.isEmpty()) {
-            return
-        }
-        updateState(PlayStateEnum.Loading)
-        currentMediaListPlayer()?.controls()?.playNext()
+        val targetRealIndex = getNextPlayableIndex()
+            .takeIf { it != Constants.MINUS_ONE_INT }
+            ?: return
+        playMusicAtRealIndex(targetRealIndex)
     }
 
     /**
      * 播放列表内跳转到上一首歌曲。
      */
     override fun seekToPrevious() {
-        if (originMusicList.isEmpty()) {
-            return
-        }
-        updateState(PlayStateEnum.Loading)
-        currentMediaListPlayer()?.controls()?.playPrevious()
+        val targetRealIndex = getPreviousPlayableIndex() ?: return
+        playMusicAtRealIndex(targetRealIndex)
     }
 
     /**
-     * 根据列表索引切换歌曲，并交由 MediaListPlayer 播放对应项。
+     * 根据业务层列表索引切换歌曲，并直接交给单曲 MediaPlayer 播放。
      */
     override fun seekToIndex(index: Int) {
-        if (index !in originMusicList.indices) {
-            return
-        }
-        updateState(PlayStateEnum.Loading)
-        updateEvent(PlayerEvent.BeforeChangeMusic)
-        currentMediaListPlayer()?.controls()?.play(index)
+        val targetRealIndex = realIndexForOriginIndex(index) ?: return
+        playMusicAtRealIndex(targetRealIndex)
     }
 
     /**
@@ -268,7 +268,6 @@ class JvmMusicController : MusicCommonController() {
             return
         }
         removeMusic(index)
-        removePlaylistItem(index)
         when {
             originMusicList.isEmpty() -> {
                 clearPlayerList()
@@ -312,7 +311,7 @@ class JvmMusicController : MusicCommonController() {
 
     /**
      * 刷新当前远程歌曲的播放地址。
-     * 转码策略或网络环境变化后，需要把整份 MediaList 里的远程地址重建一遍。
+     * 转码策略或网络环境变化后，需要把业务层维护的可播地址重新解析一遍。
      */
     override fun replacePlaylistItemUrl() {
         val snapshot = playMusicList.toList()
@@ -323,25 +322,17 @@ class JvmMusicController : MusicCommonController() {
         val currentIndex = curOriginIndex
         val currentState = state
 
-        if (currentState == PlayStateEnum.Pause) {
-            stopCurrentPlayback()
-        }
+        snapshot.forEach { preparePlaylistSource(it, address) }
 
-        val refreshedSources = snapshot.map { preparePlaylistSource(it, address) }
-
-        // 地址刷新后直接整表重建，避免旧 mrl 残留在 VLC 内部列表里。
-        val applied = applyFullPlaylist(refreshedSources)
-        if (!applied) {
-            //todo 这里需要试验一下会不会发出声音的问题
-            seekToIndex(currentIndex)
-            pause()
-            return
-        }
-
-        if ((currentState == PlayStateEnum.Playing || currentState == PlayStateEnum.Loading) &&
+        if ((currentState == PlayStateEnum.Playing ||
+                currentState == PlayStateEnum.Loading ||
+                currentState == PlayStateEnum.Pause) &&
             currentIndex in snapshot.indices
         ) {
-            currentMediaListPlayer()?.controls()?.play(currentIndex)
+            seekToIndex(currentIndex)
+            if (currentState == PlayStateEnum.Pause) {
+                pause()
+            }
         }
     }
 
@@ -369,7 +360,6 @@ class JvmMusicController : MusicCommonController() {
             musicPlayTypeEnum
         )
         stopCurrentPlayback()
-        clearPlaylistMirror()
 
         val targetIndex = originIndex ?: 0
         updateOriginIndex(targetIndex)
@@ -399,12 +389,6 @@ class JvmMusicController : MusicCommonController() {
      * 生成当前播放模式下的歌曲列表
      */
     override fun updatePlayerMode() {
-        val mode = when (playMode) {
-            PlayerModeEnum.SINGLE_LOOP -> PlaybackMode.REPEAT
-            else -> PlaybackMode.LOOP
-        }
-        currentMediaListPlayer()?.controls()?.setMode(mode)
-//        mediaPlayer?.controls()?.repeat = false
     }
 
     override fun getMusicUrl(
@@ -425,7 +409,6 @@ class JvmMusicController : MusicCommonController() {
      * 清空播放列表并停止当前本地/远程播放会话。
      */
     override fun clearPlayerList() {
-        clearPlaylistMirror()
         stopCurrentPlayback()
         super.clearPlayerList()
     }
@@ -438,10 +421,6 @@ class JvmMusicController : MusicCommonController() {
         currentMediaPlayer()?.takeIf { mediaPlayerListenerRegistered }?.events()
             ?.removeMediaPlayerEventListener(playerListener)
         mediaPlayerListenerRegistered = false
-        mediaList?.release()
-        mediaList = null
-        mediaListPlayer?.release()
-        mediaListPlayer = null
         mediaPlayer?.release()
         mediaPlayer = null
         mediaPlayerFactory?.release()
@@ -465,11 +444,11 @@ class JvmMusicController : MusicCommonController() {
 
     /**
      * 停止当前 VLC 播放流程。
-     * `ignoreStoppedEvent=true` 时会预先登记一次忽略标记，
-     * 用来屏蔽 MediaListPlayer 内部切换带来的中间 stopped 事件。
+     * 直接用户停播时不屏蔽 stopped 事件，确保状态机仍然回到空闲态。
      */
     private fun stopCurrentPlayback() {
-        runCatching { currentMediaListPlayer()?.controls()?.stop() }
+        clearIgnoredStoppedEvent()
+        runCatching { currentMediaPlayer()?.controls()?.stop() }
     }
 
     /**
@@ -623,93 +602,26 @@ class JvmMusicController : MusicCommonController() {
     }
 
     /**
-     * 确保 VLC 内部的 MediaList 已经和当前业务层播放列表同步完成。
-     * 如果本地镜像仍然有效，则直接复用；
-     * 否则重新把业务层列表解析成可播放地址，再整表写入 MediaList。
-     *
-     * `requestVersion` 用来防止异步准备期间发生“用户又切歌/又改列表”的竞态：
-     * 一旦发现这次准备结果已经过期，就直接放弃，不把旧数据写回播放器。
+     * 预先解析业务层播放列表里的地址，确保真正切歌时已经拿到最终可播 mrl。
      */
     private fun ensurePlaylistPrepared(
         musicList: List<XyPlayMusic>
     ): Boolean {
-        val preparedSources = mutableListOf<String>()
         musicList.forEach { music ->
-            // 远程歌曲在这里解析成最终代理地址，本地歌曲则直接转成 file uri。
-            preparedSources += preparePlaylistSource(music,address)
+            preparePlaylistSource(music, address)
         }
-        return applyFullPlaylist(preparedSources)
-    }
-
-    /**
-     * 用最新的业务列表整表覆盖 VLC 的 MediaList，并同步更新本地镜像缓存。
-     */
-    private fun applyFullPlaylist(
-        preparedSources: List<String>
-    ): Boolean {
-        val mediaApi = ensureMediaList()?.media() ?: return false
-        runCatching { mediaApi.clear() }.onFailure {
-            Log.e("vlc", "清空 MediaList 失败", it)
-            return false
-        }
-        preparedSources.forEach { source ->
-            val added = runCatching { mediaApi.add(source) }.getOrDefault(false)
-            if (!added) {
-                return false
-            }
-        }
-
         return true
     }
 
     /**
-     * “下一首播放”场景下，如果歌曲已存在则移动，否则插入到目标位置。
+     * “下一首播放”场景下，如果歌曲已存在则移动，否则确保它的播放地址已准备完成。
      */
     private fun scheduleMoveOrInsertPlaylistItem(
         music: XyPlayMusic,
         oldIndex: Int,
         targetIndex: Int
     ) {
-        if (oldIndex != Constants.MINUS_ONE_INT) {
-            removePlaylistItem(oldIndex)
-
-        }
-        insertPlaylistItems(
-            targetIndex,
-            listOf(music)
-        )
-    }
-
-    /**
-     * 将若干媒体项插入到 VLC 的 MediaList，并同步更新本地镜像。
-     */
-    private fun insertPlaylistItems(
-        insertIndex: Int,
-        musicList: List<XyPlayMusic>
-    ) {
-        val preparedSources = musicList.map { preparePlaylistSource(it,address) }
-        val mediaApi = ensureMediaList()?.media() ?: return
-        val boundedIndex = insertIndex.coerceIn(0, originMusicList.size)
-
-        preparedSources.forEachIndexed { offset, source ->
-            val actualIndex = boundedIndex + offset
-            runCatching {
-                if (actualIndex >= originMusicList.size + offset) {
-                    mediaApi.add(source)
-                } else {
-                    mediaApi.insert(actualIndex, source)
-                }
-            }
-
-        }
-    }
-
-    /**
-     * 从 VLC 的 MediaList 中删除单条媒体，并同步更新镜像缓存。
-     */
-    private fun removePlaylistItem(index: Int) {
-        val mediaApi = ensureMediaList()?.media() ?: return
-        runCatching { mediaApi.remove(index) }
+        preparePlaylistSource(music, address)
     }
 
     /**
@@ -718,18 +630,17 @@ class JvmMusicController : MusicCommonController() {
      */
     private fun preparePlaylistSource(music: XyPlayMusic, address: String): String {
         val localPath = music.filePath
-        if (!localPath.isNullOrBlank()) {
-            return File(localPath).toURI().toString()
+        val playerUrl = if (!localPath.isNullOrBlank()) {
+            File(localPath).toURI().toString()
+        } else {
+            resolveRemotePlaybackUrl(music, address)
         }
-        return resolveRemotePlaybackUrl(music, address)
+        return playerUrl
     }
 
     /**
      * 延迟初始化 VLC 播放器体系。
-     * 这里会同时创建：
-     * 1. 单条媒体事件来源 MediaPlayer
-     * 2. 负责按列表播放的 MediaListPlayer
-     * 3. 真正承载播放队列的 MediaList
+     * 这里仅创建真正承载单曲播放的 MediaPlayer。
      */
     private fun ensureMediaPlayer(): MediaPlayer? {
         mediaPlayer?.let { return it }
@@ -751,57 +662,11 @@ class JvmMusicController : MusicCommonController() {
             Log.e("vlc", "创建 VLC 音频播放器失败", it)
         }.getOrNull() ?: return null
 
-        val createdListPlayer = runCatching {
-            factory.mediaPlayers().newMediaListPlayer()
-        }.onFailure {
-            runCatching { createdPlayer.release() }
-            runCatching { factory.release() }
-            Log.e("vlc", "创建 VLC MediaListPlayer 失败", it)
-        }.getOrNull() ?: return null
-
-        val createdMediaList = runCatching {
-            factory.media().newMediaList()
-        }.onFailure {
-            runCatching { createdListPlayer.release() }
-            runCatching { createdPlayer.release() }
-            runCatching { factory.release() }
-            Log.e("vlc", "创建 VLC MediaList 失败", it)
-        }.getOrNull() ?: return null
-
-        val bound = runCatching {
-            // MediaListPlayer 本身不直接输出音频，
-            // 需要绑定一个真正的 MediaPlayer 和一份 MediaList。
-            createdListPlayer.mediaPlayer().setMediaPlayer(createdPlayer)
-            val mediaListRef = createdMediaList.newMediaListRef()
-            try {
-                createdListPlayer.list().setMediaList(mediaListRef)
-            } finally {
-                mediaListRef.release()
-            }
-        }.isSuccess
-        if (!bound) {
-            runCatching { createdMediaList.release() }
-            runCatching { createdListPlayer.release() }
-            runCatching { createdPlayer.release() }
-            runCatching { factory.release() }
-            return null
-        }
         createdPlayer.events().addMediaPlayerEventListener(playerListener)
         mediaPlayerListenerRegistered = true
         mediaPlayerFactory = factory
         mediaPlayer = createdPlayer
-        mediaListPlayer = createdListPlayer
-        mediaList = createdMediaList
         return createdPlayer
-    }
-
-    /**
-     * 确保 MediaList 已可用。
-     * 由于 MediaList 是随播放器一起懒初始化的，这里通过确保播放器存在来顺带拿到它。
-     */
-    private fun ensureMediaList(): MediaList? {
-        ensureMediaPlayer()
-        return mediaList
     }
 
     /**
@@ -870,24 +735,78 @@ class JvmMusicController : MusicCommonController() {
     }
 
     /**
+     * 业务层原始列表索引映射到当前实际播放顺序索引。
+     */
+    private fun realIndexForOriginIndex(originIndex: Int): Int? {
+        if (originIndex !in originMusicList.indices) {
+            return null
+        }
+        val targetMusicId = originMusicList[originIndex].itemId
+        val realIndex = playMusicList.indexOfFirst { it.itemId == targetMusicId }
+        return realIndex.takeIf { it in playMusicList.indices }
+    }
+
+    /**
+     * 使用当前有效播放顺序的目标索引直接装载并播放单个媒体。
+     */
+    private fun playMusicAtRealIndex(realIndex: Int) {
+        val player = ensureMediaPlayer() ?: return
+        val music = playMusicList.getOrNull(realIndex) ?: return
+        val mediaSource = preparePlaylistSource(music, address)
+
+        updateState(PlayStateEnum.Loading)
+        setCurrentPositionData(0L)
+        updateEvent(PlayerEvent.BeforeChangeMusic)
+        updateRealIndex(realIndex)
+
+        ignoreStoppedEventOnce()
+        val played = runCatching {
+            player.media().play(mediaSource)
+        }.onFailure {
+            clearIgnoredStoppedEvent()
+            Log.e("vlc", "直接播放媒体失败: $mediaSource", it)
+        }.getOrDefault(false)
+        if (!played) {
+            clearIgnoredStoppedEvent()
+            updateState(PlayStateEnum.None)
+        }
+    }
+
+    /**
+     * 标记下一次 stopped 回调为切歌过程中的中间事件。
+     */
+    private fun ignoreStoppedEventOnce() {
+        ignoreNextStoppedEvent = true
+    }
+
+    /**
+     * 清理 stopped 忽略标记，恢复正常停止事件处理。
+     */
+    private fun clearIgnoredStoppedEvent() {
+        ignoreNextStoppedEvent = false
+    }
+
+    /**
+     * 播放自然结束后，完全交给应用层的播放顺序与模式来决定后续行为。
+     */
+    private fun handlePlaybackFinished() {
+        val targetRealIndex = when (playMode) {
+            PlayerModeEnum.SINGLE_LOOP -> curRealIndex.takeIf { it in playMusicList.indices }
+            PlayerModeEnum.SEQUENTIAL_PLAYBACK -> getNextPlayableIndex().takeIf {
+                it != Constants.MINUS_ONE_INT
+            }
+            PlayerModeEnum.RANDOM_PLAY -> getNextPlayableIndex().takeIf {
+                it != Constants.MINUS_ONE_INT
+            }
+        } ?: return
+        playMusicAtRealIndex(targetRealIndex)
+    }
+
+    /**
      * 获取底层单曲播放器实例。
      */
     private fun currentMediaPlayer(): MediaPlayer? {
         return mediaPlayer
-    }
-
-    /**
-     * 获取负责调度播放列表的 MediaListPlayer 实例。
-     */
-    private fun currentMediaListPlayer(): MediaListPlayer? {
-        return mediaListPlayer
-    }
-
-    /**
-     * 清空 VLC 内部播放列表及其镜像缓存。
-     */
-    private fun clearPlaylistMirror() {
-        runCatching { mediaList?.media()?.clear() }
     }
 
     companion object {

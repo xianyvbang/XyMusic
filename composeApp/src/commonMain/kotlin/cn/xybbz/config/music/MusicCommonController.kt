@@ -227,20 +227,22 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
      * 获取下一首播放位置的索引
      */
     open fun getNextPlayableIndex(): Int {
-        if (originMusicList.isEmpty() || curRealIndex == Constants.MINUS_ONE_INT) {
+        if (_playMusicList.isEmpty() || curRealIndex !in _playMusicList.indices) {
             return Constants.MINUS_ONE_INT
         }
-        return if (curRealIndex == _playMusicList.lastIndex) 0 else curRealIndex + 1
+        val nextIndex = if (curRealIndex == _playMusicList.lastIndex) 0 else curRealIndex + 1
+        return nextIndex.takeIf { it in _playMusicList.indices } ?: Constants.MINUS_ONE_INT
     }
 
     /**
      * 获取上一首播放位置的索引
      */
     open fun getPreviousPlayableIndex(): Int? {
-        if (originMusicList.isEmpty() || curRealIndex == Constants.MINUS_ONE_INT) {
-            return Constants.MINUS_ONE_INT
+        if (_playMusicList.isEmpty() || curRealIndex !in _playMusicList.indices) {
+            return null
         }
-        return if (curRealIndex == 0) originMusicList.lastIndex else curOriginIndex - 1
+        val previousIndex = if (curRealIndex == 0) _playMusicList.lastIndex else curRealIndex - 1
+        return previousIndex.takeIf { it in _playMusicList.indices }
     }
 
     /**
