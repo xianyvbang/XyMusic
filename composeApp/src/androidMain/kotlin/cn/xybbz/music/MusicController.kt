@@ -434,10 +434,10 @@ class MusicController(
         ) {
             removeMusic(existingOriginIndex)
             mediaController?.removeMediaItem(existingOriginIndex)
-            updateOriginIndex(mediaController?.currentMediaItemIndex?:0)
+            updateOriginIndex(mediaController?.currentMediaItemIndex ?: 0)
         }
         insertMusic(music)
-        mediaController?.addMediaItem(curOriginIndex + 1, mediaItem)
+        mediaController?.addMediaItem(mediaController?.nextMediaItemIndex ?: 0, mediaItem)
         updateEvent(PlayerEvent.AddMusicList(music.artistIds?.firstOrNull()))
     }
 

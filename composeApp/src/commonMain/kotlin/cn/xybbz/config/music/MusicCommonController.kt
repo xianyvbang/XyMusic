@@ -102,10 +102,17 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     var playMode by mutableStateOf(PlayerModeEnum.SEQUENTIAL_PLAYBACK)
         protected set
 
+    //是否能加载下一页
     var ifNextPage = true
         private set
 
+    //加载下一页数据为空次数
     var ifGetNextPageMusicDataIsNullCount: Int = 0
+
+    /**
+     * 是否能操作playMusicList
+     */
+    open val isPlayMusicListMutable: Boolean = false
 
     //事件发送流
     private val _events = MutableSharedFlow<PlayerEvent>(
@@ -215,7 +222,8 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
         playMode = playerModeEnum
         updateEvent(PlayerEvent.PlayerTypeChange(playerModeEnum))
         updatePlayerMode()
-        insertPlayMusicList(_originMusicList)
+        if (isPlayMusicListMutable)
+            insertPlayMusicList(_originMusicList)
     }
 
 
@@ -228,22 +236,42 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
      * 获取下一首播放位置的索引
      */
     open fun getNextPlayableIndex(): Int {
-        if (_playMusicList.isEmpty() || curRealIndex !in _playMusicList.indices) {
-            return Constants.MINUS_ONE_INT
+        if (isPlayMusicListMutable) {
+            if (_playMusicList.isEmpty() || curRealIndex !in _playMusicList.indices) {
+                return Constants.MINUS_ONE_INT
+            }
+            val nextIndex = if (curRealIndex == _playMusicList.lastIndex) 0 else curRealIndex + 1
+            return nextIndex.takeIf { it in _playMusicList.indices } ?: Constants.MINUS_ONE_INT
+        } else {
+            if (_originMusicList.isEmpty() || curOriginIndex !in _originMusicList.indices) {
+                return Constants.MINUS_ONE_INT
+            }
+            val nextIndex =
+                if (curOriginIndex == _originMusicList.lastIndex) 0 else curOriginIndex + 1
+            return nextIndex.takeIf { it in _originMusicList.indices } ?: Constants.MINUS_ONE_INT
         }
-        val nextIndex = if (curRealIndex == _playMusicList.lastIndex) 0 else curRealIndex + 1
-        return nextIndex.takeIf { it in _playMusicList.indices } ?: Constants.MINUS_ONE_INT
+
     }
 
     /**
      * 获取上一首播放位置的索引
      */
     open fun getPreviousPlayableIndex(): Int? {
-        if (_playMusicList.isEmpty() || curRealIndex !in _playMusicList.indices) {
-            return null
+        if (isPlayMusicListMutable) {
+            if (_playMusicList.isEmpty() || curRealIndex !in _playMusicList.indices) {
+                return null
+            }
+            val previousIndex =
+                if (curRealIndex == 0) _playMusicList.lastIndex else curRealIndex - 1
+            return previousIndex.takeIf { it in _playMusicList.indices }
+        } else {
+            if (_originMusicList.isEmpty() || curOriginIndex !in _originMusicList.indices) {
+                return null
+            }
+            val previousIndex =
+                if (curOriginIndex == 0) _originMusicList.lastIndex else curOriginIndex - 1
+            return previousIndex.takeIf { it in _originMusicList.indices }
         }
-        val previousIndex = if (curRealIndex == 0) _playMusicList.lastIndex else curRealIndex - 1
-        return previousIndex.takeIf { it in _playMusicList.indices }
     }
 
     /**
@@ -392,60 +420,33 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     fun replacePlaylist(musicList: List<XyPlayMusic>) {
         _originMusicList.clear()
         _originMusicList.addAll(musicList)
-        insertPlayMusicList(musicList)
+        if (isPlayMusicListMutable)
+            insertPlayMusicList(musicList)
     }
 
     fun addMusic(music: XyPlayMusic) {
         _originMusicList.add(music)
-        _playMusicList.add(music)
+        if (isPlayMusicListMutable)
+            _playMusicList.add(music)
     }
 
-    fun insertMusic(music: XyPlayMusic): Int {
+    fun insertMusic(music: XyPlayMusic) {
         val insertIndex = curOriginIndex + 1
         _originMusicList.add(insertIndex, music)
-        val playIndex = curRealIndex + 1
-        _playMusicList.add(playIndex, music)
-        return playIndex
+        if (isPlayMusicListMutable) {
+            val playIndex = curRealIndex + 1
+            _playMusicList.add(playIndex, music)
+        }
+
     }
 
-    fun addMusicList(musicList: List<XyPlayMusic>): Int {
+    fun addMusicList(musicList: List<XyPlayMusic>) {
         val insertIndex = curOriginIndex + 1
         _originMusicList.addAll(insertIndex, musicList)
-        val playIndex = curRealIndex + 1
-        _playMusicList.addAll(playIndex, musicList)
-        return playIndex
-    }
-
-    fun removeMusic(music: XyPlayMusic) {
-        _originMusicList.remove(music)
-        _playMusicList.remove(music)
-    }
-
-    /**
-     * 交换两个位置的索引
-     */
-
-    fun addNextMusic(music: XyPlayMusic): Pair<Int, Int> {
-        val insertRealIndex = when {
-            _originMusicList.isEmpty() -> 0
-            curRealIndex == Constants.MINUS_ONE_INT -> 0
-            else -> curRealIndex + 1
+        if (isPlayMusicListMutable) {
+            val playIndex = curRealIndex + 1
+            _playMusicList.addAll(playIndex, musicList)
         }
-
-        val insertOriginIndex = when {
-            _originMusicList.isEmpty() -> 0
-            curOriginIndex == Constants.MINUS_ONE_INT -> 0
-            else -> curOriginIndex + 1
-        }
-
-        val oldIndex = _originMusicList.indexOfFirst { it.itemId == music.itemId }
-        val playOldIndex = _playMusicList.indexOfFirst { it.itemId == music.itemId }
-
-        _originMusicList.removeAt(oldIndex)
-        _playMusicList.removeAt(playOldIndex)
-        _playMusicList.add(insertRealIndex, music)
-        _originMusicList.add(insertOriginIndex, music)
-        return Pair(insertRealIndex, playOldIndex)
     }
 
     /**
@@ -456,7 +457,8 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
             return
         }
         val playMusic = _originMusicList.removeAt(index)
-        _playMusicList.remove(playMusic)
+        if (isPlayMusicListMutable)
+            _playMusicList.remove(playMusic)
     }
 
     /**
@@ -465,8 +467,9 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     fun updateOriginIndex(originIndex: Int) {
         if (originIndex != Constants.MINUS_ONE_INT) {
             curOriginIndex = originIndex
-            curRealIndex =
-                _playMusicList.indexOfFirst { it.itemId == originMusicList[originIndex].itemId }
+            if (isPlayMusicListMutable)
+                curRealIndex =
+                    _playMusicList.indexOfFirst { it.itemId == originMusicList[originIndex].itemId }
             syncCurrentMusicAfterOriginIndexChanged()
         }
 
@@ -478,8 +481,9 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     fun updateRealIndex(realIndex: Int) {
         if (realIndex != Constants.MINUS_ONE_INT) {
             curRealIndex = realIndex
-            curOriginIndex =
-                originMusicList.indexOfFirst { it.itemId == _playMusicList[realIndex].itemId }
+            if (isPlayMusicListMutable)
+                curOriginIndex =
+                    originMusicList.indexOfFirst { it.itemId == _playMusicList[realIndex].itemId }
             syncCurrentMusicAfterOriginIndexChanged()
         }
     }
@@ -494,13 +498,15 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
             PlayerModeEnum.SINGLE_LOOP -> {
                 _playMusicList.addAll(musicList)
             }
+
             PlayerModeEnum.SEQUENTIAL_PLAYBACK -> {
                 _playMusicList.addAll(musicList)
             }
+
             PlayerModeEnum.RANDOM_PLAY -> {
                 _playMusicList.addAll(musicList.shuffled())
             }
-         }
+        }
     }
 
 

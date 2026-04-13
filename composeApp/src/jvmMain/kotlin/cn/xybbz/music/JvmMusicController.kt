@@ -161,6 +161,12 @@ class JvmMusicController : MusicCommonController() {
     }
 
     /**
+     * 是否能操作playMusicList
+     */
+    override val isPlayMusicListMutable: Boolean
+        get() = true
+
+    /**
      * 初始化 JVM 播放器监听器与进度轮询任务。
      */
     override fun initController(onRestorePlaylists: (() -> Unit)?) {
