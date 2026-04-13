@@ -267,6 +267,8 @@ class JvmMusicController : MusicCommonController() {
         if (index !in originMusicList.indices) {
             return
         }
+        val removingCurrent = index == curOriginIndex
+        val currentRealIndexBeforeRemove = curRealIndex
         removeMusic(index)
         when {
             originMusicList.isEmpty() -> {
@@ -277,11 +279,14 @@ class JvmMusicController : MusicCommonController() {
                 updateOriginIndex(curOriginIndex - 1)
             }
 
-            index == curOriginIndex -> {
+            removingCurrent -> {
                 stopCurrentPlayback()
-                val nextIndex = getNextPlayableIndex()
-                if (nextIndex != Constants.MINUS_ONE_INT)
-                    updateRealIndex(nextIndex)
+                if (currentRealIndexBeforeRemove != Constants.MINUS_ONE_INT) {
+                    val targetRealIndex = minOf(currentRealIndexBeforeRemove, playMusicList.lastIndex)
+                    if (targetRealIndex in playMusicList.indices) {
+                        updateRealIndex(targetRealIndex)
+                    }
+                }
             }
 
             else -> {
