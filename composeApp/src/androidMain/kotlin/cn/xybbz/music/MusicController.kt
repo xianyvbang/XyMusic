@@ -370,8 +370,8 @@ class MusicController(
 
     }
 
-    override fun getNextPlayableIndex(): Int? {
-        return mediaController?.nextMediaItemIndex?.takeIf { it in originMusicList.indices }
+    override fun getNextPlayableIndex(): Int {
+        return mediaController?.nextMediaItemIndex?.takeIf { it in originMusicList.indices } ?: 0
     }
 
     override fun getPreviousPlayableIndex(): Int? {
@@ -397,18 +397,8 @@ class MusicController(
         artistId: String?,
         isPlayer: Boolean?
     ) {
-        var nowIndex = 0
-        val tmpList = mutableListOf<XyPlayMusic>()
-        if (originMusicList.isNotEmpty()) {
-            nowIndex = curOriginIndex + 1
-            val tmpList = mutableListOf<XyPlayMusic>()
-            tmpList.addAll(originMusicList)
-            tmpList.addAll(nowIndex, musicList)
-        } else {
-            tmpList.addAll(originMusicList)
-            tmpList.addAll(musicList)
-        }
-        updateOriginMusicList(tmpList)
+        val nowIndex = curOriginIndex + 1
+        addMusicList(musicList)
         mediaController?.run {
             val mediaItemList = musicList.map { item -> musicSetMediaItem(item) }
             addMediaItems(nowIndex, mediaItemList)
@@ -430,36 +420,29 @@ class MusicController(
         val mediaItem = musicSetMediaItem(music)
 
         if (originMusicList.isEmpty()) {
-            val tmpList = mutableListOf<XyPlayMusic>()
-            tmpList.addAll(originMusicList)
-            tmpList.add(music)
-            updateOriginMusicList(tmpList)
+            addMusic(music)
             mediaController?.addMediaItem(mediaItem)
             thisPlay()
         } else {
             //判断是否存在
             val indexOfFirst =
                 originMusicList.indexOfFirst { it.itemId == music.itemId }
-            if (indexOfFirst != -1) {
-                if (indexOfFirst != curOriginIndex + 1) {
-                    val tmpList = mutableListOf<XyPlayMusic>()
-                    tmpList.addAll(originMusicList)
-                    tmpList.add(curOriginIndex + 1, music)
-                    tmpList.removeAt(indexOfFirst)
-                    updateOriginMusicList(tmpList)
-                    mediaController?.let { controller ->
-                        controller.addMediaItem(
-                            controller.nextMediaItemIndex,
-                            mediaItem
-                        )
-                        controller.removeMediaItem(indexOfFirst)
-                    }
+            if (indexOfFirst != -1 && indexOfFirst != curOriginIndex && indexOfFirst != curOriginIndex + 1) {
+                removeMusic(indexOfFirst)
+                if (indexOfFirst < curOriginIndex){
+                    updateOriginIndex(curOriginIndex - 1)
+                }
+                addMusic(music)
+                mediaController?.let { controller ->
+                    controller.removeMediaItem(indexOfFirst)
+                    controller.addMediaItem(
+                        controller.nextMediaItemIndex,
+                        mediaItem
+                    )
+                    controller.removeMediaItem(indexOfFirst)
                 }
             } else {
-                val tmpList = mutableListOf<XyPlayMusic>()
-                tmpList.addAll(originMusicList)
-                tmpList.add(curOriginIndex + 1, music)
-                updateOriginMusicList(tmpList)
+                addMusic(music)
                 mediaController?.let { media ->
                     media.addMediaItem(
                         media.nextMediaItemIndex,

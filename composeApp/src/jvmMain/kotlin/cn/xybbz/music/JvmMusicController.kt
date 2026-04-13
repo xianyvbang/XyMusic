@@ -269,6 +269,7 @@ class JvmMusicController : MusicCommonController() {
         }
         val removingCurrent = index == curOriginIndex
         val currentRealIndexBeforeRemove = curRealIndex
+        val previousState = state
         removeMusic(index)
         when {
             originMusicList.isEmpty() -> {
@@ -282,9 +283,13 @@ class JvmMusicController : MusicCommonController() {
             removingCurrent -> {
                 stopCurrentPlayback()
                 if (currentRealIndexBeforeRemove != Constants.MINUS_ONE_INT) {
-                    val targetRealIndex = minOf(currentRealIndexBeforeRemove, playMusicList.lastIndex)
+                    val targetRealIndex =
+                        minOf(currentRealIndexBeforeRemove, playMusicList.lastIndex)
                     if (targetRealIndex in playMusicList.indices) {
-                        updateRealIndex(targetRealIndex)
+                        playMusicAtRealIndex(targetRealIndex)
+                        if (previousState == PlayStateEnum.Pause) {
+                            pause()
+                        }
                     }
                 }
             }
@@ -305,12 +310,11 @@ class JvmMusicController : MusicCommonController() {
      * 将歌曲插入到“下一首播放”位置。
      */
     override fun addNextPlayer(music: XyPlayMusic) {
-        val nextIndex = addNextMusic(music)
-        scheduleMoveOrInsertPlaylistItem(
+        preparePlaylistSource(
             music = music,
-            oldIndex = nextIndex.second,
-            targetIndex = nextIndex.first
+            address = address
         )
+        addMusic(music)
         updateEvent(PlayerEvent.AddMusicList(music.artistIds?.firstOrNull()))
     }
 
@@ -330,8 +334,8 @@ class JvmMusicController : MusicCommonController() {
         snapshot.forEach { preparePlaylistSource(it, address) }
 
         if ((currentState == PlayStateEnum.Playing ||
-                currentState == PlayStateEnum.Loading ||
-                currentState == PlayStateEnum.Pause) &&
+                    currentState == PlayStateEnum.Loading ||
+                    currentState == PlayStateEnum.Pause) &&
             currentIndex in snapshot.indices
         ) {
             seekToIndex(currentIndex)
@@ -622,9 +626,7 @@ class JvmMusicController : MusicCommonController() {
      * “下一首播放”场景下，如果歌曲已存在则移动，否则确保它的播放地址已准备完成。
      */
     private fun scheduleMoveOrInsertPlaylistItem(
-        music: XyPlayMusic,
-        oldIndex: Int,
-        targetIndex: Int
+        music: XyPlayMusic
     ) {
         preparePlaylistSource(music, address)
     }
@@ -798,10 +800,7 @@ class JvmMusicController : MusicCommonController() {
     private fun handlePlaybackFinished() {
         val targetRealIndex = when (playMode) {
             PlayerModeEnum.SINGLE_LOOP -> curRealIndex.takeIf { it in playMusicList.indices }
-            PlayerModeEnum.SEQUENTIAL_PLAYBACK -> getNextPlayableIndex().takeIf {
-                it != Constants.MINUS_ONE_INT
-            }
-            PlayerModeEnum.RANDOM_PLAY -> getNextPlayableIndex().takeIf {
+            PlayerModeEnum.SEQUENTIAL_PLAYBACK, PlayerModeEnum.RANDOM_PLAY -> getNextPlayableIndex().takeIf {
                 it != Constants.MINUS_ONE_INT
             }
         } ?: return

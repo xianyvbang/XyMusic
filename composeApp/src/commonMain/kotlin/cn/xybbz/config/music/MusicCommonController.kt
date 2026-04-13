@@ -215,6 +215,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
         playMode = playerModeEnum
         updateEvent(PlayerEvent.PlayerTypeChange(playerModeEnum))
         updatePlayerMode()
+        insertPlayMusicList(_originMusicList)
     }
 
 
@@ -289,7 +290,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
             musicCurrentPositionMap.clear()
             musicCurrentPositionMap.putAll(musicCurrentPositionMapData)
         }
-        replacePlaylist(musicDataList,)
+        replacePlaylist(musicDataList)
         setPageNumData(pageNum)
         updatePageSize(pageSize)
     }
