@@ -76,7 +76,7 @@ class MusicBottomMenuViewModel(
     val downloadMusicIdsFlow =
         downloadDb.downloadDao.getAllMusicTaskUidsFlow(
             notTypeData = DownloadTypes.APK.toString(),
-            mediaLibraryId = dataSourceManager.getConnectionId().toString()
+            mediaLibraryId = settingsManager.get().connectionId.toString()
         )
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
