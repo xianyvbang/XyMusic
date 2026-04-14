@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import org.jetbrains.compose.resources.stringResource
 import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.loading
 import xymusic_kmp.composeapp.generated.resources.reached_bottom
 
 @Composable
@@ -21,6 +22,7 @@ fun ScreenLazyColumn(
     contentPadding: PaddingValues = PaddingValues(0.dp),
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
+    ifLoading: Boolean = false,
     items: LazyListScope.() -> Unit
 ) {
     LazyColumnNotComponent(
@@ -33,8 +35,8 @@ fun ScreenLazyColumn(
             items()
             item {
                 LazyLoadingAndStatus(
-                    stringResource(Res.string.reached_bottom),
-                    ifLoading = false
+                    if (ifLoading) stringResource(Res.string.loading) else stringResource(Res.string.reached_bottom),
+                    ifLoading = ifLoading
                 )
             }
         })

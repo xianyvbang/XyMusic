@@ -123,12 +123,12 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
                 json(jsonSerializer)
             }
             install(HttpRequestRetry) {
-                maxRetries = 2
+                maxRetries = 1
             }
             install(HttpTimeout) {
-//                requestTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
-//                connectTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
-//                socketTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
+                requestTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
+                connectTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
+                socketTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
             }
             HttpResponseValidator {
                 validateResponse { response ->

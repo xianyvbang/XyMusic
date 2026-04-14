@@ -54,6 +54,7 @@ object ApiConstants {
     const val NAVIDROME_IMAGE_PREFIX_ALBUM = "al-"
     const val NAVIDROME_IMAGE_PREFIX_MUSIC = "mf-"
     const val NAVIDROME_IMAGE_PREFIX_PLAYLIST = "pl-"
+    const val NAVIDROME_IMAGE_PREFIX_ARTIST = "ar-"
 
     const val AUTHORIZATION_SCHEME: String = "MediaBrowser"
     const val EMBY_AUTHORIZATION_SCHEME: String = "Emby"
