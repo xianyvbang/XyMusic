@@ -20,7 +20,6 @@ package cn.xybbz.ui.screens
 
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,7 +29,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,16 +36,11 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -66,7 +59,6 @@ import cn.xybbz.localdata.data.search.SearchHistory
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.router.ArtistInfo
-import cn.xybbz.ui.components.LazyLoadingAndStatus
 import cn.xybbz.ui.components.LazyRowComponent
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicArtistCardComponent
@@ -81,7 +73,6 @@ import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
-import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.SearchViewModel
 import com.github.panpf.sketch.ability.bindPauseLoadWhenScrolling
 import org.jetbrains.compose.resources.painterResource
@@ -93,7 +84,6 @@ import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.artist
 import xymusic_kmp.composeapp.generated.resources.cancel_24px
 import xymusic_kmp.composeapp.generated.resources.clear
-import xymusic_kmp.composeapp.generated.resources.loading
 import xymusic_kmp.composeapp.generated.resources.music
 import xymusic_kmp.composeapp.generated.resources.return_home
 import xymusic_kmp.composeapp.generated.resources.search_24px
@@ -115,9 +105,6 @@ fun SearchScreen(
         emptyList()
     )
 
-    var textFieldValue by remember {
-        mutableStateOf(TextFieldValue(text = "", selection = TextRange("".length)))
-    }
 
     SideEffect {
         Log.i("=====", "SearchScreen重载")
@@ -128,16 +115,14 @@ fun SearchScreen(
         TopAppBar(
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
             title = {
-
                 XyEdit(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth(),
-                    text = textFieldValue,
+                    text = searchViewModel.textFieldValue,
                     onChange = {
-                        textFieldValue = it
-
-                        if (textFieldValue.text.isBlank()) {
+                        searchViewModel.updateSearchInput(it)
+                        if (searchViewModel.textFieldValue.text.isBlank()) {
                             searchViewModel.updateIfShowSearchResult(false)
                         }
                     },
@@ -151,15 +136,15 @@ fun SearchScreen(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = {
                         searchViewModel.onSearch(
-                            textFieldValue.text
+                            searchViewModel.textFieldValue.text
                         )
                     }),
                     singleLine = true,
-                    actionContent = if (textFieldValue.text.isNotBlank()) {
+                    actionContent = if (searchViewModel.textFieldValue.text.isNotBlank()) {
                         {
                             IconButton(
                                 onClick = composeClick {
-                                    textFieldValue = textFieldValue.copy("")
+                                    searchViewModel.updateSearchInput(searchViewModel.textFieldValue.copy(""))
                                     searchViewModel.updateIfShowSearchResult(false)
                                 },
                                 modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize)
@@ -207,8 +192,12 @@ fun SearchScreen(
             } else {
                 HistoryAndHintList(
                     onClick = { search ->
-                        textFieldValue =
-                            TextFieldValue(text = search, selection = TextRange(search.length))
+                        searchViewModel.updateSearchInput(
+                            TextFieldValue(
+                                text = search,
+                                selection = TextRange(search.length)
+                            )
+                        )
                         searchViewModel.onSearch(search)
                     },
                     onClear = {

@@ -21,7 +21,10 @@ package cn.xybbz.viewmodel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.Transaction
@@ -55,6 +58,12 @@ class SearchViewModel(
             mediaLibraryId = dataSourceManager.getConnectionId().toString()
         )
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
+
+    /**
+     * 搜索输入的内容
+     */
+    var textFieldValue by mutableStateOf(TextFieldValue(text = "", selection = TextRange("".length)))
+        private set
 
     /**
      * 搜索历史
@@ -178,4 +187,10 @@ class SearchViewModel(
         this.ifShowSearchResult = ifShowSearchResult
     }
 
+    /**
+     * 更新搜索内容
+     */
+    fun updateSearchInput(textFieldValue: TextFieldValue){
+        this.textFieldValue = textFieldValue
+    }
 }
