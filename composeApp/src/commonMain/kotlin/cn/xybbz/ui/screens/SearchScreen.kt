@@ -130,12 +130,7 @@ fun SearchScreen(
                 XyEdit(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxWidth()
-                        .border(
-                            1.dp,
-                            MaterialTheme.colorScheme.onSurfaceVariant,
-                            shape = RoundedCornerShape(XyTheme.dimens.corner)
-                        ),
+                        .fillMaxWidth(),
                     text = textFieldValue,
                     onChange = {
                         textFieldValue = it
@@ -151,6 +146,13 @@ fun SearchScreen(
                             contentDescription = stringResource(Res.string.search_box_icon)
                         )
                     },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = {
+                        searchViewModel.onSearch(
+                            textFieldValue.text
+                        )
+                    }),
+                    singleLine = true,
                     actionContent = if (textFieldValue.text.isNotBlank()) {
                         {
                             IconButton(
@@ -268,92 +270,84 @@ fun SearchResultScreen(
     ScreenLazyColumn(
         modifier = Modifier
             .padding(top = XyTheme.dimens.outerVerticalPadding)
-            .fillMaxSize()
+            .fillMaxSize(),
+        ifLoading = onLoadingState()
     ) {
 
-        if (onLoadingState()) {
+        if (artistList.isNotEmpty()) {
             item {
-                LazyLoadingAndStatus(
-                    text = stringResource(Res.string.loading),
-                    ifLoading = true
-                )
-            }
-        } else {
-            if (artistList.isNotEmpty()) {
-                item {
-                    XyRow {
-                        XyText(
-                            text = stringResource(Res.string.artist),
-                        )
-                    }
-
-                }
-                item {
-                    LazyRowComponent {
-                        items(artistList, key = { it.artistId }) { artist ->
-                            MusicArtistCardComponent(
-                                onItem = { artist },
-                                onRouter = {
-                                    navigator.navigate(ArtistInfo(it, artist.name ?: ""))
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-
-            if (albumList.isNotEmpty()) {
-                item {
-                    XyRow {
-                        XyText(text = stringResource(Res.string.album))
-                    }
-                }
-                item {
-                    LazyRowComponent {
-                        items(albumList, key = { it.itemId }) { album ->
-                            MusicAlbumCardComponent(
-                                onItem = { album },
-                                onRouter = {
-                                    navigator.navigate(
-                                        AlbumInfo(
-                                            it,
-                                            MusicDataTypeEnum.ALBUM
-                                        )
-                                    )
-                                })
-
-                        }
-                    }
-                }
-            }
-
-            if (musicList.isNotEmpty()) {
-                item {
-                    XyRow {
-                        XyText(text = stringResource(Res.string.music))
-                    }
-                }
-                items(musicList, key = { music -> music.itemId }) { music ->
-                    MusicItemComponent(
-                        music = music,
-                        onIfFavorite = {
-                            music.itemId in onFavoriteList()
-                        },
-                        ifDownload = music.itemId in onDownloadMusicIdList(),
-                        ifPlay = music.itemId == musicController.musicInfo?.itemId,
-                        onMusicPlay = {
-                            onAddMusic(
-                                music
-                            )
-                        },
-                        trailingOnClick = {
-                            music.show()
-                        },
-                        trailingOnSelectClick = {
-                            music.show()
-                        }
+                XyRow {
+                    XyText(
+                        text = stringResource(Res.string.artist),
                     )
                 }
+
+            }
+            item {
+                LazyRowComponent {
+                    items(artistList, key = { it.artistId }) { artist ->
+                        MusicArtistCardComponent(
+                            onItem = { artist },
+                            onRouter = {
+                                navigator.navigate(ArtistInfo(it, artist.name ?: ""))
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        if (albumList.isNotEmpty()) {
+            item {
+                XyRow {
+                    XyText(text = stringResource(Res.string.album))
+                }
+            }
+            item {
+                LazyRowComponent {
+                    items(albumList, key = { it.itemId }) { album ->
+                        MusicAlbumCardComponent(
+                            onItem = { album },
+                            onRouter = {
+                                navigator.navigate(
+                                    AlbumInfo(
+                                        it,
+                                        MusicDataTypeEnum.ALBUM
+                                    )
+                                )
+                            })
+
+                    }
+                }
+            }
+        }
+
+        if (musicList.isNotEmpty()) {
+            item {
+                XyRow {
+                    XyText(text = stringResource(Res.string.music))
+                }
+            }
+            items(musicList, key = { music -> music.itemId }) { music ->
+                MusicItemComponent(
+                    music = music,
+                    onIfFavorite = {
+                        music.itemId in onFavoriteList()
+                    },
+                    ifDownload = music.itemId in onDownloadMusicIdList(),
+                    ifPlay = music.itemId == musicController.musicInfo?.itemId,
+                    onMusicPlay = {
+                        onAddMusic(
+                            music
+                        )
+                    },
+                    trailingOnClick = {
+                        music.show()
+                    },
+                    trailingOnSelectClick = {
+                        music.show()
+                    }
+                )
             }
         }
     }

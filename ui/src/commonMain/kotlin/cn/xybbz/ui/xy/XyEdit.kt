@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -147,7 +148,7 @@ fun XyEdit(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = false,
     textContentAlignment: Alignment = Alignment.TopStart,
-    textStyle: TextStyle = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurface),
+    textStyle: TextStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
     visualTransformation: VisualTransformation = VisualTransformation.None,
     actionContent: (@Composable () -> Unit)? = null,
     leadingContent: (@Composable () -> Unit)? = null,
@@ -192,9 +193,8 @@ fun XyEdit(
                 }
                 if (actionContent != null) {
                     actionContent()
-                } else {
-                    Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
                 }
+                Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
             }
         }
     )
