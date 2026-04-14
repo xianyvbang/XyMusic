@@ -17,11 +17,22 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate target token
+        env:
+          TARGET_REPO_TOKEN: ${{ secrets.TARGET_REPO_TOKEN }}
+        run: |
+          if [ -z "${TARGET_REPO_TOKEN}" ]; then
+            echo "TARGET_REPO_TOKEN is not configured."
+            exit 1
+          fi
 
       - name: Add target remote
         env:
           TARGET_REPO_TOKEN: ${{ secrets.TARGET_REPO_TOKEN }}
         run: |
+          git config --global --unset-all http.https://github.com/.extraheader || true
           git remote add target https://x-access-token:${TARGET_REPO_TOKEN}@github.com/xianyvbang/XyMusic.git
           git fetch target xy-kmp
 
