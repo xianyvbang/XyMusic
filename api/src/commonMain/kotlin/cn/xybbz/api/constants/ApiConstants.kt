@@ -66,7 +66,7 @@ object ApiConstants {
     /**
      * okhttp超时时间
      */
-    const val DEFAULT_TIMEOUT_MILLISECONDS = 10000L
+    const val DEFAULT_TIMEOUT_MILLISECONDS = 30000L
 
     const val CUSTOM_IMAGE_HEADER_NAME = "X-Custom-Image-Url"
 

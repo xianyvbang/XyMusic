@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -82,6 +83,7 @@ import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.SearchViewModel
+import com.github.panpf.sketch.ability.bindPauseLoadWhenScrolling
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -266,11 +268,13 @@ fun SearchResultScreen(
 ) {
     val navigator = LocalNavigator.current
 
-
+    val lazyListState = rememberLazyListState()
+    bindPauseLoadWhenScrolling(lazyListState)
     ScreenLazyColumn(
         modifier = Modifier
             .padding(top = XyTheme.dimens.outerVerticalPadding)
             .fillMaxSize(),
+        state = lazyListState,
         ifLoading = onLoadingState()
     ) {
 
