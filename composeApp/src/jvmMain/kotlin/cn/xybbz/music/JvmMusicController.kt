@@ -98,7 +98,7 @@ class JvmMusicController : MusicCommonController() {
             submitMediaPlayerTask(mediaPlayer) {
                 try {
                     syncCurrentMusicFromMedia(retainedMedia)
-                    refreshArtworkBytes(retainedMedia, player)
+                    refreshArtworkBytes(retainedMedia)
                     val appliedPendingStartPosition = applyPendingStartPosition()
                     if (!appliedPendingStartPosition) {
                         // 没有显式恢复历史进度时，也主动拉一次底层真实时间，
@@ -151,6 +151,23 @@ class JvmMusicController : MusicCommonController() {
             updateDurationFromEvent(newLength)
         }
     }
+
+    private val listener: VlcMediaEventAdapter = object : VlcMediaEventAdapter() {
+        override fun mediaParsedChanged(media: Media, newStatus: MediaParsedStatus) {
+            submitMediaPlayerTask(mediaPlayer) {
+                updatePicBytes(null)
+                try {
+                    if (newStatus == MediaParsedStatus.DONE) {
+                        val bytes = readArtworkBytesFromMedia(media)
+                        updatePicBytes(bytes)
+                    }
+                } catch (e: Exception) {
+                    Log.e("vlc", "读取专辑图片异常", e)
+                }
+            }
+        }
+    }
+
 
     /**
      * 是否能操作playMusicList
@@ -210,18 +227,20 @@ class JvmMusicController : MusicCommonController() {
      */
     override fun seekTo(millSeconds: Long) {
         val player = currentMediaPlayer() ?: return
-        player.controls().setTime(millSeconds)
-        setCurrentPositionData(millSeconds)
-        musicInfo?.let {
-            updateEvent(
-                PlayerEvent.PositionSeekTo(
-                    millSeconds,
-                    it.itemId
+        if (millSeconds > 0) {
+            player.controls().setTime(millSeconds)
+            setCurrentPositionData(millSeconds)
+            musicInfo?.let {
+                updateEvent(
+                    PlayerEvent.PositionSeekTo(
+                        millSeconds,
+                        it.itemId
+                    )
                 )
-            )
-        }
-        if (state == PlayStateEnum.Pause) {
-            player.controls().play()
+            }
+            if (state == PlayStateEnum.Pause) {
+                player.controls().play()
+            }
         }
     }
 
@@ -357,9 +376,9 @@ class JvmMusicController : MusicCommonController() {
                     currentState == PlayStateEnum.Pause) &&
             currentIndex in snapshot.indices
         ) {
-            seekToIndex(currentIndex)
-            if (currentState == PlayStateEnum.Pause) {
-                pause()
+            if (currentState == PlayStateEnum.Playing) {
+                seekToIndex(currentIndex)
+//                pause()
             }
         }
     }
@@ -432,8 +451,9 @@ class JvmMusicController : MusicCommonController() {
      */
     override fun close() {
         stopCurrentPlayback()
-        currentMediaPlayer()?.takeIf { mediaPlayerListenerRegistered }?.events()
-            ?.removeMediaPlayerEventListener(playerListener)
+        val eventApi = currentMediaPlayer()?.takeIf { mediaPlayerListenerRegistered }?.events()
+        eventApi?.removeMediaPlayerEventListener(playerListener)
+        eventApi?.removeMediaEventListener(listener)
         mediaPlayerListenerRegistered = false
         mediaPlayer?.release()
         mediaPlayer = null
@@ -475,14 +495,14 @@ class JvmMusicController : MusicCommonController() {
      * 尝试从当前媒体的元数据里提取封面图。
      * 如果 ARTWORK_URL 还没准备好，则异步触发一次 parse，待 VLC 回填元数据后再读取。
      */
-    private fun refreshArtworkBytes(media: Media, mediaPlayer: MediaPlayer) {
+    private fun refreshArtworkBytes(media: Media) {
         updatePicBytes(null)
         readArtworkBytesFromMedia(media)?.let { bytes ->
             updatePicBytes(bytes)
             return
         }
 
-        parseArtworkBytesAsync(media, mediaPlayer)
+        parseArtworkBytesAsync(media)
     }
 
     /**
@@ -554,47 +574,18 @@ class JvmMusicController : MusicCommonController() {
     /**
      * 触发一次异步 parse，等待 VLC 回填元数据后再取封面。
      */
-    private fun parseArtworkBytesAsync(
-        media: Media,
-        mediaPlayer: MediaPlayer
-    ) {
-        val parsingMedia = media.newMedia()
-        lateinit var listener: VlcMediaEventAdapter
-        listener = object : VlcMediaEventAdapter() {
-            override fun mediaParsedChanged(media: Media, newStatus: MediaParsedStatus) {
-                submitMediaPlayerTask(mediaPlayer) {
-                    updatePicBytes(null)
-                    try {
-                        if (newStatus == MediaParsedStatus.DONE) {
-                            val bytes = readArtworkBytesFromMedia(parsingMedia)
-                            updatePicBytes(bytes)
-                        }
-                    } finally {
-                        parsingMedia.events().removeMediaEventListener(listener)
-                        parsingMedia.release()
-                    }
-                }
-            }
-        }
-
-        parsingMedia.events().addMediaEventListener(listener)
-
-        val parseStarted = runCatching {
-            parsingMedia.parsing().parse(
-                5_000,
+    private fun parseArtworkBytesAsync(media: Media) {
+        runCatching {
+            media.parsing().parse(
+                5_0000,
                 ParseFlag.PARSE_LOCAL,
-                ParseFlag.PARSE_NETWORK,
+//                ParseFlag.PARSE_NETWORK,
                 ParseFlag.FETCH_LOCAL,
-                ParseFlag.FETCH_NETWORK
+//                ParseFlag.FETCH_NETWORK
             )
         }.onFailure {
             Log.e("vlc", "触发封面元数据解析失败", it)
         }.getOrDefault(false)
-
-        if (!parseStarted) {
-            parsingMedia.events().removeMediaEventListener(listener)
-            parsingMedia.release()
-        }
     }
 
     /**
@@ -661,6 +652,7 @@ class JvmMusicController : MusicCommonController() {
         }.getOrNull() ?: return null
 
         createdPlayer.events().addMediaPlayerEventListener(playerListener)
+        createdPlayer.events().addMediaEventListener(listener)
         mediaPlayerListenerRegistered = true
         mediaPlayerFactory = factory
         mediaPlayer = createdPlayer
@@ -751,7 +743,7 @@ class JvmMusicController : MusicCommonController() {
         val player = ensureMediaPlayer() ?: return
         val music = playMusicList.getOrNull(realIndex) ?: return
         val mediaSource = preparePlaylistSource(music)
-
+        Log.i("=====", "音乐播放链接${music.musicUrl}")
         updateState(PlayStateEnum.Loading)
         setCurrentPositionData(0L)
         updateEvent(PlayerEvent.BeforeChangeMusic)
