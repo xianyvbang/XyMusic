@@ -51,7 +51,6 @@ import cn.xybbz.entity.data.SearchData
 import cn.xybbz.entity.data.ext.convertToArtist
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.ext.toXyMusic
-import cn.xybbz.entity.data.music.TranscodingAndMusicUrlData
 import cn.xybbz.entity.data.toNavidromeOrder
 import cn.xybbz.entity.data.toNavidromeOrder2
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -1307,8 +1306,13 @@ class NavidromeDatasourceServer(
                 .lowercase()
         return XyArtist(
             artistId = artist.id,
-            pic = artist.smallImageUrl ?: artist.largeImageUrl,
-            backdrop = artist.largeImageUrl ?: artist.smallImageUrl,
+            pic = navidromeApiClient.getImageUrl(
+                ApiConstants.NAVIDROME_IMAGE_PREFIX_ARTIST + artist.id
+            ),
+            backdrop = navidromeApiClient.getImageUrl(
+                ApiConstants.NAVIDROME_IMAGE_PREFIX_ARTIST + artist.id,
+                1000
+            ),
             name = artist.name,
             describe = artist.biography,
             connectionId = getConnectionId(),
