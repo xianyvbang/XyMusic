@@ -1,0 +1,29 @@
+name: Sync to XyMusic xy-kmp
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Add target remote
+        env:
+          TARGET_REPO_TOKEN: ${{ secrets.TARGET_REPO_TOKEN }}
+        run: |
+          git remote add target https://x-access-token:${TARGET_REPO_TOKEN}@github.com/xianyvbang/XyMusic.git
+          git fetch target xy-kmp
+
+      - name: Force sync main to xy-kmp
+        run: git push --force-with-lease target HEAD:refs/heads/xy-kmp
