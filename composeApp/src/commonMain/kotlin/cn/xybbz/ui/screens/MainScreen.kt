@@ -147,6 +147,8 @@ fun MainScreen(mainViewModel: MainViewModel = koinViewModel<MainViewModel>()) {
             enableAnimations = navigationConfig.enableAnimations
         ) { bool ->
             if (bool) {
+                ConnectionScreen(connectionUiType = null)
+            } else {
                 MainScreenScaffold(
                     navigationConfig = navigationConfig,
                     navigationState = navigationState,
@@ -164,8 +166,6 @@ fun MainScreen(mainViewModel: MainViewModel = koinViewModel<MainViewModel>()) {
                         LoadingCompose(modifier = Modifier.align(alignment = Alignment.Center))
                     }
                 }
-            } else {
-                ConnectionScreen(connectionUiType = null)
             }
         }
     }

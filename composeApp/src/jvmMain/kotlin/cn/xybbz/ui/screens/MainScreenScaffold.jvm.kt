@@ -2,6 +2,7 @@ package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Text
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
@@ -46,7 +47,7 @@ actual fun MainScreenScaffold(
                                 contentDescription = ""
                             )
                         },
-                        label = { XyText(text = stringResource(item.title)) },
+                        label = { Text(text = stringResource(item.title)) },
                     )
                 }
             }
