@@ -150,14 +150,18 @@ fun MainScreen(mainViewModel: MainViewModel = koinViewModel<MainViewModel>()) {
                 SnackBarHostUi()
             }
         ) {
-            RootNavTransition(!ifConnectionConfig) { bool ->
+            RootNavTransition(
+                state = !ifConnectionConfig,
+                enableAnimations = navigationConfig.enableAnimations
+            ) { bool ->
                 if (bool) {
                     ConnectionScreen(connectionUiType = null)
                 } else {
                     Box {
                         RouterCompose(
                             paddingValues = it,
-                            navigationState = navigationState
+                            navigationState = navigationState,
+                            enableAnimations = navigationConfig.enableAnimations
                         )
                         LoadingCompose(modifier = Modifier.align(alignment = Alignment.Center))
                     }

@@ -2,6 +2,8 @@ package cn.xybbz.router
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -34,6 +36,18 @@ sealed class RouterAnimate(
         popTransitionSpec = {
             slideInHorizontally(initialOffsetX = { -it }) togetherWith
                     slideOutHorizontally(targetOffsetX = { it })
+        }
+    )
+
+    data object NONE : RouterAnimate(
+        predictivePopTransitionSpec = {
+            EnterTransition.None togetherWith ExitTransition.None
+        },
+        transitionSpec = {
+            EnterTransition.None togetherWith ExitTransition.None
+        },
+        popTransitionSpec = {
+            EnterTransition.None togetherWith ExitTransition.None
         }
     )
 }

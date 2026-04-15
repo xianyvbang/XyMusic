@@ -15,9 +15,11 @@ import com.github.panpf.sketch.cache.internal.EmptyMemoryCache.entries
 @Composable
 fun RouterCompose(
     paddingValues: PaddingValues,
-    navigationState: NavigationState
+    navigationState: NavigationState,
+    enableAnimations: Boolean = true
 ) {
     val navigator = LocalNavigator.current
+    val routerAnimate = if (enableAnimations) RouterAnimate.DEFAULT else RouterAnimate.NONE
     SideEffect {
         Log.d("=====", "RouterCompose重组一次")
     }
@@ -26,9 +28,9 @@ fun RouterCompose(
         entries = navigationState.toEntries(platformEntryProvider),
         onBack = { navigator.goBack() },
         sceneStrategy = remember { DialogSceneStrategy() },
-        predictivePopTransitionSpec = RouterAnimate.DEFAULT.predictivePopTransitionSpec,
-        transitionSpec = RouterAnimate.DEFAULT.transitionSpec,
-        popTransitionSpec = RouterAnimate.DEFAULT.popTransitionSpec
+        predictivePopTransitionSpec = routerAnimate.predictivePopTransitionSpec,
+        transitionSpec = routerAnimate.transitionSpec,
+        popTransitionSpec = routerAnimate.popTransitionSpec
     )
 
 }
