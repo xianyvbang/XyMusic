@@ -2,12 +2,10 @@ package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Text
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.WideNavigationRail
+import androidx.compose.material3.WideNavigationRailItem
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import cn.xybbz.router.NavigationState
@@ -30,14 +28,14 @@ actual fun MainScreenScaffold(
 ) {
     Scaffold(
         modifier = modifier,
-        snackbarHost = snackbarHost
+//        snackbarHost = snackbarHost
     ) { paddingValues ->
         XyRow(paddingValues = PaddingValues()) {
-            NavigationRail(
+            WideNavigationRail(
                 modifier = Modifier.padding(paddingValues),
             ) {
                 jvmTopRouterDataList.forEach { item ->
-                    NavigationRailItem(
+                    WideNavigationRailItem(
                         selected = navigator.state.topLevelRoute == item.route,
                         onClick = { navigator.navigate(route = item.route) },
                         icon = {
@@ -47,6 +45,7 @@ actual fun MainScreenScaffold(
                             )
                         },
                         label = { XyText(text = stringResource(item.title)) },
+                        railExpanded = false,
                     )
                 }
             }
