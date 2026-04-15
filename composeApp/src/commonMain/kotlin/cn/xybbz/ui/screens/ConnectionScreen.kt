@@ -52,6 +52,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -165,6 +166,7 @@ fun ConnectionScreen(
 
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
+    val ifConnectionConfig by connectionViewModel.settingsManager.ifConnectionConfig.collectAsState()
     var ifSelectDataSource by remember {
         mutableStateOf(ScreenType.SELECT_DATA_SOURCE)
     }
@@ -510,7 +512,7 @@ fun ConnectionScreen(
                                     Button(
                                         modifier = Modifier.width(width = 150.dp),
                                         onClick = {
-                                            if (!connectionViewModel.settingsManager.ifConnectionConfig) {
+                                            if (!ifConnectionConfig) {
                                                 connectionViewModel.updateIfConnectionConfig()
                                             } else {
                                                 navigator.goBack()

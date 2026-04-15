@@ -37,7 +37,7 @@ class CacheLimitViewModel (
     /**
      * 缓存上限
      */
-    var cacheUpperLimit by mutableStateOf(settingsManager.cacheUpperLimit)
+    var cacheUpperLimit by mutableStateOf(settingsManager.cacheUpperLimit.value)
         private set
 
     /**

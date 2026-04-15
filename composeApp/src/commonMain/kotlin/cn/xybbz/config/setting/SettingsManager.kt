@@ -20,7 +20,6 @@ package cn.xybbz.config.setting
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cn.xybbz.api.TokenServer
 import cn.xybbz.common.enums.AllDataEnum
@@ -36,7 +35,10 @@ import cn.xybbz.localdata.enums.LanguageType
 import cn.xybbz.localdata.enums.ThemeTypeEnum
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.withContext
 
@@ -49,48 +51,48 @@ class SettingsManager(
 
     private var settings: XySettings? = null
 
-    var languageType by mutableStateOf<LanguageType?>(null)
-        private set
+    private val _languageType = MutableStateFlow<LanguageType?>(null)
+    val languageType: StateFlow<LanguageType?> = _languageType.asStateFlow()
 
     //监听
     val onSettingsChangeListeners = mutableListOf<OnSettingsChangeListener>()
 
     //缓存设置
-    var cacheUpperLimit by mutableStateOf(CacheUpperLimitEnum.Auto)
-        private set
+    private val _cacheUpperLimit = MutableStateFlow(CacheUpperLimitEnum.Auto)
+    val cacheUpperLimit: StateFlow<CacheUpperLimitEnum> = _cacheUpperLimit.asStateFlow()
 
     //缓存文件所在位置
-    var cacheFilePath by mutableStateOf("")
-        private set
+    private val _cacheFilePath = MutableStateFlow("")
+    val cacheFilePath: StateFlow<String> = _cacheFilePath.asStateFlow()
 
     //是否为非计费网络
     var isUnmeteredWifi: Boolean = false
 
     //是否有连接配置
-    var ifConnectionConfig by mutableStateOf(false)
-        private set
+    private val _ifConnectionConfig = MutableStateFlow(false)
+    val ifConnectionConfig: StateFlow<Boolean> = _ifConnectionConfig.asStateFlow()
 
     //是否显示SnackBar
-    var ifShowSnackBar by mutableStateOf(false)
-        private set
+    private val _ifShowSnackBar = MutableStateFlow(false)
+    val ifShowSnackBar: StateFlow<Boolean> = _ifShowSnackBar.asStateFlow()
 
     /**
      * 主题类型
      */
-    var themeType by mutableStateOf(ThemeTypeEnum.SYSTEM)
-        private set
+    private val _themeType = MutableStateFlow(ThemeTypeEnum.SYSTEM)
+    val themeType: StateFlow<ThemeTypeEnum> = _themeType.asStateFlow()
 
     /**
      * 是否动态颜色
      */
-    var isDynamic by mutableStateOf(false)
-        private set
+    private val _isDynamic = MutableStateFlow(false)
+    val isDynamic: StateFlow<Boolean> = _isDynamic.asStateFlow()
 
     /**
      * 背景图片地址
      */
-    var imageFilePath by mutableStateOf<String?>(null)
-        private set
+    private val _imageFilePath = MutableStateFlow<String?>(null)
+    val imageFilePath: StateFlow<String?> = _imageFilePath.asStateFlow()
 
 
     //是否设置转码音质
@@ -113,9 +115,9 @@ class SettingsManager(
 
 
 
-        this@SettingsManager.themeType = this@SettingsManager.get().themeType
-        this@SettingsManager.isDynamic = this@SettingsManager.get().isDynamic
-        this@SettingsManager.imageFilePath = this@SettingsManager.get().imageFilePath
+        this@SettingsManager._themeType.value = this@SettingsManager.get().themeType
+        this@SettingsManager._isDynamic.value = this@SettingsManager.get().isDynamic
+        this@SettingsManager._imageFilePath.value = this@SettingsManager.get().imageFilePath
 
         val connectionId = this@SettingsManager.get().connectionId
         val ifConnectionId = connectionId != null
@@ -126,11 +128,11 @@ class SettingsManager(
 
 
         if (this@SettingsManager.get().languageType != null) {
-            this@SettingsManager.languageType = this@SettingsManager.get().languageType
+            this@SettingsManager._languageType.value = this@SettingsManager.get().languageType
         } else {
             setDefaultLanguage()
         }
-        this@SettingsManager.cacheUpperLimit = this@SettingsManager.get().cacheUpperLimit
+        this@SettingsManager._cacheUpperLimit.value = this@SettingsManager.get().cacheUpperLimit
         Log.i("api", "动态设置数据--读取配置")
         audioFadeController.updateFadeDurationMs(this@SettingsManager.get().fadeDurationMs)
         netWorkMonitor.addListener(object : OnNetworkChangeListener {
@@ -164,8 +166,8 @@ class SettingsManager(
      * 设置缓存上限
      */
     suspend fun setCacheUpperLimit(cacheUpperLimit: CacheUpperLimitEnum) {
-        val oldCacheUpperLimit = this.cacheUpperLimit
-        this.cacheUpperLimit = cacheUpperLimit
+        val oldCacheUpperLimit = this.cacheUpperLimit.value
+        this._cacheUpperLimit.value = cacheUpperLimit
         settings = get().copy(cacheUpperLimit = cacheUpperLimit)
         if (get().id != AllDataEnum.All.code) {
             db.settingsDao.updateCacheUpperLimit(cacheUpperLimit, get().id)
@@ -346,14 +348,14 @@ class SettingsManager(
      */
     fun updateLanguage(languageType: LanguageType) {
         languagePlatformManager.applyLanguage(languageType)
-        this.languageType = languageType
+        this._languageType.value = languageType
     }
 
     /**
      * 设置当前默认语言
      */
     fun setDefaultLanguage() {
-        this.languageType = languagePlatformManager.getSystemLanguageType()
+        this._languageType.value = languagePlatformManager.getSystemLanguageType()
     }
 
     /**
@@ -581,7 +583,7 @@ class SettingsManager(
      * 更新主题颜色类型
      */
     suspend fun setThemeTypeData(themeType: ThemeTypeEnum) {
-        this.themeType = themeType
+        this._themeType.value = themeType
         settings = get().copy(themeType = themeType)
         if (get().id != AllDataEnum.All.code) {
             db.settingsDao.update(
@@ -599,7 +601,7 @@ class SettingsManager(
      * 更新背景图片地址
      */
     suspend fun setImageFilePath(imageFilePath: String?) {
-        this.imageFilePath = imageFilePath
+        this._imageFilePath.value = imageFilePath
         settings = get().copy(imageFilePath = imageFilePath)
         if (get().id != AllDataEnum.All.code) {
             db.settingsDao.updateImageFilePath(imageFilePath, get().id)
@@ -614,7 +616,7 @@ class SettingsManager(
      * 更新缓存数据目录地址
      */
     fun updateCacheFilePath(path: String) {
-        this.cacheFilePath = path
+        this._cacheFilePath.value = path
     }
 
     fun sengTranscodingEvent(transcodingState:TranscodingState = TranscodingState.Transcoding) {
@@ -642,7 +644,7 @@ class SettingsManager(
      * 更新是否存在连接设置
      */
     fun updateIfConnectionConfig(ifConnectionConfig: Boolean) {
-        this.ifConnectionConfig = ifConnectionConfig
+        this._ifConnectionConfig.value = ifConnectionConfig
         updateIfShowSnackBar(ifConnectionConfig)
     }
 
@@ -650,7 +652,7 @@ class SettingsManager(
      * 更新是否显示底部ShowSnackBar
      */
     fun updateIfShowSnackBar(ifShowSnackBar: Boolean) {
-        this.ifShowSnackBar = ifShowSnackBar
+        this._ifShowSnackBar.value = ifShowSnackBar
     }
 
 }

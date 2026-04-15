@@ -61,6 +61,7 @@ fun MainScreen(mainViewModel: MainViewModel = koinViewModel<MainViewModel>()) {
 
     val coroutineScope = rememberCoroutineScope()
     val ifOpenSelect by mainViewModel.selectControl.uiState.collectAsStateWithLifecycle()
+    val ifConnectionConfig by mainViewModel.settingsManager.ifConnectionConfig.collectAsStateWithLifecycle()
 
     val navigationConfig = platformNavigationConfig
     val navigationState = rememberNavigationState(
@@ -149,7 +150,7 @@ fun MainScreen(mainViewModel: MainViewModel = koinViewModel<MainViewModel>()) {
                 SnackBarHostUi()
             }
         ) {
-            RootNavTransition(!mainViewModel.settingsManager.ifConnectionConfig) { bool ->
+            RootNavTransition(!ifConnectionConfig) { bool ->
                 if (bool) {
                     ConnectionScreen(connectionUiType = null)
                 } else {
@@ -170,7 +171,8 @@ fun MainScreen(mainViewModel: MainViewModel = koinViewModel<MainViewModel>()) {
 @Composable
 private fun SnackBarHostUi(modifier: Modifier = Modifier) {
     val mainViewModel = LocalMainViewModel.current
-    if (mainViewModel.settingsManager.ifShowSnackBar)
+    val ifShowSnackBar by mainViewModel.settingsManager.ifShowSnackBar.collectAsStateWithLifecycle()
+    if (ifShowSnackBar)
         Column(modifier = Modifier.then(modifier)) {
             SnackBarPlayerComponent(
                 onClick = {

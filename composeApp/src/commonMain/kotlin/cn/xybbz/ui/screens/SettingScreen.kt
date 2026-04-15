@@ -28,6 +28,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -112,6 +113,7 @@ fun SettingScreen(
     }
 
     val copySuccess = stringResource(Res.string.copy_success)
+    val cacheFilePath by settingsViewModel.settingsManager.cacheFilePath.collectAsState()
 
     XyColumnScreen {
         TopAppBarComponent(
@@ -195,12 +197,12 @@ fun SettingScreen(
 
                     SettingItemComponent(
                         title = stringResource(Res.string.cache_location),
-                        bottomInfo = settingsViewModel.settingsManager.cacheFilePath,
+                        bottomInfo = cacheFilePath,
                         maxLines = Int.MAX_VALUE,
                         painter = null
                     ) {
-                        if (settingsViewModel.settingsManager.cacheFilePath.isNotBlank()) {
-                            copyTextToClipboard(settingsViewModel.settingsManager.cacheFilePath)
+                        if (cacheFilePath.isNotBlank()) {
+                            copyTextToClipboard(cacheFilePath)
                             MessageUtils.sendPopTip(copySuccess)
                         }
 

@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,6 +67,7 @@ fun InterfaceSettingScreen(
 
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
+    val themeType by interfaceSettingViewModel.settingsManager.themeType.collectAsState()
     var ifShowThemeMenu by remember {
         mutableStateOf(false)
     }
@@ -106,7 +108,7 @@ fun InterfaceSettingScreen(
 
                     SettingItemComponent(
                         title = stringResource(Res.string.theme_mode),
-                        info = stringResource(interfaceSettingViewModel.settingsManager.themeType.toResStringInt()),
+                        info = stringResource(themeType.toResStringInt()),
                         painter = Res.drawable.keyboard_arrow_down_24px,
                         trailingContent = {
                             XyDropdownMenu(
@@ -118,7 +120,7 @@ fun InterfaceSettingScreen(
                                     MenuItemDefaultData(
                                         title = stringResource(it.toResStringInt()),
                                         leadingIcon = {
-                                            if (interfaceSettingViewModel.settingsManager.themeType == it)
+                                            if (themeType == it)
                                                 Icon(
                                                     painter = painterResource(Res.drawable.check_24px),
                                                     contentDescription = stringResource(

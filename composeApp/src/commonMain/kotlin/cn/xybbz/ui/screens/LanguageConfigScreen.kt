@@ -22,10 +22,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.LanguageType
@@ -54,11 +53,7 @@ fun LanguageConfigScreen(
 
     val navigator = LocalNavigator.current
 
-    val languageType by remember {
-        derivedStateOf {
-            languageConfigViewModel.settingsManager.languageType
-        }
-    }
+    val languageType by languageConfigViewModel.settingsManager.languageType.collectAsState()
 
     key(languageType) {
         XyColumnScreen {
@@ -90,7 +85,7 @@ fun LanguageConfigScreen(
                                 XyItemRadioButton(
                                     text = it.languageName,
                                     sub = it.languageCode,
-                                    selected = it == languageConfigViewModel.settingsManager.languageType,
+                                    selected = it == languageType,
                                     enabled = it.enabled,
                                     paddingValue = PaddingValues(
                                         horizontal = XyTheme.dimens.innerHorizontalPadding,

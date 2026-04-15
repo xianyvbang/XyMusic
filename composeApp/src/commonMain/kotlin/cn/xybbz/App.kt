@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.union
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.config.setting.SettingsManager
@@ -26,8 +28,10 @@ import org.koin.compose.getKoin
 fun App() {
 
     val settingsManager: SettingsManager = getKoin().get()
+    val themeType by settingsManager.themeType.collectAsState()
+    val imageFilePath by settingsManager.imageFilePath.collectAsState()
 
-    val isDark = when (settingsManager.themeType) {
+    val isDark = when (themeType) {
         ThemeTypeEnum.SYSTEM -> isSystemInDarkTheme()
         ThemeTypeEnum.DARK -> true
         ThemeTypeEnum.LIGHT -> false
@@ -38,7 +42,7 @@ fun App() {
             isDarkTheme = isDark,
         ),
         brash = xyBackgroundBrash(
-            backgroundImageUri = settingsManager.imageFilePath
+            backgroundImageUri = imageFilePath
         )
     ) {
         WindowInsets.systemBars.union(WindowInsets.displayCutout)

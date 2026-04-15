@@ -31,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -63,10 +64,11 @@ import cn.xybbz.ui.xy.XyIconButton as IconButton
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageViewModel = koinViewModel<SetBackgroundImageViewModel>()) {
+    val imageFilePath by setBackgroundImageViewModel.settingsManager.imageFilePath.collectAsState()
 
     val ifSelectImage by remember {
         derivedStateOf {
-            !setBackgroundImageViewModel.settingsManager.imageFilePath.isNullOrBlank()
+            !imageFilePath.isNullOrBlank()
         }
     }
     val navigator = LocalNavigator.current
@@ -122,7 +124,7 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
                 if (!ifSelectImage) {
                     XyNoData()
                 } else {
-                    Text(text = setBackgroundImageViewModel.settingsManager.imageFilePath.orEmpty())
+                    Text(text = imageFilePath.orEmpty())
                 }
                 Spacer(
                     modifier = Modifier.height(
