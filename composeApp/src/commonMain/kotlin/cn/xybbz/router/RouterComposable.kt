@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import org.jetbrains.compose.resources.stringResource
+import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -74,7 +75,7 @@ private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.nodeComposabl
     }
 }
 
-val entryProvider = entryProvider {
+internal fun buildDefaultRouteEntryProvider(): (NavKey) -> NavEntry<NavKey> = entryProvider {
     nodeComposable<Connection> {
         ConnectionScreen(it.connectionUiType)
     }

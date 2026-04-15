@@ -19,7 +19,7 @@ fun RouterCompose(
         Log.d("=====", "RouterCompose重组一次")
     }
     NavDisplay(
-        entries = navigationState.toEntries(entryProvider),
+        entries = navigationState.toEntries(platformEntryProvider),
         onBack = { navigator.goBack() },
         sceneStrategy = remember { DialogSceneStrategy() },
         predictivePopTransitionSpec = RouterAnimate.DEFAULT.predictivePopTransitionSpec,
