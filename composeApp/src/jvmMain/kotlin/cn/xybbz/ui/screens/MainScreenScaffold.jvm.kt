@@ -7,7 +7,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import cn.xybbz.router.NavigationState
@@ -15,11 +14,13 @@ import cn.xybbz.router.Navigator
 import cn.xybbz.router.PlatformNavigationConfig
 import cn.xybbz.router.jvmTopRouterDataList
 import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.xy.XyText
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 actual fun MainScreenScaffold(
+    modifier: Modifier,
     navigationConfig: PlatformNavigationConfig,
     navigationState: NavigationState,
     navigator: Navigator,
@@ -27,7 +28,8 @@ actual fun MainScreenScaffold(
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
-        snackbarHost = snackbarHost,
+        modifier = modifier,
+        snackbarHost = snackbarHost
     ) { paddingValues ->
         XyRow(paddingValues = PaddingValues()) {
             NavigationRail(
@@ -44,7 +46,7 @@ actual fun MainScreenScaffold(
                                 contentDescription = ""
                             )
                         },
-                        label = { Text(stringResource(item.title)) },
+                        label = { XyText(text = stringResource(item.title)) },
                     )
                 }
             }

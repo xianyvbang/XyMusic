@@ -142,21 +142,19 @@ fun MainScreen(mainViewModel: MainViewModel = koinViewModel<MainViewModel>()) {
         BottomSheetCompose()
 
         AddPlaylistBottomComponent()
-        MainScreenScaffold(
-            navigationConfig = navigationConfig,
-            navigationState = navigationState,
-            navigator = navigator,
-            snackbarHost = {
-                SnackBarHostUi()
-            }
-        ) {
-            RootNavTransition(
-                state = !ifConnectionConfig,
-                enableAnimations = navigationConfig.enableAnimations
-            ) { bool ->
-                if (bool) {
-                    ConnectionScreen(connectionUiType = null)
-                } else {
+        RootNavTransition(
+            state = !ifConnectionConfig,
+            enableAnimations = navigationConfig.enableAnimations
+        ) { bool ->
+            if (bool) {
+                MainScreenScaffold(
+                    navigationConfig = navigationConfig,
+                    navigationState = navigationState,
+                    navigator = navigator,
+                    snackbarHost = {
+                        SnackBarHostUi()
+                    }
+                ) {
                     Box {
                         RouterCompose(
                             paddingValues = it,
@@ -166,6 +164,8 @@ fun MainScreen(mainViewModel: MainViewModel = koinViewModel<MainViewModel>()) {
                         LoadingCompose(modifier = Modifier.align(alignment = Alignment.Center))
                     }
                 }
+            } else {
+                ConnectionScreen(connectionUiType = null)
             }
         }
     }
