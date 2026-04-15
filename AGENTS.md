@@ -30,5 +30,26 @@ Recent history uses short imperative subjects in Chinese, for example `完善播
 ## Configuration Notes
 Do not commit `local.properties`, local SDK paths, or temporary logs such as `hs_err_pid*.log` and `replay_pid*.log`.
 
-## 编译校验
-绝对不要全局编译校验,只校验修改的地方的代码
+<!-- TRELLIS:START -->
+# Trellis Instructions
+
+These instructions are for AI assistants working in this project.
+
+Use the `/trellis:start` command when starting a new session to:
+- Initialize your developer identity
+- Understand current project context
+- Read relevant guidelines
+
+Use `@/.trellis/` to learn:
+- Development workflow (`workflow.md`)
+- Project structure guidelines (`spec/`)
+- Developer workspace (`workspace/`)
+
+If you're using Codex, project-scoped helpers may also live in:
+- `.agents/skills/` for reusable Trellis skills
+- `.codex/agents/` for optional custom subagents
+
+Keep this managed block so 'trellis update' can refresh the instructions.
+
+<!-- TRELLIS:END -->
+

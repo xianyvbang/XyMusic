@@ -19,3 +19,7 @@ captures
 node_modules/
 .gradle-user-home/
 .serena/
+.agents/
+.codex/
+.trellis/
+**/schemas/
