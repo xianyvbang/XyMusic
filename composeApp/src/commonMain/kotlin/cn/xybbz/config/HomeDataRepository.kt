@@ -46,12 +46,19 @@ class HomeDataRepository(
     private val _playlists = MutableStateFlow<List<XyAlbum>>(emptyList())
     private val _dataCount = MutableStateFlow<XyDataCount?>(null)
 
+    //最多播放音乐
     val mostPlayedMusic: StateFlow<List<XyMusic>> get() = _mostPlayedMusic
+    //最新专辑
     val newestAlbums: StateFlow<List<XyAlbum>> get() = _newestAlbums
+    //最近播放音乐
     val recentMusic: StateFlow<List<XyMusic>> get() = _recentMusic
+    //最近播放专辑
     val recentAlbums: StateFlow<List<XyAlbum>> get() = _recentAlbums
+    //最多播放专辑
     val mostPlayedAlbums: StateFlow<List<XyAlbum>> get() = _mostPlayedAlbums
+    //推荐音乐
     val recommendedMusic: StateFlow<List<XyMusic>> get() = _recommendedMusic
+    //播放列表
     val playlists: StateFlow<List<XyAlbum>> get() = _playlists
     val dataCount: StateFlow<XyDataCount?> get() = _dataCount
 
