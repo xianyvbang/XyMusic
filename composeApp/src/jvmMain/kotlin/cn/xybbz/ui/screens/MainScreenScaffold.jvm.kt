@@ -35,7 +35,6 @@ actual fun MainScreenScaffold(
         XyRow(paddingValues = PaddingValues()) {
             NavigationRail(
                 modifier = Modifier.padding(paddingValues),
-                containerColor = MaterialTheme.colorScheme.onBackground
             ) {
                 jvmTopRouterDataList.forEach { item ->
                     NavigationRailItem(
@@ -47,7 +46,7 @@ actual fun MainScreenScaffold(
                                 contentDescription = ""
                             )
                         },
-                        label = { Text(text = stringResource(item.title)) },
+                        label = { XyText(text = stringResource(item.title)) },
                     )
                 }
             }
