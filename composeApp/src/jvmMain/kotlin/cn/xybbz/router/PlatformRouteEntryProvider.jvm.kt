@@ -23,8 +23,8 @@ import cn.xybbz.ui.screens.DownloadScreen
 import cn.xybbz.ui.screens.FavoriteDesktopScreen
 import cn.xybbz.ui.screens.GenresInfoScreen
 import cn.xybbz.ui.screens.GenresScreen
-import cn.xybbz.ui.screens.HomeDesktopScreen
 import cn.xybbz.ui.screens.InterfaceSettingScreen
+import cn.xybbz.ui.screens.JvmMusicScreen
 import cn.xybbz.ui.screens.LanguageConfigScreen
 import cn.xybbz.ui.screens.LocalScreen
 import cn.xybbz.ui.screens.MemoryManagementScreen
@@ -56,9 +56,9 @@ private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.desktopNode(n
 private val jvmDesktopEntryProvider = buildDefaultRouteEntryProvider()
 
 
-private val jvmDesktopEntryProvider2 =   entryProvider<NavKey> {
+private val jvmDesktopEntryProvider2 = entryProvider<NavKey> {
     desktopNode<Connection> { ConnectionScreen(it.connectionUiType) }
-    desktopNode<Home> { HomeDesktopScreen() }
+    desktopNode<Home> { JvmMusicScreen() }
     desktopNode<Search> { SearchDesktopScreen() }
     desktopNode<Music> { MusicDesktopScreen() }
     desktopNode<Album> { AlbumDesktopScreen() }
@@ -89,4 +89,4 @@ private val jvmDesktopEntryProvider2 =   entryProvider<NavKey> {
     desktopNode<CustomApi> { CustomApiScreen() }
 }
 
-actual val platformEntryProvider: (NavKey) -> NavEntry<NavKey> = jvmDesktopEntryProvider
+actual val platformEntryProvider: (NavKey) -> NavEntry<NavKey> = jvmDesktopEntryProvider2

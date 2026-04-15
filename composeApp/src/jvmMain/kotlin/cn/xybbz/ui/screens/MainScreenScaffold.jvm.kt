@@ -13,10 +13,10 @@ import androidx.compose.ui.Modifier
 import cn.xybbz.router.NavigationState
 import cn.xybbz.router.Navigator
 import cn.xybbz.router.PlatformNavigationConfig
+import cn.xybbz.router.jvmTopRouterDataList
 import cn.xybbz.ui.xy.XyRow
 import org.jetbrains.compose.resources.painterResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.add_24px
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 actual fun MainScreenScaffold(
@@ -34,17 +34,17 @@ actual fun MainScreenScaffold(
                 modifier = Modifier.padding(paddingValues),
                 containerColor = MaterialTheme.colorScheme.onBackground
             ) {
-                navigationConfig.topLevelRoutes.forEach { route ->
+                jvmTopRouterDataList.forEach { item ->
                     NavigationRailItem(
-                        selected = navigator.state.topLevelRoute == route,
-                        onClick = { navigator.navigate(route = route) },
+                        selected = navigator.state.topLevelRoute == item.route,
+                        onClick = { navigator.navigate(route = item.route) },
                         icon = {
                             Icon(
-                                painter = painterResource(Res.drawable.add_24px),
+                                painter = painterResource(item.icon),
                                 contentDescription = ""
                             )
                         },
-                        label = { Text(route.toString()) },
+                        label = { Text(stringResource(item.title)) },
                     )
                 }
             }
