@@ -21,11 +21,8 @@ package cn.xybbz.ui.xy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -55,10 +52,7 @@ fun LazyColumnComponent(
             items()
             item {
                 Spacer(
-                    modifier = Modifier.height(
-                        XyTheme.dimens.snackBarPlayerHeight + WindowInsets.navigationBars.asPaddingValues()
-                            .calculateBottomPadding()
-                    )
+                    modifier = Modifier.height(XyTheme.dimens.snackBarPlayerHeight)
                 )
             }
         }
@@ -75,10 +69,7 @@ fun LazyColumnNotComponent(
     bottomItem: (LazyListScope.() -> Unit)? = {
         item {
             Spacer(
-                modifier = Modifier.height(
-                    XyTheme.dimens.snackBarPlayerHeight + WindowInsets.navigationBars.asPaddingValues()
-                        .calculateBottomPadding()
-                )
+                modifier = Modifier.height(XyTheme.dimens.snackBarPlayerHeight)
             )
         }
     },

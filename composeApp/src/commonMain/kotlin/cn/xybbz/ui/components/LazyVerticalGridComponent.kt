@@ -21,29 +21,25 @@ package cn.xybbz.ui.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.stringResource
 import androidx.paging.compose.LazyPagingItems
 import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.theme.XyTheme
 import com.github.panpf.sketch.ability.bindPauseLoadWhenScrolling
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * LazyVerticalGrid组件抽取-可以拖拽
@@ -157,8 +153,7 @@ fun LazyVerticalGridComponent(
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Spacer(
                     modifier = Modifier.height(
-                        XyTheme.dimens.snackBarPlayerHeight /*+ WindowInsets.navigationBars.asPaddingValues()
-                            .calculateBottomPadding()*/
+                        XyTheme.dimens.snackBarPlayerHeight
                     )
                 )
             }

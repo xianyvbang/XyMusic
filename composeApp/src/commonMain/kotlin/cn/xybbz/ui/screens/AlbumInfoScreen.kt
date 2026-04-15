@@ -41,7 +41,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -485,8 +484,7 @@ fun AlbumInfoScreen(
                     LazyListComponent(
                         modifier = Modifier.height(
                             maxHeight - DefaultAlbumInfoHeight - /*XyTheme.dimens.contentPadding -*/ TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
-                                .calculateTopPadding() + XyTheme.dimens.snackBarPlayerHeight + WindowInsets.navigationBars.asPaddingValues()
-                                .calculateBottomPadding() - XyTheme.dimens.outerHorizontalPadding
+                                .calculateTopPadding() + XyTheme.dimens.snackBarPlayerHeight - XyTheme.dimens.outerHorizontalPadding
                         ),
                         collectAsLazyPagingItems = musicListPage
                     ) {
