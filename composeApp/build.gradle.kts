@@ -95,11 +95,11 @@ kotlin {
             implementation(libs.sketch.compose.resources.ext)
             implementation(libs.sketch.ktor)
 
-            implementation(project(path = ":ui"))
-            implementation(project(path = ":api"))
-            implementation(project(path = ":localdata"))
-            implementation(project(path = ":xy-platform"))
-            implementation(project(path = ":download"))
+            implementation(projects.ui)
+            implementation(projects.api)
+            implementation(projects.localdata)
+            implementation(projects.xyPlatform)
+            implementation(projects.download)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

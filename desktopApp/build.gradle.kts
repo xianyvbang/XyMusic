@@ -9,6 +9,7 @@ plugins {
 kotlin {
     dependencies {
         implementation(projects.composeApp)
+        implementation(projects.ui)
 
         implementation(compose.desktop.currentOs)
         implementation(libs.kotlinx.coroutinesSwing)
