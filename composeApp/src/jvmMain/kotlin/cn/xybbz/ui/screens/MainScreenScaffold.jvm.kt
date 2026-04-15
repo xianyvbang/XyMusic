@@ -1,29 +1,35 @@
 package cn.xybbz.ui.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.WideNavigationRail
-import androidx.compose.material3.WideNavigationRailItem
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import cn.xybbz.router.JvmTopRouterData
 import cn.xybbz.router.NavigationState
 import cn.xybbz.router.Navigator
 import cn.xybbz.router.PlatformNavigationConfig
 import cn.xybbz.router.jvmTopRouterDataList
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import androidx.compose.material3.WideNavigationRailValue
-import androidx.compose.material3.rememberWideNavigationRailState
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.close
-import xymusic_kmp.composeapp.generated.resources.close_24px
-import xymusic_kmp.composeapp.generated.resources.menu_open_24px
 
 @Composable
 actual fun MainScreenScaffold(
@@ -34,67 +40,71 @@ actual fun MainScreenScaffold(
     snackbarHost: @Composable () -> Unit,
     content: @Composable (PaddingValues) -> Unit
 ) {
-    val railState = rememberWideNavigationRailState()
-    val coroutineScope = rememberCoroutineScope()
-    val railExpanded = railState.currentValue == WideNavigationRailValue.Expanded
-
     Scaffold(
         modifier = modifier,
 //        snackbarHost = snackbarHost
     ) { paddingValues ->
-        XyRow(paddingValues = PaddingValues()) {
-            WideNavigationRail(
-                modifier = Modifier.padding(paddingValues),
-                state = railState,
-                header = {
-                    WideNavigationRailItem(
-                        selected = false,
-                        onClick = {
-                            coroutineScope.launch {
-                                if (railExpanded) {
-                                    railState.collapse()
-                                } else {
-                                    railState.expand()
-                                }
-                            }
-                        },
-                        icon = {
-                            Icon(
-                                painter = painterResource(
-                                    if (railExpanded) Res.drawable.close_24px
-                                    else Res.drawable.menu_open_24px
-                                ),
-                                contentDescription = if (railExpanded) {
-                                    stringResource(Res.string.close)
-                                } else {
-                                    "展开侧边栏"
-                                }
-                            )
-                        },
-                        label = {
-                            XyText(text = if (railExpanded) "收起" else "展开")
-                        },
-                        railExpanded = railExpanded,
-                    )
-                },
+        XyRow(
+            paddingValues = PaddingValues(),
+            verticalAlignment = Alignment.Top
+        ) {
+            LazyColumn(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .width(180.dp),
+                contentPadding = PaddingValues(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                jvmTopRouterDataList.forEach { item ->
-                    WideNavigationRailItem(
+                items(jvmTopRouterDataList) { item ->
+                    DesktopNavigationItem(
+                        item = item,
                         selected = navigator.state.topLevelRoute == item.route,
                         onClick = { navigator.navigate(route = item.route) },
-                        icon = {
-                            Icon(
-                                painter = painterResource(item.icon),
-                                contentDescription = ""
-                            )
-                        },
-                        label = { XyText(text = stringResource(item.title)) },
-                        railExpanded = railExpanded,
                     )
                 }
             }
+
             content(paddingValues)
         }
+    }
+}
 
+@Composable
+private fun DesktopNavigationItem(
+    item: JvmTopRouterData,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val backgroundColor = if (selected) {
+        MaterialTheme.colorScheme.secondaryContainer
+    } else {
+        Color.Transparent
+    }
+    val contentColor = if (selected) {
+        MaterialTheme.colorScheme.onSecondaryContainer
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(backgroundColor)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            painter = painterResource(item.icon),
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+            tint = contentColor,
+        )
+        XyText(
+            text = stringResource(item.title),
+            color = contentColor,
+        )
     }
 }
