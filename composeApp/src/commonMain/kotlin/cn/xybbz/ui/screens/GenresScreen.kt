@@ -1,7 +1,6 @@
 ﻿package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -41,7 +40,6 @@ fun GenresScreen(
 
     XyColumnScreen {
         TopAppBarComponent(
-            modifier = Modifier.statusBarsPadding(),
             title = {
                 TopAppBarTitle(
                     title = stringResource(Res.string.genres)

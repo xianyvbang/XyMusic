@@ -30,7 +30,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -375,7 +374,6 @@ fun MultiSelectTopAppEnd(
     AnimatedContent(isMultiSelectMode, label = "animated content") {
         if (it) {
             TopAppBarComponent(
-                modifier = Modifier.statusBarsPadding(),
                 title = {},
                 navigationIcon = {
                     Row(
@@ -432,7 +430,6 @@ fun MultiSelectTopAppEnd(
 
         } else {
             TopAppBarComponent(
-                modifier = Modifier.statusBarsPadding(),
                 title = {
                     TopAppBarTitle(
                         title = stringResource(Res.string.download_list)

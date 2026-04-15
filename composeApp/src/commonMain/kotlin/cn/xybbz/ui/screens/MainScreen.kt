@@ -23,7 +23,6 @@ package cn.xybbz.ui.screens
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
@@ -39,11 +38,11 @@ import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.router.Connection
-import cn.xybbz.router.Home
 import cn.xybbz.router.Navigator
 import cn.xybbz.router.OnDestinationChangedListener
 import cn.xybbz.router.RootNavTransition
 import cn.xybbz.router.RouterCompose
+import cn.xybbz.router.platformNavigationConfig
 import cn.xybbz.router.rememberNavigationState
 import cn.xybbz.ui.components.AddPlaylistBottomComponent
 import cn.xybbz.ui.components.AlertDialogComponent
@@ -63,9 +62,10 @@ fun MainScreen(mainViewModel: MainViewModel = koinViewModel<MainViewModel>()) {
     val coroutineScope = rememberCoroutineScope()
     val ifOpenSelect by mainViewModel.selectControl.uiState.collectAsStateWithLifecycle()
 
+    val navigationConfig = platformNavigationConfig
     val navigationState = rememberNavigationState(
-        startRoute = Home,
-        topLevelRoutes = setOf(Home)
+        startRoute = navigationConfig.startRoute,
+        topLevelRoutes = navigationConfig.topLevelRoutes
     )
 
     val navigator = remember {
@@ -141,12 +141,14 @@ fun MainScreen(mainViewModel: MainViewModel = koinViewModel<MainViewModel>()) {
         BottomSheetCompose()
 
         AddPlaylistBottomComponent()
-        Scaffold(
+        MainScreenScaffold(
+            navigationConfig = navigationConfig,
+            navigationState = navigationState,
+            navigator = navigator,
             snackbarHost = {
                 SnackBarHostUi()
-            },
+            }
         ) {
-
             RootNavTransition(!mainViewModel.settingsManager.ifConnectionConfig) { bool ->
                 if (bool) {
                     ConnectionScreen(connectionUiType = null)
@@ -157,12 +159,9 @@ fun MainScreen(mainViewModel: MainViewModel = koinViewModel<MainViewModel>()) {
                             navigationState = navigationState
                         )
                         LoadingCompose(modifier = Modifier.align(alignment = Alignment.Center))
-
                     }
                 }
             }
-
-
         }
     }
 }

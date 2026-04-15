@@ -2,7 +2,6 @@
 
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -57,7 +56,6 @@ fun ArtistScreen(
 
     XyColumnScreen {
         TopAppBarComponent(
-            modifier = Modifier.statusBarsPadding(),
             title = {
                 TopAppBarTitle(
                     title = stringResource(Res.string.artist)

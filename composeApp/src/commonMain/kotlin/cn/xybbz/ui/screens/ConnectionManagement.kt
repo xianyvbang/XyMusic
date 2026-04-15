@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -100,7 +99,6 @@ fun ConnectionManagement(
     XyColumnScreen {
 
         TopAppBarComponent(
-            modifier = Modifier.statusBarsPadding(),
             title = {
                 TopAppBarTitle(
                     title = stringResource(Res.string.connection_settings_list)

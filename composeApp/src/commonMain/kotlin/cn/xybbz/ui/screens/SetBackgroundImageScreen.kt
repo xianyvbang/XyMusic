@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -78,7 +77,6 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
         XyColumnScreen {
 
             TopAppBarComponent(
-                modifier = Modifier.statusBarsPadding(),
                 title = {
                     TopAppBarTitle(
                         title = stringResource(Res.string.background_image_setting)

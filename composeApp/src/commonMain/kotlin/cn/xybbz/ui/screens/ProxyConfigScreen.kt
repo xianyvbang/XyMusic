@@ -3,7 +3,6 @@
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -57,7 +56,6 @@ fun ProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = koinViewModel
 
     XyColumnScreen {
         TopAppBarComponent(
-            modifier = Modifier.statusBarsPadding(),
             title = {
                 TopAppBarTitle(
                     title = stringResource(Res.string.poxy_config)

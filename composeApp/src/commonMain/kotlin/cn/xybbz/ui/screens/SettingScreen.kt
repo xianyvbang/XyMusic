@@ -23,7 +23,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -116,7 +115,6 @@ fun SettingScreen(
 
     XyColumnScreen {
         TopAppBarComponent(
-            modifier = Modifier.statusBarsPadding(),
             title = {
                 TopAppBarTitle(
                     title = stringResource(Res.string.settings)

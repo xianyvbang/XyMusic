@@ -157,8 +157,8 @@ fun LazyVerticalGridComponent(
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Spacer(
                     modifier = Modifier.height(
-                        XyTheme.dimens.snackBarPlayerHeight + WindowInsets.navigationBars.asPaddingValues()
-                            .calculateBottomPadding()
+                        XyTheme.dimens.snackBarPlayerHeight /*+ WindowInsets.navigationBars.asPaddingValues()
+                            .calculateBottomPadding()*/
                     )
                 )
             }

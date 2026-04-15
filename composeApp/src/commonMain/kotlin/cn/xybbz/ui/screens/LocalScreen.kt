@@ -18,7 +18,6 @@
 
 package cn.xybbz.ui.screens
 
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -60,7 +59,6 @@ fun LocalScreen(localViewModel: LocalViewModel = koinViewModel<LocalViewModel>()
 
     XyColumnScreen {
         TopAppBarComponent(
-            modifier = Modifier.statusBarsPadding(),
             title = {
                 TopAppBarTitle(
                     title = stringResource(Res.string.local_music)
