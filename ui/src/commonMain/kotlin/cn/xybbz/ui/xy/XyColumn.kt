@@ -57,7 +57,7 @@ fun XyColumn(
             .padding(
                 paddingValues
             )
-            .background(backgroundColor,RoundedCornerShape(clipSize)),
+            .background(backgroundColor, RoundedCornerShape(clipSize)),
         verticalArrangement = verticalArrangement,
         horizontalAlignment = horizontalAlignment,
         content = content
@@ -91,7 +91,7 @@ fun XyRow(
 @Composable
 fun XyColumnScreen(
     modifier: Modifier = Modifier,
-    background: Color = Color.Transparent,
+    background: Color = MaterialTheme.colorScheme.background,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
