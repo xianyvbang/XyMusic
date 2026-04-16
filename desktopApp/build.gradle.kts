@@ -10,8 +10,11 @@ kotlin {
     dependencies {
         implementation(projects.composeApp)
         implementation(projects.ui)
+        implementation(projects.localdata)
 
         implementation(compose.desktop.currentOs)
+        implementation(libs.compose.material3)
+        implementation(libs.compose.components.resources)
         implementation(libs.kotlinx.coroutinesSwing)
         implementation(libs.kotlin.ktor.apache)
         implementation(project.dependencies.platform(libs.koin.bom))

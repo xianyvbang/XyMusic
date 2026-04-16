@@ -31,6 +31,9 @@ import cn.xybbz.ui.xy.XyText
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
+public val jvmRouterMenuWidth = 180.dp
+
+
 @Composable
 actual fun MainScreenScaffold(
     modifier: Modifier,
@@ -51,7 +54,7 @@ actual fun MainScreenScaffold(
             LazyColumn(
                 modifier = Modifier
                     .padding(paddingValues)
-                    .width(180.dp),
+                    .width(jvmRouterMenuWidth),
                 contentPadding = PaddingValues(8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {

@@ -125,6 +125,10 @@ composeCompiler {
     stabilityConfigurationFiles.add(rootProject.layout.projectDirectory.file("compose_compiler_config.conf"))
 }
 
+compose.resources {
+    publicResClass = true
+}
+
 dependencies {
     androidRuntimeClasspath(libs.compose.uiTooling)
 }
