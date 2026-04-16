@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.window.WindowDraggableArea
+import androidx.compose.material3.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
@@ -29,6 +30,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,16 +40,23 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.img
+import cn.xybbz.common.utils.DataSourceChangeUtils
+import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.di.initKoin
+import cn.xybbz.localdata.config.LocalDatabaseClient
+import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.localdata.enums.ThemeTypeEnum
 import cn.xybbz.proxy.JvmReverseProxyServer
+import cn.xybbz.ui.popup.MenuItemDefaultData
+import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.screens.jvmRouterMenuWidth
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumn
@@ -63,10 +72,16 @@ import xymusic_kmp.composeapp.generated.resources.app_icon_info
 import xymusic_kmp.composeapp.generated.resources.app_name
 import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.chevron_right_24px
+import xymusic_kmp.composeapp.generated.resources.check_24px
+import xymusic_kmp.composeapp.generated.resources.connection_link
+import xymusic_kmp.composeapp.generated.resources.icon
+import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
 import xymusic_kmp.composeapp.generated.resources.logo_new
 import xymusic_kmp.composeapp.generated.resources.no_connection_selected
+import xymusic_kmp.composeapp.generated.resources.open_add_or_switch_data_sources
 import xymusic_kmp.composeapp.generated.resources.search_24px
 import xymusic_kmp.composeapp.generated.resources.search_music_album_artist
+import kotlinx.coroutines.launch
 
 fun main() = application {
     initKoin {}
@@ -269,9 +284,20 @@ private fun DesktopTitleActions(
     onClose: () -> Unit
 ) {
     val dataSourceManager: DataSourceManager = remember { KoinPlatform.getKoin().get() }
+    val db: LocalDatabaseClient = remember { KoinPlatform.getKoin().get() }
+    val musicController: MusicCommonController = remember { KoinPlatform.getKoin().get() }
+    val coroutineScope = rememberCoroutineScope()
+    var ifShowConnectionMenu by remember { mutableStateOf(false) }
+    val connectionList by db.connectionConfigDao.selectAllDataFlow().collectAsState(initial = emptyList())
     val noConnectionSelected = stringResource(Res.string.no_connection_selected)
-    val currentDataSource = remember(dataSourceManager.dataSourceType) {
-        readCurrentDataSourceInfo(dataSourceManager, noConnectionSelected)
+    val currentConnectionId = dataSourceManager.getConnectionId()
+    val currentDataSource = remember(connectionList, currentConnectionId, dataSourceManager.dataSourceType) {
+        readCurrentDataSourceInfo(
+            connectionList = connectionList,
+            currentConnectionId = currentConnectionId,
+            dataSourceManager = dataSourceManager,
+            fallbackTitle = noConnectionSelected
+        )
     }
     val colors = DesktopTitleBarColors.current
 
@@ -280,24 +306,72 @@ private fun DesktopTitleActions(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
     ) {
-        Row(
-            modifier = Modifier
-                .height(XyTheme.dimens.itemHeight * .8f)
-                .clip(RoundedCornerShape(XyTheme.dimens.corner))
-                .padding(
-                    horizontal = XyTheme.dimens.innerHorizontalPadding,
-                    vertical = XyTheme.dimens.innerVerticalPadding
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
-        ) {
-            Image(
-                painter = painterResource(currentDataSource.iconRes),
-                contentDescription = null,
-            )
-            XyText(
-                text = currentDataSource.title,
-                color = colors.foreground,
+        Box {
+            Row(
+                modifier = Modifier
+                    .height(XyTheme.dimens.itemHeight * .8f)
+                    .clip(RoundedCornerShape(XyTheme.dimens.corner))
+                    .clickable { ifShowConnectionMenu = true }
+                    .padding(
+                        horizontal = XyTheme.dimens.innerHorizontalPadding,
+                        vertical = XyTheme.dimens.innerVerticalPadding
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
+            ) {
+                Image(
+                    painter = painterResource(currentDataSource.iconRes),
+                    contentDescription = null,
+                )
+                XyText(
+                    text = currentDataSource.title,
+                    color = colors.foreground,
+                )
+                Icon(
+                    painter = painterResource(Res.drawable.keyboard_arrow_down_24px),
+                    contentDescription = stringResource(Res.string.open_add_or_switch_data_sources),
+                    tint = colors.foreground,
+                    modifier = Modifier
+                        .size(18.dp)
+                        .clickable { ifShowConnectionMenu = true }
+                )
+            }
+            XyDropdownMenu(
+                offset = DpOffset(0.dp, XyTheme.dimens.outerVerticalPadding / 2),
+                onIfShowMenu = { ifShowConnectionMenu },
+                onSetIfShowMenu = { ifShowConnectionMenu = it },
+                modifier = Modifier.width(220.dp),
+                itemDataList = connectionList.map { connection ->
+                    MenuItemDefaultData(
+                        title = connection.name,
+                        leadingIcon = {
+                            if (currentConnectionId == connection.id) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.check_24px),
+                                    contentDescription = connection.name + stringResource(Res.string.connection_link),
+                                    tint = colors.foreground,
+                                )
+                            }
+                        },
+                        trailingIcon = {
+                            Image(
+                                painter = painterResource(connection.type.img),
+                                contentDescription = connection.name + stringResource(Res.string.icon),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        },
+                        onClick = {
+                            coroutineScope.launch {
+                                ifShowConnectionMenu = false
+                                DataSourceChangeUtils.changeDataSource(
+                                    connectionConfig = connection,
+                                    dataSourceManager = dataSourceManager,
+                                    musicController = musicController
+                                )
+                            }
+                        }
+                    )
+                }
             )
         }
 
@@ -504,12 +578,15 @@ private data class DesktopTitleBarColors(
  * 从当前 DataSourceManager 中读取标题栏展示所需的数据源名称与图标。
  */
 private fun readCurrentDataSourceInfo(
+    connectionList: List<ConnectionConfig>,
+    currentConnectionId: Long,
     dataSourceManager: DataSourceManager,
     fallbackTitle: String,
 ): DataSourceTitleInfo {
+    val currentConnection = connectionList.firstOrNull { it.id == currentConnectionId }
     val dataSource = dataSourceManager.dataSourceType
     return DataSourceTitleInfo(
-        title = dataSource?.title ?: fallbackTitle,
-        iconRes = dataSource?.img ?: Res.drawable.logo_new
+        title = currentConnection?.name ?: dataSource?.title ?: fallbackTitle,
+        iconRes = currentConnection?.type?.img ?: dataSource?.img ?: Res.drawable.logo_new
     )
 }
