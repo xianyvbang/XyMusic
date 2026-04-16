@@ -367,7 +367,6 @@ private fun DesktopWindowControlButton(
         modifier = Modifier
             .size(width = 42.dp, height = 34.dp)
             .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .background(backgroundColor)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
