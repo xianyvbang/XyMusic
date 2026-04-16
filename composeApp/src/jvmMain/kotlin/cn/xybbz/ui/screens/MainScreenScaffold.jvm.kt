@@ -6,8 +6,11 @@ import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,13 +34,12 @@ import cn.xybbz.router.NavigationState
 import cn.xybbz.router.Navigator
 import cn.xybbz.router.PlatformNavigationConfig
 import cn.xybbz.router.jvmTopRouterDataList
-import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.components.DesktopWindowTitleBar
 import cn.xybbz.ui.xy.XyText
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 val jvmRouterMenuWidth = 180.dp
-
 
 @Composable
 actual fun MainScreenScaffold(
@@ -52,27 +54,33 @@ actual fun MainScreenScaffold(
         modifier = modifier,
 //        snackbarHost = snackbarHost
     ) { paddingValues ->
-        XyRow(
-            paddingValues = PaddingValues(),
-            verticalAlignment = Alignment.Top
-        ) {
-            LazyColumn(
+        Column(modifier = Modifier.fillMaxSize()) {
+            DesktopWindowTitleBar(navigator = navigator)
+
+            Row(
                 modifier = Modifier
-                    .padding(paddingValues)
-                    .width(jvmRouterMenuWidth),
-                contentPadding = PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                verticalAlignment = Alignment.Top,
             ) {
-                items(jvmTopRouterDataList) { item ->
-                    DesktopNavigationItem(
-                        item = item,
-                        selected = navigator.state.topLevelRoute == item.route,
-                        onClick = { navigator.navigate(route = item.route) },
-                    )
+                LazyColumn(
+                    modifier = Modifier.width(jvmRouterMenuWidth),
+                    contentPadding = PaddingValues(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    items(jvmTopRouterDataList) { item ->
+                        DesktopNavigationItem(
+                            item = item,
+                            selected = navigator.state.topLevelRoute == item.route,
+                            onClick = { navigator.navigate(route = item.route) },
+                        )
+                    }
+                }
+
+                Box(modifier = Modifier.weight(1f)) {
+                    content(PaddingValues())
                 }
             }
-
-            content(paddingValues)
         }
     }
 }
