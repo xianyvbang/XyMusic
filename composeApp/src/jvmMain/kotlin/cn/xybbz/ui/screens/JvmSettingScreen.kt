@@ -140,7 +140,7 @@ fun JvmSettingScreen(
             contentPadding = PaddingValues()
         ) {
             item {
-                SettingRoundedSurfaceColumn {
+                JvmSettingRoundedSurfaceColumn {
                     MusicSettingSwitchItemComponent(
                         title = stringResource(Res.string.broadcast_while_down),
                         ifChecked = settingsViewModel.settingDataNow.ifEnableEdgeDownload
@@ -211,7 +211,7 @@ fun JvmSettingScreen(
                 }
             }
             item {
-                SettingRoundedSurfaceColumn {
+                JvmSettingRoundedSurfaceColumn {
                     SettingItemComponent(title = stringResource(Res.string.connection_management)) {
                         navigator.navigate(ConnectionManagement)
                     }
@@ -219,7 +219,7 @@ fun JvmSettingScreen(
             }
 
             item {
-                SettingRoundedSurfaceColumn {
+                JvmSettingRoundedSurfaceColumn {
                     SettingItemComponent(
                         title = stringResource(Res.string.download_max_list),
                         info = settingsViewModel.settingDataNow.maxConcurrentDownloads.toString(),
@@ -314,7 +314,7 @@ fun JvmSettingScreen(
             }
 
             item {
-                SettingRoundedSurfaceColumn {
+                JvmSettingRoundedSurfaceColumn {
 
                     SettingItemComponent(title = stringResource(Res.string.storage_management)) {
                         navigator.navigate(MemoryManagement)
@@ -351,7 +351,7 @@ fun JvmSettingScreen(
 }
 
 @Composable
-fun SettingRoundedSurfaceColumn(content: @Composable ColumnScope.() -> Unit) {
+fun JvmSettingRoundedSurfaceColumn(content: @Composable ColumnScope.() -> Unit) {
     RoundedSurfaceColumn(
         contentPaddingValues = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding
@@ -359,5 +359,6 @@ fun SettingRoundedSurfaceColumn(content: @Composable ColumnScope.() -> Unit) {
         content = content
     )
 }
+
 
 

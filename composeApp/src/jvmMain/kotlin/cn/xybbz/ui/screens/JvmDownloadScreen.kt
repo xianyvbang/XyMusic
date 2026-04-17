@@ -112,7 +112,7 @@ fun JvmDownloadScreen(
 
     val tasks by downloadViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
     XyColumnScreen {
-        MultiSelectTopAppEnd(
+        JvmMultiSelectTopAppEnd(
             isMultiSelectMode = downloadViewModel.isMultiSelectMode,
             isSelectAll = downloadViewModel.isSelectAll,
             onExitMultiSelectMode = { downloadViewModel.exitMultiSelectMode() },
@@ -150,7 +150,7 @@ fun JvmDownloadScreen(
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.innerVerticalPadding),
         ) {
             items(tasks, key = { it.id }) { task ->
-                DownloadItemTrailingContent(
+                JvmDownloadItemTrailingContent(
                     task = task,
                     isMultiSelectMode = downloadViewModel.isMultiSelectMode,
                     isSelected = downloadViewModel.selectedTaskIds.contains(task.id),
@@ -175,7 +175,7 @@ fun JvmDownloadScreen(
 }
 
 @Composable
-fun DownloadItemTrailingContent(
+fun JvmDownloadItemTrailingContent(
     modifier: Modifier = Modifier,
     task: XyDownload,
     enabled: Boolean = true,
@@ -247,7 +247,7 @@ fun DownloadItemTrailingContent(
 
                     when (task.status) {
                         DownloadStatus.QUEUED -> {
-                            DownloadPrompt(
+                            JvmDownloadPrompt(
                                 text = stringResource(Res.string.download_status_queued),
                                 fontSize = 14.sp
                             )
@@ -276,21 +276,21 @@ fun DownloadItemTrailingContent(
                         }
 
                         DownloadStatus.PAUSED -> {
-                            DownloadPrompt(
+                            JvmDownloadPrompt(
                                 text = stringResource(Res.string.tap_to_resume_download),
                                 fontSize = 14.sp,
                             )
                         }
 
                         DownloadStatus.COMPLETED -> {
-                            DownloadPrompt(
+                            JvmDownloadPrompt(
                                 text = stringResource(Res.string.download_completed),
                                 fontSize = 14.sp,
                             )
                         }
 
                         DownloadStatus.FAILED -> {
-                            DownloadPrompt(
+                            JvmDownloadPrompt(
                                 text = stringResource(
                                     Res.string.download_failed_with_reason,
                                     task.error ?: ""
@@ -300,7 +300,7 @@ fun DownloadItemTrailingContent(
                         }
 
                         DownloadStatus.CANCEL -> {
-                            DownloadPrompt(
+                            JvmDownloadPrompt(
                                 text = stringResource(Res.string.cancel_download),
                                 fontSize = 14.sp,
                             )
@@ -344,7 +344,7 @@ fun DownloadItemTrailingContent(
 }
 
 @Composable
-fun DownloadPrompt(
+fun JvmDownloadPrompt(
     text: String,
     fontSize: TextUnit = 14.sp,
     color: Color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -358,7 +358,7 @@ fun DownloadPrompt(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MultiSelectTopAppEnd(
+fun JvmMultiSelectTopAppEnd(
     isMultiSelectMode: Boolean,
     isSelectAll: Boolean,
     onExitMultiSelectMode: () -> Unit,
@@ -471,5 +471,6 @@ fun MultiSelectTopAppEnd(
         }
     }
 }
+
 
 

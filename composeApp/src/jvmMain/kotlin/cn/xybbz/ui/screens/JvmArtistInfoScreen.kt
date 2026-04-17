@@ -152,7 +152,7 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
-internal val DefaultImageHeight = 320.dp
+internal val JvmDefaultImageHeight = 320.dp
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -199,10 +199,10 @@ fun JvmArtistInfoScreen(
     val pageBackgroundColor = MaterialTheme.colorScheme.background
     val surface = MaterialTheme.colorScheme.onSurface
     val headerTextLiftOffsetDp = 8.dp
-    val pullDownResistanceDistancePx = with(density) { (DefaultImageHeight * 0.8f).toPx() }
-    val defaultImageHeightPx = with(density) { DefaultImageHeight.toPx() }
-    val listLiftUpOffsetPx = with(density) { (DefaultImageHeight * 0.12f).toPx() }
-    val gradientVisualHeightDp = DefaultImageHeight * gradientHeight
+    val pullDownResistanceDistancePx = with(density) { (JvmDefaultImageHeight * 0.8f).toPx() }
+    val defaultImageHeightPx = with(density) { JvmDefaultImageHeight.toPx() }
+    val listLiftUpOffsetPx = with(density) { (JvmDefaultImageHeight * 0.12f).toPx() }
+    val gradientVisualHeightDp = JvmDefaultImageHeight * gradientHeight
     val gradientVisualHeightPx = with(density) { gradientVisualHeightDp.toPx() }
     val headerInfoMinHeightPx = with(density) {
         val titleHeightPx = 30.sp.toPx()
@@ -290,17 +290,17 @@ fun JvmArtistInfoScreen(
         label = "artist_image_scale"
     )
     val imageTranslationY by animateFloatAsState(
-        targetValue = -with(density) { (DefaultImageHeight * 0.10f).toPx() } * collapseProgress,
+        targetValue = -with(density) { (JvmDefaultImageHeight * 0.10f).toPx() } * collapseProgress,
         animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
         label = "artist_image_translation"
     )
     val headerTitleTranslationY by animateFloatAsState(
-        targetValue = -with(density) { (DefaultImageHeight * 0.34f).toPx() } * collapseProgress,
+        targetValue = -with(density) { (JvmDefaultImageHeight * 0.34f).toPx() } * collapseProgress,
         animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
         label = "artist_header_title_translation"
     )
     val headerDescriptionTranslationY by animateFloatAsState(
-        targetValue = -with(density) { (DefaultImageHeight * 0.08f).toPx() } * collapseProgress,
+        targetValue = -with(density) { (JvmDefaultImageHeight * 0.08f).toPx() } * collapseProgress,
         animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
         label = "artist_header_description_translation"
     )
@@ -458,7 +458,7 @@ fun JvmArtistInfoScreen(
     ) {
         val maxHeight =
             this.maxHeight - tabHeightDp - TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
-                .calculateTopPadding() /*- (DefaultImageHeight.times(0.2f))*/
+                .calculateTopPadding() /*- (JvmDefaultImageHeight.times(0.2f))*/
 
         val parentMaxHeight = this.maxHeight
 
@@ -495,7 +495,7 @@ fun JvmArtistInfoScreen(
         Box(
             modifier = Modifier
                 .height(
-                    DefaultImageHeight
+                    JvmDefaultImageHeight
                 )
         ) {
             XyImage(
@@ -508,7 +508,7 @@ fun JvmArtistInfoScreen(
                         translationY = imageTranslationY
                     }
                     .align(Alignment.TopCenter)
-                    .height(DefaultImageHeight),
+                    .height(JvmDefaultImageHeight),
                 model = artistBackdropUrls.primaryUrl ?: artistCoverUrls.primaryUrl,
                 backModel = artistBackdropUrls.fallbackUrl ?: artistCoverUrls.fallbackUrl,
                 placeholder = Res.drawable.artrist_info,
@@ -523,7 +523,7 @@ fun JvmArtistInfoScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(DefaultImageHeight)
+                .height(JvmDefaultImageHeight)
                 .background(topOverlayColor)
         )
 
@@ -623,7 +623,7 @@ fun JvmArtistInfoScreen(
                     Spacer(
                         modifier = Modifier.padding(
                             top =
-                                (DefaultImageHeight.times(1 - gradientHeight)) - TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
+                                (JvmDefaultImageHeight.times(1 - gradientHeight)) - TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
                                     .calculateTopPadding()
                         )
                     )
@@ -781,7 +781,7 @@ fun JvmArtistInfoScreen(
                                             collectAsLazyPagingItems = musicPage
                                         ) { list ->
                                             item {
-                                                ArtistMusicListOperation(
+                                                JvmArtistMusicListOperation(
                                                     artistId = artistId,
                                                     musicPlayContext = artistInfoViewModel.musicPlayContext,
                                                     selectControl = artistInfoViewModel.selectControl,
@@ -915,7 +915,7 @@ fun JvmArtistInfoScreen(
  * 音乐列表操作栏
  */
 @Composable
-private fun ArtistMusicListOperation(
+private fun JvmArtistMusicListOperation(
     artistId: String,
     musicPlayContext: MusicPlayContext,
     selectControl: SelectControl,
@@ -1018,5 +1018,6 @@ private fun calculatePullDownDeltaWithResistance(
     val resistanceFactor = (1f / (1f + normalized)).coerceIn(0.08f, 1f)
     return deltaY * resistanceFactor
 }
+
 
 

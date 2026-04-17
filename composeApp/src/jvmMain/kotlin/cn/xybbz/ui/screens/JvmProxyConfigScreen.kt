@@ -103,7 +103,7 @@ fun JvmProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = koinViewMo
                 }
             }
             item {
-                ProxyConfigComponent(
+                JvmProxyConfigComponent(
                     proxyConfigViewModel.addressValue,
                     updateAddress = { proxyConfigViewModel.updateAddress(it) }
                 )
@@ -126,7 +126,7 @@ fun JvmProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = koinViewMo
 }
 
 @Composable
-private fun ProxyConfigInput(
+private fun JvmProxyConfigInput(
     text: TextFieldValue,
     onChange: (TextFieldValue) -> Unit,
     hint: String? = null,
@@ -152,7 +152,7 @@ private fun ProxyConfigInput(
 }
 
 @Composable
-fun ProxyConfigComponent(
+fun JvmProxyConfigComponent(
     addressValue: TextFieldValue,
     updateAddress: (String) -> Unit,
 ) {
@@ -166,7 +166,7 @@ fun ProxyConfigComponent(
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    ProxyConfigInput(
+                    JvmProxyConfigInput(
                         text = addressValue,
                         onChange = { newValue ->
                             val newText = newValue.text
@@ -179,5 +179,6 @@ fun ProxyConfigComponent(
             })
     }
 }
+
 
 

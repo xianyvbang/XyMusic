@@ -160,7 +160,7 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 
-internal val DefaultAlbumInfoHeight = 124.dp
+internal val JvmDefaultAlbumInfoHeight = 124.dp
 
 /**
  * 专辑详情,通过分类或者其他跳转
@@ -457,7 +457,7 @@ fun JvmAlbumInfoScreen(
                     .nestedScroll(nestedScrollConnection)
             ) { list ->
                 item {
-                    MusicAlbumInfoComponent(
+                    JvmMusicAlbumInfoComponent(
                         onData = {
                             albumInfoViewModel.xyAlbumInfoData
                         },
@@ -472,7 +472,7 @@ fun JvmAlbumInfoScreen(
                     )
                 }
                 stickyHeader(key = 2) {
-                    StickyHeaderOperationParent(
+                    JvmStickyHeaderOperationParent(
                         albumInfoViewModel = albumInfoViewModel,
                         musicListPage = musicListPage,
                         ifOpenSelect = ifOpenSelect,
@@ -483,7 +483,7 @@ fun JvmAlbumInfoScreen(
                 item {
                     LazyListComponent(
                         modifier = Modifier.height(
-                            maxHeight - DefaultAlbumInfoHeight - /*XyTheme.dimens.contentPadding -*/ TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
+                            maxHeight - JvmDefaultAlbumInfoHeight - /*XyTheme.dimens.contentPadding -*/ TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
                                 .calculateTopPadding() + XyTheme.dimens.snackBarPlayerHeight - XyTheme.dimens.outerHorizontalPadding
                         ),
                         collectAsLazyPagingItems = musicListPage
@@ -552,7 +552,7 @@ fun JvmAlbumInfoScreen(
  * 音乐列表操作栏
  */
 @Composable
-private fun MusicListOperation(
+private fun JvmMusicListOperation(
     playbackHistoryProgress: Progress?,
     currentPlayAlbumId: String,
     album: XyAlbum?,
@@ -681,7 +681,7 @@ private fun MusicListOperation(
  */
 @OptIn(ExperimentalEncodingApi::class)
 @Composable
-private fun MusicAlbumInfoComponent(
+private fun JvmMusicAlbumInfoComponent(
     onData: () -> XyAlbum?,
     albumPic: String?,
     onIfSavePlaybackHistory: () -> Boolean,
@@ -702,7 +702,7 @@ private fun MusicAlbumInfoComponent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(DefaultAlbumInfoHeight),
+                .height(JvmDefaultAlbumInfoHeight),
             verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.Start
         ) {
@@ -754,13 +754,13 @@ private fun MusicAlbumInfoComponent(
 
 
 @Composable
-private fun StickyHeaderOperation(
+private fun JvmStickyHeaderOperation(
     onMusicListPage: () -> LazyPagingItems<XyMusic>,
     albumInfoViewModel: AlbumInfoViewModel,
     ifOpenSelect: Boolean,
     sortContent: @Composable () -> Unit
 ) {
-    MusicListOperation(
+    JvmMusicListOperation(
         playbackHistoryProgress = albumInfoViewModel.albumPlayerHistoryProgress,
         currentPlayAlbumId = albumInfoViewModel.musicController.musicInfo?.album.orEmpty(),
         album = albumInfoViewModel.xyAlbumInfoData,
@@ -788,7 +788,7 @@ private fun StickyHeaderOperation(
 }
 
 @Composable
-private fun StickyHeaderOperationParent(
+private fun JvmStickyHeaderOperationParent(
     albumInfoViewModel: AlbumInfoViewModel,
     musicListPage: LazyPagingItems<XyMusic>,
     ifOpenSelect: Boolean,
@@ -796,7 +796,7 @@ private fun StickyHeaderOperationParent(
 ) {
 
     val mainViewModel = LocalMainViewModel.current
-    StickyHeaderOperation(
+    JvmStickyHeaderOperation(
         onMusicListPage = { musicListPage },
         albumInfoViewModel = albumInfoViewModel,
         ifOpenSelect = ifOpenSelect,
@@ -847,5 +847,6 @@ private fun StickyHeaderOperationParent(
 
 
 }
+
 
 

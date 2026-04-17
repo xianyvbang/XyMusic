@@ -134,7 +134,7 @@ import xymusic_kmp.composeapp.generated.resources.visibility_24px
 import xymusic_kmp.composeapp.generated.resources.visibility_off_24px
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
-private enum class ScreenType {
+private enum class JvmScreenType {
     /**
      * 选择数据源
      */
@@ -168,7 +168,7 @@ fun JvmConnectionScreen(
     val coroutineScope = rememberCoroutineScope()
     val ifConnectionConfig by connectionViewModel.settingsManager.ifConnectionConfig.collectAsState()
     var ifSelectDataSource by remember {
-        mutableStateOf(ScreenType.SELECT_DATA_SOURCE)
+        mutableStateOf(JvmScreenType.SELECT_DATA_SOURCE)
     }
 
     XyColumnScreen(
@@ -194,7 +194,7 @@ fun JvmConnectionScreen(
 
         })
 
-        AnimatedVisibility(visible = ifSelectDataSource != ScreenType.SELECT_DATA_SOURCE) {
+        AnimatedVisibility(visible = ifSelectDataSource != JvmScreenType.SELECT_DATA_SOURCE) {
             ItemTrailingArrowRight(
                 modifier = Modifier
                     .padding(horizontal = XyTheme.dimens.innerHorizontalPadding)
@@ -211,7 +211,7 @@ fun JvmConnectionScreen(
                 img = connectionViewModel.dataSourceType?.img?.let { img -> painterResource(img) },
                 onClick = {
                     connectionViewModel.setDataSourceTypeData(connectionViewModel.dataSourceType)
-                    ifSelectDataSource = ScreenType.INPUT_DATA
+                    ifSelectDataSource = JvmScreenType.INPUT_DATA
                 }
             )
             Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding / 2))
@@ -234,7 +234,7 @@ fun JvmConnectionScreen(
             }
         ) { screen ->
             when (screen) {
-                ScreenType.SELECT_DATA_SOURCE -> {
+                JvmScreenType.SELECT_DATA_SOURCE -> {
                     Box(modifier = Modifier.fillMaxSize()) {
                         LazyColumnNotComponent(
                             modifier = Modifier,
@@ -268,7 +268,7 @@ fun JvmConnectionScreen(
                                     img = painterResource(it.img),
                                     onClick = {
                                         connectionViewModel.setDataSourceTypeData(it)
-                                        ifSelectDataSource = ScreenType.INPUT_DATA
+                                        ifSelectDataSource = JvmScreenType.INPUT_DATA
                                     }
                                 )
                             }
@@ -276,11 +276,11 @@ fun JvmConnectionScreen(
                     }
                 }
 
-                ScreenType.INPUT_DATA -> {
+                JvmScreenType.INPUT_DATA -> {
                     LazyColumnComponent {
                         if (connectionViewModel.dataSourceType?.ifInputUrl == true)
                             item {
-                                AddressInputEdit(
+                                JvmAddressInputEdit(
                                     address = connectionViewModel.address,
                                     updateAddress = {
                                         connectionViewModel.setAddressData(it)
@@ -288,7 +288,7 @@ fun JvmConnectionScreen(
                                 )
                             }
                         item {
-                            UsernameInputEdit(
+                            JvmUsernameInputEdit(
                                 username = connectionViewModel.username,
                                 updateUsername = {
                                     connectionViewModel.setUserNameData(it)
@@ -297,7 +297,7 @@ fun JvmConnectionScreen(
                         }
 
                         item {
-                            PasswordInputEdit(
+                            JvmPasswordInputEdit(
                                 password = connectionViewModel.password,
                                 updatePassword = {
                                     connectionViewModel.setPasswordData(it)
@@ -317,7 +317,7 @@ fun JvmConnectionScreen(
                                             }
                                             Log.i("JvmConnectionScreen", "noifInputUrl")
                                             coroutineScope.launch {
-                                                ifSelectDataSource = ScreenType.SELECT_ADDRESS
+                                                ifSelectDataSource = JvmScreenType.SELECT_ADDRESS
                                                 connectionViewModel.getResources()
                                             }.invokeOnCompletion {
                                                 connectionViewModel.updateResourceLoading(false)
@@ -326,9 +326,9 @@ fun JvmConnectionScreen(
                                             Log.i("JvmConnectionScreen", "ifInputUrl")
                                             if (!connectionViewModel.isHttpStartAndPortEnd()) {
                                                 connectionViewModel.createTmpAddress()
-                                                ifSelectDataSource = ScreenType.SELECT_ADDRESS
+                                                ifSelectDataSource = JvmScreenType.SELECT_ADDRESS
                                             } else {
-                                                ifSelectDataSource = ScreenType.LOGIN
+                                                ifSelectDataSource = JvmScreenType.LOGIN
                                                 coroutineScope.launch {
                                                     connectionViewModel.setTmpAddressData(
                                                         connectionViewModel.address
@@ -346,7 +346,7 @@ fun JvmConnectionScreen(
                                 Button(
                                     modifier = Modifier.width(width = 150.dp),
                                     onClick = {
-                                        ifSelectDataSource = ScreenType.SELECT_DATA_SOURCE
+                                        ifSelectDataSource = JvmScreenType.SELECT_DATA_SOURCE
                                     }
                                 ) {
                                     Text(text = stringResource(Res.string.reselect))
@@ -357,7 +357,7 @@ fun JvmConnectionScreen(
                     }
                 }
 
-                ScreenType.SELECT_ADDRESS -> {
+                JvmScreenType.SELECT_ADDRESS -> {
                     LazyColumnComponent {
                         if (connectionViewModel.resourceLoading) {
                             item {
@@ -369,7 +369,7 @@ fun JvmConnectionScreen(
 
                         } else if (connectionViewModel.isResourceLoginError) {
                             item {
-                                LoginError(
+                                JvmLoginError(
                                     modifier = Modifier.height(200.dp),
                                     errorMessage = connectionViewModel.errorMessage,
                                     errorHint = stringResource(connectionViewModel.errorHint)
@@ -411,7 +411,7 @@ fun JvmConnectionScreen(
                                                 bottomItem = null
                                             ) {
                                                 itemsIndexed(connectionViewModel.tmpPlexInfo) { index, item ->
-                                                    PlexResourceItem(
+                                                    JvmPlexResourceItem(
                                                         text = item.name,
                                                         serverName = item.product,
                                                         address = item.addressUrl,
@@ -441,7 +441,7 @@ fun JvmConnectionScreen(
                                                 connectionViewModel.setSelectUrlIndexData(
                                                     connectionViewModel.selectUrlIndex
                                                 )
-                                                ifSelectDataSource = ScreenType.LOGIN
+                                                ifSelectDataSource = JvmScreenType.LOGIN
                                                 connectionViewModel.inputAddress()
                                             }
                                         }) {
@@ -452,7 +452,7 @@ fun JvmConnectionScreen(
                                 Button(
                                     modifier = Modifier.width(width = 150.dp),
                                     onClick = {
-                                        ifSelectDataSource = ScreenType.INPUT_DATA
+                                        ifSelectDataSource = JvmScreenType.INPUT_DATA
                                     }) {
                                     Text(stringResource(Res.string.back_to_input_credentials))
                                 }
@@ -462,7 +462,7 @@ fun JvmConnectionScreen(
                     }
                 }
 
-                ScreenType.LOGIN -> {
+                JvmScreenType.LOGIN -> {
                     if (connectionViewModel.loading) {
                         XyLoadingItem(
                             modifier = Modifier.height(200.dp),
@@ -472,7 +472,7 @@ fun JvmConnectionScreen(
                         LazyColumnComponent {
                             if (connectionViewModel.isLoginError) {
                                 item {
-                                    LoginError(
+                                    JvmLoginError(
                                         modifier = Modifier.height(200.dp),
                                         errorMessage = connectionViewModel.errorMessage,
                                         errorHint = stringResource(connectionViewModel.errorHint)
@@ -484,9 +484,9 @@ fun JvmConnectionScreen(
                                         onClick = {
                                             ifSelectDataSource =
                                                 if (connectionViewModel.isHttpStartAndPortEnd()) {
-                                                    ScreenType.INPUT_DATA
+                                                    JvmScreenType.INPUT_DATA
                                                 } else
-                                                    ScreenType.SELECT_ADDRESS
+                                                    JvmScreenType.SELECT_ADDRESS
                                         }) {
                                         Text(text = stringResource(Res.string.reconnect))
                                     }
@@ -532,7 +532,7 @@ fun JvmConnectionScreen(
 }
 
 @Composable
-fun PlexResourceItem(
+fun JvmPlexResourceItem(
     modifier: Modifier = Modifier,
     text: String,
     serverName: String,
@@ -575,7 +575,7 @@ fun PlexResourceItem(
 }
 
 @Composable
-private fun LoginError(
+private fun JvmLoginError(
     modifier: Modifier = Modifier,
     title: String = stringResource(Res.string.login_failed),
     errorMessage: String,
@@ -604,11 +604,11 @@ private fun LoginError(
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun AddressInputEdit(
+fun JvmAddressInputEdit(
     address: String,
     updateAddress: (String) -> Unit
 ) {
-    ConnectionDataInfoInputEdit(
+    JvmConnectionDataInfoInputEdit(
         text = address,
         onChange = {
             updateAddress(it)
@@ -638,12 +638,12 @@ fun AddressInputEdit(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun UsernameInputEdit(
+fun JvmUsernameInputEdit(
     modifier: Modifier = Modifier,
     username: String,
     updateUsername: (String) -> Unit
 ) {
-    ConnectionDataInfoInputEdit(
+    JvmConnectionDataInfoInputEdit(
         text = username,
         modifier = modifier,
         onChange = {
@@ -674,13 +674,13 @@ fun UsernameInputEdit(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun PasswordInputEdit(
+fun JvmPasswordInputEdit(
     modifier: Modifier = Modifier,
     password: String,
     updatePassword: (String) -> Unit
 ) {
     var showPassword by remember { mutableStateOf(false) }
-    ConnectionDataInfoInputEdit(
+    JvmConnectionDataInfoInputEdit(
         text = password,
         modifier = modifier,
         onChange = {
@@ -709,12 +709,12 @@ fun PasswordInputEdit(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun ConnectionNameInputEdit(
+fun JvmConnectionNameInputEdit(
     modifier: Modifier = Modifier,
     connectionName: String,
     updateConnectionName: (String) -> Unit
 ) {
-    ConnectionDataInfoInputEdit(
+    JvmConnectionDataInfoInputEdit(
         text = connectionName,
         modifier = modifier,
         onChange = {
@@ -742,7 +742,7 @@ fun ConnectionNameInputEdit(
 
 
 @Composable
-private fun ConnectionDataInfoInputEdit(
+private fun JvmConnectionDataInfoInputEdit(
     modifier: Modifier = Modifier,
     text: String,
     onChange: (String) -> Unit,
@@ -775,5 +775,6 @@ private fun ConnectionDataInfoInputEdit(
         actionContent = actionContent
     )
 }
+
 
 

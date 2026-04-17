@@ -190,7 +190,7 @@ fun JvmSearchScreen(
                     musicController = searchViewModel.musicController
                 )
             } else {
-                HistoryAndHintList(
+                JvmHistoryAndHintList(
                     onClick = { search ->
                         searchViewModel.updateSearchInput(
                             TextFieldValue(
@@ -217,7 +217,7 @@ fun JvmSearchScreen(
  * @param [onHistoryList] 搜索历史列表
  */
 @Composable
-private fun HistoryAndHintList(
+private fun JvmHistoryAndHintList(
     onClick: (String) -> Unit,
     onClear: () -> Unit,
     onHistoryList: () -> List<SearchHistory>,
@@ -345,6 +345,7 @@ fun JvmSearchResultScreen(
         }
     }
 }
+
 
 
 

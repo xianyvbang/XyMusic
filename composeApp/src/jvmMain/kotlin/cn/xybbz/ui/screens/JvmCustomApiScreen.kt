@@ -137,7 +137,7 @@ fun JvmCustomApiScreen(
             }
 
             item {
-                CustomLyricsSettingTitleItem(
+                JvmCustomLyricsSettingTitleItem(
                     title = stringResource(Res.string.lyrics_api_auth_key)
                 )
             }
@@ -167,7 +167,7 @@ fun JvmCustomApiScreen(
                         append("官方文档")
                     }
                 }
-                CustomLyricsItemComponent(
+                JvmCustomLyricsItemComponent(
                     bottomInfo = annotatedText,
                     title = "验证信息",
                     value = customLyricsViewModel.customLrcApiAuthValue,
@@ -177,12 +177,12 @@ fun JvmCustomApiScreen(
             }
 
             item {
-                CustomLyricsSettingTitleItem(
+                JvmCustomLyricsSettingTitleItem(
                     title = stringResource(Res.string.lyrics_single_api)
                 )
             }
             item {
-                CustomLyricsSettingInput(
+                JvmCustomLyricsSettingInput(
                     value = customLyricsViewModel.customLrcSingleApiValue,
                     hint = stringResource(Res.string.lyrics_single_api_hint),
                     onValueChange = { customLyricsViewModel.updateCustomLrcSingleApi(it) }
@@ -190,12 +190,12 @@ fun JvmCustomApiScreen(
             }
 
             item {
-                CustomLyricsSettingTitleItem(
+                JvmCustomLyricsSettingTitleItem(
                     title = stringResource(Res.string.custom_cover_api)
                 )
             }
             item {
-                CustomLyricsSettingInput(
+                JvmCustomLyricsSettingInput(
                     value = customLyricsViewModel.customCoverApiValue,
                     hint = stringResource(Res.string.custom_cover_api_hint),
                     onValueChange = { customLyricsViewModel.updateCustomCoverApi(it) }
@@ -206,7 +206,7 @@ fun JvmCustomApiScreen(
 }
 
 @Composable
-private fun CustomLyricsSettingTitleItem(
+private fun JvmCustomLyricsSettingTitleItem(
     title: String,
 ) {
     XyRow(
@@ -224,7 +224,7 @@ private fun CustomLyricsSettingTitleItem(
 }
 
 @Composable
-private fun CustomLyricsSettingInput(
+private fun JvmCustomLyricsSettingInput(
     title: String = "地址",
     bottomInfo: String? = null,
     value: String,
@@ -260,7 +260,7 @@ private fun CustomLyricsSettingInput(
 
 
 @Composable
-private fun CustomLyricsItemComponent(
+private fun JvmCustomLyricsItemComponent(
     modifier: Modifier = Modifier,
     title: String = "地址",
     bottomInfo: AnnotatedString? = null,
@@ -316,5 +316,6 @@ private fun CustomLyricsItemComponent(
 
     }
 }
+
 
 

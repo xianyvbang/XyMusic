@@ -101,7 +101,7 @@ fun JvmMemoryManagementScreen(
 
         LazyColumnNotComponent {
             item {
-                MemoryManagementItem(
+                JvmMemoryManagementItem(
                     cacheSize = memoryManagementViewModel.musicCacheSize,
                     onClick = { memoryManagementViewModel.clearMusicCache() },
                     text = stringResource(Res.string.audio_cache),
@@ -109,7 +109,7 @@ fun JvmMemoryManagementScreen(
                 )
             }
             item {
-                MemoryManagementItem(
+                JvmMemoryManagementItem(
                     cacheSize = memoryManagementViewModel.cacheSize,
                     onClick = { memoryManagementViewModel.clearAllCache() },
                     text = stringResource(Res.string.temporary_cache),
@@ -118,7 +118,7 @@ fun JvmMemoryManagementScreen(
             }
 
             item {
-                MemoryManagementItem(
+                JvmMemoryManagementItem(
                     cacheSize = memoryManagementViewModel.databaseSize,
                     onClick = {
                         AlertDialogObject(
@@ -139,7 +139,7 @@ fun JvmMemoryManagementScreen(
                 )
             }
             item {
-                MemoryManagementItem(
+                JvmMemoryManagementItem(
                     cacheSize = memoryManagementViewModel.appDataSize,
                     text = stringResource(Res.string.essential_data),
                     describe = stringResource(Res.string.essential_data_description),
@@ -159,7 +159,7 @@ fun JvmMemoryManagementScreen(
  * @param [describe] 描述
  */
 @Composable
-fun MemoryManagementItem(
+fun JvmMemoryManagementItem(
     modifier: Modifier = Modifier,
     cacheSize: String,
     text: String,
@@ -218,5 +218,6 @@ fun MemoryManagementItem(
 
     }
 }
+
 
 

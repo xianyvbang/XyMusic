@@ -154,7 +154,7 @@ fun JvmMainScreen(mainViewModel: MainViewModel = koinViewModel<MainViewModel>())
                     navigationState = navigationState,
                     navigator = navigator,
                     snackbarHost = {
-                        SnackBarHostUi()
+                        JvmSnackBarHostUi()
                     }
                 ) {
                     Box {
@@ -173,7 +173,7 @@ fun JvmMainScreen(mainViewModel: MainViewModel = koinViewModel<MainViewModel>())
 
 
 @Composable
-private fun SnackBarHostUi(modifier: Modifier = Modifier) {
+private fun JvmSnackBarHostUi(modifier: Modifier = Modifier) {
     val mainViewModel = LocalMainViewModel.current
     val ifShowSnackBar by mainViewModel.settingsManager.ifShowSnackBar.collectAsStateWithLifecycle()
     if (ifShowSnackBar)
@@ -185,4 +185,5 @@ private fun SnackBarHostUi(modifier: Modifier = Modifier) {
 
         }
 }
+
 
