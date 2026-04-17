@@ -1,4 +1,4 @@
-@file:Suppress("UNCHECKED_CAST", "INVISIBLE_MEMBER", "INVISIBLE_REFERENCE", "DEPRECATED")
+@file:Suppress("UNCHECKED_CAST", "INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
 
 package cn.xybbz.config.window
 
@@ -10,9 +10,9 @@ import androidx.compose.ui.node.HitTestResult
 import androidx.compose.ui.node.LayoutNode
 import androidx.compose.ui.node.PointerInputModifierNode
 import androidx.compose.ui.node.RootNodeOwner
-import androidx.compose.ui.scene.ComposeScene
+import androidx.compose.ui.scene.ComposeSceneContext
 import androidx.compose.ui.scene.CopiedList
-import androidx.compose.ui.scene.LocalComposeScene
+import androidx.compose.ui.scene.LocalComposeSceneContext
 import androidx.compose.ui.util.fastForEachReversed
 import androidx.compose.ui.util.packFloats
 
@@ -33,16 +33,16 @@ interface DesktopWindowTitleBarHitTestOwner {
 @OptIn(InternalComposeUiApi::class)
 @Composable
 fun rememberDesktopWindowTitleBarHitTestOwner(): DesktopWindowTitleBarHitTestOwner {
-    val scene = LocalComposeScene.current
-    return remember(scene) {
+    val sceneContext = LocalComposeSceneContext.current
+    return remember(sceneContext) {
         runCatching {
-            when (scene?.javaClass?.name) {
+            when (sceneContext?.javaClass?.name) {
                 null -> DesktopWindowTitleBarHitTestOwner.None
                 "androidx.compose.ui.scene.CanvasLayersComposeSceneImpl" ->
-                    CanvasLayersDesktopWindowTitleBarHitTestOwner(scene)
+                    CanvasLayersDesktopWindowTitleBarHitTestOwner(sceneContext)
 
                 "androidx.compose.ui.scene.PlatformLayersComposeSceneImpl" ->
-                    PlatformLayersDesktopWindowTitleBarHitTestOwner(scene)
+                    PlatformLayersDesktopWindowTitleBarHitTestOwner(sceneContext)
 
                 else -> DesktopWindowTitleBarHitTestOwner.None
             }
@@ -54,7 +54,7 @@ fun rememberDesktopWindowTitleBarHitTestOwner(): DesktopWindowTitleBarHitTestOwn
 
 @OptIn(InternalComposeUiApi::class)
 private abstract class ReflectDesktopWindowTitleBarHitTestOwner : DesktopWindowTitleBarHitTestOwner {
-    protected val classLoader = ComposeScene::class.java.classLoader!!
+    protected val classLoader = ComposeSceneContext::class.java.classLoader!!
 
     protected fun LayoutNode.layoutNodeHitTest(x: Float, y: Float): Boolean {
         return try {
@@ -69,13 +69,13 @@ private abstract class ReflectDesktopWindowTitleBarHitTestOwner : DesktopWindowT
 
 @OptIn(InternalComposeUiApi::class)
 private class PlatformLayersDesktopWindowTitleBarHitTestOwner(
-    scene: ComposeScene,
+    sceneContext: ComposeSceneContext,
 ) : ReflectDesktopWindowTitleBarHitTestOwner() {
     private val mainOwner = runCatching {
         val sceneClass = classLoader.loadClass("androidx.compose.ui.scene.PlatformLayersComposeSceneImpl")
         sceneClass.getDeclaredMethod("getMainOwner").let {
             it.trySetAccessible()
-            it.invoke(scene) as RootNodeOwner
+            it.invoke(sceneContext) as RootNodeOwner
         }
     }.getOrNull()
 
@@ -84,7 +84,7 @@ private class PlatformLayersDesktopWindowTitleBarHitTestOwner(
 
 @OptIn(InternalComposeUiApi::class)
 private class CanvasLayersDesktopWindowTitleBarHitTestOwner(
-    private val scene: ComposeScene,
+    private val sceneContext: ComposeSceneContext,
 ) : ReflectDesktopWindowTitleBarHitTestOwner() {
     private val sceneClass = runCatching {
         classLoader.loadClass("androidx.compose.ui.scene.CanvasLayersComposeSceneImpl")
@@ -98,14 +98,14 @@ private class CanvasLayersDesktopWindowTitleBarHitTestOwner(
         sceneClass
             ?.getDeclaredField("mainOwner")
             ?.apply { trySetAccessible() }
-            ?.get(scene) as RootNodeOwner
+            ?.get(sceneContext) as RootNodeOwner
     }.getOrNull()
 
     private val layers = runCatching {
         sceneClass
             ?.getDeclaredField("_layersCopyCache")
             ?.apply { trySetAccessible() }
-            ?.get(scene) as CopiedList<*>
+            ?.get(sceneContext) as CopiedList<*>
     }.getOrNull()
 
     private val focusedLayerField = runCatching {
@@ -143,7 +143,7 @@ private class CanvasLayersDesktopWindowTitleBarHitTestOwner(
                 if (currentLayerIsInBoundsMethod.invoke(layer, packFloats(x, y)) == true) {
                     return ((currentLayerOwnerField.get(layer) as? RootNodeOwner)?.owner?.root ?: mainRoot)
                         .layoutNodeHitTest(x, y)
-                } else if (layer == currentFocusedLayerField.get(scene)) {
+                } else if (layer == currentFocusedLayerField.get(sceneContext)) {
                     return false
                 }
             }
