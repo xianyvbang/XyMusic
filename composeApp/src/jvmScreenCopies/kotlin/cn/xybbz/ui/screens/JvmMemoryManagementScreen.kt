@@ -1,0 +1,222 @@
+﻿/*
+ *   XyMusic
+ *   Copyright (C) 2023 xianyvbang
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ */
+
+package cn.xybbz.ui.screens
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
+import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.TopAppBarTitle
+import cn.xybbz.ui.components.show
+import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.LazyColumnNotComponent
+import cn.xybbz.ui.xy.RoundedSurfaceColumn
+import cn.xybbz.ui.xy.XyButton
+import cn.xybbz.ui.xy.XyColumnScreen
+import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyTextSub
+import cn.xybbz.ui.xy.XyTextSubSmall
+import cn.xybbz.viewmodel.MemoryManagementViewModel
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.audio_cache
+import xymusic_kmp.composeapp.generated.resources.audio_cache_description
+import xymusic_kmp.composeapp.generated.resources.clear
+import xymusic_kmp.composeapp.generated.resources.confirm_delete_database
+import xymusic_kmp.composeapp.generated.resources.database_data
+import xymusic_kmp.composeapp.generated.resources.database_data_description
+import xymusic_kmp.composeapp.generated.resources.essential_data
+import xymusic_kmp.composeapp.generated.resources.essential_data_description
+import xymusic_kmp.composeapp.generated.resources.return_setting_screen
+import xymusic_kmp.composeapp.generated.resources.storage_management
+import xymusic_kmp.composeapp.generated.resources.temporary_cache
+import xymusic_kmp.composeapp.generated.resources.temporary_cache_description
+import xymusic_kmp.composeapp.generated.resources.warning
+import cn.xybbz.ui.xy.XyIconButton as IconButton
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun JvmMemoryManagementScreen(
+    memoryManagementViewModel: MemoryManagementViewModel = koinViewModel<MemoryManagementViewModel>()
+) {
+
+    val navigator = LocalNavigator.current
+
+    val warning = stringResource(Res.string.warning)
+
+
+    LaunchedEffect(Unit) {
+        memoryManagementViewModel.logStorageInfo()
+    }
+    XyColumnScreen {
+        TopAppBarComponent(
+            title = {
+                TopAppBarTitle(
+                    title = stringResource(Res.string.storage_management)
+                )
+            },
+            navigationIcon = {
+                IconButton(
+                    onClick = {
+                        navigator.goBack()
+                    },
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.arrow_back_24px),
+                        contentDescription = stringResource(Res.string.return_setting_screen)
+                    )
+                }
+            }
+        )
+
+        LazyColumnNotComponent {
+            item {
+                MemoryManagementItem(
+                    cacheSize = memoryManagementViewModel.musicCacheSize,
+                    onClick = { memoryManagementViewModel.clearMusicCache() },
+                    text = stringResource(Res.string.audio_cache),
+                    describe = stringResource(Res.string.audio_cache_description)
+                )
+            }
+            item {
+                MemoryManagementItem(
+                    cacheSize = memoryManagementViewModel.cacheSize,
+                    onClick = { memoryManagementViewModel.clearAllCache() },
+                    text = stringResource(Res.string.temporary_cache),
+                    describe = stringResource(Res.string.temporary_cache_description)
+                )
+            }
+
+            item {
+                MemoryManagementItem(
+                    cacheSize = memoryManagementViewModel.databaseSize,
+                    onClick = {
+                        AlertDialogObject(
+                            title = warning,
+                            content = {
+                                XyTextSubSmall(
+                                    text = stringResource(Res.string.confirm_delete_database)
+                                )
+                            },
+                            ifWarning = true,
+                            onConfirmation = {
+                                memoryManagementViewModel.clearDatabaseData()
+                            }
+                        ).show()
+                    },
+                    text = stringResource(Res.string.database_data),
+                    describe = stringResource(Res.string.database_data_description)
+                )
+            }
+            item {
+                MemoryManagementItem(
+                    cacheSize = memoryManagementViewModel.appDataSize,
+                    text = stringResource(Res.string.essential_data),
+                    describe = stringResource(Res.string.essential_data_description),
+                    ifShowButton = false
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 存储管理项
+ * @param [modifier] 修饰语
+ * @param [cacheSize] 缓存大小
+ * @param [onClick] 点击时
+ * @param [text] 文本
+ * @param [describe] 描述
+ */
+@Composable
+fun MemoryManagementItem(
+    modifier: Modifier = Modifier,
+    cacheSize: String,
+    text: String,
+    describe: String,
+    ifShowButton: Boolean = true,
+    onClick: (() -> Unit)? = null,
+) {
+    RoundedSurfaceColumn(
+        horizontalAlignment = Alignment.Start
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .then(modifier)
+                .fillMaxWidth()
+                .padding(
+                    horizontal = XyTheme.dimens.innerHorizontalPadding
+                )
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                XyText(
+                    modifier = Modifier.padding(
+                        top = XyTheme.dimens.innerVerticalPadding
+                    ), text = text
+                )
+                XyTextSubSmall(
+                    modifier = Modifier,
+                    text = cacheSize
+                )
+            }
+            if (ifShowButton)
+                XyButton(
+                    modifier = Modifier,
+                    enabled = cacheSize != "0B",
+                    onClick = { onClick?.invoke() },
+                    text = stringResource(Res.string.clear)
+                )
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = XyTheme.dimens.innerHorizontalPadding,
+                    end = XyTheme.dimens.innerHorizontalPadding,
+                    bottom = XyTheme.dimens.innerVerticalPadding,
+                ),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            XyTextSub(
+                text = describe,
+                overflow = TextOverflow.Visible
+            )
+        }
+
+    }
+}
+
+
