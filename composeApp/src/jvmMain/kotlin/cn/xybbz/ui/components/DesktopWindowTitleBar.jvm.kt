@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,17 +32,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.common.enums.img
 import cn.xybbz.common.utils.DataSourceChangeUtils
+import cn.xybbz.compositionLocal.LocalDesktopWindowChromeController
 import cn.xybbz.compositionLocal.LocalDesktopWindowDecorators
 import cn.xybbz.compositionLocal.LocalDesktopWindowFrameState
+import cn.xybbz.config.window.rememberDesktopWindowTitleBarHitTestOwner
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
@@ -82,13 +88,26 @@ import xymusic_kmp.composeapp.generated.resources.search_music_album_artist
 @Composable
 fun DesktopWindowTitleBar(navigator: Navigator) {
     val decorators = LocalDesktopWindowDecorators.current
+    val chromeController = LocalDesktopWindowChromeController.current
+    val titleBarHitTestOwner = rememberDesktopWindowTitleBarHitTestOwner()
+
+    DisposableEffect(chromeController, titleBarHitTestOwner) {
+        chromeController.setTitleBarHitTestOwner(titleBarHitTestOwner)
+        onDispose {
+            chromeController.setTitleBarHitTestOwner(null)
+        }
+    }
+
     // 标题栏主体留在 composeApp 中，是否具备窗口拖拽能力由 desktopApp 注入。
     val content: @Composable () -> Unit = {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(XyTheme.dimens.itemHeight * 1.3f)
-                .background(DesktopTitleBarColors.current.background),
+                .background(DesktopTitleBarColors.current.background)
+                .onGloballyPositioned {
+                    chromeController.updateTitleBarBounds(it.boundsInWindow())
+                },
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start,
         ) {
@@ -206,6 +225,7 @@ private fun DesktopSearchField(
 private fun DesktopTitleActions(navigator: Navigator) {
     val koin = getKoin()
     val frameState = LocalDesktopWindowFrameState.current
+    val chromeController = LocalDesktopWindowChromeController.current
     val dataSourceManager: DataSourceManager = remember { koin.get() }
     val db: LocalDatabaseClient = remember { koin.get() }
     val musicController: MusicCommonController = remember { koin.get() }
@@ -335,16 +355,25 @@ private fun DesktopTitleActions(navigator: Navigator) {
         ) {
             DesktopWindowControlButton(
                 controlType = WindowControlType.Minimize,
-                onClick = frameState.onMinimize
+                onClick = frameState.onMinimize,
+                modifier = Modifier.onGloballyPositioned {
+                    chromeController.updateMinimizeButtonBounds(it.boundsInWindow())
+                }
             )
             DesktopWindowControlButton(
                 controlType = if (frameState.isMaximized) WindowControlType.Restore else WindowControlType.Maximize,
-                onClick = frameState.onToggleMaximize
+                onClick = frameState.onToggleMaximize,
+                modifier = Modifier.onGloballyPositioned {
+                    chromeController.updateMaximizeButtonBounds(it.boundsInWindow())
+                }
             )
             DesktopWindowControlButton(
                 controlType = WindowControlType.Close,
                 onClick = frameState.onClose,
-                contentColor = colors.foreground
+                contentColor = colors.foreground,
+                modifier = Modifier.onGloballyPositioned {
+                    chromeController.updateCloseButtonBounds(it.boundsInWindow())
+                }
             )
         }
     }
@@ -385,10 +414,11 @@ private fun DesktopToolbarIconButton(resource: DrawableResource) {
 private fun DesktopWindowControlButton(
     controlType: WindowControlType,
     onClick: () -> Unit,
-    contentColor: Color = DesktopTitleBarColors.current.foreground
+    contentColor: Color = DesktopTitleBarColors.current.foreground,
+    modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(width = 42.dp, height = 34.dp)
             .clip(RoundedCornerShape(XyTheme.dimens.corner))
             .clickable(onClick = onClick),

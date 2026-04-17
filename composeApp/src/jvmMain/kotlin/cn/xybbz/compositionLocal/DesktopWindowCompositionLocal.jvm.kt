@@ -2,6 +2,7 @@ package cn.xybbz.compositionLocal
 
 import androidx.compose.runtime.compositionLocalOf
 import cn.xybbz.common.constants.Constants
+import cn.xybbz.config.window.DesktopWindowChromeController
 import cn.xybbz.config.window.DesktopWindowDecorators
 import cn.xybbz.entity.data.DesktopWindowFrameState
 
@@ -18,3 +19,10 @@ val LocalDesktopWindowFrameState =
  */
 val LocalDesktopWindowDecorators =
     compositionLocalOf<DesktopWindowDecorators> { error(Constants.COMPOSITION_LOCAL_ERROR) }
+
+/**
+ * 桌面窗口原生标题栏桥接能力。
+ * Windows 端通过它同步标题栏热区与系统窗口行为，其它平台使用空实现。
+ */
+val LocalDesktopWindowChromeController =
+    compositionLocalOf<DesktopWindowChromeController> { DesktopWindowChromeController.None }
