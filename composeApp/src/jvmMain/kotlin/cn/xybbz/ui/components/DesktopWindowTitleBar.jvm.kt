@@ -53,7 +53,9 @@ import cn.xybbz.config.window.DesktopWindowTitleBarHitTestOwner
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.router.Connection
+import cn.xybbz.router.Download
 import cn.xybbz.router.Navigator
+import cn.xybbz.router.Setting
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.screens.jvmRouterMenuWidth
@@ -74,13 +76,17 @@ import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.check_24px
 import xymusic_kmp.composeapp.generated.resources.chevron_right_24px
 import xymusic_kmp.composeapp.generated.resources.connection_link
+import xymusic_kmp.composeapp.generated.resources.download_24px
+import xymusic_kmp.composeapp.generated.resources.download_list
 import xymusic_kmp.composeapp.generated.resources.icon
 import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
 import xymusic_kmp.composeapp.generated.resources.logo_new
 import xymusic_kmp.composeapp.generated.resources.no_connection_selected
+import xymusic_kmp.composeapp.generated.resources.open_settings_page_button
 import xymusic_kmp.composeapp.generated.resources.open_add_or_switch_data_sources
 import xymusic_kmp.composeapp.generated.resources.search_24px
 import xymusic_kmp.composeapp.generated.resources.search_music_album_artist
+import xymusic_kmp.composeapp.generated.resources.settings_24px
 
 /**
  * 桌面端主标题栏。
@@ -363,6 +369,26 @@ private fun DesktopTitleActions(navigator: Navigator) {
         }
 
         Row(
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            DesktopToolbarIconButton(
+                resource = Res.drawable.download_24px,
+                enabled = true,
+                onClick = { navigator.navigate(Download) },
+                modifier = Modifier.titleBarHitTarget(titleBarHitTestOwner, DesktopTitleBarHitTarget.DownloadButton),
+                contentDescription = stringResource(Res.string.download_list)
+            )
+            DesktopToolbarIconButton(
+                resource = Res.drawable.settings_24px,
+                enabled = true,
+                onClick = { navigator.navigate(Setting) },
+                modifier = Modifier.titleBarHitTarget(titleBarHitTestOwner, DesktopTitleBarHitTarget.SettingButton),
+                contentDescription = stringResource(Res.string.open_settings_page_button)
+            )
+        }
+
+        Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(XyTheme.dimens.corner))
                 .background(Color.Transparent),
@@ -403,6 +429,7 @@ private fun DesktopToolbarIconButton(
     enabled: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    contentDescription: String? = null,
 ) {
     val colors = DesktopTitleBarColors.current
     val backgroundColor = if (enabled) {
@@ -436,7 +463,7 @@ private fun DesktopToolbarIconButton(
     ) {
         Icon(
             painter = painterResource(resource),
-            contentDescription = null,
+            contentDescription = contentDescription,
             modifier = Modifier.size(18.dp),
             tint = iconTint
         )
@@ -603,6 +630,8 @@ private enum class DesktopTitleBarHitTarget {
     BackButton,
     SearchField,
     DataSource,
+    DownloadButton,
+    SettingButton,
 }
 
 private class DesktopInteractiveHitTestOwner : DesktopWindowTitleBarHitTestOwner {
