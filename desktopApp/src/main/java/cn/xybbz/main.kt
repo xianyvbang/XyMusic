@@ -55,12 +55,8 @@ fun main() = application {
             LocalDesktopWindowDecorators provides object : DesktopWindowDecorators {
                 @Composable
                 override fun DraggableArea(content: @Composable () -> Unit) {
-                    if (isWindows) {
+                    WindowDraggableArea {
                         content()
-                    } else {
-                        WindowDraggableArea {
-                            content()
-                        }
                     }
                 }
             },
