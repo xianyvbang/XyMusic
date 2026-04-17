@@ -2,7 +2,6 @@ package cn.xybbz
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.window.WindowDraggableArea
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -88,7 +87,6 @@ fun main() = application {
             Box(
                 modifier = androidx.compose.ui.Modifier
                     .fillMaxSize()
-                    .windowInsetsPadding(chromeController.windowInsets)
             ) {
                 App()
             }
