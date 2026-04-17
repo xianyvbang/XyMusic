@@ -42,6 +42,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.common.enums.img
 import cn.xybbz.common.utils.DataSourceChangeUtils
@@ -84,6 +85,8 @@ import xymusic_kmp.composeapp.generated.resources.logo_new
 import xymusic_kmp.composeapp.generated.resources.no_connection_selected
 import xymusic_kmp.composeapp.generated.resources.open_settings_page_button
 import xymusic_kmp.composeapp.generated.resources.open_add_or_switch_data_sources
+import xymusic_kmp.composeapp.generated.resources.refresh_24px
+import xymusic_kmp.composeapp.generated.resources.refresh_login
 import xymusic_kmp.composeapp.generated.resources.search_24px
 import xymusic_kmp.composeapp.generated.resources.search_music_album_artist
 import xymusic_kmp.composeapp.generated.resources.settings_24px
@@ -380,6 +383,20 @@ private fun DesktopTitleActions(navigator: Navigator) {
                 contentDescription = stringResource(Res.string.download_list)
             )
             DesktopToolbarIconButton(
+                resource = Res.drawable.refresh_24px,
+                enabled = true,
+                onClick = {
+                    coroutineScope.launch {
+                        dataSourceManager.serverLogin(
+                            LoginType.API,
+                            db.connectionConfigDao.selectConnectionConfig()
+                        )
+                    }
+                },
+                modifier = Modifier.titleBarHitTarget(titleBarHitTestOwner, DesktopTitleBarHitTarget.RefreshLoginButton),
+                contentDescription = stringResource(Res.string.refresh_login)
+            )
+            DesktopToolbarIconButton(
                 resource = Res.drawable.settings_24px,
                 enabled = true,
                 onClick = { navigator.navigate(Setting) },
@@ -631,6 +648,7 @@ private enum class DesktopTitleBarHitTarget {
     SearchField,
     DataSource,
     DownloadButton,
+    RefreshLoginButton,
     SettingButton,
 }
 
