@@ -119,7 +119,7 @@ fun DesktopWindowTitleBar(navigator: Navigator) {
                     .fillMaxHeight(),
                 contentAlignment = Alignment.CenterStart
             ) {
-                DesktopTitleCenter()
+                DesktopTitleCenter(navigator = navigator)
             }
 
             DesktopTitleActions(navigator = navigator)
@@ -159,8 +159,11 @@ private fun DesktopTitleBrand() {
  * 标题栏中间区域，承载返回、前进和搜索输入框。
  */
 @Composable
-private fun DesktopTitleCenter() {
+private fun DesktopTitleCenter(navigator: Navigator) {
     var keyword by remember { mutableStateOf("") }
+    val currentStack = navigator.state.backStacks[navigator.state.topLevelRoute]
+    val canGoBack = navigator.state.topLevelRoute != navigator.state.startRoute ||
+        currentStack?.lastOrNull() != navigator.state.topLevelRoute
 
     Row(
         modifier = Modifier
@@ -169,8 +172,11 @@ private fun DesktopTitleCenter() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
     ) {
-        DesktopToolbarIconButton(resource = Res.drawable.arrow_back_24px)
-        DesktopToolbarIconButton(resource = Res.drawable.chevron_right_24px)
+        DesktopToolbarIconButton(
+            resource = Res.drawable.arrow_back_24px,
+            enabled = canGoBack,
+            onClick = navigator::goBack
+        )
         DesktopSearchField(
             value = keyword,
             onValueChange = { keyword = it },
@@ -380,29 +386,49 @@ private fun DesktopTitleActions(navigator: Navigator) {
 }
 
 /**
- * 标题栏中的通用小图标按钮，当前用于返回和前进占位。
+ * 标题栏中的通用小图标按钮，用于导航等轻量操作。
  */
 @Composable
-private fun DesktopToolbarIconButton(resource: DrawableResource) {
+private fun DesktopToolbarIconButton(
+    resource: DrawableResource,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
     val colors = DesktopTitleBarColors.current
+    val backgroundColor = if (enabled) {
+        colors.iconButtonBackground
+    } else {
+        colors.iconButtonBackground.copy(alpha = 0.55f)
+    }
+    val borderColor = if (enabled) {
+        colors.outline
+    } else {
+        colors.outline.copy(alpha = 0.45f)
+    }
+    val iconTint = if (enabled) {
+        colors.foreground
+    } else {
+        colors.foreground.copy(alpha = 0.45f)
+    }
 
     Box(
         modifier = Modifier
             .size(36.dp)
             .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .background(colors.iconButtonBackground)
+            .background(backgroundColor)
             .border(
                 width = 1.dp,
-                color = colors.outline,
+                color = borderColor,
                 shape = RoundedCornerShape(XyTheme.dimens.corner)
             )
-            .clickable { },
+            .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        Image(
+        Icon(
             painter = painterResource(resource),
             contentDescription = null,
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(18.dp),
+            tint = iconTint
         )
     }
 }
