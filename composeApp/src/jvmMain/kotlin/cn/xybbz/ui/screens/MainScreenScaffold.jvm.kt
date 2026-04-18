@@ -26,7 +26,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,16 +43,24 @@ import cn.xybbz.router.NavigationState
 import cn.xybbz.router.Navigator
 import cn.xybbz.router.PlatformNavigationConfig
 import cn.xybbz.router.jvmTopRouterDataList
+import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.DesktopWindowTitleBar
 import cn.xybbz.ui.components.MusicPlaylistItemComponent
+import cn.xybbz.ui.components.show
+import cn.xybbz.ui.xy.XyEdit
+import cn.xybbz.ui.xy.XyIconButton
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.HomeViewModel
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.add_24px
+import xymusic_kmp.composeapp.generated.resources.create_playlist
 import xymusic_kmp.composeapp.generated.resources.no_playlists
+import xymusic_kmp.composeapp.generated.resources.new_playlist
 import xymusic_kmp.composeapp.generated.resources.playlist
 import xymusic_kmp.composeapp.generated.resources.songs_count_suffix
 
@@ -65,10 +76,14 @@ actual fun MainScreenScaffold(
     content: @Composable (PaddingValues) -> Unit
 ) {
     val homeViewModel = koinViewModel<HomeViewModel>()
+    val coroutineScope = rememberCoroutineScope()
     val playlists by homeViewModel.homeDataRepository.playlists.collectAsStateWithLifecycle()
     val playlistTitle = stringResource(Res.string.playlist)
+    val createPlaylist = stringResource(Res.string.create_playlist)
+    val newPlaylist = stringResource(Res.string.new_playlist)
     val noPlaylistsText = stringResource(Res.string.no_playlists)
     val songsCountSuffix = stringResource(Res.string.songs_count_suffix)
+    var playlistName by remember { mutableStateOf("") }
 
     LaunchedEffect(playlists.isEmpty()) {
         if (playlists.isEmpty()) {
@@ -105,12 +120,47 @@ actual fun MainScreenScaffold(
                         Spacer(modifier = Modifier.height(20.dp))
                     }
                     item(key = "playlist_header") {
-                        XyText(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            text = playlistTitle,
-                            fontWeight = null,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            XyText(
+                                text = playlistTitle,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            XyIconButton(
+                                onClick = {
+                                    playlistName = newPlaylist + playlists.size
+                                    AlertDialogObject(
+                                        title = createPlaylist,
+                                        content = {
+                                            XyEdit(
+                                                text = playlistName,
+                                                onChange = { playlistName = it }
+                                            )
+                                        },
+                                        onDismissRequest = {},
+                                        onConfirmation = {
+                                            coroutineScope.launch {
+                                                homeViewModel.savePlaylist(playlistName)
+                                            }
+                                        }
+                                    ).show()
+                                }
+                            ) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.add_24px),
+                                    contentDescription = createPlaylist,
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
+                        }
+                    }
+                    item(key = "playlist_header_spacing") {
+                        Spacer(modifier = Modifier.height(4.dp))
                     }
                     if (playlists.isEmpty()) {
                         item(key = "playlist_empty") {
