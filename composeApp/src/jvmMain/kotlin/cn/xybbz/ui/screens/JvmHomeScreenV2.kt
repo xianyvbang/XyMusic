@@ -1,22 +1,35 @@
 package cn.xybbz.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -59,6 +72,10 @@ private val HomeMusicTableColumns = SongTableColumns(
 fun JvmHomeScreenV2(
     homeViewModel: HomeViewModel = koinViewModel<HomeViewModel>()
 ) {
+    val homeListState = rememberLazyListState()
+    val scrollbarInteractionSource = remember { MutableInteractionSource() }
+    val scrollbarHovered by scrollbarInteractionSource.collectIsHoveredAsState()
+    val showScrollbar = scrollbarHovered || homeListState.isScrollInProgress
     val mostPlayedMusicList by homeViewModel.homeDataRepository.mostPlayedMusic.collectAsStateWithLifecycle()
     val newestAlbumList by homeViewModel.homeDataRepository.newestAlbums.collectAsStateWithLifecycle()
     val recentMusicList by homeViewModel.homeDataRepository.recentMusic.collectAsStateWithLifecycle()
@@ -73,133 +90,145 @@ fun JvmHomeScreenV2(
     val mostPlayed = stringResource(Res.string.most_played)
     val viewMore = stringResource(Res.string.view_more)
 
-    ScreenLazyColumn(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colors.surface),
-        contentPadding = PaddingValues(horizontal = XyTheme.dimens.innerHorizontalPadding),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.Start,
+            .hoverable(interactionSource = scrollbarInteractionSource)
     ) {
-        var hasPreviousSection = false
+        ScreenLazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colors.surface)
+                .padding(end = XyTheme.dimens.contentPadding),
+            state = homeListState,
+            contentPadding = PaddingValues(horizontal = XyTheme.dimens.innerHorizontalPadding),
+        ) {
+            var hasPreviousSection = false
 
-        if (recommendedMusicList.isNotEmpty()) {
-            homeMusicSection(
-                sectionKey = "recommended_music",
-                title = dailyRecommendations,
-                musicList = recommendedMusicList,
-                navigator = navigator,
-                onSongClick = { music ->
-                    homeViewModel.musicList(
-                        onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
-                        musicList = recommendedMusicList
-                    )
-                },
-                headerAction = {
-                    TextButton(
-                        onClick = { navigator.navigate(DailyRecommend) },
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        XyText(
-                            text = viewMore,
+            if (recommendedMusicList.isNotEmpty()) {
+                homeMusicSection(
+                    sectionKey = "recommended_music",
+                    title = dailyRecommendations,
+                    musicList = recommendedMusicList,
+                    navigator = navigator,
+                    onSongClick = { music ->
+                        homeViewModel.musicList(
+                            onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
+                            musicList = recommendedMusicList
                         )
+                    },
+                    headerAction = {
+                        TextButton(
+                            onClick = { navigator.navigate(DailyRecommend) },
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            XyText(
+                                text = viewMore,
+                            )
+                        }
+                    }
+                )
+                hasPreviousSection = true
+            }
+
+            if (newestAlbumList.isNotEmpty()) {
+                if (hasPreviousSection) {
+                    item(key = "latest_album_spacing") {
+                        Spacer(modifier = Modifier.height(40.dp))
                     }
                 }
-            )
-            hasPreviousSection = true
+                homeAlbumSection(
+                    sectionKey = "latest_album",
+                    title = latestAlbums,
+                    albumList = newestAlbumList,
+                    onOpenAlbum = { album ->
+                        navigator.navigate(AlbumInfo(album.itemId, MusicDataTypeEnum.ALBUM))
+                    }
+                )
+                hasPreviousSection = true
+            }
+
+            if (recentMusicList.isNotEmpty()) {
+                if (hasPreviousSection) {
+                    item(key = "recent_music_spacing") {
+                        Spacer(modifier = Modifier.height(40.dp))
+                    }
+                }
+                homeMusicSection(
+                    sectionKey = "recent_music",
+                    title = recentlyPlayedMusic,
+                    musicList = recentMusicList,
+                    navigator = navigator,
+                    onSongClick = { music ->
+                        homeViewModel.musicList(
+                            onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
+                            musicList = recentMusicList
+                        )
+                    }
+                )
+                hasPreviousSection = true
+            }
+
+            if (recentAlbumList.isNotEmpty()) {
+                if (hasPreviousSection) {
+                    item(key = "recent_album_spacing") {
+                        Spacer(modifier = Modifier.height(40.dp))
+                    }
+                }
+                homeAlbumSection(
+                    sectionKey = "recent_album",
+                    title = recentlyPlayedAlbums,
+                    albumList = recentAlbumList,
+                    onOpenAlbum = { album ->
+                        navigator.navigate(AlbumInfo(album.itemId, MusicDataTypeEnum.ALBUM))
+                    }
+                )
+                hasPreviousSection = true
+            }
+
+            if (mostPlayedAlbumList.isNotEmpty()) {
+                if (hasPreviousSection) {
+                    item(key = "most_played_album_spacing") {
+                        Spacer(modifier = Modifier.height(40.dp))
+                    }
+                }
+                homeAlbumSection(
+                    sectionKey = "most_played_album",
+                    title = mostPlayed,
+                    albumList = mostPlayedAlbumList,
+                    onOpenAlbum = { album ->
+                        navigator.navigate(AlbumInfo(album.itemId, MusicDataTypeEnum.ALBUM))
+                    }
+                )
+                hasPreviousSection = true
+            }
+
+            if (mostPlayedMusicList.isNotEmpty()) {
+                if (hasPreviousSection) {
+                    item(key = "most_played_music_spacing") {
+                        Spacer(modifier = Modifier.height(40.dp))
+                    }
+                }
+                homeMusicSection(
+                    sectionKey = "most_played_music",
+                    title = mostPlayed,
+                    musicList = mostPlayedMusicList,
+                    navigator = navigator,
+                    onSongClick = { music ->
+                        homeViewModel.musicList(
+                            onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
+                            musicList = mostPlayedMusicList
+                        )
+                    }
+                )
+            }
         }
 
-        if (newestAlbumList.isNotEmpty()) {
-            if (hasPreviousSection) {
-                item(key = "latest_album_spacing") {
-                    Spacer(modifier = Modifier.height(40.dp))
-                }
-            }
-            homeAlbumSection(
-                sectionKey = "latest_album",
-                title = latestAlbums,
-                albumList = newestAlbumList,
-                onOpenAlbum = { album ->
-                    navigator.navigate(AlbumInfo(album.itemId, MusicDataTypeEnum.ALBUM))
-                }
-            )
-            hasPreviousSection = true
-        }
-
-        if (recentMusicList.isNotEmpty()) {
-            if (hasPreviousSection) {
-                item(key = "recent_music_spacing") {
-                    Spacer(modifier = Modifier.height(40.dp))
-                }
-            }
-            homeMusicSection(
-                sectionKey = "recent_music",
-                title = recentlyPlayedMusic,
-                musicList = recentMusicList,
-                navigator = navigator,
-                onSongClick = { music ->
-                    homeViewModel.musicList(
-                        onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
-                        musicList = recentMusicList
-                    )
-                }
-            )
-            hasPreviousSection = true
-        }
-
-        if (recentAlbumList.isNotEmpty()) {
-            if (hasPreviousSection) {
-                item(key = "recent_album_spacing") {
-                    Spacer(modifier = Modifier.height(40.dp))
-                }
-            }
-            homeAlbumSection(
-                sectionKey = "recent_album",
-                title = recentlyPlayedAlbums,
-                albumList = recentAlbumList,
-                onOpenAlbum = { album ->
-                    navigator.navigate(AlbumInfo(album.itemId, MusicDataTypeEnum.ALBUM))
-                }
-            )
-            hasPreviousSection = true
-        }
-
-        if (mostPlayedAlbumList.isNotEmpty()) {
-            if (hasPreviousSection) {
-                item(key = "most_played_album_spacing") {
-                    Spacer(modifier = Modifier.height(40.dp))
-                }
-            }
-            homeAlbumSection(
-                sectionKey = "most_played_album",
-                title = mostPlayed,
-                albumList = mostPlayedAlbumList,
-                onOpenAlbum = { album ->
-                    navigator.navigate(AlbumInfo(album.itemId, MusicDataTypeEnum.ALBUM))
-                }
-            )
-            hasPreviousSection = true
-        }
-
-        if (mostPlayedMusicList.isNotEmpty()) {
-            if (hasPreviousSection) {
-                item(key = "most_played_music_spacing") {
-                    Spacer(modifier = Modifier.height(40.dp))
-                }
-            }
-            homeMusicSection(
-                sectionKey = "most_played_music",
-                title = mostPlayed,
-                musicList = mostPlayedMusicList,
-                navigator = navigator,
-                onSongClick = { music ->
-                    homeViewModel.musicList(
-                        onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
-                        musicList = mostPlayedMusicList
-                    )
-                }
-            )
-        }
+        HomeVerticalScrollbar(
+            visible = showScrollbar,
+            modifier = Modifier.align(Alignment.CenterEnd),
+            adapter = rememberScrollbarAdapter(scrollState = homeListState),
+        )
     }
 }
 
@@ -290,5 +319,27 @@ private fun JvmHomeDesktopSectionHeader(
         if (action != null) {
             action()
         }
+    }
+}
+
+@Composable
+private fun HomeVerticalScrollbar(
+    visible: Boolean,
+    modifier: Modifier = Modifier,
+    adapter: androidx.compose.foundation.v2.ScrollbarAdapter,
+) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(),
+        exit = fadeOut(),
+        modifier = modifier,
+    ) {
+        VerticalScrollbar(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(6.dp)
+                .padding(vertical = XyTheme.dimens.outerVerticalPadding),
+            adapter = adapter,
+        )
     }
 }
