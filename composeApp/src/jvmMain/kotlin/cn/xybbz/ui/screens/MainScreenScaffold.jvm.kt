@@ -1,5 +1,8 @@
 package cn.xybbz.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.hoverable
@@ -89,6 +92,9 @@ actual fun MainScreenScaffold(
     val songsCountSuffix = stringResource(Res.string.songs_count_suffix)
     var playlistName by remember { mutableStateOf("") }
     val sidebarListState = rememberLazyListState()
+    val sidebarInteractionSource = remember { MutableInteractionSource() }
+    val sidebarHovered by sidebarInteractionSource.collectIsHoveredAsState()
+    val showScrollbar = sidebarHovered || sidebarListState.isScrollInProgress
 
     LaunchedEffect(playlists.isEmpty()) {
         if (playlists.isEmpty()) {
@@ -109,7 +115,11 @@ actual fun MainScreenScaffold(
                     .padding(paddingValues),
                 verticalAlignment = Alignment.Top,
             ) {
-                Box(modifier = Modifier.width(jvmRouterMenuWidth)) {
+                Box(
+                    modifier = Modifier
+                        .width(jvmRouterMenuWidth)
+                        .hoverable(interactionSource = sidebarInteractionSource)
+                ) {
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
@@ -193,11 +203,9 @@ actual fun MainScreenScaffold(
                             }
                         }
                     }
-                    VerticalScrollbar(
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .fillMaxHeight()
-                            .padding(vertical = XyTheme.dimens.outerVerticalPadding),
+                    SidebarVerticalScrollbar(
+                        visible = showScrollbar,
+                        modifier = Modifier.align(Alignment.CenterEnd),
                         adapter = rememberScrollbarAdapter(scrollState = sidebarListState),
                     )
                 }
@@ -207,6 +215,28 @@ actual fun MainScreenScaffold(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SidebarVerticalScrollbar(
+    visible: Boolean,
+    modifier: Modifier = Modifier,
+    adapter: androidx.compose.foundation.v2.ScrollbarAdapter,
+) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(),
+        exit = fadeOut(),
+        modifier = modifier,
+    ) {
+        VerticalScrollbar(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(6.dp)
+                .padding(vertical = XyTheme.dimens.outerVerticalPadding),
+            adapter = adapter,
+        )
     }
 }
 
