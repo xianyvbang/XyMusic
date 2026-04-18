@@ -3,12 +3,14 @@ package cn.xybbz.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.MaterialTheme
@@ -27,7 +29,6 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.router.DailyRecommend
 import cn.xybbz.router.Navigator
-import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SongTableColumns
@@ -236,42 +237,45 @@ private fun LazyListScope.homeAlbumSection(
     onOpenAlbum: (XyAlbum) -> Unit,
 ) {
     val albumRows = albumList.chunked(5)
+    val columnCount = 5
 
     item(key = "${sectionKey}_header") {
-        // TODO: components package 里还没有“固定五列桌面专辑网格”组件，
-        // 这里先保留页面内布局骨架，后续可抽到通用组件。
         JvmHomeDesktopSectionHeader(title = title)
     }
     item(key = "${sectionKey}_grid_spacing") {
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding + XyTheme.dimens.contentPadding))
     }
     items(
         items = albumRows,
         key = { row -> "${sectionKey}_${row.firstOrNull()?.itemId.orEmpty()}" }
     ) { rowAlbums ->
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-//            horizontalArrangement = Arrangement.spacedBy(24.dp),
-        ) {
-            rowAlbums.forEach { album ->
-                MusicAlbumCardComponent(
-                    onItem = { album },
-                    imageSize = MusicCardImageSize,
-                    onRouter = {
-                        onOpenAlbum(album)
-                    }
-                )
-            }
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val rowSpacing = XyTheme.dimens.innerVerticalPadding * 2
+            val cellWidth = (maxWidth - rowSpacing * (columnCount - 1)) / columnCount
 
-            /*repeat(5 - rowAlbums.size) {
-                Spacer(
-                    modifier = Modifier.weight(1f)
-                )
-            }*/
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(rowSpacing),
+            ) {
+                rowAlbums.forEach { album ->
+                    Box(modifier = Modifier.width(cellWidth)) {
+                        MusicAlbumCardComponent(
+                            modifier = Modifier.fillMaxWidth(),
+                            onItem = { album },
+                            imageSize = cellWidth,
+                            onRouter = { onOpenAlbum(album) }
+                        )
+                    }
+                }
+
+                repeat(columnCount - rowAlbums.size) {
+                    Spacer(modifier = Modifier.width(cellWidth))
+                }
+            }
         }
 
         if (rowAlbums !== albumRows.lastOrNull()) {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(XyTheme.dimens.innerVerticalPadding * 2))
         }
     }
 }
