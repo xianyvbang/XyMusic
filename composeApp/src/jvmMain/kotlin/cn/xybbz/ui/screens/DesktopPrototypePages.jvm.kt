@@ -29,6 +29,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cn.xybbz.ui.components.SongTable
+import cn.xybbz.ui.components.SongTableColumns
 import org.jetbrains.compose.resources.painterResource
 import xymusic_kmp.composeapp.generated.resources.*
 
@@ -220,13 +222,12 @@ private fun DetailPageScaffold(
 @Composable
 private fun AlbumTrackSection(onOpenArtist: () -> Unit) {
     SongTable(
-        songs = listOf(
-            SongRowData(1, "Intro - The Night", "The Synth Band", "", "", "1:24", Color(0xFF3C4CE0)),
-            SongRowData(2, "Neon Lights", "The Synth Band", "", "", "3:42", Color(0xFF3C4CE0)),
+        songs = albumTrackSongs,
+        columns = SongTableColumns(
+            showAlbumColumn = false,
+            showMetaColumn = false,
         ),
-        showAlbumColumn = false,
-        showMetaColumn = false,
-        onOpenAlbum = {},
-        onOpenArtist = onOpenArtist,
+        accentColor = { _, music -> prototypeSongAccent(music) },
+        onOpenArtist = { onOpenArtist() },
     )
 }

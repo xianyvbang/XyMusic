@@ -121,19 +121,6 @@ internal data class PlaylistCard(
 )
 
 /**
- * 歌曲行展示模型。
- */
-internal data class SongRowData(
-    val index: Int,
-    val title: String,
-    val artist: String,
-    val album: String,
-    val meta: String,
-    val duration: String,
-    val accent: Color,
-)
-
-/**
  * 专辑/歌单/艺人卡片模型。
  */
 internal data class AlbumCardData(

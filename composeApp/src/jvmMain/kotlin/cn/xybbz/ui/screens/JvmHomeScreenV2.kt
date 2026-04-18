@@ -7,11 +7,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -27,10 +25,12 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.router.DailyRecommend
+import cn.xybbz.router.Navigator
 import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.components.MusicAlbumCardComponent
-import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
+import cn.xybbz.ui.components.SongTableColumns
+import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
@@ -46,6 +46,13 @@ import xymusic_kmp.composeapp.generated.resources.recently_played_albums
 import xymusic_kmp.composeapp.generated.resources.recently_played_music
 import xymusic_kmp.composeapp.generated.resources.view_more
 import androidx.compose.foundation.lazy.grid.items as gridItems
+
+private val HomeMusicTableColumns = SongTableColumns(
+    showFavoriteColumn = true,
+    showInlineActions = true,
+    showAlbumColumn = true,
+    showMetaColumn = false,
+)
 
 @Composable
 fun JvmHomeScreenV2(
@@ -80,6 +87,7 @@ fun JvmHomeScreenV2(
                 sectionKey = "recommended_music",
                 title = dailyRecommendations,
                 musicList = recommendedMusicList,
+                navigator = navigator,
                 onSongClick = { music ->
                     homeViewModel.musicList(
                         onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
@@ -127,6 +135,7 @@ fun JvmHomeScreenV2(
                 sectionKey = "recent_music",
                 title = recentlyPlayedMusic,
                 musicList = recentMusicList,
+                navigator = navigator,
                 onSongClick = { music ->
                     homeViewModel.musicList(
                         onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
@@ -181,6 +190,7 @@ fun JvmHomeScreenV2(
                 sectionKey = "most_played_music",
                 title = mostPlayed,
                 musicList = mostPlayedMusicList,
+                navigator = navigator,
                 onSongClick = { music ->
                     homeViewModel.musicList(
                         onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
@@ -197,38 +207,26 @@ private fun LazyListScope.homeMusicSection(
     title: String,
     musicList: List<XyMusic>,
     onSongClick: (XyMusic) -> Unit,
+    navigator: Navigator,
     headerAction: @Composable (() -> Unit)? = null,
 ) {
     item(key = "${sectionKey}_header") {
-        // TODO: 这里暂时仍是页面内自定义 section header；ui module / components package
-        // 里还没有桌面首页可直接复用的 section header 组件，后续可由你统一抽取。
         JvmHomeDesktopSectionHeader(title = title, action = headerAction)
     }
     item(key = "${sectionKey}_header_spacing") {
         Spacer(modifier = Modifier.height(6.dp))
     }
-    // TODO: MusicItemComponent 能复用，但它目前不支持桌面首页原型里“单独点击专辑/艺人”的交互入口。
-    // 这里先退回为“整行点击播放 + trailing action 预留”，后续由你决定是否抽一个桌面专用行组件。
-    itemsIndexed(
-        items = musicList,
-        key = { _, music -> music.itemId }
-    ) { index, music ->
-        MusicItemComponent(
-            modifier = if (index > 0) Modifier.padding(top = 6.dp) else Modifier,
-            music = music,
-            onIfFavorite = { music.ifFavoriteStatus },
-            ifDownload = false,
-            ifPlay = false,
-            backgroundColor = androidx.compose.ui.graphics.Color.Transparent,
-            onMusicPlay = {
-                onSongClick(music)
-            },
-            trailingOnClick = {
-                // TODO: components package 里目前没有适合桌面首页复用的轻量更多操作组件；
-                // 暂时留空，等你统一处理桌面首页的 trailing action。
+    songTableItems(
+        tableKey = sectionKey,
+        songs = musicList,
+        columns = HomeMusicTableColumns,
+        onSongClick = onSongClick,
+        onOpenAlbum = { music ->
+            if (music.album.isNotBlank()) {
+                navigator.navigate(AlbumInfo(music.album, MusicDataTypeEnum.ALBUM))
             }
-        )
-    }
+        },
+    )
 }
 
 private fun LazyListScope.homeAlbumSection(

@@ -34,7 +34,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -54,6 +53,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.ui.components.SongTable
+import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.xy.XyIconButton
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XySmallSlider
@@ -67,7 +69,7 @@ import xymusic_kmp.composeapp.generated.resources.*
 @Composable
 internal fun SongSection(
     title: String?,
-    songs: List<SongRowData>,
+    songs: List<XyMusic>,
     showAlbumColumn: Boolean = true,
     showMetaColumn: Boolean = true,
     onOpenAlbum: () -> Unit = {},
@@ -77,94 +79,17 @@ internal fun SongSection(
         if (title != null) {
             TitleText(title)
         }
-        SongTable(songs, showAlbumColumn, showMetaColumn, onOpenAlbum, onOpenArtist)
-    }
-}
-
-/**
- * 通用歌曲表格容器。
- */
-@Composable
-internal fun SongTable(
-    songs: List<SongRowData>,
-    showAlbumColumn: Boolean,
-    showMetaColumn: Boolean,
-    onOpenAlbum: () -> Unit,
-    onOpenArtist: () -> Unit,
-) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        SongTableHeader(showAlbumColumn, showMetaColumn)
-        songs.forEach { song ->
-            SongRow(song, showAlbumColumn, showMetaColumn, onOpenAlbum, onOpenArtist)
-        }
-    }
-}
-
-/**
- * 歌曲表格头部。
- */
-@Composable
-private fun SongTableHeader(showAlbumColumn: Boolean, showMetaColumn: Boolean) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        TableCell("#", 40.dp, desktopColors.textSecondary)
-        TableCell("标题", 320.dp, desktopColors.textSecondary)
-        if (showAlbumColumn) {
-            TableCell("专辑", 240.dp, desktopColors.textSecondary)
-        }
-        if (showMetaColumn) {
-            TableCell("添加时间", 140.dp, desktopColors.textSecondary)
-        }
-        TableCell("时长", 72.dp, desktopColors.textSecondary, textAlign = TextAlign.End)
-    }
-    HorizontalDivider(color = desktopColors.divider)
-}
-
-/**
- * 歌曲表格中的单行内容。
- */
-@Composable
-private fun SongRow(
-    song: SongRowData,
-    showAlbumColumn: Boolean,
-    showMetaColumn: Boolean,
-    onOpenAlbum: () -> Unit,
-    onOpenArtist: () -> Unit,
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val hovered by interactionSource.collectIsHoveredAsState()
-    val background by animateColorAsState(if (hovered) Color(0x19FFFFFF) else Color.Transparent)
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(4.dp))
-            .background(background)
-            .hoverable(interactionSource)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        TableCell(song.index.toString(), 40.dp, desktopColors.textSecondary)
-        Row(
-            modifier = Modifier.width(320.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            CoverSwatch(Modifier.size(40.dp), song.accent)
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(song.title, color = desktopColors.textPrimary, fontSize = 16.sp, fontWeight = FontWeight.Medium)
-                Text(song.artist, color = desktopColors.textSecondary, fontSize = 14.sp, modifier = Modifier.clickable(onClick = onOpenArtist))
-            }
-        }
-        if (showAlbumColumn) {
-            TableCell(song.album, 240.dp, desktopColors.textSecondary, modifier = Modifier.clickable(onClick = onOpenAlbum))
-        }
-        if (showMetaColumn) {
-            TableCell(song.meta, 140.dp, desktopColors.textSecondary)
-        }
-        TableCell(song.duration, 72.dp, desktopColors.textSecondary, textAlign = TextAlign.End)
+        SongTable(
+            songs = songs,
+            columns = SongTableColumns(
+                showAlbumColumn = showAlbumColumn,
+                showMetaColumn = showMetaColumn,
+            ),
+            metaText = ::prototypeSongMetaText,
+            accentColor = { _, music -> prototypeSongAccent(music) },
+            onOpenAlbum = { onOpenAlbum() },
+            onOpenArtist = { onOpenArtist() },
+        )
     }
 }
 
@@ -319,16 +244,16 @@ internal fun QueuePanel(visible: Boolean, modifier: Modifier = Modifier, onClose
  * 播放队列中的单条歌曲卡片。
  */
 @Composable
-private fun QueueSongCard(song: SongRowData, active: Boolean) {
+private fun QueueSongCard(song: XyMusic, active: Boolean) {
     Row(
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(if (active) Color(0x19FFFFFF) else Color.Transparent).padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        CoverSwatch(Modifier.size(40.dp), song.accent)
+        CoverSwatch(Modifier.size(40.dp), prototypeSongAccent(song))
         Column(modifier = Modifier.width(196.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(song.title, color = if (active) desktopColors.theme else desktopColors.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-            Text(song.artist, color = desktopColors.textSecondary, fontSize = 12.sp)
+            Text(song.name, color = if (active) desktopColors.theme else desktopColors.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            Text(song.artists?.firstOrNull().orEmpty(), color = desktopColors.textSecondary, fontSize = 12.sp)
         }
         if (active) {
             ResourceIcon(Res.drawable.volume_up_24px, null, desktopColors.theme, modifier = Modifier.size(16.dp))
@@ -365,7 +290,7 @@ internal fun PlayerBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            CoverSwatch(Modifier.size(56.dp), recommendedSongs.first().accent)
+            CoverSwatch(Modifier.size(56.dp), prototypeSongAccent(recommendedSongs.first()))
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text("Neon Lights", color = desktopColors.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable(onClick = onOpenAlbum))
                 Text("The Synth Band", color = desktopColors.textSecondary, fontSize = 12.sp, modifier = Modifier.clickable(onClick = onOpenArtist))

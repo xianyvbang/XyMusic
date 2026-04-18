@@ -1,7 +1,68 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.ui.graphics.Color
+import cn.xybbz.localdata.data.music.XyMusic
+import kotlin.time.Clock
 import xymusic_kmp.composeapp.generated.resources.*
+
+private const val PrototypeConnectionId = -1L
+private const val DayMilliseconds = 24 * 60 * 60 * 1000L
+
+private fun prototypeSong(
+    itemId: String,
+    title: String,
+    artist: String,
+    albumName: String = "",
+    duration: String = "00:00",
+    daysAgo: Int? = null,
+    ifFavorite: Boolean = false,
+): XyMusic {
+    val timestamp = daysAgo?.let { Clock.System.now().toEpochMilliseconds() - it * DayMilliseconds } ?: 0L
+    return XyMusic(
+        itemId = itemId,
+        name = title,
+        downloadUrl = "",
+        album = albumName.takeIf { it.isNotBlank() }?.plus("-id").orEmpty(),
+        albumName = albumName.ifBlank { null },
+        connectionId = PrototypeConnectionId,
+        artists = listOf(artist),
+        ifFavoriteStatus = ifFavorite,
+        runTimeTicks = duration.toDurationMillis(),
+        createTime = timestamp,
+        lastPlayedDate = timestamp,
+    )
+}
+
+private fun String.toDurationMillis(): Long {
+    val parts = split(":")
+    if (parts.size != 2) return 0L
+    val minutes = parts[0].toLongOrNull() ?: return 0L
+    val seconds = parts[1].toLongOrNull() ?: return 0L
+    return (minutes * 60 + seconds) * 1000L
+}
+
+internal fun prototypeSongAccent(music: XyMusic): Color {
+    return when (music.itemId) {
+        "recommended_1", "album_track_1", "album_track_2", "artist_hot_1" -> Color(0xFF3C4CE0)
+        "recommended_2", "queue_1" -> Color(0xFFE14C40)
+        "recommended_3", "queue_2" -> Color(0xFFB98B29)
+        "recent_1" -> Color(0xFF467B52)
+        "recent_2" -> Color(0xFF7E3C3C)
+        "artist_hot_2" -> Color(0xFF6B419B)
+        else -> Color(0xFF267A6A)
+    }
+}
+
+internal fun prototypeSongMetaText(music: XyMusic): String {
+    if (music.createTime <= 0L) return ""
+    val diffDays = ((Clock.System.now().toEpochMilliseconds() - music.createTime) / DayMilliseconds).toInt()
+    return when {
+        diffDays <= 0 -> ""
+        diffDays == 1 -> "昨天"
+        diffDays < 7 -> "${diffDays}天前"
+        else -> "${diffDays / 7}周前"
+    }
+}
 
 /**
  * 左侧导航菜单样例数据。
@@ -27,9 +88,9 @@ internal val sidebarPlaylists = listOf(
  * 首页推荐歌曲样例数据。
  */
 internal val recommendedSongs = listOf(
-    SongRowData(1, "Neon Lights", "The Synth Band", "Midnight Sounds", "2天前", "3:42", Color(0xFF3C4CE0)),
-    SongRowData(2, "Bass Drop", "DJ Alex", "Electronic Vibes", "4天前", "4:15", Color(0xFFE14C40)),
-    SongRowData(3, "Sunrise Stroll", "Sarah Guitars", "Acoustic Morning", "1周前", "3:18", Color(0xFFB98B29)),
+    prototypeSong("recommended_1", "Neon Lights", "The Synth Band", "Midnight Sounds", "3:42", daysAgo = 2),
+    prototypeSong("recommended_2", "Bass Drop", "DJ Alex", "Electronic Vibes", "4:15", daysAgo = 4),
+    prototypeSong("recommended_3", "Sunrise Stroll", "Sarah Guitars", "Acoustic Morning", "3:18", daysAgo = 7),
 )
 
 /**
@@ -46,8 +107,8 @@ internal val latestAlbums = listOf(
  * 首页最近播放歌曲样例数据。
  */
 internal val recentSongs = listOf(
-    SongRowData(1, "Shape of My Heart", "Sting", "Ten Summoner's Tales", "昨天", "4:38", Color(0xFF467B52)),
-    SongRowData(2, "Lose Yourself", "Eminem", "8 Mile", "昨天", "5:20", Color(0xFF7E3C3C)),
+    prototypeSong("recent_1", "Shape of My Heart", "Sting", "Ten Summoner's Tales", "4:38", daysAgo = 1),
+    prototypeSong("recent_2", "Lose Yourself", "Eminem", "8 Mile", "5:20", daysAgo = 1),
 )
 
 /**
@@ -136,14 +197,22 @@ internal val sampleArtistDetail = ArtistDetailData(
  * 艺术家热门歌曲样例数据。
  */
 internal val artistHotSongs = listOf(
-    SongRowData(1, "Neon Lights", "The Synth Band", "1,000,432 次播放", "", "3:42", Color(0xFF3C4CE0)),
-    SongRowData(2, "City Cruising", "The Synth Band", "845,123 次播放", "", "4:10", Color(0xFF6B419B)),
+    prototypeSong("artist_hot_1", "Neon Lights", "The Synth Band", "1,000,432 次播放", "3:42"),
+    prototypeSong("artist_hot_2", "City Cruising", "The Synth Band", "845,123 次播放", "4:10"),
+)
+
+/**
+ * 专辑详情曲目样例数据。
+ */
+internal val albumTrackSongs = listOf(
+    prototypeSong("album_track_1", "Intro - The Night", "The Synth Band", duration = "1:24"),
+    prototypeSong("album_track_2", "Neon Lights", "The Synth Band", duration = "3:42"),
 )
 
 /**
  * 播放队列样例数据。
  */
 internal val queueSongs = listOf(
-    SongRowData(1, "Bass Drop", "DJ Alex", "", "", "4:15", Color(0xFFE14C40)),
-    SongRowData(2, "Sunrise Stroll", "Sarah Guitars", "", "", "3:18", Color(0xFFB98B29)),
+    prototypeSong("queue_1", "Bass Drop", "DJ Alex", duration = "4:15"),
+    prototypeSong("queue_2", "Sunrise Stroll", "Sarah Guitars", duration = "3:18"),
 )
