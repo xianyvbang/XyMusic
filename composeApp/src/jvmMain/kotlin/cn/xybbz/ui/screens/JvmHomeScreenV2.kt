@@ -2,14 +2,15 @@ package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -45,7 +46,6 @@ import xymusic_kmp.composeapp.generated.resources.most_played
 import xymusic_kmp.composeapp.generated.resources.recently_played_albums
 import xymusic_kmp.composeapp.generated.resources.recently_played_music
 import xymusic_kmp.composeapp.generated.resources.view_more
-import androidx.compose.foundation.lazy.grid.items as gridItems
 
 private val HomeMusicTableColumns = SongTableColumns(
     showFavoriteColumn = true,
@@ -235,6 +235,8 @@ private fun LazyListScope.homeAlbumSection(
     albumList: List<XyAlbum>,
     onOpenAlbum: (XyAlbum) -> Unit,
 ) {
+    val albumRows = albumList.chunked(5)
+
     item(key = "${sectionKey}_header") {
         // TODO: components package 里还没有“固定五列桌面专辑网格”组件，
         // 这里先保留页面内布局骨架，后续可抽到通用组件。
@@ -243,20 +245,15 @@ private fun LazyListScope.homeAlbumSection(
     item(key = "${sectionKey}_grid_spacing") {
         Spacer(modifier = Modifier.height(20.dp))
     }
-    item(key = "${sectionKey}_grid") {
-        val rows = ((albumList.size + 4) / 5).coerceAtLeast(1)
-        val gridHeight = 252.dp * rows + 24.dp * (rows - 1)
-
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(5),
-            horizontalArrangement = Arrangement.spacedBy(24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
-            userScrollEnabled = false,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(gridHeight),
+    items(
+        items = albumRows,
+        key = { row -> "${sectionKey}_${row.firstOrNull()?.itemId.orEmpty()}" }
+    ) { rowAlbums ->
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+//            horizontalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            gridItems(albumList, key = { album -> album.itemId }) { album ->
+            rowAlbums.forEach { album ->
                 MusicAlbumCardComponent(
                     onItem = { album },
                     imageSize = MusicCardImageSize,
@@ -265,6 +262,16 @@ private fun LazyListScope.homeAlbumSection(
                     }
                 )
             }
+
+            /*repeat(5 - rowAlbums.size) {
+                Spacer(
+                    modifier = Modifier.weight(1f)
+                )
+            }*/
+        }
+
+        if (rowAlbums !== albumRows.lastOrNull()) {
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
