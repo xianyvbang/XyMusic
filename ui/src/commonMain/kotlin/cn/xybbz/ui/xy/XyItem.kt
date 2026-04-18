@@ -312,6 +312,119 @@ fun ItemTrailingArrowRight(
     )
 }
 
+
+@Composable
+fun JvmItemTrailingArrowRight(
+    modifier: Modifier = Modifier,
+    name: String,
+    subordination: String?,
+    favoriteState: Boolean,
+    imgUrl: String? = null,
+    backImgUrl: String? = null,
+    media: String? = null,
+    enabledPic: Boolean = true,
+    ifDownload: Boolean,
+    ifPlay: Boolean,
+    enabled: Boolean = true,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
+    picSize: Dp = 50.dp,
+    brush: Brush? = null,
+    onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
+    trailingContent: (@Composable () -> Unit)? = null
+) {
+    /*
+    *                overlineContent
+    * leadingContent headlineContent      trailingContent
+    *                supportingContent
+    * */
+
+    val density = LocalDensity.current
+    val iconSizeDp = with(density) { 16.sp.toDp() }
+    ListItem(
+        colors = ListItemDefaults.colors(
+            containerColor = if (brush != null) Color.Transparent else if (ifPlay) Color(0x3B000000) else backgroundColor
+        ),
+        modifier = modifier
+            .height(XyTheme.dimens.itemHeight)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(XyTheme.dimens.corner))
+            .background(
+                brush
+            )
+            .combinedClickable(enabled = enabled, onClick = composeClick {
+                onClick?.invoke()
+            }, onLongClick = { onLongClick?.invoke() }),
+        headlineContent = {
+            XyText(
+                text = name,
+                color = if (ifPlay) Color(0xFFABE2FF) else MaterialTheme.colorScheme.onSurface
+            )
+        },
+        supportingContent = if (!media.isNullOrBlank() || !subordination.isNullOrBlank()) {
+            {
+                XyTextSub(
+                    text = buildAnnotatedString {
+                        media?.let {
+                            append(media)
+                            append(" ")
+                        }
+                        subordination?.let {
+                            withStyle(
+                                style = SpanStyle(
+                                    fontSize = 12.sp,
+                                    fontStyle = MaterialTheme.typography.titleSmall.fontStyle,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                ), block = {
+                                    append(subordination)
+                                }
+                            )
+                        }
+
+                    },
+                )
+            }
+        } else null,
+        leadingContent = if (enabledPic) {
+            {
+                XySmallImage(
+                    modifier = Modifier.aspectRatio(1F),
+                    model = imgUrl,
+                    backModel = backImgUrl,
+                    size = picSize,
+                    contentDescription = "${name}${stringResource(Res.string.image_suffix)}",
+                    placeholder = Res.drawable.default_placeholder,
+                    error = Res.drawable.default_placeholder,
+                    fallback = Res.drawable.default_placeholder,
+                )
+            }
+        } else null,
+        trailingContent = {
+
+            Row {
+                Icon(
+                    painter = painterResource(Res.drawable.favorite_border_24px),
+                    contentDescription = stringResource(Res.string.favorited),
+                    modifier = Modifier
+                        .size(iconSizeDp)
+                        .padding(end = 2.dp),
+                    tint = Color.Red
+                )
+
+                Icon(
+                    painter = painterResource(Res.drawable.download_done_24px),
+                    contentDescription = stringResource(Res.string.downloaded),
+                    modifier = Modifier
+                        .size(iconSizeDp)
+                        .padding(end = 2.dp),
+                    tint = Color.Green
+                )
+            }
+        }
+
+    )
+}
+
 @Composable
 fun XyItem(
     modifier: Modifier = Modifier,

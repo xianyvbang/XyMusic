@@ -3,7 +3,6 @@ package cn.xybbz.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material3.TextButton
@@ -38,8 +36,8 @@ import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextLarge
 import cn.xybbz.viewmodel.HomeViewModel
-import org.koin.compose.viewmodel.koinViewModel
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.daily_recommendations
 import xymusic_kmp.composeapp.generated.resources.latest_albums
@@ -47,6 +45,7 @@ import xymusic_kmp.composeapp.generated.resources.most_played
 import xymusic_kmp.composeapp.generated.resources.recently_played_albums
 import xymusic_kmp.composeapp.generated.resources.recently_played_music
 import xymusic_kmp.composeapp.generated.resources.view_more
+import androidx.compose.foundation.lazy.grid.items as gridItems
 
 @Composable
 fun JvmHomeScreenV2(
