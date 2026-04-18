@@ -47,6 +47,7 @@ class SidebarPlaylistViewModel(
     init {
         startPlaylistObserver()
         observePlaylistChanges()
+        refreshPlaylists()
     }
 
     private fun observePlaylistChanges() {

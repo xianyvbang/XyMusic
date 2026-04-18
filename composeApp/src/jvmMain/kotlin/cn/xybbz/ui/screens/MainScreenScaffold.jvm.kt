@@ -28,7 +28,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -95,12 +94,6 @@ actual fun MainScreenScaffold(
     val sidebarInteractionSource = remember { MutableInteractionSource() }
     val sidebarHovered by sidebarInteractionSource.collectIsHoveredAsState()
     val showScrollbar = sidebarHovered || sidebarListState.isScrollInProgress
-
-    LaunchedEffect(playlists.isEmpty()) {
-        if (playlists.isEmpty()) {
-            sidebarPlaylistViewModel.refreshPlaylists()
-        }
-    }
 
     Scaffold(
         modifier = modifier,
