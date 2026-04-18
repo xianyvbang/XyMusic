@@ -172,7 +172,7 @@ fun XyTextLarge(
     text: String,
     fontWeight: FontWeight? = FontWeight.Bold,
     maxLines: Int = 1,
-    style: TextStyle = MaterialTheme.typography.titleLarge,
+    style: TextStyle = MaterialTheme.typography.headlineSmall,
     overflow: TextOverflow = TextOverflow.Ellipsis,
     color: Color = MaterialTheme.colorScheme.onSurface
 ){

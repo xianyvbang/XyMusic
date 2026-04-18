@@ -34,7 +34,9 @@ import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyTextLarge
 import cn.xybbz.viewmodel.HomeViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.jetbrains.compose.resources.stringResource
@@ -275,12 +277,8 @@ private fun JvmHomeDesktopSectionHeader(
     title: String,
     action: @Composable (() -> Unit)? = null,
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        XyText(text = title)
+    XyRow {
+        XyTextLarge(text = title)
         if (action != null) {
             action()
         }
