@@ -21,7 +21,6 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -49,7 +48,6 @@ import cn.xybbz.ui.components.AlertDialogComponent
 import cn.xybbz.ui.components.BottomSheetCompose
 import cn.xybbz.ui.components.LifecycleEffect
 import cn.xybbz.ui.components.LoadingCompose
-import cn.xybbz.ui.components.SnackBarPlayerComponent
 import cn.xybbz.viewmodel.MainViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -154,7 +152,7 @@ fun MainScreen(mainViewModel: MainViewModel = koinViewModel<MainViewModel>()) {
                     navigationState = navigationState,
                     navigator = navigator,
                     snackbarHost = {
-                        SnackBarHostUi()
+                        MainScreenSnackBarHost()
                     }
                 ) {
                     Box {
@@ -169,19 +167,4 @@ fun MainScreen(mainViewModel: MainViewModel = koinViewModel<MainViewModel>()) {
             }
         }
     }
-}
-
-
-@Composable
-private fun SnackBarHostUi(modifier: Modifier = Modifier) {
-    val mainViewModel = LocalMainViewModel.current
-    val ifShowSnackBar by mainViewModel.settingsManager.ifShowSnackBar.collectAsStateWithLifecycle()
-    if (ifShowSnackBar)
-        Column(modifier = Modifier.then(modifier)) {
-            SnackBarPlayerComponent(
-                onClick = {
-                    mainViewModel.putSheetState(true)
-                })
-
-        }
 }
