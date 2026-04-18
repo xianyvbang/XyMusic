@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
@@ -52,6 +51,7 @@ import cn.xybbz.ui.components.MusicPlaylistItemComponent
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyIconButton
 import cn.xybbz.ui.xy.XyRow
@@ -97,7 +97,7 @@ actual fun MainScreenScaffold(
 
     Scaffold(
         modifier = modifier,
-//        snackbarHost = snackbarHost
+        snackbarHost = snackbarHost
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize()) {
             DesktopWindowTitleBar(navigator = navigator)
@@ -113,7 +113,7 @@ actual fun MainScreenScaffold(
                         .width(jvmRouterMenuWidth)
                         .hoverable(interactionSource = sidebarInteractionSource)
                 ) {
-                    LazyColumn(
+                    LazyColumnNotComponent(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(end = XyTheme.dimens.contentPadding),
