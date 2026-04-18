@@ -53,7 +53,7 @@ import cn.xybbz.ui.xy.XyIconButton
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSubSmall
-import cn.xybbz.viewmodel.HomeViewModel
+import cn.xybbz.viewmodel.SidebarPlaylistViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -66,7 +66,7 @@ import xymusic_kmp.composeapp.generated.resources.no_playlists
 import xymusic_kmp.composeapp.generated.resources.playlist
 import xymusic_kmp.composeapp.generated.resources.songs_count_suffix
 
-val jvmRouterMenuWidth = 180.dp
+val jvmRouterMenuWidth = 220.dp
 
 @Composable
 actual fun MainScreenScaffold(
@@ -77,9 +77,9 @@ actual fun MainScreenScaffold(
     snackbarHost: @Composable () -> Unit,
     content: @Composable (PaddingValues) -> Unit
 ) {
-    val homeViewModel = koinViewModel<HomeViewModel>()
+    val sidebarPlaylistViewModel = koinViewModel<SidebarPlaylistViewModel>()
     val coroutineScope = rememberCoroutineScope()
-    val playlists by homeViewModel.homeDataRepository.playlists.collectAsStateWithLifecycle()
+    val playlists by sidebarPlaylistViewModel.playlists.collectAsStateWithLifecycle()
     val playlistTitle = stringResource(Res.string.playlist)
     val createPlaylist = stringResource(Res.string.create_playlist)
     val newPlaylist = stringResource(Res.string.new_playlist)
@@ -89,7 +89,7 @@ actual fun MainScreenScaffold(
 
     LaunchedEffect(playlists.isEmpty()) {
         if (playlists.isEmpty()) {
-            homeViewModel.getServerPlaylists()
+            sidebarPlaylistViewModel.refreshPlaylists()
         }
     }
 
@@ -139,7 +139,7 @@ actual fun MainScreenScaffold(
                                         onDismissRequest = {},
                                         onConfirmation = {
                                             coroutineScope.launch {
-                                                homeViewModel.savePlaylist(playlistName)
+                                                sidebarPlaylistViewModel.savePlaylist(playlistName)
                                             }
                                         }
                                     ).show()
