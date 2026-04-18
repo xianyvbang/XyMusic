@@ -64,7 +64,7 @@ private val jvmDesktopEntryProvider2 = entryProvider<NavKey> {
     desktopNode<Home> { HomeDesktopScreen() }
     desktopNode<Search> { JvmHomeScreenV2() }
     desktopNode<Music> { JvmMusicScreen() }
-    desktopNode<Album> { AlbumDesktopScreen() }
+    desktopNode<Album> { JvmHomeScreen() }
     desktopNode<Artist> { ArtistDesktopScreen() }
     desktopNode<FavoriteList> { FavoriteDesktopScreen() }
     desktopNode<AlbumInfo> { AlbumInfoDesktopScreen(it) }

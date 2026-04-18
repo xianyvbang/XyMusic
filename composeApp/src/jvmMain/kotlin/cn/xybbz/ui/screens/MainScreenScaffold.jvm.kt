@@ -1,7 +1,6 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -47,8 +46,11 @@ import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.DesktopWindowTitleBar
 import cn.xybbz.ui.components.MusicPlaylistItemComponent
 import cn.xybbz.ui.components.show
+import cn.xybbz.ui.ext.debounceClickable
+import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyIconButton
+import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.HomeViewModel
@@ -59,8 +61,8 @@ import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.add_24px
 import xymusic_kmp.composeapp.generated.resources.create_playlist
-import xymusic_kmp.composeapp.generated.resources.no_playlists
 import xymusic_kmp.composeapp.generated.resources.new_playlist
+import xymusic_kmp.composeapp.generated.resources.no_playlists
 import xymusic_kmp.composeapp.generated.resources.playlist
 import xymusic_kmp.composeapp.generated.resources.songs_count_suffix
 
@@ -116,17 +118,9 @@ actual fun MainScreenScaffold(
                             onClick = { navigator.navigate(route = item.route) },
                         )
                     }
-                    item(key = "playlist_spacer") {
-                        Spacer(modifier = Modifier.height(20.dp))
-                    }
+
                     item(key = "playlist_header") {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 6.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
+                        XyRow {
                             XyText(
                                 text = playlistTitle,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -159,16 +153,15 @@ actual fun MainScreenScaffold(
                             }
                         }
                     }
-                    item(key = "playlist_header_spacing") {
-                        Spacer(modifier = Modifier.height(4.dp))
-                    }
                     if (playlists.isEmpty()) {
                         item(key = "playlist_empty") {
-                            XyTextSubSmall(
-                                text = noPlaylistsText,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                            XyRow {
+                                XyTextSubSmall(
+                                    text = noPlaylistsText,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+
                         }
                     } else {
                         items(playlists, key = { item -> item.itemId }) { playlist ->
@@ -215,20 +208,17 @@ private fun DesktopNavigationItem(
     }
     val contentColor = MaterialTheme.colorScheme.onSurface
 
-    Row(
+    XyRow(
         modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(XyTheme.dimens.corner))
             .background(backgroundColor)
             .hoverable(interactionSource = interactionSource)
-            .clickable(
+            .debounceClickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick
-            )
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            ),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.innerVerticalPadding),
     ) {
         Icon(
             painter = painterResource(item.icon),
@@ -239,6 +229,7 @@ private fun DesktopNavigationItem(
         XyText(
             text = stringResource(item.title),
             color = contentColor,
+            style = MaterialTheme.typography.bodyLarge,
         )
     }
 }

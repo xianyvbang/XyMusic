@@ -19,6 +19,7 @@
 package cn.xybbz.ui.xy
 
 import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -162,5 +163,26 @@ fun XyScreenTitle(
         fontWeight = fontWeight,
         color = color,
         style = MaterialTheme.typography.titleLarge,
+    )
+}
+
+@Composable
+fun XyTextLarge(
+    modifier: Modifier = Modifier,
+    text: String,
+    fontWeight: FontWeight? = FontWeight.Bold,
+    maxLines: Int = 1,
+    style: TextStyle = MaterialTheme.typography.titleLarge,
+    overflow: TextOverflow = TextOverflow.Ellipsis,
+    color: Color = MaterialTheme.colorScheme.onSurface
+){
+    XyText(
+        modifier = modifier,
+        text = text,
+        fontWeight = fontWeight,
+        maxLines = maxLines,
+        style = style,
+        overflow = overflow,
+        color = color
     )
 }
