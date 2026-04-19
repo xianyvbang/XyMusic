@@ -29,6 +29,7 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -91,3 +92,56 @@ fun MusicProgressBar(
         )
     }
 }
+
+
+/**
+ * 横向进度条组件。
+ * 当前时间和总时长分别放在进度条左右两侧，适合紧凑的底部播放栏场景。
+ */
+@Composable
+fun MusicProgressBarHorizontal(
+    currentTime: Long,
+    progressStateFlow: Flow<Long>,
+    totalTime: Long,
+    cacheProgress: Float,
+    onProgressChanged: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    progressBarColor: Color = MaterialTheme.colorScheme.onSurface,
+    cacheProgressBarColor: Color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+    backgroundBarColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
+    barHeight: Float = 4f,
+    thumbRadius: Float = 6f,
+    timeTextStyle: TextStyle = TextStyle(fontSize = 12.sp, color = Color.Gray),
+) {
+
+    val progress by playProgress(totalTime, progressStateFlow)
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = XyTheme.dimens.outerVerticalPadding / 2),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        BasicText(
+            text = formatTime(currentTime),
+            style = timeTextStyle
+        )
+        XySmallSlider(
+            modifier = Modifier.weight(1f),
+            progress = progress,
+            cacheProgress = cacheProgress,
+            onProgressChanged = onProgressChanged,
+            progressBarColor = progressBarColor,
+            cacheProgressBarColor = cacheProgressBarColor,
+            backgroundBarColor = backgroundBarColor,
+            barHeight = barHeight,
+            thumbRadius = thumbRadius
+        )
+        BasicText(
+            text = formatTime(totalTime),
+            style = timeTextStyle
+        )
+    }
+}
+

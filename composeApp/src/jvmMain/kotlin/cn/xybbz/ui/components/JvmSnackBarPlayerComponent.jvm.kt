@@ -31,7 +31,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -48,7 +47,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -65,7 +63,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -442,7 +439,6 @@ private fun JvmSnackBarPlaybackBar(
     val musicController = snackBarPlayerViewModel.musicController
     val currentMusic = musicController.musicInfo
     val snackBarTitle = currentMusic.snackBarTitleAnnotatedString(
-        subColor = MaterialTheme.colorScheme.onSurfaceVariant,
         spanStyle = MaterialTheme.typography.bodySmall.copy(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         ).toSpanStyle(
@@ -642,6 +638,7 @@ private fun JvmSnackBarControlSection(
                         stringResource(Res.string.playing)
                     },
                     tint = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.fillMaxSize()
                 )
             }
             JvmSnackBarIconButton(
@@ -674,7 +671,7 @@ private fun JvmSnackBarControlSection(
             }
         }
 
-        MusicProgressBar(
+        MusicProgressBarHorizontal(
             currentTime = currentProgress,
             progressStateFlow = musicController.progressStateFlow,
             totalTime = musicController.duration,
@@ -717,7 +714,8 @@ private fun JvmSnackBarIconButton(
         Icon(
             painter = painterResource(iconRes),
             contentDescription = contentDescription,
-            tint = tint
+            tint = tint,
+            modifier = Modifier.fillMaxSize()
         )
     }
 }
@@ -727,7 +725,6 @@ private fun JvmSnackBarIconButton(
  * 主标题沿用主文案颜色，艺术家名称使用次级文案颜色。
  */
 private fun XyPlayMusic?.snackBarTitleAnnotatedString(
-    subColor: Color,
     spanStyle: SpanStyle
 ): AnnotatedString {
     val music = this ?: return AnnotatedString("")
