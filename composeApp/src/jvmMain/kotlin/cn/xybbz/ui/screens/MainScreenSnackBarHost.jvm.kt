@@ -21,8 +21,6 @@ internal actual fun MainScreenSnackBarHost(modifier: Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .padding(
-                start = jvmRouterMenuWidth + XyTheme.dimens.innerHorizontalPadding,
-                end = XyTheme.dimens.innerHorizontalPadding,
                 bottom = XyTheme.dimens.outerVerticalPadding
             )
     ) {

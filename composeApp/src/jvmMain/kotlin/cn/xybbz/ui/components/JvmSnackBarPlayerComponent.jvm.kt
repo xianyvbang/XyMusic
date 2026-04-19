@@ -211,15 +211,7 @@ fun JvmSnackBarPlayerComponent(
         modifier = Modifier
             .fillMaxWidth()
             .zIndex(Float.MAX_VALUE)
-            .padding(horizontal = XyTheme.dimens.innerHorizontalPadding)
-            .clip(
-                shape = RoundedCornerShape(
-                    topStart = XyTheme.dimens.corner,
-                    bottomStart = XyTheme.dimens.corner,
-                    topEnd = 25.dp,
-                    bottomEnd = 25.dp
-                )
-            )
+            .padding(horizontal = XyTheme.dimens.innerVerticalPadding)
             .background(defaultSnackBarColor)
             .drawBehind {
                 drawRect(animatedColor)
