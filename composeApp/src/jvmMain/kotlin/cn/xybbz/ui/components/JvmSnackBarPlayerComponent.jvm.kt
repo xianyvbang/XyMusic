@@ -21,12 +21,16 @@ package cn.xybbz.ui.components
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,6 +38,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,6 +48,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -53,6 +59,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -61,13 +68,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -89,7 +99,6 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XySmallImage
-import cn.xybbz.ui.xy.XySmallSlider
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import cn.xybbz.viewmodel.SnackBarPlayerViewModel
@@ -137,6 +146,7 @@ import xymusic_kmp.composeapp.generated.resources.song_info
 import xymusic_kmp.composeapp.generated.resources.unfavorite
 import xymusic_kmp.composeapp.generated.resources.volume_up_24px
 import xymusic_kmp.composeapp.generated.resources.volume_value_setting
+import kotlin.math.roundToInt
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 // 底部播放栏里相对固定的尺寸统一收敛在这里，避免散落魔法值。
@@ -146,8 +156,15 @@ private val JvmSnackBarPlayButtonWidth = 56.dp
 private val JvmSnackBarPlayButtonHeight = 32.dp
 private val JvmSnackBarPlayIconSize = 40.dp
 private val JvmSnackBarIconButtonSize = 32.dp
-private val JvmSnackBarVolumeGroupWidth = 124.dp
-private val JvmSnackBarVolumeSliderWidth = 92.dp
+private val JvmSnackBarVolumePopupWidth = 60.dp
+private val JvmSnackBarVolumePopupHeight = 188.dp
+private val JvmSnackBarVolumeSliderWidth = 24.dp
+private val JvmSnackBarVolumeSliderHeight = 128.dp
+private val JvmSnackBarVolumePopupOffsetX =
+    (JvmSnackBarVolumePopupWidth - JvmSnackBarIconButtonSize) / -2
+private val JvmSnackBarVolumePopupOffsetY = 228.dp
+private val JvmSnackBarVolumeSliderBarWidth = 5f
+private val JvmSnackBarVolumeSliderThumbRadius = 6f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -584,6 +601,9 @@ private fun JvmSnackBarControlSection(
     musicBottomMenuViewModel: MusicBottomMenuViewModel
 ) {
     val currentProgress by musicController.progressStateFlow.collectAsStateWithLifecycle()
+    var showVolumePopup by remember {
+        mutableStateOf(false)
+    }
     val playModeIcon = musicController.playMode.toPlayModeIcon()
     val playModeDescription = when (musicController.playMode) {
         PlayerModeEnum.SINGLE_LOOP -> stringResource(Res.string.single_loop)
@@ -593,7 +613,7 @@ private fun JvmSnackBarControlSection(
     val isPlaying =
         musicController.state == PlayStateEnum.Playing || musicController.state == PlayStateEnum.Loading
 
-    XyColumn (
+    XyColumn(
         modifier = modifier
             .fillMaxHeight(),
         paddingValues = PaddingValues(),
@@ -651,26 +671,24 @@ private fun JvmSnackBarControlSection(
                 enabled = musicController.musicInfo != null,
                 onClick = musicController::seekToNext
             )
-            Row(
-                modifier = Modifier.width(JvmSnackBarVolumeGroupWidth),
-                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding / 2),
-                verticalAlignment = Alignment.CenterVertically
+            Box(
+                contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    painter = painterResource(Res.drawable.volume_up_24px),
+                JvmSnackBarIconButton(
+                    iconRes = Res.drawable.volume_up_24px,
                     contentDescription = stringResource(Res.string.volume_value_setting),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    enabled = musicController.musicInfo != null,
+                    onClick = {
+                        showVolumePopup = !showVolumePopup
+                    }
                 )
-                XySmallSlider(
-                    modifier = Modifier.width(JvmSnackBarVolumeSliderWidth),
-                    progress = musicBottomMenuViewModel.volumeValue,
-                    onProgressChanged = musicBottomMenuViewModel::updateVolume,
-                    cacheProgressBarColor = Color.Transparent,
-                    progressBarColor = MaterialTheme.colorScheme.onSurface,
-                    backgroundBarColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f),
-                    barHeight = 3f,
-                    thumbRadius = 4f,
-                    touchHeight = XyTheme.dimens.itemHeight / 3
+
+                // 音量调节改成桌面端悬浮弹层，避免和主控制区横向挤在一起。
+                JvmSnackBarVolumePopup(
+                    expanded = showVolumePopup,
+                    volume = musicBottomMenuViewModel.volumeValue,
+                    onDismissRequest = { showVolumePopup = false },
+                    onVolumeChanged = musicBottomMenuViewModel::updateVolume
                 )
             }
         }
@@ -693,6 +711,139 @@ private fun JvmSnackBarControlSection(
             timeTextStyle = MaterialTheme.typography.labelSmall.copy(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        )
+    }
+}
+
+/**
+ * 底部播放栏的音量弹层。
+ * 点击音量按钮后向上展开，内部放竖向滑条和当前音量百分比。
+ */
+@Composable
+private fun JvmSnackBarVolumePopup(
+    expanded: Boolean,
+    volume: Float,
+    onDismissRequest: () -> Unit,
+    onVolumeChanged: (Float) -> Unit
+) {
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismissRequest,
+        // 让弹层水平中心对齐音量按钮，避免默认左对齐导致整体偏到一侧。
+        offset = DpOffset(x = JvmSnackBarVolumePopupOffsetX, y = -JvmSnackBarVolumePopupOffsetY),
+        shape = RoundedCornerShape(XyTheme.dimens.corner),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        modifier = Modifier.width(JvmSnackBarVolumePopupWidth)
+    ) {
+        Column(
+            modifier = Modifier
+                .width(JvmSnackBarVolumePopupWidth)
+//                .height(JvmSnackBarVolumePopupHeight)
+                .padding(vertical = XyTheme.dimens.contentPadding / 2),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Bottom
+        ) {
+            // 竖向滑条放在弹层主体，保持从下到上对应 0% 到 100% 的直觉。
+            JvmSnackBarVerticalSlider(
+                progress = volume,
+                onProgressChanged = onVolumeChanged,
+                modifier = Modifier
+                    .width(JvmSnackBarVolumeSliderWidth)
+                    .height(JvmSnackBarVolumeSliderHeight)
+            )
+            Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
+            Text(
+                text = "${(volume * 100).roundToInt()}%",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
+            Icon(
+                painter = painterResource(Res.drawable.volume_up_24px),
+                contentDescription = "音量设置"
+            )
+        }
+    }
+}
+
+/**
+ * JVM 底部播放栏专用的竖向滑条。
+ * 这里单独实现命中区域和拖拽逻辑，避免复用横向滑条时出现点击不准的问题。
+ */
+@Composable
+private fun JvmSnackBarVerticalSlider(
+    progress: Float,
+    onProgressChanged: (Float) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val sliderColor = MaterialTheme.colorScheme.onSurface
+    val sliderBackgroundColor = sliderColor.copy(alpha = 0.14f)
+
+    var isDragging by remember {
+        mutableStateOf(false)
+    }
+    var updatedProgress by remember(progress) {
+        mutableFloatStateOf(progress)
+    }
+    val animatedProgress by animateFloatAsState(
+        targetValue = if (isDragging) updatedProgress else progress,
+        label = "JvmSnackBarVolumeProgress"
+    )
+
+    fun updateByOffset(offsetY: Float, height: Float) {
+        val safeHeight = height.takeIf { it > 0f } ?: return
+        val newProgress = (1f - offsetY / safeHeight).coerceIn(0f, 1f)
+        updatedProgress = newProgress
+        onProgressChanged(newProgress)
+    }
+
+    Canvas(
+        modifier = modifier
+            .pointerInput(Unit) {
+                detectTapGestures { offset ->
+                    updateByOffset(offset.y, size.height.toFloat())
+                }
+            }
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDragStart = { offset ->
+                        isDragging = true
+                        updateByOffset(offset.y, size.height.toFloat())
+                    },
+                    onDrag = { change, _ ->
+                        updateByOffset(change.position.y, size.height.toFloat())
+                    },
+                    onDragEnd = { isDragging = false },
+                    onDragCancel = { isDragging = false }
+                )
+            }
+    ) {
+        val centerX = size.width / 2
+        val bottomY = size.height
+        val progressY = bottomY - bottomY * animatedProgress
+
+        // 背景轨道固定铺满整个高度，作为当前音量范围的基准线。
+        drawLine(
+            color = sliderBackgroundColor,
+            start = Offset(centerX, bottomY),
+            end = Offset(centerX, 0f),
+            strokeWidth = JvmSnackBarVolumeSliderBarWidth.dp.toPx(),
+            cap = StrokeCap.Round
+        )
+
+        // 前景轨道从底部向上增长，和系统音量的增长方向保持一致。
+        drawLine(
+            color = sliderColor,
+            start = Offset(centerX, bottomY),
+            end = Offset(centerX, progressY),
+            strokeWidth = JvmSnackBarVolumeSliderBarWidth.dp.toPx(),
+            cap = StrokeCap.Round
+        )
+
+        drawCircle(
+            color = sliderColor,
+            radius = JvmSnackBarVolumeSliderThumbRadius.dp.toPx(),
+            center = Offset(centerX, progressY)
         )
     }
 }
