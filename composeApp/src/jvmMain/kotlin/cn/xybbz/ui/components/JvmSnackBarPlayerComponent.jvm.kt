@@ -160,11 +160,11 @@ private val JvmSnackBarVolumePopupWidth = 60.dp
 private val JvmSnackBarVolumePopupHeight = 188.dp
 private val JvmSnackBarVolumeSliderWidth = 24.dp
 private val JvmSnackBarVolumeSliderHeight = 128.dp
+private val JvmSnackBarVolumePopupGap = 12.dp
 private val JvmSnackBarVolumePopupOffsetX =
     (JvmSnackBarVolumePopupWidth - JvmSnackBarIconButtonSize) / -2
-private val JvmSnackBarVolumePopupOffsetY = 228.dp
-private val JvmSnackBarVolumeSliderBarWidth = 5f
-private val JvmSnackBarVolumeSliderThumbRadius = 6f
+private const val JvmSnackBarVolumeSliderBarWidth = 5f
+private const val JvmSnackBarVolumeSliderThumbRadius = 6f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -730,7 +730,10 @@ private fun JvmSnackBarVolumePopup(
         expanded = expanded,
         onDismissRequest = onDismissRequest,
         // 让弹层水平中心对齐音量按钮，避免默认左对齐导致整体偏到一侧。
-        offset = DpOffset(x = JvmSnackBarVolumePopupOffsetX, y = -JvmSnackBarVolumePopupOffsetY),
+        offset = DpOffset(
+            x = JvmSnackBarVolumePopupOffsetX,
+            y = -(JvmSnackBarVolumePopupHeight + JvmSnackBarIconButtonSize + JvmSnackBarVolumePopupGap + XyTheme.dimens.outerVerticalPadding * 2)
+        ),
         shape = RoundedCornerShape(XyTheme.dimens.corner),
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         modifier = Modifier.width(JvmSnackBarVolumePopupWidth)
@@ -738,7 +741,6 @@ private fun JvmSnackBarVolumePopup(
         Column(
             modifier = Modifier
                 .width(JvmSnackBarVolumePopupWidth)
-//                .height(JvmSnackBarVolumePopupHeight)
                 .padding(vertical = XyTheme.dimens.contentPadding / 2),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Bottom
