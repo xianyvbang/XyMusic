@@ -2,9 +2,11 @@ package cn.xybbz
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.material3.MaterialTheme
@@ -25,7 +27,9 @@ import org.koin.compose.getKoin
 
 @Composable
 //@Preview
-fun App() {
+fun App(
+    windowContentPadding: PaddingValues = PaddingValues()
+) {
 
     val settingsManager: SettingsManager = getKoin().get()
     val themeType by settingsManager.themeType.collectAsState()
@@ -50,7 +54,11 @@ fun App() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            Box(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(windowContentPadding)
+            ) {
                 MainScreen()
                 XyPopTipHost()
             }
