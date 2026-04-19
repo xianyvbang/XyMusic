@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,14 +42,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -86,8 +85,9 @@ import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.XySmallSlider
+import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XySmallImage
+import cn.xybbz.ui.xy.XySmallSlider
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import cn.xybbz.viewmodel.SnackBarPlayerViewModel
@@ -142,7 +142,6 @@ private val JvmSnackBarCoverSize = 56.dp
 private val JvmSnackBarControlMaxWidth = 420.dp
 private val JvmSnackBarPlayButtonWidth = 48.dp
 private val JvmSnackBarPlayButtonHeight = 28.dp
-private val JvmSnackBarPlayIconSize = 16.dp
 private val JvmSnackBarIconButtonSize = 32.dp
 private val JvmSnackBarVolumeGroupWidth = 124.dp
 private val JvmSnackBarVolumeSliderWidth = 92.dp
@@ -451,13 +450,8 @@ private fun JvmSnackBarPlaybackBar(
     ) {
         val sectionWidth = maxWidth / 3
 
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(
-                    horizontal = XyTheme.dimens.outerHorizontalPadding,
-                    vertical = XyTheme.dimens.outerVerticalPadding / 2
-                ),
+        XyRow(
+            paddingValues = PaddingValues(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -531,9 +525,10 @@ private fun JvmSnackBarPlaybackBar(
                             onClick = {
                                 currentMusic ?: return@JvmSnackBarIconButton
                                 coroutineScope.launch {
-                                    snackBarPlayerViewModel.loadMusicInfo(currentMusic.itemId)?.let {
-                                        onShowMusicInfo(it)
-                                    }
+                                    snackBarPlayerViewModel.loadMusicInfo(currentMusic.itemId)
+                                        ?.let {
+                                            onShowMusicInfo(it)
+                                        }
                                 }
                             }
                         )
@@ -587,7 +582,8 @@ private fun JvmSnackBarControlSection(
         PlayerModeEnum.SEQUENTIAL_PLAYBACK -> stringResource(Res.string.list_loop)
         PlayerModeEnum.RANDOM_PLAY -> stringResource(Res.string.shuffle_play)
     }
-    val isPlaying = musicController.state == PlayStateEnum.Playing || musicController.state == PlayStateEnum.Loading
+    val isPlaying =
+        musicController.state == PlayStateEnum.Playing || musicController.state == PlayStateEnum.Loading
 
     Column(
         modifier = modifier
@@ -623,9 +619,9 @@ private fun JvmSnackBarControlSection(
                 },
                 enabled = musicController.musicInfo != null,
                 modifier = Modifier
+                    .clip(RoundedCornerShape(JvmSnackBarPlayButtonHeight))
                     .width(JvmSnackBarPlayButtonWidth)
-//                    .height(JvmSnackBarPlayButtonHeight/2)
-                    .clip(RoundedCornerShape(topEnd = 12.dp, bottomStart = 12.dp, bottomEnd = 12.dp, topStart = 12.dp))
+                    .height(JvmSnackBarPlayButtonHeight)
                     .background(MaterialTheme.colorScheme.onSurface)
             ) {
                 Icon(
@@ -638,7 +634,6 @@ private fun JvmSnackBarControlSection(
                         stringResource(Res.string.playing)
                     },
                     tint = MaterialTheme.colorScheme.surface,
-//                    modifier = Modifier.size(JvmSnackBarPlayIconSize)
                 )
             }
             JvmSnackBarIconButton(
