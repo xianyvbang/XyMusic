@@ -32,10 +32,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.common.utils.LrcUtils.formatTime
 import cn.xybbz.extension.playProgress
+import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XySmallSlider
 import kotlinx.coroutines.flow.Flow
 
@@ -61,7 +61,7 @@ fun MusicProgressBar(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .padding(vertical = XyTheme.dimens.outerVerticalPadding / 2)
     ) {
         // 时间显示
         Row(
@@ -78,7 +78,7 @@ fun MusicProgressBar(
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding / 2))
         XySmallSlider(
             progress = progress,
             cacheProgress = cacheProgress,

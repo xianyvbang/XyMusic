@@ -37,6 +37,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 
@@ -51,6 +52,7 @@ fun XySmallSlider(
     backgroundBarColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
     barHeight: Float = 4f,
     thumbRadius: Float = 6f,
+    touchHeight: Dp = 24.dp,
 ) {
 
     var isDragging by remember { mutableStateOf(false) }
@@ -60,11 +62,14 @@ fun XySmallSlider(
         label = "Progress Animation"
     )
 
+    // 视觉上仍然保持细线进度条，但手势命中区域扩大到更容易点击的高度。
+    val resolvedTouchHeight = if (touchHeight < barHeight.dp) barHeight.dp else touchHeight
+
     // 进度条
     Canvas(
         modifier = modifier
             .fillMaxWidth()
-            .height(barHeight.dp)
+            .height(resolvedTouchHeight)
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = { offset ->

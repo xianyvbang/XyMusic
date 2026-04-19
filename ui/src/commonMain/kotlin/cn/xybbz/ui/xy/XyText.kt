@@ -55,6 +55,32 @@ fun XyText(
 }
 
 /**
+ * 主要信息使用的Text，支持富文本颜色与样式。
+ */
+@Composable
+fun XyText(
+    modifier: Modifier = Modifier,
+    text: AnnotatedString,
+    inlineContent: Map<String, InlineTextContent> = mapOf(),
+    fontWeight: FontWeight? = FontWeight.Bold,
+    maxLines: Int = 1,
+    style: TextStyle = MaterialTheme.typography.bodyMedium,
+    overflow: TextOverflow = TextOverflow.Ellipsis,
+    color: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Text(
+        modifier = modifier,
+        text = text,
+        inlineContent = inlineContent,
+        fontWeight = fontWeight,
+        maxLines = maxLines,
+        style = style,
+        overflow = overflow,
+        color = color
+    )
+}
+
+/**
  * 次要信息使用的Text
  */
 @Composable

@@ -32,7 +32,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -63,10 +62,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.common.enums.PlayStateEnum
@@ -84,11 +86,9 @@ import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XySmallSlider
 import cn.xybbz.ui.xy.XySmallImage
 import cn.xybbz.ui.xy.XyText
-import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import cn.xybbz.viewmodel.SnackBarPlayerViewModel
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -136,6 +136,16 @@ import xymusic_kmp.composeapp.generated.resources.unfavorite
 import xymusic_kmp.composeapp.generated.resources.volume_up_24px
 import xymusic_kmp.composeapp.generated.resources.volume_value_setting
 import cn.xybbz.ui.xy.XyIconButton as IconButton
+
+// 底部播放栏里相对固定的尺寸统一收敛在这里，避免散落魔法值。
+private val JvmSnackBarCoverSize = 56.dp
+private val JvmSnackBarControlMaxWidth = 420.dp
+private val JvmSnackBarPlayButtonWidth = 48.dp
+private val JvmSnackBarPlayButtonHeight = 28.dp
+private val JvmSnackBarPlayIconSize = 16.dp
+private val JvmSnackBarIconButtonSize = 32.dp
+private val JvmSnackBarVolumeGroupWidth = 124.dp
+private val JvmSnackBarVolumeSliderWidth = 92.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -430,6 +440,9 @@ private fun JvmSnackBarPlaybackBar(
     val coroutineScope = rememberCoroutineScope()
     val musicController = snackBarPlayerViewModel.musicController
     val currentMusic = musicController.musicInfo
+    val snackBarTitle = currentMusic.snackBarTitleAnnotatedString(
+        subColor = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 
     // 桌面端底栏固定拆成左侧信息、中间控制、右侧播放列表三段。
     BoxWithConstraints(
@@ -438,7 +451,16 @@ private fun JvmSnackBarPlaybackBar(
     ) {
         val sectionWidth = maxWidth / 3
 
-        XyRow(paddingValues = PaddingValues()) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    horizontal = XyTheme.dimens.outerHorizontalPadding,
+                    vertical = XyTheme.dimens.outerVerticalPadding / 2
+                ),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             // 左侧主体仍然负责打开完整播放页，底部只保留收藏和歌曲信息两个快捷操作。
             ListItem(
                 modifier = Modifier
@@ -456,7 +478,9 @@ private fun JvmSnackBarPlaybackBar(
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                 leadingContent = {
                     JvmImageCover(
-                        modifier = Modifier,
+                        modifier = Modifier
+                            .size(JvmSnackBarCoverSize)
+                            .clip(RoundedCornerShape(XyTheme.dimens.corner)),
                         musicController = musicController,
                         isDarkTheme = isDarkTheme,
                         onSetColor = {
@@ -465,26 +489,16 @@ private fun JvmSnackBarPlaybackBar(
                     )
                 },
                 headlineContent = {
-                    Row {
-                        XyText(
-                            text = currentMusic?.name?:"",
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.basicMarquee(iterations = mainViewModel.iterations)
-                        )
-                        if (!currentMusic?.artists?.joinToString("/").isNullOrBlank()){
-                            XyTextSub(
-                                text = ("-" + currentMusic.artists?.joinToString("/")),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.basicMarquee(iterations = mainViewModel.iterations)
-                            )
-                        }
-                    }
+                    XyText(
+                        text = snackBarTitle,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.basicMarquee(iterations = mainViewModel.iterations)
+                    )
                 },
                 supportingContent = {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding / 3),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         JvmSnackBarIconButton(
@@ -530,7 +544,7 @@ private fun JvmSnackBarPlaybackBar(
             JvmSnackBarControlSection(
                 modifier = Modifier
                     .width(sectionWidth)
-                    .widthIn(max = 420.dp),
+                    .widthIn(max = JvmSnackBarControlMaxWidth),
                 mainViewModel = mainViewModel,
                 musicController = musicController,
                 musicBottomMenuViewModel = musicBottomMenuViewModel
@@ -578,15 +592,14 @@ private fun JvmSnackBarControlSection(
     Column(
         modifier = modifier
             .fillMaxHeight()
-            .padding(vertical = 4.dp),
+            .padding(vertical = XyTheme.dimens.outerVerticalPadding / 2),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         // 第一行放桌面端高频操作，进度条单独占第二行，避免按钮区过挤。
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.background(Color.Red)
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding / 2),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             JvmSnackBarIconButton(
                 iconRes = playModeIcon,
@@ -610,8 +623,9 @@ private fun JvmSnackBarControlSection(
                 },
                 enabled = musicController.musicInfo != null,
                 modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
+                    .width(JvmSnackBarPlayButtonWidth)
+//                    .height(JvmSnackBarPlayButtonHeight/2)
+                    .clip(RoundedCornerShape(topEnd = 12.dp, bottomStart = 12.dp, bottomEnd = 12.dp, topStart = 12.dp))
                     .background(MaterialTheme.colorScheme.onSurface)
             ) {
                 Icon(
@@ -623,7 +637,8 @@ private fun JvmSnackBarControlSection(
                     } else {
                         stringResource(Res.string.playing)
                     },
-                    tint = MaterialTheme.colorScheme.surface
+                    tint = MaterialTheme.colorScheme.surface,
+//                    modifier = Modifier.size(JvmSnackBarPlayIconSize)
                 )
             }
             JvmSnackBarIconButton(
@@ -633,8 +648,8 @@ private fun JvmSnackBarControlSection(
                 onClick = musicController::seekToNext
             )
             Row(
-                modifier = Modifier.width(124.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.width(JvmSnackBarVolumeGroupWidth),
+                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding / 2),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
@@ -643,14 +658,15 @@ private fun JvmSnackBarControlSection(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 XySmallSlider(
-                    modifier = Modifier.width(92.dp),
+                    modifier = Modifier.width(JvmSnackBarVolumeSliderWidth),
                     progress = musicBottomMenuViewModel.volumeValue,
                     onProgressChanged = musicBottomMenuViewModel::updateVolume,
                     cacheProgressBarColor = Color.Transparent,
                     progressBarColor = MaterialTheme.colorScheme.onSurface,
                     backgroundBarColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f),
                     barHeight = 3f,
-                    thumbRadius = 4f
+                    thumbRadius = 4f,
+                    touchHeight = XyTheme.dimens.itemHeight / 3
                 )
             }
         }
@@ -665,14 +681,13 @@ private fun JvmSnackBarControlSection(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 2.dp),
+                .padding(top = XyTheme.dimens.outerVerticalPadding / 4),
             progressBarColor = MaterialTheme.colorScheme.onSurface,
             cacheProgressBarColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
             backgroundBarColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
             barHeight = 3f,
             thumbRadius = 4f,
-            timeTextStyle = TextStyle(
-                fontSize = 10.sp,
+            timeTextStyle = MaterialTheme.typography.labelSmall.copy(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         )
@@ -694,7 +709,7 @@ private fun JvmSnackBarIconButton(
     IconButton(
         onClick = onClick,
         enabled = enabled,
-        modifier = Modifier.size(32.dp)
+        modifier = Modifier.size(JvmSnackBarIconButtonSize)
     ) {
         Icon(
             painter = painterResource(iconRes),
@@ -705,17 +720,26 @@ private fun JvmSnackBarIconButton(
 }
 
 /**
- * 生成底部播放栏显示的标题文本。
- * 有艺术家时拼成“标题 - 艺术家”，没有艺术家时只显示标题。
+ * 生成底部播放栏显示的标题富文本。
+ * 主标题沿用主文案颜色，艺术家名称使用次级文案颜色。
  */
-private fun XyPlayMusic?.snackBarTitleText(): String {
-    this ?: return ""
-    val artistsText = artists?.joinToString().orEmpty()
-    // 标题后拼接艺术家，和桌面端新的信息布局保持一致。
-    return if (artistsText.isBlank()) {
-        name
-    } else {
-        "$name - $artistsText"
+private fun XyPlayMusic?.snackBarTitleAnnotatedString(subColor: Color): AnnotatedString {
+    val music = this ?: return AnnotatedString("")
+    val artistsText = music.artists?.joinToString("/")?.takeIf { it.isNotBlank() }
+
+    return buildAnnotatedString {
+        append(music.name)
+        if (artistsText != null) {
+            withStyle(
+                SpanStyle(
+                    color = subColor,
+                    fontWeight = FontWeight.Normal
+                )
+            ) {
+                append(" - ")
+                append(artistsText)
+            }
+        }
     }
 }
 
