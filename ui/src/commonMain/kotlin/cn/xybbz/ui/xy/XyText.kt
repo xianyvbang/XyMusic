@@ -19,7 +19,6 @@
 package cn.xybbz.ui.xy
 
 import androidx.compose.foundation.text.InlineTextContent
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
