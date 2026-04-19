@@ -30,6 +30,8 @@ import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+expect val platformSnackBarPlayerHeight: Dp
+
 /**
  * @param corner corner
  * @param dialogCorner dialogCorner
@@ -71,7 +73,7 @@ fun xyDimens(
     outerVerticalPadding: Dp = 8.dp,
     innerVerticalPadding: Dp = 12.dp,
     contentPadding: Dp = 12.dp,
-    snackBarPlayerHeight: Dp = 54.dp,
+    snackBarPlayerHeight: Dp = platformSnackBarPlayerHeight,
     itemHeight:Dp = 62.dp
 ): XyDimens = XyDimens(
     corner = corner,

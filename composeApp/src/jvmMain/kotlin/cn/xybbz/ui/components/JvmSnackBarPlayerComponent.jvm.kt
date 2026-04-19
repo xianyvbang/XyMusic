@@ -30,9 +30,11 @@ import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -82,6 +84,7 @@ import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XySmallImage
 import cn.xybbz.viewmodel.SnackBarPlayerViewModel
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -210,8 +213,8 @@ fun JvmSnackBarPlayerComponent(
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .height(XyTheme.dimens.snackBarPlayerHeight)
             .zIndex(Float.MAX_VALUE)
-            .padding(horizontal = XyTheme.dimens.innerVerticalPadding)
             .background(defaultSnackBarColor)
             .drawBehind {
                 drawRect(animatedColor)
@@ -232,8 +235,7 @@ fun JvmSnackBarPlayerComponent(
             if (select) {
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(XyTheme.dimens.snackBarPlayerHeight),
+                        .fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -339,8 +341,9 @@ fun JvmSnackBarPlayerComponent(
                         }
                 }
             } else {
-                Row(
+                XyRow(
                     modifier = modifier
+                        .fillMaxHeight()
                         .debounceClickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
@@ -349,7 +352,7 @@ fun JvmSnackBarPlayerComponent(
                                 onClick()
                             }
                         },
-                    verticalAlignment = Alignment.Bottom,
+                    verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start
                 ) {
 
@@ -364,9 +367,8 @@ fun JvmSnackBarPlayerComponent(
                         }
                     )
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(XyTheme.dimens.snackBarPlayerHeight),
+                        modifier = Modifier/*
+                            .fillMaxWidth()*/,
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -627,8 +629,7 @@ private fun JvmImageCover(
     val defaultSnackBarColor = MaterialTheme.colorScheme.surfaceContainerLowest
 
     XySmallImage(
-        modifier = Modifier
-            .size(XyTheme.dimens.snackBarPlayerHeight),
+        modifier = Modifier,
         model = activeCoverModel,
         backModel = backupCoverModel,
         placeholder = Res.drawable.music_xy_placeholder_foreground,
