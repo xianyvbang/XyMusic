@@ -22,7 +22,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.Transaction
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.api.converter.jsonSerializer
+import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.music.DownloadCacheCommonController
 import cn.xybbz.config.music.MusicCommonController
@@ -32,6 +34,7 @@ import cn.xybbz.download.core.DownloadRequest
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.common.enums.getDownloadType
 import cn.xybbz.localdata.config.LocalDatabaseClient
+import cn.xybbz.localdata.data.music.XyMusic
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
@@ -89,5 +92,30 @@ class SnackBarPlayerViewModel(
             }
         }.invokeOnCompletion { selectControl.dismiss() }
 
+    }
+
+    suspend fun toggleFavorite(
+        itemId: String,
+        ifFavorite: Boolean
+    ): Boolean {
+        // Snackbar 直接复用现有收藏切换逻辑，保持和其他页面行为一致。
+        return FavoriteCoordinator.setFavoriteData(
+            dataSourceManager = dataSourceManager,
+            type = MusicTypeEnum.MUSIC,
+            itemId = itemId,
+            ifFavorite = ifFavorite,
+            musicController = musicController
+        )
+    }
+
+    suspend fun loadMusicInfo(itemId: String): XyMusic? {
+        // 优先走数据源详情，拿不到时再回退本地库，避免信息按钮无响应。
+        val remoteMusicInfo = runCatching {
+            dataSourceManager.selectMusicInfoById(itemId)
+        }.getOrNull()
+
+        return remoteMusicInfo ?: runCatching {
+            db.musicDao.selectById(itemId)
+        }.getOrNull()
     }
 }
