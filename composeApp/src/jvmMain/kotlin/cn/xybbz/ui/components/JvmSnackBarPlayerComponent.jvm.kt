@@ -48,6 +48,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -64,7 +65,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -85,6 +86,7 @@ import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XySmallImage
 import cn.xybbz.ui.xy.XySmallSlider
@@ -440,7 +442,12 @@ private fun JvmSnackBarPlaybackBar(
     val musicController = snackBarPlayerViewModel.musicController
     val currentMusic = musicController.musicInfo
     val snackBarTitle = currentMusic.snackBarTitleAnnotatedString(
-        subColor = MaterialTheme.colorScheme.onSurfaceVariant
+        subColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        spanStyle = MaterialTheme.typography.bodySmall.copy(
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        ).toSpanStyle(
+
+        )
     )
 
     // 桌面端底栏固定拆成左侧信息、中间控制、右侧播放列表三段。
@@ -585,11 +592,12 @@ private fun JvmSnackBarControlSection(
     val isPlaying =
         musicController.state == PlayStateEnum.Playing || musicController.state == PlayStateEnum.Loading
 
-    Column(
+    XyColumn (
         modifier = modifier
             .fillMaxHeight()
             .padding(vertical = XyTheme.dimens.outerVerticalPadding / 2),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        paddingValues = PaddingValues(),
+        backgroundColor = Color.Transparent,
         verticalArrangement = Arrangement.Center
     ) {
         // 第一行放桌面端高频操作，进度条单独占第二行，避免按钮区过挤。
@@ -718,7 +726,10 @@ private fun JvmSnackBarIconButton(
  * 生成底部播放栏显示的标题富文本。
  * 主标题沿用主文案颜色，艺术家名称使用次级文案颜色。
  */
-private fun XyPlayMusic?.snackBarTitleAnnotatedString(subColor: Color): AnnotatedString {
+private fun XyPlayMusic?.snackBarTitleAnnotatedString(
+    subColor: Color,
+    spanStyle: SpanStyle
+): AnnotatedString {
     val music = this ?: return AnnotatedString("")
     val artistsText = music.artists?.joinToString("/")?.takeIf { it.isNotBlank() }
 
@@ -726,10 +737,7 @@ private fun XyPlayMusic?.snackBarTitleAnnotatedString(subColor: Color): Annotate
         append(music.name)
         if (artistsText != null) {
             withStyle(
-                SpanStyle(
-                    color = subColor,
-                    fontWeight = FontWeight.Normal
-                )
+                spanStyle
             ) {
                 append(" - ")
                 append(artistsText)
