@@ -595,11 +595,10 @@ private fun JvmSnackBarControlSection(
 
     XyColumn (
         modifier = modifier
-            .fillMaxHeight()
-            .padding(vertical = XyTheme.dimens.outerVerticalPadding / 2),
+            .fillMaxHeight(),
         paddingValues = PaddingValues(),
         backgroundColor = Color.Transparent,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Bottom
     ) {
         // 第一行放桌面端高频操作，进度条单独占第二行，避免按钮区过挤。
         Row(
@@ -685,8 +684,7 @@ private fun JvmSnackBarControlSection(
                 musicController.seekTo((musicController.duration * progress).toLong())
             },
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = XyTheme.dimens.outerVerticalPadding / 4),
+                .fillMaxWidth(),
             progressBarColor = MaterialTheme.colorScheme.onSurface,
             cacheProgressBarColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
             backgroundBarColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
