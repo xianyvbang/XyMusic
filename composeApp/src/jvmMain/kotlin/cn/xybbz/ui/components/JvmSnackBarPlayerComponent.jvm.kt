@@ -69,8 +69,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionOnScreen
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -176,6 +180,9 @@ fun JvmSnackBarPlayerComponent(
 ) {
     val mainViewModel = LocalMainViewModel.current
     val navigator = LocalNavigator.current
+    var sharedCoverSourceBoundsOnScreen by remember {
+        mutableStateOf<Rect?>(null)
+    }
     var musicListState by remember {
         mutableStateOf(false)
     }
@@ -240,6 +247,7 @@ fun JvmSnackBarPlayerComponent(
         JvmMusicPlayerComponent(
             music = it,
             snackBarPlayerViewModel.musicController.picByte,
+            sharedCoverSourceBoundsOnScreen = sharedCoverSourceBoundsOnScreen,
             sheetStateR = playerSheetState,
             toNext = {
                 Log.i("=====", "数据调用JvmSnackBarPlayerComponent")
@@ -418,6 +426,9 @@ fun JvmSnackBarPlayerComponent(
                     favoriteSet = favoriteSet,
                     isDarkTheme = isDarkTheme,
                     defaultSnackBarColor = defaultSnackBarColor,
+                    onSharedCoverBoundsChanged = {
+                        sharedCoverSourceBoundsOnScreen = it
+                    },
                     onSetColor = {
                         Log.i("=====", "加载图片成功1 $it")
                         colorPurple = it
@@ -450,6 +461,7 @@ private fun JvmSnackBarPlaybackBar(
     favoriteSet: List<String>,
     isDarkTheme: Boolean,
     defaultSnackBarColor: Color,
+    onSharedCoverBoundsChanged: (Rect) -> Unit,
     onSetColor: (Color?) -> Unit,
     onShowPlayer: () -> Unit,
     onShowPlaylist: () -> Unit,
@@ -502,6 +514,7 @@ private fun JvmSnackBarPlaybackBar(
                             .clip(RoundedCornerShape(XyTheme.dimens.corner)),
                         musicController = musicController,
                         isDarkTheme = isDarkTheme,
+                        onBoundsChanged = onSharedCoverBoundsChanged,
                         onSetColor = {
                             onSetColor(it ?: defaultSnackBarColor)
                         }
@@ -922,6 +935,7 @@ private fun JvmImageCover(
     modifier: Modifier = Modifier,
     musicController: MusicCommonController,
     isDarkTheme: Boolean,
+    onBoundsChanged: (Rect) -> Unit = {},
     onSetColor: (Color?) -> Unit
 ) {
     val coverUrls = rememberPlayMusicCoverUrls(
@@ -936,7 +950,18 @@ private fun JvmImageCover(
     val defaultSnackBarColor = MaterialTheme.colorScheme.surfaceContainerLowest
 
     XySmallImage(
-        modifier = modifier,
+        modifier = modifier
+            .onGloballyPositioned { coordinates ->
+                onBoundsChanged(
+                    Rect(
+                        offset = coordinates.positionOnScreen(),
+                        size = Size(
+                            width = coordinates.size.width.toFloat(),
+                            height = coordinates.size.height.toFloat()
+                        )
+                    )
+                )
+            },
         model = activeCoverModel,
         backModel = backupCoverModel,
         placeholder = Res.drawable.music_xy_placeholder_foreground,

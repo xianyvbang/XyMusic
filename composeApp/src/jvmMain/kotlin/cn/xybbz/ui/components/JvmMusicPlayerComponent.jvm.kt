@@ -20,7 +20,9 @@ package cn.xybbz.ui.components
 
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -31,6 +33,7 @@ import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -53,6 +56,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -64,14 +68,23 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionOnScreen
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.lerp
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -121,6 +134,7 @@ import xymusic_kmp.composeapp.generated.resources.queue_music_24px
 import xymusic_kmp.composeapp.generated.resources.skip_next_24px
 import xymusic_kmp.composeapp.generated.resources.skip_previous_24px
 import xymusic_kmp.composeapp.generated.resources.unknown_artist
+import kotlin.math.min
 import kotlin.math.roundToInt
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
@@ -130,6 +144,7 @@ import cn.xybbz.ui.xy.XyIconButton as IconButton
 fun JvmMusicPlayerComponent(
     music: XyPlayMusic,
     picByte: ByteArray? = null,
+    sharedCoverSourceBoundsOnScreen: Rect? = null,
     sheetStateR: SheetState,
     toNext: () -> Unit,
     backNext: () -> Unit,
@@ -140,6 +155,14 @@ fun JvmMusicPlayerComponent(
     val overlayVisibleState = remember {
         MutableTransitionState(false)
     }
+    val sharedCoverProgress by animateFloatAsState(
+        targetValue = if (mainViewModel.sheetState) 1f else 0f,
+        animationSpec = tween(
+            durationMillis = 360,
+            easing = FastOutSlowInEasing
+        ),
+        label = "JvmMusicPlayerSharedCoverProgress"
+    )
     val horPagerState =
         rememberPagerState {
             3
@@ -180,11 +203,13 @@ fun JvmMusicPlayerComponent(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.scrim)
+                        .background(MaterialTheme.colorScheme.background)
                 ) {
                     JvmMusicPlayerScreen(
                         musicDetail = music,
                         picByte = picByte,
+                        sharedCoverSourceBoundsOnScreen = sharedCoverSourceBoundsOnScreen,
+                        sharedCoverProgress = sharedCoverProgress,
                         onCloseSheet = {
                             coroutineScope.launch {
                                 runCatching {
@@ -218,6 +243,8 @@ fun JvmMusicPlayerScreen(
     musicDetail: XyPlayMusic,
     picByte: ByteArray? = null,
     musicPlayerViewModel: MusicPlayerViewModel = koinViewModel<MusicPlayerViewModel>(),
+    sharedCoverSourceBoundsOnScreen: Rect? = null,
+    sharedCoverProgress: Float = 1f,
     onCloseSheet: () -> Unit,
     onSeekToNext: () -> Unit,
     onSeekBack: () -> Unit,
@@ -237,8 +264,32 @@ fun JvmMusicPlayerScreen(
     )
 
     val coroutineScope = rememberCoroutineScope()
+    var playerRootBoundsOnScreen by remember {
+        mutableStateOf<Rect?>(null)
+    }
+    var sharedCoverTargetBoundsOnScreen by remember {
+        mutableStateOf<Rect?>(null)
+    }
+    val showSharedCoverOverlay =
+        sharedCoverSourceBoundsOnScreen != null &&
+            playerRootBoundsOnScreen != null &&
+            sharedCoverTargetBoundsOnScreen != null &&
+            sharedCoverProgress > 0f &&
+            sharedCoverProgress < 1f
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .onGloballyPositioned { coordinates ->
+                playerRootBoundsOnScreen = Rect(
+                    offset = coordinates.positionOnScreen(),
+                    size = Size(
+                        width = coordinates.size.width.toFloat(),
+                        height = coordinates.size.height.toFloat()
+                    )
+                )
+            }
+    ) {
         XyImage(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -247,6 +298,14 @@ fun JvmMusicPlayerScreen(
             backModel = coverUrls.fallbackUrl ?: picByte,
             alpha = 0.2f,
             contentDescription = stringResource(Res.string.album_cover),
+        )
+        JvmSharedCoverOverlay(
+            sourceBoundsOnScreen = sharedCoverSourceBoundsOnScreen,
+            targetBoundsOnScreen = sharedCoverTargetBoundsOnScreen,
+            rootBoundsOnScreen = playerRootBoundsOnScreen,
+            progress = sharedCoverProgress,
+            model = coverUrls.primaryUrl ?: picByte,
+            backModel = coverUrls.fallbackUrl ?: picByte
         )
         XyColumnScreen(
             modifier = Modifier
@@ -322,24 +381,38 @@ fun JvmMusicPlayerScreen(
                     when (page) {
                         0 -> {
                             Box(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .fillMaxSize()
                             ) {
-                                XyImage(
+                                Box(
                                     modifier = Modifier
                                         .align(Alignment.Center)
                                         .size(300.dp)
                                         .aspectRatio(1F)
-                                        .clip(
-                                            CircleShape
-                                        ),
-                                    model = coverUrls.primaryUrl ?: picByte,
-                                    backModel = coverUrls.fallbackUrl ?: picByte,
-                                    placeholder = Res.drawable.disc_placeholder,
-                                    /*.graphicsLayer(rotationZ = rotationState)*/
-                                    error = Res.drawable.disc_placeholder,
-                                    fallback = Res.drawable.disc_placeholder,
-                                    contentDescription = stringResource(Res.string.album_cover),
-                                )
+                                        .onGloballyPositioned { coordinates ->
+                                            sharedCoverTargetBoundsOnScreen = Rect(
+                                                offset = coordinates.positionOnScreen(),
+                                                size = Size(
+                                                    width = coordinates.size.width.toFloat(),
+                                                    height = coordinates.size.height.toFloat()
+                                                )
+                                            )
+                                        }
+                                ) {
+                                    XyImage(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(CircleShape),
+                                        model = coverUrls.primaryUrl ?: picByte,
+                                        backModel = coverUrls.fallbackUrl ?: picByte,
+                                        placeholder = Res.drawable.disc_placeholder,
+                                        error = Res.drawable.disc_placeholder,
+                                        fallback = Res.drawable.disc_placeholder,
+                                        alpha = if (showSharedCoverOverlay) 0f else 1f,
+                                        contentDescription = stringResource(Res.string.album_cover),
+                                    )
+                                }
                             }
 
                         }
@@ -506,6 +579,62 @@ fun JvmMusicPlayerScreen(
         }
     }
 
+}
+
+@Composable
+private fun JvmSharedCoverOverlay(
+    sourceBoundsOnScreen: Rect?,
+    targetBoundsOnScreen: Rect?,
+    rootBoundsOnScreen: Rect?,
+    progress: Float,
+    model: Any?,
+    backModel: Any?
+) {
+    val sourceBounds = sourceBoundsOnScreen ?: return
+    val targetBounds = targetBoundsOnScreen ?: return
+    val rootBounds = rootBoundsOnScreen ?: return
+    if (progress <= 0f || progress >= 1f) return
+
+    val density = LocalDensity.current
+    val easedProgress = FastOutSlowInEasing.transform(progress.coerceIn(0f, 1f))
+    val animatedLeft = lerpFloat(sourceBounds.left, targetBounds.left, easedProgress)
+    val animatedTop = lerpFloat(sourceBounds.top, targetBounds.top, easedProgress)
+    val animatedWidth = lerpFloat(sourceBounds.width, targetBounds.width, easedProgress)
+    val animatedHeight = lerpFloat(sourceBounds.height, targetBounds.height, easedProgress)
+    val startCornerPx = with(density) { XyTheme.dimens.corner.toPx() }
+    val endCornerPx = min(animatedWidth, animatedHeight) / 2f
+    val animatedCorner = with(density) {
+        lerp(
+            start = startCornerPx.toDp(),
+            stop = endCornerPx.toDp(),
+            fraction = easedProgress
+        )
+    }
+
+    XyImage(
+        modifier = Modifier
+            .offset {
+                IntOffset(
+                    x = (animatedLeft - rootBounds.left).roundToInt(),
+                    y = (animatedTop - rootBounds.top).roundToInt()
+                )
+            }
+            .requiredSize(
+                width = with(density) { animatedWidth.toDp() },
+                height = with(density) { animatedHeight.toDp() }
+            )
+            .clip(RoundedCornerShape(animatedCorner)),
+        model = model,
+        backModel = backModel,
+        placeholder = Res.drawable.disc_placeholder,
+        error = Res.drawable.disc_placeholder,
+        fallback = Res.drawable.disc_placeholder,
+        contentDescription = stringResource(Res.string.album_cover),
+    )
+}
+
+private fun lerpFloat(start: Float, stop: Float, fraction: Float): Float {
+    return start + (stop - start) * fraction
 }
 
 /**
