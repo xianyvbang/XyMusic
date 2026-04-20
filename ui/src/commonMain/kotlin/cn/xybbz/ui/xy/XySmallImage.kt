@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.theme.XyTheme
 import com.github.panpf.sketch.AsyncImage
@@ -54,6 +55,7 @@ fun XySmallImage(
     modifier: Modifier = Modifier,
     model: Any?,
     backModel: Any? = null,
+    requestSize: IntSize? = null,
     shape: Shape = RoundedCornerShape(XyTheme.dimens.corner),
     size: Dp = 50.dp,
     contentDescription: String? = null,
@@ -71,6 +73,7 @@ fun XySmallImage(
             .aspectRatio(1F),
         model = model,
         backModel = backModel,
+        requestSize = requestSize,
         placeholder = placeholder,
         error = error,
         fallback = fallback,
@@ -86,6 +89,7 @@ fun XyImage(
     modifier: Modifier = Modifier,
     model: Any?,
     backModel: Any? = null,
+    requestSize: IntSize? = null,
     placeholder: DrawableResource? = null,
     error: DrawableResource? = null,
     fallback: DrawableResource? = null,
@@ -119,6 +123,9 @@ fun XyImage(
 
         is String -> {
             val state = rememberAsyncImageState(ComposableImageOptions {
+                requestSize?.takeIf { it.width > 0 && it.height > 0 }?.let {
+                    size(it.width, it.height)
+                }
                 placeholder?.let { placeholder(placeholder) }
                 error?.let { error(error) }
                 fallback?.let { fallback(fallback) }

@@ -83,6 +83,7 @@ import androidx.compose.ui.layout.positionOnScreen
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
@@ -138,6 +139,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
+internal val JvmMusicPlayerSharedCoverTargetSize = 300.dp
 private const val JvmMusicPlayerSharedCoverDurationMillis = 920
 private const val JvmMusicPlayerDialogEnterDurationMillis = 260
 
@@ -265,8 +267,16 @@ fun JvmMusicPlayerScreen(
         musicDetail,
         musicPlayerViewModel.musicController.coverRefreshVersion
     )
-
     val coroutineScope = rememberCoroutineScope()
+    val density = LocalDensity.current
+    val sharedCoverRequestSize = remember(density) {
+        with(density) {
+            IntSize(
+                width = JvmMusicPlayerSharedCoverTargetSize.roundToPx(),
+                height = JvmMusicPlayerSharedCoverTargetSize.roundToPx()
+            )
+        }
+    }
     var playerRootBoundsOnScreen by remember {
         mutableStateOf<Rect?>(null)
     }
@@ -299,6 +309,7 @@ fun JvmMusicPlayerScreen(
                 .fillMaxSize(),
             model = coverUrls.primaryUrl ?: picByte,
             backModel = coverUrls.fallbackUrl ?: picByte,
+            requestSize = sharedCoverRequestSize,
             alpha = 0.2f,
             contentDescription = stringResource(Res.string.album_cover),
         )
@@ -308,7 +319,8 @@ fun JvmMusicPlayerScreen(
             rootBoundsOnScreen = playerRootBoundsOnScreen,
             progress = sharedCoverProgress,
             model = coverUrls.primaryUrl ?: picByte,
-            backModel = coverUrls.fallbackUrl ?: picByte
+            backModel = coverUrls.fallbackUrl ?: picByte,
+            requestSize = sharedCoverRequestSize
         )
         XyColumnScreen(
             modifier = Modifier
@@ -409,6 +421,7 @@ fun JvmMusicPlayerScreen(
                                             .clip(CircleShape),
                                         model = coverUrls.primaryUrl ?: picByte,
                                         backModel = coverUrls.fallbackUrl ?: picByte,
+                                        requestSize = sharedCoverRequestSize,
                                         placeholder = Res.drawable.disc_placeholder,
                                         error = Res.drawable.disc_placeholder,
                                         fallback = Res.drawable.disc_placeholder,
@@ -591,7 +604,8 @@ private fun JvmSharedCoverOverlay(
     rootBoundsOnScreen: Rect?,
     progress: Float,
     model: Any?,
-    backModel: Any?
+    backModel: Any?,
+    requestSize: IntSize
 ) {
     val sourceBounds = sourceBoundsOnScreen ?: return
     val targetBounds = targetBoundsOnScreen ?: return
@@ -629,6 +643,7 @@ private fun JvmSharedCoverOverlay(
             .clip(RoundedCornerShape(animatedCorner)),
         model = model,
         backModel = backModel,
+        requestSize = requestSize,
         placeholder = Res.drawable.disc_placeholder,
         error = Res.drawable.disc_placeholder,
         fallback = Res.drawable.disc_placeholder,

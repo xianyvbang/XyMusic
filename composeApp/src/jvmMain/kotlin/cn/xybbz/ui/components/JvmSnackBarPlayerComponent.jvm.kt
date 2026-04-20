@@ -82,6 +82,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -207,6 +208,15 @@ fun JvmSnackBarPlayerComponent(
         animationSpec = tween(durationMillis = 800),
         label = "backgroundColorAnim"
     )
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val sharedCoverRequestSize = remember(density) {
+        with(density) {
+            IntSize(
+                width = JvmMusicPlayerSharedCoverTargetSize.roundToPx(),
+                height = JvmMusicPlayerSharedCoverTargetSize.roundToPx()
+            )
+        }
+    }
 
     val permissionState = downloadPermission {
         snackBarPlayerViewModel.downloadMusics()
@@ -429,6 +439,7 @@ fun JvmSnackBarPlayerComponent(
                     onSharedCoverBoundsChanged = {
                         sharedCoverSourceBoundsOnScreen = it
                     },
+                    sharedCoverRequestSize = sharedCoverRequestSize,
                     onSetColor = {
                         Log.i("=====", "加载图片成功1 $it")
                         colorPurple = it
@@ -462,6 +473,7 @@ private fun JvmSnackBarPlaybackBar(
     isDarkTheme: Boolean,
     defaultSnackBarColor: Color,
     onSharedCoverBoundsChanged: (Rect) -> Unit,
+    sharedCoverRequestSize: IntSize,
     onSetColor: (Color?) -> Unit,
     onShowPlayer: () -> Unit,
     onShowPlaylist: () -> Unit,
@@ -515,6 +527,7 @@ private fun JvmSnackBarPlaybackBar(
                         musicController = musicController,
                         isDarkTheme = isDarkTheme,
                         onBoundsChanged = onSharedCoverBoundsChanged,
+                        requestSize = sharedCoverRequestSize,
                         onSetColor = {
                             onSetColor(it ?: defaultSnackBarColor)
                         }
@@ -936,6 +949,7 @@ private fun JvmImageCover(
     musicController: MusicCommonController,
     isDarkTheme: Boolean,
     onBoundsChanged: (Rect) -> Unit = {},
+    requestSize: IntSize,
     onSetColor: (Color?) -> Unit
 ) {
     val coverUrls = rememberPlayMusicCoverUrls(
@@ -964,6 +978,7 @@ private fun JvmImageCover(
             },
         model = activeCoverModel,
         backModel = backupCoverModel,
+        requestSize = requestSize,
         placeholder = Res.drawable.music_xy_placeholder_foreground,
         error = Res.drawable.music_xy_placeholder_foreground,
         fallback = Res.drawable.music_xy_placeholder_foreground,
