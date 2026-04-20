@@ -237,7 +237,7 @@ fun JvmSnackBarPlayerComponent(
     }
 
     snackBarPlayerViewModel.musicController.musicInfo?.let {
-        MusicPlayerComponent(
+        JvmMusicPlayerComponent(
             music = it,
             snackBarPlayerViewModel.musicController.picByte,
             sheetStateR = playerSheetState,
