@@ -622,7 +622,7 @@ private fun JvmSnackBarControlSection(
     ) {
         // 第一行放桌面端高频操作，进度条单独占第二行，避免按钮区过挤。
         Row(
-            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding / 2),
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             JvmSnackBarIconButton(
