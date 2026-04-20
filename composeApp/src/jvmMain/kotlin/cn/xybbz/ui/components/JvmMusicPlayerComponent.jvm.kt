@@ -66,6 +66,7 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -96,6 +97,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
+import cn.xybbz.compositionLocal.LocalDesktopWindowChromeController
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.config.music.MusicCommonController
@@ -156,6 +158,7 @@ fun JvmMusicPlayerComponent(
     onSetState: (Boolean) -> Unit
 ) {
     val mainViewModel = LocalMainViewModel.current
+    val chromeController = LocalDesktopWindowChromeController.current
     val coroutineScope = rememberCoroutineScope()
     val overlayVisibleState = remember {
         MutableTransitionState(false)
@@ -177,6 +180,12 @@ fun JvmMusicPlayerComponent(
     LaunchedEffect(mainViewModel.sheetState) {
         overlayVisibleState.targetState = mainViewModel.sheetState
     }
+    DisposableEffect(mainViewModel.sheetState, chromeController) {
+        chromeController.setTitleBarHitTestEnabled(!mainViewModel.sheetState)
+        onDispose {
+            chromeController.setTitleBarHitTestEnabled(true)
+        }
+    }
     if (overlayVisibleState.currentState || overlayVisibleState.targetState) {
         Dialog(
             onDismissRequest = {
@@ -187,6 +196,7 @@ fun JvmMusicPlayerComponent(
                 dismissOnBackPress = true,
                 dismissOnClickOutside = false,
                 usePlatformDefaultWidth = false,
+                usePlatformInsets = false,
                 scrimColor= Color.Transparent
             )
         ) {

@@ -21,6 +21,8 @@ interface DesktopWindowChromeController {
 
     fun setTitleBarHitTestOwner(hitTestOwner: DesktopWindowTitleBarHitTestOwner?)
 
+    fun setTitleBarHitTestEnabled(enabled: Boolean)
+
     fun minimize()
 
     fun toggleMaximize()
@@ -41,6 +43,8 @@ interface DesktopWindowChromeController {
             override fun updateCloseButtonBounds(bounds: Rect) = Unit
 
             override fun setTitleBarHitTestOwner(hitTestOwner: DesktopWindowTitleBarHitTestOwner?) = Unit
+
+            override fun setTitleBarHitTestEnabled(enabled: Boolean) = Unit
 
             override fun minimize() = Unit
 

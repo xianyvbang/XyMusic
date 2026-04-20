@@ -40,6 +40,7 @@ class WindowsDesktopWindowChromeController(
     private var maximizeButtonBounds = Rect.Zero
     private var closeButtonBounds = Rect.Zero
     private var titleBarHitTestOwner: DesktopWindowTitleBarHitTestOwner? = null
+    private var titleBarHitTestEnabled = true
 
     private var insetsState by mutableStateOf(zeroInsets)
     private var maximizedState by mutableStateOf(false)
@@ -77,6 +78,10 @@ class WindowsDesktopWindowChromeController(
         titleBarHitTestOwner = hitTestOwner
     }
 
+    override fun setTitleBarHitTestEnabled(enabled: Boolean) {
+        titleBarHitTestEnabled = enabled
+    }
+
     override fun minimize() {
         com.sun.jna.platform.win32.User32.INSTANCE.ShowWindow(procedure.windowHandle, WinUser.SW_MINIMIZE)
     }
@@ -91,7 +96,9 @@ class WindowsDesktopWindowChromeController(
             maximizeButtonBounds.containsPoint(x, y) -> WinUserConst.HTMAXBUTTON
             minimizeButtonBounds.containsPoint(x, y) -> WinUserConst.HTMINBUTTON
             closeButtonBounds.containsPoint(x, y) -> WinUserConst.HTCLOSE
-            titleBarBounds.containsPoint(x, y) && titleBarHitTestOwner?.hitTest(x, y) != true -> WinUserConst.HTCAPTION
+            titleBarHitTestEnabled &&
+                titleBarBounds.containsPoint(x, y) &&
+                titleBarHitTestOwner?.hitTest(x, y) != true -> WinUserConst.HTCAPTION
             else -> WinUserConst.HTCLIENT
         }
     }
