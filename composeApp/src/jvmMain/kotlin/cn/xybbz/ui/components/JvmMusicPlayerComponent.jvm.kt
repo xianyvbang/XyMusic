@@ -20,6 +20,12 @@ package cn.xybbz.ui.components
 
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
@@ -32,12 +38,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.captionBar
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
@@ -56,22 +62,21 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.FavoriteCoordinator
@@ -86,7 +91,6 @@ import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.ui.components.lrc.LrcViewNewCompose
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.ModalBottomSheetExtendFillMaxSizeComponent
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyImage
@@ -133,59 +137,74 @@ fun JvmMusicPlayerComponent(
 ) {
     val mainViewModel = LocalMainViewModel.current
     val coroutineScope = rememberCoroutineScope()
-    /*  val sheetStateR = rememberModalBottomSheetState(
-          skipPartiallyExpanded = true
-      )*/
-
+    val overlayVisibleState = remember {
+        MutableTransitionState(false)
+    }
     val horPagerState =
         rememberPagerState {
             3
         }
     val listState = rememberLazyListState()
     val similarPopularListState = rememberLazyListState()
-
-    val bottomSheetScrollConnection = remember {
-        object : NestedScrollConnection {
-            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                // 这里你可以根据需要自定义滚动逻辑
-                if (horPagerState.currentPage == 1)
-                    listState.dispatchRawDelta(-available.y)
-                else if (horPagerState.currentPage == 2)
-                    similarPopularListState.dispatchRawDelta(-available.y)
-                return Offset(0f, available.y)  // 表示不消费滚动事件
+    LaunchedEffect(mainViewModel.sheetState) {
+        overlayVisibleState.targetState = mainViewModel.sheetState
+    }
+    if (overlayVisibleState.currentState || overlayVisibleState.targetState) {
+        Dialog(
+            onDismissRequest = {
+                mainViewModel.putIterations(1)
+                mainViewModel.putSheetState(false)
+            },
+            properties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = false,
+                usePlatformDefaultWidth = false,
+                scrimColor= Color.Transparent
+            )
+        ) {
+            AnimatedVisibility(
+                modifier = Modifier
+                    .fillMaxSize(),
+                visibleState = overlayVisibleState,
+                enter = fadeIn(animationSpec = tween(durationMillis = 220)) +
+                    scaleIn(
+                        animationSpec = tween(durationMillis = 220),
+                        initialScale = 0.98f
+                    ),
+                exit = fadeOut(animationSpec = tween(durationMillis = 180)) +
+                    scaleOut(
+                        animationSpec = tween(durationMillis = 180),
+                        targetScale = 0.98f
+                    )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.scrim)
+                ) {
+                    JvmMusicPlayerScreen(
+                        musicDetail = music,
+                        picByte = picByte,
+                        onCloseSheet = {
+                            coroutineScope.launch {
+                                runCatching {
+                                    sheetStateR.hide()
+                                }
+                            }.invokeOnCompletion {
+                                mainViewModel.putIterations(1)
+                                mainViewModel.putSheetState(false)
+                            }
+                        },
+                        onSeekToNext = toNext,
+                        onSeekBack = backNext,
+                        onSetState = onSetState,
+                        lrcListState = listState,
+                        similarPopularListState = similarPopularListState,
+                        horPagerState = horPagerState
+                    )
+                }
             }
         }
-    }
-
-    ModalBottomSheetExtendFillMaxSizeComponent(
-        modifier = Modifier.nestedScroll(bottomSheetScrollConnection),
-        bottomSheetState = sheetStateR,
-        onIfDisplay = { mainViewModel.sheetState },
-        onClose = {
-            mainViewModel.putIterations(1)
-            mainViewModel.putSheetState(false)
-        },
-        containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = { WindowInsets.captionBar },
-    ) {
-        JvmMusicPlayerScreen(
-            musicDetail = music,
-            picByte = picByte,
-            onCloseSheet = {
-                coroutineScope.launch {
-                    sheetStateR.hide()
-                }.invokeOnCompletion {
-                    mainViewModel.putIterations(1)
-                    mainViewModel.putSheetState(false)
-                }
-            },
-            onSeekToNext = toNext,
-            onSeekBack = backNext,
-            onSetState = onSetState,
-            lrcListState = listState,
-            similarPopularListState = similarPopularListState,
-            horPagerState = horPagerState
-        )
     }
 }
 
