@@ -31,9 +31,9 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -43,6 +43,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -50,6 +51,7 @@ import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
@@ -58,6 +60,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -69,6 +73,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -76,19 +81,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionOnScreen
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.lerp
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -123,6 +133,7 @@ import xymusic_kmp.composeapp.generated.resources.disc_placeholder
 import xymusic_kmp.composeapp.generated.resources.favorite_24px
 import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
 import xymusic_kmp.composeapp.generated.resources.favorite_button
+import xymusic_kmp.composeapp.generated.resources.forward_offset
 import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
 import xymusic_kmp.composeapp.generated.resources.more_vert_24px
 import xymusic_kmp.composeapp.generated.resources.music_list
@@ -134,9 +145,14 @@ import xymusic_kmp.composeapp.generated.resources.play_arrow_24px
 import xymusic_kmp.composeapp.generated.resources.playing
 import xymusic_kmp.composeapp.generated.resources.previous_track
 import xymusic_kmp.composeapp.generated.resources.queue_music_24px
+import xymusic_kmp.composeapp.generated.resources.recommend
+import xymusic_kmp.composeapp.generated.resources.reset
+import xymusic_kmp.composeapp.generated.resources.song_tab
 import xymusic_kmp.composeapp.generated.resources.skip_next_24px
 import xymusic_kmp.composeapp.generated.resources.skip_previous_24px
 import xymusic_kmp.composeapp.generated.resources.unknown_artist
+import xymusic_kmp.composeapp.generated.resources.backward_offset
+import xymusic_kmp.composeapp.generated.resources.confirm
 import kotlin.math.min
 import kotlin.math.roundToInt
 import cn.xybbz.ui.xy.XyIconButton as IconButton
@@ -144,6 +160,10 @@ import cn.xybbz.ui.xy.XyIconButton as IconButton
 internal val JvmMusicPlayerSharedCoverTargetSize = 300.dp
 private const val JvmMusicPlayerSharedCoverDurationMillis = 920
 private const val JvmMusicPlayerDialogEnterDurationMillis = 260
+private val JvmMusicPlayerPrimaryPageMaxWidth = 1320.dp
+private val JvmMusicPlayerPrimaryPageInnerGap = 48.dp
+private val JvmMusicPlayerLyricsMaxWidth = 560.dp
+private val JvmMusicPlayerTitleSectionMaxWidth = 320.dp
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -160,6 +180,9 @@ fun JvmMusicPlayerComponent(
     val mainViewModel = LocalMainViewModel.current
     val chromeController = LocalDesktopWindowChromeController.current
     val coroutineScope = rememberCoroutineScope()
+    val desktopTabs = remember {
+        listOf(Res.string.song_tab, Res.string.recommend)
+    }
     val overlayVisibleState = remember {
         MutableTransitionState(false)
     }
@@ -173,7 +196,7 @@ fun JvmMusicPlayerComponent(
     )
     val horPagerState =
         rememberPagerState {
-            3
+            desktopTabs.size
         }
     val listState = rememberLazyListState()
     val similarPopularListState = rememberLazyListState()
@@ -293,12 +316,37 @@ fun JvmMusicPlayerScreen(
     var sharedCoverTargetBoundsOnScreen by remember {
         mutableStateOf<Rect?>(null)
     }
+    val desktopTabs = remember {
+        listOf(Res.string.song_tab, Res.string.recommend)
+    }
+    var lyricsMenuExpanded by remember(musicDetail.itemId) {
+        mutableStateOf(false)
+    }
+    var lyricsMenuOffset by remember {
+        mutableStateOf(DpOffset(0.dp, 0.dp))
+    }
+    var lyricsPreviewOffsetMs by remember(musicDetail.itemId) {
+        mutableLongStateOf(musicPlayerViewModel.lrcServer.lrcConfig?.lrcOffsetMs ?: 0L)
+    }
     val showSharedCoverOverlay =
         sharedCoverSourceBoundsOnScreen != null &&
             playerRootBoundsOnScreen != null &&
             sharedCoverTargetBoundsOnScreen != null &&
             sharedCoverProgress > 0f &&
             sharedCoverProgress < 1f
+
+    fun persistedLyricsOffsetMs(): Long {
+        return musicPlayerViewModel.lrcServer.lrcConfig?.lrcOffsetMs ?: 0L
+    }
+
+    fun resetLyricsPreviewOffset() {
+        lyricsPreviewOffsetMs = persistedLyricsOffsetMs()
+    }
+
+    LaunchedEffect(musicDetail.itemId) {
+        lyricsMenuExpanded = false
+        resetLyricsPreviewOffset()
+    }
 
     Box(
         modifier = Modifier
@@ -349,7 +397,7 @@ fun JvmMusicPlayerScreen(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        musicPlayerViewModel.dataList.forEachIndexed { index, item ->
+                        desktopTabs.forEachIndexed { index, item ->
 
                             TextButton(onClick = {
                                 coroutineScope
@@ -390,7 +438,7 @@ fun JvmMusicPlayerScreen(
 
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .background(Color.Transparent),
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -398,60 +446,120 @@ fun JvmMusicPlayerScreen(
                 HorizontalPager(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(4f),
+                        .weight(1f),
                     state = horPagerState,
                     // 在底部弹窗里关闭 Pager 的边缘回弹，避免翻页落位后再次左右抖动
                     overscrollEffect = null
                 ) { page ->
                     when (page) {
                         0 -> {
-                            Box(
+                            Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .fillMaxSize()
+                                    .padding(horizontal = XyTheme.dimens.outerHorizontalPadding)
+                                    .widthIn(max = JvmMusicPlayerPrimaryPageMaxWidth)
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .align(Alignment.Center)
-                                        .size(300.dp)
-                                        .aspectRatio(1F)
-                                        .onGloballyPositioned { coordinates ->
-                                            sharedCoverTargetBoundsOnScreen = Rect(
-                                                offset = coordinates.positionOnScreen(),
-                                                size = Size(
-                                                    width = coordinates.size.width.toFloat(),
-                                                    height = coordinates.size.height.toFloat()
-                                                )
-                                            )
-                                        }
+                                        .weight(1f)
+                                        .fillMaxHeight()
+                                        .padding(end = JvmMusicPlayerPrimaryPageInnerGap),
+                                    contentAlignment = Alignment.CenterEnd
                                 ) {
-                                    XyImage(
+                                    Box(
                                         modifier = Modifier
-                                            .fillMaxSize()
-                                            .clip(CircleShape),
-                                        model = coverUrls.primaryUrl ?: picByte,
-                                        backModel = coverUrls.fallbackUrl ?: picByte,
-                                        requestSize = sharedCoverRequestSize,
-                                        placeholder = Res.drawable.disc_placeholder,
-                                        error = Res.drawable.disc_placeholder,
-                                        fallback = Res.drawable.disc_placeholder,
-                                        alpha = if (showSharedCoverOverlay) 0f else 1f,
-                                        contentDescription = stringResource(Res.string.album_cover),
-                                    )
-                                }
-                            }
-
-                        }
-
-                        1 -> {
-                            LrcViewNewCompose(
-                                listState = lrcListState,
-                                onSetLrcOffset = { offsetMs ->
-                                    coroutineScope.launch {
-                                        musicPlayerViewModel.lrcServer.updateLrcConfig(offsetMs)
+                                            .size(JvmMusicPlayerSharedCoverTargetSize)
+                                            .aspectRatio(1F)
+                                            .onGloballyPositioned { coordinates ->
+                                                sharedCoverTargetBoundsOnScreen = Rect(
+                                                    offset = coordinates.positionOnScreen(),
+                                                    size = Size(
+                                                        width = coordinates.size.width.toFloat(),
+                                                        height = coordinates.size.height.toFloat()
+                                                    )
+                                                )
+                                            }
+                                    ) {
+                                        XyImage(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .clip(CircleShape),
+                                            model = coverUrls.primaryUrl ?: picByte,
+                                            backModel = coverUrls.fallbackUrl ?: picByte,
+                                            requestSize = sharedCoverRequestSize,
+                                            placeholder = Res.drawable.disc_placeholder,
+                                            error = Res.drawable.disc_placeholder,
+                                            fallback = Res.drawable.disc_placeholder,
+                                            alpha = if (showSharedCoverOverlay) 0f else 1f,
+                                            contentDescription = stringResource(Res.string.album_cover),
+                                        )
                                     }
                                 }
-                            )
+
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight()
+                                        .padding(start = JvmMusicPlayerPrimaryPageInnerGap),
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .widthIn(max = JvmMusicPlayerLyricsMaxWidth)
+                                            .fillMaxHeight()
+                                            .pointerInput(musicDetail.itemId) {
+                                                awaitPointerEventScope {
+                                                    while (true) {
+                                                        val event = awaitPointerEvent()
+                                                        val change = event.changes.firstOrNull() ?: continue
+                                                        if (
+                                                            event.type == PointerEventType.Press &&
+                                                            event.buttons.isSecondaryPressed
+                                                        ) {
+                                                            resetLyricsPreviewOffset()
+                                                            lyricsMenuOffset = with(density) {
+                                                                DpOffset(
+                                                                    change.position.x.toDp(),
+                                                                    change.position.y.toDp()
+                                                                )
+                                                            }
+                                                            lyricsMenuExpanded = true
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                    ) {
+                                        LrcViewNewCompose(
+                                            modifier = Modifier.fillMaxSize(),
+                                            listState = lrcListState,
+                                            showConfigButton = false,
+                                            externalOffsetMillis = lyricsPreviewOffsetMs,
+                                            onSetLrcOffset = { offsetMs ->
+                                                coroutineScope.launch {
+                                                    musicPlayerViewModel.lrcServer.updateLrcConfig(offsetMs)
+                                                }
+                                            }
+                                        )
+                                        JvmLyricsConfigDropdownMenu(
+                                            expanded = lyricsMenuExpanded,
+                                            offset = lyricsMenuOffset,
+                                            onDismissRequest = {
+                                                lyricsMenuExpanded = false
+                                                resetLyricsPreviewOffset()
+                                            },
+                                            onPreviewOffsetChange = { lyricsPreviewOffsetMs = it },
+                                            onConfirm = {
+                                                coroutineScope.launch {
+                                                    musicPlayerViewModel.lrcServer.updateLrcConfig(lyricsPreviewOffsetMs)
+                                                }
+                                                lyricsMenuExpanded = false
+                                            },
+                                            currentPreviewOffsetMs = lyricsPreviewOffsetMs
+                                        )
+                                    }
+                                }
+                            }
                         }
 
                         else -> {
@@ -469,133 +577,142 @@ fun JvmMusicPlayerScreen(
 
                 XyColumn(
                     verticalArrangement = Arrangement.Bottom,
-                    modifier = Modifier
-                    /*.weight(2.8f)*/,
+                    modifier = Modifier.fillMaxWidth(),
                     paddingValues = PaddingValues(0.dp),
                     clipSize = 0.dp,
                     backgroundColor = Color.Transparent
                 ) {
-//                    Spacer(modifier = Modifier.height(XyTheme.dimens.corner))
-                    XyRow {
-                        Column(
-                            modifier = Modifier
-                                .width(200.dp)
-                        ) {
-                            Text(
-                                text = musicDetail.name,
-                                fontSize = 22.sp,
-                                fontWeight = FontWeight.W700,
-                                lineHeight = 31.86.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Visible,
-                                modifier = Modifier
-                                    .basicMarquee(iterations = Int.MAX_VALUE)
-                            )
-
-                            Text(
-                                text = if (musicDetail.artists.isNullOrEmpty()) stringResource(Res.string.unknown_artist) else musicDetail.artists?.joinToString()
-                                    ?: "",
-                                color = Color(0xff7B7B8B),
-                                fontSize = 17.sp,
-                                fontWeight = FontWeight.W400,
-                                lineHeight = 15.93.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.basicMarquee(
-                                    iterations = 0
-                                )
-                            )
-                        }
-
-                        JvmFavoriteMusicIconComponent(
-                            musicDetail = musicDetail,
-                            dataSourceManager = musicPlayerViewModel.dataSourceManager,
-                            musicController = musicPlayerViewModel.musicController,
-                            onFavoriteMusicIdSet = { favoriteList }
-                        )
-                        IconButton(
-                            modifier = Modifier.offset(x = (10).dp),
-                            onClick = {
-                                coroutineScope.launch {
-                                    val itemId =
-                                        musicPlayerViewModel.musicController.musicInfo?.itemId
-                                    itemId?.let {
-                                        musicPlayerViewModel.dataSourceManager.selectMusicInfoById(
-                                            it
-                                        )?.show()
-                                    }
-                                }
-                            },
-                        ) {
-                            Icon(
-                                painter = painterResource(Res.drawable.more_vert_24px),
-                                contentDescription = "${musicPlayerViewModel.musicController.musicInfo?.name}${
-                                    stringResource(
-                                        Res.string.other_operations_button_suffix
-                                    )
-                                }"
-                            )
-                        }
-                    }
-                    AnimatedVisibility(
-                        visible = !musicPlayerViewModel.lrcServer.lrcText.isNullOrBlank() && horPagerState.currentPage == 0
-                    ) {
-                        XyRow(modifier = Modifier/*.height(30.dp)*/) {
-                            LrcViewOneComponent(lrcText = musicPlayerViewModel.lrcServer.lrcText)
-                        }
-                    }
-
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .padding(
+                                horizontal = XyTheme.dimens.outerHorizontalPadding,
+                                vertical = XyTheme.dimens.outerVerticalPadding
+                            )
+                            .widthIn(max = JvmMusicPlayerPrimaryPageMaxWidth)
                     ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier.weight(1f),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                Column(
+                                    modifier = Modifier.widthIn(max = JvmMusicPlayerTitleSectionMaxWidth)
+                                ) {
+                                    Text(
+                                        text = musicDetail.name,
+                                        fontSize = 22.sp,
+                                        fontWeight = FontWeight.W700,
+                                        lineHeight = 31.86.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Visible,
+                                        modifier = Modifier
+                                            .basicMarquee(iterations = Int.MAX_VALUE)
+                                    )
+
+                                    Text(
+                                        text = if (musicDetail.artists.isNullOrEmpty()) stringResource(Res.string.unknown_artist) else musicDetail.artists?.joinToString()
+                                            ?: "",
+                                        color = Color(0xff7B7B8B),
+                                        fontSize = 17.sp,
+                                        fontWeight = FontWeight.W400,
+                                        lineHeight = 15.93.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.basicMarquee(
+                                            iterations = 0
+                                        )
+                                    )
+                                }
+                            }
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                JvmPlayerTypeComponent(musicController = musicPlayerViewModel.musicController)
+                                Icon(
+                                    painter = painterResource(Res.drawable.skip_previous_24px),
+                                    contentDescription = stringResource(Res.string.previous_track),
+                                    modifier = Modifier
+                                        .size(30.dp, 35.dp)
+                                        .debounceClickable {
+                                            coroutineScope.launch {
+                                                onSeekBack()
+                                            }
+                                        }
+                                )
+
+                                JvmPlayerStateComponent(musicController = musicPlayerViewModel.musicController)
+
+                                Icon(
+                                    painter = painterResource(Res.drawable.skip_next_24px),
+                                    contentDescription = stringResource(Res.string.next_track),
+                                    modifier = Modifier
+                                        .size(30.dp, 35.dp)
+                                        .debounceClickable {
+                                            coroutineScope.launch {
+                                                onSeekToNext()
+                                            }
+                                        }
+                                )
+                            }
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                horizontalArrangement = Arrangement.End,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                JvmFavoriteMusicIconComponent(
+                                    musicDetail = musicDetail,
+                                    dataSourceManager = musicPlayerViewModel.dataSourceManager,
+                                    musicController = musicPlayerViewModel.musicController,
+                                    onFavoriteMusicIdSet = { favoriteList }
+                                )
+                                IconButton(
+                                    modifier = Modifier.offset(x = 10.dp),
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            val itemId =
+                                                musicPlayerViewModel.musicController.musicInfo?.itemId
+                                            itemId?.let {
+                                                musicPlayerViewModel.dataSourceManager.selectMusicInfoById(
+                                                    it
+                                                )?.show()
+                                            }
+                                        }
+                                    },
+                                ) {
+                                    Icon(
+                                        painter = painterResource(Res.drawable.more_vert_24px),
+                                        contentDescription = "${musicPlayerViewModel.musicController.musicInfo?.name}${
+                                            stringResource(
+                                                Res.string.other_operations_button_suffix
+                                            )
+                                        }"
+                                    )
+                                }
+                                IconButton(
+                                    onClick = {
+                                        if (musicPlayerViewModel.musicController.originMusicList.isNotEmpty()) {
+                                            onSetState(true)
+                                        }
+                                    },
+                                ) {
+                                    Icon(
+                                        painter = painterResource(Res.drawable.queue_music_24px),
+                                        contentDescription = stringResource(Res.string.music_list)
+                                    )
+                                }
+                            }
+                        }
                         JvmPlayerCurrentPosition(
                             musicController = musicPlayerViewModel.musicController,
                             onCacheProgress = {
                                 cacheScheduleData
                             })
-                        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding))
-                        XyRow(modifier = Modifier/*.weight(1f)*/) {
-                            JvmPlayerTypeComponent(musicController = musicPlayerViewModel.musicController)
-                            Icon(
-                                painter = painterResource(Res.drawable.skip_previous_24px),
-                                contentDescription = stringResource(Res.string.previous_track),
-                                modifier = Modifier
-                                    .size(30.dp, 35.dp)
-                                    .debounceClickable {
-                                        coroutineScope.launch {
-                                            onSeekBack()
-                                        }
-                                    }
-                            )
-
-                            JvmPlayerStateComponent(musicController = musicPlayerViewModel.musicController)
-
-                            Icon(
-                                painter = painterResource(Res.drawable.skip_next_24px),
-                                contentDescription = stringResource(Res.string.next_track),
-                                modifier = Modifier
-                                    .size(30.dp, 35.dp)
-                                    .debounceClickable {
-                                        coroutineScope.launch {
-                                            onSeekToNext()
-                                        }
-                                    }
-                            )
-
-                            IconButton(
-                                onClick = {
-                                    if (musicPlayerViewModel.musicController.originMusicList.isNotEmpty()) {
-                                        onSetState(true)
-                                    }
-                                },
-                            ) {
-                                Icon(
-                                    painter = painterResource(Res.drawable.queue_music_24px),
-                                    contentDescription = stringResource(Res.string.music_list)
-                                )
-                            }
-                        }
                         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding * 4))
                     }
                 }
@@ -605,6 +722,54 @@ fun JvmMusicPlayerScreen(
         }
     }
 
+}
+
+@Composable
+private fun BoxScope.JvmLyricsConfigDropdownMenu(
+    expanded: Boolean,
+    offset: DpOffset,
+    onDismissRequest: () -> Unit,
+    onPreviewOffsetChange: (Long) -> Unit,
+    onConfirm: () -> Unit,
+    currentPreviewOffsetMs: Long
+) {
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismissRequest,
+        offset = offset,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+    ) {
+        DropdownMenuItem(
+            text = {
+                Text(stringResource(Res.string.forward_offset))
+            },
+            onClick = {
+                onPreviewOffsetChange(currentPreviewOffsetMs + 500L)
+            }
+        )
+        DropdownMenuItem(
+            text = {
+                Text(stringResource(Res.string.backward_offset))
+            },
+            onClick = {
+                onPreviewOffsetChange(currentPreviewOffsetMs - 500L)
+            }
+        )
+        DropdownMenuItem(
+            text = {
+                Text(stringResource(Res.string.reset))
+            },
+            onClick = {
+                onPreviewOffsetChange(0L)
+            }
+        )
+        DropdownMenuItem(
+            text = {
+                Text(stringResource(Res.string.confirm))
+            },
+            onClick = onConfirm
+        )
+    }
 }
 
 @Composable

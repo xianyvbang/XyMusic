@@ -116,6 +116,8 @@ private val lyricHorizontalPadding = 30.dp
 fun LrcViewNewCompose(
     modifier: Modifier = Modifier,
     onSetLrcOffset: (Long) -> Unit,
+    showConfigButton: Boolean = true,
+    externalOffsetMillis: Long? = null,
     lrcViewModel: LrcViewModel = koinViewModel<LrcViewModel>(),
     listState: LazyListState = rememberLazyListState(),
 ) {
@@ -128,6 +130,7 @@ fun LrcViewNewCompose(
     var tmpOffsetMs by remember {
         mutableStateOf(lrcViewModel.lrcServer.lrcConfig?.lrcOffsetMs ?: 0L)
     }
+    val effectiveOffsetMs = externalOffsetMillis ?: tmpOffsetMs
     var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
 
@@ -182,13 +185,13 @@ fun LrcViewNewCompose(
 
 
         //播放歌词的位置
-        val playIndex by produceState(initialValue = 0, lcrEntryList) {
+        val playIndex by produceState(initialValue = 0, lcrEntryList, effectiveOffsetMs) {
             //播放进度的flow，每秒钟发射一次
             lrcViewModel.getProgressStateFlow().collect {
                 currentTimeMillis = it
                 lcrEntryList.let { lcrEntryList ->
                     //播放器的播放进度，单位毫秒
-                    val index = lcrEntryList.getIndex(it, tmpOffsetMs)
+                    val index = lcrEntryList.getIndex(it, effectiveOffsetMs)
                     if (index >= 0) {
                         this.value = index
                     }
@@ -327,30 +330,30 @@ fun LrcViewNewCompose(
                 }
             }
 
-            LrcConfigComponent(
-                modifier = Modifier.align(Alignment.CenterEnd),
-                onTmpOffsetMillis = { tmpOffsetMs },
-                onFabMenuExpanded = { fabMenuExpanded },
-                onSetFabMenuExpanded = { fabMenuExpanded = it },
-                onSetLrcOffset = {
-                    onSetLrcOffset(it)
-                },
-                onSetTmpLrcOffset = { offset ->
-                    tmpOffsetMs = offset
-                })
+            if (showConfigButton) {
+                LrcConfigComponent(
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                    onTmpOffsetMillis = { tmpOffsetMs },
+                    onFabMenuExpanded = { fabMenuExpanded },
+                    onSetFabMenuExpanded = { fabMenuExpanded = it },
+                    onSetLrcOffset = {
+                        onSetLrcOffset(it)
+                    },
+                    onSetTmpLrcOffset = { offset ->
+                        tmpOffsetMs = offset
+                    })
 
-            SuggestionChip(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(start = XyTheme.dimens.outerHorizontalPadding),
-//                colors = SuggestionChipDefaults.suggestionChipColors(containerColor = Color.Gray),
-                onClick = {
-                    //生成调整事件
-                    fabMenuExpanded = !fabMenuExpanded
-                },
-                label = {
-                    Text(text = stringResource(Res.string.lrc_config))
-                })
+                SuggestionChip(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(start = XyTheme.dimens.outerHorizontalPadding),
+                    onClick = {
+                        fabMenuExpanded = !fabMenuExpanded
+                    },
+                    label = {
+                        Text(text = stringResource(Res.string.lrc_config))
+                    })
+            }
         }
     }
 }
