@@ -138,6 +138,9 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
+private const val JvmMusicPlayerSharedCoverDurationMillis = 920
+private const val JvmMusicPlayerDialogEnterDurationMillis = 260
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -158,7 +161,7 @@ fun JvmMusicPlayerComponent(
     val sharedCoverProgress by animateFloatAsState(
         targetValue = if (mainViewModel.sheetState) 1f else 0f,
         animationSpec = tween(
-            durationMillis = 360,
+            durationMillis = JvmMusicPlayerSharedCoverDurationMillis,
             easing = FastOutSlowInEasing
         ),
         label = "JvmMusicPlayerSharedCoverProgress"
@@ -189,14 +192,14 @@ fun JvmMusicPlayerComponent(
                 modifier = Modifier
                     .fillMaxSize(),
                 visibleState = overlayVisibleState,
-                enter = fadeIn(animationSpec = tween(durationMillis = 220)) +
+                enter = fadeIn(animationSpec = tween(durationMillis = JvmMusicPlayerDialogEnterDurationMillis)) +
                     scaleIn(
-                        animationSpec = tween(durationMillis = 220),
+                        animationSpec = tween(durationMillis = JvmMusicPlayerDialogEnterDurationMillis),
                         initialScale = 0.98f
                     ),
-                exit = fadeOut(animationSpec = tween(durationMillis = 180)) +
+                exit = fadeOut(animationSpec = tween(durationMillis = JvmMusicPlayerSharedCoverDurationMillis)) +
                     scaleOut(
-                        animationSpec = tween(durationMillis = 180),
+                        animationSpec = tween(durationMillis = JvmMusicPlayerSharedCoverDurationMillis),
                         targetScale = 0.98f
                     )
             ) {
