@@ -32,6 +32,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,7 +41,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -157,7 +157,8 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
-internal val JvmMusicPlayerSharedCoverTargetSize = 260.dp
+internal val JvmMusicPlayerSharedCoverTargetSize = 300.dp
+private val JvmMusicPlayerSharedCoverMinSize = 220.dp
 private const val JvmMusicPlayerSharedCoverDurationMillis = 920
 private const val JvmMusicPlayerDialogEnterDurationMillis = 260
 //private val JvmMusicPlayerPrimaryPageMaxWidth = 1320.dp
@@ -467,33 +468,42 @@ fun JvmMusicPlayerScreen(
                                         .padding(end = JvmMusicPlayerPrimaryPageInnerGap),
                                     contentAlignment = Alignment.CenterEnd
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(JvmMusicPlayerSharedCoverTargetSize)
-                                            .aspectRatio(1F)
-                                            .onGloballyPositioned { coordinates ->
-                                                sharedCoverTargetBoundsOnScreen = Rect(
-                                                    offset = coordinates.positionOnScreen(),
-                                                    size = Size(
-                                                        width = coordinates.size.width.toFloat(),
-                                                        height = coordinates.size.height.toFloat()
-                                                    )
-                                                )
-                                            }
+                                    BoxWithConstraints(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.CenterEnd
                                     ) {
-                                        XyImage(
+                                        val coverSize =
+                                            minOf(maxWidth * 0.55f, maxHeight * 0.4f).coerceIn(
+                                                JvmMusicPlayerSharedCoverMinSize,
+                                                JvmMusicPlayerSharedCoverTargetSize
+                                            )
+                                        Box(
                                             modifier = Modifier
-                                                .fillMaxSize()
-                                                .clip(CircleShape),
-                                            model = coverUrls.primaryUrl ?: picByte,
-                                            backModel = coverUrls.fallbackUrl ?: picByte,
-                                            requestSize = sharedCoverRequestSize,
-                                            placeholder = Res.drawable.disc_placeholder,
-                                            error = Res.drawable.disc_placeholder,
-                                            fallback = Res.drawable.disc_placeholder,
-                                            alpha = if (showSharedCoverOverlay) 0f else 1f,
-                                            contentDescription = stringResource(Res.string.album_cover),
-                                        )
+                                                .requiredSize(coverSize)
+                                                .onGloballyPositioned { coordinates ->
+                                                    sharedCoverTargetBoundsOnScreen = Rect(
+                                                        offset = coordinates.positionOnScreen(),
+                                                        size = Size(
+                                                            width = coordinates.size.width.toFloat(),
+                                                            height = coordinates.size.height.toFloat()
+                                                        )
+                                                    )
+                                                }
+                                        ) {
+                                            XyImage(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .clip(CircleShape),
+                                                model = coverUrls.primaryUrl ?: picByte,
+                                                backModel = coverUrls.fallbackUrl ?: picByte,
+                                                requestSize = sharedCoverRequestSize,
+                                                placeholder = Res.drawable.disc_placeholder,
+                                                error = Res.drawable.disc_placeholder,
+                                                fallback = Res.drawable.disc_placeholder,
+                                                alpha = if (showSharedCoverOverlay) 0f else 1f,
+                                                contentDescription = stringResource(Res.string.album_cover),
+                                            )
+                                        }
                                     }
                                 }
 
