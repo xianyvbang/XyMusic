@@ -570,6 +570,7 @@ fun JvmMusicPlayerScreen(
                                             modifier = Modifier.fillMaxSize(),
                                             listState = lrcListState,
                                             externalOffsetMillis = lyricsPreviewOffsetMs,
+                                            currentLineTopInset = XyTheme.dimens.itemHeight,
                                             previewEntries = mockLyricsEntries,
                                             previewCurrentTimeMillis = mockLyricsCurrentTimeMillis,
                                             // TODO 接入真实歌词数据后，移除 previewEntries / previewCurrentTimeMillis，改回真实歌词流。

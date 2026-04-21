@@ -77,6 +77,7 @@ import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -120,6 +121,7 @@ fun LrcViewNewCompose(
     onSetLrcOffset: (Long) -> Unit,
     showConfigButton: Boolean = true,
     externalOffsetMillis: Long? = null,
+    currentLineTopInset: Dp? = null,
     previewEntries: List<LrcEntryData>? = null,
     previewCurrentTimeMillis: Long? = null,
     lrcViewModel: LrcViewModel = koinViewModel<LrcViewModel>(),
@@ -158,7 +160,14 @@ fun LrcViewNewCompose(
                 (maxWidth - lyricHorizontalPadding * 2).roundToPx()
             }
         }
-        val verticalContentPadding = maxHeight / 2 - XyTheme.dimens.outerVerticalPadding
+        val topContentPadding = (
+            currentLineTopInset ?: (maxHeight / 2 - XyTheme.dimens.outerVerticalPadding)
+            ).coerceAtLeast(0.dp)
+        val bottomContentPadding = if (currentLineTopInset == null) {
+            topContentPadding
+        } else {
+            (maxHeight - currentLineTopInset).coerceAtLeast(0.dp)
+        }
         //获取歌词列表
 
         // 记录拖到哪一行
@@ -277,7 +286,8 @@ fun LrcViewNewCompose(
                         verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         contentPadding = PaddingValues(
-                            vertical = verticalContentPadding
+                            top = topContentPadding,
+                            bottom = bottomContentPadding
                         ),
                     ) {
                         itemsIndexed(lcrEntryList) { index, line ->
@@ -334,7 +344,15 @@ fun LrcViewNewCompose(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .align(Alignment.Center)
+                        .then(
+                            if (currentLineTopInset == null) {
+                                Modifier.align(Alignment.Center)
+                            } else {
+                                Modifier
+                                    .align(Alignment.TopCenter)
+                                    .padding(top = currentLineTopInset)
+                            }
+                        )
                         .padding(vertical = 8.dp)
 
                 ) {
