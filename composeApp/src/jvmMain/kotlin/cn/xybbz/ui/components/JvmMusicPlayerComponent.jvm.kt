@@ -114,10 +114,11 @@ import cn.xybbz.compositionLocal.LocalDesktopWindowChromeController
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.config.music.MusicCommonController
-import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.LrcEntryData
+import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.PlayerModeEnum
+import cn.xybbz.ui.components.lrc.LrcViewNewCompose
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumn
@@ -333,6 +334,19 @@ fun JvmMusicPlayerScreen(
     var lyricsPreviewOffsetMs by remember(musicDetail.itemId) {
         mutableLongStateOf(0L)
     }
+    val mockLyricsEntries = remember(
+        musicDetail.itemId,
+        musicDetail.name,
+        musicDetail.artists
+    ) {
+        buildJvmMockLyricsEntries(musicDetail)
+    }
+    val mockLyricsLoopDuration = remember(mockLyricsEntries) {
+        (mockLyricsEntries.lastOrNull()?.startTime ?: 0L) + 3_000L
+    }
+    var mockLyricsCurrentTimeMillis by remember(musicDetail.itemId) {
+        mutableLongStateOf(0L)
+    }
     val showSharedCoverOverlay =
         sharedCoverSourceBoundsOnScreen != null &&
             playerRootBoundsOnScreen != null &&
@@ -352,6 +366,13 @@ fun JvmMusicPlayerScreen(
     LaunchedEffect(musicDetail.itemId) {
         lyricsMenuExpanded = false
         resetLyricsPreviewOffset()
+    }
+    LaunchedEffect(musicDetail.itemId, mockLyricsLoopDuration) {
+        mockLyricsCurrentTimeMillis = 0L
+        while (true) {
+            delay(90L)
+            mockLyricsCurrentTimeMillis = (mockLyricsCurrentTimeMillis + 90L) % mockLyricsLoopDuration
+        }
     }
 
     Box(
@@ -545,13 +566,21 @@ fun JvmMusicPlayerScreen(
                                                 }
                                             }
                                     ) {
-                                        // TODO 接入真实歌词数据后，将这里替换回 LrcViewNewCompose，并透传真实歌词流与偏移配置。
+
                                         JvmMockLyricsView(
-                                            modifier = Modifier.fillMaxSize(),
                                             musicDetail = musicDetail,
                                             listState = lrcListState,
-                                            externalOffsetMillis = lyricsPreviewOffsetMs,
+                                            externalOffsetMillis = lyricsPreviewOffsetMs
                                         )
+                                        /*LrcViewNewCompose(
+                                            modifier = Modifier.fillMaxSize(),
+                                            listState = lrcListState,
+                                            externalOffsetMillis = lyricsPreviewOffsetMs,
+                                            previewEntries = mockLyricsEntries,
+                                            previewCurrentTimeMillis = mockLyricsCurrentTimeMillis,
+                                            // TODO 接入真实歌词数据后，移除 previewEntries / previewCurrentTimeMillis，改回真实歌词流。
+                                            onSetLrcOffset = { }
+                                        )*/
                                         JvmLyricsConfigDropdownMenu(
                                             expanded = lyricsMenuExpanded,
                                             offset = lyricsMenuOffset,

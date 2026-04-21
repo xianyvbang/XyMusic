@@ -118,14 +118,18 @@ fun LrcViewNewCompose(
     onSetLrcOffset: (Long) -> Unit,
     showConfigButton: Boolean = true,
     externalOffsetMillis: Long? = null,
+    previewEntries: List<LrcEntryData>? = null,
+    previewCurrentTimeMillis: Long? = null,
     lrcViewModel: LrcViewModel = koinViewModel<LrcViewModel>(),
     listState: LazyListState = rememberLazyListState(),
 ) {
 
-    val lcrEntryList by lrcViewModel.lrcServer.lcrEntryListFlow.collectAsStateWithLifecycle(
+    val realLcrEntryList by lrcViewModel.lrcServer.lcrEntryListFlow.collectAsStateWithLifecycle(
         emptyList()
     )
+    val lcrEntryList = previewEntries ?: realLcrEntryList
     val coroutineScope = rememberCoroutineScope()
+    val usePreviewLyrics = previewEntries != null && previewCurrentTimeMillis != null
 
     var tmpOffsetMs by remember {
         mutableStateOf(lrcViewModel.lrcServer.lrcConfig?.lrcOffsetMs ?: 0L)
@@ -185,20 +189,39 @@ fun LrcViewNewCompose(
 
 
         //播放歌词的位置
-        val playIndex by produceState(initialValue = 0, lcrEntryList, effectiveOffsetMs) {
-            //播放进度的flow，每秒钟发射一次
-            lrcViewModel.getProgressStateFlow().collect {
-                currentTimeMillis = it
-                lcrEntryList.let { lcrEntryList ->
-                    //播放器的播放进度，单位毫秒
-                    val index = lcrEntryList.getIndex(it, effectiveOffsetMs)
+        val playIndex by produceState(
+            initialValue = 0,
+            lcrEntryList,
+            effectiveOffsetMs,
+            previewCurrentTimeMillis
+        ) {
+            if (usePreviewLyrics) {
+                val previewTime = previewCurrentTimeMillis
+                currentTimeMillis = previewTime
+                lcrEntryList.let { entries ->
+                    val index = entries.getIndex(previewTime, effectiveOffsetMs)
                     if (index >= 0) {
                         this.value = index
                     }
                 }
-            }
-            awaitDispose {
-                this.value = 0
+                awaitDispose {
+                    this.value = 0
+                }
+            } else {
+                //播放进度的flow，每秒钟发射一次
+                lrcViewModel.getProgressStateFlow().collect {
+                    currentTimeMillis = it
+                    lcrEntryList.let { entries ->
+                        //播放器的播放进度，单位毫秒
+                        val index = entries.getIndex(it, effectiveOffsetMs)
+                        if (index >= 0) {
+                            this.value = index
+                        }
+                    }
+                }
+                awaitDispose {
+                    this.value = 0
+                }
             }
         }
 
@@ -263,7 +286,9 @@ fun LrcViewNewCompose(
                                     highlight = index == playIndex,
                                     currentTimeMillis = currentTimeMillis,
                                     onClick = {
-                                        lrcViewModel.seekTo(line.startTime)
+                                        if (!usePreviewLyrics) {
+                                            lrcViewModel.seekTo(line.startTime)
+                                        }
                                         coroutineScope.launch {
                                             listState.animateScrollToItem(index)
                                         }
@@ -274,7 +299,9 @@ fun LrcViewNewCompose(
                                     line = line,
                                     highlight = index == playIndex,
                                     onClick = {
-                                        lrcViewModel.seekTo(line.startTime)
+                                        if (!usePreviewLyrics) {
+                                            lrcViewModel.seekTo(line.startTime)
+                                        }
                                         coroutineScope.launch {
                                             listState.animateScrollToItem(index)
                                         }
