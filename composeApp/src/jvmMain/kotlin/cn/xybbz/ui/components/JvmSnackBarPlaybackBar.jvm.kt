@@ -199,7 +199,6 @@ fun JvmSnackBarPlaybackBar(
         val sectionWidth = maxWidth / 3
 
         XyRow(
-            modifier = Modifier.background(Color.Red),
             paddingValues = PaddingValues(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically

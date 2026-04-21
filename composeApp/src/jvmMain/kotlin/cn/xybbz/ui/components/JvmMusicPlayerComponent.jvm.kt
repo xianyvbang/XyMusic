@@ -551,17 +551,19 @@ fun JvmMusicPlayerScreen(
                                             title = musicDetail.name,
                                             artist = artistLabel
                                         )
-                                        Spacer(modifier = Modifier.height(JvmMusicPlayerLyricsHeaderBottomGap))
+//                                        Spacer(modifier = Modifier.height(JvmMusicPlayerLyricsHeaderBottomGap))
                                         Box(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .weight(1f)
+                                                .background(Color.Red)
                                         ) {
                                             LrcViewNewCompose(
                                                 modifier = Modifier.fillMaxSize(),
                                                 listState = lrcListState,
                                                 externalOffsetMillis = lyricsPreviewOffsetMs,
                                                 previewEntries = mockLyricsEntries,
+                                                currentLineTopInset = XyTheme.dimens.itemHeight,
                                                 previewCurrentTimeMillis = mockLyricsCurrentTimeMillis,
                                                 // TODO 接入真实歌词数据后，移除 previewEntries / previewCurrentTimeMillis，改回真实歌词流。
                                                 onSetLrcOffset = { }
