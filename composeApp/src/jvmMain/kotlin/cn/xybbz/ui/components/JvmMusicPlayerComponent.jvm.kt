@@ -29,44 +29,35 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
@@ -83,7 +74,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -93,80 +83,55 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionOnScreen
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.common.enums.MusicTypeEnum
-import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.compositionLocal.LocalDesktopWindowChromeController
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
-import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
-import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.ui.components.lrc.LrcViewNewCompose
-import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyImage
-import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import cn.xybbz.viewmodel.MusicPlayerViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.album_cover
+import xymusic_kmp.composeapp.generated.resources.backward_offset
 import xymusic_kmp.composeapp.generated.resources.close_player_screen
+import xymusic_kmp.composeapp.generated.resources.confirm
 import xymusic_kmp.composeapp.generated.resources.disc_placeholder
-import xymusic_kmp.composeapp.generated.resources.favorite_24px
-import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
-import xymusic_kmp.composeapp.generated.resources.favorite_button
 import xymusic_kmp.composeapp.generated.resources.forward_offset
 import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
-import xymusic_kmp.composeapp.generated.resources.more_vert_24px
-import xymusic_kmp.composeapp.generated.resources.music_list
-import xymusic_kmp.composeapp.generated.resources.next_track
-import xymusic_kmp.composeapp.generated.resources.other_operations_button_suffix
-import xymusic_kmp.composeapp.generated.resources.pause
-import xymusic_kmp.composeapp.generated.resources.pause_24px
-import xymusic_kmp.composeapp.generated.resources.play_arrow_24px
-import xymusic_kmp.composeapp.generated.resources.playing
-import xymusic_kmp.composeapp.generated.resources.previous_track
-import xymusic_kmp.composeapp.generated.resources.queue_music_24px
 import xymusic_kmp.composeapp.generated.resources.recommend
 import xymusic_kmp.composeapp.generated.resources.reset
 import xymusic_kmp.composeapp.generated.resources.song_tab
-import xymusic_kmp.composeapp.generated.resources.skip_next_24px
-import xymusic_kmp.composeapp.generated.resources.skip_previous_24px
-import xymusic_kmp.composeapp.generated.resources.unknown_artist
-import xymusic_kmp.composeapp.generated.resources.backward_offset
-import xymusic_kmp.composeapp.generated.resources.confirm
 import kotlin.math.min
 import kotlin.math.roundToInt
-import kotlinx.coroutines.delay
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 internal val JvmMusicPlayerSharedCoverTargetSize = 340.dp
 private val JvmMusicPlayerSharedCoverMinSize = 240.dp
 private const val JvmMusicPlayerSharedCoverDurationMillis = 920
 private const val JvmMusicPlayerDialogEnterDurationMillis = 260
+
 //private val JvmMusicPlayerPrimaryPageMaxWidth = 1320.dp
 private val JvmMusicPlayerPrimaryPageInnerGap = 48.dp
 private val JvmMusicPlayerLyricsMaxWidth = 480.dp
@@ -225,7 +190,7 @@ fun JvmMusicPlayerComponent(
                 dismissOnClickOutside = false,
                 usePlatformDefaultWidth = false,
                 usePlatformInsets = false,
-                scrimColor= Color.Transparent
+                scrimColor = Color.Transparent
             )
         ) {
             AnimatedVisibility(
@@ -233,15 +198,15 @@ fun JvmMusicPlayerComponent(
                     .fillMaxSize(),
                 visibleState = overlayVisibleState,
                 enter = fadeIn(animationSpec = tween(durationMillis = JvmMusicPlayerDialogEnterDurationMillis)) +
-                    scaleIn(
-                        animationSpec = tween(durationMillis = JvmMusicPlayerDialogEnterDurationMillis),
-                        initialScale = 0.98f
-                    ),
+                        scaleIn(
+                            animationSpec = tween(durationMillis = JvmMusicPlayerDialogEnterDurationMillis),
+                            initialScale = 0.98f
+                        ),
                 exit = fadeOut(animationSpec = tween(durationMillis = JvmMusicPlayerSharedCoverDurationMillis)) +
-                    scaleOut(
-                        animationSpec = tween(durationMillis = JvmMusicPlayerSharedCoverDurationMillis),
-                        targetScale = 0.98f
-                    )
+                        scaleOut(
+                            animationSpec = tween(durationMillis = JvmMusicPlayerSharedCoverDurationMillis),
+                            targetScale = 0.98f
+                        )
             ) {
                 Box(
                     modifier = Modifier
@@ -348,10 +313,10 @@ fun JvmMusicPlayerScreen(
     }
     val showSharedCoverOverlay =
         sharedCoverSourceBoundsOnScreen != null &&
-            playerRootBoundsOnScreen != null &&
-            sharedCoverTargetBoundsOnScreen != null &&
-            sharedCoverProgress > 0f &&
-            sharedCoverProgress < 1f
+                playerRootBoundsOnScreen != null &&
+                sharedCoverTargetBoundsOnScreen != null &&
+                sharedCoverProgress > 0f &&
+                sharedCoverProgress < 1f
 
     fun persistedLyricsOffsetMs(): Long {
         // TODO 接入真实歌词配置后，从 lrcServer 读取并返回已保存的歌词偏移量。
@@ -373,7 +338,8 @@ fun JvmMusicPlayerScreen(
         mockLyricsCurrentTimeMillis = 0L
         while (true) {
             delay(90L)
-            mockLyricsCurrentTimeMillis = (mockLyricsCurrentTimeMillis + 90L) % mockLyricsLoopDuration
+            mockLyricsCurrentTimeMillis =
+                (mockLyricsCurrentTimeMillis + 90L) % mockLyricsLoopDuration
         }
     }
 
@@ -550,7 +516,8 @@ fun JvmMusicPlayerScreen(
                                                 awaitPointerEventScope {
                                                     while (true) {
                                                         val event = awaitPointerEvent()
-                                                        val change = event.changes.firstOrNull() ?: continue
+                                                        val change =
+                                                            event.changes.firstOrNull() ?: continue
                                                         if (
                                                             event.type == PointerEventType.Press &&
                                                             event.buttons.isSecondaryPressed
@@ -628,6 +595,7 @@ fun JvmMusicPlayerScreen(
                         isDarkTheme = XyTheme.configs.isDarkTheme,
                         defaultContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
                         sharedCoverRequestSize = sharedCoverRequestSize,
+                        showCover = false,
                         cacheProgress = cacheScheduleData,
                         onShowPlaylist = {
                             if (musicPlayerViewModel.musicController.originMusicList.isNotEmpty()) {
@@ -658,7 +626,8 @@ fun JvmMusicPlayerScreen(
 }
 
 private fun buildJvmMockLyricsEntries(musicDetail: XyPlayMusic): List<LrcEntryData> {
-    val artistLabel = musicDetail.artists?.joinToString().takeUnless { it.isNullOrBlank() } ?: "Artist"
+    val artistLabel =
+        musicDetail.artists?.joinToString().takeUnless { it.isNullOrBlank() } ?: "Artist"
     return listOf(
         LrcEntryData(
             startTime = 0L,

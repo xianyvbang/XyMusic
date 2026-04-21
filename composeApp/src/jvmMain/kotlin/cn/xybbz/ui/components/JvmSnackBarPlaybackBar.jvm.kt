@@ -151,6 +151,8 @@ private const val JvmSnackBarVolumeSliderThumbRadius = 6f
  *
  * 调用方只需要传入当前播放控制器、音量控制 ViewModel，以及各业务行为回调，
  * 就可以复用统一的桌面端播放栏视觉和交互。
+ *
+ * 通过 `showCover` 可以控制左侧是否显示封面图，方便完整播放器页在已有大封面时复用同一套底栏。
  */
 @Composable
 fun JvmSnackBarPlaybackBar(
@@ -161,6 +163,7 @@ fun JvmSnackBarPlaybackBar(
     isDarkTheme: Boolean,
     defaultContainerColor: Color,
     sharedCoverRequestSize: IntSize,
+    showCover: Boolean = true,
     cacheProgress: Float = 0f,
     onSharedCoverBoundsChanged: (Rect) -> Unit = {},
     onSetColor: (Color?) -> Unit = {},
@@ -196,6 +199,7 @@ fun JvmSnackBarPlaybackBar(
         val sectionWidth = maxWidth / 3
 
         XyRow(
+            modifier = Modifier.background(Color.Red),
             paddingValues = PaddingValues(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -207,19 +211,23 @@ fun JvmSnackBarPlaybackBar(
                     .clip(RoundedCornerShape(XyTheme.dimens.corner))
                     .then(openPlayerModifier),
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                leadingContent = {
-                    JvmImageCover(
-                        modifier = Modifier
-                            .size(JvmSnackBarCoverSize)
-                            .clip(RoundedCornerShape(XyTheme.dimens.corner)),
-                        musicController = musicController,
-                        isDarkTheme = isDarkTheme,
-                        onBoundsChanged = onSharedCoverBoundsChanged,
-                        requestSize = sharedCoverRequestSize,
-                        onSetColor = {
-                            onSetColor(it ?: defaultContainerColor)
-                        }
-                    )
+                leadingContent = if (showCover) {
+                    {
+                        JvmImageCover(
+                            modifier = Modifier
+                                .size(JvmSnackBarCoverSize)
+                                .clip(RoundedCornerShape(XyTheme.dimens.corner)),
+                            musicController = musicController,
+                            isDarkTheme = isDarkTheme,
+                            onBoundsChanged = onSharedCoverBoundsChanged,
+                            requestSize = sharedCoverRequestSize,
+                            onSetColor = {
+                                onSetColor(it ?: defaultContainerColor)
+                            }
+                        )
+                    }
+                } else {
+                    null
                 },
                 headlineContent = {
                     XyText(
