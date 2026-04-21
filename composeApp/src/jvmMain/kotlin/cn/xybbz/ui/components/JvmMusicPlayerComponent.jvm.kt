@@ -142,6 +142,7 @@ private const val JvmMusicPlayerDialogEnterDurationMillis = 260
 private val JvmMusicPlayerPrimaryPageInnerGap = 48.dp
 private val JvmMusicPlayerLyricsMaxWidth = 480.dp
 private val JvmMusicPlayerLyricsHeaderBottomGap = 20.dp
+private val JvmMusicPlayerLyricsItemHeight = 56.dp
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -562,8 +563,9 @@ fun JvmMusicPlayerScreen(
                                                 modifier = Modifier.fillMaxSize(),
                                                 listState = lrcListState,
                                                 externalOffsetMillis = lyricsPreviewOffsetMs,
+                                                currentLineTopInset = JvmMusicPlayerLyricsItemHeight,
+                                                highlightScaleEnabled = false,
                                                 previewEntries = mockLyricsEntries,
-                                                currentLineTopInset = XyTheme.dimens.itemHeight,
                                                 previewCurrentTimeMillis = mockLyricsCurrentTimeMillis,
                                                 // TODO 接入真实歌词数据后，移除 previewEntries / previewCurrentTimeMillis，改回真实歌词流。
                                                 onSetLrcOffset = { }

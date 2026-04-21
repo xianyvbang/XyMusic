@@ -122,6 +122,7 @@ fun LrcViewNewCompose(
     showConfigButton: Boolean = true,
     externalOffsetMillis: Long? = null,
     currentLineTopInset: Dp? = null,
+    highlightScaleEnabled: Boolean = true,
     previewEntries: List<LrcEntryData>? = null,
     previewCurrentTimeMillis: Long? = null,
     lrcViewModel: LrcViewModel = koinViewModel<LrcViewModel>(),
@@ -296,6 +297,7 @@ fun LrcViewNewCompose(
                                 KaraokeLyricLineNew(
                                     line = line,
                                     highlight = index == playIndex,
+                                    highlightScaleEnabled = highlightScaleEnabled,
                                     currentTimeMillis = currentTimeMillis,
                                     onClick = {
                                         if (!usePreviewLyrics) {
@@ -310,6 +312,7 @@ fun LrcViewNewCompose(
                                 KaraokeLyricLineNew(
                                     line = line,
                                     highlight = index == playIndex,
+                                    highlightScaleEnabled = highlightScaleEnabled,
                                     onClick = {
                                         if (!usePreviewLyrics) {
                                             lrcViewModel.seekTo(line.startTime)
@@ -409,12 +412,16 @@ fun LrcViewNewCompose(
 fun KaraokeLyricLineNew(
     line: LrcEntryData,
     highlight: Boolean,
+    highlightScaleEnabled: Boolean = true,
     onClick: () -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
-    // 使用 Float 来动画变化，然后转换为 sp
+    val targetPrimaryFontSize = if (highlight && highlightScaleEnabled) 24f else 20f
+    val targetPrimaryLineHeight = if (highlight && highlightScaleEnabled) 32.sp else 28.sp
+    val secondaryFontSize = if (highlight && highlightScaleEnabled) 16.sp else 14.sp
+
     val animatedFontSize by animateFloatAsState(
-        targetValue = if (highlight) 24f else 20f,
+        targetValue = targetPrimaryFontSize,
         animationSpec = tween(durationMillis = 280),
         label = "FontSizeAnimation"
     )
@@ -448,9 +455,9 @@ fun KaraokeLyricLineNew(
         Text(
             text = line.text,
             fontSize = animatedFontSize.sp,
-            lineHeight = if (highlight) 32.sp else 28.sp,
+            lineHeight = targetPrimaryLineHeight,
             color = animatedColor,
-            fontWeight = if (highlight) FontWeight.Bold else FontWeight.Normal,
+            fontWeight = if (highlight && highlightScaleEnabled) FontWeight.Bold else FontWeight.Normal,
             textAlign = TextAlign.Center
         )
 
@@ -458,7 +465,7 @@ fun KaraokeLyricLineNew(
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = line.secondText,
-                fontSize = if (highlight) 16.sp else 14.sp,
+                fontSize = secondaryFontSize,
                 lineHeight = 22.sp,
                 color = animatedSecondTextColor,
                 textAlign = TextAlign.Center
@@ -472,12 +479,15 @@ fun KaraokeLyricLineNew(
     line: LrcEntryData,
     currentTimeMillis: Long,
     highlight: Boolean,
+    highlightScaleEnabled: Boolean = true,
     onClick: () -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val highlightIndex = line.wordTimings.indexOfLast { it <= currentTimeMillis }
     val nextWordTime = line.wordTimings.getOrNull(highlightIndex + 1) ?: Long.MAX_VALUE
     val currentWordTime = line.wordTimings.getOrNull(highlightIndex) ?: Long.MAX_VALUE
+    val primaryFontSize = if (highlight && highlightScaleEnabled) 24.sp else 20.sp
+    val primaryLineHeight = if (highlight && highlightScaleEnabled) 32.sp else 28.sp
 
     val progress = when {
         currentTimeMillis < currentWordTime -> 0f
@@ -520,10 +530,14 @@ fun KaraokeLyricLineNew(
 
                 Text(
                     text = char.toString(),
-                    fontSize = if (highlight) 24.sp else 20.sp,
-                    lineHeight = if (highlight) 32.sp else 28.sp,
+                    fontSize = primaryFontSize,
+                    lineHeight = primaryLineHeight,
                     color = lerp(inactiveCharColor, activeCharColor, animatedAlpha),
-                    fontWeight = if (animatedAlpha > 0.8f) FontWeight.Bold else FontWeight.Normal,
+                    fontWeight = if (highlightScaleEnabled && animatedAlpha > 0.8f) {
+                        FontWeight.Bold
+                    } else {
+                        FontWeight.Normal
+                    },
                     modifier = Modifier.padding(horizontal = 1.dp)
                 )
             }
