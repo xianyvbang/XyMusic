@@ -48,6 +48,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
@@ -69,6 +70,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.isTraversalGroup
@@ -341,16 +343,16 @@ fun LrcViewNewCompose(
                             .padding(horizontal = 16.dp)
                             .fillMaxWidth(),
                         thickness = 1.dp,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.outlineVariant
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = formatTime(dragLine.startTime),
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 14.sp,
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
-                            .background(Color.Black.copy(alpha = 0.5f))
+                            .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.92f))
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                             .clip(RoundedCornerShape(4.dp))
                     )
@@ -391,15 +393,28 @@ fun KaraokeLyricLineNew(
     highlight: Boolean,
     onClick: () -> Unit
 ) {
+    val colorScheme = MaterialTheme.colorScheme
     // 使用 Float 来动画变化，然后转换为 sp
     val animatedFontSize by animateFloatAsState(
-        targetValue = if (highlight) 24f else 16f,
-        animationSpec = tween(durationMillis = 300),
+        targetValue = if (highlight) 24f else 20f,
+        animationSpec = tween(durationMillis = 280),
         label = "FontSizeAnimation"
     )
     val animatedColor by animateColorAsState(
-        targetValue = if (highlight) Color.Cyan else Color.White,
+        targetValue = if (highlight) {
+            colorScheme.onSurface
+        } else {
+            colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+        },
         label = "ColorAnimation"
+    )
+    val animatedSecondTextColor by animateColorAsState(
+        targetValue = if (highlight) {
+            colorScheme.primary
+        } else {
+            colorScheme.onSurfaceVariant.copy(alpha = 0.64f)
+        },
+        label = "SecondTextColorAnimation"
     )
 
     XyColumn(
@@ -415,17 +430,19 @@ fun KaraokeLyricLineNew(
         Text(
             text = line.text,
             fontSize = animatedFontSize.sp,
+            lineHeight = if (highlight) 32.sp else 28.sp,
             color = animatedColor,
             fontWeight = if (highlight) FontWeight.Bold else FontWeight.Normal,
             textAlign = TextAlign.Center
         )
 
         if (line.secondText.isNotBlank()) {
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = line.secondText,
-                fontSize = 14.sp,
-                color = Color.LightGray,
+                fontSize = if (highlight) 16.sp else 14.sp,
+                lineHeight = 22.sp,
+                color = animatedSecondTextColor,
                 textAlign = TextAlign.Center
             )
         }
@@ -439,6 +456,7 @@ fun KaraokeLyricLineNew(
     highlight: Boolean,
     onClick: () -> Unit
 ) {
+    val colorScheme = MaterialTheme.colorScheme
     val highlightIndex = line.wordTimings.indexOfLast { it <= currentTimeMillis }
     val nextWordTime = line.wordTimings.getOrNull(highlightIndex + 1) ?: Long.MAX_VALUE
     val currentWordTime = line.wordTimings.getOrNull(highlightIndex) ?: Long.MAX_VALUE
@@ -464,6 +482,12 @@ fun KaraokeLyricLineNew(
             ) { onClick() },
         backgroundColor = Color.Transparent
     ) {
+        val inactiveCharColor = colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+        val activeCharColor = if (highlight) {
+            colorScheme.onSurface
+        } else {
+            colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+        }
         Row(horizontalArrangement = Arrangement.Center) {
             line.text.forEachIndexed { index, char ->
                 val intensity = when {
@@ -478,8 +502,9 @@ fun KaraokeLyricLineNew(
 
                 Text(
                     text = char.toString(),
-                    fontSize = if (highlight) 24.sp else 16.sp,
-                    color = Color.White.copy(alpha = 0.5f + 0.5f * animatedAlpha),
+                    fontSize = if (highlight) 24.sp else 20.sp,
+                    lineHeight = if (highlight) 32.sp else 28.sp,
+                    color = lerp(inactiveCharColor, activeCharColor, animatedAlpha),
                     fontWeight = if (animatedAlpha > 0.8f) FontWeight.Bold else FontWeight.Normal,
                     modifier = Modifier.padding(horizontal = 1.dp)
                 )
@@ -492,13 +517,13 @@ fun KaraokeLyricLineNew(
                 .height(2.dp)
                 .fillMaxWidth(0.6f) // 进度条宽度控制
                 .clip(RoundedCornerShape(50))
-                .background(Color.Gray.copy(alpha = 0.3f))
+                .background(colorScheme.outlineVariant.copy(alpha = 0.35f))
         ) {
             Box(
                 modifier = Modifier
                     .matchParentSize()
                     .fillMaxWidth(animatedProgress)
-                    .background(Color.Cyan.copy(alpha = 0.8f))
+                    .background(colorScheme.primary.copy(alpha = 0.9f))
             )
         }
     }

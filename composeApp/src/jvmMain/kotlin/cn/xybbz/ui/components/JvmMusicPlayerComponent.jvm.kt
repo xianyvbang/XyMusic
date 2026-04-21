@@ -566,13 +566,7 @@ fun JvmMusicPlayerScreen(
                                                 }
                                             }
                                     ) {
-
-                                        JvmMockLyricsView(
-                                            musicDetail = musicDetail,
-                                            listState = lrcListState,
-                                            externalOffsetMillis = lyricsPreviewOffsetMs
-                                        )
-                                        /*LrcViewNewCompose(
+                                        LrcViewNewCompose(
                                             modifier = Modifier.fillMaxSize(),
                                             listState = lrcListState,
                                             externalOffsetMillis = lyricsPreviewOffsetMs,
@@ -580,7 +574,7 @@ fun JvmMusicPlayerScreen(
                                             previewCurrentTimeMillis = mockLyricsCurrentTimeMillis,
                                             // TODO 接入真实歌词数据后，移除 previewEntries / previewCurrentTimeMillis，改回真实歌词流。
                                             onSetLrcOffset = { }
-                                        )*/
+                                        )
                                         JvmLyricsConfigDropdownMenu(
                                             expanded = lyricsMenuExpanded,
                                             offset = lyricsMenuOffset,
@@ -760,96 +754,6 @@ fun JvmMusicPlayerScreen(
         }
     }
 
-}
-
-@Composable
-private fun JvmMockLyricsView(
-    modifier: Modifier = Modifier,
-    musicDetail: XyPlayMusic,
-    listState: LazyListState,
-    externalOffsetMillis: Long = 0L
-) {
-    val lyrics = remember(
-        musicDetail.itemId,
-        musicDetail.name,
-        musicDetail.artists
-    ) {
-        buildJvmMockLyricsEntries(musicDetail)
-    }
-    val loopDuration = remember(lyrics) {
-        (lyrics.lastOrNull()?.startTime ?: 0L) + 3_000L
-    }
-    var currentTimeMillis by remember(musicDetail.itemId) {
-        mutableLongStateOf(0L)
-    }
-    val activeIndex = remember(currentTimeMillis, externalOffsetMillis, lyrics) {
-        lyrics.indexOfLast { line ->
-            line.startTime <= currentTimeMillis + externalOffsetMillis
-        }.coerceAtLeast(0)
-    }
-
-    LaunchedEffect(musicDetail.itemId, loopDuration) {
-        currentTimeMillis = 0L
-        while (true) {
-            delay(90L)
-            currentTimeMillis = (currentTimeMillis + 90L) % loopDuration
-        }
-    }
-
-    LaunchedEffect(activeIndex, lyrics.size) {
-        if (lyrics.isNotEmpty()) {
-            listState.animateScrollToItem(activeIndex)
-        }
-    }
-
-    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-        val verticalContentPadding = maxHeight / 2 - XyTheme.dimens.outerVerticalPadding
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            state = listState,
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            contentPadding = PaddingValues(vertical = verticalContentPadding)
-        ) {
-            itemsIndexed(lyrics) { index, line ->
-                val isActive = index == activeIndex
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = line.text,
-                        color = if (isActive) {
-                            MaterialTheme.colorScheme.onSurface
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
-                        },
-                        fontSize = if (isActive) 28.sp else 22.sp,
-                        fontWeight = if (isActive) FontWeight.W700 else FontWeight.W400,
-                        lineHeight = if (isActive) 36.sp else 30.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.widthIn(max = JvmMusicPlayerLyricsMaxWidth)
-                    )
-                    if (line.secondText.isNotBlank()) {
-                        Text(
-                            text = line.secondText,
-                            color = if (isActive) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.64f)
-                            },
-                            fontSize = if (isActive) 18.sp else 16.sp,
-                            lineHeight = 24.sp,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .padding(top = 6.dp)
-                                .widthIn(max = JvmMusicPlayerLyricsMaxWidth)
-                        )
-                    }
-                }
-            }
-        }
-    }
 }
 
 private fun buildJvmMockLyricsEntries(musicDetail: XyPlayMusic): List<LrcEntryData> {
