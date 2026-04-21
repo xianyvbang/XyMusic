@@ -125,6 +125,7 @@ import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import cn.xybbz.viewmodel.MusicPlayerViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -179,8 +180,6 @@ fun JvmMusicPlayerComponent(
     picByte: ByteArray? = null,
     sharedCoverSourceBoundsOnScreen: Rect? = null,
     sheetStateR: SheetState,
-    toNext: () -> Unit,
-    backNext: () -> Unit,
     onSetState: (Boolean) -> Unit
 ) {
     val mainViewModel = LocalMainViewModel.current
@@ -264,8 +263,6 @@ fun JvmMusicPlayerComponent(
                                 mainViewModel.putSheetState(false)
                             }
                         },
-                        onSeekToNext = toNext,
-                        onSeekBack = backNext,
                         onSetState = onSetState,
                         lrcListState = listState,
                         similarPopularListState = similarPopularListState,
@@ -279,19 +276,21 @@ fun JvmMusicPlayerComponent(
 
 
 /**
- * 播放页面弹窗
+ * JVM 完整播放页主体。
+ *
+ * 上半部分承载封面、歌词和推荐页内容，
+ * 底部区域复用 `JvmSnackBarPlaybackBar`，让完整播放页和底部悬浮播放条保持一致的控制体验。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JvmMusicPlayerScreen(
     musicDetail: XyPlayMusic,
     picByte: ByteArray? = null,
+    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
     musicPlayerViewModel: MusicPlayerViewModel = koinViewModel<MusicPlayerViewModel>(),
     sharedCoverSourceBoundsOnScreen: Rect? = null,
     sharedCoverProgress: Float = 1f,
     onCloseSheet: () -> Unit,
-    onSeekToNext: () -> Unit,
-    onSeekBack: () -> Unit,
     onSetState: (Boolean) -> Unit,
     lrcListState: LazyListState = rememberLazyListState(),
     similarPopularListState: LazyListState = rememberLazyListState(),
@@ -366,6 +365,9 @@ fun JvmMusicPlayerScreen(
     LaunchedEffect(musicDetail.itemId) {
         lyricsMenuExpanded = false
         resetLyricsPreviewOffset()
+    }
+    LaunchedEffect(Unit) {
+        musicBottomMenuViewModel.refreshVolume()
     }
     LaunchedEffect(musicDetail.itemId, mockLyricsLoopDuration) {
         mockLyricsCurrentTimeMillis = 0L
@@ -624,128 +626,37 @@ fun JvmMusicPlayerScreen(
                             )
 //                            .widthIn(max = JvmMusicPlayerPrimaryPageMaxWidth)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier.weight(1f),
-                                contentAlignment = Alignment.CenterStart
-                            ) {
-                                Column(
-                                    modifier = Modifier.widthIn(max = JvmMusicPlayerTitleSectionMaxWidth)
-                                ) {
-                                    Text(
-                                        text = musicDetail.name,
-                                        fontSize = 22.sp,
-                                        fontWeight = FontWeight.W700,
-                                        lineHeight = 31.86.sp,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Visible,
-                                        modifier = Modifier
-                                            .basicMarquee(iterations = Int.MAX_VALUE)
-                                    )
-
-                                    Text(
-                                        text = if (musicDetail.artists.isNullOrEmpty()) stringResource(Res.string.unknown_artist) else musicDetail.artists?.joinToString()
-                                            ?: "",
-                                        color = Color(0xff7B7B8B),
-                                        fontSize = 17.sp,
-                                        fontWeight = FontWeight.W400,
-                                        lineHeight = 15.93.sp,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.basicMarquee(
-                                            iterations = 0
-                                        )
-                                    )
-                                }
-                            }
-                            Row(
-                                modifier = Modifier.weight(1f),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                JvmPlayerTypeComponent(musicController = musicPlayerViewModel.musicController)
-                                Icon(
-                                    painter = painterResource(Res.drawable.skip_previous_24px),
-                                    contentDescription = stringResource(Res.string.previous_track),
-                                    modifier = Modifier
-                                        .size(30.dp, 35.dp)
-                                        .debounceClickable {
-                                            coroutineScope.launch {
-                                                onSeekBack()
-                                            }
-                                        }
-                                )
-
-                                JvmPlayerStateComponent(musicController = musicPlayerViewModel.musicController)
-
-                                Icon(
-                                    painter = painterResource(Res.drawable.skip_next_24px),
-                                    contentDescription = stringResource(Res.string.next_track),
-                                    modifier = Modifier
-                                        .size(30.dp, 35.dp)
-                                        .debounceClickable {
-                                            coroutineScope.launch {
-                                                onSeekToNext()
-                                            }
-                                        }
-                                )
-                            }
-                            Row(
-                                modifier = Modifier.weight(1f),
-                                horizontalArrangement = Arrangement.End,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                JvmFavoriteMusicIconComponent(
-                                    musicDetail = musicDetail,
-                                    dataSourceManager = musicPlayerViewModel.dataSourceManager,
-                                    musicController = musicPlayerViewModel.musicController,
-                                    onFavoriteMusicIdSet = { favoriteList }
-                                )
-                                IconButton(
-                                    modifier = Modifier.offset(x = 10.dp),
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            val itemId =
-                                                musicPlayerViewModel.musicController.musicInfo?.itemId
-                                            itemId?.let {
-                                                musicPlayerViewModel.dataSourceManager.selectMusicInfoById(
-                                                    it
-                                                )?.show()
-                                            }
-                                        }
-                                    },
-                                ) {
-                                    Icon(
-                                        painter = painterResource(Res.drawable.more_vert_24px),
-                                        contentDescription = "${musicPlayerViewModel.musicController.musicInfo?.name}${
-                                            stringResource(
-                                                Res.string.other_operations_button_suffix
-                                            )
-                                        }"
-                                    )
-                                }
-                                IconButton(
-                                    onClick = {
-                                        if (musicPlayerViewModel.musicController.originMusicList.isNotEmpty()) {
-                                            onSetState(true)
-                                        }
-                                    },
-                                ) {
-                                    Icon(
-                                        painter = painterResource(Res.drawable.queue_music_24px),
-                                        contentDescription = stringResource(Res.string.music_list)
-                                    )
-                                }
-                            }
-                        }
-                        JvmPlayerCurrentPosition(
+                        // 完整播放页底部直接复用桌面端共享播放栏，避免两套控制区长期分叉。
+                        JvmSnackBarPlaybackBar(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(XyTheme.dimens.snackBarPlayerHeight),
                             musicController = musicPlayerViewModel.musicController,
-                            onCacheProgress = {
-                                cacheScheduleData
-                            })
+                            musicBottomMenuViewModel = musicBottomMenuViewModel,
+                            favoriteSet = favoriteList,
+                            isDarkTheme = XyTheme.configs.isDarkTheme,
+                            defaultContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                            sharedCoverRequestSize = sharedCoverRequestSize,
+                            cacheProgress = cacheScheduleData,
+                            onShowPlaylist = {
+                                if (musicPlayerViewModel.musicController.originMusicList.isNotEmpty()) {
+                                    onSetState(true)
+                                }
+                            },
+                            onToggleFavorite = { playMusic ->
+                                FavoriteCoordinator.setFavoriteData(
+                                    dataSourceManager = musicPlayerViewModel.dataSourceManager,
+                                    type = MusicTypeEnum.MUSIC,
+                                    itemId = playMusic.itemId,
+                                    ifFavorite = playMusic.itemId in favoriteList,
+                                    musicController = musicPlayerViewModel.musicController
+                                )
+                            },
+                            onShowMusicInfo = { playMusic ->
+                                musicPlayerViewModel.dataSourceManager.selectMusicInfoById(playMusic.itemId)
+                                    ?.show()
+                            }
+                        )
                         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding * 4))
                     }
                 }
@@ -897,150 +808,4 @@ private fun JvmSharedCoverOverlay(
 
 private fun lerpFloat(start: Float, stop: Float, fraction: Float): Float {
     return start + (stop - start) * fraction
-}
-
-/**
- * 播放类型
- */
-@Composable
-private fun JvmPlayerTypeComponent(
-    musicController: MusicCommonController
-) {
-    val mainViewModel = LocalMainViewModel.current
-    IconButton(
-        onClick = {
-            mainViewModel.setNowPlayerTypeData()
-        },
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            if (musicController.playMode.code == PlayerModeEnum.SINGLE_LOOP.code) {
-                Text(text = "1", fontSize = 10.sp)
-            }
-            Icon(
-                painter = painterResource(mainViewModel.iconList[musicController.playMode.code].icon),
-                contentDescription = stringResource(mainViewModel.iconList[musicController.playMode.code].message),
-            )
-        }
-
-    }
-}
-
-/**
- * 音乐进度
- */
-@Composable
-private fun JvmPlayerCurrentPosition(
-    musicController: MusicCommonController,
-    onCacheProgress: () -> Float
-) {
-
-    val currentPosition by musicController.progressStateFlow.collectAsStateWithLifecycle()
-
-    XyColumn(
-        backgroundColor = Color.Transparent,
-        clipSize = 0.dp
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-
-            MusicProgressBar(
-                currentTime = currentPosition,
-                progressStateFlow = musicController.progressStateFlow,
-                totalTime = musicController.duration,
-                cacheProgress = onCacheProgress(),
-                onProgressChanged = { newProgress ->
-                    musicController.seekTo(
-                        (musicController.duration * newProgress).roundToInt().toLong()
-                    )
-                })
-        }
-    }
-}
-
-/**
- * 音乐状态
- */
-@Composable
-fun JvmPlayerStateComponent(
-    size: Dp = 60.dp,
-    musicController: MusicCommonController
-) {
-    Box(
-        modifier = Modifier
-            .clip(CircleShape)
-    ) {
-
-        Icon(
-            painter = painterResource(
-                if (musicController.state == PlayStateEnum.Playing
-                    || musicController.state == PlayStateEnum.Loading
-                ) Res.drawable.pause_24px else Res.drawable.play_arrow_24px
-            ),
-            contentDescription = if (musicController.state == PlayStateEnum.Playing) stringResource(
-                Res.string.playing
-            ) else stringResource(Res.string.pause),
-            modifier = Modifier
-                .size(size)
-                .clip(CircleShape)
-                .clickable {
-                    if (musicController.state != PlayStateEnum.Pause) {
-                        musicController.pause()
-                    } else {
-                        musicController.resume()
-                    }
-
-                }
-        )
-        if (musicController.state == PlayStateEnum.Loading) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .clip(CircleShape),
-                strokeWidth = size
-            )
-        }
-    }
-}
-
-/**
- * 音乐收藏
- */
-@Composable
-private fun JvmFavoriteMusicIconComponent(
-    musicDetail: XyPlayMusic,
-    dataSourceManager: DataSourceManager,
-    musicController: MusicCommonController,
-    onFavoriteMusicIdSet: () -> List<String>
-) {
-    val coroutineScope = rememberCoroutineScope()
-
-    IconButton(
-        onClick = {
-            coroutineScope.launch {
-                FavoriteCoordinator.setFavoriteData(
-                    dataSourceManager = dataSourceManager,
-                    type = MusicTypeEnum.MUSIC,
-                    itemId = musicDetail.itemId,
-                    ifFavorite = musicDetail.itemId in onFavoriteMusicIdSet(),
-                    musicController = musicController
-                )
-            }
-        },
-    ) {
-        Icon(
-            modifier = Modifier
-                .size(60.dp),
-            painter =
-                painterResource(
-                    if (musicDetail.itemId in onFavoriteMusicIdSet())
-                        Res.drawable.favorite_border_24px
-                    else
-                        Res.drawable.favorite_24px
-                ),
-            contentDescription = stringResource(Res.string.favorite_button),
-            tint = if (musicDetail.itemId in onFavoriteMusicIdSet()) Color.Red else LocalContentColor.current
-        )
-    }
-
 }
