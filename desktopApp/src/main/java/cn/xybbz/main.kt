@@ -1,6 +1,7 @@
 package cn.xybbz
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.window.WindowDraggableArea
@@ -49,6 +50,14 @@ fun main() = application {
                 DesktopWindowChromeController.None
             }
         }
+        val windowContentPadding =
+            if (isWindows && chromeController.isMaximized) {
+                // 自定义 Windows 窗口在最大化时需要保留系统安全边距，
+                // 普通窗口态则不应把边框 inset 当成内容 padding，否则会出现四周白边。
+                chromeController.windowInsets.asPaddingValues()
+            } else {
+                PaddingValues()
+            }
         CompositionLocalProvider(
             LocalDesktopWindowChromeController provides chromeController,
             // WindowDraggableArea 只能在 desktopApp 入口侧拿到，这里向 composeApp 注入拖拽包装能力。
@@ -89,7 +98,7 @@ fun main() = application {
                 modifier = androidx.compose.ui.Modifier
                     .fillMaxSize()
             ) {
-                App(windowContentPadding = chromeController.windowInsets.asPaddingValues())
+                App(windowContentPadding = windowContentPadding)
             }
         }
     }
