@@ -617,48 +617,37 @@ fun JvmMusicPlayerScreen(
                     clipSize = 0.dp,
                     backgroundColor = Color.Transparent
                 ) {
-                    Column(
+                    // 完整播放页底部直接复用桌面端共享播放栏，避免两套控制区长期分叉。
+                    JvmSnackBarPlaybackBar(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(
-                                horizontal = XyTheme.dimens.outerHorizontalPadding,
-                                vertical = XyTheme.dimens.outerVerticalPadding
-                            )
-//                            .widthIn(max = JvmMusicPlayerPrimaryPageMaxWidth)
-                    ) {
-                        // 完整播放页底部直接复用桌面端共享播放栏，避免两套控制区长期分叉。
-                        JvmSnackBarPlaybackBar(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(XyTheme.dimens.snackBarPlayerHeight),
-                            musicController = musicPlayerViewModel.musicController,
-                            musicBottomMenuViewModel = musicBottomMenuViewModel,
-                            favoriteSet = favoriteList,
-                            isDarkTheme = XyTheme.configs.isDarkTheme,
-                            defaultContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-                            sharedCoverRequestSize = sharedCoverRequestSize,
-                            cacheProgress = cacheScheduleData,
-                            onShowPlaylist = {
-                                if (musicPlayerViewModel.musicController.originMusicList.isNotEmpty()) {
-                                    onSetState(true)
-                                }
-                            },
-                            onToggleFavorite = { playMusic ->
-                                FavoriteCoordinator.setFavoriteData(
-                                    dataSourceManager = musicPlayerViewModel.dataSourceManager,
-                                    type = MusicTypeEnum.MUSIC,
-                                    itemId = playMusic.itemId,
-                                    ifFavorite = playMusic.itemId in favoriteList,
-                                    musicController = musicPlayerViewModel.musicController
-                                )
-                            },
-                            onShowMusicInfo = { playMusic ->
-                                musicPlayerViewModel.dataSourceManager.selectMusicInfoById(playMusic.itemId)
-                                    ?.show()
+                            .height(XyTheme.dimens.snackBarPlayerHeight),
+                        musicController = musicPlayerViewModel.musicController,
+                        musicBottomMenuViewModel = musicBottomMenuViewModel,
+                        favoriteSet = favoriteList,
+                        isDarkTheme = XyTheme.configs.isDarkTheme,
+                        defaultContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                        sharedCoverRequestSize = sharedCoverRequestSize,
+                        cacheProgress = cacheScheduleData,
+                        onShowPlaylist = {
+                            if (musicPlayerViewModel.musicController.originMusicList.isNotEmpty()) {
+                                onSetState(true)
                             }
-                        )
-                        Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding * 4))
-                    }
+                        },
+                        onToggleFavorite = { playMusic ->
+                            FavoriteCoordinator.setFavoriteData(
+                                dataSourceManager = musicPlayerViewModel.dataSourceManager,
+                                type = MusicTypeEnum.MUSIC,
+                                itemId = playMusic.itemId,
+                                ifFavorite = playMusic.itemId in favoriteList,
+                                musicController = musicPlayerViewModel.musicController
+                            )
+                        },
+                        onShowMusicInfo = { playMusic ->
+                            musicPlayerViewModel.dataSourceManager.selectMusicInfoById(playMusic.itemId)
+                                ?.show()
+                        }
+                    )
                 }
 
             }
