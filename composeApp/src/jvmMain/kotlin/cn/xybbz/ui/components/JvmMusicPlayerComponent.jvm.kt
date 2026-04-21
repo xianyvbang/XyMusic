@@ -52,7 +52,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
@@ -92,6 +94,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionOnScreen
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
@@ -112,9 +115,9 @@ import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.entity.data.ext.joinToString
+import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.PlayerModeEnum
-import cn.xybbz.ui.components.lrc.LrcViewNewCompose
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumn
@@ -155,6 +158,7 @@ import xymusic_kmp.composeapp.generated.resources.backward_offset
 import xymusic_kmp.composeapp.generated.resources.confirm
 import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlinx.coroutines.delay
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 internal val JvmMusicPlayerSharedCoverTargetSize = 300.dp
@@ -327,7 +331,7 @@ fun JvmMusicPlayerScreen(
         mutableStateOf(DpOffset(0.dp, 0.dp))
     }
     var lyricsPreviewOffsetMs by remember(musicDetail.itemId) {
-        mutableLongStateOf(musicPlayerViewModel.lrcServer.lrcConfig?.lrcOffsetMs ?: 0L)
+        mutableLongStateOf(0L)
     }
     val showSharedCoverOverlay =
         sharedCoverSourceBoundsOnScreen != null &&
@@ -337,7 +341,8 @@ fun JvmMusicPlayerScreen(
             sharedCoverProgress < 1f
 
     fun persistedLyricsOffsetMs(): Long {
-        return musicPlayerViewModel.lrcServer.lrcConfig?.lrcOffsetMs ?: 0L
+        // TODO 接入真实歌词配置后，从 lrcServer 读取并返回已保存的歌词偏移量。
+        return 0L
     }
 
     fun resetLyricsPreviewOffset() {
@@ -540,16 +545,12 @@ fun JvmMusicPlayerScreen(
                                                 }
                                             }
                                     ) {
-                                        LrcViewNewCompose(
+                                        // TODO 接入真实歌词数据后，将这里替换回 LrcViewNewCompose，并透传真实歌词流与偏移配置。
+                                        JvmMockLyricsView(
                                             modifier = Modifier.fillMaxSize(),
+                                            musicDetail = musicDetail,
                                             listState = lrcListState,
-                                            showConfigButton = false,
                                             externalOffsetMillis = lyricsPreviewOffsetMs,
-                                            onSetLrcOffset = { offsetMs ->
-                                                coroutineScope.launch {
-                                                    musicPlayerViewModel.lrcServer.updateLrcConfig(offsetMs)
-                                                }
-                                            }
                                         )
                                         JvmLyricsConfigDropdownMenu(
                                             expanded = lyricsMenuExpanded,
@@ -560,9 +561,7 @@ fun JvmMusicPlayerScreen(
                                             },
                                             onPreviewOffsetChange = { lyricsPreviewOffsetMs = it },
                                             onConfirm = {
-                                                coroutineScope.launch {
-                                                    musicPlayerViewModel.lrcServer.updateLrcConfig(lyricsPreviewOffsetMs)
-                                                }
+                                                // TODO 接入真实歌词配置后，在这里持久化 lyricsPreviewOffsetMs 到 lrcServer。
                                                 lyricsMenuExpanded = false
                                             },
                                             currentPreviewOffsetMs = lyricsPreviewOffsetMs
@@ -732,6 +731,132 @@ fun JvmMusicPlayerScreen(
         }
     }
 
+}
+
+@Composable
+private fun JvmMockLyricsView(
+    modifier: Modifier = Modifier,
+    musicDetail: XyPlayMusic,
+    listState: LazyListState,
+    externalOffsetMillis: Long = 0L
+) {
+    val lyrics = remember(
+        musicDetail.itemId,
+        musicDetail.name,
+        musicDetail.artists
+    ) {
+        buildJvmMockLyricsEntries(musicDetail)
+    }
+    val loopDuration = remember(lyrics) {
+        (lyrics.lastOrNull()?.startTime ?: 0L) + 3_000L
+    }
+    var currentTimeMillis by remember(musicDetail.itemId) {
+        mutableLongStateOf(0L)
+    }
+    val activeIndex = remember(currentTimeMillis, externalOffsetMillis, lyrics) {
+        lyrics.indexOfLast { line ->
+            line.startTime <= currentTimeMillis + externalOffsetMillis
+        }.coerceAtLeast(0)
+    }
+
+    LaunchedEffect(musicDetail.itemId, loopDuration) {
+        currentTimeMillis = 0L
+        while (true) {
+            delay(90L)
+            currentTimeMillis = (currentTimeMillis + 90L) % loopDuration
+        }
+    }
+
+    LaunchedEffect(activeIndex, lyrics.size) {
+        if (lyrics.isNotEmpty()) {
+            listState.animateScrollToItem(activeIndex)
+        }
+    }
+
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        val verticalContentPadding = maxHeight / 2 - XyTheme.dimens.outerVerticalPadding
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            state = listState,
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            contentPadding = PaddingValues(vertical = verticalContentPadding)
+        ) {
+            itemsIndexed(lyrics) { index, line ->
+                val isActive = index == activeIndex
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = line.text,
+                        color = if (isActive) {
+                            MaterialTheme.colorScheme.onSurface
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
+                        },
+                        fontSize = if (isActive) 28.sp else 22.sp,
+                        fontWeight = if (isActive) FontWeight.W700 else FontWeight.W400,
+                        lineHeight = if (isActive) 36.sp else 30.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.widthIn(max = JvmMusicPlayerLyricsMaxWidth)
+                    )
+                    if (line.secondText.isNotBlank()) {
+                        Text(
+                            text = line.secondText,
+                            color = if (isActive) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.64f)
+                            },
+                            fontSize = if (isActive) 18.sp else 16.sp,
+                            lineHeight = 24.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .padding(top = 6.dp)
+                                .widthIn(max = JvmMusicPlayerLyricsMaxWidth)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun buildJvmMockLyricsEntries(musicDetail: XyPlayMusic): List<LrcEntryData> {
+    val artistLabel = musicDetail.artists?.joinToString().takeUnless { it.isNullOrBlank() } ?: "Artist"
+    return listOf(
+        LrcEntryData(
+            startTime = 0L,
+            text = "桌面播放器歌词区域正在使用模拟数据",
+            secondText = "Mock lyrics are showing in the JVM player for now"
+        ),
+        LrcEntryData(
+            startTime = 2_200L,
+            text = musicDetail.name,
+            secondText = artistLabel
+        ),
+        LrcEntryData(
+            startTime = 4_600L,
+            text = "这里先验证排版、滚动和高亮节奏",
+            secondText = "We are validating layout, scrolling, and highlight rhythm"
+        ),
+        LrcEntryData(
+            startTime = 7_100L,
+            text = "真实歌词接口稍后再接入",
+            secondText = "Real lyric data will be wired in later"
+        ),
+        LrcEntryData(
+            startTime = 9_600L,
+            text = "右键菜单里的偏移预览仍然可以先体验",
+            secondText = "Offset preview in the context menu still works"
+        ),
+        LrcEntryData(
+            startTime = 12_200L,
+            text = "接入真实数据时，把这里替换回正式歌词组件即可",
+            secondText = "Swap this mock block back to the real lyrics component later"
+        )
+    )
 }
 
 @Composable
