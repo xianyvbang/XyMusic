@@ -157,12 +157,12 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
-internal val JvmMusicPlayerSharedCoverTargetSize = 300.dp
+internal val JvmMusicPlayerSharedCoverTargetSize = 260.dp
 private const val JvmMusicPlayerSharedCoverDurationMillis = 920
 private const val JvmMusicPlayerDialogEnterDurationMillis = 260
-private val JvmMusicPlayerPrimaryPageMaxWidth = 1320.dp
+//private val JvmMusicPlayerPrimaryPageMaxWidth = 1320.dp
 private val JvmMusicPlayerPrimaryPageInnerGap = 48.dp
-private val JvmMusicPlayerLyricsMaxWidth = 560.dp
+private val JvmMusicPlayerLyricsMaxWidth = 480.dp
 private val JvmMusicPlayerTitleSectionMaxWidth = 320.dp
 
 
@@ -458,7 +458,7 @@ fun JvmMusicPlayerScreen(
                                     .fillMaxWidth()
                                     .fillMaxSize()
                                     .padding(horizontal = XyTheme.dimens.outerHorizontalPadding)
-                                    .widthIn(max = JvmMusicPlayerPrimaryPageMaxWidth)
+//                                    .widthIn(max = JvmMusicPlayerPrimaryPageMaxWidth)
                             ) {
                                 Box(
                                     modifier = Modifier
@@ -589,7 +589,7 @@ fun JvmMusicPlayerScreen(
                                 horizontal = XyTheme.dimens.outerHorizontalPadding,
                                 vertical = XyTheme.dimens.outerVerticalPadding
                             )
-                            .widthIn(max = JvmMusicPlayerPrimaryPageMaxWidth)
+//                            .widthIn(max = JvmMusicPlayerPrimaryPageMaxWidth)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
