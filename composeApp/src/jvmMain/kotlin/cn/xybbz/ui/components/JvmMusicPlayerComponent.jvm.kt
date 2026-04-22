@@ -435,12 +435,7 @@ fun JvmMusicPlayerScreen(
                         )
                     }
                 }, actions = {
-                    IconButton(
-                        onClick = {
-                        },
-                    ) {
-                        // todo 加个隐藏按钮操作,打开开发者页面
-                    }
+                    DesktopWindowControlButtons()
                 }
             )
 
