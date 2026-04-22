@@ -557,7 +557,7 @@ fun JvmMusicPlayerScreen(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .weight(1f)
-                                                .background(Color.Red)
+//                                                .background(Color.Red)
                                         ) {
                                             LrcViewNewCompose(
                                                 modifier = Modifier.fillMaxSize(),

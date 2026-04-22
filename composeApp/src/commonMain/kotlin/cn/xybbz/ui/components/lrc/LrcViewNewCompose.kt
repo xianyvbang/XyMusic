@@ -284,7 +284,7 @@ fun LrcViewNewCompose(
                             .detectDragState { dragging ->
                                 isDragState.value = dragging
                             },
-                        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
+                        verticalArrangement = Arrangement.spacedBy(0.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         contentPadding = PaddingValues(
                             top = topContentPadding,
@@ -450,7 +450,8 @@ fun KaraokeLyricLineNew(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) { onClick() },
-        backgroundColor = Color.Transparent
+        backgroundColor = Color.Transparent,
+        paddingValues = PaddingValues()
     ) {
         Text(
             text = line.text,
@@ -508,7 +509,10 @@ fun KaraokeLyricLineNew(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) { onClick() },
-        backgroundColor = Color.Transparent
+        backgroundColor = Color.Transparent,
+        paddingValues = PaddingValues(
+
+        )
     ) {
         val inactiveCharColor = colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
         val activeCharColor = if (highlight) {
