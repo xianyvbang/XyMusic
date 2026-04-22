@@ -42,12 +42,12 @@ import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.common.enums.img
 import cn.xybbz.common.utils.DataSourceChangeUtils
+import cn.xybbz.compositionLocal.DesktopInteractiveHitTestOwner
 import cn.xybbz.compositionLocal.LocalDesktopWindowChromeController
 import cn.xybbz.compositionLocal.LocalDesktopWindowDecorators
 import cn.xybbz.compositionLocal.LocalDesktopWindowFrameState
 import cn.xybbz.compositionLocal.LocalDesktopTitleBarHitTestOwner
 import cn.xybbz.config.music.MusicCommonController
-import cn.xybbz.config.window.DesktopWindowTitleBarHitTestOwner
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.router.Connection
@@ -515,33 +515,6 @@ private enum class DesktopTitleBarHitTarget {
 }
 
 /**
- * 标题栏交互热区记录器。
- * 它只关心“哪些矩形区域属于 Compose 控件”，供原生窗口命中测试排除这些区域，
- * 从而保留按钮点击、输入框聚焦等交互，不把它们误判成窗口拖拽。
- */
-internal class DesktopInteractiveHitTestOwner : DesktopWindowTitleBarHitTestOwner {
-    private val interactiveBounds = mutableMapOf<DesktopTitleBarHitTarget, Rect>()
-
-    /**
-     * 判断当前坐标是否命中任意一个已登记的交互区域。
-     * 返回 `true` 表示这里应该交给 Compose 控件处理，而不是当成标题栏空白拖拽区。
-     */
-    override fun hitTest(x: Float, y: Float): Boolean {
-        return interactiveBounds.values.any { bounds ->
-            x >= bounds.left && x < bounds.right && y >= bounds.top && y < bounds.bottom
-        }
-    }
-
-    /**
-     * 记录指定交互控件当前在窗口中的位置。
-     * 组件发生重组或布局变化时，会持续更新这些边界，保证命中测试结果准确。
-     */
-    fun updateBounds(target: DesktopTitleBarHitTarget, bounds: Rect) {
-        interactiveBounds[target] = bounds
-    }
-}
-
-/**
  * 把控件的窗口坐标登记到标题栏热区记录器里。
  * 这样窗口命中测试阶段就能知道该点位是否属于按钮、输入框等交互控件。
  */
@@ -549,5 +522,5 @@ private fun Modifier.titleBarHitTarget(
     owner: DesktopInteractiveHitTestOwner,
     target: DesktopTitleBarHitTarget,
 ): Modifier = onGloballyPositioned { coordinates ->
-    owner.updateBounds(target, coordinates.boundsInWindow())
+    owner.updateBounds(target.name, coordinates.boundsInWindow())
 }

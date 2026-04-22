@@ -6,7 +6,6 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.config.window.DesktopWindowChromeController
 import cn.xybbz.config.window.DesktopWindowDecorators
 import cn.xybbz.entity.data.DesktopWindowFrameState
-import cn.xybbz.ui.components.DesktopInteractiveHitTestOwner
 
 /**
  * 桌面窗口控制状态。
@@ -34,7 +33,7 @@ val LocalDesktopWindowChromeController =
  * 标题栏子组件通过它把按钮、输入框等可交互区域上报给窗口命中检测层，
  * 这样系统只会在真正的留白区触发拖动窗口，不会吞掉控件点击。
  */
-val LocalDesktopTitleBarHitTestOwner =
+internal val LocalDesktopTitleBarHitTestOwner =
     staticCompositionLocalOf<DesktopInteractiveHitTestOwner> {
         error("DesktopInteractiveHitTestOwner not provided")
     }
