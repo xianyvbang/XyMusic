@@ -18,8 +18,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -82,11 +88,15 @@ import xymusic_kmp.composeapp.generated.resources.download_list
 import xymusic_kmp.composeapp.generated.resources.icon
 import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
 import xymusic_kmp.composeapp.generated.resources.logo_new
+import xymusic_kmp.composeapp.generated.resources.maximize_window
 import xymusic_kmp.composeapp.generated.resources.no_connection_selected
+import xymusic_kmp.composeapp.generated.resources.minimize_window
+import xymusic_kmp.composeapp.generated.resources.close_window
 import xymusic_kmp.composeapp.generated.resources.open_settings_page_button
 import xymusic_kmp.composeapp.generated.resources.open_add_or_switch_data_sources
 import xymusic_kmp.composeapp.generated.resources.refresh_24px
 import xymusic_kmp.composeapp.generated.resources.refresh_login
+import xymusic_kmp.composeapp.generated.resources.restore_window
 import xymusic_kmp.composeapp.generated.resources.search_24px
 import xymusic_kmp.composeapp.generated.resources.search_music_album_artist
 import xymusic_kmp.composeapp.generated.resources.settings_24px
@@ -243,6 +253,7 @@ private fun DesktopSearchField(
  * 标题栏右侧操作区。
  * 包含当前数据源展示、切换/创建连接菜单和窗口控制按钮。
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DesktopTitleActions(navigator: Navigator) {
     val koin = getKoin()
@@ -411,28 +422,46 @@ private fun DesktopTitleActions(navigator: Navigator) {
                 .background(Color.Transparent),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            DesktopWindowControlButton(
-                controlType = WindowControlType.Minimize,
-                onClick = frameState.onMinimize,
-                modifier = Modifier.onGloballyPositioned {
-                    chromeController.updateMinimizeButtonBounds(it.boundsInWindow())
-                }
-            )
-            DesktopWindowControlButton(
-                controlType = if (frameState.isMaximized) WindowControlType.Restore else WindowControlType.Maximize,
-                onClick = frameState.onToggleMaximize,
-                modifier = Modifier.onGloballyPositioned {
-                    chromeController.updateMaximizeButtonBounds(it.boundsInWindow())
-                }
-            )
-            DesktopWindowControlButton(
-                controlType = WindowControlType.Close,
-                onClick = frameState.onClose,
-                contentColor = colors.foreground,
-                modifier = Modifier.onGloballyPositioned {
-                    chromeController.updateCloseButtonBounds(it.boundsInWindow())
-                }
-            )
+            DesktopWindowControlTooltipBox(
+                tooltip = stringResource(Res.string.minimize_window)
+            ) {
+                DesktopWindowControlButton(
+                    controlType = WindowControlType.Minimize,
+                    onClick = frameState.onMinimize,
+                    modifier = Modifier.onGloballyPositioned {
+                        chromeController.updateMinimizeButtonBounds(it.boundsInWindow())
+                    }
+                )
+            }
+            DesktopWindowControlTooltipBox(
+                tooltip = stringResource(
+                    if (frameState.isMaximized) {
+                        Res.string.restore_window
+                    } else {
+                        Res.string.maximize_window
+                    }
+                )
+            ) {
+                DesktopWindowControlButton(
+                    controlType = if (frameState.isMaximized) WindowControlType.Restore else WindowControlType.Maximize,
+                    onClick = frameState.onToggleMaximize,
+                    modifier = Modifier.onGloballyPositioned {
+                        chromeController.updateMaximizeButtonBounds(it.boundsInWindow())
+                    }
+                )
+            }
+            DesktopWindowControlTooltipBox(
+                tooltip = stringResource(Res.string.close_window)
+            ) {
+                DesktopWindowControlButton(
+                    controlType = WindowControlType.Close,
+                    onClick = frameState.onClose,
+                    contentColor = colors.foreground,
+                    modifier = Modifier.onGloballyPositioned {
+                        chromeController.updateCloseButtonBounds(it.boundsInWindow())
+                    }
+                )
+            }
         }
     }
 }
@@ -510,6 +539,27 @@ private fun DesktopWindowControlButton(
             modifier = Modifier.size(12.dp)
         )
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DesktopWindowControlTooltipBox(
+    tooltip: String,
+    content: @Composable () -> Unit,
+) {
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Below),
+        state = rememberTooltipState(),
+        tooltip = {
+            PlainTooltip {
+                XyText(
+                    text = tooltip,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        },
+        content = content,
+    )
 }
 
 /**

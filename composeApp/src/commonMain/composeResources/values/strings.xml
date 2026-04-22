@@ -45,6 +45,10 @@
     <string name="download_install">下载并安装</string>
     <string name="download">下载</string>
     <string name="close">关闭</string>
+    <string name="close_window">关闭窗口</string>
+    <string name="minimize_window">最小化</string>
+    <string name="maximize_window">最大化</string>
+    <string name="restore_window">还原</string>
     <string name="problem_feedback">问题反馈</string>
     <string name="function_not_implemented">功能未实现</string>
     <string name="official_website">官网</string>
