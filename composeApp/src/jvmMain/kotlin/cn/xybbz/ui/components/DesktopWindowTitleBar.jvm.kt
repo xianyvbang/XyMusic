@@ -5,6 +5,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -29,6 +32,7 @@ import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -69,6 +73,8 @@ import cn.xybbz.ui.screens.jvmRouterMenuWidth
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyTextSub
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -547,20 +553,43 @@ private fun DesktopWindowControlTooltipBox(
     tooltip: String,
     content: @Composable () -> Unit,
 ) {
+    val tooltipState = rememberTooltipState(isPersistent = true)
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+
+    LaunchedEffect(isHovered) {
+        if (isHovered) {
+            delay(WindowControlTooltipDelayMillis)
+            tooltipState.show()
+        } else {
+            tooltipState.dismiss()
+        }
+    }
+
     TooltipBox(
         positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Below),
-        state = rememberTooltipState(),
+        state = tooltipState,
+        enableUserInput = false,
         tooltip = {
-            PlainTooltip {
-                XyText(
+            PlainTooltip(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                contentColor = MaterialTheme.colorScheme.onBackground
+            ) {
+                XyTextSub(
                     text = tooltip,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
         },
-        content = content,
+        content = {
+            Box(modifier = Modifier.hoverable(interactionSource = interactionSource)) {
+                content()
+            }
+        },
     )
 }
+
+private const val WindowControlTooltipDelayMillis = 500L
 
 /**
  * 使用 Canvas 绘制窗口控制按钮的几何图形。
