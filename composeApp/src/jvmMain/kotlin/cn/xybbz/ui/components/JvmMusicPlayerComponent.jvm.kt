@@ -98,6 +98,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalDesktopWindowChromeController
+import cn.xybbz.compositionLocal.LocalDesktopWindowDecorators
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.entity.data.LrcEntryData
@@ -270,7 +271,7 @@ fun JvmMusicPlayerScreen(
     horPagerState: PagerState
 ) {
 
-
+    val decorators = LocalDesktopWindowDecorators.current
     val cacheScheduleData by musicPlayerViewModel.downloadCacheController.cacheSchedule.collectAsStateWithLifecycle()
 
     val favoriteList by musicPlayerViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
@@ -353,299 +354,299 @@ fun JvmMusicPlayerScreen(
                 (mockLyricsCurrentTimeMillis + 90L) % mockLyricsLoopDuration
         }
     }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .onGloballyPositioned { coordinates ->
-                playerRootBoundsOnScreen = Rect(
-                    offset = coordinates.positionOnScreen(),
-                    size = Size(
-                        width = coordinates.size.width.toFloat(),
-                        height = coordinates.size.height.toFloat()
+    val content: @Composable () -> Unit = {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .onGloballyPositioned { coordinates ->
+                    playerRootBoundsOnScreen = Rect(
+                        offset = coordinates.positionOnScreen(),
+                        size = Size(
+                            width = coordinates.size.width.toFloat(),
+                            height = coordinates.size.height.toFloat()
+                        )
                     )
-                )
-            }
-    ) {
-        XyImage(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .fillMaxSize(),
-            model = coverUrls.primaryUrl ?: picByte,
-            backModel = coverUrls.fallbackUrl ?: picByte,
-            requestSize = sharedCoverRequestSize,
-            alpha = 0.2f,
-            contentDescription = stringResource(Res.string.album_cover),
-        )
-        JvmSharedCoverOverlay(
-            sourceBoundsOnScreen = sharedCoverSourceBoundsOnScreen,
-            targetBoundsOnScreen = sharedCoverTargetBoundsOnScreen,
-            rootBoundsOnScreen = playerRootBoundsOnScreen,
-            progress = sharedCoverProgress,
-            model = coverUrls.primaryUrl ?: picByte,
-            backModel = coverUrls.fallbackUrl ?: picByte,
-            requestSize = sharedCoverRequestSize
-        )
-        XyColumnScreen(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(
-                    top = WindowInsets.statusBars.asPaddingValues()
-                        .calculateTopPadding()
-                ),
-            background = Color.Transparent
+                }
         ) {
-            TopAppBarComponent(
-                modifier = Modifier,
-                title = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        desktopTabs.forEachIndexed { index, item ->
+            XyImage(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .fillMaxSize(),
+                model = coverUrls.primaryUrl ?: picByte,
+                backModel = coverUrls.fallbackUrl ?: picByte,
+                requestSize = sharedCoverRequestSize,
+                alpha = 0.2f,
+                contentDescription = stringResource(Res.string.album_cover),
+            )
+            JvmSharedCoverOverlay(
+                sourceBoundsOnScreen = sharedCoverSourceBoundsOnScreen,
+                targetBoundsOnScreen = sharedCoverTargetBoundsOnScreen,
+                rootBoundsOnScreen = playerRootBoundsOnScreen,
+                progress = sharedCoverProgress,
+                model = coverUrls.primaryUrl ?: picByte,
+                backModel = coverUrls.fallbackUrl ?: picByte,
+                requestSize = sharedCoverRequestSize
+            )
+            XyColumnScreen(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(
+                        top = WindowInsets.statusBars.asPaddingValues()
+                            .calculateTopPadding()
+                    ),
+                background = Color.Transparent
+            ) {
+                TopAppBarComponent(
+                    modifier = Modifier,
+                    title = {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            desktopTabs.forEachIndexed { index, item ->
 
-                            TextButton(onClick = {
-                                coroutineScope
-                                    .launch {
-                                        horPagerState.animateScrollToPage(index)
+                                TextButton(onClick = {
+                                    coroutineScope
+                                        .launch {
+                                            horPagerState.animateScrollToPage(index)
+                                        }
+                                }) {
+                                    XyText(
+                                        text = stringResource(item),
+                                        fontWeight = null,
+                                        maxLines = 2,
+                                        style = LocalTextStyle.current,
+                                        color = if (horPagerState.currentPage == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {
+                                onCloseSheet()
+                            },
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.keyboard_arrow_down_24px),
+                                contentDescription = stringResource(Res.string.close_player_screen)
+                            )
+                        }
+                    }, actions = {
+                        DesktopWindowControlButtons()
+                    }
+                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Transparent),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    HorizontalPager(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        state = horPagerState,
+                        // 在底部弹窗里关闭 Pager 的边缘回弹，避免翻页落位后再次左右抖动
+                        overscrollEffect = null
+                    ) { page ->
+                        when (page) {
+                            0 -> {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .fillMaxSize()
+                                        .padding(horizontal = XyTheme.dimens.outerHorizontalPadding)
+//                                    .widthIn(max = JvmMusicPlayerPrimaryPageMaxWidth)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxHeight()
+                                            .padding(end = JvmMusicPlayerPrimaryPageInnerGap),
+                                        contentAlignment = Alignment.CenterEnd
+                                    ) {
+                                        BoxWithConstraints(
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentAlignment = Alignment.CenterEnd
+                                        ) {
+                                            val coverSize =
+                                                minOf(maxWidth * 0.6f, maxHeight * 0.45f).coerceIn(
+                                                    JvmMusicPlayerSharedCoverMinSize,
+                                                    JvmMusicPlayerSharedCoverTargetSize
+                                                )
+                                            Box(
+                                                modifier = Modifier
+                                                    .requiredSize(coverSize)
+                                                    .onGloballyPositioned { coordinates ->
+                                                        sharedCoverTargetBoundsOnScreen = Rect(
+                                                            offset = coordinates.positionOnScreen(),
+                                                            size = Size(
+                                                                width = coordinates.size.width.toFloat(),
+                                                                height = coordinates.size.height.toFloat()
+                                                            )
+                                                        )
+                                                    }
+                                            ) {
+                                                XyImage(
+                                                    modifier = Modifier
+                                                        .fillMaxSize()
+                                                        .clip(CircleShape),
+                                                    model = coverUrls.primaryUrl ?: picByte,
+                                                    backModel = coverUrls.fallbackUrl ?: picByte,
+                                                    requestSize = sharedCoverRequestSize,
+                                                    placeholder = Res.drawable.disc_placeholder,
+                                                    error = Res.drawable.disc_placeholder,
+                                                    fallback = Res.drawable.disc_placeholder,
+                                                    alpha = if (showSharedCoverOverlay) 0f else 1f,
+                                                    contentDescription = stringResource(Res.string.album_cover),
+                                                )
+                                            }
+                                        }
                                     }
-                            }) {
-                                XyText(
-                                    text = stringResource(item),
-                                    fontWeight = null,
-                                    maxLines = 2,
-                                    style = LocalTextStyle.current,
-                                    color = if (horPagerState.currentPage == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    overflow = TextOverflow.Ellipsis
+
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxHeight()
+                                            .padding(start = JvmMusicPlayerPrimaryPageInnerGap),
+                                        contentAlignment = Alignment.CenterStart
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .widthIn(max = JvmMusicPlayerLyricsMaxWidth)
+                                                .fillMaxHeight()
+                                                .pointerInput(musicDetail.itemId) {
+                                                    awaitPointerEventScope {
+                                                        while (true) {
+                                                            val event = awaitPointerEvent()
+                                                            val change =
+                                                                event.changes.firstOrNull() ?: continue
+                                                            if (
+                                                                event.type == PointerEventType.Press &&
+                                                                event.buttons.isSecondaryPressed
+                                                            ) {
+                                                                resetLyricsPreviewOffset()
+                                                                lyricsMenuOffset = with(density) {
+                                                                    DpOffset(
+                                                                        change.position.x.toDp(),
+                                                                        change.position.y.toDp()
+                                                                    )
+                                                                }
+                                                                lyricsMenuExpanded = true
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                            verticalArrangement = Arrangement.Top
+                                        ) {
+                                            JvmMusicPlayerLyricsHeader(
+                                                title = musicDetail.name,
+                                                artist = artistLabel
+                                            )
+//                                        Spacer(modifier = Modifier.height(JvmMusicPlayerLyricsHeaderBottomGap))
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .weight(1f)
+//                                                .background(Color.Red)
+                                            ) {
+                                                LrcViewNewCompose(
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    listState = lrcListState,
+                                                    externalOffsetMillis = lyricsPreviewOffsetMs,
+                                                    currentLineTopInset = JvmMusicPlayerLyricsItemHeight,
+                                                    highlightScaleEnabled = false,
+                                                    primaryFontSize = JvmMusicPlayerLyricsFontSize,
+                                                    previewEntries = mockLyricsEntries,
+                                                    previewCurrentTimeMillis = mockLyricsCurrentTimeMillis,
+                                                    // TODO 接入真实歌词数据后，移除 previewEntries / previewCurrentTimeMillis，改回真实歌词流。
+                                                    onSetLrcOffset = { }
+                                                )
+                                                JvmLyricsConfigDropdownMenu(
+                                                    expanded = lyricsMenuExpanded,
+                                                    offset = lyricsMenuOffset,
+                                                    onDismissRequest = {
+                                                        lyricsMenuExpanded = false
+                                                        resetLyricsPreviewOffset()
+                                                    },
+                                                    onPreviewOffsetChange = { lyricsPreviewOffsetMs = it },
+                                                    onConfirm = {
+                                                        // TODO 接入真实歌词配置后，在这里持久化 lyricsPreviewOffsetMs 到 lrcServer。
+                                                        lyricsMenuExpanded = false
+                                                    },
+                                                    currentPreviewOffsetMs = lyricsPreviewOffsetMs
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            else -> {
+                                MusicPlayerSimilarPopularComponent(
+                                    listState = similarPopularListState,
+                                    onFavoriteSet = { emptySet() },
+                                    onDownloadMusicIds = { emptyList() },
+                                    playMusicList = musicPlayerViewModel.musicController.originMusicList,
+                                    onAddPlayMusic = { musicPlayerViewModel.addNextPlayer(it) }
                                 )
                             }
                         }
                     }
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = {
-                            onCloseSheet()
-                        },
+
+
+                    XyColumn(
+                        verticalArrangement = Arrangement.Bottom,
+                        modifier = Modifier.fillMaxWidth(),
+                        paddingValues = PaddingValues(0.dp),
+                        clipSize = 0.dp,
+                        backgroundColor = Color.Transparent
                     ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.keyboard_arrow_down_24px),
-                            contentDescription = stringResource(Res.string.close_player_screen)
+                        // 完整播放页底部直接复用桌面端共享播放栏，避免两套控制区长期分叉。
+                        JvmSnackBarPlaybackBar(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(XyTheme.dimens.snackBarPlayerHeight),
+                            musicController = musicPlayerViewModel.musicController,
+                            musicBottomMenuViewModel = musicBottomMenuViewModel,
+                            favoriteSet = favoriteList,
+                            isDarkTheme = XyTheme.configs.isDarkTheme,
+                            defaultContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                            sharedCoverRequestSize = sharedCoverRequestSize,
+                            showCover = false,
+                            cacheProgress = cacheScheduleData,
+                            onShowPlaylist = {
+                                if (musicPlayerViewModel.musicController.originMusicList.isNotEmpty()) {
+                                    onSetState(true)
+                                }
+                            },
+                            onToggleFavorite = { playMusic ->
+                                FavoriteCoordinator.setFavoriteData(
+                                    dataSourceManager = musicPlayerViewModel.dataSourceManager,
+                                    type = MusicTypeEnum.MUSIC,
+                                    itemId = playMusic.itemId,
+                                    ifFavorite = playMusic.itemId in favoriteList,
+                                    musicController = musicPlayerViewModel.musicController
+                                )
+                            },
+                            onShowMusicInfo = { playMusic ->
+                                musicPlayerViewModel.dataSourceManager.selectMusicInfoById(playMusic.itemId)
+                                    ?.show()
+                            }
                         )
                     }
-                }, actions = {
-                    DesktopWindowControlButtons()
-                }
-            )
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Transparent),
-                verticalArrangement = Arrangement.SpaceBetween,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                HorizontalPager(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    state = horPagerState,
-                    // 在底部弹窗里关闭 Pager 的边缘回弹，避免翻页落位后再次左右抖动
-                    overscrollEffect = null
-                ) { page ->
-                    when (page) {
-                        0 -> {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .fillMaxSize()
-                                    .padding(horizontal = XyTheme.dimens.outerHorizontalPadding)
-//                                    .widthIn(max = JvmMusicPlayerPrimaryPageMaxWidth)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxHeight()
-                                        .padding(end = JvmMusicPlayerPrimaryPageInnerGap),
-                                    contentAlignment = Alignment.CenterEnd
-                                ) {
-                                    BoxWithConstraints(
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentAlignment = Alignment.CenterEnd
-                                    ) {
-                                        val coverSize =
-                                            minOf(maxWidth * 0.6f, maxHeight * 0.45f).coerceIn(
-                                                JvmMusicPlayerSharedCoverMinSize,
-                                                JvmMusicPlayerSharedCoverTargetSize
-                                            )
-                                        Box(
-                                            modifier = Modifier
-                                                .requiredSize(coverSize)
-                                                .onGloballyPositioned { coordinates ->
-                                                    sharedCoverTargetBoundsOnScreen = Rect(
-                                                        offset = coordinates.positionOnScreen(),
-                                                        size = Size(
-                                                            width = coordinates.size.width.toFloat(),
-                                                            height = coordinates.size.height.toFloat()
-                                                        )
-                                                    )
-                                                }
-                                        ) {
-                                            XyImage(
-                                                modifier = Modifier
-                                                    .fillMaxSize()
-                                                    .clip(CircleShape),
-                                                model = coverUrls.primaryUrl ?: picByte,
-                                                backModel = coverUrls.fallbackUrl ?: picByte,
-                                                requestSize = sharedCoverRequestSize,
-                                                placeholder = Res.drawable.disc_placeholder,
-                                                error = Res.drawable.disc_placeholder,
-                                                fallback = Res.drawable.disc_placeholder,
-                                                alpha = if (showSharedCoverOverlay) 0f else 1f,
-                                                contentDescription = stringResource(Res.string.album_cover),
-                                            )
-                                        }
-                                    }
-                                }
-
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxHeight()
-                                        .padding(start = JvmMusicPlayerPrimaryPageInnerGap),
-                                    contentAlignment = Alignment.CenterStart
-                                ) {
-                                    Column(
-                                        modifier = Modifier
-                                            .widthIn(max = JvmMusicPlayerLyricsMaxWidth)
-                                            .fillMaxHeight()
-                                            .pointerInput(musicDetail.itemId) {
-                                                awaitPointerEventScope {
-                                                    while (true) {
-                                                        val event = awaitPointerEvent()
-                                                        val change =
-                                                            event.changes.firstOrNull() ?: continue
-                                                        if (
-                                                            event.type == PointerEventType.Press &&
-                                                            event.buttons.isSecondaryPressed
-                                                        ) {
-                                                            resetLyricsPreviewOffset()
-                                                            lyricsMenuOffset = with(density) {
-                                                                DpOffset(
-                                                                    change.position.x.toDp(),
-                                                                    change.position.y.toDp()
-                                                                )
-                                                            }
-                                                            lyricsMenuExpanded = true
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                        verticalArrangement = Arrangement.Top
-                                    ) {
-                                        JvmMusicPlayerLyricsHeader(
-                                            title = musicDetail.name,
-                                            artist = artistLabel
-                                        )
-//                                        Spacer(modifier = Modifier.height(JvmMusicPlayerLyricsHeaderBottomGap))
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .weight(1f)
-//                                                .background(Color.Red)
-                                        ) {
-                                            LrcViewNewCompose(
-                                                modifier = Modifier.fillMaxSize(),
-                                                listState = lrcListState,
-                                                externalOffsetMillis = lyricsPreviewOffsetMs,
-                                                currentLineTopInset = JvmMusicPlayerLyricsItemHeight,
-                                                highlightScaleEnabled = false,
-                                                primaryFontSize = JvmMusicPlayerLyricsFontSize,
-                                                previewEntries = mockLyricsEntries,
-                                                previewCurrentTimeMillis = mockLyricsCurrentTimeMillis,
-                                                // TODO 接入真实歌词数据后，移除 previewEntries / previewCurrentTimeMillis，改回真实歌词流。
-                                                onSetLrcOffset = { }
-                                            )
-                                            JvmLyricsConfigDropdownMenu(
-                                                expanded = lyricsMenuExpanded,
-                                                offset = lyricsMenuOffset,
-                                                onDismissRequest = {
-                                                    lyricsMenuExpanded = false
-                                                    resetLyricsPreviewOffset()
-                                                },
-                                                onPreviewOffsetChange = { lyricsPreviewOffsetMs = it },
-                                                onConfirm = {
-                                                    // TODO 接入真实歌词配置后，在这里持久化 lyricsPreviewOffsetMs 到 lrcServer。
-                                                    lyricsMenuExpanded = false
-                                                },
-                                                currentPreviewOffsetMs = lyricsPreviewOffsetMs
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        else -> {
-                            MusicPlayerSimilarPopularComponent(
-                                listState = similarPopularListState,
-                                onFavoriteSet = { emptySet() },
-                                onDownloadMusicIds = { emptyList() },
-                                playMusicList = musicPlayerViewModel.musicController.originMusicList,
-                                onAddPlayMusic = { musicPlayerViewModel.addNextPlayer(it) }
-                            )
-                        }
-                    }
-                }
-
-
-                XyColumn(
-                    verticalArrangement = Arrangement.Bottom,
-                    modifier = Modifier.fillMaxWidth(),
-                    paddingValues = PaddingValues(0.dp),
-                    clipSize = 0.dp,
-                    backgroundColor = Color.Transparent
-                ) {
-                    // 完整播放页底部直接复用桌面端共享播放栏，避免两套控制区长期分叉。
-                    JvmSnackBarPlaybackBar(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(XyTheme.dimens.snackBarPlayerHeight),
-                        musicController = musicPlayerViewModel.musicController,
-                        musicBottomMenuViewModel = musicBottomMenuViewModel,
-                        favoriteSet = favoriteList,
-                        isDarkTheme = XyTheme.configs.isDarkTheme,
-                        defaultContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-                        sharedCoverRequestSize = sharedCoverRequestSize,
-                        showCover = false,
-                        cacheProgress = cacheScheduleData,
-                        onShowPlaylist = {
-                            if (musicPlayerViewModel.musicController.originMusicList.isNotEmpty()) {
-                                onSetState(true)
-                            }
-                        },
-                        onToggleFavorite = { playMusic ->
-                            FavoriteCoordinator.setFavoriteData(
-                                dataSourceManager = musicPlayerViewModel.dataSourceManager,
-                                type = MusicTypeEnum.MUSIC,
-                                itemId = playMusic.itemId,
-                                ifFavorite = playMusic.itemId in favoriteList,
-                                musicController = musicPlayerViewModel.musicController
-                            )
-                        },
-                        onShowMusicInfo = { playMusic ->
-                            musicPlayerViewModel.dataSourceManager.selectMusicInfoById(playMusic.itemId)
-                                ?.show()
-                        }
-                    )
                 }
 
             }
-
         }
     }
-
+    decorators.DraggableArea(content)
 }
 
 @Composable
