@@ -46,7 +46,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyListState
@@ -60,8 +59,8 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -141,8 +140,10 @@ private const val JvmMusicPlayerDialogEnterDurationMillis = 260
 //private val JvmMusicPlayerPrimaryPageMaxWidth = 1320.dp
 private val JvmMusicPlayerPrimaryPageInnerGap = 48.dp
 private val JvmMusicPlayerLyricsMaxWidth = 480.dp
-private val JvmMusicPlayerLyricsHeaderBottomGap = 20.dp
-private val JvmMusicPlayerLyricsItemHeight = 56.dp
+// JVM 播放页歌词使用略小的主歌词字号，避免桌面布局里文字显得过大。
+private val JvmMusicPlayerLyricsFontSize = 18.sp
+// 当前歌词锚点只按主歌词单行高度计算，不包含翻译歌词高度。
+private val JvmMusicPlayerLyricsItemHeight = 26.dp
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -565,6 +566,7 @@ fun JvmMusicPlayerScreen(
                                                 externalOffsetMillis = lyricsPreviewOffsetMs,
                                                 currentLineTopInset = JvmMusicPlayerLyricsItemHeight,
                                                 highlightScaleEnabled = false,
+                                                primaryFontSize = JvmMusicPlayerLyricsFontSize,
                                                 previewEntries = mockLyricsEntries,
                                                 previewCurrentTimeMillis = mockLyricsCurrentTimeMillis,
                                                 // TODO 接入真实歌词数据后，移除 previewEntries / previewCurrentTimeMillis，改回真实歌词流。

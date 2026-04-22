@@ -78,6 +78,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -123,6 +124,8 @@ fun LrcViewNewCompose(
     externalOffsetMillis: Long? = null,
     currentLineTopInset: Dp? = null,
     highlightScaleEnabled: Boolean = true,
+    // 主歌词基础字号，翻译字号和行高会基于它联动计算。
+    primaryFontSize: TextUnit = 20.sp,
     previewEntries: List<LrcEntryData>? = null,
     previewCurrentTimeMillis: Long? = null,
     lrcViewModel: LrcViewModel = koinViewModel<LrcViewModel>(),
@@ -298,6 +301,7 @@ fun LrcViewNewCompose(
                                     line = line,
                                     highlight = index == playIndex,
                                     highlightScaleEnabled = highlightScaleEnabled,
+                                    primaryFontSize = primaryFontSize,
                                     currentTimeMillis = currentTimeMillis,
                                     onClick = {
                                         if (!usePreviewLyrics) {
@@ -313,6 +317,7 @@ fun LrcViewNewCompose(
                                     line = line,
                                     highlight = index == playIndex,
                                     highlightScaleEnabled = highlightScaleEnabled,
+                                    primaryFontSize = primaryFontSize,
                                     onClick = {
                                         if (!usePreviewLyrics) {
                                             lrcViewModel.seekTo(line.startTime)
@@ -413,12 +418,21 @@ fun KaraokeLyricLineNew(
     line: LrcEntryData,
     highlight: Boolean,
     highlightScaleEnabled: Boolean = true,
+    primaryFontSize: TextUnit = 20.sp,
     onClick: () -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
-    val targetPrimaryFontSize = if (highlight && highlightScaleEnabled) 24f else 20f
-    val targetPrimaryLineHeight = if (highlight && highlightScaleEnabled) 32.sp else 28.sp
-    val secondaryFontSize = if (highlight && highlightScaleEnabled) 16.sp else 14.sp
+    val defaultPrimaryFontSize = primaryFontSize.value
+    val highlightPrimaryFontSize =
+        if (highlightScaleEnabled) defaultPrimaryFontSize + 4f else defaultPrimaryFontSize
+    val targetPrimaryFontSize =
+        if (highlight && highlightScaleEnabled) highlightPrimaryFontSize else defaultPrimaryFontSize
+    val targetPrimaryLineHeight = (targetPrimaryFontSize + 8f).sp
+    val defaultSecondaryFontSize = (defaultPrimaryFontSize - 4f).coerceAtLeast(12f)
+    val secondaryFontSize =
+        if (highlight && highlightScaleEnabled) (defaultSecondaryFontSize + 2f).sp
+        else defaultSecondaryFontSize.sp
+    val secondaryLineHeight = (secondaryFontSize.value + 8f).sp
 
     val animatedFontSize by animateFloatAsState(
         targetValue = targetPrimaryFontSize,
@@ -467,7 +481,7 @@ fun KaraokeLyricLineNew(
             Text(
                 text = line.secondText,
                 fontSize = secondaryFontSize,
-                lineHeight = 22.sp,
+                lineHeight = secondaryLineHeight,
                 color = animatedSecondTextColor,
                 textAlign = TextAlign.Center
             )
@@ -481,14 +495,19 @@ fun KaraokeLyricLineNew(
     currentTimeMillis: Long,
     highlight: Boolean,
     highlightScaleEnabled: Boolean = true,
+    primaryFontSize: TextUnit = 20.sp,
     onClick: () -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val highlightIndex = line.wordTimings.indexOfLast { it <= currentTimeMillis }
     val nextWordTime = line.wordTimings.getOrNull(highlightIndex + 1) ?: Long.MAX_VALUE
     val currentWordTime = line.wordTimings.getOrNull(highlightIndex) ?: Long.MAX_VALUE
-    val primaryFontSize = if (highlight && highlightScaleEnabled) 24.sp else 20.sp
-    val primaryLineHeight = if (highlight && highlightScaleEnabled) 32.sp else 28.sp
+    val resolvedPrimaryFontSize = if (highlight && highlightScaleEnabled) {
+        (primaryFontSize.value + 4f).sp
+    } else {
+        primaryFontSize
+    }
+    val primaryLineHeight = (resolvedPrimaryFontSize.value + 8f).sp
 
     val progress = when {
         currentTimeMillis < currentWordTime -> 0f
@@ -534,7 +553,7 @@ fun KaraokeLyricLineNew(
 
                 Text(
                     text = char.toString(),
-                    fontSize = primaryFontSize,
+                    fontSize = resolvedPrimaryFontSize,
                     lineHeight = primaryLineHeight,
                     color = lerp(inactiveCharColor, activeCharColor, animatedAlpha),
                     fontWeight = if (highlightScaleEnabled && animatedAlpha > 0.8f) {
