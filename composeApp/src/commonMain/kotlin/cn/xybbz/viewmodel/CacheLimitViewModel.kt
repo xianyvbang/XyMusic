@@ -57,7 +57,10 @@ class CacheLimitViewModel (
         }
     }
 
+    /**
+     * 读取自动缓存上限的展示文案。
+     */
     fun getAutomaticCacheSize() {
-        cacheSizeInfo = formatBytes(settingsManager.maxBytes)
+        cacheSizeInfo = formatBytes(settingsManager.maxBytesFlow.value)
     }
 }

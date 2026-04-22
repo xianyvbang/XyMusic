@@ -58,7 +58,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun MainScreen(mainViewModel: MainViewModel = koinViewModel<MainViewModel>()) {
 
     val coroutineScope = rememberCoroutineScope()
-    val ifOpenSelect by mainViewModel.selectControl.uiState.collectAsStateWithLifecycle()
+    val selectUiState by mainViewModel.selectControl.uiState.collectAsStateWithLifecycle()
     val ifConnectionConfig by mainViewModel.settingsManager.ifConnectionConfig.collectAsStateWithLifecycle()
 
     val navigationConfig = platformNavigationConfig
@@ -84,9 +84,9 @@ fun MainScreen(mainViewModel: MainViewModel = koinViewModel<MainViewModel>()) {
                 navigator: Navigator,
                 destination: NavKey
             ) {
-                coroutineScope.launch(Dispatchers.Main.immediate) {
-                    withFrameNanos {
-                        if (ifOpenSelect) {
+                        coroutineScope.launch(Dispatchers.Main.immediate) {
+                            withFrameNanos {
+                        if (selectUiState.isOpen) {
                             mainViewModel.selectControl.dismiss()
                         }
                     }

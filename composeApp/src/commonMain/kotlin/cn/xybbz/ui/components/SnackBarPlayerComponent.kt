@@ -128,7 +128,9 @@ fun SnackBarPlayerComponent(
         mutableStateOf(false)
     }
     val coroutineScope = rememberCoroutineScope()
-    val ifOpenSelect by snackBarPlayerViewModel.selectControl.uiState.collectAsStateWithLifecycle()
+    val selectUiState by snackBarPlayerViewModel.selectControl.uiState.collectAsStateWithLifecycle()
+    val playbackState by snackBarPlayerViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val originMusicList by snackBarPlayerViewModel.musicController.originMusicListFlow.collectAsStateWithLifecycle()
 
     val defaultSnackBarColor = MaterialTheme.colorScheme.surfaceContainerLowest
 
@@ -164,10 +166,10 @@ fun SnackBarPlayerComponent(
             }
         })
 
-    snackBarPlayerViewModel.musicController.musicInfo?.let {
+    playbackState.musicInfo?.let {
         MusicPlayerComponent(
             music = it,
-            snackBarPlayerViewModel.musicController.picByte,
+            playbackState.picByte,
             sheetStateR = playerSheetState,
             toNext = {
                 Log.i("=====", "数据调用SnackBarPlayerComponent")
@@ -180,8 +182,8 @@ fun SnackBarPlayerComponent(
 
     MusicListComponent(
         musicListState = musicListState,
-        curOriginIndex = snackBarPlayerViewModel.musicController.curOriginIndex,
-        originMusicList = snackBarPlayerViewModel.musicController.originMusicList,
+        curOriginIndex = playbackState.curOriginIndex,
+        originMusicList = originMusicList,
         onSetState = { musicListState = it },
         onClearPlayerList = {
             coroutineScope.launch {
@@ -198,7 +200,7 @@ fun SnackBarPlayerComponent(
         onRemovePlayerMusicItem = {
             try {
                 snackBarPlayerViewModel.musicController.removeItem(it)
-                if (snackBarPlayerViewModel.musicController.originMusicList.isEmpty()) {
+                if (originMusicList.isEmpty()) {
                     mainViewModel.putSheetState(false)
                     coroutineScope.launch {
                         mainViewModel.db.playerDao.removeByDatasource()
@@ -228,7 +230,7 @@ fun SnackBarPlayerComponent(
             }
     ) {
         AnimatedContent(
-            targetState = ifOpenSelect,
+            targetState = selectUiState.isOpen,
             transitionSpec = {
                 if (targetState > initialState) {
                     fadeIn() togetherWith fadeOut()
@@ -261,10 +263,10 @@ fun SnackBarPlayerComponent(
                                 }
 
                             }
-                        }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
+                        }, enabled = selectUiState.ifEnableButton) {
                             Icon(
                                 painter = painterResource(Res.drawable.delete_24px),
-                                contentDescription = if (snackBarPlayerViewModel.selectControl.ifLocal) stringResource(
+                                contentDescription = if (selectUiState.ifLocal) stringResource(
                                     Res.string.delete_local_permanently
                                 ) else stringResource(Res.string.delete_permanently)
                             )
@@ -282,7 +284,7 @@ fun SnackBarPlayerComponent(
                                 )
                             }
                         }
-                    }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
+                    }, enabled = selectUiState.ifEnableButton) {
                         Icon(
                             painter = painterResource(Res.drawable.playlist_play_24px),
                             contentDescription = stringResource(Res.string.play_selected)
@@ -295,13 +297,13 @@ fun SnackBarPlayerComponent(
                         } else {
                             snackBarPlayerViewModel.selectControl.onAddPlaylistSelect()
                         }
-                    }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
+                    }, enabled = selectUiState.ifEnableButton) {
                         Icon(
                             painter = painterResource(Res.drawable.playlist_add_24px),
                             contentDescription = stringResource(Res.string.add_to_playlist)
                         )
                     }
-                    if (snackBarPlayerViewModel.selectControl.ifPlaylist)
+                    if (selectUiState.ifPlaylist)
                         IconButton(onClick = {
                             if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
                                 MessageUtils.sendPopTip(pleaseSelect)
@@ -310,7 +312,7 @@ fun SnackBarPlayerComponent(
                                     snackBarPlayerViewModel.dataSourceManager,
                                     coroutineScope
                                 )
-                        }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
+                        }, enabled = selectUiState.ifEnableButton) {
                             Icon(
                                 painter = painterResource(Res.drawable.playlist_remove_24px),
                                 contentDescription = stringResource(Res.string.music_remove_from_playlist)
@@ -326,14 +328,14 @@ fun SnackBarPlayerComponent(
                                 coroutineScope,
                                 snackBarPlayerViewModel.musicController
                             )
-                    }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
+                    }, enabled = selectUiState.ifEnableButton) {
                         Icon(
                             painter = painterResource(Res.drawable.heart_broken_24px),
                             contentDescription = stringResource(Res.string.unfavorite)
                         )
                     }
 
-                    if (!snackBarPlayerViewModel.selectControl.ifLocal && snackBarPlayerViewModel.dataSourceManager.getCanDownload())
+                    if (!selectUiState.ifLocal && snackBarPlayerViewModel.dataSourceManager.getCanDownload())
                         IconButton(onClick = {
                             if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
                                 MessageUtils.sendPopTip(pleaseSelect)
@@ -341,7 +343,7 @@ fun SnackBarPlayerComponent(
                                 permissionState.launchMultiplePermissionRequest()
                             }
 
-                        }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
+                        }, enabled = selectUiState.ifEnableButton) {
                             Icon(
                                 painter = painterResource(Res.drawable.download_24px),
                                 contentDescription = stringResource(Res.string.download_list)
@@ -355,7 +357,7 @@ fun SnackBarPlayerComponent(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
                         ) {
-                            if (snackBarPlayerViewModel.musicController.musicInfo != null) {
+                            if (playbackState.musicInfo != null) {
                                 onClick()
                             }
                         },
@@ -406,7 +408,7 @@ fun SnackBarPlayerComponent(
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = null
                                 ) {
-                                    if (snackBarPlayerViewModel.musicController.originMusicList.isNotEmpty()) {
+                                    if (originMusicList.isNotEmpty()) {
                                         musicListState = true
                                     }
                                 }
@@ -427,18 +429,15 @@ fun RowScope.HorizontalPagerSnackBar(
     backNext: () -> Unit,
     musicController: MusicCommonController
 ) {
-    val originMusicListIsEmpty by remember {
-        derivedStateOf {
-            musicController.originMusicList
-        }
-    }
+    val originMusicList by musicController.originMusicListFlow.collectAsStateWithLifecycle()
+    val playbackState by musicController.playbackStateFlow.collectAsStateWithLifecycle()
 
-    if (originMusicListIsEmpty.isNotEmpty()) {
+    if (originMusicList.isNotEmpty()) {
         val basePage by remember {
             derivedStateOf {
                 val mid = Int.MAX_VALUE / 2
-                val size = musicController.originMusicList.size
-                if (size == 0) 0 else mid - (mid % size) + (musicController.curOriginIndex % size)
+                val size = originMusicList.size
+                if (size == 0) 0 else mid - (mid % size) + (playbackState.curOriginIndex % size)
             }
 
         }
@@ -450,8 +449,8 @@ fun RowScope.HorizontalPagerSnackBar(
             Int.MAX_VALUE
         }
 
-        LaunchedEffect(originMusicListIsEmpty) {
-            snapshotFlow { originMusicListIsEmpty }.collect {
+        LaunchedEffect(originMusicList) {
+            snapshotFlow { originMusicList }.collect {
                 horPagerState.scrollToPage(basePage)
             }
         }
@@ -460,7 +459,7 @@ fun RowScope.HorizontalPagerSnackBar(
 
         val intState = remember {
             derivedStateOf {
-                musicController.curOriginIndex
+                playbackState.curOriginIndex
             }
         }
         LaunchedEffect(intState) {
@@ -483,7 +482,7 @@ fun RowScope.HorizontalPagerSnackBar(
             //详见文档：https://developer.android.com/jetpack/compose/side-effects#snapshotFlow
             snapshotFlow { shouldLoadMore.value }.collect {
                 if (!it && basePage != horPagerState.currentPage
-                    && musicController.curOriginIndex != Constants.MINUS_ONE_INT
+                    && playbackState.curOriginIndex != Constants.MINUS_ONE_INT
                 ) {
                     if (basePage > horPagerState.currentPage) {
                         Log.d("Pager", "向右滑动 ->")
@@ -506,22 +505,22 @@ fun RowScope.HorizontalPagerSnackBar(
             val index by remember(
                 page,
                 basePage,
-                originMusicListIsEmpty,
-                musicController.curOriginIndex,
-                musicController.playMode
+                originMusicList,
+                playbackState.curOriginIndex,
+                playbackState.playMode
             ) {
                 derivedStateOf {
-                    if (originMusicListIsEmpty.isEmpty()) {
+                    if (originMusicList.isEmpty()) {
                         0
                     } else {
-                        val listSize = originMusicListIsEmpty.size
-                        val currentIndex = musicController.curOriginIndex
-                            .takeIf { it in originMusicListIsEmpty.indices }
+                        val listSize = originMusicList.size
+                        val currentIndex = playbackState.curOriginIndex
+                            .takeIf { it in originMusicList.indices }
                             ?: 0
                         val fallbackIndex =
                             (page % listSize + listSize) % listSize
 
-                        if (musicController.playMode != PlayerModeEnum.RANDOM_PLAY) {
+                        if (playbackState.playMode != PlayerModeEnum.RANDOM_PLAY) {
                             fallbackIndex
                         } else {
                             when (page - basePage) {
@@ -539,7 +538,7 @@ fun RowScope.HorizontalPagerSnackBar(
                 }
             }
             Text(
-                text = if (originMusicListIsEmpty.isNotEmpty()) originMusicListIsEmpty[index].name else "",
+                text = if (originMusicList.isNotEmpty()) originMusicList[index].name else "",
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp)
@@ -564,8 +563,8 @@ private val logger = KotlinLogging.logger("CircularProgressIndicatorComp")
 
 @Composable
 private fun CircularProgressIndicatorComp(musicController: MusicCommonController) {
-
-    val progress by playProgress(musicController.duration, musicController.progressStateFlow)
+    val playbackState by musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val progress by playProgress(playbackState.duration, musicController.progressStateFlow)
 
     Box(
         modifier = Modifier
@@ -573,7 +572,7 @@ private fun CircularProgressIndicatorComp(musicController: MusicCommonController
             .clip(CircleShape),
         contentAlignment = Alignment.Center
     ) {
-        if (musicController.state == PlayStateEnum.Loading) {
+        if (playbackState.state == PlayStateEnum.Loading) {
             //这个放在一个单独的组件里
             CircularProgressIndicator(
                 modifier = Modifier
@@ -607,8 +606,8 @@ private fun CircularProgressIndicatorComp(musicController: MusicCommonController
         }
 
         Icon(
-            painter = painterResource(if (musicController.state == PlayStateEnum.Playing || musicController.state == PlayStateEnum.Loading) Res.drawable.pause_24px else Res.drawable.play_arrow_24px),
-            contentDescription = if (musicController.state == PlayStateEnum.Playing) stringResource(
+            painter = painterResource(if (playbackState.state == PlayStateEnum.Playing || playbackState.state == PlayStateEnum.Loading) Res.drawable.pause_24px else Res.drawable.play_arrow_24px),
+            contentDescription = if (playbackState.state == PlayStateEnum.Playing) stringResource(
                 Res.string.playing
             ) else stringResource(Res.string.pause),
             modifier = Modifier
@@ -618,7 +617,7 @@ private fun CircularProgressIndicatorComp(musicController: MusicCommonController
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null
                 ) {
-                    if (musicController.state != PlayStateEnum.Pause) {
+                    if (playbackState.state != PlayStateEnum.Pause) {
                         musicController.pause()
                     } else {
                         musicController.resume()
@@ -635,13 +634,14 @@ private fun ImageCover(
     isDarkTheme: Boolean,
     onSetColor: (Color?) -> Unit
 ) {
+    val playbackState by musicController.playbackStateFlow.collectAsStateWithLifecycle()
     val coverUrls = rememberPlayMusicCoverUrls(
-        musicController.musicInfo,
-        musicController.coverRefreshVersion
+        playbackState.musicInfo,
+        playbackState.coverRefreshVersion
     )
     val primaryCoverModel = coverUrls.primaryUrl
     val fallbackCoverModel = coverUrls.fallbackUrl
-    val byteCoverModel = musicController.picByte
+    val byteCoverModel = playbackState.picByte
     val activeCoverModel = primaryCoverModel ?: fallbackCoverModel ?: byteCoverModel
     val backupCoverModel = if (activeCoverModel == byteCoverModel) null else byteCoverModel
     val defaultSnackBarColor = MaterialTheme.colorScheme.surfaceContainerLowest

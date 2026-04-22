@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyPlayMusic
@@ -49,6 +50,7 @@ fun MusicPlayerSimilarPopularComponent(
     onAddPlayMusic: (XyMusic) -> Unit
 ) {
     val mainViewModel = LocalMainViewModel.current
+    val recommendationState by mainViewModel.recommendationStateFlow.collectAsStateWithLifecycle()
 
     val playIdSet by remember(playMusicList) {
         derivedStateOf {
@@ -70,11 +72,11 @@ fun MusicPlayerSimilarPopularComponent(
                 text = stringResource(Res.string.top_music)
             )
         }
-        if (mainViewModel.popularMusicList.isEmpty())
+        if (recommendationState.popularMusicList.isEmpty())
             item {
                 XyNoData()
             }
-        items(mainViewModel.popularMusicList) { music ->
+        items(recommendationState.popularMusicList) { music ->
 
             MusicItemComponent(
                 music = music,
@@ -106,12 +108,12 @@ fun MusicPlayerSimilarPopularComponent(
             )
         }
 
-        if (mainViewModel.similarMusicList.isEmpty())
+        if (recommendationState.similarMusicList.isEmpty())
             item {
                 XyNoData()
             }
 
-        items(mainViewModel.similarMusicList) { music ->
+        items(recommendationState.similarMusicList) { music ->
 
             MusicItemComponent(
                 music = music,

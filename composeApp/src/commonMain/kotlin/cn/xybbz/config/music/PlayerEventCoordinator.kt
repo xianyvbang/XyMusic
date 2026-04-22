@@ -1,10 +1,5 @@
 package cn.xybbz.config.music
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.common.enums.MusicTypeEnum
@@ -19,8 +14,22 @@ import cn.xybbz.localdata.data.player.XyPlayer
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerModeEnum
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+
+/**
+ * 播放页推荐歌曲状态。
+ */
+data class PlayerRecommendationState(
+    // 当前歌曲的相似歌曲列表
+    val similarMusicList: List<XyMusic> = emptyList(),
+    // 当前歌曲对应歌手的热门歌曲列表
+    val popularMusicList: List<XyMusic> = emptyList()
+)
 
 /**
  * 播放器事件协调器。
@@ -35,28 +44,36 @@ class PlayerEventCoordinator(
     private val playbackProgressReporter: PlaybackProgressReporter
 ) : IoScoped() {
 
+    // 推荐歌曲状态的唯一响应式来源
+    private val _recommendationStateFlow = MutableStateFlow(PlayerRecommendationState())
+    val recommendationStateFlow = _recommendationStateFlow.asStateFlow()
+
     /**
      * 当前歌曲的相似歌曲，供 UI 直接读取展示。
      */
-    var similarMusicList by mutableStateOf(emptyList<XyMusic>())
-        private set
+    val similarMusicList: List<XyMusic>
+        get() = recommendationStateFlow.value.similarMusicList
 
     /**
      * 当前歌曲所属歌手的热门歌曲，供 UI 直接读取展示。
      */
-    var popularMusicList by mutableStateOf(emptyList<XyMusic>())
-        private set
+    val popularMusicList: List<XyMusic>
+        get() = recommendationStateFlow.value.popularMusicList
 
     /**
-     * 每次切歌递增一次，供 UI 层感知“歌曲已变化”这种轻量事件。
+     * 轻量切歌事件，供 UI 感知“歌曲已变化”。
      */
-    var songChangeVersion by mutableIntStateOf(0)
-        private set
+    private val _songChangeEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val songChangeEvents = _songChangeEvents.asSharedFlow()
 
+    // 播放器业务事件监听任务
     private var observeJob: Job? = null
+    // 登录状态监听任务
     private var loginObserveJob: Job? = null
+    // 专辑历史开关监听任务
     private var enableProgressJob: Job? = null
-    private val enableProgressMap = mutableStateMapOf<String, Boolean>()
+    // 当前数据源下允许记录进度的专辑配置
+    private val enableProgressMap = mutableMapOf<String, Boolean>()
 
     init {
         createScope()
@@ -70,49 +87,20 @@ class PlayerEventCoordinator(
             return
         }
 
-        // 播放器业务事件统一在这里分发，避免 ViewModel 直接承担播放器协调职责。
         observeJob = scope.launch {
+            // 播放器业务事件统一在这里分发，避免 ViewModel 直接承担播放器协调职责。
             musicController.events.collect {
                 when (it) {
-                    is PlayerEvent.AddMusicList -> {
-                        onAddMusicList(it.artistId, it.ifInitPlayerList)
-                    }
-
-                    PlayerEvent.BeforeChangeMusic -> {
-                        onBeforeChangeMusic()
-                    }
-
-                    is PlayerEvent.ChangeMusic -> {
-                        onChangeMusic(it.musicId, it.artistId, it.artistName)
-                    }
-
-                    is PlayerEvent.Favorite -> {
-                        onFavoriteMusic(it.musicId)
-                    }
-
-                    is PlayerEvent.NextList -> {
-                        onNextList()
-                    }
-
-                    is PlayerEvent.Pause -> {
-                        onPause(it.musicId)
-                    }
-
-                    is PlayerEvent.Play -> {
-                        onPlay(it.musicId)
-                    }
-
-                    is PlayerEvent.PlayerTypeChange -> {
-                        onPlayerTypeChange(it.playerType)
-                    }
-
-                    is PlayerEvent.PositionSeekTo -> {
-                        onPositionSeekTo(it.positionMs)
-                    }
-
-                    is PlayerEvent.RemovePlaybackProgress -> {
-                        removePlaybackProgress(it.musicId)
-                    }
+                    is PlayerEvent.AddMusicList -> onAddMusicList(it.artistId, it.ifInitPlayerList)
+                    PlayerEvent.BeforeChangeMusic -> onBeforeChangeMusic()
+                    is PlayerEvent.ChangeMusic -> onChangeMusic(it.musicId, it.artistId, it.artistName)
+                    is PlayerEvent.Favorite -> onFavoriteMusic(it.musicId)
+                    is PlayerEvent.NextList -> onNextList()
+                    is PlayerEvent.Pause -> onPause(it.musicId)
+                    is PlayerEvent.Play -> onPlay(it.musicId)
+                    is PlayerEvent.PlayerTypeChange -> onPlayerTypeChange(it.playerType)
+                    is PlayerEvent.PositionSeekTo -> onPositionSeekTo(it.positionMs)
+                    is PlayerEvent.RemovePlaybackProgress -> removePlaybackProgress(it.musicId)
                 }
             }
         }
@@ -137,12 +125,18 @@ class PlayerEventCoordinator(
         playbackProgressReporter.stop()
     }
 
+    /**
+     * 删除指定歌曲的播放进度记录。
+     */
     private fun removePlaybackProgress(musicId: String) {
         scope.launch {
             db.progressDao.removeByMusicId(musicId)
         }
     }
 
+    /**
+     * 处理开始播放事件。
+     */
     private fun onPlay(musicId: String) {
         if (settingsManager.get().ifEnableSyncPlayProgress) {
             scope.launch {
@@ -156,6 +150,9 @@ class PlayerEventCoordinator(
         }
     }
 
+    /**
+     * 处理暂停播放事件。
+     */
     private fun onPause(musicId: String) {
         playbackProgressReporter.stop()
         if (settingsManager.get().ifEnableSyncPlayProgress) {
@@ -171,6 +168,9 @@ class PlayerEventCoordinator(
         setPlayerProgress(musicController.progressStateFlow.value)
     }
 
+    /**
+     * 处理拖动播放进度事件。
+     */
     private fun onPositionSeekTo(millSeconds: Long) {
         setPlayerProgress(millSeconds)
         if (settingsManager.get().ifEnableSyncPlayProgress) {
@@ -178,11 +178,17 @@ class PlayerEventCoordinator(
         }
     }
 
+    /**
+     * 切歌前先落库当前播放进度。
+     */
     private fun onBeforeChangeMusic() {
         playbackProgressReporter.stop()
         setPlayerProgress(musicController.progressStateFlow.value)
     }
 
+    /**
+     * 处理收藏状态切换事件。
+     */
     private fun onFavoriteMusic(musicId: String) {
         scope.launch {
             FavoriteCoordinator.setFavoriteData(
@@ -195,23 +201,31 @@ class PlayerEventCoordinator(
         }
     }
 
+    /**
+     * 处理切歌后的推荐数据刷新与历史记录持久化。
+     */
     private fun onChangeMusic(musicId: String, artistId: String?, artistName: String?) {
         // 切歌后补充加载相似歌曲和热门歌曲，供播放页展示。
         scope.launch {
-            similarMusicList = dataSourceManager.getSimilarMusicList(musicId)
+            val similar = dataSourceManager.getSimilarMusicList(musicId)
+            _recommendationStateFlow.value = recommendationStateFlow.value.copy(
+                similarMusicList = similar
+            )
         }
         scope.launch {
             musicController.musicInfo?.let {
-                popularMusicList =
-                    dataSourceManager.getArtistPopularMusicList(
-                        artistId ?: "",
-                        artistName ?: ""
-                    )
+                val popular = dataSourceManager.getArtistPopularMusicList(
+                    artistId ?: "",
+                    artistName ?: ""
+                )
+                _recommendationStateFlow.value = recommendationStateFlow.value.copy(
+                    popularMusicList = popular
+                )
             }
         }
         scope.launch {
             // 通知 UI 层当前歌曲已切换，例如重置跑马灯等页面状态。
-            songChangeVersion += 1
+            _songChangeEvents.emit(Unit)
             db.withTransaction {
                 db.musicDao.updateByPlayedCount(musicId)
                 val recordMusic = db.musicDao.selectById(musicId)
@@ -237,6 +251,9 @@ class PlayerEventCoordinator(
         }
     }
 
+    /**
+     * 监听当前数据源的专辑进度记录开关。
+     */
     private fun startEnableProgressObserver() {
         enableProgressJob?.cancel()
 
@@ -246,14 +263,15 @@ class PlayerEventCoordinator(
                 .getAlbumEnableProgressMap()
                 .distinctUntilChanged()
                 .collect { map ->
-                    if (map.isNotEmpty()) {
-                        enableProgressMap.clear()
-                        enableProgressMap.putAll(map)
-                    }
+                    enableProgressMap.clear()
+                    enableProgressMap.putAll(map)
                 }
         }
     }
 
+    /**
+     * 持久化当前播放模式。
+     */
     private fun onPlayerTypeChange(playerModeEnum: PlayerModeEnum) {
         scope.launch {
             val player = db.playerDao.selectPlayerByDataSource()
@@ -272,6 +290,9 @@ class PlayerEventCoordinator(
         }
     }
 
+    /**
+     * 同步新增播放列表到本地播放队列。
+     */
     private fun onAddMusicList(artistId: String?, ifInitPlayerList: Boolean) {
         if (ifInitPlayerList) {
             return
@@ -323,9 +344,12 @@ class PlayerEventCoordinator(
         }
     }
 
+    /**
+     * 加载下一页播放列表数据。
+     */
     private fun onNextList() {
         // 下一页加载状态是全局播放流程的一部分，因此也放在协调器里维护。
-        ifNextPageNumList = true
+        musicPlayContext.updateIfNextPageNumList(true)
         scope.launch {
             val newPageNum = musicController.pageNum + 1
             val newMusicList = musicPlayContext.musicPlayData?.onNextMusicList?.invoke(newPageNum)
@@ -339,18 +363,20 @@ class PlayerEventCoordinator(
             } else {
                 musicController.updateIfGetNextPageMusicDataIsNullCount(1)
             }
-        }.invokeOnCompletion { ifNextPageNumList = false }
+        }.invokeOnCompletion { musicPlayContext.updateIfNextPageNumList(false) }
     }
 
+    /**
+     * 持久化当前歌曲的播放进度。
+     */
     private fun setPlayerProgress(progress: Long) {
         scope.launch {
             musicController.musicInfo?.let {
-                // 专辑历史开启后，暂停/切歌/拖动时都需要把当前位置持久化。
-                if (settingsManager.get().ifEnableAlbumHistory || (
-                        enableProgressMap.containsKey(it.album) &&
-                            enableProgressMap[it.album] == true
-                        )
+                if (
+                    settingsManager.get().ifEnableAlbumHistory ||
+                        (enableProgressMap.containsKey(it.album) && enableProgressMap[it.album] == true)
                 ) {
+                    // 专辑历史开启后，暂停、切歌、拖动时都需要把当前位置持久化。
                     savePlayerProgress(
                         progress = progress,
                         progressPercentage = calculateProgressPercentage(
@@ -367,6 +393,9 @@ class PlayerEventCoordinator(
         }
     }
 
+    /**
+     * 根据时长计算百分比进度，使用四舍六入五成双避免累计偏差。
+     */
     private fun calculateProgressPercentage(progress: Long, duration: Long): Int {
         if (duration <= 0L) {
             return 0
@@ -387,6 +416,9 @@ class PlayerEventCoordinator(
         return roundedPercentage.toInt()
     }
 
+    /**
+     * 保存播放进度到数据库。
+     */
     private suspend fun savePlayerProgress(
         progress: Long,
         progressPercentage: Int,

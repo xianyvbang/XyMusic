@@ -174,7 +174,9 @@ fun JvmSnackBarPlaybackBar(
 ) {
     val mainViewModel = LocalMainViewModel.current
     val coroutineScope = rememberCoroutineScope()
-    val currentMusic = musicController.musicInfo
+    val playbackState by musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val originMusicList by musicController.originMusicListFlow.collectAsStateWithLifecycle()
+    val currentMusic = playbackState.musicInfo
     val snackBarTitle = currentMusic.snackBarTitleAnnotatedString(
         spanStyle = SpanStyle(
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -295,7 +297,7 @@ fun JvmSnackBarPlaybackBar(
                 JvmSnackBarIconButton(
                     iconRes = Res.drawable.queue_music_24px,
                     contentDescription = stringResource(Res.string.music_list),
-                    enabled = musicController.originMusicList.isNotEmpty(),
+                    enabled = originMusicList.isNotEmpty(),
                     onClick = onShowPlaylist
                 )
             }
@@ -318,17 +320,18 @@ private fun JvmSnackBarControlSection(
 ) {
     val mainViewModel = LocalMainViewModel.current
     val currentProgress by musicController.progressStateFlow.collectAsStateWithLifecycle()
+    val playbackState by musicController.playbackStateFlow.collectAsStateWithLifecycle()
     var showVolumePopup by remember {
         mutableStateOf(false)
     }
-    val playModeIcon = musicController.playMode.toPlayModeIcon()
-    val playModeDescription = when (musicController.playMode) {
+    val playModeIcon = playbackState.playMode.toPlayModeIcon()
+    val playModeDescription = when (playbackState.playMode) {
         PlayerModeEnum.SINGLE_LOOP -> stringResource(Res.string.single_loop)
         PlayerModeEnum.SEQUENTIAL_PLAYBACK -> stringResource(Res.string.list_loop)
         PlayerModeEnum.RANDOM_PLAY -> stringResource(Res.string.shuffle_play)
     }
     val isPlaying =
-        musicController.state == PlayStateEnum.Playing || musicController.state == PlayStateEnum.Loading
+        playbackState.state == PlayStateEnum.Playing || playbackState.state == PlayStateEnum.Loading
 
     XyColumn(
         modifier = modifier.fillMaxHeight(),
@@ -343,13 +346,13 @@ private fun JvmSnackBarControlSection(
             JvmSnackBarIconButton(
                 iconRes = playModeIcon,
                 contentDescription = playModeDescription,
-                enabled = musicController.musicInfo != null,
+                enabled = playbackState.musicInfo != null,
                 onClick = mainViewModel::setNowPlayerTypeData
             )
             JvmSnackBarIconButton(
                 iconRes = Res.drawable.skip_previous_24px,
                 contentDescription = stringResource(Res.string.previous_track),
-                enabled = musicController.musicInfo != null,
+                enabled = playbackState.musicInfo != null,
                 onClick = musicController::seekToPrevious
             )
             IconButton(
@@ -360,7 +363,7 @@ private fun JvmSnackBarControlSection(
                         musicController.resume()
                     }
                 },
-                enabled = musicController.musicInfo != null,
+                enabled = playbackState.musicInfo != null,
                 modifier = Modifier
                     .clip(RoundedCornerShape(JvmSnackBarPlayButtonHeight))
                     .width(JvmSnackBarPlayButtonWidth)
@@ -383,7 +386,7 @@ private fun JvmSnackBarControlSection(
             JvmSnackBarIconButton(
                 iconRes = Res.drawable.skip_next_24px,
                 contentDescription = stringResource(Res.string.next_track),
-                enabled = musicController.musicInfo != null,
+                enabled = playbackState.musicInfo != null,
                 onClick = musicController::seekToNext
             )
             Box(
@@ -392,7 +395,7 @@ private fun JvmSnackBarControlSection(
                 JvmSnackBarIconButton(
                     iconRes = Res.drawable.volume_up_24px,
                     contentDescription = stringResource(Res.string.volume_value_setting),
-                    enabled = musicController.musicInfo != null,
+                    enabled = playbackState.musicInfo != null,
                     onClick = {
                         showVolumePopup = !showVolumePopup
                     }
@@ -410,10 +413,10 @@ private fun JvmSnackBarControlSection(
         MusicProgressBarHorizontal(
             currentTime = currentProgress,
             progressStateFlow = musicController.progressStateFlow,
-            totalTime = musicController.duration,
+            totalTime = playbackState.duration,
             cacheProgress = cacheProgress,
             onProgressChanged = { progress ->
-                musicController.seekTo((musicController.duration * progress).toLong())
+                musicController.seekTo((playbackState.duration * progress).toLong())
             },
             modifier = Modifier.fillMaxWidth(),
             progressBarColor = MaterialTheme.colorScheme.onSurface,
@@ -633,13 +636,14 @@ private fun JvmImageCover(
     requestSize: IntSize,
     onSetColor: (Color?) -> Unit
 ) {
+    val playbackState by musicController.playbackStateFlow.collectAsStateWithLifecycle()
     val coverUrls = rememberPlayMusicCoverUrls(
-        musicController.musicInfo,
-        musicController.coverRefreshVersion
+        playbackState.musicInfo,
+        playbackState.coverRefreshVersion
     )
     val primaryCoverModel = coverUrls.primaryUrl
     val fallbackCoverModel = coverUrls.fallbackUrl
-    val byteCoverModel = musicController.picByte
+    val byteCoverModel = playbackState.picByte
     val activeCoverModel = primaryCoverModel ?: fallbackCoverModel ?: byteCoverModel
     val backupCoverModel = if (activeCoverModel == byteCoverModel) null else byteCoverModel
     val defaultContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest

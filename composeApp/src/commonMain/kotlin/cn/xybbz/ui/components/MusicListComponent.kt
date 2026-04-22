@@ -53,8 +53,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.compositionLocal.LocalMainViewModel
-import cn.xybbz.config.music.ifNextPageNumList
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.ui.ext.debounceClickable
@@ -156,6 +156,8 @@ fun MusicList(
     onSeekToIndex: (Int) -> Unit,
     onRemovePlayerMusicItem: (Int) -> Unit
 ) {
+    val mainViewModel = LocalMainViewModel.current
+    val ifNextPageNumList by mainViewModel.ifNextPageNumListFlow.collectAsStateWithLifecycle()
 
     LazyColumnParentComponent(
         modifier = Modifier.fillMaxSize(),

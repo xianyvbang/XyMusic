@@ -179,7 +179,8 @@ fun JvmArtistInfoScreen(
     val downloadMusicIds by artistInfoViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
         emptyList()
     )
-    val ifOpenSelect by artistInfoViewModel.selectControl.uiState.collectAsStateWithLifecycle()
+    val selectUiState by artistInfoViewModel.selectControl.uiState.collectAsStateWithLifecycle()
+    val playbackState by artistInfoViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
 
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
@@ -789,7 +790,8 @@ fun JvmArtistInfoScreen(
                                                         artistInfoViewModel.selectControl.toggleSelectionAll(
                                                             musicPage.itemSnapshotList.items.map { it.itemId })
                                                     },
-                                                    ifOpenSelect = ifOpenSelect,
+                                                    ifOpenSelect = selectUiState.isOpen,
+                                                    isSelectAll = selectUiState.isSelectAll,
                                                     sortContent = {}
                                                 )
                                             }
@@ -805,7 +807,7 @@ fun JvmArtistInfoScreen(
                                                             music.itemId in favoriteSet
                                                         },
                                                         ifDownload = music.itemId in downloadMusicIds,
-                                                        ifPlay = artistInfoViewModel.musicController.musicInfo?.itemId == music.itemId,
+                                                        ifPlay = playbackState.musicInfo?.itemId == music.itemId,
                                                         backgroundColor = Color.Transparent,
                                                         trailingOnClick = {
                                                             music.show()
@@ -821,13 +823,13 @@ fun JvmArtistInfoScreen(
                                                                 )
                                                             }
                                                         },
-                                                        ifSelect = ifOpenSelect,
-                                                        ifSelectCheckBox = { artistInfoViewModel.selectControl.selectMusicIdList.any { it == music.itemId } },
+                                                        ifSelect = selectUiState.isOpen,
+                                                        ifSelectCheckBox = { music.itemId in selectUiState.selectedMusicIds },
                                                         trailingOnSelectClick = { _ ->
                                                             artistInfoViewModel.selectControl.toggleSelection(
                                                                 music.itemId,
                                                                 onIsSelectAll = {
-                                                                    artistInfoViewModel.selectControl.selectMusicIdList.containsAll(
+                                                                    selectUiState.selectedMusicIds.containsAll(
                                                                         list.itemSnapshotList.items.map { it.itemId }
                                                                     )
                                                                 }
@@ -920,6 +922,7 @@ private fun JvmArtistMusicListOperation(
     musicPlayContext: MusicPlayContext,
     selectControl: SelectControl,
     ifOpenSelect: Boolean,
+    isSelectAll: Boolean,
     onSelectAll: () -> Unit,
     sortContent: @Composable () -> Unit
 ) {
@@ -951,7 +954,7 @@ private fun JvmArtistMusicListOperation(
 
         if (ifOpenSelect) {
             XySelectAllComponent(
-                isSelectAll = selectControl.isSelectAll,
+                isSelectAll = isSelectAll,
                 onSelectAll = onSelectAll
             )
             IconButton(onClick = {

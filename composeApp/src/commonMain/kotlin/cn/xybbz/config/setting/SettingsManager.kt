@@ -18,9 +18,6 @@
 
 package cn.xybbz.config.setting
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.setValue
 import cn.xybbz.api.TokenServer
 import cn.xybbz.common.enums.AllDataEnum
 import cn.xybbz.common.utils.Log
@@ -103,10 +100,19 @@ class SettingsManager(
      * 音乐缓存上限
      * todo 这里赋值应该改为使用方法设置
      */
-    var maxBytes by mutableLongStateOf(0L)
+    private val _maxBytesFlow = MutableStateFlow(0L)
+    // 音乐缓存上限的唯一响应式来源
+    val maxBytesFlow = _maxBytesFlow.asStateFlow()
 
     fun get(): XySettings {
         return settings ?: XySettings()
+    }
+
+    /**
+     * 更新当前缓存上限字节数。
+     */
+    fun updateMaxBytes(maxBytes: Long) {
+        _maxBytesFlow.value = maxBytes
     }
 
     suspend fun setSettingsData(): XySettings = withContext(Dispatchers.IO) {

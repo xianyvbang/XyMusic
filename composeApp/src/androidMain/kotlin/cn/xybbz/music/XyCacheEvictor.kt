@@ -91,7 +91,7 @@ class XyCacheEvictor(private val settingsManager: SettingsManager) : CacheEvicto
     }
 
     private fun evictCache(cache: Cache, requiredSpace: Long) {
-        while (currentSize + requiredSpace > settingsManager.maxBytes && !leastRecentlyUsed.isEmpty()) {
+        while (currentSize + requiredSpace > settingsManager.maxBytesFlow.value && !leastRecentlyUsed.isEmpty()) {
             cache.removeSpan(leastRecentlyUsed.first())
         }
     }
@@ -106,15 +106,17 @@ class XyCacheEvictor(private val settingsManager: SettingsManager) : CacheEvicto
 
             val gigabytes = availROMSize / (1024.0 * 1024.0 * 1024.0)
 
-            settingsManager.maxBytes = when {
+            settingsManager.updateMaxBytes(
+                when {
                 gigabytes > 100 -> 16L * 1024 * 1024 * 1024
                 gigabytes > 50 && gigabytes <= 100 -> 8L * 1024 * 1024 * 1024
                 gigabytes > 10 -> 4L * 1024 * 1024 * 1024
                 else -> 2L * 1024 * 1024 * 1024
             }
+            )
 
         } else {
-            settingsManager.maxBytes = cacheUpperLimit.value * 1024 * 1024L
+            settingsManager.updateMaxBytes(cacheUpperLimit.value * 1024 * 1024L)
         }
     }
 

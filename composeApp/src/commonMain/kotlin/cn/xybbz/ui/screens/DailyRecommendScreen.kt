@@ -60,6 +60,7 @@ fun DailyRecommendScreen(
 
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
+    val playbackState by dailyRecommendViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
     val favoriteList by dailyRecommendViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val downloadMusicIds by dailyRecommendViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
         emptyList()
@@ -110,7 +111,7 @@ fun DailyRecommendScreen(
                             music.itemId in favoriteList
                         },
                         ifDownload = music.itemId in downloadMusicIds,
-                        ifPlay = dailyRecommendViewModel.musicController.musicInfo?.itemId == music.itemId,
+                        ifPlay = playbackState.musicInfo?.itemId == music.itemId,
                         backgroundColor = Color.Transparent,
                         onMusicPlay = {
                             coroutineScope.launch {

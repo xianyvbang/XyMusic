@@ -18,10 +18,6 @@
 
 package cn.xybbz.config.lrc
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.custom.data.CustomLyricsQuery
@@ -42,6 +38,19 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
+/**
+ * 歌词显示主状态。
+ */
+data class LrcState(
+    // 当前高亮歌词索引
+    val indexData: Int = -1,
+    // 当前高亮歌词文本
+    val lrcText: String? = null,
+    // 当前歌词所属歌曲 id
+    val itemId: String = "",
+    // 当前歌词偏移配置
+    val lrcConfig: XyLrcConfig? = null
+)
 
 class LrcServer(
     private val musicController: MusicCommonController,
@@ -57,17 +66,29 @@ class LrcServer(
     private val _lcrEntryListFlow = MutableStateFlow(emptyList<LrcEntryData>())
     val lcrEntryListFlow = _lcrEntryListFlow.asStateFlow()
 
-    var indexData by mutableIntStateOf(-1)
-        private set
-    var lrcText by mutableStateOf<String?>(null)
-        private set
+    // 歌词显示状态的唯一响应式来源
+    private val _lrcStateFlow = MutableStateFlow(LrcState())
+    val lrcStateFlow = _lrcStateFlow.asStateFlow()
 
-    var itemId by mutableStateOf("")
-        private set
+    // 当前高亮歌词索引
+    val indexData: Int
+        get() = lrcStateFlow.value.indexData
 
-    var lrcConfig: XyLrcConfig? by mutableStateOf(null)
-        private set
+    // 当前高亮歌词文本
+    val lrcText: String?
+        get() = lrcStateFlow.value.lrcText
 
+    // 当前歌词所属歌曲 id
+    val itemId: String
+        get() = lrcStateFlow.value.itemId
+
+    // 当前歌词偏移配置
+    val lrcConfig: XyLrcConfig?
+        get() = lrcStateFlow.value.lrcConfig
+
+    /**
+     * 初始化歌词监听逻辑。
+     */
     fun init(coroutineContext: CoroutineContext) {
         createScope(coroutineContext)
         scope.launch {
@@ -77,12 +98,38 @@ class LrcServer(
             ) { progress, lrcList ->
                 progress to lrcList
             }.collect { (progress, lrcList) ->
-
                 if (lrcList.isNotEmpty()) {
                     val index = lrcList.getIndex(progress, getLrcConfig(itemId).lrcOffsetMs)
                     if (index != indexData && index != -1) {
-                        indexData = index
-                        lrcText = lrcList[index].displayText
+                        _lrcStateFlow.update {
+                            it.copy(
+                                indexData = index,
+                                lrcText = lrcList[index].displayText
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 拉取当前歌曲歌词。
+     */
+    fun getMusicLyricList() {
+        scope.launch {
+            if (_lcrEntryListFlow.value.isEmpty()) {
+                musicController.musicInfo?.itemId?.let { itemId ->
+                    val settings = settingsManager.get()
+                    val musicLyricList = if (settings.ifPriorityMusicApi) {
+                        // 歌词查询只依赖歌曲元数据，不需要触发封面优先级逻辑。
+                        // API 模块负责网络请求，App 模块负责业务数据组装与 LRC 解析。
+                        getMusicLyricListByMusicService(itemId) ?: getMusicLyricListByCustomApi(itemId)
+                    } else {
+                        getMusicLyricListByCustomApi(itemId) ?: getMusicLyricListByMusicService(itemId)
+                    }
+                    if (!musicLyricList.isNullOrEmpty()) {
+                        createLrcList(musicLyricList, LrcDataType.NETWORK)
                     }
                 }
             }
@@ -92,34 +139,15 @@ class LrcServer(
     /**
      * 获得音乐歌词信息
      */
-    fun getMusicLyricList() {
-        scope.launch {
-            if (_lcrEntryListFlow.value.isEmpty()) {
-                musicController.musicInfo?.itemId?.let { itemId ->
-                    val settings = settingsManager.get()
-                    val musicLyricList = if (settings.ifPriorityMusicApi) {
-                        getMusicLyricListByMusicService(itemId) ?: getMusicLyricListByCustomApi(
-                            itemId
-                        )
-                    } else {
-                        getMusicLyricListByCustomApi(itemId) ?: getMusicLyricListByMusicService(
-                            itemId
-                        )
-                    }
-                    if (!musicLyricList.isNullOrEmpty())
-                        createLrcList(musicLyricList, LrcDataType.NETWORK)
-                }
-            }
-        }
-    }
-
     private suspend fun getMusicLyricListByMusicService(itemId: String): List<LrcEntryData>? {
         return dataSourceManager.getMusicLyricList(itemId)?.takeIf { it.isNotEmpty() }
     }
 
+    /**
+     * 通过自定义歌词接口获取歌词。
+     */
     private suspend fun getMusicLyricListByCustomApi(itemId: String): List<LrcEntryData>? {
         return try {
-            // 歌词查询只依赖歌曲元数据，不需要触发封面优先级逻辑。
             val musicInfo = dataSourceManager.selectMusicInfoById(itemId) ?: return null
             val settings = settingsManager.get()
             val customLrcSingleApi = settings.customLrcSingleApi.trim()
@@ -127,7 +155,6 @@ class LrcServer(
                 return null
             }
 
-            // API 模块负责网络请求，App 模块负责业务数据组装与 LRC 解析。
             val query = CustomLyricsQuery(
                 singleApi = customLrcSingleApi,
                 authKey = settings.customLrcApiAuth,
@@ -150,12 +177,13 @@ class LrcServer(
      * 根据歌词列表创建歌词列表
      */
     fun createLrcList(lrcList: List<LrcEntryData>?, lrcDataType: LrcDataType) {
-//        clear()
         if (!lrcList.isNullOrEmpty()) {
             scope.launch {
-                musicController.musicInfo?.itemId?.let { itemId ->
-                    initLrcConfig(itemId)
-                    this@LrcServer.itemId = itemId
+                musicController.musicInfo?.itemId?.let { musicItemId ->
+                    initLrcConfig(musicItemId)
+                    _lrcStateFlow.update {
+                        it.copy(itemId = musicItemId)
+                    }
                 }
             }
 
@@ -170,48 +198,70 @@ class LrcServer(
             _lcrEntryListFlow.update {
                 list
             }
-
         }
         Log.i("createLrcList", "随机数111 $lrcDataType 歌词列表：${_lcrEntryListFlow.value}")
     }
 
+    /**
+     * 清空当前歌词状态。
+     */
     fun clear() {
         _lcrEntryListFlow.update {
             emptyList()
         }
-        lrcText = null
-        indexData = -1
+        _lrcStateFlow.update {
+            it.copy(
+                lrcText = null,
+                indexData = -1
+            )
+        }
     }
 
+    /**
+     * 初始化当前歌曲的歌词配置。
+     */
     suspend fun initLrcConfig(itemId: String) {
-        this.lrcConfig = db.lrcConfigDao.getLrcConfig(itemId) ?: XyLrcConfig(
+        val config = db.lrcConfigDao.getLrcConfig(itemId) ?: XyLrcConfig(
             itemId = itemId,
             lrcOffsetMs = 0L,
             connectionId = dataSourceManager.getConnectionId()
         )
+        _lrcStateFlow.update {
+            it.copy(lrcConfig = config)
+        }
     }
 
+    /**
+     * 获取歌词偏移配置，没有则返回默认配置。
+     */
     fun getLrcConfig(itemId: String): XyLrcConfig {
-        return this.lrcConfig ?: XyLrcConfig(
+        return lrcConfig ?: XyLrcConfig(
             itemId = itemId,
             lrcOffsetMs = 0L,
             connectionId = dataSourceManager.getConnectionId()
         )
     }
 
+    /**
+     * 更新歌词偏移配置。
+     */
     suspend fun updateLrcConfig(offsetMs: Long) {
         val config = getLrcConfig(itemId)
-        lrcConfig = config.copy(lrcOffsetMs = offsetMs)
+        val updatedConfig = config.copy(lrcOffsetMs = offsetMs)
+        _lrcStateFlow.update {
+            it.copy(lrcConfig = updatedConfig)
+        }
         if (config.id != AllDataEnum.All.code) {
-            val xyLrcConfig =
-                XyLrcConfig(
-                    itemId = itemId,
-                    lrcOffsetMs = offsetMs,
-                    connectionId = dataSourceManager.getConnectionId()
-                )
+            val xyLrcConfig = XyLrcConfig(
+                itemId = itemId,
+                lrcOffsetMs = offsetMs,
+                connectionId = dataSourceManager.getConnectionId()
+            )
 
             val id = db.lrcConfigDao.insert(xyLrcConfig)
-            this.lrcConfig = xyLrcConfig.copy(id = id)
+            _lrcStateFlow.update {
+                it.copy(lrcConfig = xyLrcConfig.copy(id = id))
+            }
         } else {
             db.lrcConfigDao.update(config)
         }

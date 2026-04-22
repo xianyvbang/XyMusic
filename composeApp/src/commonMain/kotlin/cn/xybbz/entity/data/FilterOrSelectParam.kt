@@ -1,53 +1,26 @@
 package cn.xybbz.entity.data
 
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.Immutable
 import cn.xybbz.common.enums.SortTypeEnum
 
-@Stable
-class Sort {
-    var sortType: SortTypeEnum? by mutableStateOf(null)
+/**
+ * 列表页排序与筛选条件。
+ */
+@Immutable
+data class Sort(
+    // 排序类型
+    val sortType: SortTypeEnum? = null,
+    // 过滤条件年列表
+    val yearList: List<Int>? = null,
+    // 收藏条件, 收藏, 全部
+    val isFavorite: Boolean? = null
+)
 
-    //过滤条件年列表
-    var yearList: List<Int>? by mutableStateOf(null)
-
-    //收藏条件,收藏,全部
-    var isFavorite: Boolean? by mutableStateOf(null)
-
-    constructor(sortType: SortTypeEnum? = null) {
-        this.sortType = sortType
-    }
-
-    constructor(
-        sortType: SortTypeEnum? = null,
-        yearList: List<Int>? = null,
-        isFavorite: Boolean? = null
-    ) {
-        this.sortType = sortType
-        this.yearList = yearList
-        this.isFavorite = isFavorite
-    }
-
-    fun copy(): Sort {
-        return Sort(this.sortType, this.yearList, this.isFavorite)
-    }
-}
-
-@Stable
-class ArtistFilter {
-    //收藏条件,收藏,全部
-    var isFavorite: Boolean? by mutableStateOf(null)
-
-    constructor()
-
-    constructor(isFavorite: Boolean?) {
-        this.isFavorite = isFavorite
-    }
-
-    fun copy(): ArtistFilter {
-        return ArtistFilter(this.isFavorite)
-    }
-
-}
+/**
+ * 艺术家页面筛选条件。
+ */
+@Immutable
+data class ArtistFilter(
+    // 收藏条件, 收藏, 全部
+    val isFavorite: Boolean? = null
+)

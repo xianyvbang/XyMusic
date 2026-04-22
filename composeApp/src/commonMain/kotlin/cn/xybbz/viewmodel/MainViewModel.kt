@@ -21,7 +21,6 @@ package cn.xybbz.viewmodel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -77,20 +76,26 @@ class MainViewModel(
     val yearSet by mutableStateOf(DateUtil.getYearSet())
 
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
+    // 播放页推荐歌曲状态，直接透传协调器中的同一份状态源
+    val recommendationStateFlow = playerEventCoordinator.recommendationStateFlow
+    // 切歌事件，直接透传协调器中的同一份事件流
+    val songChangeEvents = playerEventCoordinator.songChangeEvents
+    // 播放列表下一页加载状态
+    val ifNextPageNumListFlow = musicPlayContext.ifNextPageNumListFlow
 
     /**
      * 播放页展示的相似歌曲列表。
      * 数据由 PlayerEventCoordinator 维护，这里只做只读暴露。
      */
     val similarMusicList: List<XyMusic>
-        get() = playerEventCoordinator.similarMusicList
+        get() = recommendationStateFlow.value.similarMusicList
 
     /**
      * 播放页展示的热门歌曲列表。
      * 数据由 PlayerEventCoordinator 维护，这里只做只读暴露。
      */
     val popularMusicList: List<XyMusic>
-        get() = playerEventCoordinator.popularMusicList
+        get() = recommendationStateFlow.value.popularMusicList
 
 
     init {
@@ -106,15 +111,15 @@ class MainViewModel(
         initTranscodeListener()
     }
 
+    /**
+     * 监听切歌事件并重置页面表现状态。
+     */
     private fun initSongChangeObserver() {
         viewModelScope.launch {
-            // 切歌后重置跑马灯次数，这属于页面表现层逻辑，仍放在 ViewModel 中处理。
-            snapshotFlow { playerEventCoordinator.songChangeVersion }
-                .collect {
-                    if (it > 0) {
-                        putIterations(0)
-                    }
-                }
+            songChangeEvents.collect {
+                // 切歌后重置跑马灯次数，这属于页面表现层逻辑，仍放在 ViewModel 中处理。
+                putIterations(0)
+            }
         }
     }
 
@@ -124,6 +129,9 @@ class MainViewModel(
     var iterations by mutableIntStateOf(1)
         private set
 
+    /**
+     * 更新歌词或标题区域的滚动次数。
+     */
     fun putIterations(iterations: Int) {
         this.iterations = iterations
     }
@@ -135,6 +143,9 @@ class MainViewModel(
     var sheetState by mutableStateOf(false)
         private set
 
+    /**
+     * 更新播放器页显示状态。
+     */
     fun putSheetState(sheetState: Boolean) {
         this.sheetState = sheetState
     }

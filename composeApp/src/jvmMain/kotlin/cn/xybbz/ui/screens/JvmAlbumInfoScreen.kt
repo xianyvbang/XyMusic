@@ -192,7 +192,8 @@ fun JvmAlbumInfoScreen(
     val downloadMusicIds by albumInfoViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
         emptyList()
     )
-    val ifOpenSelect by albumInfoViewModel.selectControl.uiState.collectAsStateWithLifecycle()
+    val selectUiState by albumInfoViewModel.selectControl.uiState.collectAsStateWithLifecycle()
+    val playbackState by albumInfoViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
 
     val musicListPage =
         albumInfoViewModel.listPage.collectAsLazyPagingItems()
@@ -475,7 +476,10 @@ fun JvmAlbumInfoScreen(
                     JvmStickyHeaderOperationParent(
                         albumInfoViewModel = albumInfoViewModel,
                         musicListPage = musicListPage,
-                        ifOpenSelect = ifOpenSelect,
+                        ifOpenSelect = selectUiState.isOpen,
+                        isSelectAll = selectUiState.isSelectAll,
+                        currentPlayAlbumId = playbackState.musicInfo?.album.orEmpty(),
+                        playState = playbackState.state,
                         sortBy = sortBy
                     )
                 }
@@ -503,7 +507,7 @@ fun JvmAlbumInfoScreen(
                                         music.itemId in favoriteSet
                                     },
                                     ifDownload = music.itemId in downloadMusicIds,
-                                    ifPlay = albumInfoViewModel.musicController.musicInfo?.itemId == music.itemId,
+                                    ifPlay = playbackState.musicInfo?.itemId == music.itemId,
                                     subordination =
                                         if (albumInfoViewModel.albumPlayerHistoryProgressMap.containsKey(
                                                 music.itemId
@@ -521,13 +525,13 @@ fun JvmAlbumInfoScreen(
                                             )
                                         }
                                     },
-                                    ifSelect = ifOpenSelect,
-                                    ifSelectCheckBox = { albumInfoViewModel.selectControl.selectMusicIdList.any { it == music.itemId } },
+                                    ifSelect = selectUiState.isOpen,
+                                    ifSelectCheckBox = { music.itemId in selectUiState.selectedMusicIds },
                                     trailingOnSelectClick = { _ ->
                                         albumInfoViewModel.selectControl.toggleSelection(
                                             music.itemId,
                                             onIsSelectAll = {
-                                                albumInfoViewModel.selectControl.selectMusicIdList.containsAll(
+                                                selectUiState.selectedMusicIds.containsAll(
                                                     musicListPage.itemSnapshotList.items.map { it.itemId }
                                                 )
                                             }
@@ -563,6 +567,7 @@ private fun JvmMusicListOperation(
     selectControl: SelectControl,
     onSelectAll: () -> Unit,
     ifOpenSelect: Boolean,
+    isSelectAll: Boolean,
     sortContent: @Composable () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -618,7 +623,7 @@ private fun JvmMusicListOperation(
 
         if (ifOpenSelect) {
             XySelectAllComponent(
-                isSelectAll = selectControl.isSelectAll,
+                isSelectAll = isSelectAll,
                 onSelectAll = onSelectAll
             )
             IconButton(onClick = {
@@ -757,22 +762,25 @@ private fun JvmMusicAlbumInfoComponent(
 private fun JvmStickyHeaderOperation(
     onMusicListPage: () -> LazyPagingItems<XyMusic>,
     albumInfoViewModel: AlbumInfoViewModel,
+    currentPlayAlbumId: String,
+    playState: PlayStateEnum,
     ifOpenSelect: Boolean,
+    isSelectAll: Boolean,
     sortContent: @Composable () -> Unit
 ) {
     JvmMusicListOperation(
         playbackHistoryProgress = albumInfoViewModel.albumPlayerHistoryProgress,
-        currentPlayAlbumId = albumInfoViewModel.musicController.musicInfo?.album.orEmpty(),
+        currentPlayAlbumId = currentPlayAlbumId,
         album = albumInfoViewModel.xyAlbumInfoData,
         musicPlayContext = albumInfoViewModel.musicPlayContext,
-        playState = albumInfoViewModel.musicController.state,
+        playState = playState,
         onRemovePlayerHistory = {
             albumInfoViewModel.removeAlbumPlayerHistoryProgress(
                 it
             )
         },
         onPlayOrPause = {
-            if (albumInfoViewModel.musicController.state != PlayStateEnum.Pause) {
+            if (playState != PlayStateEnum.Pause) {
                 albumInfoViewModel.musicController.pause()
             } else {
                 albumInfoViewModel.musicController.resume()
@@ -783,6 +791,7 @@ private fun JvmStickyHeaderOperation(
             albumInfoViewModel.selectControl.toggleSelectionAll(onMusicListPage().itemSnapshotList.items.map { it.itemId })
         },
         ifOpenSelect = ifOpenSelect,
+        isSelectAll = isSelectAll,
         sortContent = sortContent
     )
 }
@@ -792,6 +801,9 @@ private fun JvmStickyHeaderOperationParent(
     albumInfoViewModel: AlbumInfoViewModel,
     musicListPage: LazyPagingItems<XyMusic>,
     ifOpenSelect: Boolean,
+    isSelectAll: Boolean,
+    currentPlayAlbumId: String,
+    playState: PlayStateEnum,
     sortBy: Sort,
 ) {
 
@@ -799,7 +811,10 @@ private fun JvmStickyHeaderOperationParent(
     JvmStickyHeaderOperation(
         onMusicListPage = { musicListPage },
         albumInfoViewModel = albumInfoViewModel,
+        currentPlayAlbumId = currentPlayAlbumId,
+        playState = playState,
         ifOpenSelect = ifOpenSelect,
+        isSelectAll = isSelectAll,
         sortContent = {
             SelectSortBottomSheetComponent(
                 onIfSelectOneYear = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifAlbumInfoSelectOneYear },

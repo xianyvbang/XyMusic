@@ -39,7 +39,9 @@ abstract class PageListViewModel<T : Any>(
     val defaultSortType: SortTypeEnum? = null
 ) : ViewModel() {
 
+    // 列表排序与筛选状态的唯一来源
     private val _sortType = MutableStateFlow(Sort(defaultSortType))
+    // 列表排序与筛选状态的对外只读流
     val sortBy: StateFlow<Sort> = _sortType.asStateFlow()
 
 
@@ -70,9 +72,7 @@ abstract class PageListViewModel<T : Any>(
         sortType: SortTypeEnum?,
         refreshPage: suspend () -> Unit
     ) {
-        val sort = this._sortType.value
-        sort.sortType = sortType
-        updateSort(sort.copy(), refreshPage = refreshPage)
+        updateSort(_sortType.value.copy(sortType = sortType), refreshPage = refreshPage)
     }
 
     /**
@@ -82,20 +82,22 @@ abstract class PageListViewModel<T : Any>(
         yearList: List<Int>?,
         refreshPage: suspend () -> Unit
     ) {
-        val sort = this._sortType.value
-        sort.yearList = yearList
-        updateSort(sort.copy(), refreshPage = refreshPage)
+        updateSort(_sortType.value.copy(yearList = yearList), refreshPage = refreshPage)
     }
 
     /**
      * 设置收藏过滤
      */
     suspend fun setFavorite(isFavorite: Boolean, refreshPage: suspend () -> Unit) {
-        val sort = this._sortType.value
-        sort.isFavorite = if (isFavorite) true else null
-        updateSort(sort.copy(), refreshPage = refreshPage)
+        updateSort(
+            _sortType.value.copy(isFavorite = if (isFavorite) true else null),
+            refreshPage = refreshPage
+        )
     }
 
+    /**
+     * 更新排序与筛选状态。
+     */
     suspend fun updateSort(
         sort: Sort,
         refreshPage: suspend () -> Unit
@@ -107,11 +109,17 @@ abstract class PageListViewModel<T : Any>(
 //        refreshPage()
     }
 
+    /**
+     * 清空当前排序与筛选条件。
+     */
     suspend fun clearFilterOrSort(refreshPage: suspend () -> Unit) {
         val sort = Sort(defaultSortType)
         updateSort(sort, refreshPage = refreshPage)
     }
 
+    /**
+     * 判断当前排序或筛选是否与默认状态不同。
+     */
     fun isSortChange(): Boolean {
         return _sortType.value.sortType != defaultSortType || _sortType.value.isFavorite != null || _sortType.value.yearList != null
     }
@@ -121,5 +129,8 @@ abstract class PageListViewModel<T : Any>(
      */
     abstract fun getFlowPageData(sort: Sort): Flow<PagingData<T>>
 
+    /**
+     * 更新分页远端键，确保筛选变更后重新拉取数据。
+     */
     abstract suspend fun updateDataSourceRemoteKey()
 }

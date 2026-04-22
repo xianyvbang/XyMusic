@@ -135,19 +135,20 @@ fun LrcViewNewCompose(
     val realLcrEntryList by lrcViewModel.lrcServer.lcrEntryListFlow.collectAsStateWithLifecycle(
         emptyList()
     )
+    val lrcState by lrcViewModel.lrcServer.lrcStateFlow.collectAsStateWithLifecycle()
     val lcrEntryList = previewEntries ?: realLcrEntryList
     val coroutineScope = rememberCoroutineScope()
     val usePreviewLyrics = previewEntries != null && previewCurrentTimeMillis != null
 
-    var tmpOffsetMs by remember {
-        mutableStateOf(lrcViewModel.lrcServer.lrcConfig?.lrcOffsetMs ?: 0L)
+    var tmpOffsetMs by remember(lrcState.lrcConfig?.lrcOffsetMs) {
+        mutableStateOf(lrcState.lrcConfig?.lrcOffsetMs ?: 0L)
     }
     val effectiveOffsetMs = externalOffsetMillis ?: tmpOffsetMs
     var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
 
-    DisposableEffect(Unit) {
-        Log.i("=====", "歌词偏移 ${lrcViewModel.lrcServer.lrcConfig?.lrcOffsetMs}")
+    DisposableEffect(lrcState.lrcConfig?.lrcOffsetMs) {
+        Log.i("=====", "歌词偏移 ${lrcState.lrcConfig?.lrcOffsetMs}")
         onDispose {
             fabMenuExpanded = false
         }

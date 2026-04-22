@@ -103,7 +103,9 @@ fun JvmSnackBarPlayerComponent(
         mutableStateOf(false)
     }
     val coroutineScope = rememberCoroutineScope()
-    val ifOpenSelect by snackBarPlayerViewModel.selectControl.uiState.collectAsStateWithLifecycle()
+    val selectUiState by snackBarPlayerViewModel.selectControl.uiState.collectAsStateWithLifecycle()
+    val playbackState by snackBarPlayerViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val originMusicList by snackBarPlayerViewModel.musicController.originMusicListFlow.collectAsStateWithLifecycle()
     val favoriteSet by mainViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
 
     val defaultSnackBarColor = MaterialTheme.colorScheme.surfaceContainerLowest
@@ -162,10 +164,10 @@ fun JvmSnackBarPlayerComponent(
         )
     }
 
-    snackBarPlayerViewModel.musicController.musicInfo?.let {
+    playbackState.musicInfo?.let {
         JvmMusicPlayerComponent(
             music = it,
-            snackBarPlayerViewModel.musicController.picByte,
+            playbackState.picByte,
             sharedCoverSourceBoundsOnScreen = sharedCoverSourceBoundsOnScreen,
             sheetStateR = playerSheetState,
             onSetState = { musicListState = it }
@@ -174,8 +176,8 @@ fun JvmSnackBarPlayerComponent(
 
     MusicListComponent(
         musicListState = musicListState,
-        curOriginIndex = snackBarPlayerViewModel.musicController.curOriginIndex,
-        originMusicList = snackBarPlayerViewModel.musicController.originMusicList,
+        curOriginIndex = playbackState.curOriginIndex,
+        originMusicList = originMusicList,
         onSetState = { musicListState = it },
         onClearPlayerList = {
             coroutineScope.launch {
@@ -192,7 +194,7 @@ fun JvmSnackBarPlayerComponent(
         onRemovePlayerMusicItem = {
             try {
                 snackBarPlayerViewModel.musicController.removeItem(it)
-                if (snackBarPlayerViewModel.musicController.originMusicList.isEmpty()) {
+                if (originMusicList.isEmpty()) {
                     mainViewModel.putSheetState(false)
                     coroutineScope.launch {
                         mainViewModel.db.playerDao.removeByDatasource()
@@ -214,7 +216,7 @@ fun JvmSnackBarPlayerComponent(
             }
     ) {
         AnimatedContent(
-            targetState = ifOpenSelect,
+            targetState = selectUiState.isOpen,
             transitionSpec = {
                 if (targetState > initialState) {
                     fadeIn() togetherWith fadeOut()
@@ -246,10 +248,10 @@ fun JvmSnackBarPlayerComponent(
                                 }
 
                             }
-                        }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
+                        }, enabled = selectUiState.ifEnableButton) {
                             Icon(
                                 painter = painterResource(Res.drawable.delete_24px),
-                                contentDescription = if (snackBarPlayerViewModel.selectControl.ifLocal) stringResource(
+                                contentDescription = if (selectUiState.ifLocal) stringResource(
                                     Res.string.delete_local_permanently
                                 ) else stringResource(Res.string.delete_permanently)
                             )
@@ -267,7 +269,7 @@ fun JvmSnackBarPlayerComponent(
                                 )
                             }
                         }
-                    }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
+                    }, enabled = selectUiState.ifEnableButton) {
                         Icon(
                             painter = painterResource(Res.drawable.playlist_play_24px),
                             contentDescription = stringResource(Res.string.play_selected)
@@ -280,13 +282,13 @@ fun JvmSnackBarPlayerComponent(
                         } else {
                             snackBarPlayerViewModel.selectControl.onAddPlaylistSelect()
                         }
-                    }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
+                    }, enabled = selectUiState.ifEnableButton) {
                         Icon(
                             painter = painterResource(Res.drawable.playlist_add_24px),
                             contentDescription = stringResource(Res.string.add_to_playlist)
                         )
                     }
-                    if (snackBarPlayerViewModel.selectControl.ifPlaylist)
+                    if (selectUiState.ifPlaylist)
                         IconButton(onClick = {
                             if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
                                 MessageUtils.sendPopTip(pleaseSelect)
@@ -295,7 +297,7 @@ fun JvmSnackBarPlayerComponent(
                                     snackBarPlayerViewModel.dataSourceManager,
                                     coroutineScope
                                 )
-                        }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
+                        }, enabled = selectUiState.ifEnableButton) {
                             Icon(
                                 painter = painterResource(Res.drawable.playlist_remove_24px),
                                 contentDescription = stringResource(Res.string.music_remove_from_playlist)
@@ -311,14 +313,14 @@ fun JvmSnackBarPlayerComponent(
                                 coroutineScope,
                                 snackBarPlayerViewModel.musicController
                             )
-                    }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
+                    }, enabled = selectUiState.ifEnableButton) {
                         Icon(
                             painter = painterResource(Res.drawable.heart_broken_24px),
                             contentDescription = stringResource(Res.string.unfavorite)
                         )
                     }
 
-                    if (!snackBarPlayerViewModel.selectControl.ifLocal && snackBarPlayerViewModel.dataSourceManager.getCanDownload())
+                    if (!selectUiState.ifLocal && snackBarPlayerViewModel.dataSourceManager.getCanDownload())
                         IconButton(onClick = {
                             if (snackBarPlayerViewModel.selectControl.ifSelectEmpty()) {
                                 MessageUtils.sendPopTip(pleaseSelect)
@@ -326,7 +328,7 @@ fun JvmSnackBarPlayerComponent(
                                 permissionState.launchMultiplePermissionRequest()
                             }
 
-                        }, enabled = snackBarPlayerViewModel.selectControl.ifEnableButton) {
+                        }, enabled = selectUiState.ifEnableButton) {
                             Icon(
                                 painter = painterResource(Res.drawable.download_24px),
                                 contentDescription = stringResource(Res.string.download_list)

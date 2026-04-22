@@ -55,6 +55,7 @@ fun LocalScreen(localViewModel: LocalViewModel = koinViewModel<LocalViewModel>()
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
     val downloadMusicList by localViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
+    val playbackState by localViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
     val favoriteSet by localViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
 
     XyColumnScreen {
@@ -85,7 +86,7 @@ fun LocalScreen(localViewModel: LocalViewModel = koinViewModel<LocalViewModel>()
                         music.itemId in favoriteSet
                     },
                     ifDownload = true,
-                    ifPlay = localViewModel.musicController.musicInfo?.itemId == music.itemId,
+                    ifPlay = playbackState.musicInfo?.itemId == music.itemId,
                     backgroundColor = Color.Transparent,
                     onMusicPlay = {
                         localViewModel.musicList(

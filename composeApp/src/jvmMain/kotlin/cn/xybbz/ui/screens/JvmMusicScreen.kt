@@ -72,12 +72,13 @@ fun JvmMusicScreen(
     val coroutineScope = rememberCoroutineScope()
     val mainViewModel = LocalMainViewModel.current
     val homeMusicPager = musicViewModel.listPage.collectAsLazyPagingItems()
+    val playbackState by musicViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
     val favoriteSet by musicViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val downloadMusicIds by musicViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
         emptyList()
     )
     val sortBy by musicViewModel.sortBy.collectAsStateWithLifecycle()
-    val ifOpenSelect by musicViewModel.selectControl.uiState.collectAsStateWithLifecycle()
+    val selectUiState by musicViewModel.selectControl.uiState.collectAsStateWithLifecycle()
 
     XyColumnScreen {
         MusicSelectTopBarComponent(
@@ -98,7 +99,8 @@ fun JvmMusicScreen(
                 }
             },
             selectControl = musicViewModel.selectControl,
-            ifOpenSelect = ifOpenSelect,
+            ifOpenSelect = selectUiState.isOpen,
+            isSelectAll = selectUiState.isSelectAll,
             sortOrFilterContent = {
                 SelectSortBottomSheetComponent(
                     onIfSelectOneYear = { musicViewModel.dataSourceManager.dataSourceType?.ifMusicSelectOneYear },
@@ -149,7 +151,7 @@ fun JvmMusicScreen(
                             music.itemId in favoriteSet
                         },
                         ifDownload = music.itemId in downloadMusicIds,
-                        ifPlay = musicViewModel.musicController.musicInfo?.itemId == music.itemId,
+                        ifPlay = playbackState.musicInfo?.itemId == music.itemId,
                         onMusicPlay = {
                             musicViewModel.musicPlayContext.music(
                                 onMusicPlayParameter = it,
@@ -158,16 +160,16 @@ fun JvmMusicScreen(
                             )
                         },
                         backgroundColor = Color.Transparent,
-                        ifSelect = ifOpenSelect,
+                        ifSelect = selectUiState.isOpen,
                         ifSelectCheckBox = {
-                            music.itemId in musicViewModel.selectControl.selectMusicIdList
+                            music.itemId in selectUiState.selectedMusicIds
                         },
                         trailingOnSelectClick = { select ->
                             Log.i("======", "数据是否一起变化${select}")
                             musicViewModel.selectControl.toggleSelection(
                                 music.itemId,
                                 onIsSelectAll = {
-                                    musicViewModel.selectControl.selectMusicIdList.containsAll(
+                                    selectUiState.selectedMusicIds.containsAll(
                                         homeMusicPager.itemSnapshotList.items.map { it.itemId }
                                     )
                                 })
@@ -194,6 +196,7 @@ private fun MusicSelectTopBarComponent(
     onRandomPlayerClick: () -> Unit,
     onSelectAll: () -> Unit,
     ifOpenSelect: Boolean,
+    isSelectAll: Boolean,
     selectControl: SelectControl,
     sortOrFilterContent: @Composable () -> Unit
 ) {
@@ -205,7 +208,7 @@ private fun MusicSelectTopBarComponent(
             if (ifOpenSelect) {
 
                 XySelectAllComponent(
-                    isSelectAll = selectControl.isSelectAll,
+                    isSelectAll = isSelectAll,
                     onSelectAll = onSelectAll
                 )
             } else {

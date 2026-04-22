@@ -100,6 +100,7 @@ fun JvmSearchScreen(
 ) {
     val navigator = LocalNavigator.current
 
+    val playbackState by searchViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
     val favoriteList by searchViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val downloadMusicIds by searchViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
         emptyList()
@@ -187,6 +188,7 @@ fun JvmSearchScreen(
                     },
                     onFavoriteList = { favoriteList },
                     onDownloadMusicIdList = { downloadMusicIds },
+                    currentPlayingMusicId = playbackState.musicInfo?.itemId,
                     musicController = searchViewModel.musicController
                 )
             } else {
@@ -253,6 +255,7 @@ fun JvmSearchResultScreen(
     onLoadingState: () -> Boolean,
     onFavoriteList: () -> List<String>,
     onDownloadMusicIdList: () -> List<String>,
+    currentPlayingMusicId: String?,
     musicController: MusicCommonController
 ) {
     val navigator = LocalNavigator.current
@@ -328,7 +331,7 @@ fun JvmSearchResultScreen(
                         music.itemId in onFavoriteList()
                     },
                     ifDownload = music.itemId in onDownloadMusicIdList(),
-                    ifPlay = music.itemId == musicController.musicInfo?.itemId,
+                    ifPlay = music.itemId == currentPlayingMusicId,
                     onMusicPlay = {
                         onAddMusic(
                             music

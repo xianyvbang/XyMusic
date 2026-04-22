@@ -19,9 +19,6 @@
 package cn.xybbz.config.music
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.utils.Log
@@ -40,23 +37,27 @@ import cn.xybbz.ui.components.LoadingObject
 import cn.xybbz.ui.components.dismiss
 import cn.xybbz.ui.components.show
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.get_music_failed_cannot_play
 
+/**
+ * 一次播放请求所需的上下文数据。
+ */
 @Immutable
 data class MusicPlayData(
+    // 播放请求参数
     var onMusicPlayParameter: OnMusicPlayParameter,
+    // 首次加载的歌曲列表提供器
     var xyMusicList: (suspend () -> List<XyPlayMusic>)? = { emptyList() },
+    // 下一页歌曲列表提供器
     var onNextMusicList: (suspend (Int) -> List<XyPlayMusic>?)? = null,
+    // 当前请求的分页大小
     var pageSize: Int = Constants.MIN_PAGE
 )
 
-/**
- * 是否在加载下一页数据
- */
-var ifNextPageNumList by mutableStateOf(false)
-//todo 增加排序类型存储,并且根据存储的排序类型存储加载列表和加载下一页
 /**
  * 音乐播放请求上下文
  */
@@ -66,12 +67,27 @@ class MusicPlayContext(
     private val db: LocalDatabaseClient
 ) : IoScoped() {
 
+    /**
+     * 是否在加载下一页数据
+     */
+    private val _ifNextPageNumListFlow = MutableStateFlow(false)
+    val ifNextPageNumListFlow = _ifNextPageNumListFlow.asStateFlow()
+
+    // 当前播放流程使用的请求上下文
     var musicPlayData: MusicPlayData? = null
 
     init {
         createScope()
     }
 
+    /**
+     * 更新“是否正在加载下一页”的状态。
+     */
+    fun updateIfNextPageNumList(isLoading: Boolean) {
+        _ifNextPageNumListFlow.value = isLoading
+    }
+
+    // todo 增加排序类型存储，并且根据存储的排序类型存储加载列表和加载下一页
 
     /**
      * 播放音乐列表

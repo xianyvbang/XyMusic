@@ -18,10 +18,6 @@
 
 package cn.xybbz.config.select
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableStateSetOf
-import androidx.compose.runtime.setValue
 import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.FavoriteCoordinator
@@ -46,6 +42,26 @@ import xymusic_kmp.composeapp.generated.resources.delete_permanently
 import xymusic_kmp.composeapp.generated.resources.delete_warning
 
 /**
+ * 选择模式下的界面状态。
+ */
+data class SelectUiState(
+    // 是否打开选择模式
+    val isOpen: Boolean = false,
+    // 选中音乐列表 id
+    val selectedMusicIds: Set<String> = emptySet(),
+    // 是否已经全选
+    val isSelectAll: Boolean = false,
+    // 是否为本地页面操作
+    val ifLocal: Boolean = false,
+    // 是否启用按钮
+    val ifEnableButton: Boolean = false,
+    // 当前操作的歌单 id
+    val playlistId: String? = null,
+    // 是否在歌单中操作
+    val ifPlaylist: Boolean = false
+)
+
+/**
  * 选择列表数据
  * @author 刘梦龙
  * @date 2025/01/18
@@ -55,41 +71,35 @@ class SelectControl(
     private val dataSourceManager: DataSourceManager
 ) {
 
-
-    //选中音乐列表id
-    val selectMusicIdList = mutableStateSetOf<String>()
-
-    /**
-     * 是否已经全选
-     */
-    var isSelectAll by mutableStateOf(false)
-        private set
-
-    //是否显示按钮
-    /*var ifOpenSelect by mutableStateOf(false)
-        private set*/
-
-    private val _uiState = MutableStateFlow(
-        false
-    )
+    // 选择状态的唯一响应式来源
+    private val _uiState = MutableStateFlow(SelectUiState())
     val uiState = _uiState.asStateFlow()
 
-    //是否为本地页面操作
-    var ifLocal by mutableStateOf(false)
-        private set
+    // 当前选中的音乐 id 集合
+    val selectMusicIdList: Set<String>
+        get() = uiState.value.selectedMusicIds
 
-    //是否启用按钮
-    var ifEnableButton by mutableStateOf(false)
-        private set
+    // 当前是否处于全选状态
+    val isSelectAll: Boolean
+        get() = uiState.value.isSelectAll
 
-    var playlistId: String? by mutableStateOf(null)
-        private set
+    // 当前是否在本地页面操作
+    val ifLocal: Boolean
+        get() = uiState.value.ifLocal
 
-    //是否在歌单中操作
-    var ifPlaylist by mutableStateOf(false)
-        private set
+    // 当前批量操作按钮是否可用
+    val ifEnableButton: Boolean
+        get() = uiState.value.ifEnableButton
 
-    //永久删除所选音乐资源-从硬盘上删除
+    // 当前操作的歌单 id
+    val playlistId: String?
+        get() = uiState.value.playlistId
+
+    // 当前是否在歌单场景中操作
+    val ifPlaylist: Boolean
+        get() = uiState.value.ifPlaylist
+
+    // 永久删除所选音乐资源，从硬盘上删除
     val onRemoveSelectListResource: (suspend (DataSourceManager, CoroutineScope) -> Unit) =
         { dataSourceManager, viewModelScope ->
             AlertDialogObject(
@@ -102,59 +112,64 @@ class SelectControl(
                 ifWarning = true,
                 onConfirmation = {
                     removeSelectListResource(dataSourceManager, viewModelScope)
-                }, onDismissRequest = {}).show()
+                },
+                onDismissRequest = {}
+            ).show()
         }
 
-    //增加选中音乐到播放列表
+    // 增加选中音乐到播放列表
     val onAddPlaySelect: suspend (MusicCommonController, LocalDatabaseClient, DownloadDatabaseClient) -> Unit =
         { musicController, db, downloadDb ->
             addPlayerList(musicController, db, downloadDb)
         }
 
-    //增加选中音乐到歌单
+    // 增加选中音乐到歌单
     val onAddPlaylistSelect: () -> Unit = {
         AddPlaylistBottomData(
             ifShow = true,
-            musicInfoList = selectMusicIdList.map { it },
+            musicInfoList = selectMusicIdList.toList(),
             onItemClick = {
                 dismiss()
-            }).show()
+            }
+        ).show()
     }
 
-    //从歌单中删除选中音乐
+    // 从歌单中删除选中音乐
     val onRemovePlaylistMusic: (DataSourceManager, CoroutineScope) -> Unit =
         { dataSourceManager, viewModelScope ->
             removePlaylistMusic(dataSourceManager, viewModelScope)
         }
 
-    //取消收藏
+    // 取消收藏
     val onRemoveFavorite: (DataSourceManager, CoroutineScope, MusicCommonController) -> Unit =
         { dataSourceManager, viewModelScope, musicController ->
             viewModelScope.launch {
                 OperationTipUtils.operationTipProgress() { loadingObject ->
                     loadingObject.updateProgress(0.0f, 0)
-                    selectMusicIdList
-                        .forEachIndexed { index, musicId ->
-                            FavoriteCoordinator.setFavoriteData(
-                                dataSourceManager = dataSourceManager,
-                                type = MusicTypeEnum.MUSIC,
-                                itemId = musicId,
-                                ifFavorite = true,
-                                musicController = musicController
-                            )
-                            loadingObject.updateProgress(
-                                (index * 1.0f + 1.0f) / selectMusicIdList.size,
-                                index + 1
-                            )
-                        }
+                    selectMusicIdList.forEachIndexed { index, musicId ->
+                        FavoriteCoordinator.setFavoriteData(
+                            dataSourceManager = dataSourceManager,
+                            type = MusicTypeEnum.MUSIC,
+                            itemId = musicId,
+                            ifFavorite = true,
+                            musicController = musicController
+                        )
+                        loadingObject.updateProgress(
+                            (index * 1.0f + 1.0f) / selectMusicIdList.size,
+                            index + 1
+                        )
+                    }
                 }
                 dismiss()
             }
         }
 
-    //状态变化
+    // 状态变化
     var onOpenChange: ((Boolean) -> Unit)? = null
 
+    /**
+     * 打开选择模式并初始化上下文。
+     */
     fun show(
         ifOpenSelect: Boolean,
         playlistId: String? = null,
@@ -166,10 +181,16 @@ class SelectControl(
         this.onOpenChange = onOpenChange
     }
 
+    /**
+     * 关闭选择模式。
+     */
     fun dismiss() {
         clearData()
     }
 
+    /**
+     * 设置选择音乐列表数据
+     */
     private fun setData(
         ifOpenSelect: Boolean,
         playlistId: String? = null,
@@ -177,50 +198,60 @@ class SelectControl(
         ifPlaylist: Boolean,
         ifLocal: Boolean = false
     ) {
-//        this.ifOpenSelect = ifOpenSelect
-
-        _uiState.update { ifOpenSelect }
-        if (ifPlaylist)
-            this.playlistId = playlistId
-        else
-            this.playlistId = null
-
-        this.ifEnableButton = ifEnableButton
-        this.ifPlaylist = ifPlaylist
-        this.ifLocal = ifLocal
-    }
-
-    fun clearData() {
-        selectMusicIdList.clear()
-        isSelectAll = false
-//        ifOpenSelect = false
-        _uiState.update { false }
-        ifEnableButton = false
-        this.ifPlaylist = false
-        onOpenChange?.invoke(false)
-    }
-
-    /**
-     * 设置选择音乐列表数据
-     * @param [music] 音乐
-     */
-    fun toggleSelection(musicId: String, onIsSelectAll: () -> Boolean) {
-
-        if (selectMusicIdList.contains(musicId)) {
-            selectMusicIdList.remove(musicId)
-            if (selectMusicIdList.isEmpty()) {
-                ifEnableButton = false
-            }
-            isSelectAll = false
-        } else {
-            selectMusicIdList.add(musicId)
-            ifEnableButton = true
-            isSelectAll = onIsSelectAll()
+        _uiState.update {
+            it.copy(
+                isOpen = ifOpenSelect,
+                playlistId = playlistId.takeIf { ifPlaylist },
+                ifEnableButton = ifEnableButton,
+                ifPlaylist = ifPlaylist,
+                ifLocal = ifLocal
+            )
         }
     }
 
     /**
      * 删除选中数据
+     */
+    fun clearData() {
+        _uiState.update {
+            it.copy(
+                isOpen = false,
+                selectedMusicIds = emptySet(),
+                isSelectAll = false,
+                ifEnableButton = false,
+                playlistId = null,
+                ifPlaylist = false,
+                ifLocal = false
+            )
+        }
+        onOpenChange?.invoke(false)
+    }
+
+    /**
+     * 切换单首歌曲的选中状态。
+     */
+    fun toggleSelection(musicId: String, onIsSelectAll: () -> Boolean) {
+        _uiState.update { current ->
+            val nextIds = current.selectedMusicIds.toMutableSet()
+            val nextIsSelectAll: Boolean
+            if (nextIds.contains(musicId)) {
+                nextIds.remove(musicId)
+                nextIsSelectAll = false
+            } else {
+                nextIds.add(musicId)
+                nextIsSelectAll = onIsSelectAll()
+            }
+
+            current.copy(
+                selectedMusicIds = nextIds,
+                ifEnableButton = nextIds.isNotEmpty(),
+                isSelectAll = nextIsSelectAll
+            )
+        }
+    }
+
+    /**
+     * 永久删除当前选中的本地资源。
      */
     fun removeSelectListResource(
         dataSourceManager: DataSourceManager,
@@ -233,7 +264,6 @@ class SelectControl(
                 dismiss()
             }
         }
-
     }
 
     /**
@@ -256,20 +286,28 @@ class SelectControl(
         clearData()
     }
 
+    /**
+     * 切换全选状态。
+     */
     fun toggleSelectionAll(musicIdList: List<String>? = null) {
-        if (isSelectAll) {
-            selectMusicIdList.clear()
-            isSelectAll = false
-            ifEnableButton = false
-        } else {
-            if (!musicIdList.isNullOrEmpty()) {
-                ifEnableButton = true
-                isSelectAll = true
-                selectMusicIdList.addAll(musicIdList)
+        _uiState.update { current ->
+            if (current.isSelectAll) {
+                current.copy(
+                    selectedMusicIds = emptySet(),
+                    isSelectAll = false,
+                    ifEnableButton = false
+                )
+            } else if (!musicIdList.isNullOrEmpty()) {
+                current.copy(
+                    selectedMusicIds = musicIdList.toSet(),
+                    isSelectAll = true,
+                    ifEnableButton = true
+                )
+            } else {
+                current
             }
         }
     }
-
 
     /**
      * 从歌单中移除相应音乐
@@ -292,7 +330,7 @@ class SelectControl(
         }
     }
 
-    //判断是否选择列表是否为空
+    // 判断选择列表是否为空
     fun ifSelectEmpty(): Boolean {
         return selectMusicIdList.isEmpty()
     }

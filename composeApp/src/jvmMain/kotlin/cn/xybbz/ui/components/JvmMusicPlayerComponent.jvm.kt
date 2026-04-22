@@ -273,11 +273,12 @@ fun JvmMusicPlayerScreen(
 
     val decorators = LocalDesktopWindowDecorators.current
     val cacheScheduleData by musicPlayerViewModel.downloadCacheController.cacheSchedule.collectAsStateWithLifecycle()
-
+    val playbackState by musicPlayerViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val originMusicList by musicPlayerViewModel.musicController.originMusicListFlow.collectAsStateWithLifecycle()
     val favoriteList by musicPlayerViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val coverUrls = rememberPlayMusicCoverUrls(
         musicDetail,
-        musicPlayerViewModel.musicController.coverRefreshVersion
+        playbackState.coverRefreshVersion
     )
     val coroutineScope = rememberCoroutineScope()
     val density = LocalDensity.current
@@ -593,7 +594,7 @@ fun JvmMusicPlayerScreen(
                                     listState = similarPopularListState,
                                     onFavoriteSet = { emptySet() },
                                     onDownloadMusicIds = { emptyList() },
-                                    playMusicList = musicPlayerViewModel.musicController.originMusicList,
+                                    playMusicList = originMusicList,
                                     onAddPlayMusic = { musicPlayerViewModel.addNextPlayer(it) }
                                 )
                             }
@@ -622,7 +623,7 @@ fun JvmMusicPlayerScreen(
                             showCover = false,
                             cacheProgress = cacheScheduleData,
                             onShowPlaylist = {
-                                if (musicPlayerViewModel.musicController.originMusicList.isNotEmpty()) {
+                                if (originMusicList.isNotEmpty()) {
                                     onSetState(true)
                                 }
                             },

@@ -18,8 +18,8 @@
 
 package cn.xybbz.viewmodel
 
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -49,13 +49,14 @@ class ArtistViewModel (
     private val db: LocalDatabaseClient
 ) : ViewModel() {
 
-
+    // 艺术家筛选状态的唯一来源
     private val _sortType = MutableStateFlow(ArtistFilter())
 
-    var ifFavorite by mutableStateOf<Boolean?>(null)
-        private set
-
+    // 当前艺术家页筛选条件
     val sortBy: StateFlow<ArtistFilter> = _sortType
+    // 当前收藏筛选条件的便捷读取入口
+    val ifFavorite: Boolean?
+        get() = sortBy.value.isFavorite
 
     /**
      * 艺术家页面右侧筛选字符
@@ -89,11 +90,12 @@ class ArtistViewModel (
             .cachedIn(viewModelScope) // 外层只缓存一次
 
 
+    /**
+     * 设置收藏筛选条件。
+     */
     fun setFavoriteFilterData(isFavorite: Boolean?) {
-        ifFavorite = isFavorite
         _sortType.update {
-            it.isFavorite = isFavorite
-            it.copy()
+            it.copy(isFavorite = isFavorite)
         }
     }
 
