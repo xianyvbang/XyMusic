@@ -1,13 +1,9 @@
 package cn.xybbz.ui.components
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.hoverable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,18 +17,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PlainTooltip
-import androidx.compose.material3.TooltipAnchorPosition
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
-import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,11 +31,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.DpOffset
@@ -73,8 +59,6 @@ import cn.xybbz.ui.screens.jvmRouterMenuWidth
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyText
-import cn.xybbz.ui.xy.XyTextSub
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -94,15 +78,11 @@ import xymusic_kmp.composeapp.generated.resources.download_list
 import xymusic_kmp.composeapp.generated.resources.icon
 import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
 import xymusic_kmp.composeapp.generated.resources.logo_new
-import xymusic_kmp.composeapp.generated.resources.maximize_window
 import xymusic_kmp.composeapp.generated.resources.no_connection_selected
-import xymusic_kmp.composeapp.generated.resources.minimize_window
-import xymusic_kmp.composeapp.generated.resources.close_window
 import xymusic_kmp.composeapp.generated.resources.open_settings_page_button
 import xymusic_kmp.composeapp.generated.resources.open_add_or_switch_data_sources
 import xymusic_kmp.composeapp.generated.resources.refresh_24px
 import xymusic_kmp.composeapp.generated.resources.refresh_login
-import xymusic_kmp.composeapp.generated.resources.restore_window
 import xymusic_kmp.composeapp.generated.resources.search_24px
 import xymusic_kmp.composeapp.generated.resources.search_music_album_artist
 import xymusic_kmp.composeapp.generated.resources.settings_24px
@@ -259,12 +239,9 @@ private fun DesktopSearchField(
  * 标题栏右侧操作区。
  * 包含当前数据源展示、切换/创建连接菜单和窗口控制按钮。
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DesktopTitleActions(navigator: Navigator) {
     val koin = getKoin()
-    val frameState = LocalDesktopWindowFrameState.current
-    val chromeController = LocalDesktopWindowChromeController.current
     val titleBarHitTestOwner = LocalDesktopTitleBarHitTestOwner.current
     val dataSourceManager: DataSourceManager = remember { koin.get() }
     val db: LocalDatabaseClient = remember { koin.get() }
@@ -422,53 +399,7 @@ private fun DesktopTitleActions(navigator: Navigator) {
             )
         }
 
-        Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(XyTheme.dimens.corner))
-                .background(Color.Transparent),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            DesktopWindowControlTooltipBox(
-                tooltip = stringResource(Res.string.minimize_window)
-            ) {
-                DesktopWindowControlButton(
-                    controlType = WindowControlType.Minimize,
-                    onClick = frameState.onMinimize,
-                    modifier = Modifier.onGloballyPositioned {
-                        chromeController.updateMinimizeButtonBounds(it.boundsInWindow())
-                    }
-                )
-            }
-            DesktopWindowControlTooltipBox(
-                tooltip = stringResource(
-                    if (frameState.isMaximized) {
-                        Res.string.restore_window
-                    } else {
-                        Res.string.maximize_window
-                    }
-                )
-            ) {
-                DesktopWindowControlButton(
-                    controlType = if (frameState.isMaximized) WindowControlType.Restore else WindowControlType.Maximize,
-                    onClick = frameState.onToggleMaximize,
-                    modifier = Modifier.onGloballyPositioned {
-                        chromeController.updateMaximizeButtonBounds(it.boundsInWindow())
-                    }
-                )
-            }
-            DesktopWindowControlTooltipBox(
-                tooltip = stringResource(Res.string.close_window)
-            ) {
-                DesktopWindowControlButton(
-                    controlType = WindowControlType.Close,
-                    onClick = frameState.onClose,
-                    contentColor = colors.foreground,
-                    modifier = Modifier.onGloballyPositioned {
-                        chromeController.updateCloseButtonBounds(it.boundsInWindow())
-                    }
-                )
-            }
-        }
+        DesktopWindowControlButtons()
     }
 }
 
@@ -520,155 +451,6 @@ private fun DesktopToolbarIconButton(
             tint = iconTint
         )
     }
-}
-
-/**
- * 单个窗口控制按钮容器，负责承载最小化、最大化和关闭图标。
- */
-@Composable
-private fun DesktopWindowControlButton(
-    controlType: WindowControlType,
-    onClick: () -> Unit,
-    contentColor: Color = DesktopTitleBarColors.current.foreground,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .size(width = 42.dp, height = 34.dp)
-            .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        WindowControlGlyph(
-            controlType = controlType,
-            tint = contentColor,
-            modifier = Modifier.size(12.dp)
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DesktopWindowControlTooltipBox(
-    tooltip: String,
-    content: @Composable () -> Unit,
-) {
-    val tooltipState = rememberTooltipState(isPersistent = true)
-    val interactionSource = remember { MutableInteractionSource() }
-    val isHovered by interactionSource.collectIsHoveredAsState()
-
-    LaunchedEffect(isHovered) {
-        if (isHovered) {
-            delay(WindowControlTooltipDelayMillis)
-            tooltipState.show()
-        } else {
-            tooltipState.dismiss()
-        }
-    }
-
-    TooltipBox(
-        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Below),
-        state = tooltipState,
-        enableUserInput = false,
-        tooltip = {
-            PlainTooltip(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-                contentColor = MaterialTheme.colorScheme.onBackground
-            ) {
-                XyTextSub(
-                    text = tooltip,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-            }
-        },
-        content = {
-            Box(modifier = Modifier.hoverable(interactionSource = interactionSource)) {
-                content()
-            }
-        },
-    )
-}
-
-private const val WindowControlTooltipDelayMillis = 500L
-
-/**
- * 使用 Canvas 绘制窗口控制按钮的几何图形。
- */
-@Composable
-private fun WindowControlGlyph(
-    controlType: WindowControlType,
-    tint: Color,
-    modifier: Modifier = Modifier
-) {
-    Canvas(modifier = modifier) {
-        val strokeWidth = 1.4.dp.toPx()
-        val inset = 1.5.dp.toPx()
-        val left = inset
-        val top = inset
-        val right = size.width - inset
-        val bottom = size.height - inset
-
-        when (controlType) {
-            WindowControlType.Minimize -> {
-                drawLine(
-                    color = tint,
-                    start = Offset(left, bottom - inset),
-                    end = Offset(right, bottom - inset),
-                    strokeWidth = strokeWidth
-                )
-            }
-
-            WindowControlType.Maximize -> {
-                drawRect(
-                    color = tint,
-                    topLeft = Offset(left, top),
-                    size = Size(right - left, bottom - top),
-                    style = Stroke(width = strokeWidth)
-                )
-            }
-
-            WindowControlType.Restore -> {
-                val shift = 2.dp.toPx()
-                drawRect(
-                    color = tint,
-                    topLeft = Offset(left + shift, top),
-                    size = Size(right - left - shift, bottom - top - shift),
-                    style = Stroke(width = strokeWidth)
-                )
-                drawRect(
-                    color = tint,
-                    topLeft = Offset(left, top + shift),
-                    size = Size(right - left - shift, bottom - top - shift),
-                    style = Stroke(width = strokeWidth)
-                )
-            }
-
-            WindowControlType.Close -> {
-                drawLine(
-                    color = tint,
-                    start = Offset(left, top),
-                    end = Offset(right, bottom),
-                    strokeWidth = strokeWidth
-                )
-                drawLine(
-                    color = tint,
-                    start = Offset(right, top),
-                    end = Offset(left, bottom),
-                    strokeWidth = strokeWidth
-                )
-            }
-        }
-    }
-}
-
-/**
- * 窗口控制按钮类型。
- */
-private enum class WindowControlType {
-    Minimize,
-    Maximize,
-    Restore,
-    Close,
 }
 
 /**
