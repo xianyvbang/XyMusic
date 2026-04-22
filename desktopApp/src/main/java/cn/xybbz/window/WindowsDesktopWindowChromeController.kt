@@ -93,7 +93,7 @@ class WindowsDesktopWindowChromeController(
 
     private fun resolveHitTest(x: Float, y: Float): Int {
         return when {
-            maximizeButtonBounds.containsPoint(x, y) -> WinUserConst.HTMAXBUTTON
+            maximizeButtonBounds.containsPoint(x, y) -> WinUserConst.HTCLIENT
             minimizeButtonBounds.containsPoint(x, y) -> WinUserConst.HTMINBUTTON
             closeButtonBounds.containsPoint(x, y) -> WinUserConst.HTCLOSE
             titleBarHitTestEnabled &&
@@ -273,7 +273,6 @@ private class SkiaLayerWindowProcedure(
                 val result = lParam.useMousePoint(windowHandle) { x, y -> hitTest(x.toFloat(), y.toFloat()) }
                 when (result) {
                     WinUserConst.HTCLIENT,
-                    WinUserConst.HTMAXBUTTON,
                     WinUserConst.HTMINBUTTON,
                     WinUserConst.HTCLOSE,
                     -> LRESULT(result.toLong())
