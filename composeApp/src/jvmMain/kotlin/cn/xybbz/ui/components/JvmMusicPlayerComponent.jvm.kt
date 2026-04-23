@@ -37,6 +37,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -139,7 +140,7 @@ private const val JvmMusicPlayerSharedCoverDurationMillis = 920
 private const val JvmMusicPlayerDialogEnterDurationMillis = 260
 
 //private val JvmMusicPlayerPrimaryPageMaxWidth = 1320.dp
-private val JvmMusicPlayerPrimaryPageInnerGap = 48.dp
+private const val JvmMusicPlayerPrimaryPageGapWeight = 0.18f
 private val JvmMusicPlayerLyricsMaxWidth = 480.dp
 // JVM 播放页歌词使用略小的主歌词字号，避免桌面布局里文字显得过大。
 private val JvmMusicPlayerLyricsFontSize = 18.sp
@@ -468,8 +469,7 @@ fun JvmMusicPlayerScreen(
                                     Box(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .fillMaxHeight()
-                                            .padding(end = JvmMusicPlayerPrimaryPageInnerGap),
+                                            .fillMaxHeight(),
                                         contentAlignment = Alignment.CenterEnd
                                     ) {
                                         BoxWithConstraints(
@@ -511,11 +511,16 @@ fun JvmMusicPlayerScreen(
                                         }
                                     }
 
+                                    Spacer(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .weight(JvmMusicPlayerPrimaryPageGapWeight)
+                                    )
+
                                     Box(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .fillMaxHeight()
-                                            .padding(start = JvmMusicPlayerPrimaryPageInnerGap),
+                                            .fillMaxHeight(),
                                         contentAlignment = Alignment.CenterStart
                                     ) {
                                         Column(
