@@ -459,26 +459,28 @@ fun JvmMusicPlayerScreen(
                     ) { page ->
                         when (page) {
                             0 -> {
-                                Row(
+                                BoxWithConstraints(
                                     modifier = Modifier
-                                        .fillMaxWidth()
                                         .fillMaxSize()
                                         .padding(horizontal = XyTheme.dimens.outerHorizontalPadding)
 //                                    .widthIn(max = JvmMusicPlayerPrimaryPageMaxWidth)
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .fillMaxHeight(),
-                                        contentAlignment = Alignment.TopEnd
+                                    val coverColumnWidth =
+                                        maxWidth * (1f / (2f + JvmMusicPlayerPrimaryPageGapWeight))
+                                    val coverSize =
+                                        minOf(coverColumnWidth * 0.76f, maxHeight * 0.6f)
+                                            .coerceAtMost(JvmMusicPlayerSharedCoverDisplayMaxSize)
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        BoxWithConstraints(
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentAlignment = Alignment.CenterEnd
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(coverSize),
+                                            contentAlignment = Alignment.TopEnd
                                         ) {
-                                            val coverSize =
-                                                minOf(maxWidth * 0.76f, maxHeight * 0.6f)
-                                                    .coerceAtMost(JvmMusicPlayerSharedCoverDisplayMaxSize)
                                             Box(
                                                 modifier = Modifier
                                                     .requiredSize(coverSize)
@@ -507,85 +509,85 @@ fun JvmMusicPlayerScreen(
                                                 )
                                             }
                                         }
-                                    }
 
-                                    Spacer(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .weight(JvmMusicPlayerPrimaryPageGapWeight)
-                                    )
-
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .fillMaxHeight(),
-                                        contentAlignment = Alignment.CenterStart
-                                    ) {
-                                        Column(
+                                        Spacer(
                                             modifier = Modifier
-                                                .widthIn(max = JvmMusicPlayerLyricsMaxWidth)
                                                 .fillMaxHeight()
-                                                .pointerInput(musicDetail.itemId) {
-                                                    awaitPointerEventScope {
-                                                        while (true) {
-                                                            val event = awaitPointerEvent()
-                                                            val change =
-                                                                event.changes.firstOrNull() ?: continue
-                                                            if (
-                                                                event.type == PointerEventType.Press &&
-                                                                event.buttons.isSecondaryPressed
-                                                            ) {
-                                                                resetLyricsPreviewOffset()
-                                                                lyricsMenuOffset = with(density) {
-                                                                    DpOffset(
-                                                                        change.position.x.toDp(),
-                                                                        change.position.y.toDp()
-                                                                    )
+                                                .weight(JvmMusicPlayerPrimaryPageGapWeight)
+                                        )
+
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(coverSize),
+                                            contentAlignment = Alignment.TopStart
+                                        ) {
+                                            Column(
+                                                modifier = Modifier
+                                                    .widthIn(max = JvmMusicPlayerLyricsMaxWidth)
+                                                    .fillMaxHeight()
+                                                    .pointerInput(musicDetail.itemId) {
+                                                        awaitPointerEventScope {
+                                                            while (true) {
+                                                                val event = awaitPointerEvent()
+                                                                val change =
+                                                                    event.changes.firstOrNull() ?: continue
+                                                                if (
+                                                                    event.type == PointerEventType.Press &&
+                                                                    event.buttons.isSecondaryPressed
+                                                                ) {
+                                                                    resetLyricsPreviewOffset()
+                                                                    lyricsMenuOffset = with(density) {
+                                                                        DpOffset(
+                                                                            change.position.x.toDp(),
+                                                                            change.position.y.toDp()
+                                                                        )
+                                                                    }
+                                                                    lyricsMenuExpanded = true
                                                                 }
-                                                                lyricsMenuExpanded = true
                                                             }
                                                         }
-                                                    }
-                                                },
-                                            verticalArrangement = Arrangement.Top
-                                        ) {
-                                            JvmMusicPlayerLyricsHeader(
-                                                title = musicDetail.name,
-                                                artist = artistLabel
-                                            )
-//                                        Spacer(modifier = Modifier.height(JvmMusicPlayerLyricsHeaderBottomGap))
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .weight(1f)
-//                                                .background(Color.Red)
+                                                    },
+                                                verticalArrangement = Arrangement.Top
                                             ) {
-                                                LrcViewNewCompose(
-                                                    modifier = Modifier.fillMaxSize(),
-                                                    listState = lrcListState,
-                                                    externalOffsetMillis = lyricsPreviewOffsetMs,
-                                                    currentLineTopInset = JvmMusicPlayerLyricsItemHeight,
-                                                    highlightScaleEnabled = false,
-                                                    primaryFontSize = JvmMusicPlayerLyricsFontSize,
-                                                    previewEntries = mockLyricsEntries,
-                                                    previewCurrentTimeMillis = mockLyricsCurrentTimeMillis,
-                                                    // TODO 接入真实歌词数据后，移除 previewEntries / previewCurrentTimeMillis，改回真实歌词流。
-                                                    onSetLrcOffset = { }
+                                                JvmMusicPlayerLyricsHeader(
+                                                    title = musicDetail.name,
+                                                    artist = artistLabel
                                                 )
-                                                JvmLyricsConfigDropdownMenu(
-                                                    expanded = lyricsMenuExpanded,
-                                                    offset = lyricsMenuOffset,
-                                                    onDismissRequest = {
-                                                        lyricsMenuExpanded = false
-                                                        resetLyricsPreviewOffset()
-                                                    },
-                                                    onPreviewOffsetChange = { lyricsPreviewOffsetMs = it },
-                                                    onConfirm = {
-                                                        // TODO 接入真实歌词配置后，在这里持久化 lyricsPreviewOffsetMs 到 lrcServer。
-                                                        lyricsMenuExpanded = false
-                                                    },
-                                                    currentPreviewOffsetMs = lyricsPreviewOffsetMs
-                                                )
+//                                        Spacer(modifier = Modifier.height(JvmMusicPlayerLyricsHeaderBottomGap))
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .weight(1f)
+//                                                .background(Color.Red)
+                                                ) {
+                                                    LrcViewNewCompose(
+                                                        modifier = Modifier.fillMaxSize(),
+                                                        listState = lrcListState,
+                                                        externalOffsetMillis = lyricsPreviewOffsetMs,
+                                                        currentLineTopInset = JvmMusicPlayerLyricsItemHeight,
+                                                        highlightScaleEnabled = false,
+                                                        primaryFontSize = JvmMusicPlayerLyricsFontSize,
+                                                        previewEntries = mockLyricsEntries,
+                                                        previewCurrentTimeMillis = mockLyricsCurrentTimeMillis,
+                                                        // TODO 接入真实歌词数据后，移除 previewEntries / previewCurrentTimeMillis，改回真实歌词流。
+                                                        onSetLrcOffset = { }
+                                                    )
+                                                    JvmLyricsConfigDropdownMenu(
+                                                        expanded = lyricsMenuExpanded,
+                                                        offset = lyricsMenuOffset,
+                                                        onDismissRequest = {
+                                                            lyricsMenuExpanded = false
+                                                            resetLyricsPreviewOffset()
+                                                        },
+                                                        onPreviewOffsetChange = { lyricsPreviewOffsetMs = it },
+                                                        onConfirm = {
+                                                            // TODO 接入真实歌词配置后，在这里持久化 lyricsPreviewOffsetMs 到 lrcServer。
+                                                            lyricsMenuExpanded = false
+                                                        },
+                                                        currentPreviewOffsetMs = lyricsPreviewOffsetMs
+                                                    )
+                                                }
                                             }
                                         }
                                     }
