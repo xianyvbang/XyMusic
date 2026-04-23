@@ -451,7 +451,7 @@ private fun JvmSnackBarVolumePopup(
             y = -(JvmSnackBarVolumePopupHeight + JvmSnackBarIconButtonSize + JvmSnackBarVolumePopupGap + XyTheme.dimens.outerVerticalPadding * 2)
         ),
         shape = RoundedCornerShape(XyTheme.dimens.corner),
-        containerColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
         modifier = Modifier.width(JvmSnackBarVolumePopupWidth)
     ) {
         Column(
