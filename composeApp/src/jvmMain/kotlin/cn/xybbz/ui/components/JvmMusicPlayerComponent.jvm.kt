@@ -134,8 +134,8 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
-internal val JvmMusicPlayerSharedCoverTargetSize = 340.dp
-private val JvmMusicPlayerSharedCoverMinSize = 240.dp
+internal val JvmMusicPlayerSharedCoverTargetSize = 420.dp
+private val JvmMusicPlayerSharedCoverMinSize = 280.dp
 private const val JvmMusicPlayerSharedCoverDurationMillis = 920
 private const val JvmMusicPlayerDialogEnterDurationMillis = 260
 
