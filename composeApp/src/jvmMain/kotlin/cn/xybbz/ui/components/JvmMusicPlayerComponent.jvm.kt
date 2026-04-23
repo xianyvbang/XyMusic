@@ -663,12 +663,12 @@ private fun JvmMusicPlayerLyricsHeader(
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         XyText(
             text = title,
             modifier = Modifier
-                .fillMaxWidth()
                 .basicMarquee(iterations = Int.MAX_VALUE),
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold,
@@ -682,7 +682,6 @@ private fun JvmMusicPlayerLyricsHeader(
         XyTextSub(
             text = artist,
             modifier = Modifier
-                .fillMaxWidth()
                 .basicMarquee(iterations = Int.MAX_VALUE),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyLarge,
