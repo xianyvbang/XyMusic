@@ -256,6 +256,7 @@ object JvmReverseProxyServer : KoinComponent {
                 text = "代理请求失败：${throwable.message ?: "unknown"}",
                 status = HttpStatusCode.BadGateway
             )
+            throw throwable
         }
     }
 

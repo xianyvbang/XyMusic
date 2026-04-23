@@ -122,9 +122,9 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
             install(ContentNegotiation) {
                 json(jsonSerializer)
             }
-            install(HttpRequestRetry) {
-                maxRetries = 1
-            }
+            /*install(HttpRequestRetry) {
+//                maxRetries = 1
+            }*/
             install(HttpTimeout) {
                 requestTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
                 connectTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
