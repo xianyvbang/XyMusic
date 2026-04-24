@@ -2,7 +2,6 @@ package cn.xybbz.di
 
 import cn.xybbz.StartKoinApp
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.api.client.OnDatasourceListener
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.common.utils.PlayerListRestoreUtils
@@ -12,6 +11,7 @@ import cn.xybbz.config.music.PlayerEventCoordinator
 import cn.xybbz.config.proxy.ProxyConfigServer
 import cn.xybbz.config.setting.OnSettingsChangeListener
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.config.volume.VolumeServer
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import kotlinx.coroutines.launch
 import org.koin.core.KoinApplication
@@ -44,6 +44,9 @@ fun initKoin(config: KoinAppDeclaration? = null): KoinApplication {
                     koinTmp.get(),
                     settings.connectionId.toString()
                 )
+            }
+            appScope.launch {
+                koinTmp.get<VolumeServer>().updateVolume(settings.jvmVolume ?: 60)
             }
 
             settingsManager.setOnListener(object : OnSettingsChangeListener {

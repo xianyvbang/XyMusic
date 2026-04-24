@@ -642,7 +642,6 @@ fun JvmMusicPlayerScreen(
                                                     modifier = Modifier
                                                         .fillMaxWidth()
                                                         .weight(1f)
-//                                                .background(Color.Red)
                                                 ) {
                                                     LrcViewNewCompose(
                                                         modifier = Modifier.fillMaxSize(),
@@ -748,7 +747,7 @@ private fun JvmMusicPlayerLyricsHeader(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.fillMaxWidth().background(Color.Red),
+        modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

@@ -147,4 +147,8 @@ data class XySettings @OptIn(ExperimentalUuidApi::class) constructor(
      * 背景图片地址
      */
     val imageFilePath: String? = null,
+    /**
+     * JVM 播放器音量百分比
+     */
+    val jvmVolume: Int? = null,
 )

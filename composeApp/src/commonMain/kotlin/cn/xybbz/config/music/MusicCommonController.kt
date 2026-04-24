@@ -193,6 +193,12 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     abstract fun setDoubleSpeed(value: Float)
 
     /**
+     * 设置音量百分比
+     */
+    open fun setVolume(volume: Int) {
+    }
+
+    /**
      * 设置播放类型
      */
     open fun setPlayTypeData(playerModeEnum: PlayerModeEnum) {

@@ -23,7 +23,7 @@ interface VolumeServer {
 
     fun createVolumeManager()
 
-    fun updateVolume(volume: Int)
+    suspend fun updateVolume(volume: Int)
 
     fun getMaxVolume(): Int
 

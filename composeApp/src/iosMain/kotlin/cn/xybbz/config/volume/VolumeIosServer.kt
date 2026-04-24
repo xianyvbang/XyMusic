@@ -5,7 +5,7 @@ class VolumeIosServer : VolumeServer {
     override fun createVolumeManager() {
     }
 
-    override fun updateVolume(volume: Int) {
+    override suspend fun updateVolume(volume: Int) {
     }
 
     override fun getMaxVolume(): Int {

@@ -179,6 +179,7 @@ class JvmMusicController : MusicCommonController() {
      * 初始化 JVM 播放器监听器与进度轮询任务。
      */
     override fun initController(onRestorePlaylists: (MusicCommonController.() -> Unit)?) {
+        ensureMediaPlayer()
         onRestorePlaylists?.invoke(this)
     }
 
@@ -324,6 +325,13 @@ class JvmMusicController : MusicCommonController() {
      */
     override fun setDoubleSpeed(value: Float) {
         currentMediaPlayer()?.controls()?.setRate(value)
+    }
+
+    /**
+     * 设置当前 vlcj 播放器音量。
+     */
+    override fun setVolume(volume: Int) {
+        currentMediaPlayer()?.audio()?.setVolume(volume.coerceIn(0, 100))
     }
 
     /**
@@ -653,6 +661,7 @@ class JvmMusicController : MusicCommonController() {
 
         createdPlayer.events().addMediaPlayerEventListener(playerListener)
         createdPlayer.events().addMediaEventListener(listener)
+        createdPlayer.audio().setVolume(60)
         mediaPlayerListenerRegistered = true
         mediaPlayerFactory = factory
         mediaPlayer = createdPlayer

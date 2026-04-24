@@ -619,6 +619,21 @@ class SettingsManager(
     }
 
     /**
+     * 更新 JVM 播放器音量百分比
+     */
+    suspend fun setJvmVolume(jvmVolume: Int) {
+        val value = jvmVolume.coerceIn(0, 100)
+        settings = get().copy(jvmVolume = value)
+        if (get().id != AllDataEnum.All.code) {
+            db.settingsDao.updateJvmVolume(value, get().id)
+        } else {
+            val settingId =
+                db.settingsDao.save(XySettings(jvmVolume = value))
+            settings = get().copy(id = settingId)
+        }
+    }
+
+    /**
      * 更新缓存数据目录地址
      */
     fun updateCacheFilePath(path: String) {

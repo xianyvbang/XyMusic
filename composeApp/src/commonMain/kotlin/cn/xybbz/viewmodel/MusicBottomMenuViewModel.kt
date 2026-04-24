@@ -83,9 +83,6 @@ class MusicBottomMenuViewModel(
     var volumeValue by mutableStateOf(0f)
         private set
 
-    private var volumeMaxValue: Int = 0
-    private var volume: Int = 0
-
     /**
      * 播放速度
      */
@@ -106,7 +103,7 @@ class MusicBottomMenuViewModel(
 
     init {
         getDoubleSpeed()
-        initVolume()
+        refreshVolume()
     }
 
     //region 定时关闭
@@ -305,18 +302,14 @@ class MusicBottomMenuViewModel(
     }
 
     fun refreshVolume() {
-        this.volumeValue = (volume.toFloat() / volumeMaxValue)
+        this.volumeValue = (volumeServer.getStreamVolume().toFloat() / volumeServer.getMaxVolume())
     }
 
     fun updateVolume(value: Float) {
-        volumeServer.updateVolume((value * 100).toInt())
-        this.volumeValue = value
-    }
-
-    fun initVolume() {
-        volumeMaxValue = volumeServer.getMaxVolume()
-        volume = volumeServer.getStreamVolume()
-        refreshVolume()
+        viewModelScope.launch {
+            volumeServer.updateVolume((value * 100).toInt())
+            this@MusicBottomMenuViewModel.volumeValue = value
+        }
     }
 
     fun setFadeDurationMs(fadeDurationMs: Long) {

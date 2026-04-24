@@ -112,4 +112,7 @@ interface SettingsDao {
 
     @Query("update xy_settings set imageFilePath = :imageFilePath where id = :id")
     suspend fun updateImageFilePath(imageFilePath: String?, id: Long)
+
+    @Query("update xy_settings set jvmVolume = :jvmVolume where id = :id")
+    suspend fun updateJvmVolume(jvmVolume: Int, id: Long)
 }

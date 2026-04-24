@@ -246,8 +246,8 @@ class MusicController(
                     // 设置当缓冲完毕后直接播放视频
                     playWhenReady = true
                 }
+                onRestorePlaylists?.invoke(this)
             }
-            onRestorePlaylists?.invoke(this)
         }, ContextCompat.getMainExecutor(application))
     }
 

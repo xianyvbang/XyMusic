@@ -28,7 +28,7 @@ class VolumeAndroidServer(val application: android.content.Context) : VolumeServ
             application.getSystemService(android.content.Context.AUDIO_SERVICE) as AudioManager
     }
 
-    override fun updateVolume(volume: Int) {
+    override suspend fun updateVolume(volume: Int) {
         audioManager.setStreamVolume(
             AudioManager.STREAM_MUSIC,
             volume,
