@@ -37,7 +37,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -67,11 +66,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
@@ -112,9 +111,6 @@ import xymusic_kmp.composeapp.generated.resources.reset
 import xymusic_kmp.composeapp.generated.resources.restart_alt_24px
 
 
-//歌词横向的padding
-private val lyricHorizontalPadding = 30.dp
-
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun LrcViewNewCompose(
@@ -128,6 +124,7 @@ fun LrcViewNewCompose(
     primaryFontSize: TextUnit = 20.sp,
     previewEntries: List<LrcEntryData>? = null,
     previewCurrentTimeMillis: Long? = null,
+    horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     lrcViewModel: LrcViewModel = koinViewModel<LrcViewModel>(),
     listState: LazyListState = rememberLazyListState(),
 ) {
@@ -155,16 +152,7 @@ fun LrcViewNewCompose(
     }
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-        val density = LocalDensity.current
-
         val maxHeight = this.maxHeight
-        //得到歌词的最大宽度
-        val lyricWidth = remember(this.maxWidth) {
-            with(density) {
-                //lyricHorizontalPadding 是 LazyColumn横向的padding，可以自行设置
-                (maxWidth - lyricHorizontalPadding * 2).roundToPx()
-            }
-        }
         val topContentPadding = (
             currentLineTopInset ?: (maxHeight / 2 - XyTheme.dimens.outerVerticalPadding)
             ).coerceAtLeast(0.dp)
@@ -271,8 +259,7 @@ fun LrcViewNewCompose(
         }
         Box(
             modifier = Modifier
-                .fillMaxHeight()
-                .width(lyricWidth.dp)
+                .fillMaxSize()
         ) {
 
             AnimatedContent(
@@ -289,7 +276,7 @@ fun LrcViewNewCompose(
                                 isDragState.value = dragging
                             },
                         verticalArrangement = Arrangement.spacedBy(0.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
+                        horizontalAlignment = horizontalAlignment,
                         contentPadding = PaddingValues(
                             top = topContentPadding,
                             bottom = bottomContentPadding

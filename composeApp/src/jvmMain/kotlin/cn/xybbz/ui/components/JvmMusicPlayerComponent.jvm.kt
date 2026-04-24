@@ -153,8 +153,10 @@ private const val JvmMusicPlayerCoverRotationReadyProgress = 0.999f
 //private val JvmMusicPlayerPrimaryPageMaxWidth = 1320.dp
 private const val JvmMusicPlayerPrimaryPageGapWeight = 0.18f
 private val JvmMusicPlayerLyricsMaxWidth = 480.dp
+
 // JVM 播放页歌词使用略小的主歌词字号，避免桌面布局里文字显得过大。
 private val JvmMusicPlayerLyricsFontSize = 18.sp
+
 // 当前歌词锚点只按主歌词单行高度计算，不包含翻译歌词高度。
 private val JvmMusicPlayerLyricsItemHeight = 26.dp
 
@@ -543,6 +545,8 @@ fun JvmMusicPlayerScreen(
                                     val coverSize =
                                         minOf(coverColumnWidth * 0.76f, maxHeight * 0.6f)
                                             .coerceAtMost(JvmMusicPlayerSharedCoverDisplayMaxSize)
+                                    val primaryPageSideInset =
+                                        (coverColumnWidth - coverSize).coerceAtLeast(0.dp)
 
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
@@ -570,7 +574,9 @@ fun JvmMusicPlayerScreen(
                                                 XyImage(
                                                     modifier = Modifier
                                                         .fillMaxSize()
-                                                        .graphicsLayer { rotationZ = coverRotation.value }
+                                                        .graphicsLayer {
+                                                            rotationZ = coverRotation.value
+                                                        }
                                                         .clip(CircleShape),
                                                     model = coverUrls.primaryUrl ?: picByte,
                                                     backModel = coverUrls.fallbackUrl ?: picByte,
@@ -593,7 +599,8 @@ fun JvmMusicPlayerScreen(
                                         Box(
                                             modifier = Modifier
                                                 .weight(1f)
-                                                .height(coverSize),
+                                                .height(coverSize)
+                                                .padding(end = primaryPageSideInset),
                                             contentAlignment = Alignment.TopStart
                                         ) {
                                             Column(
@@ -605,18 +612,20 @@ fun JvmMusicPlayerScreen(
                                                             while (true) {
                                                                 val event = awaitPointerEvent()
                                                                 val change =
-                                                                    event.changes.firstOrNull() ?: continue
+                                                                    event.changes.firstOrNull()
+                                                                        ?: continue
                                                                 if (
                                                                     event.type == PointerEventType.Press &&
                                                                     event.buttons.isSecondaryPressed
                                                                 ) {
                                                                     resetLyricsPreviewOffset()
-                                                                    lyricsMenuOffset = with(density) {
-                                                                        DpOffset(
-                                                                            change.position.x.toDp(),
-                                                                            change.position.y.toDp()
-                                                                        )
-                                                                    }
+                                                                    lyricsMenuOffset =
+                                                                        with(density) {
+                                                                            DpOffset(
+                                                                                change.position.x.toDp(),
+                                                                                change.position.y.toDp()
+                                                                            )
+                                                                        }
                                                                     lyricsMenuExpanded = true
                                                                 }
                                                             }
@@ -654,7 +663,9 @@ fun JvmMusicPlayerScreen(
                                                             lyricsMenuExpanded = false
                                                             resetLyricsPreviewOffset()
                                                         },
-                                                        onPreviewOffsetChange = { lyricsPreviewOffsetMs = it },
+                                                        onPreviewOffsetChange = {
+                                                            lyricsPreviewOffsetMs = it
+                                                        },
                                                         onConfirm = {
                                                             // TODO 接入真实歌词配置后，在这里持久化 lyricsPreviewOffsetMs 到 lrcServer。
                                                             lyricsMenuExpanded = false
@@ -739,6 +750,7 @@ private fun JvmMusicPlayerLyricsHeader(
     Column(
         modifier = modifier.fillMaxWidth().background(Color.Red),
         verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         XyText(
             text = title,
