@@ -118,6 +118,7 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyImage
+import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.MusicBottomMenuViewModel
@@ -452,41 +453,15 @@ fun JvmMusicPlayerScreen(
                     ),
                 background = Color.Transparent
             ) {
-                TopAppBarComponent(
+                XyRow(
                     modifier = Modifier,
-                    title = {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            desktopTabs.forEachIndexed { index, item ->
-
-                                TextButton(
-                                    modifier = Modifier.jvmPlayerTitleBarHitTarget(
-                                        titleBarHitTestOwner,
-                                        JvmMusicPlayerTitleBarHitTarget.Tab(index)
-                                    ),
-                                    onClick = {
-                                        coroutineScope
-                                            .launch {
-                                                horPagerState.animateScrollToPage(index)
-                                            }
-                                    }
-                                ) {
-                                    XyText(
-                                        text = stringResource(item),
-                                        fontWeight = null,
-                                        maxLines = 2,
-                                        style = LocalTextStyle.current,
-                                        color = if (horPagerState.currentPage == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                            }
-                        }
-                    },
-                    navigationIcon = {
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
                         IconButton(
                             modifier = Modifier.jvmPlayerTitleBarHitTarget(
                                 titleBarHitTestOwner,
@@ -501,10 +476,44 @@ fun JvmMusicPlayerScreen(
                                 contentDescription = stringResource(Res.string.close_player_screen)
                             )
                         }
-                    }, actions = {
+                    }
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        desktopTabs.forEachIndexed { index, item ->
+
+                            TextButton(
+                                modifier = Modifier.jvmPlayerTitleBarHitTarget(
+                                    titleBarHitTestOwner,
+                                    JvmMusicPlayerTitleBarHitTarget.Tab(index)
+                                ),
+                                onClick = {
+                                    coroutineScope
+                                        .launch {
+                                            horPagerState.animateScrollToPage(index)
+                                        }
+                                }
+                            ) {
+                                XyText(
+                                    text = stringResource(item),
+                                    fontWeight = null,
+                                    maxLines = 2,
+                                    style = LocalTextStyle.current,
+                                    color = if (horPagerState.currentPage == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    }
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.CenterEnd
+                    ) {
                         DesktopWindowControlButtons()
                     }
-                )
+                }
 
                 Column(
                     modifier = Modifier
