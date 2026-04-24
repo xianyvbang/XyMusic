@@ -2,6 +2,7 @@ package cn.xybbz.config.music
 
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.FavoriteCoordinator
+import cn.xybbz.api.state.ClientLoginInfoState
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.SettingsManager
@@ -205,6 +206,11 @@ class PlayerEventCoordinator(
      * 处理切歌后的推荐数据刷新与历史记录持久化。
      */
     private fun onChangeMusic(musicId: String, artistId: String?, artistName: String?) {
+        if (dataSourceManager.loginStatus !is ClientLoginInfoState.UserLoginSuccess) {
+            _recommendationStateFlow.value = PlayerRecommendationState()
+            return
+        }
+
         // 切歌后补充加载相似歌曲和热门歌曲，供播放页展示。
         scope.launch {
             val similar = dataSourceManager.getSimilarMusicList(musicId)
