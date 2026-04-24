@@ -20,7 +20,9 @@ package cn.xybbz.ui.components
 
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -79,6 +81,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.pointerInput
@@ -97,6 +100,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.api.client.FavoriteCoordinator
+import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalDesktopWindowChromeController
 import cn.xybbz.compositionLocal.LocalDesktopWindowDecorators
@@ -138,6 +142,8 @@ internal val JvmMusicPlayerSharedCoverTargetSize = 650.dp
 private val JvmMusicPlayerSharedCoverDisplayMaxSize = 650.dp
 private const val JvmMusicPlayerSharedCoverDurationMillis = 920
 private const val JvmMusicPlayerDialogEnterDurationMillis = 260
+private const val JvmMusicPlayerCoverRotationDurationMillis = 18_000
+private const val JvmMusicPlayerCoverRotationReadyProgress = 0.999f
 
 //private val JvmMusicPlayerPrimaryPageMaxWidth = 1320.dp
 private const val JvmMusicPlayerPrimaryPageGapWeight = 0.18f
@@ -319,6 +325,13 @@ fun JvmMusicPlayerScreen(
     val artistLabel = remember(musicDetail.artists) {
         musicDetail.artistLabel()
     }
+    val isCoverPlaybackActive = playbackState.state == PlayStateEnum.Playing ||
+            playbackState.state == PlayStateEnum.Loading
+    val isPlayerFullyOpened = sharedCoverProgress >= JvmMusicPlayerCoverRotationReadyProgress
+    val shouldRotateCover = isCoverPlaybackActive && isPlayerFullyOpened
+    val coverRotation = remember {
+        Animatable(0f)
+    }
     val mockLyricsLoopDuration = remember(mockLyricsEntries) {
         (mockLyricsEntries.lastOrNull()?.startTime ?: 0L) + 3_000L
     }
@@ -344,9 +357,27 @@ fun JvmMusicPlayerScreen(
     LaunchedEffect(musicDetail.itemId) {
         lyricsMenuExpanded = false
         resetLyricsPreviewOffset()
+        coverRotation.snapTo(0f)
     }
     LaunchedEffect(Unit) {
         musicBottomMenuViewModel.refreshVolume()
+    }
+    LaunchedEffect(shouldRotateCover, musicDetail.itemId) {
+        if (!shouldRotateCover) return@LaunchedEffect
+
+        while (true) {
+            val startRotation = coverRotation.value % 360f
+            if (startRotation != coverRotation.value) {
+                coverRotation.snapTo(startRotation)
+            }
+            coverRotation.animateTo(
+                targetValue = startRotation + 360f,
+                animationSpec = tween(
+                    durationMillis = JvmMusicPlayerCoverRotationDurationMillis,
+                    easing = LinearEasing
+                )
+            )
+        }
     }
     LaunchedEffect(musicDetail.itemId, mockLyricsLoopDuration) {
         mockLyricsCurrentTimeMillis = 0L
@@ -387,7 +418,8 @@ fun JvmMusicPlayerScreen(
                 progress = sharedCoverProgress,
                 model = coverUrls.primaryUrl ?: picByte,
                 backModel = coverUrls.fallbackUrl ?: picByte,
-                requestSize = sharedCoverRequestSize
+                requestSize = sharedCoverRequestSize,
+                rotationDegrees = coverRotation.value
             )
             XyColumnScreen(
                 modifier = Modifier
@@ -497,6 +529,7 @@ fun JvmMusicPlayerScreen(
                                                 XyImage(
                                                     modifier = Modifier
                                                         .fillMaxSize()
+                                                        .graphicsLayer { rotationZ = coverRotation.value }
                                                         .clip(CircleShape),
                                                     model = coverUrls.primaryUrl ?: picByte,
                                                     backModel = coverUrls.fallbackUrl ?: picByte,
@@ -802,7 +835,8 @@ private fun JvmSharedCoverOverlay(
     progress: Float,
     model: Any?,
     backModel: Any?,
-    requestSize: IntSize
+    requestSize: IntSize,
+    rotationDegrees: Float
 ) {
     val sourceBounds = sourceBoundsOnScreen ?: return
     val targetBounds = targetBoundsOnScreen ?: return
@@ -824,8 +858,9 @@ private fun JvmSharedCoverOverlay(
             fraction = easedProgress
         )
     }
+    val animatedShape = RoundedCornerShape(animatedCorner)
 
-    XyImage(
+    Box(
         modifier = Modifier
             .offset {
                 IntOffset(
@@ -837,15 +872,21 @@ private fun JvmSharedCoverOverlay(
                 width = with(density) { animatedWidth.toDp() },
                 height = with(density) { animatedHeight.toDp() }
             )
-            .clip(RoundedCornerShape(animatedCorner)),
-        model = model,
-        backModel = backModel,
-        requestSize = requestSize,
-        placeholder = Res.drawable.disc_placeholder,
-        error = Res.drawable.disc_placeholder,
-        fallback = Res.drawable.disc_placeholder,
-        contentDescription = stringResource(Res.string.album_cover),
-    )
+            .clip(animatedShape)
+    ) {
+        XyImage(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer { rotationZ = rotationDegrees },
+            model = model,
+            backModel = backModel,
+            requestSize = requestSize,
+            placeholder = Res.drawable.disc_placeholder,
+            error = Res.drawable.disc_placeholder,
+            fallback = Res.drawable.disc_placeholder,
+            contentDescription = stringResource(Res.string.album_cover),
+        )
+    }
 }
 
 private fun lerpFloat(start: Float, stop: Float, fraction: Float): Float {
