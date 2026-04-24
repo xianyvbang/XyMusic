@@ -411,6 +411,9 @@ fun JvmMusicPlayerScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .onGloballyPositioned { coordinates ->
+                    // 整个播放器弹层都属于可拖拽区域，这里同步给原生命中测试，
+                    // 让任意可拖拽空白区在最大化状态下拖动时都能像标题栏一样还原窗口。
+                    chromeController.updateTitleBarBounds(coordinates.boundsInWindow())
                     playerRootBoundsOnScreen = Rect(
                         offset = coordinates.positionOnScreen(),
                         size = Size(
@@ -450,10 +453,7 @@ fun JvmMusicPlayerScreen(
                 background = Color.Transparent
             ) {
                 TopAppBarComponent(
-                    modifier = Modifier.onGloballyPositioned { coordinates ->
-                        // 把播放器顶部栏登记为原生标题栏拖拽区域，最大化后拖动会自动还原窗口。
-                        chromeController.updateTitleBarBounds(coordinates.boundsInWindow())
-                    },
+                    modifier = Modifier,
                     title = {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -692,6 +692,7 @@ fun JvmMusicPlayerScreen(
                             sharedCoverRequestSize = sharedCoverRequestSize,
                             showCover = false,
                             cacheProgress = cacheScheduleData,
+                            desktopDragHitTestOwner = titleBarHitTestOwner,
                             onShowPlaylist = {
                                 if (originMusicList.isNotEmpty()) {
                                     onSetState(true)

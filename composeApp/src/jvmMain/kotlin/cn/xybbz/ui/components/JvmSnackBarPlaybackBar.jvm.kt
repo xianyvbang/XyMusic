@@ -63,6 +63,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionOnScreen
 import androidx.compose.ui.text.AnnotatedString
@@ -76,6 +77,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.ResourcesUtils.readPaletteColor
+import cn.xybbz.compositionLocal.DesktopInteractiveHitTestOwner
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.config.music.MusicCommonController
@@ -155,7 +157,7 @@ private const val JvmSnackBarVolumeSliderThumbRadius = 6f
  * 通过 `showCover` 可以控制左侧是否显示封面图，方便完整播放器页在已有大封面时复用同一套底栏。
  */
 @Composable
-fun JvmSnackBarPlaybackBar(
+internal fun JvmSnackBarPlaybackBar(
     modifier: Modifier = Modifier,
     musicController: MusicCommonController,
     musicBottomMenuViewModel: MusicBottomMenuViewModel,
@@ -165,6 +167,7 @@ fun JvmSnackBarPlaybackBar(
     sharedCoverRequestSize: IntSize,
     showCover: Boolean = true,
     cacheProgress: Float = 0f,
+    desktopDragHitTestOwner: DesktopInteractiveHitTestOwner? = null,
     onSharedCoverBoundsChanged: (Rect) -> Unit = {},
     onSetColor: (Color?) -> Unit = {},
     onShowPlayer: (() -> Unit)? = null,
@@ -210,7 +213,8 @@ fun JvmSnackBarPlaybackBar(
                     .width(sectionWidth)
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(XyTheme.dimens.corner))
-                    .then(openPlayerModifier),
+                    .then(openPlayerModifier)
+                    .desktopDragHitTarget(desktopDragHitTestOwner, "SongInfo"),
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                 leadingContent = if (showCover) {
                     {
@@ -284,7 +288,8 @@ fun JvmSnackBarPlaybackBar(
                     .widthIn(max = JvmSnackBarControlMaxWidth),
                 musicController = musicController,
                 musicBottomMenuViewModel = musicBottomMenuViewModel,
-                cacheProgress = cacheProgress
+                cacheProgress = cacheProgress,
+                desktopDragHitTestOwner = desktopDragHitTestOwner
             )
 
             Row(
@@ -298,6 +303,8 @@ fun JvmSnackBarPlaybackBar(
                     iconRes = Res.drawable.queue_music_24px,
                     contentDescription = stringResource(Res.string.music_list),
                     enabled = originMusicList.isNotEmpty(),
+                    desktopDragHitTestOwner = desktopDragHitTestOwner,
+                    desktopDragHitTargetId = "PlaylistButton",
                     onClick = onShowPlaylist
                 )
             }
@@ -316,7 +323,8 @@ private fun JvmSnackBarControlSection(
     modifier: Modifier,
     musicController: MusicCommonController,
     musicBottomMenuViewModel: MusicBottomMenuViewModel,
-    cacheProgress: Float
+    cacheProgress: Float,
+    desktopDragHitTestOwner: DesktopInteractiveHitTestOwner?
 ) {
     val mainViewModel = LocalMainViewModel.current
     val currentProgress by musicController.progressStateFlow.collectAsStateWithLifecycle()
@@ -347,12 +355,16 @@ private fun JvmSnackBarControlSection(
                 iconRes = playModeIcon,
                 contentDescription = playModeDescription,
                 enabled = playbackState.musicInfo != null,
+                desktopDragHitTestOwner = desktopDragHitTestOwner,
+                desktopDragHitTargetId = "PlayModeButton",
                 onClick = mainViewModel::setNowPlayerTypeData
             )
             JvmSnackBarIconButton(
                 iconRes = Res.drawable.skip_previous_24px,
                 contentDescription = stringResource(Res.string.previous_track),
                 enabled = playbackState.musicInfo != null,
+                desktopDragHitTestOwner = desktopDragHitTestOwner,
+                desktopDragHitTargetId = "PreviousButton",
                 onClick = musicController::seekToPrevious
             )
             IconButton(
@@ -365,6 +377,7 @@ private fun JvmSnackBarControlSection(
                 },
                 enabled = playbackState.musicInfo != null,
                 modifier = Modifier
+                    .desktopDragHitTarget(desktopDragHitTestOwner, "PlayPauseButton")
                     .clip(RoundedCornerShape(JvmSnackBarPlayButtonHeight))
                     .width(JvmSnackBarPlayButtonWidth)
                     .height(JvmSnackBarPlayButtonHeight)
@@ -387,6 +400,8 @@ private fun JvmSnackBarControlSection(
                 iconRes = Res.drawable.skip_next_24px,
                 contentDescription = stringResource(Res.string.next_track),
                 enabled = playbackState.musicInfo != null,
+                desktopDragHitTestOwner = desktopDragHitTestOwner,
+                desktopDragHitTargetId = "NextButton",
                 onClick = musicController::seekToNext
             )
             Box(
@@ -396,6 +411,8 @@ private fun JvmSnackBarControlSection(
                     iconRes = Res.drawable.volume_up_24px,
                     contentDescription = stringResource(Res.string.volume_value_setting),
                     enabled = playbackState.musicInfo != null,
+                    desktopDragHitTestOwner = desktopDragHitTestOwner,
+                    desktopDragHitTargetId = "VolumeButton",
                     onClick = {
                         showVolumePopup = !showVolumePopup
                     }
@@ -418,7 +435,9 @@ private fun JvmSnackBarControlSection(
             onProgressChanged = { progress ->
                 musicController.seekTo((playbackState.duration * progress).toLong())
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .desktopDragHitTarget(desktopDragHitTestOwner, "ProgressBar"),
             progressBarColor = MaterialTheme.colorScheme.onSurface,
             cacheProgressBarColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
             backgroundBarColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
@@ -575,18 +594,34 @@ private fun JvmSnackBarIconButton(
     contentDescription: String,
     enabled: Boolean = true,
     tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    desktopDragHitTestOwner: DesktopInteractiveHitTestOwner? = null,
+    desktopDragHitTargetId: String = contentDescription,
     onClick: () -> Unit
 ) {
     IconButton(
         onClick = onClick,
         enabled = enabled,
-        modifier = Modifier.size(JvmSnackBarIconButtonSize)
+        modifier = Modifier
+            .size(JvmSnackBarIconButtonSize)
+            .desktopDragHitTarget(desktopDragHitTestOwner, desktopDragHitTargetId)
     ) {
         Icon(
             painter = painterResource(iconRes),
             contentDescription = contentDescription,
             tint = tint
         )
+    }
+}
+
+private fun Modifier.desktopDragHitTarget(
+    owner: DesktopInteractiveHitTestOwner?,
+    targetId: String,
+): Modifier {
+    if (owner == null) return this
+
+    // 播放器整页作为原生拖拽热区时，按钮、歌曲信息和进度条需要继续交给 Compose 处理。
+    return onGloballyPositioned { coordinates ->
+        owner.updateBounds(targetId, coordinates.boundsInWindow())
     }
 }
 
