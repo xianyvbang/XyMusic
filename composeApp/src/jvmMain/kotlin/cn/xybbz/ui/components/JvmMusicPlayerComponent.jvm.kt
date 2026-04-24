@@ -67,6 +67,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -85,6 +86,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionOnScreen
 import androidx.compose.ui.platform.LocalDensity
@@ -102,6 +104,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.enums.MusicTypeEnum
+import cn.xybbz.compositionLocal.DesktopInteractiveHitTestOwner
+import cn.xybbz.compositionLocal.LocalDesktopTitleBarHitTestOwner
 import cn.xybbz.compositionLocal.LocalDesktopWindowChromeController
 import cn.xybbz.compositionLocal.LocalDesktopWindowDecorators
 import cn.xybbz.compositionLocal.LocalMainViewModel
@@ -165,6 +169,8 @@ fun JvmMusicPlayerComponent(
 ) {
     val mainViewModel = LocalMainViewModel.current
     val chromeController = LocalDesktopWindowChromeController.current
+    // 播放器弹层复用桌面标题栏命中测试记录器，让 Windows 最大化拖拽能走原生还原逻辑。
+    val playerHitTestOwner = remember { DesktopInteractiveHitTestOwner() }
     val coroutineScope = rememberCoroutineScope()
     val desktopTabs = remember {
         listOf(Res.string.song_tab, Res.string.recommend)
@@ -189,9 +195,16 @@ fun JvmMusicPlayerComponent(
     LaunchedEffect(mainViewModel.sheetState) {
         overlayVisibleState.targetState = mainViewModel.sheetState
     }
-    DisposableEffect(mainViewModel.sheetState, chromeController) {
-        chromeController.setTitleBarHitTestEnabled(!mainViewModel.sheetState)
+    DisposableEffect(mainViewModel.sheetState, chromeController, playerHitTestOwner) {
+        if (mainViewModel.sheetState) {
+            // 弹层打开时临时接管标题栏命中测试，关闭后交还给主窗口标题栏。
+            chromeController.setTitleBarHitTestOwner(playerHitTestOwner)
+            chromeController.setTitleBarHitTestEnabled(true)
+        }
         onDispose {
+            if (mainViewModel.sheetState) {
+                chromeController.setTitleBarHitTestOwner(null)
+            }
             chromeController.setTitleBarHitTestEnabled(true)
         }
     }
@@ -229,26 +242,29 @@ fun JvmMusicPlayerComponent(
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.background)
                 ) {
-                    JvmMusicPlayerScreen(
-                        musicDetail = music,
-                        picByte = picByte,
-                        sharedCoverSourceBoundsOnScreen = sharedCoverSourceBoundsOnScreen,
-                        sharedCoverProgress = sharedCoverProgress,
-                        onCloseSheet = {
-                            coroutineScope.launch {
-                                runCatching {
-                                    sheetStateR.hide()
+                    // 向播放器内容下发当前弹层的命中测试记录器，供按钮和 Tab 排除拖拽命中。
+                    CompositionLocalProvider(LocalDesktopTitleBarHitTestOwner provides playerHitTestOwner) {
+                        JvmMusicPlayerScreen(
+                            musicDetail = music,
+                            picByte = picByte,
+                            sharedCoverSourceBoundsOnScreen = sharedCoverSourceBoundsOnScreen,
+                            sharedCoverProgress = sharedCoverProgress,
+                            onCloseSheet = {
+                                coroutineScope.launch {
+                                    runCatching {
+                                        sheetStateR.hide()
+                                    }
+                                }.invokeOnCompletion {
+                                    mainViewModel.putIterations(1)
+                                    mainViewModel.putSheetState(false)
                                 }
-                            }.invokeOnCompletion {
-                                mainViewModel.putIterations(1)
-                                mainViewModel.putSheetState(false)
-                            }
-                        },
-                        onSetState = onSetState,
-                        lrcListState = listState,
-                        similarPopularListState = similarPopularListState,
-                        horPagerState = horPagerState
-                    )
+                            },
+                            onSetState = onSetState,
+                            lrcListState = listState,
+                            similarPopularListState = similarPopularListState,
+                            horPagerState = horPagerState
+                        )
+                    }
                 }
             }
         }
@@ -279,6 +295,9 @@ fun JvmMusicPlayerScreen(
 ) {
 
     val decorators = LocalDesktopWindowDecorators.current
+    val chromeController = LocalDesktopWindowChromeController.current
+    // 标记播放器顶部可交互控件，避免原生 HTCAPTION 拖拽吞掉点击事件。
+    val titleBarHitTestOwner = LocalDesktopTitleBarHitTestOwner.current
     val cacheScheduleData by musicPlayerViewModel.downloadCacheController.cacheSchedule.collectAsStateWithLifecycle()
     val playbackState by musicPlayerViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
     val originMusicList by musicPlayerViewModel.musicController.originMusicListFlow.collectAsStateWithLifecycle()
@@ -431,7 +450,10 @@ fun JvmMusicPlayerScreen(
                 background = Color.Transparent
             ) {
                 TopAppBarComponent(
-                    modifier = Modifier,
+                    modifier = Modifier.onGloballyPositioned { coordinates ->
+                        // 把播放器顶部栏登记为原生标题栏拖拽区域，最大化后拖动会自动还原窗口。
+                        chromeController.updateTitleBarBounds(coordinates.boundsInWindow())
+                    },
                     title = {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -440,12 +462,18 @@ fun JvmMusicPlayerScreen(
                         ) {
                             desktopTabs.forEachIndexed { index, item ->
 
-                                TextButton(onClick = {
-                                    coroutineScope
-                                        .launch {
-                                            horPagerState.animateScrollToPage(index)
-                                        }
-                                }) {
+                                TextButton(
+                                    modifier = Modifier.jvmPlayerTitleBarHitTarget(
+                                        titleBarHitTestOwner,
+                                        JvmMusicPlayerTitleBarHitTarget.Tab(index)
+                                    ),
+                                    onClick = {
+                                        coroutineScope
+                                            .launch {
+                                                horPagerState.animateScrollToPage(index)
+                                            }
+                                    }
+                                ) {
                                     XyText(
                                         text = stringResource(item),
                                         fontWeight = null,
@@ -460,6 +488,10 @@ fun JvmMusicPlayerScreen(
                     },
                     navigationIcon = {
                         IconButton(
+                            modifier = Modifier.jvmPlayerTitleBarHitTarget(
+                                titleBarHitTestOwner,
+                                JvmMusicPlayerTitleBarHitTarget.CloseButton
+                            ),
                             onClick = {
                                 onCloseSheet()
                             },
@@ -722,6 +754,21 @@ private fun JvmMusicPlayerLyricsHeader(
             overflow = TextOverflow.Visible
         )
     }
+}
+
+// 播放器顶部栏中需要保留 Compose 点击能力的控件标识。
+private sealed class JvmMusicPlayerTitleBarHitTarget(val id: String) {
+    data object CloseButton : JvmMusicPlayerTitleBarHitTarget("CloseButton")
+
+    data class Tab(private val index: Int) : JvmMusicPlayerTitleBarHitTarget("Tab$index")
+}
+
+// 将控件窗口坐标同步给原生命中测试层，命中这些区域时不触发窗口拖拽。
+private fun Modifier.jvmPlayerTitleBarHitTarget(
+    owner: DesktopInteractiveHitTestOwner,
+    target: JvmMusicPlayerTitleBarHitTarget,
+): Modifier = onGloballyPositioned { coordinates ->
+    owner.updateBounds(target.id, coordinates.boundsInWindow())
 }
 
 private fun buildJvmMockLyricsEntries(musicDetail: XyPlayMusic): List<LrcEntryData> {
