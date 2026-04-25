@@ -68,7 +68,6 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -106,7 +105,6 @@ import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.DesktopInteractiveHitTestOwner
 import cn.xybbz.compositionLocal.LocalDesktopTitleBarHitTestOwner
-import cn.xybbz.compositionLocal.LocalDesktopWindowChromeController
 import cn.xybbz.compositionLocal.LocalDesktopWindowDecorators
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
@@ -171,8 +169,6 @@ fun JvmMusicPlayerComponent(
     onSetState: (Boolean) -> Unit
 ) {
     val mainViewModel = LocalMainViewModel.current
-    val chromeController = LocalDesktopWindowChromeController.current
-    // 播放器弹层复用桌面标题栏命中测试记录器，让 Windows 最大化拖拽能走原生还原逻辑。
     val playerHitTestOwner = remember { DesktopInteractiveHitTestOwner() }
     val coroutineScope = rememberCoroutineScope()
     val desktopTabs = remember {
@@ -197,19 +193,6 @@ fun JvmMusicPlayerComponent(
     val similarPopularListState = rememberLazyListState()
     LaunchedEffect(mainViewModel.sheetState) {
         overlayVisibleState.targetState = mainViewModel.sheetState
-    }
-    DisposableEffect(mainViewModel.sheetState, chromeController, playerHitTestOwner) {
-        if (mainViewModel.sheetState) {
-            // 弹层打开时临时接管标题栏命中测试，关闭后交还给主窗口标题栏。
-            chromeController.setTitleBarHitTestOwner(playerHitTestOwner)
-            chromeController.setTitleBarHitTestEnabled(true)
-        }
-        onDispose {
-            if (mainViewModel.sheetState) {
-                chromeController.setTitleBarHitTestOwner(null)
-            }
-            chromeController.setTitleBarHitTestEnabled(true)
-        }
     }
     if (overlayVisibleState.currentState || overlayVisibleState.targetState) {
         Dialog(
@@ -298,8 +281,6 @@ fun JvmMusicPlayerScreen(
 ) {
 
     val decorators = LocalDesktopWindowDecorators.current
-    val chromeController = LocalDesktopWindowChromeController.current
-    // 标记播放器顶部可交互控件，避免原生 HTCAPTION 拖拽吞掉点击事件。
     val titleBarHitTestOwner = LocalDesktopTitleBarHitTestOwner.current
     val cacheScheduleData by musicPlayerViewModel.downloadCacheController.cacheSchedule.collectAsStateWithLifecycle()
     val playbackState by musicPlayerViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
@@ -414,9 +395,6 @@ fun JvmMusicPlayerScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .onGloballyPositioned { coordinates ->
-                    // 整个播放器弹层都属于可拖拽区域，这里同步给原生命中测试，
-                    // 让任意可拖拽空白区在最大化状态下拖动时都能像标题栏一样还原窗口。
-                    chromeController.updateTitleBarBounds(coordinates.boundsInWindow())
                     playerRootBoundsOnScreen = Rect(
                         offset = coordinates.positionOnScreen(),
                         size = Size(

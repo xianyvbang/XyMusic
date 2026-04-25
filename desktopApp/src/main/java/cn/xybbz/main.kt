@@ -12,10 +12,8 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import cn.xybbz.compositionLocal.LocalDesktopWindowChromeController
 import cn.xybbz.compositionLocal.LocalDesktopWindowDecorators
 import cn.xybbz.compositionLocal.LocalDesktopWindowFrameState
-import cn.xybbz.config.window.DesktopWindowChromeController
 import cn.xybbz.config.window.DesktopWindowDecorators
 import cn.xybbz.di.initKoin
 import cn.xybbz.entity.data.DesktopWindowFrameState
@@ -44,23 +42,23 @@ fun main() = application {
         title = "XyMusic-KMP",
         state = windowState,
     ) {
+
         val chromeController = remember(window, isWindows) {
             if (isWindows) {
                 WindowsDesktopWindowChromeController(window)
             } else {
-                DesktopWindowChromeController.None
+                null
             }
         }
         val windowContentPadding =
-            if (isWindows && chromeController.isMaximized) {
+            if (isWindows && windowState.placement == WindowPlacement.Maximized) {
                 // 自定义 Windows 窗口在最大化时需要保留系统安全边距，
                 // 普通窗口态则不应把边框 inset 当成内容 padding，否则会出现四周白边。
-                chromeController.windowInsets.asPaddingValues()
+                chromeController?.windowInsets?.asPaddingValues() ?: PaddingValues()
             } else {
                 PaddingValues()
             }
         CompositionLocalProvider(
-            LocalDesktopWindowChromeController provides chromeController,
             // WindowDraggableArea 只能在 desktopApp 入口侧拿到，这里向 composeApp 注入拖拽包装能力。
             LocalDesktopWindowDecorators provides object : DesktopWindowDecorators {
                 @Composable
@@ -72,25 +70,17 @@ fun main() = application {
             },
             // 窗口控制行为同样从桌面入口下发，标题栏 UI 只消费状态与回调。
             LocalDesktopWindowFrameState provides DesktopWindowFrameState(
-                isMaximized = if (isWindows) chromeController.isMaximized else windowState.placement == WindowPlacement.Maximized,
+                isMaximized = windowState.placement == WindowPlacement.Maximized,
                 onMinimize = {
-                    if (isWindows) {
-                        chromeController.minimize()
-                    } else {
-                        windowState.isMinimized = true
-                    }
+                    windowState.isMinimized = true
                 },
                 onToggleMaximize = {
-                    if (isWindows) {
-                        chromeController.toggleMaximize()
-                    } else {
-                        windowState.placement =
-                            if (windowState.placement == WindowPlacement.Maximized) {
-                                WindowPlacement.Floating
-                            } else {
-                                WindowPlacement.Maximized
-                            }
-                    }
+                    windowState.placement =
+                        if (windowState.placement == WindowPlacement.Maximized) {
+                            WindowPlacement.Floating
+                        } else {
+                            WindowPlacement.Maximized
+                        }
                 },
                 onClose = handleCloseRequest
             )
@@ -102,7 +92,7 @@ fun main() = application {
                 App(
                     windowContentPadding = windowContentPadding,
                     appChrome = { navigator ->
-                        WindowDraggableArea{
+                        WindowDraggableArea {
                             DesktopWindowTitleBar(navigator = navigator)
                         }
                     },

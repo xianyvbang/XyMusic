@@ -28,10 +28,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.layout.boundsInWindow
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
-import cn.xybbz.compositionLocal.LocalDesktopWindowChromeController
 import cn.xybbz.compositionLocal.LocalDesktopWindowFrameState
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyTextSub
@@ -49,7 +46,6 @@ import xymusic_kmp.composeapp.generated.resources.restore_window
 @Composable
 fun DesktopWindowControlButtons(modifier: Modifier = Modifier) {
     val frameState = LocalDesktopWindowFrameState.current
-    val chromeController = LocalDesktopWindowChromeController.current
 
     Row(
         modifier = modifier
@@ -63,9 +59,6 @@ fun DesktopWindowControlButtons(modifier: Modifier = Modifier) {
             DesktopWindowControlButton(
                 controlType = WindowControlType.Minimize,
                 onClick = frameState.onMinimize,
-                modifier = Modifier.onGloballyPositioned {
-                    chromeController.updateMinimizeButtonBounds(it.boundsInWindow())
-                }
             )
         }
         DesktopWindowControlTooltipBox(
@@ -84,9 +77,6 @@ fun DesktopWindowControlButtons(modifier: Modifier = Modifier) {
                     WindowControlType.Maximize
                 },
                 onClick = frameState.onToggleMaximize,
-                modifier = Modifier.onGloballyPositioned {
-                    chromeController.updateMaximizeButtonBounds(it.boundsInWindow())
-                }
             )
         }
         DesktopWindowControlTooltipBox(
@@ -95,9 +85,6 @@ fun DesktopWindowControlButtons(modifier: Modifier = Modifier) {
             DesktopWindowControlButton(
                 controlType = WindowControlType.Close,
                 onClick = frameState.onClose,
-                modifier = Modifier.onGloballyPositioned {
-                    chromeController.updateCloseButtonBounds(it.boundsInWindow())
-                }
             )
         }
     }

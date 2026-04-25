@@ -20,8 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,10 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.boundsInWindow
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import cn.xybbz.api.client.DataSourceManager
@@ -42,11 +37,6 @@ import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.common.enums.img
 import cn.xybbz.common.utils.DataSourceChangeUtils
-import cn.xybbz.compositionLocal.DesktopInteractiveHitTestOwner
-import cn.xybbz.compositionLocal.LocalDesktopWindowChromeController
-import cn.xybbz.compositionLocal.LocalDesktopWindowDecorators
-import cn.xybbz.compositionLocal.LocalDesktopWindowFrameState
-import cn.xybbz.compositionLocal.LocalDesktopTitleBarHitTestOwner
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.connection.ConnectionConfig
@@ -94,47 +84,27 @@ import xymusic_kmp.composeapp.generated.resources.settings_24px
  */
 @Composable
 fun DesktopWindowTitleBar(navigator: Navigator) {
-    val decorators = LocalDesktopWindowDecorators.current
-    val chromeController = LocalDesktopWindowChromeController.current
-    val titleBarHitTestOwner = remember { DesktopInteractiveHitTestOwner() }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(XyTheme.dimens.itemHeight * 1.3f)
+            .background(DesktopTitleBarColors.current.background),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start,
+    ) {
+        DesktopTitleBrand()
 
-    DisposableEffect(chromeController, titleBarHitTestOwner) {
-        chromeController.setTitleBarHitTestOwner(titleBarHitTestOwner)
-        onDispose {
-            chromeController.setTitleBarHitTestOwner(null)
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            DesktopTitleCenter(navigator = navigator)
         }
+
+        DesktopTitleActions(navigator = navigator)
     }
-
-    // 标题栏主体留在 composeApp 中，是否具备窗口拖拽能力由 desktopApp 注入。
-    val content: @Composable () -> Unit = {
-        CompositionLocalProvider(LocalDesktopTitleBarHitTestOwner provides titleBarHitTestOwner) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(XyTheme.dimens.itemHeight * 1.3f)
-                    .background(DesktopTitleBarColors.current.background)
-                    .onGloballyPositioned {
-                        chromeController.updateTitleBarBounds(it.boundsInWindow())
-                    },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start,
-            ) {
-                DesktopTitleBrand()
-
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    DesktopTitleCenter(navigator = navigator)
-                }
-
-                DesktopTitleActions(navigator = navigator)
-            }
-        }
-    }
-    decorators.DraggableArea(content)
 }
 
 /**
@@ -173,7 +143,6 @@ private fun DesktopTitleCenter(navigator: Navigator) {
     val currentStack = navigator.state.backStacks[navigator.state.topLevelRoute]
     val canGoBack = navigator.state.topLevelRoute != navigator.state.startRoute ||
         currentStack?.lastOrNull() != navigator.state.topLevelRoute
-    val titleBarHitTestOwner = LocalDesktopTitleBarHitTestOwner.current
 
     Row(
         modifier = Modifier
@@ -186,14 +155,12 @@ private fun DesktopTitleCenter(navigator: Navigator) {
             resource = Res.drawable.arrow_back_24px,
             enabled = canGoBack,
             onClick = navigator::goBack,
-            modifier = Modifier.titleBarHitTarget(titleBarHitTestOwner, DesktopTitleBarHitTarget.BackButton)
         )
         DesktopSearchField(
             value = keyword,
             onValueChange = { keyword = it },
             modifier = Modifier
                 .weight(1f)
-                .titleBarHitTarget(titleBarHitTestOwner, DesktopTitleBarHitTarget.SearchField)
         )
     }
 }
@@ -243,7 +210,6 @@ private fun DesktopSearchField(
 @Composable
 private fun DesktopTitleActions(navigator: Navigator) {
     val koin = getKoin()
-    val titleBarHitTestOwner = LocalDesktopTitleBarHitTestOwner.current
     val dataSourceManager: DataSourceManager = remember { koin.get() }
     val db: LocalDatabaseClient = remember { koin.get() }
     val musicController: MusicCommonController = remember { koin.get() }
@@ -272,7 +238,6 @@ private fun DesktopTitleActions(navigator: Navigator) {
                 modifier = Modifier
                     .height(XyTheme.dimens.itemHeight * .8f)
                     .clip(RoundedCornerShape(XyTheme.dimens.corner))
-                    .titleBarHitTarget(titleBarHitTestOwner, DesktopTitleBarHitTarget.DataSource)
                     .clickable { ifShowConnectionMenu = true }
                     .padding(
                         horizontal = XyTheme.dimens.innerHorizontalPadding,
@@ -374,7 +339,6 @@ private fun DesktopTitleActions(navigator: Navigator) {
                 resource = Res.drawable.download_24px,
                 enabled = true,
                 onClick = { navigator.navigate(Download) },
-                modifier = Modifier.titleBarHitTarget(titleBarHitTestOwner, DesktopTitleBarHitTarget.DownloadButton),
                 contentDescription = stringResource(Res.string.download_list)
             )
             DesktopToolbarIconButton(
@@ -388,14 +352,12 @@ private fun DesktopTitleActions(navigator: Navigator) {
                         )
                     }
                 },
-                modifier = Modifier.titleBarHitTarget(titleBarHitTestOwner, DesktopTitleBarHitTarget.RefreshLoginButton),
                 contentDescription = stringResource(Res.string.refresh_login)
             )
             DesktopToolbarIconButton(
                 resource = Res.drawable.settings_24px,
                 enabled = true,
                 onClick = { navigator.navigate(Setting) },
-                modifier = Modifier.titleBarHitTarget(titleBarHitTestOwner, DesktopTitleBarHitTarget.SettingButton),
                 contentDescription = stringResource(Res.string.open_settings_page_button)
             )
         }
@@ -503,24 +465,4 @@ private fun readCurrentDataSourceInfo(
         title = currentConnection?.name ?: dataSource?.title ?: fallbackTitle,
         iconRes = currentConnection?.type?.img ?: dataSource?.img ?: Res.drawable.logo_new
     )
-}
-
-private enum class DesktopTitleBarHitTarget {
-    BackButton,
-    SearchField,
-    DataSource,
-    DownloadButton,
-    RefreshLoginButton,
-    SettingButton,
-}
-
-/**
- * 把控件的窗口坐标登记到标题栏热区记录器里。
- * 这样窗口命中测试阶段就能知道该点位是否属于按钮、输入框等交互控件。
- */
-private fun Modifier.titleBarHitTarget(
-    owner: DesktopInteractiveHitTestOwner,
-    target: DesktopTitleBarHitTarget,
-): Modifier = onGloballyPositioned { coordinates ->
-    owner.updateBounds(target.name, coordinates.boundsInWindow())
 }
