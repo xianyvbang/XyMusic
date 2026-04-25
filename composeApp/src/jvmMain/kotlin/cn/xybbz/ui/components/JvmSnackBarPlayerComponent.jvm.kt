@@ -46,7 +46,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -72,10 +71,10 @@ import xymusic_kmp.composeapp.generated.resources.download_24px
 import xymusic_kmp.composeapp.generated.resources.download_list
 import xymusic_kmp.composeapp.generated.resources.heart_broken_24px
 import xymusic_kmp.composeapp.generated.resources.music_remove_from_playlist
+import xymusic_kmp.composeapp.generated.resources.play_selected
 import xymusic_kmp.composeapp.generated.resources.playlist_add_24px
 import xymusic_kmp.composeapp.generated.resources.playlist_play_24px
 import xymusic_kmp.composeapp.generated.resources.playlist_remove_24px
-import xymusic_kmp.composeapp.generated.resources.play_selected
 import xymusic_kmp.composeapp.generated.resources.please_select
 import xymusic_kmp.composeapp.generated.resources.unfavorite
 import cn.xybbz.ui.xy.XyIconButton as IconButton

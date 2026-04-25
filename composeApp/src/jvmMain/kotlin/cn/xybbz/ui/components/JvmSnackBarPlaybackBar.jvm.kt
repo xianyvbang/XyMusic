@@ -204,6 +204,7 @@ internal fun JvmSnackBarPlaybackBar(
         val sectionWidth = maxWidth / 3
 
         XyRow(
+            modifier = Modifier.then(openPlayerModifier),
             paddingValues = PaddingValues(bottom = 2.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -213,7 +214,6 @@ internal fun JvmSnackBarPlaybackBar(
                     .width(sectionWidth)
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(XyTheme.dimens.corner))
-                    .then(openPlayerModifier)
                     .desktopDragHitTarget(desktopDragHitTestOwner, "SongInfo"),
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                 leadingContent = if (showCover) {
