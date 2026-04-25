@@ -1,5 +1,7 @@
 package cn.xybbz
 
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.asPaddingValues
@@ -8,6 +10,8 @@ import androidx.compose.foundation.window.WindowDraggableArea
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
@@ -92,7 +96,12 @@ fun main() = application {
                 App(
                     windowContentPadding = windowContentPadding,
                     appChrome = { navigator ->
-                        WindowDraggableArea {
+                        WindowDraggableArea(modifier = Modifier.pointerInput(Unit) {
+                            awaitEachGesture {
+                                awaitFirstDown()
+                                windowState.placement = WindowPlacement.Floating
+                            }
+                        }) {
                             DesktopWindowTitleBar(navigator = navigator)
                         }
                     },
