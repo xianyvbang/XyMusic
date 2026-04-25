@@ -10,7 +10,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -46,7 +45,6 @@ import cn.xybbz.router.Navigator
 import cn.xybbz.router.PlatformNavigationConfig
 import cn.xybbz.router.jvmTopRouterDataList
 import cn.xybbz.ui.components.AlertDialogObject
-import cn.xybbz.ui.components.DesktopWindowTitleBar
 import cn.xybbz.ui.components.MusicPlaylistItemComponent
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.debounceClickable
@@ -99,113 +97,109 @@ actual fun MainScreenScaffold(
         modifier = modifier,
         snackbarHost = snackbarHost
     ) { paddingValues ->
-        Column(modifier = Modifier.fillMaxSize()) {
-            DesktopWindowTitleBar(navigator = navigator)
-
-            Row(
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            verticalAlignment = Alignment.Top,
+        ) {
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                verticalAlignment = Alignment.Top,
+                    .width(jvmRouterMenuWidth)
+                    .hoverable(interactionSource = sidebarInteractionSource)
             ) {
-                Box(
+                LazyColumnNotComponent(
                     modifier = Modifier
-                        .width(jvmRouterMenuWidth)
-                        .hoverable(interactionSource = sidebarInteractionSource)
+                        .fillMaxSize()
+                        .padding(end = XyTheme.dimens.contentPadding),
+                    state = sidebarListState,
+                    contentPadding = PaddingValues(XyTheme.dimens.outerVerticalPadding),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    LazyColumnNotComponent(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(end = XyTheme.dimens.contentPadding),
-                        state = sidebarListState,
-                        contentPadding = PaddingValues(XyTheme.dimens.outerVerticalPadding),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        items(jvmTopRouterDataList) { item ->
-                            DesktopNavigationItem(
-                                item = item,
-                                selected = navigator.state.topLevelRoute == item.route,
-                                onClick = { navigator.navigate(route = item.route) },
+                    items(jvmTopRouterDataList) { item ->
+                        DesktopNavigationItem(
+                            item = item,
+                            selected = navigator.state.topLevelRoute == item.route,
+                            onClick = { navigator.navigate(route = item.route) },
+                        )
+                    }
+
+                    item(key = "playlist_header") {
+                        XyRow {
+                            XyText(
+                                text = playlistTitle,
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
-                        }
-
-                        item(key = "playlist_header") {
-                            XyRow {
-                                XyText(
-                                    text = playlistTitle,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                )
-                                XyIconButton(
-                                    onClick = {
-                                        playlistName = newPlaylist + playlists.size
-                                        AlertDialogObject(
-                                            title = createPlaylist,
-                                            content = {
-                                                XyEdit(
-                                                    text = playlistName,
-                                                    onChange = { playlistName = it }
-                                                )
-                                            },
-                                            onDismissRequest = {},
-                                            onConfirmation = {
-                                                coroutineScope.launch {
-                                                    sidebarPlaylistViewModel.savePlaylist(
-                                                        playlistName
-                                                    )
-                                                }
-                                            }
-                                        ).show()
-                                    }
-                                ) {
-                                    Icon(
-                                        painter = painterResource(Res.drawable.add_24px),
-                                        contentDescription = createPlaylist,
-                                        tint = MaterialTheme.colorScheme.onSurface,
-                                    )
-                                }
-                            }
-                        }
-                        if (playlists.isEmpty()) {
-                            item(key = "playlist_empty") {
-                                XyRow {
-                                    XyTextSubSmall(
-                                        text = noPlaylistsText,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-
-                            }
-                        } else {
-                            items(playlists, key = { item -> item.itemId }) { playlist ->
-                                MusicPlaylistItemComponent(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    name = playlist.name,
-                                    subordination = "${playlist.musicCount}${songsCountSuffix}",
-                                    imgUrl = playlist.pic,
-                                    backgroundColor = Color.Transparent,
-                                    brush = null,
-                                    onClick = {
-                                        navigator.navigate(
-                                            route = AlbumInfo(
-                                                itemId = playlist.itemId,
-                                                dataType = MusicDataTypeEnum.PLAYLIST
+                            XyIconButton(
+                                onClick = {
+                                    playlistName = newPlaylist + playlists.size
+                                    AlertDialogObject(
+                                        title = createPlaylist,
+                                        content = {
+                                            XyEdit(
+                                                text = playlistName,
+                                                onChange = { playlistName = it }
                                             )
-                                        )
-                                    }
+                                        },
+                                        onDismissRequest = {},
+                                        onConfirmation = {
+                                            coroutineScope.launch {
+                                                sidebarPlaylistViewModel.savePlaylist(
+                                                    playlistName
+                                                )
+                                            }
+                                        }
+                                    ).show()
+                                }
+                            ) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.add_24px),
+                                    contentDescription = createPlaylist,
+                                    tint = MaterialTheme.colorScheme.onSurface,
                                 )
                             }
                         }
                     }
-                    SidebarVerticalScrollbar(
-                        visible = showScrollbar,
-                        modifier = Modifier.align(Alignment.CenterEnd),
-                        adapter = rememberScrollbarAdapter(scrollState = sidebarListState),
-                    )
-                }
+                    if (playlists.isEmpty()) {
+                        item(key = "playlist_empty") {
+                            XyRow {
+                                XyTextSubSmall(
+                                    text = noPlaylistsText,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
 
-                Box(modifier = Modifier.weight(1f)) {
-                    content(PaddingValues())
+                        }
+                    } else {
+                        items(playlists, key = { item -> item.itemId }) { playlist ->
+                            MusicPlaylistItemComponent(
+                                modifier = Modifier.fillMaxWidth(),
+                                name = playlist.name,
+                                subordination = "${playlist.musicCount}${songsCountSuffix}",
+                                imgUrl = playlist.pic,
+                                backgroundColor = Color.Transparent,
+                                brush = null,
+                                onClick = {
+                                    navigator.navigate(
+                                        route = AlbumInfo(
+                                            itemId = playlist.itemId,
+                                            dataType = MusicDataTypeEnum.PLAYLIST
+                                        )
+                                    )
+                                }
+                            )
+                        }
+                    }
                 }
+                SidebarVerticalScrollbar(
+                    visible = showScrollbar,
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                    adapter = rememberScrollbarAdapter(scrollState = sidebarListState),
+                )
+            }
+
+            Box(modifier = Modifier.weight(1f)) {
+                content(PaddingValues())
             }
         }
     }

@@ -20,6 +20,7 @@ import cn.xybbz.config.window.DesktopWindowDecorators
 import cn.xybbz.di.initKoin
 import cn.xybbz.entity.data.DesktopWindowFrameState
 import cn.xybbz.proxy.JvmReverseProxyServer
+import cn.xybbz.ui.components.DesktopWindowTitleBar
 import cn.xybbz.window.WindowsDesktopWindowChromeController
 import org.jetbrains.skiko.hostOs
 
@@ -98,7 +99,14 @@ fun main() = application {
                 modifier = androidx.compose.ui.Modifier
                     .fillMaxSize()
             ) {
-                App(windowContentPadding = windowContentPadding)
+                App(
+                    windowContentPadding = windowContentPadding,
+                    appChrome = { navigator ->
+                        WindowDraggableArea{
+                            DesktopWindowTitleBar(navigator = navigator)
+                        }
+                    },
+                )
             }
         }
     }
