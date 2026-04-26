@@ -136,3 +136,124 @@ fun DesktopWindowTitleBar(
         }
     }
 }
+
+
+
+@Composable
+fun DesktopWindowTitleCenterBar(
+    modifier: Modifier = Modifier,
+    frameState: DesktopWindowFrameState = LocalDesktopWindowFrameState.current,
+    chromeController: DesktopWindowChromeController = LocalDesktopWindowChromeController.current,
+    hitTestOwner: DesktopInteractiveHitTestOwner? = null,
+    backgroundColor: Color = MaterialTheme.colorScheme.background,
+    isMaximized: Boolean = frameState.isMaximized,
+    onMinimize: () -> Unit = frameState.onMinimize,
+    onToggleMaximize: () -> Unit = frameState.onToggleMaximize,
+    onClose: () -> Unit = frameState.onClose,
+    showMinimizeButton: Boolean = true,
+    showMaximizeButton: Boolean = true,
+    showCloseButton: Boolean = true,
+    minimizeIcon: WindowControlIcon = { tint, iconModifier ->
+        WindowControlButtonIcons.Minimize(tint, iconModifier)
+    },
+    maximizeIcon: WindowControlIcon = { tint, iconModifier ->
+        WindowControlButtonIcons.Maximize(tint, iconModifier)
+    },
+    restoreIcon: WindowControlIcon = { tint, iconModifier ->
+        WindowControlButtonIcons.Restore(tint, iconModifier)
+    },
+    closeIcon: WindowControlIcon = { tint, iconModifier ->
+        WindowControlButtonIcons.Close(tint, iconModifier)
+    },
+    beforeWindowControls: (@Composable RowScope.(DesktopInteractiveHitTestOwner) -> Unit)? = null,
+    afterWindowControls: (@Composable RowScope.(DesktopInteractiveHitTestOwner) -> Unit)? = null,
+    onControlButtonBoundsChanged: (WindowControlType, Rect) -> Unit = { _, _ -> },
+    front: (@Composable BoxScope.(DesktopInteractiveHitTestOwner) -> Unit)? = null,
+    middle: (@Composable BoxScope.(DesktopInteractiveHitTestOwner) -> Unit)? = null,
+    back: (@Composable RowScope.(DesktopInteractiveHitTestOwner) -> Unit)? = null,
+) {
+    val activeHitTestOwner = hitTestOwner ?: remember { DesktopInteractiveHitTestOwner() }
+
+    DisposableEffect(chromeController, activeHitTestOwner) {
+        val previousOwner = chromeController.titleBarHitTestOwner
+        val previousEnabled = chromeController.isTitleBarHitTestEnabled
+        chromeController.setTitleBarHitTestOwner(activeHitTestOwner)
+        chromeController.setTitleBarHitTestEnabled(true)
+        onDispose {
+            chromeController.setTitleBarHitTestOwner(previousOwner)
+            chromeController.setTitleBarHitTestEnabled(previousEnabled)
+        }
+    }
+
+    val controlButtonBoundsChanged: (WindowControlType, Rect) -> Unit = { type, bounds ->
+        activeHitTestOwner.updateBounds("WindowControl$type", bounds)
+        when (type) {
+            WindowControlType.Minimize -> chromeController.updateMinimizeButtonBounds(bounds)
+            WindowControlType.Maximize,
+            WindowControlType.Restore -> chromeController.updateMaximizeButtonBounds(bounds)
+
+            WindowControlType.Close -> chromeController.updateCloseButtonBounds(bounds)
+        }
+        onControlButtonBoundsChanged(type, bounds)
+    }
+
+    CompositionLocalProvider(LocalDesktopTitleBarHitTestOwner provides activeHitTestOwner) {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(DesktopWindowTitleBarDefaults.Height)
+                .onGloballyPositioned { coordinates ->
+                    chromeController.updateTitleBarBounds(coordinates.boundsInWindow())
+                }
+                .background(backgroundColor)
+        ) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .fillMaxHeight(),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                front?.invoke(this, activeHitTestOwner)
+            }
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .fillMaxHeight(),
+                contentAlignment = Alignment.Center
+            ) {
+                middle?.invoke(this, activeHitTestOwner)
+            }
+
+            Row(
+                modifier = Modifier.align(Alignment.CenterEnd).padding(end = XyTheme.dimens.outerHorizontalPadding),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (back != null) {
+                    back.invoke(this, activeHitTestOwner)
+                } else {
+                    DefaultDesktopWindowTitleBarBack(
+                        isMaximized = isMaximized,
+                        onMinimize = onMinimize,
+                        onToggleMaximize = onToggleMaximize,
+                        onClose = onClose,
+                        showMinimizeButton = showMinimizeButton,
+                        showMaximizeButton = showMaximizeButton,
+                        showCloseButton = showCloseButton,
+                        minimizeIcon = minimizeIcon,
+                        maximizeIcon = maximizeIcon,
+                        restoreIcon = restoreIcon,
+                        closeIcon = closeIcon,
+                        beforeWindowControls = beforeWindowControls?.let { content ->
+                            { content(activeHitTestOwner) }
+                        },
+                        afterWindowControls = afterWindowControls?.let { content ->
+                            { content(activeHitTestOwner) }
+                        },
+                        onControlButtonBoundsChanged = controlButtonBoundsChanged
+                    )
+                }
+            }
+        }
+    }
+}

@@ -101,8 +101,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.api.client.FavoriteCoordinator
-import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.enums.MusicTypeEnum
+import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.entity.data.LrcEntryData
@@ -111,13 +111,12 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.ui.components.lrc.LrcViewNewCompose
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopInteractiveHitTestOwner
-import cn.xybbz.ui.windows.DesktopWindowTitleBar as UiDesktopWindowTitleBar
+import cn.xybbz.ui.windows.DesktopWindowTitleCenterBar
 import cn.xybbz.ui.windows.LocalDesktopTitleBarHitTestOwner
 import cn.xybbz.ui.windows.LocalDesktopWindowDecorators
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyImage
-import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.MusicBottomMenuViewModel
@@ -434,7 +433,7 @@ fun JvmMusicPlayerScreen(
                     ),
                 background = Color.Transparent
             ) {
-                UiDesktopWindowTitleBar(
+                DesktopWindowTitleCenterBar(
                     hitTestOwner = titleBarHitTestOwner,
                     backgroundColor = Color.Transparent,
                     front = { hitTestOwner ->
