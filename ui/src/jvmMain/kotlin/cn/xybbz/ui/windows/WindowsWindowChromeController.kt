@@ -16,7 +16,10 @@ import com.sun.jna.platform.win32.WinDef.LRESULT
 import com.sun.jna.platform.win32.WinDef.RECT
 import com.sun.jna.platform.win32.WinDef.WPARAM
 import com.sun.jna.platform.win32.WinUser
+import org.jetbrains.skiko.SkiaLayer
+import java.awt.Container
 import java.awt.Frame
+import javax.swing.JComponent
 import kotlin.math.max
 
 internal class WindowsWindowChromeController(
@@ -27,6 +30,7 @@ internal class WindowsWindowChromeController(
     private var hwnd: HWND? = null
     private var originalWndProc: Pointer? = null
     private var callbackPointer: Pointer? = null
+    private var skiaLayerProcedure: SkiaLayerWindowProcedure? = null
     private var installed = false
 
     private var titleBarBounds: Rect = Rect.Zero
@@ -59,12 +63,15 @@ internal class WindowsWindowChromeController(
         originalWndProc = user32.GetWindowLongPtr(nativeHwnd, WinUser.GWL_WNDPROC).toPointer()
         callbackPointer = CallbackReference.getFunctionPointer(this)
         user32.SetWindowLongPtr(nativeHwnd, WinUser.GWL_WNDPROC, callbackPointer)
+        installSkiaLayerProcedureIfNeeded()
         installed = true
     }
 
     fun dispose() {
         val nativeHwnd = hwnd
         val previousWndProc = originalWndProc
+        skiaLayerProcedure?.dispose()
+        skiaLayerProcedure = null
         if (installed && nativeHwnd != null && previousWndProc != null) {
             user32.SetWindowLongPtr(nativeHwnd, WinUser.GWL_WNDPROC, previousWndProc)
         }
@@ -99,14 +106,6 @@ internal class WindowsWindowChromeController(
                 syncMaximizedState()
                 callOriginal(hwnd, uMsg, wParam, lParam)
             }
-            WindowsChromeConstants.WM_NCLBUTTONUP -> {
-                if (wParam.toInt() == WindowsChromeConstants.HTMAXBUTTON) {
-                    toggleMaximize()
-                    LRESULT(0)
-                } else {
-                    callOriginal(hwnd, uMsg, wParam, lParam)
-                }
-            }
             WinUser.WM_SYSCOMMAND -> {
                 if ((wParam.toInt() and 0xFFF0) == WindowsChromeConstants.SC_CLOSE) {
                     close()
@@ -121,6 +120,7 @@ internal class WindowsWindowChromeController(
 
     override fun updateTitleBarBounds(bounds: Rect) {
         titleBarBounds = bounds
+        installSkiaLayerProcedureIfNeeded()
     }
 
     override fun updateMinimizeButtonBounds(bounds: Rect) {
@@ -145,23 +145,19 @@ internal class WindowsWindowChromeController(
 
     override fun minimize() {
         hwnd?.let { nativeHwnd ->
-            user32.CloseWindow(nativeHwnd)
+            user32.ShowWindow(nativeHwnd, WinUser.SW_MINIMIZE)
         }
     }
 
     override fun toggleMaximize() {
         val nativeHwnd = hwnd ?: return
-        val command = if (isMaximized) {
-            WindowsChromeConstants.SC_RESTORE
+        syncMaximizedState()
+        val showCommand = if (isMaximized) {
+            WinUser.SW_RESTORE
         } else {
-            WinUser.SC_MAXIMIZE
+            WinUser.SW_MAXIMIZE
         }
-        user32.SendMessage(
-            nativeHwnd,
-            WinUser.WM_SYSCOMMAND,
-            WPARAM(command.toLong()),
-            LPARAM(0)
-        )
+        user32.ShowWindow(nativeHwnd, showCommand)
         syncMaximizedState()
     }
 
@@ -199,6 +195,16 @@ internal class WindowsWindowChromeController(
         }
     }
 
+    private fun installSkiaLayerProcedureIfNeeded() {
+        if (skiaLayerProcedure != null) return
+        skiaLayerProcedure = window.findSkiaLayer()?.let { skiaLayer ->
+            SkiaLayerWindowProcedure(
+                skiaLayer = skiaLayer,
+                hitTest = ::hitTest
+            )
+        }
+    }
+
     private fun hitTest(lParam: LPARAM): Int {
         val nativeHwnd = hwnd ?: return WindowsChromeConstants.HTCLIENT
         val screenX = signedLowWord(lParam.toLong())
@@ -213,15 +219,11 @@ internal class WindowsWindowChromeController(
             }
         }
 
-        val locationOnScreen = runCatching { window.locationOnScreen }.getOrNull()
-            ?: return WindowsChromeConstants.HTCLIENT
-        val clientX = (screenX - locationOnScreen.x).toFloat()
-        val clientY = (screenY - locationOnScreen.y).toFloat()
+        val clientX = (screenX - windowRect.left).toFloat()
+        val clientY = (screenY - windowRect.top).toFloat()
 
-        if (maximizeButtonBounds.contains(clientX, clientY)) {
-            return WindowsChromeConstants.HTMAXBUTTON
-        }
         if (
+            maximizeButtonBounds.contains(clientX, clientY) ||
             minimizeButtonBounds.contains(clientX, clientY) ||
             closeButtonBounds.contains(clientX, clientY)
         ) {
@@ -309,7 +311,14 @@ internal class WindowsWindowChromeController(
     }
 
     private fun syncMaximizedState() {
-        maximizedState = (window.extendedState and Frame.MAXIMIZED_BOTH) == Frame.MAXIMIZED_BOTH
+        val nativeHwnd = hwnd
+        maximizedState = if (nativeHwnd != null) {
+            val placement = WinUser.WINDOWPLACEMENT()
+            user32.GetWindowPlacement(nativeHwnd, placement).booleanValue() &&
+                placement.showCmd == WinUser.SW_SHOWMAXIMIZED
+        } else {
+            (window.extendedState and Frame.MAXIMIZED_BOTH) == Frame.MAXIMIZED_BOTH
+        }
     }
 
     private fun Rect.contains(x: Float, y: Float): Boolean {
@@ -323,4 +332,81 @@ internal class WindowsWindowChromeController(
     private fun signedHighWord(value: Long): Int {
         return ((value shr 16) and 0xFFFF).toShort().toInt()
     }
+}
+
+private class SkiaLayerWindowProcedure(
+    skiaLayer: SkiaLayer,
+    private val hitTest: (LPARAM) -> Int,
+) : WinUser.WindowProc {
+    private val user32 = User32.INSTANCE
+    private val contentHwnd = HWND(Native.getComponentPointer(skiaLayer.canvas))
+    private val originalWndProc: Pointer? =
+        user32.GetWindowLongPtr(contentHwnd, WinUser.GWL_WNDPROC).toPointer()
+    private val callbackPointer: Pointer = CallbackReference.getFunctionPointer(this)
+    private var installed = false
+
+    init {
+        user32.SetWindowLongPtr(contentHwnd, WinUser.GWL_WNDPROC, callbackPointer)
+        installed = true
+    }
+
+    override fun callback(
+        hwnd: HWND,
+        uMsg: Int,
+        wParam: WPARAM,
+        lParam: LPARAM,
+    ): LRESULT {
+        return when (uMsg) {
+            WindowsChromeConstants.WM_NCHITTEST -> {
+                val result = hitTest(lParam)
+                if (result == WindowsChromeConstants.HTCLIENT) {
+                    LRESULT(WindowsChromeConstants.HTCLIENT.toLong())
+                } else {
+                    LRESULT(WindowsChromeConstants.HTTRANSPARENT.toLong())
+                }
+            }
+            else -> callOriginal(hwnd, uMsg, wParam, lParam)
+        }
+    }
+
+    fun dispose() {
+        val previousWndProc = originalWndProc
+        if (installed && previousWndProc != null) {
+            user32.SetWindowLongPtr(contentHwnd, WinUser.GWL_WNDPROC, previousWndProc)
+        }
+        installed = false
+    }
+
+    private fun callOriginal(
+        hwnd: HWND,
+        uMsg: Int,
+        wParam: WPARAM,
+        lParam: LPARAM,
+    ): LRESULT {
+        val previousWndProc = originalWndProc
+        return if (previousWndProc != null && Pointer.nativeValue(previousWndProc) != 0L) {
+            user32.CallWindowProc(previousWndProc, hwnd, uMsg, wParam, lParam)
+        } else {
+            user32.DefWindowProc(hwnd, uMsg, wParam, lParam)
+        }
+    }
+}
+
+private fun ComposeWindow.findSkiaLayer(): SkiaLayer? {
+    return findComponent()
+}
+
+private inline fun <reified T : JComponent> Container.findComponent(): T? {
+    return findComponent(T::class.java)
+}
+
+private fun <T : JComponent> Container.findComponent(klass: Class<T>): T? {
+    val components = components.asSequence()
+    return components.filter { klass.isInstance(it) }
+        .ifEmpty {
+            components.filterIsInstance<Container>()
+                .mapNotNull { child -> child.findComponent(klass) }
+        }
+        .map { component -> klass.cast(component) }
+        .firstOrNull()
 }

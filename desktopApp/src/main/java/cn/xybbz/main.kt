@@ -56,6 +56,7 @@ fun main() = application {
                     hitTestOwner: DesktopWindowTitleBarHitTestOwner?,
                 ) {
                     if (hasNativeChrome) {
+                        // Windows 原生 chrome 已通过 WM_NCHITTEST 处理拖拽，避免再包 WindowDraggableArea。
                         if (hitTestOwner != null) {
                             DisposableEffect(chromeController, hitTestOwner) {
                                 val previousOwner = chromeController.titleBarHitTestOwner

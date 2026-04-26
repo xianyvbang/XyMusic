@@ -8,6 +8,7 @@ internal object WindowsChromeConstants {
     const val WM_GETMINMAXINFO: Int = 0x0024
     const val WM_NCLBUTTONUP: Int = 0x00A2
 
+    const val HTTRANSPARENT: Int = -1
     const val HTCLIENT: Int = 1
     const val HTCAPTION: Int = 2
     const val HTLEFT: Int = 10
