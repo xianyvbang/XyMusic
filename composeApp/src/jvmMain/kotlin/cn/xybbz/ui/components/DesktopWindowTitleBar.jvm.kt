@@ -362,7 +362,7 @@ private fun DesktopTitleActions(navigator: Navigator) {
             )
         }
 
-        DesktopWindowControlButtons()
+//        DesktopWindowControlButtons()
     }
 }
 
