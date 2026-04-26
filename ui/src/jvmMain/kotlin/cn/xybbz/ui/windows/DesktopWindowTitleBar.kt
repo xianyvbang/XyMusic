@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -20,6 +21,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import cn.xybbz.ui.theme.XyTheme
 
 @Composable
 fun DesktopWindowTitleBar(
@@ -73,6 +75,7 @@ fun DesktopWindowTitleBar(
             WindowControlType.Minimize -> chromeController.updateMinimizeButtonBounds(bounds)
             WindowControlType.Maximize,
             WindowControlType.Restore -> chromeController.updateMaximizeButtonBounds(bounds)
+
             WindowControlType.Close -> chromeController.updateCloseButtonBounds(bounds)
         }
         onControlButtonBoundsChanged(type, bounds)
@@ -102,6 +105,7 @@ fun DesktopWindowTitleBar(
             }
 
             Row(
+                modifier = Modifier.padding(end = XyTheme.dimens.outerHorizontalPadding),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (back != null) {

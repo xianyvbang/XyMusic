@@ -2,15 +2,14 @@ package cn.xybbz
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import cn.xybbz.di.initKoin
 import cn.xybbz.proxy.JvmReverseProxyServer
 import cn.xybbz.ui.components.DesktopWindowTitleBar
-import cn.xybbz.ui.windows.DesktopWindowFrameState
 import cn.xybbz.ui.windows.DesktopWindowDecorators
+import cn.xybbz.ui.windows.DesktopWindowFrameState
 import cn.xybbz.ui.windows.DesktopWindowTitleBarHitTestOwner
 import cn.xybbz.ui.windows.LocalDesktopWindowChromeController
 import cn.xybbz.ui.windows.LocalDesktopWindowDecorators
@@ -36,7 +35,7 @@ fun main() = application {
         title = "XyMusic-KMP",
         state = windowState,
 
-    ) {
+        ) {
         val chromeController = rememberWindowsWindowChromeController(
             window = window,
             onCloseRequest = handleCloseRequest
@@ -51,18 +50,6 @@ fun main() = application {
                     content: @Composable () -> Unit,
                     hitTestOwner: DesktopWindowTitleBarHitTestOwner?,
                 ) {
-                    if (hitTestOwner != null) {
-                        DisposableEffect(chromeController, hitTestOwner) {
-                            val previousOwner = chromeController.titleBarHitTestOwner
-                            val previousEnabled = chromeController.isTitleBarHitTestEnabled
-                            chromeController.setTitleBarHitTestOwner(hitTestOwner)
-                            chromeController.setTitleBarHitTestEnabled(true)
-                            onDispose {
-                                chromeController.setTitleBarHitTestOwner(previousOwner)
-                                chromeController.setTitleBarHitTestEnabled(previousEnabled)
-                            }
-                        }
-                    }
                     content()
                 }
             },
@@ -82,11 +69,7 @@ fun main() = application {
         ) {
             App(
                 appChrome = { navigator ->
-                    LocalDesktopWindowDecorators.current.DraggableArea(
-                        content = {
-                            DesktopWindowTitleBar(navigator = navigator)
-                        }
-                    )
+                    DesktopWindowTitleBar(navigator = navigator)
                 },
             )
         }
