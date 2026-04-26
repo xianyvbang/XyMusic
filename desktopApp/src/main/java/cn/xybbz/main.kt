@@ -37,28 +37,24 @@ fun main() = application {
         exitApplication()
     }
     val windowState = rememberWindowState()
-    val isWindows = hostOs.isWindows
 
     Window(
         onCloseRequest = handleCloseRequest,
-        undecorated = !isWindows,
+        undecorated = true,
+        transparent=true,
         resizable = true,
         title = "XyMusic-KMP",
         state = windowState,
     ) {
 
-        val chromeController = remember(window, isWindows) {
-            if (isWindows) {
-                WindowsDesktopWindowChromeController(window)
-            } else {
-                null
-            }
+        val chromeController = remember(window) {
+            WindowsDesktopWindowChromeController(window)
         }
         val windowContentPadding =
-            if (isWindows && windowState.placement == WindowPlacement.Maximized) {
+            if (windowState.placement == WindowPlacement.Maximized) {
                 // 自定义 Windows 窗口在最大化时需要保留系统安全边距，
                 // 普通窗口态则不应把边框 inset 当成内容 padding，否则会出现四周白边。
-                chromeController?.windowInsets?.asPaddingValues() ?: PaddingValues()
+                chromeController.windowInsets.asPaddingValues()
             } else {
                 PaddingValues()
             }
