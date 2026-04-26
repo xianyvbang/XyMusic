@@ -2,22 +2,11 @@ package cn.xybbz
 
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.window.WindowDraggableArea
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
@@ -29,8 +18,6 @@ import cn.xybbz.di.initKoin
 import cn.xybbz.entity.data.DesktopWindowFrameState
 import cn.xybbz.proxy.JvmReverseProxyServer
 import cn.xybbz.ui.components.DesktopWindowTitleBar
-import cn.xybbz.window.WindowsDesktopWindowChromeController
-import org.jetbrains.skiko.hostOs
 
 fun main() = application {
     initKoin {}
