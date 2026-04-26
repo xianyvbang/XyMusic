@@ -1,18 +1,15 @@
 package cn.xybbz
 
-import androidx.compose.foundation.window.WindowDraggableArea
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import cn.xybbz.di.initKoin
 import cn.xybbz.proxy.JvmReverseProxyServer
 import cn.xybbz.ui.components.DesktopWindowTitleBar
 import cn.xybbz.ui.windows.DesktopWindowFrameState
-import cn.xybbz.ui.windows.DesktopWindowChromeController
 import cn.xybbz.ui.windows.DesktopWindowDecorators
 import cn.xybbz.ui.windows.DesktopWindowTitleBarHitTestOwner
 import cn.xybbz.ui.windows.LocalDesktopWindowChromeController
@@ -44,7 +41,6 @@ fun main() = application {
             window = window,
             onCloseRequest = handleCloseRequest
         )
-        val hasNativeChrome = chromeController !== DesktopWindowChromeController.None
 
         CompositionLocalProvider(
             LocalDesktopWindowChromeController provides chromeController,
@@ -55,57 +51,32 @@ fun main() = application {
                     content: @Composable () -> Unit,
                     hitTestOwner: DesktopWindowTitleBarHitTestOwner?,
                 ) {
-                    if (hasNativeChrome) {
-                        // Windows 原生 chrome 已通过 WM_NCHITTEST 处理拖拽，避免再包 WindowDraggableArea。
-                        if (hitTestOwner != null) {
-                            DisposableEffect(chromeController, hitTestOwner) {
-                                val previousOwner = chromeController.titleBarHitTestOwner
-                                val previousEnabled = chromeController.isTitleBarHitTestEnabled
-                                chromeController.setTitleBarHitTestOwner(hitTestOwner)
-                                chromeController.setTitleBarHitTestEnabled(true)
-                                onDispose {
-                                    chromeController.setTitleBarHitTestOwner(previousOwner)
-                                    chromeController.setTitleBarHitTestEnabled(previousEnabled)
-                                }
+                    if (hitTestOwner != null) {
+                        DisposableEffect(chromeController, hitTestOwner) {
+                            val previousOwner = chromeController.titleBarHitTestOwner
+                            val previousEnabled = chromeController.isTitleBarHitTestEnabled
+                            chromeController.setTitleBarHitTestOwner(hitTestOwner)
+                            chromeController.setTitleBarHitTestEnabled(true)
+                            onDispose {
+                                chromeController.setTitleBarHitTestOwner(previousOwner)
+                                chromeController.setTitleBarHitTestEnabled(previousEnabled)
                             }
                         }
-                        content()
-                    } else {
-                        WindowDraggableArea {
-                            content()
-                        }
                     }
+                    content()
                 }
             },
             // 窗口控制行为同样从桌面入口下发，标题栏 UI 只消费状态与回调。
             LocalDesktopWindowFrameState provides DesktopWindowFrameState(
-                isMaximized = chromeController.isMaximized ||
-                    windowState.placement == WindowPlacement.Maximized,
+                isMaximized = chromeController.isMaximized,
                 onMinimize = {
-                    if (hasNativeChrome) {
-                        chromeController.minimize()
-                    } else {
-                        windowState.isMinimized = true
-                    }
+                    chromeController.minimize()
                 },
                 onToggleMaximize = {
-                    if (hasNativeChrome) {
-                        chromeController.toggleMaximize()
-                    } else {
-                        windowState.placement =
-                            if (windowState.placement == WindowPlacement.Maximized) {
-                                WindowPlacement.Floating
-                            } else {
-                                WindowPlacement.Maximized
-                            }
-                    }
+                    chromeController.toggleMaximize()
                 },
                 onClose = {
-                    if (hasNativeChrome) {
-                        chromeController.close()
-                    } else {
-                        handleCloseRequest()
-                    }
+                    chromeController.close()
                 }
             )
         ) {
