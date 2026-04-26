@@ -27,5 +27,9 @@
     <string name="downloaded">已下载</string>
     <string name="selected">已选择</string>
     <string name="no_data">暂无数据</string>
+    <string name="close_window">关闭窗口</string>
+    <string name="minimize_window">最小化</string>
+    <string name="maximize_window">最大化</string>
+    <string name="restore_window">还原</string>
 
 </resources>

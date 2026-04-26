@@ -77,7 +77,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.ResourcesUtils.readPaletteColor
-import cn.xybbz.compositionLocal.DesktopInteractiveHitTestOwner
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.config.music.MusicCommonController
@@ -85,6 +84,7 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.windows.DesktopInteractiveHitTestOwner
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XySmallImage

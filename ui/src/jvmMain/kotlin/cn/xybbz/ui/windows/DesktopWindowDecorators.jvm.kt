@@ -1,4 +1,4 @@
-package cn.xybbz.config.window
+package cn.xybbz.ui.windows
 
 import androidx.compose.runtime.Composable
 
@@ -8,5 +8,8 @@ import androidx.compose.runtime.Composable
  */
 interface DesktopWindowDecorators {
     @Composable
-    fun DraggableArea(content: @Composable () -> Unit)
+    fun DraggableArea(
+        content: @Composable () -> Unit,
+        hitTestOwner: DesktopWindowTitleBarHitTestOwner? = null,
+    )
 }

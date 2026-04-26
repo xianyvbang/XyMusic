@@ -1,4 +1,4 @@
-package cn.xybbz.config.window
+package cn.xybbz.ui.windows
 
 /**
  * 标题栏命中检测能力。

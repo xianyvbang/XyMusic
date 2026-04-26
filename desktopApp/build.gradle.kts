@@ -17,7 +17,6 @@ kotlin {
         implementation(libs.compose.components.resources)
         implementation(libs.kotlinx.coroutinesSwing)
         implementation(libs.kotlin.ktor.apache)
-        implementation(libs.jna.platform)
         implementation(project.dependencies.platform(libs.koin.bom))
         implementation(libs.koin.core)
     }

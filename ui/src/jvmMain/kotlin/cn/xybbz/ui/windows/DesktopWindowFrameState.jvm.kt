@@ -1,4 +1,4 @@
-package cn.xybbz.entity.data
+package cn.xybbz.ui.windows
 
 /**
  * 桌面窗口状态与控制动作。
@@ -9,4 +9,13 @@ data class DesktopWindowFrameState(
     val onMinimize: () -> Unit,
     val onToggleMaximize: () -> Unit,
     val onClose: () -> Unit,
-)
+) {
+    companion object {
+        val None = DesktopWindowFrameState(
+            isMaximized = false,
+            onMinimize = {},
+            onToggleMaximize = {},
+            onClose = {},
+        )
+    }
+}

@@ -121,6 +121,7 @@ kotlin {
         jvmMain {
             dependencies {
                 implementation(libs.kotlin.ktor.apache)
+                implementation(libs.jna.platform)
             }
         }
     }

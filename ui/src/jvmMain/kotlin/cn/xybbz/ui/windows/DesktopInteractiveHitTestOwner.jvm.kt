@@ -1,14 +1,13 @@
-package cn.xybbz.compositionLocal
+package cn.xybbz.ui.windows
 
 import androidx.compose.ui.geometry.Rect
-import cn.xybbz.config.window.DesktopWindowTitleBarHitTestOwner
 
 /**
  * 标题栏交互热区记录器。
  * 它只关心“哪些矩形区域属于 Compose 控件”，供原生窗口命中测试排除这些区域，
  * 从而保留按钮点击、输入框聚焦等交互，不把它们误判成窗口拖拽。
  */
-internal class DesktopInteractiveHitTestOwner : DesktopWindowTitleBarHitTestOwner {
+class DesktopInteractiveHitTestOwner : DesktopWindowTitleBarHitTestOwner {
     private val interactiveBounds = mutableMapOf<String, Rect>()
 
     /**
@@ -27,5 +26,13 @@ internal class DesktopInteractiveHitTestOwner : DesktopWindowTitleBarHitTestOwne
      */
     fun updateBounds(targetId: String, bounds: Rect) {
         interactiveBounds[targetId] = bounds
+    }
+
+    fun removeBounds(targetId: String) {
+        interactiveBounds.remove(targetId)
+    }
+
+    fun clear() {
+        interactiveBounds.clear()
     }
 }

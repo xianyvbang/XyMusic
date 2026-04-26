@@ -30,6 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import cn.xybbz.api.client.DataSourceManager
@@ -48,6 +50,8 @@ import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.screens.jvmRouterMenuWidth
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.windows.DesktopInteractiveHitTestOwner
+import cn.xybbz.ui.windows.DesktopWindowTitleBar as UiDesktopWindowTitleBar
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyText
 import kotlinx.coroutines.launch
@@ -84,27 +88,24 @@ import xymusic_kmp.composeapp.generated.resources.settings_24px
  */
 @Composable
 fun DesktopWindowTitleBar(navigator: Navigator) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(XyTheme.dimens.itemHeight * 1.3f)
-            .background(DesktopTitleBarColors.current.background),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start,
-    ) {
-        DesktopTitleBrand()
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight(),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            DesktopTitleCenter(navigator = navigator)
+    UiDesktopWindowTitleBar(
+        backgroundColor = DesktopTitleBarColors.current.background,
+        front = { _ ->
+            DesktopTitleBrand()
+        },
+        middle = { hitTestOwner ->
+            DesktopTitleCenter(
+                navigator = navigator,
+                hitTestOwner = hitTestOwner
+            )
+        },
+        beforeWindowControls = { hitTestOwner ->
+            DesktopTitleActions(
+                navigator = navigator,
+                hitTestOwner = hitTestOwner
+            )
         }
-
-        DesktopTitleActions(navigator = navigator)
-    }
+    )
 }
 
 /**
@@ -138,7 +139,10 @@ private fun DesktopTitleBrand() {
  * 标题栏中间区域，承载返回、前进和搜索输入框。
  */
 @Composable
-private fun DesktopTitleCenter(navigator: Navigator) {
+private fun DesktopTitleCenter(
+    navigator: Navigator,
+    hitTestOwner: DesktopInteractiveHitTestOwner,
+) {
     var keyword by remember { mutableStateOf("") }
     val currentStack = navigator.state.backStacks[navigator.state.topLevelRoute]
     val canGoBack = navigator.state.topLevelRoute != navigator.state.startRoute ||
@@ -155,12 +159,14 @@ private fun DesktopTitleCenter(navigator: Navigator) {
             resource = Res.drawable.arrow_back_24px,
             enabled = canGoBack,
             onClick = navigator::goBack,
+            modifier = Modifier.desktopTitleBarHitTarget(hitTestOwner, "BackButton"),
         )
         DesktopSearchField(
             value = keyword,
             onValueChange = { keyword = it },
             modifier = Modifier
                 .weight(1f)
+                .desktopTitleBarHitTarget(hitTestOwner, "SearchField")
         )
     }
 }
@@ -208,7 +214,10 @@ private fun DesktopSearchField(
  * 包含当前数据源展示、切换/创建连接菜单和窗口控制按钮。
  */
 @Composable
-private fun DesktopTitleActions(navigator: Navigator) {
+private fun DesktopTitleActions(
+    navigator: Navigator,
+    hitTestOwner: DesktopInteractiveHitTestOwner,
+) {
     val koin = getKoin()
     val dataSourceManager: DataSourceManager = remember { koin.get() }
     val db: LocalDatabaseClient = remember { koin.get() }
@@ -237,6 +246,7 @@ private fun DesktopTitleActions(navigator: Navigator) {
             Row(
                 modifier = Modifier
                     .height(XyTheme.dimens.itemHeight * .8f)
+                    .desktopTitleBarHitTarget(hitTestOwner, "ConnectionMenu")
                     .clip(RoundedCornerShape(XyTheme.dimens.corner))
                     .clickable { ifShowConnectionMenu = true }
                     .padding(
@@ -339,6 +349,7 @@ private fun DesktopTitleActions(navigator: Navigator) {
                 resource = Res.drawable.download_24px,
                 enabled = true,
                 onClick = { navigator.navigate(Download) },
+                modifier = Modifier.desktopTitleBarHitTarget(hitTestOwner, "DownloadButton"),
                 contentDescription = stringResource(Res.string.download_list)
             )
             DesktopToolbarIconButton(
@@ -352,17 +363,17 @@ private fun DesktopTitleActions(navigator: Navigator) {
                         )
                     }
                 },
+                modifier = Modifier.desktopTitleBarHitTarget(hitTestOwner, "RefreshButton"),
                 contentDescription = stringResource(Res.string.refresh_login)
             )
             DesktopToolbarIconButton(
                 resource = Res.drawable.settings_24px,
                 enabled = true,
                 onClick = { navigator.navigate(Setting) },
+                modifier = Modifier.desktopTitleBarHitTarget(hitTestOwner, "SettingsButton"),
                 contentDescription = stringResource(Res.string.open_settings_page_button)
             )
         }
-
-        DesktopWindowControlButtons()
     }
 }
 
@@ -465,4 +476,11 @@ private fun readCurrentDataSourceInfo(
         title = currentConnection?.name ?: dataSource?.title ?: fallbackTitle,
         iconRes = currentConnection?.type?.img ?: dataSource?.img ?: Res.drawable.logo_new
     )
+}
+
+private fun Modifier.desktopTitleBarHitTarget(
+    owner: DesktopInteractiveHitTestOwner,
+    targetId: String,
+): Modifier = onGloballyPositioned { coordinates ->
+    owner.updateBounds(targetId, coordinates.boundsInWindow())
 }
