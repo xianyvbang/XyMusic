@@ -3,7 +3,9 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import org.jetbrains.compose.resources.DrawableResource
 
@@ -89,18 +91,49 @@ internal sealed interface DesktopDestination {
 }
 
 /**
- * 桌面原型使用的颜色集合，尽量和 HTML 原型色板对应。
+ * 桌面原型使用的颜色集合，统一从 MaterialTheme.colorScheme 派生。
  */
-internal data class DesktopColors(
-    val bgBase: Color = Color(0xFF000000),
-    val bgElevated: Color = Color(0xFF121212),
-    val bgHighlight: Color = Color(0xFF1A1A1A),
-    val bgHover: Color = Color(0xFF282828),
-    val textPrimary: Color = Color.White,
-    val textSecondary: Color = Color(0xFFA7A7A7),
-    val theme: Color = Color(0xFF1DB954),
-    val divider: Color = Color(0x1AFFFFFF),
-)
+internal object DesktopColors {
+    val bgBase: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = MaterialTheme.colorScheme.background
+
+    val bgElevated: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = MaterialTheme.colorScheme.surfaceContainerLowest
+
+    val bgHighlight: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = MaterialTheme.colorScheme.surface
+
+    val bgHover: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = MaterialTheme.colorScheme.surfaceContainerHighest
+
+    val textPrimary: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = MaterialTheme.colorScheme.onSurface
+
+    val textSecondary: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = MaterialTheme.colorScheme.onSurfaceVariant
+
+    val theme: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = MaterialTheme.colorScheme.primary
+
+    val divider: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = MaterialTheme.colorScheme.outlineVariant
+}
 
 /**
  * 侧边栏菜单项模型。
@@ -154,4 +187,4 @@ internal data class ArtistDetailData(
 /**
  * 桌面原型全局色板实例。
  */
-internal val desktopColors = DesktopColors()
+internal val desktopColors = DesktopColors
