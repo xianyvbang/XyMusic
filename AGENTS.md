@@ -5,17 +5,6 @@
 
 Keep new shared business logic in a library module or `composeApp/commonMain` first. Treat `build/`, crash logs, and generated outputs as disposable.
 
-## Build, Test, and Development Commands
-Use the Gradle wrapper from the repository root.
-
-- `.\gradlew.bat :androidApp:assembleDebug` builds the Android debug app.
-- `.\gradlew.bat :desktopApp:run` starts the desktop client.
-- `.\gradlew.bat check` runs the standard verification tasks across modules.
-- `.\gradlew.bat :composeApp:check` verifies the shared app module and its tests.
-- `.\gradlew.bat :androidApp:testDebugUnitTest` runs Android JVM tests.
-
-If Gradle cannot use the default home in your environment, set `GRADLE_USER_HOME` to the repo-local `.gradle-user-home`.
-
 ## Coding Style & Naming Conventions
 Follow Kotlin defaults: 4-space indentation, no tabs, trailing commas only when they improve diffs, and concise expression bodies where readable. Use `PascalCase` for classes, objects, and composables, `camelCase` for functions and properties, and lower-case package names under `cn.xybbz.*`.
 

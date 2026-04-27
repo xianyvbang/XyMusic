@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -29,8 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.PointerIcon
-import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -42,6 +39,7 @@ import cn.xybbz.config.image.rememberMusicCoverUrls
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.ext.debounceClickable
+import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.screens.desktopColors
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyImage
@@ -178,13 +176,6 @@ private fun SongTitleCell(
 
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
-    var textModifier = Modifier
-        .hoverable(interactionSource)
-        .pointerHoverIcon(PointerIcon.Hand)
-        .debounceClickable(
-            interactionSource = interactionSource,
-            indication = null, onClick = onOpenArtist
-        )
 
     Row(
         modifier = Modifier.width(SongTableDefaults.titleWidth),
@@ -208,13 +199,10 @@ private fun SongTitleCell(
             XyTextSub(
                 text = music.artists?.joinToString().orEmpty(),
                 color = if (hovered) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .hoverable(interactionSource)
-                    .pointerHoverIcon(PointerIcon.Hand)
-                    .debounceClickable(
-                        interactionSource = interactionSource,
-                        indication = null, onClick = onOpenArtist
-                    ),
+                modifier = Modifier.jvmHoverDebounceClickable(
+                    interactionSource = interactionSource,
+                    onClick = onOpenArtist,
+                ),
                 maxLines = 1,
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
             )
@@ -340,15 +328,10 @@ internal fun SongTableCell(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
-    var textModifier = Modifier
-        .hoverable(interactionSource)
-        .pointerHoverIcon(PointerIcon.Hand)
-    onClick?.let { click ->
-        textModifier = textModifier.debounceClickable(
-            interactionSource = interactionSource,
-            indication = null, onClick = click
-        )
-    }
+    val textModifier = Modifier.jvmHoverDebounceClickable(
+        interactionSource = interactionSource,
+        onClick = onClick,
+    )
 
     Box(modifier = modifier.width(width), contentAlignment = Alignment.CenterStart) {
         XyText(
