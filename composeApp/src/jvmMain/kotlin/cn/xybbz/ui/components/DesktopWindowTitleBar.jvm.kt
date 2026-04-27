@@ -200,7 +200,7 @@ private fun DesktopSearchField(
         paddingValues = PaddingValues(),
         singleLine = true,
         leadingContent = {
-            Image(
+            Icon(
                 painter = painterResource(Res.drawable.search_24px),
                 contentDescription = null,
                 modifier = Modifier.size(18.dp)
