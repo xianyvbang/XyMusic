@@ -46,6 +46,7 @@ import cn.xybbz.router.Connection
 import cn.xybbz.router.Download
 import cn.xybbz.router.Navigator
 import cn.xybbz.router.Setting
+import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.screens.jvmRouterMenuWidth
@@ -248,7 +249,7 @@ private fun DesktopTitleActions(
                     .height(XyTheme.dimens.itemHeight * .8f)
                     .desktopTitleBarHitTarget(hitTestOwner, "ConnectionMenu")
                     .clip(RoundedCornerShape(XyTheme.dimens.corner))
-                    .clickable { ifShowConnectionMenu = true }
+                    .debounceClickable { ifShowConnectionMenu = true }
                     .padding(
                         horizontal = XyTheme.dimens.innerHorizontalPadding,
                         vertical = XyTheme.dimens.innerVerticalPadding
@@ -270,7 +271,7 @@ private fun DesktopTitleActions(
                     tint = colors.foreground,
                     modifier = Modifier
                         .size(18.dp)
-                        .clickable { ifShowConnectionMenu = true }
+                        .debounceClickable { ifShowConnectionMenu = true }
                 )
             }
             XyDropdownMenu(
@@ -415,7 +416,7 @@ private fun DesktopToolbarIconButton(
                 color = borderColor,
                 shape = RoundedCornerShape(XyTheme.dimens.corner)
             )
-            .clickable(enabled = enabled, onClick = onClick),
+            .debounceClickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(

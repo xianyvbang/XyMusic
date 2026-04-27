@@ -579,7 +579,7 @@ fun PlayerStateComponent(
             modifier = Modifier
                 .size(size)
                 .clip(CircleShape)
-                .clickable {
+                .debounceClickable {
                     if (playbackState.state != PlayStateEnum.Pause) {
                         musicController.pause()
                     } else {

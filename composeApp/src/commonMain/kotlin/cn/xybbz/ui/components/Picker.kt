@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import cn.xybbz.ui.ext.debounceClickable
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
@@ -117,7 +118,7 @@ fun <T> Picker(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(itemHeight)
-                        .clickable {
+                        .debounceClickable {
                             scope.launch { state.animateScrollToItem(index) }
                         },
                     contentAlignment = Alignment.Center

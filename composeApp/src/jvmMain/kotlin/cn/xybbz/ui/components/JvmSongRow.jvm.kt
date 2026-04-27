@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -39,6 +38,7 @@ import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.config.image.rememberMusicCoverUrls
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.screens.desktopColors
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyImage
@@ -111,8 +111,9 @@ internal fun SongRow(
         modifier = modifier
             .height(XyTheme.dimens.itemHeight)
             .clip(RoundedCornerShape(XyTheme.dimens.outerVerticalPadding / 2))
-            .clickable(
+            .debounceClickable(
                 interactionSource = interactionSource,
+                indication = null,
                 onClick = onClick
             ),
         paddingValues = PaddingValues(
@@ -139,7 +140,7 @@ internal fun SongRow(
                 text = albumText,
                 width = SongTableDefaults.albumWidth,
                 color = desktopColors.textSecondary,
-                modifier = Modifier.clickable(onClick = onOpenAlbum)
+                modifier = Modifier.debounceClickable(onClick = onOpenAlbum)
             )
         }
         if (columns.showMetaColumn) {
@@ -190,7 +191,7 @@ private fun SongTitleCell(
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
             )
             XyTextSub(
-                modifier = Modifier.clickable(onClick = onOpenArtist),
+                modifier = Modifier.debounceClickable(onClick = onOpenArtist),
                 text = music.artists?.joinToString().orEmpty(),
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
             )

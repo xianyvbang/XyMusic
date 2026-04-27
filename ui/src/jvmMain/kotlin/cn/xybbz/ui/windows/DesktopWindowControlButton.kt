@@ -13,6 +13,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 
 @Composable
@@ -34,7 +35,7 @@ internal fun DesktopWindowControlButton(
                 onBoundsChanged(controlType, coordinates.boundsInWindow())
             }
             .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .clickable(onClick = onClick),
+            .debounceClickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         icon(

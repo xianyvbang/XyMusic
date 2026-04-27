@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.components.SongTable
 import cn.xybbz.ui.components.SongTableColumns
+import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.xy.XyIconButton
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XySmallSlider
@@ -170,7 +171,7 @@ internal fun AlbumCard(card: AlbumCardData, onClick: () -> Unit) {
             .clip(RoundedCornerShape(8.dp))
             .background(background)
             .hoverable(interactionSource)
-            .clickable(onClick = onClick)
+            .debounceClickable(onClick = onClick)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
