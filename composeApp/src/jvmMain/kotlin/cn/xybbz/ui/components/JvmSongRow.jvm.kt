@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +29,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -140,7 +143,7 @@ internal fun SongRow(
                 text = albumText,
                 width = SongTableDefaults.albumWidth,
                 color = desktopColors.textSecondary,
-                modifier = Modifier.debounceClickable(onClick = onOpenAlbum)
+                onClick = onOpenAlbum,
             )
         }
         if (columns.showMetaColumn) {
@@ -172,6 +175,17 @@ private fun SongTitleCell(
     fallbackCoverUrl: String?,
     onOpenArtist: () -> Unit,
 ) {
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val hovered by interactionSource.collectIsHoveredAsState()
+    var textModifier = Modifier
+        .hoverable(interactionSource)
+        .pointerHoverIcon(PointerIcon.Hand)
+        .debounceClickable(
+            interactionSource = interactionSource,
+            indication = null, onClick = onOpenArtist
+        )
+
     Row(
         modifier = Modifier.width(SongTableDefaults.titleWidth),
         verticalAlignment = Alignment.CenterVertically,
@@ -190,9 +204,18 @@ private fun SongTitleCell(
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
             )
+
             XyTextSub(
-                modifier = Modifier.debounceClickable(onClick = onOpenArtist),
                 text = music.artists?.joinToString().orEmpty(),
+                color = if (hovered) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .hoverable(interactionSource)
+                    .pointerHoverIcon(PointerIcon.Hand)
+                    .debounceClickable(
+                        interactionSource = interactionSource,
+                        indication = null, onClick = onOpenArtist
+                    ),
+                maxLines = 1,
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
             )
         }
@@ -313,19 +336,35 @@ internal fun SongTableCell(
     color: Color,
     textAlign: TextAlign = TextAlign.Start,
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
 ) {
-    XyText(
-        text = text,
-        color = color,
-        modifier = modifier.width(width),
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        fontWeight = FontWeight.Normal,
-        style = MaterialTheme.typography.bodyMedium.copy(
-            fontSize = 14.sp,
-            textAlign = textAlign,
-        ),
-    )
+    val interactionSource = remember { MutableInteractionSource() }
+    val hovered by interactionSource.collectIsHoveredAsState()
+    var textModifier = Modifier
+        .hoverable(interactionSource)
+        .pointerHoverIcon(PointerIcon.Hand)
+    onClick?.let { click ->
+        textModifier = textModifier.debounceClickable(
+            interactionSource = interactionSource,
+            indication = null, onClick = click
+        )
+    }
+
+    Box(modifier = modifier.width(width), contentAlignment = Alignment.CenterStart) {
+        XyText(
+            text = text,
+            color = if (hovered) MaterialTheme.colorScheme.primary else color,
+            modifier = textModifier,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            fontWeight = FontWeight.Normal,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontSize = 14.sp,
+                textAlign = textAlign,
+            ),
+        )
+    }
+
 }
 
 /**
