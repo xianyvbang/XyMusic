@@ -67,11 +67,7 @@ fun main() = application {
                 }
             )
         ) {
-            App(
-                appChrome = { navigator ->
-                    DesktopWindowTitleBar(navigator = navigator)
-                },
-            )
+            App()
         }
     }
 }

@@ -35,7 +35,6 @@ import org.koin.compose.getKoin
 //@Preview
 fun App(
     windowContentPadding: PaddingValues = PaddingValues(),
-    appChrome: @Composable (Navigator) -> Unit = {},
 ) {
 
     val settingsManager: SettingsManager = getKoin().get()
@@ -75,15 +74,11 @@ fun App(
                         .fillMaxSize()
                         .padding(windowContentPadding)
                 ) {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        appChrome(navigator)
-                        MainScreen(
-                            navigationConfig = navigationConfig,
-                            navigationState = navigationState,
-                            navigator = navigator,
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
+                    MainScreen(
+                        navigationConfig = navigationConfig,
+                        navigationState = navigationState,
+                        navigator = navigator,
+                    )
                     XyPopTipHost()
                 }
             }
