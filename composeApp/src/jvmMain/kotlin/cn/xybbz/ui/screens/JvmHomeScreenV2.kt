@@ -97,10 +97,9 @@ fun JvmHomeScreenV2(
         ScreenLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(end = XyTheme.dimens.contentPadding),
+                .background(MaterialTheme.colorScheme.background),
             state = homeListState,
-            contentPadding = PaddingValues(horizontal = XyTheme.dimens.innerHorizontalPadding),
+            contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
         ) {
             var hasPreviousSection = false
 
@@ -313,7 +312,7 @@ private fun JvmHomeDesktopSectionHeader(
     title: String,
     action: @Composable (() -> Unit)? = null,
 ) {
-    XyRow {
+    XyRow(paddingValues = PaddingValues(vertical = XyTheme.dimens.outerVerticalPadding)) {
         XyTextLarge(text = title)
         if (action != null) {
             action()

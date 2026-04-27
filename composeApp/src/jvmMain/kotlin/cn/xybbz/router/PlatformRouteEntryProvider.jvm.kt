@@ -9,7 +9,6 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import cn.xybbz.ui.screens.AboutScreen
-import cn.xybbz.ui.screens.AlbumDesktopScreen
 import cn.xybbz.ui.screens.AlbumInfoDesktopScreen
 import cn.xybbz.ui.screens.ArtistDesktopScreen
 import cn.xybbz.ui.screens.ArtistInfoDesktopScreen
@@ -23,17 +22,14 @@ import cn.xybbz.ui.screens.DownloadScreen
 import cn.xybbz.ui.screens.FavoriteDesktopScreen
 import cn.xybbz.ui.screens.GenresInfoScreen
 import cn.xybbz.ui.screens.GenresScreen
-import cn.xybbz.ui.screens.HomeDesktopScreen
 import cn.xybbz.ui.screens.InterfaceSettingScreen
-import cn.xybbz.ui.screens.JvmHomeScreen
+import cn.xybbz.ui.screens.JvmAlbumScreen
 import cn.xybbz.ui.screens.JvmHomeScreenV2
 import cn.xybbz.ui.screens.JvmMusicScreen
 import cn.xybbz.ui.screens.LanguageConfigScreen
 import cn.xybbz.ui.screens.LocalScreen
 import cn.xybbz.ui.screens.MemoryManagementScreen
-import cn.xybbz.ui.screens.MusicDesktopScreen
 import cn.xybbz.ui.screens.ProxyConfigScreen
-import cn.xybbz.ui.screens.SearchDesktopScreen
 import cn.xybbz.ui.screens.SelectLibraryScreen
 import cn.xybbz.ui.screens.SetBackgroundImageScreen
 import cn.xybbz.ui.screens.SettingScreen
@@ -61,10 +57,13 @@ private val jvmDesktopEntryProvider = buildDefaultRouteEntryProvider()
 
 private val jvmDesktopEntryProvider2 = entryProvider<NavKey> {
     desktopNode<Connection> { ConnectionScreen(it.connectionUiType) }
-    desktopNode<Home> { HomeDesktopScreen() }
+    desktopNode<Home> {
+//        HomeDesktopScreen()
+        JvmHomeScreenV2()
+    }
     desktopNode<Search> { JvmHomeScreenV2() }
     desktopNode<Music> { JvmMusicScreen() }
-    desktopNode<Album> { JvmHomeScreen() }
+    desktopNode<Album> { JvmAlbumScreen() }
     desktopNode<Artist> { ArtistDesktopScreen() }
     desktopNode<FavoriteList> { FavoriteDesktopScreen() }
     desktopNode<AlbumInfo> { AlbumInfoDesktopScreen(it) }
