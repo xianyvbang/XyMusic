@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -46,7 +47,6 @@ import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
-import kotlin.math.absoluteValue
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.download_24px
 import xymusic_kmp.composeapp.generated.resources.favorite_24px
@@ -54,6 +54,7 @@ import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
 import xymusic_kmp.composeapp.generated.resources.info_24px
 import xymusic_kmp.composeapp.generated.resources.music_note_24px
 import xymusic_kmp.composeapp.generated.resources.playlist_add_24px
+import kotlin.math.absoluteValue
 
 /**
  * 歌曲表格列开关配置。
@@ -79,6 +80,9 @@ internal object SongTableDefaults {
     val metaWidth = 140.dp
     val durationWidth = 72.dp
     val coverSize = 40.dp
+    val actionButtonSize = 32.dp
+    val actionIconSize = 24.dp
+    val actionButtonSpacing = 8.dp
 }
 
 /**
@@ -222,14 +226,21 @@ private fun SongFavoriteCell(isFavorite: Boolean) {
 private fun SongInlineActions(hovered: Boolean) {
     Box(
         modifier = Modifier.width(SongTableDefaults.actionsWidth),
-        contentAlignment = Alignment.CenterStart,
+        contentAlignment = Alignment.Center,
     ) {
         AnimatedVisibility(
             visible = hovered,
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding / 2)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(
+                    SongTableDefaults.actionButtonSpacing,
+                    Alignment.CenterHorizontally
+                ),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 HoverActionIcon(Res.drawable.download_24px)
                 HoverActionIcon(Res.drawable.playlist_add_24px)
                 HoverActionIcon(Res.drawable.info_24px)
@@ -244,10 +255,14 @@ private fun SongInlineActions(hovered: Boolean) {
  */
 @Composable
 private fun HoverActionIcon(iconRes: DrawableResource) {
-    IconButton(onClick = {}) {
+    IconButton(
+        onClick = {},
+        modifier = Modifier.size(SongTableDefaults.actionButtonSize)
+    ) {
         Icon(
             painter = painterResource(iconRes),
             contentDescription = null,
+            modifier = Modifier.size(SongTableDefaults.actionIconSize),
             tint = desktopColors.textSecondary,
         )
     }
