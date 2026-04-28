@@ -23,6 +23,8 @@ import io.ktor.http.takeFrom
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.engine.EmbeddedServer
+import io.ktor.server.engine.applicationEnvironment
+import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.request.httpMethod
@@ -41,6 +43,8 @@ import io.ktor.server.routing.routing
 import io.ktor.utils.io.ByteWriteChannel
 import io.ktor.utils.io.copyTo
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import java.net.URLEncoder
@@ -54,6 +58,10 @@ object JvmReverseProxyServer : KoinComponent {
 
     private const val PROXY_HOST = "localhost"
     private const val PROXY_PORT = 19180
+    private val proxyWorkerThreadCount =
+        Runtime.getRuntime().availableProcessors().coerceAtLeast(4)
+    private val proxyCallThreadCount = (proxyWorkerThreadCount * 2).coerceAtLeast(8)
+    private val proxyRunningRequestLimit = (proxyCallThreadCount * 16).coerceAtMost(256)
 
     /**
      * 需要从下游请求中过滤掉的受限请求头。
@@ -106,10 +114,28 @@ object JvmReverseProxyServer : KoinComponent {
         }
 
         try {
-            proxyEngine = embeddedServer(Netty, host = PROXY_HOST, port = PROXY_PORT) {
-                installProxyRoutes()
-            }.start(wait = false)
-            logger.info { "本地反向代理服务已启动：http://$PROXY_HOST:$PROXY_PORT/proxy" }
+            proxyEngine = embeddedServer(
+                Netty,
+                environment = applicationEnvironment(),
+                configure = {
+                    connectionGroupSize = 1
+                    workerGroupSize = proxyWorkerThreadCount
+                    callGroupSize = proxyCallThreadCount
+                    runningLimit = proxyRunningRequestLimit
+                    connector {
+                        host = PROXY_HOST
+                        port = PROXY_PORT
+                    }
+                },
+                module = {
+                    installProxyRoutes()
+                }
+            ).start(wait = false)
+            logger.info {
+                "本地反向代理服务已启动：http://$PROXY_HOST:$PROXY_PORT/proxy，" +
+                        "worker=$proxyWorkerThreadCount，call=$proxyCallThreadCount，" +
+                        "runningLimit=$proxyRunningRequestLimit"
+            }
         } catch (throwable: Throwable) {
             logger.error(throwable) { "启动本地反向代理服务失败" }
         }
@@ -205,48 +231,50 @@ object JvmReverseProxyServer : KoinComponent {
                 }
             }
 
-            httpClient.prepareRequest(upstreamRequest).execute { upstreamResponse ->
-                val responseHeaders = Headers.build {
-                    copyHeaders(
-                        source = upstreamResponse.headers,
-                        target = this,
-                        restrictedHeaders = restrictedResponseHeaders
+            withContext(Dispatchers.IO) {
+                httpClient.prepareRequest(upstreamRequest).execute { upstreamResponse ->
+                    val responseHeaders = Headers.build {
+                        copyHeaders(
+                            source = upstreamResponse.headers,
+                            target = this,
+                            restrictedHeaders = restrictedResponseHeaders
+                        )
+                    }
+
+                    call.respond(
+                        object : OutgoingContent.WriteChannelContent() {
+                            /**
+                             * 将上游状态码原样回传给下游客户端。
+                             */
+                            override val status: HttpStatusCode = upstreamResponse.status
+
+                            /**
+                             * 将上游 Content-Type 原样回传，确保 m3u8、ts、mp4 等媒体类型可被正确识别。
+                             */
+                            override val contentType: ContentType? =
+                                upstreamResponse.headers[HttpHeaders.ContentType]
+                                    ?.let(ContentType::parse)
+
+                            /**
+                             * 将上游 Content-Length 回传给下游，便于播放器处理进度与分段请求。
+                             */
+                            override val contentLength: Long? =
+                                upstreamResponse.headers[HttpHeaders.ContentLength]?.toLongOrNull()
+
+                            /**
+                             * 除了单独处理的 Content-Type 与 Content-Length，其余响应头全部透传。
+                             */
+                            override val headers: Headers = responseHeaders
+
+                            /**
+                             * 直接将上游字节流写回客户端，避免整包缓冲。
+                             */
+                            override suspend fun writeTo(channel: ByteWriteChannel) {
+                                upstreamResponse.bodyAsChannel().copyTo(channel)
+                            }
+                        }
                     )
                 }
-
-                call.respond(
-                    object : OutgoingContent.WriteChannelContent() {
-                        /**
-                         * 将上游状态码原样回传给下游客户端。
-                         */
-                        override val status: HttpStatusCode = upstreamResponse.status
-
-                        /**
-                         * 将上游 Content-Type 原样回传，确保 m3u8、ts、mp4 等媒体类型可被正确识别。
-                         */
-                        override val contentType: ContentType? =
-                            upstreamResponse.headers[HttpHeaders.ContentType]
-                                ?.let(ContentType::parse)
-
-                        /**
-                         * 将上游 Content-Length 回传给下游，便于播放器处理进度与分段请求。
-                         */
-                        override val contentLength: Long? =
-                            upstreamResponse.headers[HttpHeaders.ContentLength]?.toLongOrNull()
-
-                        /**
-                         * 除了单独处理的 Content-Type 与 Content-Length，其余响应头全部透传。
-                         */
-                        override val headers: Headers = responseHeaders
-
-                        /**
-                         * 直接将上游字节流写回客户端，避免整包缓冲。
-                         */
-                        override suspend fun writeTo(channel: ByteWriteChannel) {
-                            upstreamResponse.bodyAsChannel().copyTo(channel)
-                        }
-                    }
-                )
             }
         } catch (cancellationException: CancellationException) {
             throw cancellationException
