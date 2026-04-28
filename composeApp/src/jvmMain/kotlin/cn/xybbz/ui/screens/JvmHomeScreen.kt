@@ -68,7 +68,7 @@ private val HomeMusicTableColumns = SongTableColumns(
 )
 
 @Composable
-fun JvmHomeScreenV2(
+fun JvmHomeScreen(
     homeViewModel: HomeViewModel = koinViewModel<HomeViewModel>()
 ) {
     val homeListState = rememberLazyListState()
