@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -116,7 +117,6 @@ internal fun SongRow(
             .clip(RoundedCornerShape(XyTheme.dimens.outerVerticalPadding / 2))
             .debounceClickable(
                 interactionSource = interactionSource,
-                indication = null,
                 onClick = onClick
             ),
         paddingValues = PaddingValues(

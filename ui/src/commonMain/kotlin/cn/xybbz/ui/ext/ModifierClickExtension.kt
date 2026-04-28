@@ -40,6 +40,30 @@ inline fun Modifier.debounceClickable(
 
 inline fun Modifier.debounceClickable(
     debounceInterval: Long = 500L,
+    interactionSource: MutableInteractionSource,
+    enabled: Boolean = true,
+    onClickLabel: String? = null,
+    role: Role? = null,
+    crossinline onClick: () -> Unit,
+): Modifier = then(
+    Modifier.composed {
+        var lastClickTime by remember { mutableLongStateOf(0L) }
+        this.clickable(
+            enabled,
+            onClickLabel = onClickLabel,
+            role = role,
+            interactionSource
+        ) {
+            val currentTime = Clock.System.now().toEpochMilliseconds()
+            if ((currentTime - lastClickTime) < debounceInterval) return@clickable
+            lastClickTime = currentTime
+            onClick()
+        }
+    }
+)
+
+inline fun Modifier.debounceClickable(
+    debounceInterval: Long = 500L,
     enabled: Boolean = true,
     onClickLabel: String? = null,
     role: Role? = null,

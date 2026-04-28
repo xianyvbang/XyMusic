@@ -28,11 +28,6 @@ val jvmTopRouterDataList = listOf(
         route = Home
     ),
     JvmTopRouterData(
-        title = Res.string.search,
-        icon = Res.drawable.search_24px,
-        route = Search
-    ),
-    JvmTopRouterData(
         title = Res.string.music_library,
         icon = Res.drawable.menu_open_24px,
         route = Music

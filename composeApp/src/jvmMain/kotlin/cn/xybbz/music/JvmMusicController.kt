@@ -795,7 +795,10 @@ class JvmMusicController : MusicCommonController() {
         ignoreStoppedEventOnce()
         //todo 需要试验断网后这里的逻辑
         /*val played = */runCatching {
-            player.media().play(mediaSource)
+            player.media().play(mediaSource,
+                ":network-caching=${0.toLong()}",
+                ":file-caching=${(music.runTimeTicks * 0.1).toLong()}",
+                ":http-reconnect")
         }.onFailure {
             clearIgnoredStoppedEvent()
             Log.e("vlc", "直接播放媒体失败: $mediaSource", it)
