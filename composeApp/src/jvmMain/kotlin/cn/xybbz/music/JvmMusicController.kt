@@ -30,6 +30,9 @@ class JvmMusicController : MusicCommonController() {
     private var mediaPlayer: MediaPlayer? = null
     private var mediaPlayerListenerRegistered = false
     private var ignoreNextStoppedEvent = false
+    // VLC loading is asynchronous, so keep the latest user play/pause intent separately.
+    @Volatile
+    private var playWhenReady = false
 
     private val playerListener = object : MediaPlayerEventAdapter() {
         /**
@@ -38,7 +41,12 @@ class JvmMusicController : MusicCommonController() {
         override fun playing(mediaPlayer: MediaPlayer?) {
             Log.i("vlc", "播放开始")
             clearIgnoredStoppedEvent()
-            submitMediaPlayerTask(mediaPlayer) { _ ->
+            submitMediaPlayerTask(mediaPlayer) { player ->
+                if (!playWhenReady) {
+                    player.controls().setPause(true)
+                    updateState(PlayStateEnum.Pause)
+                    return@submitMediaPlayerTask
+                }
                 if (state != PlayStateEnum.Playing) {
                     reportedPlayEvent()
                 }
@@ -51,6 +59,7 @@ class JvmMusicController : MusicCommonController() {
          */
         override fun paused(mediaPlayer: MediaPlayer?) {
             clearIgnoredStoppedEvent()
+            playWhenReady = false
             if (state == PlayStateEnum.Playing) {
                 reportedPauseEvent()
             }
@@ -65,6 +74,7 @@ class JvmMusicController : MusicCommonController() {
                 clearIgnoredStoppedEvent()
                 return
             }
+            playWhenReady = false
             setCurrentPositionData(0L)
             updateState(PlayStateEnum.None)
         }
@@ -119,6 +129,7 @@ class JvmMusicController : MusicCommonController() {
         override fun error(mediaPlayer: MediaPlayer?) {
             Log.i("vlc", "播放异常")
             clearIgnoredStoppedEvent()
+            playWhenReady = false
             updateState(PlayStateEnum.None)
         }
 
@@ -207,7 +218,13 @@ class JvmMusicController : MusicCommonController() {
      * 暂停当前 vlcj 播放器。
      */
     override fun pause() {
-        currentMediaPlayer()?.controls()?.pause()
+        val previousState = state
+        playWhenReady = false
+        if (previousState == PlayStateEnum.Loading || previousState == PlayStateEnum.Playing) {
+            reportedPauseEvent()
+            updateState(PlayStateEnum.Pause)
+        }
+        currentMediaPlayer()?.controls()?.setPause(true)
     }
 
     /**
@@ -215,6 +232,7 @@ class JvmMusicController : MusicCommonController() {
      */
     override fun resume() {
         Log.i("music", "恢复播放")
+        playWhenReady = true
         updateState(PlayStateEnum.Loading)
         val mrl = currentMediaPlayer()?.media()?.info()?.mrl()
         if (mrl.isNullOrBlank()) {
@@ -240,6 +258,8 @@ class JvmMusicController : MusicCommonController() {
                 )
             }
             if (state == PlayStateEnum.Pause) {
+                playWhenReady = true
+                updateState(PlayStateEnum.Loading)
                 player.controls().play()
             }
         }
@@ -484,6 +504,7 @@ class JvmMusicController : MusicCommonController() {
      */
     private fun stopCurrentPlayback() {
         clearIgnoredStoppedEvent()
+        playWhenReady = false
         runCatching { currentMediaPlayer()?.controls()?.stop() }
     }
 
@@ -753,6 +774,7 @@ class JvmMusicController : MusicCommonController() {
         val music = playMusicList.getOrNull(realIndex) ?: return
         val mediaSource = preparePlaylistSource(music)
         Log.i("=====", "音乐播放链接${music.musicUrl}")
+        playWhenReady = true
         updateState(PlayStateEnum.Loading)
         setCurrentPositionData(0L)
         updateEvent(PlayerEvent.BeforeChangeMusic)
@@ -790,6 +812,9 @@ class JvmMusicController : MusicCommonController() {
      * 播放自然结束后，完全交给应用层的播放顺序与模式来决定后续行为。
      */
     private fun handlePlaybackFinished() {
+        if (!playWhenReady) {
+            return
+        }
         val targetRealIndex = when (playMode) {
             PlayerModeEnum.SINGLE_LOOP -> curRealIndex.takeIf { it in playMusicList.indices }
             PlayerModeEnum.SEQUENTIAL_PLAYBACK, PlayerModeEnum.RANDOM_PLAY -> getNextPlayableIndex().takeIf {
