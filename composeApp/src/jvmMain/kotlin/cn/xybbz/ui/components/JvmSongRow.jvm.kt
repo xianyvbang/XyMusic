@@ -39,7 +39,6 @@ import cn.xybbz.config.image.rememberMusicCoverUrls
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.ext.debounceClickable
-import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.screens.desktopColors
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyImage
@@ -173,10 +172,6 @@ private fun SongTitleCell(
     fallbackCoverUrl: String?,
     onOpenArtist: () -> Unit,
 ) {
-
-    val interactionSource = remember { MutableInteractionSource() }
-    val hovered by interactionSource.collectIsHoveredAsState()
-
     Row(
         modifier = Modifier.width(SongTableDefaults.titleWidth),
         verticalAlignment = Alignment.CenterVertically,
@@ -198,13 +193,10 @@ private fun SongTitleCell(
 
             XyTextSub(
                 text = music.artists?.joinToString().orEmpty(),
-                color = if (hovered) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.jvmHoverDebounceClickable(
-                    interactionSource = interactionSource,
-                    onClick = onOpenArtist,
-                ),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                onClick = onOpenArtist,
             )
         }
     }
@@ -326,25 +318,19 @@ internal fun SongTableCell(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val hovered by interactionSource.collectIsHoveredAsState()
-    val textModifier = Modifier.jvmHoverDebounceClickable(
-        interactionSource = interactionSource,
-        onClick = onClick,
-    )
-
     Box(modifier = modifier.width(width), contentAlignment = Alignment.CenterStart) {
         XyText(
             text = text,
-            color = if (hovered) MaterialTheme.colorScheme.primary else color,
-            modifier = textModifier,
+            color = color,
+            modifier = Modifier,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             fontWeight = FontWeight.Normal,
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontSize = 14.sp,
-                textAlign = textAlign,
             ),
+            textAlign = textAlign,
+            onClick = onClick,
         )
     }
 
