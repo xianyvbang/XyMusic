@@ -30,6 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.DpOffset
@@ -66,8 +68,10 @@ import xymusic_kmp.composeapp.generated.resources.add_connection
 import xymusic_kmp.composeapp.generated.resources.app_icon_info
 import xymusic_kmp.composeapp.generated.resources.app_name
 import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.cancel_24px
 import xymusic_kmp.composeapp.generated.resources.check_24px
 import xymusic_kmp.composeapp.generated.resources.chevron_right_24px
+import xymusic_kmp.composeapp.generated.resources.clear
 import xymusic_kmp.composeapp.generated.resources.connection_link
 import xymusic_kmp.composeapp.generated.resources.download_24px
 import xymusic_kmp.composeapp.generated.resources.download_list
@@ -198,6 +202,7 @@ private fun DesktopSearchField(
         backgroundColor = colors.searchBackground,
         hint = stringResource(Res.string.search_music_album_artist),
         hintColor = colors.foregroundVariant,
+        showHintWhenFocused = false,
         paddingValues = PaddingValues(),
         singleLine = true,
         leadingContent = {
@@ -206,6 +211,26 @@ private fun DesktopSearchField(
                 contentDescription = null,
                 modifier = Modifier.size(18.dp)
             )
+        },
+        actionContent = if (value.isNotEmpty()) {
+            {
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(RoundedCornerShape(XyTheme.dimens.corner))
+                        .debounceClickable { onValueChange("") },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.cancel_24px),
+                        contentDescription = stringResource(Res.string.clear),
+                        tint = colors.foregroundVariant,
+                        modifier = Modifier.size(18.dp).pointerHoverIcon(PointerIcon.Hand)
+                    )
+                }
+            }
+        } else {
+            null
         }
     )
 }

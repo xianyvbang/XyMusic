@@ -35,9 +35,14 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
@@ -54,6 +59,7 @@ import cn.xybbz.ui.theme.XyTheme
  * @param modifier modifier
  * @param hint 提示
  * @param hintColor [hint] 文本颜色
+ * @param showHintWhenFocused 聚焦时是否继续显示 [hint]
  * @param readOnly 只读模式
  * @param paddingValues 边缘填充, 线条流畅的 IME
  * @param keyboardOptions 键盘选项
@@ -69,6 +75,7 @@ fun XyEdit(
     backgroundColor: Color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f),
     hint: String? = null,
     hintColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    showHintWhenFocused: Boolean = true,
     readOnly: Boolean = false,
     paddingValues: PaddingValues = PaddingValues(
         horizontal = XyTheme.dimens.innerHorizontalPadding,
@@ -83,10 +90,13 @@ fun XyEdit(
     actionContent: (@Composable () -> Unit)? = null,
     leadingContent: (@Composable () -> Unit)? = null,
 ) {
+    var isFocused by remember { mutableStateOf(false) }
+
     BasicTextField(
         value = text,
         onValueChange = onChange,
         modifier = modifier
+            .onFocusChanged { isFocused = it.isFocused }
             .padding(paddingValues),
         readOnly = readOnly,
         keyboardOptions = keyboardOptions,
@@ -113,7 +123,7 @@ fun XyEdit(
                     contentAlignment = textContentAlignment
                 ) {
                     innerTextField()
-                    if (hint != null && text.isEmpty()) {
+                    if (hint != null && text.isEmpty() && (showHintWhenFocused || !isFocused)) {
                         XyTextSub(
                             text = hint,
                             color = hintColor,
@@ -139,6 +149,7 @@ fun XyEdit(
     backgroundColor: Color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f),
     hint: String? = null,
     hintColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    showHintWhenFocused: Boolean = true,
     readOnly: Boolean = false,
     paddingValues: PaddingValues = PaddingValues(
         horizontal = XyTheme.dimens.innerHorizontalPadding,
@@ -153,10 +164,13 @@ fun XyEdit(
     actionContent: (@Composable () -> Unit)? = null,
     leadingContent: (@Composable () -> Unit)? = null,
 ) {
+    var isFocused by remember { mutableStateOf(false) }
+
     BasicTextField(
         value = text,
         onValueChange = onChange,
         modifier = modifier
+            .onFocusChanged { isFocused = it.isFocused }
             .padding(paddingValues),
         readOnly = readOnly,
         keyboardOptions = keyboardOptions,
@@ -183,7 +197,7 @@ fun XyEdit(
                     contentAlignment = textContentAlignment
                 ) {
                     innerTextField()
-                    if (hint != null && text.text.isEmpty()) {
+                    if (hint != null && text.text.isEmpty() && (showHintWhenFocused || !isFocused)) {
                         XyTextSub(
                             text = hint,
                             color = hintColor,

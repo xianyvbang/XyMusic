@@ -116,49 +116,6 @@ fun JvmSearchScreen(
         TopAppBar(
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
             title = {
-                XyEdit(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    text = searchViewModel.textFieldValue,
-                    onChange = {
-                        searchViewModel.updateSearchInput(it)
-                        if (searchViewModel.textFieldValue.text.isBlank()) {
-                            searchViewModel.updateIfShowSearchResult(false)
-                        }
-                    },
-                    hint = stringResource(Res.string.search_music_album_artist),
-                    leadingContent = {
-                        Icon(
-                            painter = painterResource(Res.drawable.search_24px),
-                            contentDescription = stringResource(Res.string.search_box_icon)
-                        )
-                    },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = {
-                        searchViewModel.onSearch(
-                            searchViewModel.textFieldValue.text
-                        )
-                    }),
-                    singleLine = true,
-                    actionContent = if (searchViewModel.textFieldValue.text.isNotBlank()) {
-                        {
-                            IconButton(
-                                onClick = composeClick {
-                                    searchViewModel.updateSearchInput(searchViewModel.textFieldValue.copy(""))
-                                    searchViewModel.updateIfShowSearchResult(false)
-                                },
-                                modifier = Modifier.size(IconButtonDefaults.extraSmallIconSize)
-                            ) {
-                                Icon(
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    painter = painterResource(Res.drawable.cancel_24px),
-                                    contentDescription = stringResource(Res.string.clear)
-                                )
-                            }
-                        }
-                    } else null
-                )
             },
             navigationIcon = {
                 IconButton(onClick = {
