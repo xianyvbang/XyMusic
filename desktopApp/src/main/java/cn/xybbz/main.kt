@@ -2,6 +2,7 @@ package cn.xybbz
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
@@ -26,7 +27,7 @@ fun main() = application {
         JvmReverseProxyServer.stop()
         exitApplication()
     }
-    val windowState = rememberWindowState()
+    val windowState = rememberWindowState(width = 1280.dp, height = 720.dp)
 
     Window(
         onCloseRequest = handleCloseRequest,
