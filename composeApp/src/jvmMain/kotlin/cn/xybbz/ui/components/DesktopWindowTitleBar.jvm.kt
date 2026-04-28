@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -30,15 +32,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.ConnectionUiType
+import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.enums.img
 import cn.xybbz.common.utils.DataSourceChangeUtils
 import cn.xybbz.config.music.MusicCommonController
@@ -47,6 +55,7 @@ import cn.xybbz.localdata.data.connection.ConnectionConfig
 import cn.xybbz.router.Connection
 import cn.xybbz.router.Download
 import cn.xybbz.router.Navigator
+import cn.xybbz.router.Search
 import cn.xybbz.router.Setting
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.popup.MenuItemDefaultData
@@ -152,6 +161,14 @@ private fun DesktopTitleCenter(
     val currentStack = navigator.state.backStacks[navigator.state.topLevelRoute]
     val canGoBack = navigator.state.topLevelRoute != navigator.state.startRoute ||
         currentStack?.lastOrNull() != navigator.state.topLevelRoute
+    fun submitSearch() {
+        val searchQuery = keyword.trim()
+        print("搜索内容${searchQuery}")
+        if (searchQuery.isNotEmpty()) {
+            keyword = searchQuery
+            navigator.navigate(Search(searchQuery = searchQuery))
+        }
+    }
 
     Row(
         modifier = Modifier
@@ -169,6 +186,7 @@ private fun DesktopTitleCenter(
         DesktopSearchField(
             value = keyword,
             onValueChange = { keyword = it },
+            onSearch = ::submitSearch,
             modifier = Modifier
                 .weight(1f)
                 .desktopTitleBarHitTarget(hitTestOwner, "SearchField")
@@ -184,6 +202,7 @@ private fun DesktopTitleCenter(
 private fun DesktopSearchField(
     value: String,
     onValueChange: (String) -> Unit,
+    onSearch: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = DesktopTitleBarColors.current
@@ -204,6 +223,10 @@ private fun DesktopSearchField(
         hintColor = colors.foregroundVariant,
         showHintWhenFocused = false,
         paddingValues = PaddingValues(),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = {
+            onSearch()
+        }),
         singleLine = true,
         leadingContent = {
             Icon(

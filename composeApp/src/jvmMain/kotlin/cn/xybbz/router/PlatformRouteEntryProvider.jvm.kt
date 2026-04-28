@@ -59,7 +59,7 @@ private val jvmDesktopEntryProvider = buildDefaultRouteEntryProvider()
 private val jvmDesktopEntryProvider2 = entryProvider<NavKey> {
     desktopNode<Connection> { ConnectionScreen(it.connectionUiType) }
     desktopNode<Home> { JvmHomeScreen() }
-    desktopNode<Search> { JvmSearchScreen() }
+    desktopNode<Search> { JvmSearchScreen(searchQuery = it.searchQuery) }
     desktopNode<Music> { JvmMusicScreen() }
     desktopNode<Album> { JvmAlbumScreen() }
     desktopNode<Artist> { ArtistDesktopScreen() }

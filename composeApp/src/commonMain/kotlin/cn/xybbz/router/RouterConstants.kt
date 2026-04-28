@@ -45,7 +45,9 @@ data object Home : RouterConstants()
  */
 @Serializable
 @SerialName("Search")
-data object Search : RouterConstants()
+data class Search(
+    val searchQuery: String = ""
+) : RouterConstants()
 
 /**
  * 音乐列表页面

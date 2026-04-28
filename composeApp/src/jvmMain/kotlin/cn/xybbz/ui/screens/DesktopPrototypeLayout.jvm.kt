@@ -82,7 +82,7 @@ internal fun DesktopPrototypeScreen(destination: DesktopDestination) {
                             onMenuSelected = { target ->
                                 when (target) {
                                     SidebarDestination.Home -> navigator.navigate(Home)
-                                    SidebarDestination.Search -> navigator.navigate(Search)
+                                    SidebarDestination.Search -> navigator.navigate(Search())
                                     SidebarDestination.Library -> navigator.navigate(Music)
                                     SidebarDestination.Albums -> navigator.navigate(Album)
                                     SidebarDestination.Artists -> navigator.navigate(Artist)

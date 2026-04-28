@@ -398,7 +398,7 @@ fun HomeScreen(
                         )
                     }
                     IconButton(onClick = {
-                        navigator.navigate(Search)
+                        navigator.navigate(Search())
                     }) {
                         Icon(
                             painter = painterResource(Res.drawable.search_24px),

@@ -39,6 +39,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -96,6 +97,7 @@ import cn.xybbz.ui.xy.XyIconButton as IconButton
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun JvmSearchScreen(
+    searchQuery: String = "",
     searchViewModel: SearchViewModel = koinViewModel<SearchViewModel>()
 ) {
     val navigator = LocalNavigator.current
@@ -105,6 +107,19 @@ fun JvmSearchScreen(
     val downloadMusicIds by searchViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
         emptyList()
     )
+    val routeSearchQuery = searchQuery.trim()
+
+    LaunchedEffect(routeSearchQuery) {
+        if (routeSearchQuery.isNotBlank()) {
+            searchViewModel.updateSearchInput(
+                TextFieldValue(
+                    text = routeSearchQuery,
+                    selection = TextRange(routeSearchQuery.length)
+                )
+            )
+            searchViewModel.onSearch(routeSearchQuery)
+        }
+    }
 
 
     SideEffect {
