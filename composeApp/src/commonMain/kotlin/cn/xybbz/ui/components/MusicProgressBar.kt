@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -33,12 +34,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.common.utils.LrcUtils.formatTime
 import cn.xybbz.extension.playProgress
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XySmallSlider
 import kotlinx.coroutines.flow.Flow
+
+private val MusicProgressBarTimeLabelWidth = 48.dp
 
 @Composable
 fun MusicProgressBar(
@@ -125,7 +130,8 @@ fun MusicProgressBarHorizontal(
     ) {
         BasicText(
             text = formatTime(currentTime),
-            style = timeTextStyle
+            modifier = Modifier.width(MusicProgressBarTimeLabelWidth),
+            style = timeTextStyle.copy(textAlign = TextAlign.End)
         )
         XySmallSlider(
             modifier = Modifier.weight(1f),
@@ -140,7 +146,8 @@ fun MusicProgressBarHorizontal(
         )
         BasicText(
             text = formatTime(totalTime),
-            style = timeTextStyle
+            modifier = Modifier.width(MusicProgressBarTimeLabelWidth),
+            style = timeTextStyle.copy(textAlign = TextAlign.Start)
         )
     }
 }

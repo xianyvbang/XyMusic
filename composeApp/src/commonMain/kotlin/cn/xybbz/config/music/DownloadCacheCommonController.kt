@@ -25,7 +25,7 @@ abstract class DownloadCacheCommonController : IoScoped(), KoinComponent {
     val cacheSchedule = _cacheSchedule.asStateFlow()
 
     fun updateCacheSchedule(schedule: Float) {
-        _cacheSchedule.value = schedule
+        _cacheSchedule.value = schedule.coerceIn(0f, 1f)
     }
 
     /**

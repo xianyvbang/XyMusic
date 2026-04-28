@@ -50,8 +50,16 @@ class JvmMusicController : MusicCommonController() {
                 if (state != PlayStateEnum.Playing) {
                     reportedPlayEvent()
                 }
+//                downloadCacheController.updateCacheSchedule(1f)
                 updateState(PlayStateEnum.Playing)
             }
+        }
+
+        /**
+         * VLC 上报的缓冲值是 0..100，这里转成 UI 进度条使用的 0..1。
+         */
+        override fun buffering(mediaPlayer: MediaPlayer?, newCache: Float) {
+            downloadCacheController.updateCacheSchedule(newCache / 100f)
         }
 
         /**
@@ -76,6 +84,7 @@ class JvmMusicController : MusicCommonController() {
             }
             playWhenReady = false
             setCurrentPositionData(0L)
+            downloadCacheController.updateCacheSchedule(0f)
             updateState(PlayStateEnum.None)
         }
 
@@ -130,6 +139,7 @@ class JvmMusicController : MusicCommonController() {
             Log.i("vlc", "播放异常")
             clearIgnoredStoppedEvent()
             playWhenReady = false
+            downloadCacheController.updateCacheSchedule(0f)
             updateState(PlayStateEnum.None)
         }
 
@@ -505,6 +515,7 @@ class JvmMusicController : MusicCommonController() {
     private fun stopCurrentPlayback() {
         clearIgnoredStoppedEvent()
         playWhenReady = false
+        downloadCacheController.updateCacheSchedule(0f)
         runCatching { currentMediaPlayer()?.controls()?.stop() }
     }
 
@@ -777,6 +788,7 @@ class JvmMusicController : MusicCommonController() {
         playWhenReady = true
         updateState(PlayStateEnum.Loading)
         setCurrentPositionData(0L)
+        downloadCacheController.updateCacheSchedule(0f)
         updateEvent(PlayerEvent.BeforeChangeMusic)
         updateRealIndex(realIndex)
 

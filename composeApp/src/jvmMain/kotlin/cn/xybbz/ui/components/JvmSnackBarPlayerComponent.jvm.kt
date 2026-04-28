@@ -102,6 +102,7 @@ fun JvmSnackBarPlayerComponent(
     val selectUiState by snackBarPlayerViewModel.selectControl.uiState.collectAsStateWithLifecycle()
     val playbackState by snackBarPlayerViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
     val originMusicList by snackBarPlayerViewModel.musicController.originMusicListFlow.collectAsStateWithLifecycle()
+    val cacheScheduleData by snackBarPlayerViewModel.musicController.downloadCacheController.cacheSchedule.collectAsStateWithLifecycle()
     val favoriteSet by mainViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
 
     val defaultSnackBarColor = MaterialTheme.colorScheme.surfaceContainerLowest
@@ -324,6 +325,7 @@ fun JvmSnackBarPlayerComponent(
                     musicController = snackBarPlayerViewModel.musicController,
                     musicBottomMenuViewModel = musicBottomMenuViewModel,
                     favoriteSet = favoriteSet,
+                    cacheProgress = cacheScheduleData,
                     onSharedCoverBoundsChanged = {
                         sharedCoverSourceBoundsOnScreen = it
                     },
