@@ -20,8 +20,6 @@ package cn.xybbz.ui.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -44,7 +42,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.zIndex
@@ -109,15 +106,6 @@ fun JvmSnackBarPlayerComponent(
 
     val defaultSnackBarColor = MaterialTheme.colorScheme.surfaceContainerLowest
 
-    var colorPurple by remember {
-        mutableStateOf(defaultSnackBarColor)
-    }
-    val isDarkTheme = XyTheme.configs.isDarkTheme
-    val animatedColor by animateColorAsState(
-        targetValue = colorPurple,
-        animationSpec = tween(durationMillis = 800),
-        label = "backgroundColorAnim"
-    )
     val density = androidx.compose.ui.platform.LocalDensity.current
     val sharedCoverRequestSize = remember(density) {
         with(density) {
@@ -184,7 +172,6 @@ fun JvmSnackBarPlayerComponent(
 
             }.invokeOnCompletion {
                 snackBarPlayerViewModel.musicController.clearPlayerList()
-                colorPurple = defaultSnackBarColor
             }
         },
         onSeekToIndex = {
@@ -198,7 +185,6 @@ fun JvmSnackBarPlayerComponent(
                     coroutineScope.launch {
                         mainViewModel.db.playerDao.removeByDatasource()
                     }
-                    colorPurple = defaultSnackBarColor
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -210,9 +196,6 @@ fun JvmSnackBarPlayerComponent(
             .height(XyTheme.dimens.snackBarPlayerHeight)
             .zIndex(Float.MAX_VALUE)
             .background(defaultSnackBarColor)
-            .drawBehind {
-                drawRect(animatedColor)
-            }
     ) {
         AnimatedContent(
             targetState = selectUiState.isOpen,
@@ -341,17 +324,10 @@ fun JvmSnackBarPlayerComponent(
                     musicController = snackBarPlayerViewModel.musicController,
                     musicBottomMenuViewModel = musicBottomMenuViewModel,
                     favoriteSet = favoriteSet,
-                    isDarkTheme = isDarkTheme,
-                    defaultContainerColor = defaultSnackBarColor,
                     onSharedCoverBoundsChanged = {
                         sharedCoverSourceBoundsOnScreen = it
                     },
                     sharedCoverRequestSize = sharedCoverRequestSize,
-                    onSetColor = {
-                        colorPurple = it
-                            ?.takeUnless { color -> color.alpha == 0f }
-                            ?: defaultSnackBarColor
-                    },
                     onShowPlayer = onClick,
                     onShowPlaylist = {
                         musicListState = true

@@ -76,7 +76,6 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.common.enums.PlayStateEnum
-import cn.xybbz.common.utils.ResourcesUtils.readPaletteColor
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.config.music.MusicCommonController
@@ -90,7 +89,6 @@ import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XySmallImage
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.viewmodel.MusicBottomMenuViewModel
-import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -162,14 +160,11 @@ internal fun JvmSnackBarPlaybackBar(
     musicController: MusicCommonController,
     musicBottomMenuViewModel: MusicBottomMenuViewModel,
     favoriteSet: List<String>,
-    isDarkTheme: Boolean,
-    defaultContainerColor: Color,
     sharedCoverRequestSize: IntSize,
     showCover: Boolean = true,
     cacheProgress: Float = 0f,
     desktopDragHitTestOwner: DesktopInteractiveHitTestOwner? = null,
     onSharedCoverBoundsChanged: (Rect) -> Unit = {},
-    onSetColor: (Color?) -> Unit = {},
     onShowPlayer: (() -> Unit)? = null,
     onShowPlaylist: () -> Unit,
     onToggleFavorite: suspend (XyPlayMusic) -> Unit,
@@ -223,12 +218,8 @@ internal fun JvmSnackBarPlaybackBar(
                                 .size(JvmSnackBarCoverSize)
                                 .clip(RoundedCornerShape(XyTheme.dimens.corner)),
                             musicController = musicController,
-                            isDarkTheme = isDarkTheme,
                             onBoundsChanged = onSharedCoverBoundsChanged,
                             requestSize = sharedCoverRequestSize,
-                            onSetColor = {
-                                onSetColor(it ?: defaultContainerColor)
-                            }
                         )
                     }
                 } else {
@@ -655,21 +646,17 @@ private fun PlayerModeEnum.toPlayModeIcon(): DrawableResource {
     }
 }
 
-private val logger = KotlinLogging.logger("JvmSnackBarPlaybackBar")
-
 /**
  * 播放栏左侧封面组件。
  *
- * 负责加载当前歌曲封面，并在图片成功解码后提取主色，供调用方决定是否联动背景着色。
+ * 负责加载当前歌曲封面。
  */
 @Composable
 private fun JvmImageCover(
     modifier: Modifier = Modifier,
     musicController: MusicCommonController,
-    isDarkTheme: Boolean,
     onBoundsChanged: (Rect) -> Unit = {},
     requestSize: IntSize,
-    onSetColor: (Color?) -> Unit
 ) {
     val playbackState by musicController.playbackStateFlow.collectAsStateWithLifecycle()
     val coverUrls = rememberPlayMusicCoverUrls(
@@ -681,7 +668,6 @@ private fun JvmImageCover(
     val byteCoverModel = playbackState.picByte
     val activeCoverModel = primaryCoverModel ?: fallbackCoverModel ?: byteCoverModel
     val backupCoverModel = if (activeCoverModel == byteCoverModel) null else byteCoverModel
-    val defaultContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest
 
     XySmallImage(
         modifier = modifier.onGloballyPositioned { coordinates ->
@@ -702,16 +688,5 @@ private fun JvmImageCover(
         error = Res.drawable.music_xy_placeholder_foreground,
         fallback = Res.drawable.music_xy_placeholder_foreground,
         contentDescription = stringResource(Res.string.music_cover),
-        onSuccess = {
-            readPaletteColor(
-                image = it.result.image,
-                isDarkTheme = isDarkTheme,
-                onColorReady = onSetColor
-            )
-        },
-        onError = {
-            logger.info { "加载图片失败" }
-            onSetColor(defaultContainerColor)
-        },
     )
 }

@@ -28,6 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -102,6 +104,7 @@ internal fun SongRow(
     onClick: () -> Unit = {},
     onOpenAlbum: () -> Unit = {},
     onOpenArtist: () -> Unit = {},
+    onFavoriteClick: () -> Unit = {},
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
@@ -130,7 +133,10 @@ internal fun SongRow(
             onOpenArtist = onOpenArtist
         )
         if (columns.showFavoriteColumn) {
-            SongFavoriteCell(music.ifFavoriteStatus)
+            SongFavoriteCell(
+                isFavorite = music.ifFavoriteStatus,
+                onClick = onFavoriteClick,
+            )
         }
         if (columns.showInlineActions) {
             SongInlineActions(hovered = hovered)
@@ -203,22 +209,27 @@ private fun SongTitleCell(
 }
 
 /**
- * 收藏状态展示列。
- * 当前只负责显示状态，不承载收藏切换交互。
+ * 收藏状态按钮列。
  */
 @Composable
-private fun SongFavoriteCell(isFavorite: Boolean) {
+private fun SongFavoriteCell(
+    isFavorite: Boolean,
+    onClick: () -> Unit,
+) {
     Box(
         modifier = Modifier.width(SongTableDefaults.favoriteWidth),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            painter = painterResource(
-                if (isFavorite) Res.drawable.favorite_24px else Res.drawable.favorite_border_24px
-            ),
-            contentDescription = null,
-            tint = if (isFavorite) desktopColors.theme else desktopColors.textSecondary,
-        )
+        IconButton(onClick = onClick, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
+            Icon(
+                painter = painterResource(
+                    if (isFavorite) Res.drawable.favorite_24px else Res.drawable.favorite_border_24px
+                ),
+                contentDescription = null,
+                modifier = Modifier.size(SongTableDefaults.actionIconSize),
+                tint = if (isFavorite) desktopColors.theme else desktopColors.textSecondary,
+            )
+        }
     }
 }
 
@@ -262,6 +273,7 @@ private fun HoverActionIcon(iconRes: DrawableResource) {
     IconButton(
         onClick = {},
         modifier = Modifier.size(SongTableDefaults.actionButtonSize)
+            .pointerHoverIcon(PointerIcon.Hand)
     ) {
         Icon(
             painter = painterResource(iconRes),

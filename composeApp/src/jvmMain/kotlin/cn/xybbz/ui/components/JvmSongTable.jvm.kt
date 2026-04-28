@@ -29,6 +29,7 @@ internal fun SongTable(
     onSongClick: (XyMusic) -> Unit = {},
     onOpenAlbum: (XyMusic) -> Unit = {},
     onOpenArtist: (XyMusic) -> Unit = {},
+    onFavoriteClick: (XyMusic) -> Unit = {},
 ) {
     Column(modifier = androidx.compose.ui.Modifier.fillMaxWidth()) {
         SongTableHeader(columns = columns)
@@ -44,6 +45,7 @@ internal fun SongTable(
                 onClick = { onSongClick(music) },
                 onOpenAlbum = { onOpenAlbum(music) },
                 onOpenArtist = { onOpenArtist(music) },
+                onFavoriteClick = { onFavoriteClick(music) },
             )
         }
     }
@@ -64,6 +66,7 @@ internal fun LazyListScope.songTableItems(
     onSongClick: (XyMusic) -> Unit = {},
     onOpenAlbum: (XyMusic) -> Unit = {},
     onOpenArtist: (XyMusic) -> Unit = {},
+    onFavoriteClick: (XyMusic) -> Unit = {},
 ) {
     item(key = "${tableKey}_table_header") {
         SongTableHeader(columns = columns)
@@ -83,6 +86,7 @@ internal fun LazyListScope.songTableItems(
             onClick = { onSongClick(music) },
             onOpenAlbum = { onOpenAlbum(music) },
             onOpenArtist = { onOpenArtist(music) },
+            onFavoriteClick = { onFavoriteClick(music) },
         )
     }
 }

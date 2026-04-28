@@ -201,6 +201,7 @@ fun DesktopWindowTitleCenterBar(
         Box(
             modifier = modifier
                 .fillMaxWidth()
+                .padding(start = XyTheme.dimens.outerHorizontalPadding)
                 .height(DesktopWindowTitleBarDefaults.Height)
                 .onGloballyPositioned { coordinates ->
                     chromeController.updateTitleBarBounds(coordinates.boundsInWindow())

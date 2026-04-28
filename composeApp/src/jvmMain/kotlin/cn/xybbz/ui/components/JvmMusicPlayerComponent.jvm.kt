@@ -678,8 +678,6 @@ fun JvmMusicPlayerScreen(
                             musicController = musicPlayerViewModel.musicController,
                             musicBottomMenuViewModel = musicBottomMenuViewModel,
                             favoriteSet = favoriteList,
-                            isDarkTheme = XyTheme.configs.isDarkTheme,
-                            defaultContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
                             sharedCoverRequestSize = sharedCoverRequestSize,
                             showCover = false,
                             cacheProgress = cacheScheduleData,
