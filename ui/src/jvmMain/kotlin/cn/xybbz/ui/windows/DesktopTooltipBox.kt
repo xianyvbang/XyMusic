@@ -20,7 +20,7 @@ import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun DesktopWindowControlTooltipBox(
+fun DesktopTooltipBox(
     tooltip: String,
     content: @Composable () -> Unit,
 ) {

@@ -49,6 +49,7 @@ import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.screens.desktopColors
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.windows.DesktopTooltipBox
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
@@ -68,6 +69,7 @@ import xymusic_kmp.composeapp.generated.resources.album_24px
 import xymusic_kmp.composeapp.generated.resources.artist
 import xymusic_kmp.composeapp.generated.resources.av_timer_24px
 import xymusic_kmp.composeapp.generated.resources.chevron_right_24px
+import xymusic_kmp.composeapp.generated.resources.download
 import xymusic_kmp.composeapp.generated.resources.download_24px
 import xymusic_kmp.composeapp.generated.resources.double_speed
 import xymusic_kmp.composeapp.generated.resources.favorite_24px
@@ -435,9 +437,18 @@ private fun SongInlineActions(hovered: Boolean) {
                 ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                HoverActionIcon(Res.drawable.download_24px)
-                HoverActionIcon(Res.drawable.playlist_add_24px)
-                HoverActionIcon(Res.drawable.info_24px)
+                HoverActionIcon(
+                    iconRes = Res.drawable.download_24px,
+                    tooltip = stringResource(Res.string.download),
+                )
+                HoverActionIcon(
+                    iconRes = Res.drawable.playlist_add_24px,
+                    tooltip = stringResource(Res.string.add_to_playlist),
+                )
+                HoverActionIcon(
+                    iconRes = Res.drawable.info_24px,
+                    tooltip = stringResource(Res.string.song_info),
+                )
             }
         }
     }
@@ -448,18 +459,23 @@ private fun SongInlineActions(hovered: Boolean) {
  * 本次仅保留视觉层，不接业务点击。
  */
 @Composable
-private fun HoverActionIcon(iconRes: DrawableResource) {
-    IconButton(
-        onClick = {},
-        modifier = Modifier.size(SongTableDefaults.actionButtonSize)
-            .pointerHoverIcon(PointerIcon.Hand)
-    ) {
-        Icon(
-            painter = painterResource(iconRes),
-            contentDescription = null,
-            modifier = Modifier.size(SongTableDefaults.actionIconSize),
-            tint = desktopColors.textSecondary,
-        )
+private fun HoverActionIcon(
+    iconRes: DrawableResource,
+    tooltip: String,
+) {
+    DesktopTooltipBox(tooltip = tooltip) {
+        IconButton(
+            onClick = {},
+            modifier = Modifier.size(SongTableDefaults.actionButtonSize)
+                .pointerHoverIcon(PointerIcon.Hand)
+        ) {
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                modifier = Modifier.size(SongTableDefaults.actionIconSize),
+                tint = desktopColors.textSecondary,
+            )
+        }
     }
 }
 

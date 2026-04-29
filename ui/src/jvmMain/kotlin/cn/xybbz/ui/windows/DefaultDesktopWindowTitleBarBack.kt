@@ -44,7 +44,7 @@ internal fun RowScope.DefaultDesktopWindowTitleBarBack(
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (showMinimizeButton) {
-            DesktopWindowControlTooltipBox(
+            DesktopTooltipBox(
                 tooltip = stringResource(Res.string.minimize_window)
             ) {
                 DesktopWindowControlButton(
@@ -62,7 +62,7 @@ internal fun RowScope.DefaultDesktopWindowTitleBarBack(
             } else {
                 WindowControlType.Maximize
             }
-            DesktopWindowControlTooltipBox(
+            DesktopTooltipBox(
                 tooltip = stringResource(
                     if (isMaximized) {
                         Res.string.restore_window
@@ -81,7 +81,7 @@ internal fun RowScope.DefaultDesktopWindowTitleBarBack(
         }
 
         if (showCloseButton) {
-            DesktopWindowControlTooltipBox(
+            DesktopTooltipBox(
                 tooltip = stringResource(Res.string.close_window)
             ) {
                 DesktopWindowControlButton(
