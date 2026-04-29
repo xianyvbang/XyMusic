@@ -66,6 +66,7 @@ import cn.xybbz.ui.components.MusicArtistCardComponent
 import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SearchRecordComponent
+import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
@@ -87,6 +88,7 @@ import xymusic_kmp.composeapp.generated.resources.cancel_24px
 import xymusic_kmp.composeapp.generated.resources.clear
 import xymusic_kmp.composeapp.generated.resources.music
 import xymusic_kmp.composeapp.generated.resources.return_home
+import xymusic_kmp.composeapp.generated.resources.search
 import xymusic_kmp.composeapp.generated.resources.search_24px
 import xymusic_kmp.composeapp.generated.resources.search_box_icon
 import xymusic_kmp.composeapp.generated.resources.search_history
@@ -131,85 +133,28 @@ fun JvmSearchScreen(
         TopAppBar(
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
             title = {
-            },
-            navigationIcon = {
-                IconButton(onClick = {
-                    navigator.goBack()
-                }) {
-                    Icon(
-                        painter = painterResource(Res.drawable.arrow_back_24px),
-                        contentDescription = stringResource(Res.string.return_home)
-                    )
-                }
+                TopAppBarTitle(
+                    title = "${stringResource(Res.string.search)}：${searchQuery}"
+                )
             }
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        AnimatedContent(targetState = searchViewModel.ifShowSearchResult) { bool ->
-            if (bool) {
-                JvmSearchResultScreen(
-                    musicList = searchViewModel.musicList,
-                    albumList = searchViewModel.albumList,
-                    artistList = searchViewModel.artistList,
-                    onAddMusic = {
-                        searchViewModel.addMusic(it)
-                    },
-                    onLoadingState = {
-                        searchViewModel.isSearchLoad
-                    },
-                    onFavoriteList = { favoriteList },
-                    onDownloadMusicIdList = { downloadMusicIds },
-                    currentPlayingMusicId = playbackState.musicInfo?.itemId,
-                    musicController = searchViewModel.musicController
-                )
-            } else {
-                JvmHistoryAndHintList(
-                    onClick = { search ->
-                        searchViewModel.updateSearchInput(
-                            TextFieldValue(
-                                text = search,
-                                selection = TextRange(search.length)
-                            )
-                        )
-                        searchViewModel.onSearch(search)
-                    },
-                    onClear = {
-                        //清空搜索历史
-                        searchViewModel.clearSearchHistory()
-                    },
-                    onHistoryList = { searchViewModel.searchHistory })
-            }
-        }
-    }
-}
-
-/**
- * 列列表更改
- * @param [onClick] 点击方法
- * @param [onClear] 清除方法
- * @param [onHistoryList] 搜索历史列表
- */
-@Composable
-private fun JvmHistoryAndHintList(
-    onClick: (String) -> Unit,
-    onClear: () -> Unit,
-    onHistoryList: () -> List<SearchHistory>,
-) {
-
-    XyColumn(
-        paddingValues = PaddingValues(
-            horizontal = XyTheme.dimens.outerHorizontalPadding
-        ),
-        backgroundColor = Color.Transparent,
-        horizontalAlignment = Alignment.Start,
-        clipSize = 0.dp
-    ) {
-        SearchRecordComponent(
-            onHistoryList(),
-            title = stringResource(Res.string.search_history),
-            onClick = onClick,
-            onClear = onClear
+        JvmSearchResultScreen(
+            musicList = searchViewModel.musicList,
+            albumList = searchViewModel.albumList,
+            artistList = searchViewModel.artistList,
+            onAddMusic = {
+                searchViewModel.addMusic(it)
+            },
+            onLoadingState = {
+                searchViewModel.isSearchLoad
+            },
+            onFavoriteList = { favoriteList },
+            onDownloadMusicIdList = { downloadMusicIds },
+            currentPlayingMusicId = playbackState.musicInfo?.itemId,
+            musicController = searchViewModel.musicController
         )
     }
 }

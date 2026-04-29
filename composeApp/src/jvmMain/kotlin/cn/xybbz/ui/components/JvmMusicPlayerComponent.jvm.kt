@@ -30,6 +30,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.PointerMatcher
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
@@ -53,6 +55,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.onClick
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -82,6 +85,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.pointerInput
@@ -264,7 +268,7 @@ fun JvmMusicPlayerComponent(
  * 上半部分承载封面、歌词和推荐页内容，
  * 底部区域复用 `JvmSnackBarPlaybackBar`，让完整播放页和底部悬浮播放条保持一致的控制体验。
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun JvmMusicPlayerScreen(
     musicDetail: XyPlayMusic,
@@ -579,6 +583,9 @@ fun JvmMusicPlayerScreen(
                                                 modifier = Modifier
                                                     .widthIn(max = JvmMusicPlayerLyricsMaxWidth)
                                                     .fillMaxHeight()
+                                                    .onClick(matcher = PointerMatcher.mouse(PointerButton.Secondary)){
+                                                        lyricsMenuExpanded = true
+                                                    }
                                                     .pointerInput(musicDetail.itemId) {
                                                         awaitPointerEventScope {
                                                             while (true) {
@@ -598,7 +605,6 @@ fun JvmMusicPlayerScreen(
                                                                                 change.position.y.toDp()
                                                                             )
                                                                         }
-                                                                    lyricsMenuExpanded = true
                                                                 }
                                                             }
                                                         }
