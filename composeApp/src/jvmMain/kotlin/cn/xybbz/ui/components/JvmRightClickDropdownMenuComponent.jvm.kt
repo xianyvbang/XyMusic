@@ -84,7 +84,6 @@ fun JvmRightClickDropdownMenuComponent(modifier: Modifier = Modifier) {
                         vertical = 0.dp,
                     ),
                     itemHeight = menuObject.itemHeight,
-                    ifShowHorizontalDivider = false,
                 )
             }
         }

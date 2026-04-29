@@ -21,6 +21,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -382,6 +383,9 @@ private fun DesktopTitleActions(
                                             musicController = musicController
                                         )
                                     }
+                                },
+                                colors = {
+                                    MenuDefaults.itemColors()
                                 }
                             )
                         }

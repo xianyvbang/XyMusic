@@ -2,10 +2,8 @@ package cn.xybbz.ui.popup
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.MenuItemColors
@@ -28,7 +26,6 @@ fun XyDropdownMenu(
     itemDataList: List<MenuItemDefaultData>,
     contentPadding: PaddingValues = MenuDefaults.DropdownMenuItemContentPadding,
     itemHeight: Dp? = null,
-    ifShowHorizontalDivider: Boolean = true,
 ) {
     DropdownMenu(
         offset = offset,
@@ -40,9 +37,7 @@ fun XyDropdownMenu(
         ),
         containerColor = containerColor
     ) {
-        itemDataList.filter { it.ifItemShow() }.forEachIndexed { index, data ->
-            if (ifShowHorizontalDivider && index != 0)
-                HorizontalDivider(modifier = Modifier.fillMaxWidth())
+        itemDataList.filter { it.ifItemShow() }.forEachIndexed { _, data ->
             XyDropdownMenuItem(
                 text = data.title,
                 enabled = data.enabled,

@@ -116,7 +116,7 @@ fun JvmHomeScreen(
                     },
                     headerAction = {
                         TextButton(
-                            modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding / 2),
+                            modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
                             onClick = { navigator.navigate(DailyRecommend) },
                             contentPadding = PaddingValues(0.dp)
                         ) {
