@@ -6,17 +6,15 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +34,8 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.router.DailyRecommend
 import cn.xybbz.router.Navigator
+import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
+import cn.xybbz.ui.components.LazyHorizontalGridComponent
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SidebarVerticalScrollbar
@@ -62,6 +62,8 @@ private val HomeMusicTableColumns = SongTableColumns(
     showAlbumColumn = true,
     showMetaColumn = false,
 )
+
+private const val HomeAlbumRowCount = 2
 
 @Composable
 fun JvmHomeScreen(
@@ -259,8 +261,11 @@ private fun LazyListScope.homeAlbumSection(
     albumList: List<XyAlbum>,
     onOpenAlbum: (XyAlbum) -> Unit,
 ) {
-    val albumRows = albumList.chunked(5)
-    val columnCount = 5
+    if (albumList.isEmpty()) {
+        return
+    }
+
+    val rowCount = minOf(HomeAlbumRowCount, albumList.size)
 
     item(key = "${sectionKey}_header") {
         JvmHomeDesktopSectionHeader(title = title)
@@ -268,37 +273,30 @@ private fun LazyListScope.homeAlbumSection(
     item(key = "${sectionKey}_grid_spacing") {
         Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding + XyTheme.dimens.contentPadding))
     }
-    items(
-        items = albumRows,
-        key = { row -> "${sectionKey}_${row.firstOrNull()?.itemId.orEmpty()}" }
-    ) { rowAlbums ->
-        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-            val rowSpacing = XyTheme.dimens.innerVerticalPadding * 2
-            val cellWidth = (maxWidth - rowSpacing * (columnCount - 1)) / columnCount
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(rowSpacing),
-            ) {
-                rowAlbums.forEach { album ->
-                    Box(modifier = Modifier.width(cellWidth)) {
-                        MusicAlbumCardComponent(
-                            modifier = Modifier.fillMaxWidth(),
-                            album = album,
-                            imageSize = cellWidth,
-                            onRouter = { onOpenAlbum(album) }
-                        )
-                    }
-                }
-
-                repeat(columnCount - rowAlbums.size) {
-                    Spacer(modifier = Modifier.width(cellWidth))
-                }
+    item(key = "${sectionKey}_grid") {
+        val gridSpacing = XyTheme.dimens.innerVerticalPadding * 2
+        LazyHorizontalGridComponent(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(
+                    (MusicCardImageSize + 50.dp) * rowCount +
+                        gridSpacing * (rowCount - 1)
+                ),
+            rows = GridCells.Fixed(rowCount),
+            contentPadding = PaddingValues(0.dp),
+            horizontalArrangement = Arrangement.spacedBy(gridSpacing),
+            verticalArrangement = Arrangement.spacedBy(gridSpacing),
+        ) {
+            items(
+                items = albumList,
+                key = { album -> "${sectionKey}_${album.itemId}" },
+            ) { album ->
+                MusicAlbumCardComponent(
+                    album = album,
+                    imageSize = MusicCardImageSize,
+                    onRouter = { onOpenAlbum(album) },
+                )
             }
-        }
-
-        if (rowAlbums !== albumRows.lastOrNull()) {
-            Spacer(modifier = Modifier.height(XyTheme.dimens.innerVerticalPadding * 2))
         }
     }
 }
