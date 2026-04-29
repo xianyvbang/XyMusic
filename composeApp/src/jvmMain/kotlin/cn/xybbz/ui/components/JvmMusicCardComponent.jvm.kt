@@ -1,6 +1,12 @@
 package cn.xybbz.ui.components
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.background
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,11 +15,14 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -58,13 +67,28 @@ internal fun JvmMusicCardComponent(
     fallback: DrawableResource? = Res.drawable.music_xy_placeholder_foreground,
     onRouter: (String) -> Unit,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val hovered by interactionSource.collectIsHoveredAsState()
+    val cardHovered = enabled && hovered
+    val liftOffset by animateDpAsState(
+        targetValue = if (cardHovered) (-6).dp else 0.dp,
+        animationSpec = tween(durationMillis = 160),
+        label = "music_card_lift_offset",
+    )
+
     Column(
-        modifier = modifier.width(imageSize ?: MusicCardImageSize),
+        modifier = modifier
+            .width(imageSize ?: MusicCardImageSize)
+            .hoverable(
+                interactionSource = interactionSource,
+                enabled = enabled,
+            ),
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Center,
     ) {
         Card(
             modifier = modifier
+                .offset(y = liftOffset)
                 .fillMaxWidth()
                 .aspectRatio(1F),
             enabled = enabled,
@@ -95,6 +119,7 @@ internal fun JvmMusicCardComponent(
             name = name,
             artistName = artistName ?: "",
             enabled = enabled,
+            marqueeEnabled = cardHovered,
             onClick = { onRouter(id) },
         )
     }
@@ -106,8 +131,15 @@ private fun JvmMusicCardText(
     name: String,
     artistName: String,
     enabled: Boolean,
+    marqueeEnabled: Boolean,
     onClick: () -> Unit,
 ) {
+    val textMarqueeModifier = if (marqueeEnabled) {
+        Modifier.basicMarquee(iterations = Int.MAX_VALUE)
+    } else {
+        Modifier
+    }
+
     Column(
         modifier = Modifier
             .then(modifier)
@@ -117,23 +149,27 @@ private fun JvmMusicCardText(
     ) {
         if (enabled) {
             XyText(
+                modifier = textMarqueeModifier,
                 text = name,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.bodyLarge,
                 onClick = onClick,
             )
             XyTextSub(
+                modifier = textMarqueeModifier,
                 text = artistName,
                 maxLines = 1,
                 onClick = onClick,
             )
         } else {
             XyText(
+                modifier = textMarqueeModifier,
                 text = name,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.bodyLarge,
             )
             XyTextSub(
+                modifier = textMarqueeModifier,
                 text = artistName,
                 maxLines = 1,
             )
