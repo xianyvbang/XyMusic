@@ -1,6 +1,9 @@
 package cn.xybbz.ui.popup
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,6 +13,7 @@ import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.MenuItemColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +53,15 @@ fun XyDropdownMenu(
             val visibleSubItems = data.subItems.filter { it.ifItemShow() }
             val hasSubMenu = visibleSubItems.isNotEmpty()
             val subMenuExpanded = expandedSubMenuIndex == index
+            val interactionSource = remember { MutableInteractionSource() }
+            val hovered by interactionSource.collectIsHoveredAsState()
+
+            LaunchedEffect(hovered, hasSubMenu, index) {
+                if (hovered) {
+                    expandedSubMenuIndex = if (hasSubMenu) index else null
+                }
+            }
+
             Box {
                 XyDropdownMenuItem(
                     text = data.title,
@@ -57,11 +70,12 @@ fun XyDropdownMenu(
                     trailingIcon = data.trailingIcon,
                     onClick = {
                         if (hasSubMenu) {
-                            expandedSubMenuIndex = if (subMenuExpanded) null else index
+                            expandedSubMenuIndex = index
                         } else {
                             data.onClick()
                         }
                     },
+                    modifier = Modifier.hoverable(interactionSource),
                     colors = data.colors(),
                     backgroundColor = if (subMenuExpanded) {
                         MaterialTheme.colorScheme.primary
@@ -70,11 +84,16 @@ fun XyDropdownMenu(
                     },
                     contentPadding = contentPadding,
                     itemHeight = itemHeight,
+                    interactionSource = interactionSource,
                 )
                 if (hasSubMenu) {
+                    val subMenuOffset = DpOffset(
+                        x = data.subMenuOffset.x,
+                        y = data.subMenuOffset.y - (itemHeight ?: 0.dp),
+                    )
                     XyDropdownMenu(
                         modifier = data.subMenuModifier,
-                        offset = data.subMenuOffset,
+                        offset = subMenuOffset,
                         onIfShowMenu = { subMenuExpanded },
                         onSetIfShowMenu = {
                             if (!it && expandedSubMenuIndex == index) {
