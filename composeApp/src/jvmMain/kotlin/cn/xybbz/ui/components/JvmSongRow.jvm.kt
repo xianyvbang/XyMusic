@@ -90,13 +90,15 @@ internal object SongTableDefaults {
 
 /**
  * 歌曲表格中的单行内容。
- * 组件直接使用 XyMusic，展示文案通过参数覆盖，避免额外包装展示对象。
+ * 组件直接使用 XyMusic，展示文案、收藏状态和播放状态通过参数覆盖，避免额外包装展示对象。
  */
 @Composable
 internal fun SongRow(
     music: XyMusic,
     index: Int,
     columns: SongTableColumns,
+    ifFavorite: Boolean,
+    ifPlay: Boolean,
     modifier: Modifier = Modifier,
     albumText: String = music.albumName.orEmpty(),
     metaText: String = "",
@@ -110,11 +112,13 @@ internal fun SongRow(
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
     val coverUrls = rememberMusicCoverUrls(music)
+    val rowBackgroundColor = if (ifPlay) desktopColors.bgHover else Color.Transparent
 
     XyRow(
         modifier = modifier
             .height(XyTheme.dimens.itemHeight)
             .clip(RoundedCornerShape(XyTheme.dimens.outerVerticalPadding / 2))
+            .background(rowBackgroundColor)
             .debounceClickable(
                 interactionSource = interactionSource,
                 onClick = onClick
@@ -130,11 +134,12 @@ internal fun SongRow(
             accentColor = accentColor,
             coverUrl = coverUrls.primaryUrl,
             fallbackCoverUrl = coverUrls.fallbackUrl,
+            ifPlay = ifPlay,
             onOpenArtist = onOpenArtist
         )
         if (columns.showFavoriteColumn) {
             SongFavoriteCell(
-                isFavorite = music.ifFavoriteStatus,
+                isFavorite = ifFavorite,
                 onClick = onFavoriteClick,
             )
         }
@@ -176,6 +181,7 @@ private fun SongTitleCell(
     accentColor: Color,
     coverUrl: String?,
     fallbackCoverUrl: String?,
+    ifPlay: Boolean,
     onOpenArtist: () -> Unit,
 ) {
     Row(
@@ -191,6 +197,7 @@ private fun SongTitleCell(
         Column(verticalArrangement = Arrangement.Center) {
             XyText(
                 text = music.name,
+                color = if (ifPlay) desktopColors.theme else desktopColors.textPrimary,
                 fontWeight = FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

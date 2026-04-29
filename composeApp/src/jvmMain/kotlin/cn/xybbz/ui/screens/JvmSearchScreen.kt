@@ -19,34 +19,24 @@
 package cn.xybbz.ui.screens
 
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -56,45 +46,36 @@ import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.localdata.data.search.SearchHistory
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.router.ArtistInfo
 import cn.xybbz.ui.components.LazyRowComponent
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicArtistCardComponent
-import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
-import cn.xybbz.ui.components.SearchRecordComponent
+import cn.xybbz.ui.components.SongRow
+import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.TopAppBarTitle
-import cn.xybbz.ui.components.show
-import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.viewmodel.SearchViewModel
 import com.github.panpf.sketch.ability.bindPauseLoadWhenScrolling
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.album
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.artist
-import xymusic_kmp.composeapp.generated.resources.cancel_24px
-import xymusic_kmp.composeapp.generated.resources.clear
 import xymusic_kmp.composeapp.generated.resources.music
-import xymusic_kmp.composeapp.generated.resources.return_home
 import xymusic_kmp.composeapp.generated.resources.search
-import xymusic_kmp.composeapp.generated.resources.search_24px
-import xymusic_kmp.composeapp.generated.resources.search_box_icon
-import xymusic_kmp.composeapp.generated.resources.search_history
-import xymusic_kmp.composeapp.generated.resources.search_music_album_artist
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 
+private val SearchMusicTableColumns = SongTableColumns(
+    showFavoriteColumn = true,
+    showInlineActions = true,
+    showAlbumColumn = true,
+    showMetaColumn = false,
+)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -102,13 +83,8 @@ fun JvmSearchScreen(
     searchQuery: String = "",
     searchViewModel: SearchViewModel = koinViewModel<SearchViewModel>()
 ) {
-    val navigator = LocalNavigator.current
-
     val playbackState by searchViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
     val favoriteList by searchViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
-    val downloadMusicIds by searchViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
-        emptyList()
-    )
     val routeSearchQuery = searchQuery.trim()
 
     LaunchedEffect(routeSearchQuery) {
@@ -152,7 +128,6 @@ fun JvmSearchScreen(
                 searchViewModel.isSearchLoad
             },
             onFavoriteList = { favoriteList },
-            onDownloadMusicIdList = { downloadMusicIds },
             currentPlayingMusicId = playbackState.musicInfo?.itemId,
             musicController = searchViewModel.musicController
         )
@@ -171,7 +146,6 @@ fun JvmSearchResultScreen(
     onAddMusic: (XyMusic) -> Unit,
     onLoadingState: () -> Boolean,
     onFavoriteList: () -> List<String>,
-    onDownloadMusicIdList: () -> List<String>,
     currentPlayingMusicId: String?,
     musicController: MusicCommonController
 ) {
@@ -241,25 +215,32 @@ fun JvmSearchResultScreen(
                     XyText(text = stringResource(Res.string.music))
                 }
             }
-            items(musicList, key = { music -> music.itemId }) { music ->
-                MusicItemComponent(
+            itemsIndexed(
+                items = musicList,
+                key = { _, music -> music.itemId }
+            ) { index, music ->
+                SongRow(
                     music = music,
-                    onIfFavorite = {
-                        music.itemId in onFavoriteList()
-                    },
-                    ifDownload = music.itemId in onDownloadMusicIdList(),
+                    index = index,
+                    columns = SearchMusicTableColumns,
+                    ifFavorite = music.itemId in onFavoriteList(),
                     ifPlay = music.itemId == currentPlayingMusicId,
-                    onMusicPlay = {
-                        onAddMusic(
-                            music
-                        )
+                    onClick = {
+                        onAddMusic(music)
                     },
-                    trailingOnClick = {
-                        music.show()
+                    onOpenAlbum = {
+                        if (music.album.isNotBlank()) {
+                            navigator.navigate(
+                                AlbumInfo(
+                                    music.album,
+                                    MusicDataTypeEnum.ALBUM
+                                )
+                            )
+                        }
                     },
-                    trailingOnSelectClick = {
-                        music.show()
-                    }
+                    onFavoriteClick = {
+                        musicController.invokingOnFavorite(music.itemId)
+                    },
                 )
             }
         }
