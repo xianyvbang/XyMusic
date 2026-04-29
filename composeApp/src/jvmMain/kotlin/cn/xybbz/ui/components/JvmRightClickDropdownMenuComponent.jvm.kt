@@ -29,12 +29,8 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
+import cn.xybbz.ui.theme.XyTheme
 import kotlinx.coroutines.launch
-
-private val jvmRightClickDropdownMenuItemContentPadding = PaddingValues(
-    horizontal = 10.dp,
-    vertical = 0.dp,
-)
 
 private val jvmRightClickDropdownMenuItemHeight = 32.dp
 
@@ -83,7 +79,10 @@ fun JvmRightClickDropdownMenuComponent(modifier: Modifier = Modifier) {
                             item
                         }
                     },
-                    contentPadding = jvmRightClickDropdownMenuItemContentPadding,
+                    contentPadding = PaddingValues(
+                        horizontal = XyTheme.dimens.innerHorizontalPadding,
+                        vertical = 0.dp,
+                    ),
                     itemHeight = menuObject.itemHeight,
                     ifShowHorizontalDivider = false,
                 )
