@@ -31,12 +31,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.PointerMatcher
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -55,14 +53,11 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.onClick
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
@@ -85,17 +80,12 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.PointerButton
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.isSecondaryPressed
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionOnScreen
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -113,6 +103,7 @@ import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.ui.components.lrc.LrcViewNewCompose
+import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopInteractiveHitTestOwner
 import cn.xybbz.ui.windows.DesktopWindowTitleCenterBar
@@ -313,15 +304,13 @@ fun JvmMusicPlayerScreen(
     val desktopTabs = remember {
         listOf(Res.string.song_tab, Res.string.recommend)
     }
-    var lyricsMenuExpanded by remember(musicDetail.itemId) {
-        mutableStateOf(false)
-    }
-    var lyricsMenuOffset by remember {
-        mutableStateOf(DpOffset(0.dp, 0.dp))
-    }
     var lyricsPreviewOffsetMs by remember(musicDetail.itemId) {
         mutableLongStateOf(0L)
     }
+    val forwardOffsetText = stringResource(Res.string.forward_offset)
+    val backwardOffsetText = stringResource(Res.string.backward_offset)
+    val resetText = stringResource(Res.string.reset)
+    val confirmText = stringResource(Res.string.confirm)
     val mockLyricsEntries = remember(
         musicDetail.itemId,
         musicDetail.name,
@@ -362,7 +351,7 @@ fun JvmMusicPlayerScreen(
     }
 
     LaunchedEffect(musicDetail.itemId) {
-        lyricsMenuExpanded = false
+        dismissJvmRightClickDropdownMenus()
         resetLyricsPreviewOffset()
         coverRotation.snapTo(0f)
     }
@@ -583,32 +572,40 @@ fun JvmMusicPlayerScreen(
                                                 modifier = Modifier
                                                     .widthIn(max = JvmMusicPlayerLyricsMaxWidth)
                                                     .fillMaxHeight()
-                                                    .onClick(matcher = PointerMatcher.mouse(PointerButton.Secondary)){
-                                                        lyricsMenuExpanded = true
-                                                    }
-                                                    .pointerInput(musicDetail.itemId) {
-                                                        awaitPointerEventScope {
-                                                            while (true) {
-                                                                val event = awaitPointerEvent()
-                                                                val change =
-                                                                    event.changes.firstOrNull()
-                                                                        ?: continue
-                                                                if (
-                                                                    event.type == PointerEventType.Press &&
-                                                                    event.buttons.isSecondaryPressed
-                                                                ) {
-                                                                    resetLyricsPreviewOffset()
-                                                                    lyricsMenuOffset =
-                                                                        with(density) {
-                                                                            DpOffset(
-                                                                                change.position.x.toDp(),
-                                                                                change.position.y.toDp()
-                                                                            )
-                                                                        }
-                                                                }
-                                                            }
+                                                    .jvmRightClickDropdownMenu(
+                                                        dismissOnItemClick = false,
+                                                        onShowRequest = { resetLyricsPreviewOffset() },
+                                                        onCloseRequest = { resetLyricsPreviewOffset() },
+                                                        itemDataList = {
+                                                            listOf(
+                                                                MenuItemDefaultData(
+                                                                    title = forwardOffsetText,
+                                                                    onClick = {
+                                                                        lyricsPreviewOffsetMs += 500L
+                                                                    }
+                                                                ),
+                                                                MenuItemDefaultData(
+                                                                    title = backwardOffsetText,
+                                                                    onClick = {
+                                                                        lyricsPreviewOffsetMs -= 500L
+                                                                    }
+                                                                ),
+                                                                MenuItemDefaultData(
+                                                                    title = resetText,
+                                                                    onClick = {
+                                                                        lyricsPreviewOffsetMs = 0L
+                                                                    }
+                                                                ),
+                                                                MenuItemDefaultData(
+                                                                    title = confirmText,
+                                                                    onClick = {
+                                                                        // TODO 接入真实歌词配置后，在这里持久化 lyricsPreviewOffsetMs 到 lrcServer。
+                                                                        dismissJvmRightClickDropdownMenus()
+                                                                    }
+                                                                )
+                                                            )
                                                         }
-                                                    },
+                                                    ),
                                                 verticalArrangement = Arrangement.Top
                                             ) {
                                                 JvmMusicPlayerLyricsHeader(
@@ -632,22 +629,6 @@ fun JvmMusicPlayerScreen(
                                                         previewCurrentTimeMillis = mockLyricsCurrentTimeMillis,
                                                         // TODO 接入真实歌词数据后，移除 previewEntries / previewCurrentTimeMillis，改回真实歌词流。
                                                         onSetLrcOffset = { }
-                                                    )
-                                                    JvmLyricsConfigDropdownMenu(
-                                                        expanded = lyricsMenuExpanded,
-                                                        offset = lyricsMenuOffset,
-                                                        onDismissRequest = {
-                                                            lyricsMenuExpanded = false
-                                                            resetLyricsPreviewOffset()
-                                                        },
-                                                        onPreviewOffsetChange = {
-                                                            lyricsPreviewOffsetMs = it
-                                                        },
-                                                        onConfirm = {
-                                                            // TODO 接入真实歌词配置后，在这里持久化 lyricsPreviewOffsetMs 到 lrcServer。
-                                                            lyricsMenuExpanded = false
-                                                        },
-                                                        currentPreviewOffsetMs = lyricsPreviewOffsetMs
                                                     )
                                                 }
                                             }
@@ -807,70 +788,6 @@ private fun buildJvmMockLyricsEntries(musicDetail: XyPlayMusic): List<LrcEntryDa
 
 private fun XyPlayMusic.artistLabel(): String {
     return artists?.joinToString().takeUnless { it.isNullOrBlank() } ?: "Artist"
-}
-
-@Composable
-private fun BoxScope.JvmLyricsConfigDropdownMenu(
-    expanded: Boolean,
-    offset: DpOffset,
-    onDismissRequest: () -> Unit,
-    onPreviewOffsetChange: (Long) -> Unit,
-    onConfirm: () -> Unit,
-    currentPreviewOffsetMs: Long
-) {
-    DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = onDismissRequest,
-        offset = offset,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
-    ) {
-        DropdownMenuItem(
-            text = {
-                XyText(
-                    text = stringResource(Res.string.forward_offset),
-                    fontWeight = null,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            },
-            onClick = {
-                onPreviewOffsetChange(currentPreviewOffsetMs + 500L)
-            }
-        )
-        DropdownMenuItem(
-            text = {
-                XyText(
-                    text = stringResource(Res.string.backward_offset),
-                    fontWeight = null,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            },
-            onClick = {
-                onPreviewOffsetChange(currentPreviewOffsetMs - 500L)
-            }
-        )
-        DropdownMenuItem(
-            text = {
-                XyText(
-                    text = stringResource(Res.string.reset),
-                    fontWeight = null,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            },
-            onClick = {
-                onPreviewOffsetChange(0L)
-            }
-        )
-        DropdownMenuItem(
-            text = {
-                XyText(
-                    text = stringResource(Res.string.confirm),
-                    fontWeight = null,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            },
-            onClick = onConfirm
-        )
-    }
 }
 
 @Composable
