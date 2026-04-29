@@ -18,6 +18,7 @@
 
 package cn.xybbz.ui.popup
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
@@ -30,6 +31,7 @@ import androidx.compose.material3.MenuItemColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.theme.XyTheme
@@ -44,6 +46,7 @@ fun XyDropdownMenuItem(
     trailingIcon: @Composable (() -> Unit)? = null,
     enabled: Boolean = true,
     colors: MenuItemColors = MenuDefaults.itemColors(),
+    backgroundColor: Color = Color.Transparent,
     contentPadding: PaddingValues = MenuDefaults.DropdownMenuItemContentPadding,
     itemHeight: Dp? = null,
     interactionSource: MutableInteractionSource? = null,
@@ -58,7 +61,7 @@ fun XyDropdownMenuItem(
         onClick = onClick,
         modifier = (if (itemHeight == null) modifier else modifier.height(itemHeight)).padding(
             horizontal = 5.dp
-        ).clip(RoundedCornerShape(XyTheme.dimens.corner)),
+        ).clip(RoundedCornerShape(XyTheme.dimens.corner)).background(backgroundColor),
         leadingIcon = leadingIcon,
         trailingIcon = trailingIcon,
         enabled = enabled,

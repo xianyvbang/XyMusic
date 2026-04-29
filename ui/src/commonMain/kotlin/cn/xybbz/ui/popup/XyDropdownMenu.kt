@@ -45,6 +45,7 @@ fun XyDropdownMenu(
                 trailingIcon = data.trailingIcon,
                 onClick = data.onClick,
                 colors = data.colors(),
+                backgroundColor = data.backgroundColor(),
                 contentPadding = contentPadding,
                 itemHeight = itemHeight,
             )
@@ -60,5 +61,6 @@ data class MenuItemDefaultData(
     val trailingIcon: @Composable (() -> Unit)? = null,
     val onClick: () -> Unit,
     val ifItemShow: () -> Boolean = { true },
-    val colors: @Composable () -> MenuItemColors = { MenuDefaults.itemColors() }
+    val colors: @Composable () -> MenuItemColors = { MenuDefaults.itemColors() },
+    val backgroundColor: @Composable () -> Color = { Color.Transparent },
 )

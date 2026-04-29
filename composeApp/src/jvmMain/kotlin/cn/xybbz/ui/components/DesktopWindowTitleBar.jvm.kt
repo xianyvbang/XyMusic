@@ -384,9 +384,13 @@ private fun DesktopTitleActions(
                                         )
                                     }
                                 },
-                                colors = {
-                                    MenuDefaults.itemColors()
-                                }
+                                backgroundColor = {
+                                    if (currentConnectionId == connection.id) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        Color.Transparent
+                                    }
+                                },
                             )
                         }
                     )
