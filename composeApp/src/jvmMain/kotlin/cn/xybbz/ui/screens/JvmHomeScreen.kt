@@ -12,9 +12,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material3.MaterialTheme
@@ -116,6 +116,7 @@ fun JvmHomeScreen(
                     },
                     headerAction = {
                         TextButton(
+                            modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding / 2),
                             onClick = { navigator.navigate(DailyRecommend) },
                             contentPadding = PaddingValues(0.dp)
                         ) {
@@ -281,8 +282,8 @@ private fun LazyListScope.homeAlbumSection(
                 .fillMaxWidth()
                 .height(
                     (MusicCardImageSize + 50.dp) * rowCount +
-                        gridSpacing * (rowCount - 1) +
-                        JvmHorizontalScrollbarBottomPadding
+                            gridSpacing * (rowCount - 1) +
+                            JvmHorizontalScrollbarBottomPadding()
                 ),
             rows = GridCells.Fixed(rowCount),
             userScrollEnabled = false,
