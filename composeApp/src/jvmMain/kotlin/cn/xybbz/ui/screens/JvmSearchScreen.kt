@@ -56,7 +56,7 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.router.ArtistInfo
-import cn.xybbz.ui.components.LazyRowComponent
+import cn.xybbz.ui.components.JvmLazyRowComponent
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicArtistCardComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
@@ -187,7 +187,7 @@ fun JvmSearchResultScreen(
 
                 }
                 item {
-                    LazyRowComponent {
+                    JvmLazyRowComponent {
                         items(artistList, key = { it.artistId }) { artist ->
                             MusicArtistCardComponent(
                                 artist = artist,
@@ -207,7 +207,7 @@ fun JvmSearchResultScreen(
                     }
                 }
                 item {
-                    LazyRowComponent {
+                    JvmLazyRowComponent {
                         items(albumList, key = { it.itemId }) { album ->
                             MusicAlbumCardComponent(
                                 album = album,
@@ -270,7 +270,6 @@ fun JvmSearchResultScreen(
 
     }
 }
-
 
 
 

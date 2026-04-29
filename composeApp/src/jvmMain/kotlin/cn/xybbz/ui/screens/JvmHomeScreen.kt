@@ -35,7 +35,7 @@ import cn.xybbz.router.AlbumInfo
 import cn.xybbz.router.DailyRecommend
 import cn.xybbz.router.Navigator
 import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
-import cn.xybbz.ui.components.LazyHorizontalGridComponent
+import cn.xybbz.ui.components.JvmLazyHorizontalGridComponent
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SidebarVerticalScrollbar
@@ -275,7 +275,7 @@ private fun LazyListScope.homeAlbumSection(
     }
     item(key = "${sectionKey}_grid") {
         val gridSpacing = XyTheme.dimens.innerVerticalPadding * 2
-        LazyHorizontalGridComponent(
+        JvmLazyHorizontalGridComponent(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(
