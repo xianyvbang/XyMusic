@@ -59,7 +59,9 @@ fun JvmLazyHorizontalGridComponent(
         LazyHorizontalGrid(
             state = lazyGridState,
             rows = rows,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = JvmHorizontalScrollbarBottomPadding),
             contentPadding = contentPadding,
             horizontalArrangement = horizontalArrangement,
             verticalArrangement = verticalArrangement,

@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.theme.XyTheme
 
 private val JvmScrollbarThickness = 8.dp
+internal val JvmHorizontalScrollbarBottomPadding = JvmScrollbarThickness + 8.dp
 
 @Composable
 fun SidebarVerticalScrollbar(

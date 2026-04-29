@@ -35,6 +35,7 @@ import cn.xybbz.router.AlbumInfo
 import cn.xybbz.router.DailyRecommend
 import cn.xybbz.router.Navigator
 import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
+import cn.xybbz.ui.components.JvmHorizontalScrollbarBottomPadding
 import cn.xybbz.ui.components.JvmLazyHorizontalGridComponent
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
@@ -280,8 +281,9 @@ private fun LazyListScope.homeAlbumSection(
                 .fillMaxWidth()
                 .height(
                     (MusicCardImageSize + 50.dp) * rowCount +
-                        gridSpacing * (rowCount - 1)
-            ),
+                        gridSpacing * (rowCount - 1) +
+                        JvmHorizontalScrollbarBottomPadding
+                ),
             rows = GridCells.Fixed(rowCount),
             userScrollEnabled = false,
             contentPadding = PaddingValues(0.dp),

@@ -42,7 +42,9 @@ fun JvmLazyRowComponent(
     ) {
         LazyRow(
             state = lazyListState,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = JvmHorizontalScrollbarBottomPadding),
             contentPadding = contentPadding,
             horizontalArrangement = horizontalArrangement,
         ) {
