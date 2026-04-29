@@ -44,14 +44,15 @@ fun SidebarVerticalScrollbar(
                 exit = fadeOut(),
                 modifier = modifier,
             ) {
-                Row {
+                Row(
+                    modifier = Modifier.padding(bottom = XyTheme.dimens.snackBarPlayerHeight)
+                        .padding(end = XyTheme.dimens.outerVerticalPadding)
+                ) {
                     VerticalScrollbar(
                         modifier = Modifier
-                            .fillMaxHeight()
-                        /*.padding(vertical = XyTheme.dimens.outerVerticalPadding, horizontal = 6.dp)*/,
+                            .fillMaxHeight(),
                         adapter = adapter,
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
                 }
 
             }
