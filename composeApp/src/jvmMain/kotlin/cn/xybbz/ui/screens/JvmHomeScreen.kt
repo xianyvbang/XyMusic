@@ -1,9 +1,5 @@
 package cn.xybbz.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -14,7 +10,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -43,6 +38,7 @@ import cn.xybbz.router.DailyRecommend
 import cn.xybbz.router.Navigator
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
+import cn.xybbz.ui.components.SidebarVerticalScrollbar
 import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.theme.XyTheme
@@ -222,7 +218,7 @@ fun JvmHomeScreen(
             }
         }
 
-        HomeVerticalScrollbar(
+        SidebarVerticalScrollbar(
             visible = showScrollbar,
             modifier = Modifier.align(Alignment.CenterEnd),
             adapter = rememberScrollbarAdapter(scrollState = homeListState),
@@ -320,24 +316,3 @@ private fun JvmHomeDesktopSectionHeader(
     }
 }
 
-@Composable
-private fun HomeVerticalScrollbar(
-    visible: Boolean,
-    modifier: Modifier = Modifier,
-    adapter: androidx.compose.foundation.v2.ScrollbarAdapter,
-) {
-    AnimatedVisibility(
-        visible = visible,
-        enter = fadeIn(),
-        exit = fadeOut(),
-        modifier = modifier,
-    ) {
-        VerticalScrollbar(
-            modifier = Modifier
-                .fillMaxHeight()
-                .width(6.dp)
-                .padding(vertical = XyTheme.dimens.outerVerticalPadding),
-            adapter = adapter,
-        )
-    }
-}

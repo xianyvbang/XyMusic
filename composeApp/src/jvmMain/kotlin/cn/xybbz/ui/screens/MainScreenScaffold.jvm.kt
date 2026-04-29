@@ -1,9 +1,5 @@
 package cn.xybbz.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -13,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -49,6 +44,7 @@ import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.DesktopWindowTitleBar
 import cn.xybbz.ui.components.JvmRightClickDropdownMenuComponent
 import cn.xybbz.ui.components.MusicPlaylistItemComponent
+import cn.xybbz.ui.components.SidebarVerticalScrollbar
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
@@ -212,28 +208,6 @@ actual fun MainScreenScaffold(
             }
         }
         JvmRightClickDropdownMenuComponent()
-    }
-}
-
-@Composable
-private fun SidebarVerticalScrollbar(
-    visible: Boolean,
-    modifier: Modifier = Modifier,
-    adapter: androidx.compose.foundation.v2.ScrollbarAdapter,
-) {
-    AnimatedVisibility(
-        visible = visible,
-        enter = fadeIn(),
-        exit = fadeOut(),
-        modifier = modifier,
-    ) {
-        VerticalScrollbar(
-            modifier = Modifier
-                .fillMaxHeight()
-                .width(6.dp)
-                .padding(vertical = XyTheme.dimens.outerVerticalPadding),
-            adapter = adapter,
-        )
     }
 }
 
