@@ -68,26 +68,33 @@ fun JvmRightClickDropdownMenuComponent(modifier: Modifier = Modifier) {
                     onSetIfShowMenu = { if (!it) menuObject.close() },
                     containerColor = menuObject.containerColor,
                     itemDataList = menuObject.itemDataList.map { item ->
-                        if (menuObject.dismissOnItemClick) {
-                            item.copy(
-                                onClick = {
-                                    item.onClick()
-                                    menuObject.dismiss()
-                                }
-                            )
-                        } else {
-                            item
-                        }
+                        item.withDismissBehavior(menuObject)
                     },
                     contentPadding = PaddingValues(
-                        horizontal = XyTheme.dimens.innerHorizontalPadding,
-                        vertical = 0.dp,
+                        start = XyTheme.dimens.innerHorizontalPadding,
                     ),
                     itemHeight = menuObject.itemHeight,
                 )
             }
         }
     }
+}
+
+private fun MenuItemDefaultData.withDismissBehavior(
+    menuObject: JvmRightClickDropdownMenuObject,
+): MenuItemDefaultData {
+    val wrappedSubItems = subItems.map { it.withDismissBehavior(menuObject) }
+    val shouldDismiss = menuObject.dismissOnItemClick && dismissOnClick && wrappedSubItems.isEmpty()
+
+    return copy(
+        subItems = wrappedSubItems,
+        onClick = {
+            onClick()
+            if (shouldDismiss) {
+                menuObject.dismiss()
+            }
+        },
+    )
 }
 
 /**

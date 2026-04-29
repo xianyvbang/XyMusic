@@ -39,6 +39,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -152,6 +153,15 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 
 var bottomMenuMusicInfo = mutableStateListOf<XyMusic>()
+private var bottomMenuMusicInitialActions = mutableStateMapOf<String, MusicBottomMenuInitialAction>()
+
+enum class MusicBottomMenuInitialAction {
+    Menu,
+    SongInfo,
+    DoubleSpeed,
+    SkipBeginningAndEnd,
+    Timer,
+}
 
 /**
  * 底部弹出菜单
@@ -206,6 +216,8 @@ fun MusicBottomMenuComponent(
             musicBottomMenuViewModel.refreshVolume()
         }
 
+        val initialAction = bottomMenuMusicInitialActions[music.itemId] ?: MusicBottomMenuInitialAction.Menu
+
         //收藏信息
         val favoriteState by remember {
             derivedStateOf {
@@ -237,7 +249,7 @@ fun MusicBottomMenuComponent(
          * 是否打开底部菜单
          */
         var ifShowBottom by remember {
-            mutableStateOf(true)
+            mutableStateOf(initialAction == MusicBottomMenuInitialAction.Menu)
         }
 
         /**
@@ -253,6 +265,16 @@ fun MusicBottomMenuComponent(
         val ifDelete by remember {
             derivedStateOf {
                 musicBottomMenuViewModel.dataSourceManager.getCanDelete()
+            }
+        }
+
+        LaunchedEffect(music.itemId, initialAction) {
+            when (initialAction) {
+                MusicBottomMenuInitialAction.Menu -> ifShowBottom = true
+                MusicBottomMenuInitialAction.SongInfo -> ifShowMusicInfo = true
+                MusicBottomMenuInitialAction.DoubleSpeed -> ifDoubleSpeed = true
+                MusicBottomMenuInitialAction.SkipBeginningAndEnd -> ifShowHeadAndTail = true
+                MusicBottomMenuInitialAction.Timer -> ifTimer = true
             }
         }
 
@@ -1322,10 +1344,14 @@ fun XyButtonHorizontalPadding(
     )
 }
 
-fun XyMusic.show() = apply {
+fun XyMusic.show(
+    initialAction: MusicBottomMenuInitialAction = MusicBottomMenuInitialAction.Menu,
+) = apply {
+    bottomMenuMusicInitialActions[itemId] = initialAction
     bottomMenuMusicInfo.add(this@show)
 }
 
 fun XyMusic.dismiss() = apply {
+    bottomMenuMusicInitialActions.remove(itemId)
     bottomMenuMusicInfo.remove(this@dismiss)
 }

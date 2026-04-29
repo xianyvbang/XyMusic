@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,28 +36,55 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.common.utils.DateUtil
+import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.image.rememberMusicCoverUrls
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.ext.debounceClickable
+import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.screens.desktopColors
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
+import cn.xybbz.viewmodel.MusicBottomMenuViewModel
+import cn.xybbz.viewmodel.SidebarPlaylistViewModel
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.add_to_next_play_success
+import xymusic_kmp.composeapp.generated.resources.add_to_playlist
+import xymusic_kmp.composeapp.generated.resources.album
+import xymusic_kmp.composeapp.generated.resources.album_24px
+import xymusic_kmp.composeapp.generated.resources.artist
+import xymusic_kmp.composeapp.generated.resources.av_timer_24px
+import xymusic_kmp.composeapp.generated.resources.chevron_right_24px
 import xymusic_kmp.composeapp.generated.resources.download_24px
+import xymusic_kmp.composeapp.generated.resources.double_speed
 import xymusic_kmp.composeapp.generated.resources.favorite_24px
 import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
 import xymusic_kmp.composeapp.generated.resources.info_24px
+import xymusic_kmp.composeapp.generated.resources.keyboard_double_arrow_right_24px
 import xymusic_kmp.composeapp.generated.resources.music_note_24px
+import xymusic_kmp.composeapp.generated.resources.person_24px
+import xymusic_kmp.composeapp.generated.resources.play_next
+import xymusic_kmp.composeapp.generated.resources.play_arrow_24px
+import xymusic_kmp.composeapp.generated.resources.playback
 import xymusic_kmp.composeapp.generated.resources.playlist_add_24px
+import xymusic_kmp.composeapp.generated.resources.playlist_play_24px
+import xymusic_kmp.composeapp.generated.resources.skip_head_tail
+import xymusic_kmp.composeapp.generated.resources.song_info
+import xymusic_kmp.composeapp.generated.resources.speed_24px
+import xymusic_kmp.composeapp.generated.resources.timer_close
 import kotlin.math.absoluteValue
 
 /**
@@ -113,64 +141,207 @@ internal fun SongRow(
     val hovered by interactionSource.collectIsHoveredAsState()
     val coverUrls = rememberMusicCoverUrls(music)
     val rowBackgroundColor = if (ifPlay) desktopColors.bgHover else Color.Transparent
+    val menuItems = rememberSongRowContextMenuItems(
+        music = music,
+        onPlay = onClick,
+        onOpenAlbum = onOpenAlbum,
+        onOpenArtist = onOpenArtist,
+    )
 
-    XyRow(
+    JvmRightClickDropdownMenuBox(
         modifier = modifier
-            .height(XyTheme.dimens.itemHeight)
-            .clip(RoundedCornerShape(XyTheme.dimens.outerVerticalPadding / 2))
-            .background(rowBackgroundColor)
-            .debounceClickable(
-                interactionSource = interactionSource,
-                onClick = onClick
-            )
-            .pointerHoverIcon(PointerIcon.Hand),
-        paddingValues = PaddingValues(
-            horizontal = XyTheme.dimens.innerHorizontalPadding,
-            vertical = XyTheme.dimens.outerVerticalPadding + XyTheme.dimens.outerVerticalPadding / 2
-        ),
-        verticalAlignment = Alignment.CenterVertically,
+            .clip(RoundedCornerShape(XyTheme.dimens.outerVerticalPadding / 2)),
+        menuModifier = Modifier.width(220.dp),
+        itemDataList = { menuItems },
     ) {
-        SongTitleCell(
-            music = music,
-            accentColor = accentColor,
-            coverUrl = coverUrls.primaryUrl,
-            fallbackCoverUrl = coverUrls.fallbackUrl,
-            ifPlay = ifPlay,
-            onOpenArtist = onOpenArtist
-        )
-        if (columns.showFavoriteColumn) {
-            SongFavoriteCell(
-                isFavorite = ifFavorite,
-                onClick = onFavoriteClick,
+        XyRow(
+            modifier = Modifier
+                .height(XyTheme.dimens.itemHeight)
+                .background(rowBackgroundColor)
+                .debounceClickable(
+                    interactionSource = interactionSource,
+                    onClick = onClick
+                )
+                .pointerHoverIcon(PointerIcon.Hand),
+            paddingValues = PaddingValues(
+                horizontal = XyTheme.dimens.innerHorizontalPadding,
+                vertical = XyTheme.dimens.outerVerticalPadding + XyTheme.dimens.outerVerticalPadding / 2
+            ),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            SongTitleCell(
+                music = music,
+                accentColor = accentColor,
+                coverUrl = coverUrls.primaryUrl,
+                fallbackCoverUrl = coverUrls.fallbackUrl,
+                ifPlay = ifPlay,
+                onOpenArtist = onOpenArtist
             )
-        }
-        if (columns.showInlineActions) {
-            SongInlineActions(hovered = hovered)
-        }
-        if (columns.showAlbumColumn) {
-            SongTableCell(
-                text = albumText,
-                width = SongTableDefaults.albumWidth,
-                color = desktopColors.textSecondary,
-                onClick = onOpenAlbum,
-            )
-        }
-        if (columns.showMetaColumn) {
-            SongTableCell(
-                text = metaText,
-                width = SongTableDefaults.metaWidth,
-                color = desktopColors.textSecondary
-            )
-        }
-        if (columns.showDurationColumn) {
-            SongTableCell(
-                text = durationText,
-                width = SongTableDefaults.durationWidth,
-                color = desktopColors.textSecondary,
-                textAlign = TextAlign.End
-            )
+            if (columns.showFavoriteColumn) {
+                SongFavoriteCell(
+                    isFavorite = ifFavorite,
+                    onClick = onFavoriteClick,
+                )
+            }
+            if (columns.showInlineActions) {
+                SongInlineActions(hovered = hovered)
+            }
+            if (columns.showAlbumColumn) {
+                SongTableCell(
+                    text = albumText,
+                    width = SongTableDefaults.albumWidth,
+                    color = desktopColors.textSecondary,
+                    onClick = onOpenAlbum,
+                )
+            }
+            if (columns.showMetaColumn) {
+                SongTableCell(
+                    text = metaText,
+                    width = SongTableDefaults.metaWidth,
+                    color = desktopColors.textSecondary
+                )
+            }
+            if (columns.showDurationColumn) {
+                SongTableCell(
+                    text = durationText,
+                    width = SongTableDefaults.durationWidth,
+                    color = desktopColors.textSecondary,
+                    textAlign = TextAlign.End
+                )
+            }
         }
     }
+}
+
+@Composable
+private fun rememberSongRowContextMenuItems(
+    music: XyMusic,
+    onPlay: () -> Unit,
+    onOpenAlbum: () -> Unit,
+    onOpenArtist: () -> Unit,
+    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
+    sidebarPlaylistViewModel: SidebarPlaylistViewModel = koinViewModel<SidebarPlaylistViewModel>(),
+): List<MenuItemDefaultData> {
+    val coroutineScope = rememberCoroutineScope()
+    val playlists by sidebarPlaylistViewModel.playlists.collectAsStateWithLifecycle()
+    val addToNextPlaySuccess = stringResource(Res.string.add_to_next_play_success)
+
+    return listOf(
+        songContextMenuItem(
+            title = stringResource(Res.string.playback),
+            iconRes = Res.drawable.play_arrow_24px,
+            onClick = onPlay,
+        ),
+        songContextMenuItem(
+            title = stringResource(Res.string.play_next),
+            iconRes = Res.drawable.playlist_play_24px,
+            onClick = {
+                musicBottomMenuViewModel.addNextPlayer(music.itemId)
+                MessageUtils.sendPopTip(addToNextPlaySuccess)
+            },
+        ),
+        songContextMenuItem(
+            title = stringResource(Res.string.add_to_playlist),
+            iconRes = Res.drawable.playlist_add_24px,
+            trailingIconRes = Res.drawable.chevron_right_24px,
+            dismissOnClick = playlists.isEmpty(),
+            subItems = playlists.map { playlist ->
+                songContextMenuItem(
+                    title = playlist.name,
+                    iconRes = Res.drawable.playlist_add_24px,
+                    onClick = {
+                        coroutineScope.launch {
+                            musicBottomMenuViewModel.dataSourceManager.saveMusicPlaylist(
+                                playlistId = playlist.itemId,
+                                musicIds = listOf(music.itemId),
+                            )
+                        }
+                    },
+                )
+            },
+            subMenuModifier = Modifier.width(220.dp),
+            subMenuOffset = DpOffset(220.dp, 0.dp),
+            onClick = {
+                AddPlaylistBottomData(
+                    ifShow = true,
+                    musicInfoList = listOf(music.itemId),
+                ).show()
+            },
+        ),
+        songContextMenuItem(
+            title = stringResource(Res.string.song_info),
+            iconRes = Res.drawable.info_24px,
+            onClick = { music.show(MusicBottomMenuInitialAction.SongInfo) },
+        ),
+        songContextMenuItem(
+            title = "查看",
+            iconRes = Res.drawable.info_24px,
+            trailingIconRes = Res.drawable.chevron_right_24px,
+            dismissOnClick = false,
+            subItems = listOf(
+                songContextMenuItem(
+                    title = stringResource(Res.string.artist),
+                    iconRes = Res.drawable.person_24px,
+                    onClick = onOpenArtist,
+                ),
+                songContextMenuItem(
+                    title = stringResource(Res.string.album),
+                    iconRes = Res.drawable.album_24px,
+                    onClick = onOpenAlbum,
+                ),
+            ),
+            subMenuModifier = Modifier.width(180.dp),
+            subMenuOffset = DpOffset(220.dp, 0.dp),
+            onClick = {},
+        ),
+        songContextMenuItem(
+            title = stringResource(Res.string.double_speed),
+            iconRes = Res.drawable.speed_24px,
+            onClick = { music.show(MusicBottomMenuInitialAction.DoubleSpeed) },
+        ),
+        songContextMenuItem(
+            title = stringResource(Res.string.skip_head_tail),
+            iconRes = Res.drawable.keyboard_double_arrow_right_24px,
+            onClick = { music.show(MusicBottomMenuInitialAction.SkipBeginningAndEnd) },
+        ),
+        songContextMenuItem(
+            title = stringResource(Res.string.timer_close),
+            iconRes = Res.drawable.av_timer_24px,
+            onClick = { music.show(MusicBottomMenuInitialAction.Timer) },
+        ),
+    )
+}
+
+private fun songContextMenuItem(
+    title: String,
+    iconRes: DrawableResource,
+    trailingIconRes: DrawableResource? = null,
+    dismissOnClick: Boolean = true,
+    subItems: List<MenuItemDefaultData> = emptyList(),
+    subMenuModifier: Modifier = Modifier,
+    subMenuOffset: DpOffset = DpOffset(180.dp, 0.dp),
+    onClick: () -> Unit,
+): MenuItemDefaultData {
+    return MenuItemDefaultData(
+        title = title,
+        leadingIcon = { SongContextMenuIcon(iconRes) },
+        trailingIcon = trailingIconRes?.let { { SongContextMenuIcon(it) } },
+        dismissOnClick = dismissOnClick,
+        subItems = subItems,
+        subMenuModifier = subMenuModifier,
+        subMenuOffset = subMenuOffset,
+        onClick = onClick,
+    )
+}
+
+@Composable
+private fun SongContextMenuIcon(iconRes: DrawableResource) {
+    Icon(
+        painter = painterResource(iconRes),
+        contentDescription = null,
+        modifier = Modifier.size(20.dp),
+        tint = desktopColors.textSecondary,
+    )
 }
 
 /**
