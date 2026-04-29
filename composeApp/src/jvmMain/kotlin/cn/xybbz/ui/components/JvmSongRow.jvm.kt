@@ -122,7 +122,8 @@ internal fun SongRow(
             .debounceClickable(
                 interactionSource = interactionSource,
                 onClick = onClick
-            ),
+            )
+            .pointerHoverIcon(PointerIcon.Hand),
         paddingValues = PaddingValues(
             horizontal = XyTheme.dimens.innerHorizontalPadding,
             vertical = XyTheme.dimens.outerVerticalPadding + XyTheme.dimens.outerVerticalPadding / 2
