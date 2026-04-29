@@ -119,7 +119,7 @@ fun JvmArtistScreen(
                     artistListPaging[index]?.let { (artist, _) ->
                         MusicArtistCardComponent(
                             modifier = Modifier,
-                            onItem = { artist },
+                            artist = artist,
                             enabled = !it
                         ) { artistId ->
                             navigator.navigate(ArtistInfo(artistId, artist.name ?: ""))

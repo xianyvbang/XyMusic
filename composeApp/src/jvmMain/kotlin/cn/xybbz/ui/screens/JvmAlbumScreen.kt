@@ -142,7 +142,7 @@ fun JvmAlbumScreen(
                 contentType = albumPageListItems.itemContentType { MusicTypeEnum.ALBUM.code }) { index ->
                 MusicAlbumCardComponent(
                     modifier = Modifier,
-                    onItem = { albumPageListItems[index] },
+                    album = albumPageListItems[index],
                     enabled = !it,
                     onRouter = { itemId ->
                         //取消刷新

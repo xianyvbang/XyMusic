@@ -855,7 +855,7 @@ fun JvmArtistInfoScreen(
                                                 albumPageList[index]?.let { album ->
                                                     MusicAlbumCardComponent(
                                                         modifier = Modifier,
-                                                        onItem = { album },
+                                                        album = album,
                                                         onRouter = {
                                                             navigator.navigate(
                                                                 AlbumInfo(
@@ -883,7 +883,7 @@ fun JvmArtistInfoScreen(
                                             ) { artist ->
                                                 MusicArtistCardComponent(
                                                     modifier = Modifier,
-                                                    onItem = { artist },
+                                                    artist = artist,
                                                     enabled = true
                                                 ) {
                                                     navigator.navigate(

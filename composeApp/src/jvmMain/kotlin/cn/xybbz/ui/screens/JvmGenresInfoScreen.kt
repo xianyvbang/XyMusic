@@ -79,7 +79,7 @@ fun JvmGenresInfoScreen(
                 albumListPage[index]?.let { album ->
                     MusicAlbumCardComponent(
                         modifier = Modifier,
-                        onItem = { album },
+                        album = album,
                         onRouter = {
                             navigator.navigate(
                                 AlbumInfo(it, MusicDataTypeEnum.ALBUM)

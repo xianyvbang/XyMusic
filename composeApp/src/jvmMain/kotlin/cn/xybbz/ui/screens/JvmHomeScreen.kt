@@ -288,7 +288,7 @@ private fun LazyListScope.homeAlbumSection(
                     Box(modifier = Modifier.width(cellWidth)) {
                         MusicAlbumCardComponent(
                             modifier = Modifier.fillMaxWidth(),
-                            onItem = { album },
+                            album = album,
                             imageSize = cellWidth,
                             onRouter = { onOpenAlbum(album) }
                         )

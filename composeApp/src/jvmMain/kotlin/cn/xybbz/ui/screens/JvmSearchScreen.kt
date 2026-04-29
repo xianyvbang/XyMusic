@@ -174,7 +174,7 @@ fun JvmSearchResultScreen(
                 LazyRowComponent {
                     items(artistList, key = { it.artistId }) { artist ->
                         MusicArtistCardComponent(
-                            onItem = { artist },
+                            artist = artist,
                             onRouter = {
                                 navigator.navigate(ArtistInfo(it, artist.name ?: ""))
                             }
@@ -194,7 +194,7 @@ fun JvmSearchResultScreen(
                 LazyRowComponent {
                     items(albumList, key = { it.itemId }) { album ->
                         MusicAlbumCardComponent(
-                            onItem = { album },
+                            album = album,
                             onRouter = {
                                 navigator.navigate(
                                     AlbumInfo(
