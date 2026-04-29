@@ -2,6 +2,7 @@ package cn.xybbz.ui.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
@@ -23,11 +24,19 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
 import kotlinx.coroutines.launch
+
+private val jvmRightClickDropdownMenuItemContentPadding = PaddingValues(
+    horizontal = 10.dp,
+    vertical = 0.dp,
+)
+
+private val jvmRightClickDropdownMenuItemHeight = 32.dp
 
 val jvmRightClickDropdownMenuObjectList = mutableStateListOf<JvmRightClickDropdownMenuObject>()
 
@@ -40,6 +49,7 @@ data class JvmRightClickDropdownMenuObject(
     val modifier: Modifier = Modifier,
     val containerColor: Color = Color.Transparent,
     val dismissOnItemClick: Boolean = true,
+    val itemHeight: Dp? = jvmRightClickDropdownMenuItemHeight,
     val onCloseRequest: (() -> Unit)? = null,
     val itemDataList: List<MenuItemDefaultData>,
 )
@@ -72,7 +82,10 @@ fun JvmRightClickDropdownMenuComponent(modifier: Modifier = Modifier) {
                         } else {
                             item
                         }
-                    }
+                    },
+                    contentPadding = jvmRightClickDropdownMenuItemContentPadding,
+                    itemHeight = menuObject.itemHeight,
+                    ifShowHorizontalDivider = false,
                 )
             }
         }
@@ -89,6 +102,7 @@ fun JvmRightClickDropdownMenuBox(
     menuModifier: Modifier = Modifier,
     containerColor: Color = Color.Transparent,
     dismissOnItemClick: Boolean = true,
+    itemHeight: Dp? = jvmRightClickDropdownMenuItemHeight,
     onShowRequest: (() -> Unit)? = null,
     onCloseRequest: (() -> Unit)? = null,
     itemDataList: () -> List<MenuItemDefaultData>,
@@ -100,6 +114,7 @@ fun JvmRightClickDropdownMenuBox(
             menuModifier = menuModifier,
             containerColor = containerColor,
             dismissOnItemClick = dismissOnItemClick,
+            itemHeight = itemHeight,
             onShowRequest = onShowRequest,
             onCloseRequest = onCloseRequest,
             itemDataList = itemDataList,
@@ -116,6 +131,7 @@ fun Modifier.jvmRightClickDropdownMenu(
     menuModifier: Modifier = Modifier,
     containerColor: Color = Color.Transparent,
     dismissOnItemClick: Boolean = true,
+    itemHeight: Dp? = jvmRightClickDropdownMenuItemHeight,
     onShowRequest: (() -> Unit)? = null,
     onCloseRequest: (() -> Unit)? = null,
     itemDataList: () -> List<MenuItemDefaultData>,
@@ -126,6 +142,7 @@ fun Modifier.jvmRightClickDropdownMenu(
     val currentMenuModifier by rememberUpdatedState(menuModifier)
     val currentContainerColor by rememberUpdatedState(containerColor)
     val currentDismissOnItemClick by rememberUpdatedState(dismissOnItemClick)
+    val currentItemHeight by rememberUpdatedState(itemHeight)
     val currentOnShowRequest by rememberUpdatedState(onShowRequest)
     val currentOnCloseRequest by rememberUpdatedState(onCloseRequest)
     val currentItemDataList by rememberUpdatedState(itemDataList)
@@ -154,6 +171,7 @@ fun Modifier.jvmRightClickDropdownMenu(
                         modifier = currentMenuModifier,
                         containerColor = currentContainerColor,
                         dismissOnItemClick = currentDismissOnItemClick,
+                        itemHeight = currentItemHeight,
                         onCloseRequest = currentOnCloseRequest,
                         itemDataList = currentItemDataList(),
                     ).show()

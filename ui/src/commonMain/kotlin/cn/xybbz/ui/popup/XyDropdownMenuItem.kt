@@ -20,12 +20,14 @@ package cn.xybbz.ui.popup
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.MenuItemColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import cn.xybbz.ui.xy.XyTextSubSmall
 
 @Composable
@@ -38,12 +40,13 @@ fun XyDropdownMenuItem(
     enabled: Boolean = true,
     colors: MenuItemColors = MenuDefaults.itemColors(),
     contentPadding: PaddingValues = MenuDefaults.DropdownMenuItemContentPadding,
+    itemHeight: Dp? = null,
     interactionSource: MutableInteractionSource? = null,
 ) {
     DropdownMenuItem(
         text = { XyTextSubSmall(text = text, color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant) },
         onClick = onClick,
-        modifier = modifier,
+        modifier = if (itemHeight == null) modifier else modifier.height(itemHeight),
         leadingIcon = leadingIcon,
         trailingIcon = trailingIcon,
         enabled = enabled,

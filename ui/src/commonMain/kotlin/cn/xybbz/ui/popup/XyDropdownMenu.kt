@@ -1,6 +1,7 @@
 package cn.xybbz.ui.popup
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
@@ -12,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.theme.XyTheme
@@ -23,7 +25,10 @@ fun XyDropdownMenu(
     onIfShowMenu: () -> Boolean,
     onSetIfShowMenu: (Boolean) -> Unit,
     containerColor: Color = Color.Transparent,
-    itemDataList: List<MenuItemDefaultData>
+    itemDataList: List<MenuItemDefaultData>,
+    contentPadding: PaddingValues = MenuDefaults.DropdownMenuItemContentPadding,
+    itemHeight: Dp? = null,
+    ifShowHorizontalDivider: Boolean = true,
 ) {
     DropdownMenu(
         offset = offset,
@@ -36,7 +41,7 @@ fun XyDropdownMenu(
         containerColor = containerColor
     ) {
         itemDataList.filter { it.ifItemShow() }.forEachIndexed { index, data ->
-            if (index != 0)
+            if (ifShowHorizontalDivider && index != 0)
                 HorizontalDivider(modifier = Modifier.fillMaxWidth())
             XyDropdownMenuItem(
                 text = data.title,
@@ -44,7 +49,9 @@ fun XyDropdownMenu(
                 leadingIcon = data.leadingIcon,
                 trailingIcon = data.trailingIcon,
                 onClick = data.onClick,
-                colors = data.colors()
+                colors = data.colors(),
+                contentPadding = contentPadding,
+                itemHeight = itemHeight,
             )
         }
     }
