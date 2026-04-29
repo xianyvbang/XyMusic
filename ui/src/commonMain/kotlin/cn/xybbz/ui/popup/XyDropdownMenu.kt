@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.PopupProperties
 import cn.xybbz.ui.theme.XyTheme
 
 @Composable
@@ -35,6 +36,7 @@ fun XyDropdownMenu(
     itemDataList: List<MenuItemDefaultData>,
     contentPadding: PaddingValues = MenuDefaults.DropdownMenuItemContentPadding,
     itemHeight: Dp? = null,
+    properties: PopupProperties = PopupProperties(focusable = true),
 ) {
     DropdownMenu(
         offset = offset,
@@ -44,7 +46,8 @@ fun XyDropdownMenu(
         modifier = modifier.background(
             MaterialTheme.colorScheme.surfaceContainerLowest
         ),
-        containerColor = containerColor
+        containerColor = containerColor,
+        properties = properties,
     ) {
         val visibleItems = itemDataList.filter { it.ifItemShow() }
         var expandedSubMenuIndex by remember(visibleItems) { mutableStateOf<Int?>(null) }
@@ -104,6 +107,7 @@ fun XyDropdownMenu(
                         itemDataList = visibleSubItems,
                         contentPadding = contentPadding,
                         itemHeight = itemHeight,
+                        properties = PopupProperties(focusable = false),
                     )
                 }
             }
