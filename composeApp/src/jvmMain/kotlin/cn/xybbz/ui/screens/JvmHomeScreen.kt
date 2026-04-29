@@ -281,8 +281,9 @@ private fun LazyListScope.homeAlbumSection(
                 .height(
                     (MusicCardImageSize + 50.dp) * rowCount +
                         gridSpacing * (rowCount - 1)
-                ),
+            ),
             rows = GridCells.Fixed(rowCount),
+            userScrollEnabled = false,
             contentPadding = PaddingValues(0.dp),
             horizontalArrangement = Arrangement.spacedBy(gridSpacing),
             verticalArrangement = Arrangement.spacedBy(gridSpacing),
