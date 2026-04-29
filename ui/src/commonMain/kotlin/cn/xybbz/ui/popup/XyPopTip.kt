@@ -11,18 +11,21 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.xy.XyTextSub
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -34,6 +37,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import xymusic_kmp.ui.generated.resources.Res
+import xymusic_kmp.ui.generated.resources.check_24px
+import xymusic_kmp.ui.generated.resources.info_24px
+import xymusic_kmp.ui.generated.resources.warning_24px
 
 enum class XyPopTipStyle {
     Default,
@@ -134,6 +141,7 @@ object XyPopTipManager {
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun XyPopTipHost(
     modifier: Modifier = Modifier
@@ -152,28 +160,34 @@ fun XyPopTipHost(
         contentAlignment = Alignment.TopCenter
     ) {
         Surface(
-            shape = RoundedCornerShape(18.dp),
+            shape = RoundedCornerShape(14.dp),
             shadowElevation = 18.dp,
             tonalElevation = 6.dp,
             color = backgroundColor(tip.style)
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
-                        .size(28.dp)
+                        .size(24.dp)
                         .background(color = iconContainerColor(tip.style), shape = CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = iconText(tip.style),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = iconTint(tip.style),
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (tip.style == XyPopTipStyle.Hint) {
+                        LoadingIndicator(
+                            modifier = Modifier.size(18.dp)
+                        )
+                    } else {
+                        Icon(
+                            painter = painterResource(iconResource(tip.style)),
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = iconTint(tip.style)
+                        )
+                    }
                 }
                 Column {
                     XyTextSub(
@@ -184,6 +198,15 @@ fun XyPopTipHost(
                 }
             }
         }
+    }
+}
+
+private fun iconResource(style: XyPopTipStyle): DrawableResource {
+    return when (style) {
+        XyPopTipStyle.Default -> Res.drawable.info_24px
+        XyPopTipStyle.Success -> Res.drawable.check_24px
+        XyPopTipStyle.Error -> Res.drawable.warning_24px
+        XyPopTipStyle.Hint -> Res.drawable.info_24px
     }
 }
 
@@ -225,11 +248,3 @@ private fun iconTint(style: XyPopTipStyle): Color {
     }
 }
 
-private fun iconText(style: XyPopTipStyle): String {
-    return when (style) {
-        XyPopTipStyle.Default -> "i"
-        XyPopTipStyle.Success -> "✓"
-        XyPopTipStyle.Error -> "!"
-        XyPopTipStyle.Hint -> "·"
-    }
-}
