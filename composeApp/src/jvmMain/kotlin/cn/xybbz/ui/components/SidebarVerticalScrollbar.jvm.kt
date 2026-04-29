@@ -3,10 +3,11 @@ package cn.xybbz.ui.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.desktop.DesktopTheme
 import androidx.compose.foundation.LocalScrollbarStyle
 import androidx.compose.foundation.ScrollbarStyle
 import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -18,6 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.theme.XyTheme
 
+//private val SidebarScrollbarHitTargetWidth = 16.dp
+private val SidebarScrollbarThickness = 8.dp
+
 @Composable
 fun SidebarVerticalScrollbar(
     visible: Boolean,
@@ -27,7 +31,7 @@ fun SidebarVerticalScrollbar(
     CompositionLocalProvider(
         LocalScrollbarStyle provides ScrollbarStyle(
             minimalHeight = 16.dp,
-            thickness = 8.dp,
+            thickness = SidebarScrollbarThickness,
             shape = MaterialTheme.shapes.small,
             hoverDurationMillis = 300,
             unhoverColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
@@ -40,13 +44,16 @@ fun SidebarVerticalScrollbar(
                 exit = fadeOut(),
                 modifier = modifier,
             ) {
-                VerticalScrollbar(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(6.dp)
-                        .padding(vertical = XyTheme.dimens.outerVerticalPadding),
-                    adapter = adapter,
-                )
+                Row {
+                    VerticalScrollbar(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                        /*.padding(vertical = XyTheme.dimens.outerVerticalPadding, horizontal = 6.dp)*/,
+                        adapter = adapter,
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                }
+
             }
         }
     )
