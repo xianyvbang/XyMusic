@@ -21,6 +21,9 @@ package cn.xybbz.ui.xy
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.LocalScrollbarStyle
 import androidx.compose.foundation.ScrollbarStyle
 import androidx.compose.foundation.VerticalScrollbar
@@ -68,8 +71,17 @@ internal actual fun PlatformLazyColumn(
 ) {
     // 只有右侧弹窗内的列表需要桌面滚动条，避免影响普通页面已有滚动条布局。
     if (LocalModalSideSheetContent.current) {
+        val hoverInteractionSource = remember {
+            MutableInteractionSource()
+        }
+        val isMouseInList by hoverInteractionSource.collectIsHoveredAsState()
+
         // Box 用来把滚动条叠在 LazyColumn 右侧，LazyColumn 本身仍保留调用方传入的 modifier。
-        Box {
+        Box(
+            modifier = Modifier
+                // 通过 InteractionSource 收集悬停状态，鼠标进入列表区域时才允许显示滚动条。
+                .hoverable(interactionSource = hoverInteractionSource)
+        ) {
             LazyColumn(
                 state = lazyListState,
                 modifier = modifier,
@@ -79,10 +91,10 @@ internal actual fun PlatformLazyColumn(
                 content = content
             )
 
-            // 当内容确实可以向上或向下滚动时才显示滚动条，短列表不占视觉空间。
+            // 当内容确实可以滚动，并且鼠标位于列表区域内时才显示滚动条。
             val scrollbarVisible by remember {
                 derivedStateOf {
-                    lazyListState.canScrollBackward || lazyListState.canScrollForward
+                    isMouseInList && (lazyListState.canScrollBackward || lazyListState.canScrollForward)
                 }
             }
 
