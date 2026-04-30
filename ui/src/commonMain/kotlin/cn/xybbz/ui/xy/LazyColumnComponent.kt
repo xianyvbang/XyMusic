@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -107,8 +106,9 @@ fun LazyColumnParentComponent(
     content: LazyListScope.() -> Unit
 ) {
     bindPauseLoadWhenScrolling(lazyListState)
-    LazyColumn(
-        state = lazyListState,
+    // 统一走平台化列表入口，让 JVM 右侧弹窗内的 LazyColumn 可以自动显示桌面滚动条。
+    PlatformLazyColumn(
+        lazyListState = lazyListState,
         modifier = modifier,
         contentPadding = contentPadding,
         verticalArrangement = verticalArrangement,

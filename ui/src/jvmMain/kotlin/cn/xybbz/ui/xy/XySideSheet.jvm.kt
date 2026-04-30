@@ -46,6 +46,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -260,7 +261,10 @@ fun ModalSideSheetExtendComponent(
                                 titleTailContent?.invoke(this)
                             }
                         }
-                        content()
+                        // 标记右侧弹窗内容区，内部通用 LazyColumn 会据此在 JVM 显示右侧滚动条。
+                        CompositionLocalProvider(LocalModalSideSheetContent provides true) {
+                            content()
+                        }
                     }
                 }
             }
