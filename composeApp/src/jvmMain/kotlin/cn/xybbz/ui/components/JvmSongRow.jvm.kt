@@ -138,11 +138,11 @@ internal fun SongRow(
     metaText: String = "",
     durationText: String = DateUtil.millisecondsToTime(music.runTimeTicks),
     accentColor: Color = defaultSongAccentColor(index, music),
-    onClick: () -> Unit = {},
-    onOpenAlbum: () -> Unit = {},
-    onOpenArtist: () -> Unit = {},
-    onFavoriteClick: () -> Unit = {},
-    onDownloadClick: () -> Unit = {},
+    onClick: () -> Unit,
+    onOpenAlbum: () -> Unit,
+    onOpenArtist: () -> Unit,
+    onFavoriteClick: () -> Unit,
+    onDownloadClick: () -> Unit,
     onAddToPlaylistClick: () -> Unit = {
         AddPlaylistBottomData(
             ifShow = true,

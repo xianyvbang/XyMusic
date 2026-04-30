@@ -260,6 +260,7 @@ fun JvmSearchResultScreen(
                         onFavoriteClick = {
                             musicController.invokingOnFavorite(music.itemId)
                         },
+                        onDownloadClick = {},
                         onOpenArtist = {
                             artistClickHandler.openMusicArtists(music)
                         },
@@ -276,4 +277,3 @@ fun JvmSearchResultScreen(
 
     }
 }
-

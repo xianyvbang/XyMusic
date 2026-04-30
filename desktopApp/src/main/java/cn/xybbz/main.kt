@@ -8,7 +8,6 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import cn.xybbz.di.initKoin
 import cn.xybbz.proxy.JvmReverseProxyServer
-import cn.xybbz.ui.components.DesktopWindowTitleBar
 import cn.xybbz.ui.windows.DesktopWindowDecorators
 import cn.xybbz.ui.windows.DesktopWindowFrameState
 import cn.xybbz.ui.windows.DesktopWindowTitleBarHitTestOwner
