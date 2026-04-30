@@ -235,7 +235,7 @@ internal fun JvmSnackBarPlaybackBar(
                 },
                 supportingContent = {
                     Row(
-                        modifier = Modifier.padding(top = 10.dp),
+                        modifier = Modifier.padding(top = XyTheme.dimens.contentPadding),
                         horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding / 3),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
