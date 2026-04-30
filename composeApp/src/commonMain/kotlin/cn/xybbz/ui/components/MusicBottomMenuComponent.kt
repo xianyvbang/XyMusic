@@ -1168,7 +1168,8 @@ fun MusicInfoBottomComponent(
             item {
                 XyItemReversal(
                     text = stringResource(Res.string.actual_path),
-                    sub = musicInfo.path
+                    sub = musicInfo.path,
+                    subMaxLines = Int.MAX_VALUE,
                 )
             }
             item {

@@ -461,7 +461,8 @@ fun XyItem(
 fun XyItemReversal(
     modifier: Modifier = Modifier,
     text: String,
-    sub: String?
+    sub: String?,
+    subMaxLines: Int = 1,
 ) {
     Column(
         modifier = Modifier
@@ -476,7 +477,7 @@ fun XyItemReversal(
         sub?.let {
             XyText(
                 text = sub,
-                maxLines = 1,
+                maxLines = subMaxLines,
             )
         }
     }

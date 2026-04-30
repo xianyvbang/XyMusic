@@ -336,6 +336,7 @@
     <string name="unknown_artist">未知艺术家</string>
     <string name="cover_suffix">的封面</string>
     <string name="other_operations_button_suffix">的其他操作按钮</string>
+    <string name="other">其他操作按钮</string>
 
     <string name="current_playlist">当前播放列表</string>
     <string name="playing">播放中</string>

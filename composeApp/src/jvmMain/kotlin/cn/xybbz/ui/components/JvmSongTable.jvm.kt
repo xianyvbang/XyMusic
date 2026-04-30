@@ -32,6 +32,14 @@ internal fun SongTable(
     onOpenAlbum: (XyMusic) -> Unit = {},
     onOpenArtist: (XyMusic) -> Unit = {},
     onFavoriteClick: (XyMusic) -> Unit = {},
+    onDownloadClick: (XyMusic) -> Unit = {},
+    onAddToPlaylistClick: (XyMusic) -> Unit = { music ->
+        AddPlaylistBottomData(
+            ifShow = true,
+            musicInfoList = listOf(music.itemId),
+        ).show()
+    },
+    onMoreClick: (XyMusic) -> Unit = { music -> music.show() },
 ) {
     Column(modifier = androidx.compose.ui.Modifier.fillMaxWidth()) {
         SongTableHeader(columns = columns)
@@ -50,6 +58,9 @@ internal fun SongTable(
                 onOpenAlbum = { onOpenAlbum(music) },
                 onOpenArtist = { onOpenArtist(music) },
                 onFavoriteClick = { onFavoriteClick(music) },
+                onDownloadClick = { onDownloadClick(music) },
+                onAddToPlaylistClick = { onAddToPlaylistClick(music) },
+                onMoreClick = { onMoreClick(music) },
             )
         }
     }
@@ -73,6 +84,14 @@ internal fun LazyListScope.songTableItems(
     onOpenAlbum: (XyMusic) -> Unit = {},
     onOpenArtist: (XyMusic) -> Unit = {},
     onFavoriteClick: (XyMusic) -> Unit = {},
+    onDownloadClick: (XyMusic) -> Unit = {},
+    onAddToPlaylistClick: (XyMusic) -> Unit = { music ->
+        AddPlaylistBottomData(
+            ifShow = true,
+            musicInfoList = listOf(music.itemId),
+        ).show()
+    },
+    onMoreClick: (XyMusic) -> Unit = { music -> music.show() },
 ) {
     item(key = "${tableKey}_table_header") {
         SongTableHeader(columns = columns)
@@ -95,6 +114,9 @@ internal fun LazyListScope.songTableItems(
             onOpenAlbum = { onOpenAlbum(music) },
             onOpenArtist = { onOpenArtist(music) },
             onFavoriteClick = { onFavoriteClick(music) },
+            onDownloadClick = { onDownloadClick(music) },
+            onAddToPlaylistClick = { onAddToPlaylistClick(music) },
+            onMoreClick = { onMoreClick(music) },
         )
     }
 }

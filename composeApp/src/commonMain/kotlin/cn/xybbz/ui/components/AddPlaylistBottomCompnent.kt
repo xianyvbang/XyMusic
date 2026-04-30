@@ -21,7 +21,6 @@ package cn.xybbz.ui.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -40,7 +39,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
-import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.viewmodel.PlaylistBottomViewModel
 import kotlinx.coroutines.launch
@@ -114,8 +112,8 @@ fun AddPlaylistBottomComponent(
 
     val newPlaylist = stringResource(Res.string.new_playlist)
 
-    ModalBottomSheetExtendComponent(
-        modifier = Modifier.statusBarsPadding(),
+    MusicBottomMenuPlatformSheet(
+        modifier = Modifier,
         bottomSheetState = sheetState,
         onClose = { bool ->
             coroutineScope.launch {

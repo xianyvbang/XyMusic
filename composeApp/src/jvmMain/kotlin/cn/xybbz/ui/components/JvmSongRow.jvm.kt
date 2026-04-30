@@ -44,6 +44,7 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.image.rememberMusicCoverUrls
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyMusic
+import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.screens.desktopColors
@@ -75,7 +76,11 @@ import xymusic_kmp.composeapp.generated.resources.favorite_24px
 import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
 import xymusic_kmp.composeapp.generated.resources.info_24px
 import xymusic_kmp.composeapp.generated.resources.keyboard_double_arrow_right_24px
+import xymusic_kmp.composeapp.generated.resources.more_horiz_24px
+import xymusic_kmp.composeapp.generated.resources.more_vert_24px
 import xymusic_kmp.composeapp.generated.resources.music_note_24px
+import xymusic_kmp.composeapp.generated.resources.other
+import xymusic_kmp.composeapp.generated.resources.other_operations_button_suffix
 import xymusic_kmp.composeapp.generated.resources.person_24px
 import xymusic_kmp.composeapp.generated.resources.play_arrow_24px
 import xymusic_kmp.composeapp.generated.resources.play_next
@@ -137,6 +142,16 @@ internal fun SongRow(
     onOpenAlbum: () -> Unit = {},
     onOpenArtist: () -> Unit = {},
     onFavoriteClick: () -> Unit = {},
+    onDownloadClick: () -> Unit = {},
+    onAddToPlaylistClick: () -> Unit = {
+        AddPlaylistBottomData(
+            ifShow = true,
+            musicInfoList = listOf(music.itemId),
+        ).show()
+    },
+    onMoreClick: () -> Unit = {
+        music.show()
+    },
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
@@ -185,7 +200,12 @@ internal fun SongRow(
                 )
             }
             if (columns.showInlineActions) {
-                SongInlineActions(hovered = hovered)
+                SongInlineActions(
+                    hovered = hovered,
+                    onDownloadClick = onDownloadClick,
+                    onAddToPlaylistClick = onAddToPlaylistClick,
+                    onMoreClick = onMoreClick,
+                )
             }
             if (columns.showAlbumColumn) {
                 SongTableCell(
@@ -418,7 +438,12 @@ private fun SongFavoriteCell(
  * 为了保持列宽稳定，区域始终占位，只在 hover 时显示按钮。
  */
 @Composable
-private fun SongInlineActions(hovered: Boolean) {
+private fun SongInlineActions(
+    hovered: Boolean,
+    onDownloadClick: () -> Unit,
+    onAddToPlaylistClick: () -> Unit,
+    onMoreClick: () -> Unit,
+) {
     Box(
         modifier = Modifier.width(SongTableDefaults.actionsWidth),
         contentAlignment = Alignment.Center,
@@ -439,14 +464,17 @@ private fun SongInlineActions(hovered: Boolean) {
                 HoverActionIcon(
                     iconRes = Res.drawable.download_24px,
                     tooltip = stringResource(Res.string.download),
+                    onClick = onDownloadClick,
                 )
                 HoverActionIcon(
                     iconRes = Res.drawable.playlist_add_24px,
                     tooltip = stringResource(Res.string.add_to_playlist),
+                    onClick = onAddToPlaylistClick,
                 )
                 HoverActionIcon(
-                    iconRes = Res.drawable.info_24px,
-                    tooltip = stringResource(Res.string.song_info),
+                    iconRes = Res.drawable.more_horiz_24px,
+                    tooltip = stringResource(Res.string.other),
+                    onClick = onMoreClick,
                 )
             }
         }
@@ -455,16 +483,18 @@ private fun SongInlineActions(hovered: Boolean) {
 
 /**
  * 行内悬浮操作按钮的统一外观封装。
- * 本次仅保留视觉层，不接业务点击。
  */
 @Composable
 private fun HoverActionIcon(
     iconRes: DrawableResource,
     tooltip: String,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
 ) {
     DesktopTooltipBox(tooltip = tooltip) {
         IconButton(
-            onClick = {},
+            onClick = composeClick { onClick() },
+            enabled = enabled,
             modifier = Modifier.size(SongTableDefaults.actionButtonSize)
                 .pointerHoverIcon(PointerIcon.Hand)
         ) {
@@ -472,7 +502,7 @@ private fun HoverActionIcon(
                 painter = painterResource(iconRes),
                 contentDescription = null,
                 modifier = Modifier.size(SongTableDefaults.actionIconSize),
-                tint = desktopColors.textSecondary,
+                tint = if (enabled) desktopColors.textSecondary else desktopColors.textSecondary.copy(alpha = 0.38f),
             )
         }
     }
