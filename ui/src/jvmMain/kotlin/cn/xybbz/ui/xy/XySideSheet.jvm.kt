@@ -47,13 +47,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import cn.xybbz.ui.theme.XyTheme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * JVM 桌面端右侧弹层。
@@ -70,6 +78,8 @@ import cn.xybbz.ui.theme.XyTheme
  * @param shape Sheet 外形，默认只给左上角和左下角圆角。
  * @param tonalElevation Material3 色调阴影高度。
  * @param animationDurationMillis 遮罩淡入淡出和 Sheet 横向滑动动画时长，单位毫秒。
+ * @param useDialog 是否使用全窗口 Dialog 承载 Sheet，适合调用点不在页面根布局时使用。
+ * @param dismissOnBackPress 使用 Dialog 承载时，是否允许返回键触发关闭动画。
  * @param dismissOnScrimClick 点击遮罩时是否关闭 Sheet。
  * @param onIfDisplay 返回当前是否显示 Sheet。
  * @param onClose 请求关闭 Sheet 时触发；参数保持与底部 Sheet 封装一致，遮罩关闭时传入 false。
@@ -96,6 +106,8 @@ fun ModalSideSheetExtendComponent(
     ),
     tonalElevation: Dp = 6.dp,
     animationDurationMillis: Int = 220,
+    useDialog: Boolean = false,
+    dismissOnBackPress: Boolean = true,
     dismissOnScrimClick: Boolean = true,
     onIfDisplay: () -> Boolean,
     onClose: (Boolean) -> Unit,
@@ -108,111 +120,170 @@ fun ModalSideSheetExtendComponent(
     val visibleState = remember {
         MutableTransitionState(false)
     }
+    var closeRequested by remember {
+        mutableStateOf(false)
+    }
+    var hostVisible by remember {
+        mutableStateOf(false)
+    }
+    val coroutineScope = rememberCoroutineScope()
     val visible = onIfDisplay()
 
     LaunchedEffect(visible) {
-        visibleState.targetState = visible
+        if (visible) {
+            closeRequested = false
+            hostVisible = true
+            visibleState.targetState = true
+        } else {
+            visibleState.targetState = false
+            if (useDialog && !closeRequested) {
+                delay(animationDurationMillis.toLong())
+                hostVisible = false
+            }
+        }
     }
 
-    if (!visibleState.currentState && !visibleState.targetState) {
+    if (useDialog) {
+        if (!hostVisible) {
+            return
+        }
+    } else if (!visibleState.currentState && !visibleState.targetState) {
         return
+    }
+
+    fun closeAfterAnimation() {
+        if (closeRequested) {
+            return
+        }
+        closeRequested = true
+        visibleState.targetState = false
+        coroutineScope.launch {
+            delay(animationDurationMillis.toLong())
+            onClose(false)
+            if (useDialog) {
+                hostVisible = false
+            }
+            closeRequested = false
+        }
     }
 
     val scrimInteractionSource = remember { MutableInteractionSource() }
     val sheetInteractionSource = remember { MutableInteractionSource() }
 
-    // 根容器覆盖整个页面：先绘制遮罩，再绘制右侧 Sheet。
-    Box(
-        modifier = modifier.fillMaxSize()
-    ) {
-        AnimatedVisibility(
-            visibleState = visibleState,
-            enter = fadeIn(animationSpec = tween(animationDurationMillis)),
-            exit = fadeOut(animationSpec = tween(animationDurationMillis))
+    val sideSheetContent: @Composable () -> Unit = {
+        // 根容器覆盖整个页面：先绘制遮罩，再绘制右侧 Sheet。
+        Box(
+            modifier = modifier.fillMaxSize()
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(scrimColor)
-                    .clickable(
-                        interactionSource = scrimInteractionSource,
-                        indication = null,
-                        enabled = dismissOnScrimClick,
-                        onClick = {
-                            onClose(false)
-                        }
-                    )
-            )
-        }
-
-        // Sheet 从右侧滑入/滑出，适合桌面端详情面板、设置面板等场景。
-        AnimatedVisibility(
-            visibleState = visibleState,
-            modifier = Modifier.align(Alignment.CenterEnd),
-            enter = slideInHorizontally(
-                animationSpec = tween(animationDurationMillis),
-                initialOffsetX = { fullWidth -> fullWidth }
-            ) + fadeIn(animationSpec = tween(animationDurationMillis)),
-            exit = slideOutHorizontally(
-                animationSpec = tween(animationDurationMillis),
-                targetOffsetX = { fullWidth -> fullWidth }
-            ) + fadeOut(animationSpec = tween(animationDurationMillis))
-        ) {
-            Surface(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(sheetWidth)
-                    .widthIn(max = sheetMaxWidth)
-                    .then(sheetModifier)
-                    // 消费 Sheet 内部点击，避免点击内容区域时触发外层遮罩关闭。
-                    .clickable(
-                        interactionSource = sheetInteractionSource,
-                        indication = null,
-                        onClick = {}
-                    ),
-                color = containerColor,
-                shape = shape,
-                tonalElevation = tonalElevation
+            AnimatedVisibility(
+                visibleState = visibleState,
+                enter = fadeIn(animationSpec = tween(animationDurationMillis)),
+                exit = fadeOut(animationSpec = tween(animationDurationMillis))
             ) {
-                Column(
-                    modifier = Modifier.padding(contentPaddingValues),
-                    verticalArrangement = Arrangement.Top,
-                    horizontalAlignment = Alignment.Start
-                ) {
-                    titleText?.let {
-                        XyRow(
-                            paddingValues = PaddingValues(
-                                top = XyTheme.dimens.innerVerticalPadding,
-                                start = XyTheme.dimens.innerHorizontalPadding,
-                                end = XyTheme.dimens.innerHorizontalPadding,
-                                bottom = XyTheme.dimens.innerVerticalPadding
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.Top,
-                                horizontalAlignment = Alignment.Start
-                            ) {
-                                XyText(
-                                    text = titleText,
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                                titleSub?.let {
-                                    Spacer(modifier = Modifier.height(XyTheme.dimens.innerVerticalPadding))
-                                    XyTextSub(
-                                        text = titleSub,
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(scrimColor)
+                        .clickable(
+                            interactionSource = scrimInteractionSource,
+                            indication = null,
+                            enabled = dismissOnScrimClick,
+                            onClick = {
+                                closeAfterAnimation()
                             }
+                        )
+                ) {
+                }
+            }
 
-                            titleTailContent?.invoke(this)
+            // Sheet 从右侧滑入/滑出，适合桌面端详情面板、设置面板等场景。
+            AnimatedVisibility(
+                visibleState = visibleState,
+                modifier = Modifier.align(Alignment.CenterEnd),
+                enter = slideInHorizontally(
+                    animationSpec = tween(animationDurationMillis),
+                    initialOffsetX = { fullWidth -> fullWidth }
+                ) + fadeIn(animationSpec = tween(animationDurationMillis)),
+                exit = slideOutHorizontally(
+                    animationSpec = tween(animationDurationMillis),
+                    targetOffsetX = { fullWidth -> fullWidth }
+                ) + fadeOut(animationSpec = tween(animationDurationMillis))
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(sheetWidth)
+                        .widthIn(max = sheetMaxWidth)
+                        .then(sheetModifier)
+                        // 消费 Sheet 内部点击，避免点击内容区域时触发外层遮罩关闭。
+                        .clickable(
+                            interactionSource = sheetInteractionSource,
+                            indication = null,
+                            onClick = {}
+                        ),
+                    color = containerColor,
+                    shape = shape,
+                    tonalElevation = tonalElevation
+                ) {
+                    Column(
+                        modifier = Modifier.padding(contentPaddingValues),
+                        verticalArrangement = Arrangement.Top,
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        titleText?.let {
+                            XyRow(
+                                paddingValues = PaddingValues(
+                                    top = XyTheme.dimens.innerVerticalPadding,
+                                    start = XyTheme.dimens.innerHorizontalPadding,
+                                    end = XyTheme.dimens.innerHorizontalPadding,
+                                    bottom = XyTheme.dimens.innerVerticalPadding
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.Top,
+                                    horizontalAlignment = Alignment.Start
+                                ) {
+                                    XyText(
+                                        text = titleText,
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                    titleSub?.let {
+                                        Spacer(modifier = Modifier.height(XyTheme.dimens.innerVerticalPadding))
+                                        XyTextSub(
+                                            text = titleSub,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                }
+
+                                titleTailContent?.invoke(this)
+                            }
                         }
+                        content()
                     }
-                    content()
                 }
             }
         }
+    }
+
+    if (useDialog) {
+        Dialog(
+            onDismissRequest = {
+                closeAfterAnimation()
+            },
+            properties = DialogProperties(
+                dismissOnBackPress = dismissOnBackPress,
+                dismissOnClickOutside = false,
+                usePlatformDefaultWidth = false,
+                usePlatformInsets = false,
+                scrimColor = Color.Transparent
+            )
+        ) {
+            sideSheetContent()
+        }
+    } else {
+        sideSheetContent()
     }
 }
 
@@ -231,6 +302,8 @@ fun ModalSideSheetExtendComponent(
  * @param shape Sheet 外形，默认只给左上角和左下角圆角。
  * @param tonalElevation Material3 色调阴影高度。
  * @param animationDurationMillis 遮罩淡入淡出和 Sheet 横向滑动动画时长，单位毫秒。
+ * @param useDialog 是否使用全窗口 Dialog 承载 Sheet，适合调用点不在页面根布局时使用。
+ * @param dismissOnBackPress 使用 Dialog 承载时，是否允许返回键触发关闭动画。
  * @param dismissOnScrimClick 点击遮罩时是否关闭 Sheet。
  * @param onIfDisplay 返回当前是否显示 Sheet。
  * @param onClose 请求关闭 Sheet 时触发；参数保持与底部 Sheet 封装一致，遮罩关闭时传入 false。
@@ -251,6 +324,8 @@ fun ModalSideSheetExtendFillMaxSizeComponent(
     ),
     tonalElevation: Dp = 6.dp,
     animationDurationMillis: Int = 220,
+    useDialog: Boolean = false,
+    dismissOnBackPress: Boolean = true,
     dismissOnScrimClick: Boolean = true,
     onIfDisplay: () -> Boolean,
     onClose: (Boolean) -> Unit,
@@ -267,6 +342,8 @@ fun ModalSideSheetExtendFillMaxSizeComponent(
         shape = shape,
         tonalElevation = tonalElevation,
         animationDurationMillis = animationDurationMillis,
+        useDialog = useDialog,
+        dismissOnBackPress = dismissOnBackPress,
         dismissOnScrimClick = dismissOnScrimClick,
         onIfDisplay = onIfDisplay,
         onClose = onClose,
