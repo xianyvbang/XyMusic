@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.text.KeyboardOptions
@@ -70,7 +69,6 @@ import cn.xybbz.platform.ContextWrapper
 import cn.xybbz.router.ArtistInfo
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnBottomSheetComponent
-import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
 import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyItemIcon
@@ -294,9 +292,8 @@ fun MusicBottomMenuComponent(
 
 
 
-        ModalBottomSheetExtendComponent(
-            modifier = Modifier
-                .statusBarsPadding(),
+        MusicBottomMenuPlatformSheet(
+            modifier = Modifier,
             bottomSheetState = sheetState,
             onIfDisplay = { ifShowBottom },
             dragHandle = null,
@@ -721,9 +718,9 @@ fun TimerComponent(
     }
 
     val timerClose = stringResource(Res.string.timer_close)
-    ModalBottomSheetExtendComponent(
+    MusicBottomMenuPlatformSheet(
         bottomSheetState = sheetTimer,
-        modifier = Modifier.statusBarsPadding(),
+        modifier = Modifier,
         dragHandle = null,
         onIfDisplay = onIfTimer,
         onClose = {
@@ -901,9 +898,9 @@ private fun DoubleSpeedComponent(
     }
 
 
-    ModalBottomSheetExtendComponent(
+    MusicBottomMenuPlatformSheet(
         bottomSheetState = sheetDoubleSpeed,
-        modifier = Modifier.statusBarsPadding(),
+        modifier = Modifier,
         onIfDisplay = onIfDoubleSpeed,
         dragHandle = null,
         onClose = {
@@ -1004,9 +1001,9 @@ private fun SkipBeginningAndEndComponent(
         startTime = skipTime.headTime.toFloat()
         endTime = skipTime.endTime.toFloat()
     }
-    ModalBottomSheetExtendComponent(
+    MusicBottomMenuPlatformSheet(
         bottomSheetState = sheetSkip,
-        modifier = Modifier.statusBarsPadding(),
+        modifier = Modifier,
         onIfDisplay = onIfShowHeadAndTail,
         onClose = {
             onSetIfShowHeadAndTail(it)
@@ -1108,8 +1105,8 @@ fun MusicInfoBottomComponent(
     )
     val mainViewModel = LocalMainViewModel.current
 
-    ModalBottomSheetExtendComponent(
-        modifier = modifier.statusBarsPadding(),
+    MusicBottomMenuPlatformSheet(
+        modifier = modifier,
         bottomSheetState = sheetState,
         onIfDisplay = onIfShowMusicInfo,
         dragHandle = null,
@@ -1223,8 +1220,8 @@ fun ArtistItemListBottomSheet(
     val navHostController = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
 
-    ModalBottomSheetExtendComponent(
-        modifier = modifier.statusBarsPadding(),
+    MusicBottomMenuPlatformSheet(
+        modifier = modifier,
         bottomSheetState = sheetState,
         onIfDisplay = onIfShowArtistList,
         dragHandle = null,
@@ -1272,9 +1269,9 @@ private fun FadeInOutBottomSheet(
 
     val coroutineScope = rememberCoroutineScope()
 
-    ModalBottomSheetExtendComponent(
+    MusicBottomMenuPlatformSheet(
         bottomSheetState = bottomSheetState,
-        modifier = modifier.statusBarsPadding(),
+        modifier = modifier,
         onIfDisplay = onIfShowFadeInOut,
         onClose = {
             onSetShowFadeInOut(it)
