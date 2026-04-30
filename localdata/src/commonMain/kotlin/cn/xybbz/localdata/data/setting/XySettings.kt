@@ -35,7 +35,7 @@ data class XySettings @OptIn(ExperimentalUuidApi::class) constructor(
     /**
      * 是否开启边下边播
      */
-    val ifEnableEdgeDownload: Boolean = true,
+    val ifEnableEdgeDownload: Boolean = defaultIfEnableEdgeDownload,
     /**
      * 缓存上限
      */

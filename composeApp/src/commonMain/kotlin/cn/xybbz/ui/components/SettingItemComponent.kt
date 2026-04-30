@@ -52,7 +52,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.enter_settings
-import xymusic_kmp.composeapp.generated.resources.keyboard_double_arrow_right_24px
+import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_right_24px
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @Composable
@@ -61,7 +61,7 @@ fun SettingItemComponent(
     modifier: Modifier = Modifier,
     info: String? = null,
     bottomInfo: String? = null,
-    painter: DrawableResource? = Res.drawable.keyboard_double_arrow_right_24px,
+    painter: DrawableResource? = Res.drawable.keyboard_arrow_right_24px,
     maxLines: Int = 1,
     ifOpenBadge: Boolean = false,
     enabled: Boolean = true,
@@ -208,8 +208,9 @@ fun SettingParentItemComponent(
 fun MusicSettingSwitchItemComponent(
     title: String,
     ifChecked: Boolean,
+    enabled: Boolean = true,
     onRouter: (Boolean) -> Unit,
 ) {
-    XyItemSwitcher(state = ifChecked, onChange = { onRouter(it) }, text = title)
+    XyItemSwitcher(state = ifChecked, onChange = { onRouter(it) }, text = title, enabled = enabled)
 }
 

@@ -75,12 +75,10 @@ import xymusic_kmp.composeapp.generated.resources.download_24px
 import xymusic_kmp.composeapp.generated.resources.favorite_24px
 import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
 import xymusic_kmp.composeapp.generated.resources.info_24px
-import xymusic_kmp.composeapp.generated.resources.keyboard_double_arrow_right_24px
+import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_right_24px
 import xymusic_kmp.composeapp.generated.resources.more_horiz_24px
-import xymusic_kmp.composeapp.generated.resources.more_vert_24px
 import xymusic_kmp.composeapp.generated.resources.music_note_24px
 import xymusic_kmp.composeapp.generated.resources.other
-import xymusic_kmp.composeapp.generated.resources.other_operations_button_suffix
 import xymusic_kmp.composeapp.generated.resources.person_24px
 import xymusic_kmp.composeapp.generated.resources.play_arrow_24px
 import xymusic_kmp.composeapp.generated.resources.play_next
@@ -322,7 +320,7 @@ private fun rememberSongRowContextMenuItems(
         ),
         songContextMenuItem(
             title = stringResource(Res.string.skip_head_tail),
-            iconRes = Res.drawable.keyboard_double_arrow_right_24px,
+            iconRes = Res.drawable.keyboard_arrow_right_24px,
             onClick = { music.show(MusicBottomMenuInitialAction.SkipBeginningAndEnd) },
         ),
         songContextMenuItem(
@@ -502,7 +500,9 @@ private fun HoverActionIcon(
                 painter = painterResource(iconRes),
                 contentDescription = null,
                 modifier = Modifier.size(SongTableDefaults.actionIconSize),
-                tint = if (enabled) desktopColors.textSecondary else desktopColors.textSecondary.copy(alpha = 0.38f),
+                tint = if (enabled) desktopColors.textSecondary else desktopColors.textSecondary.copy(
+                    alpha = 0.38f
+                ),
             )
         }
     }

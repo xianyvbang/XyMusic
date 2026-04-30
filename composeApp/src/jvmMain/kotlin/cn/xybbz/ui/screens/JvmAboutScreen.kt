@@ -21,13 +21,17 @@ package cn.xybbz.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.SettingItemComponent
@@ -62,6 +66,7 @@ fun JvmAboutScreen(
 ) {
     val functionNotImplemented = stringResource(Res.string.function_not_implemented)
     val noOfficialWebsiteYet = stringResource(Res.string.no_official_website_yet)
+    val logoSize = (128 * LocalDensity.current.fontScale).dp
 
     XyColumnScreen(
         modifier = Modifier
@@ -78,12 +83,13 @@ fun JvmAboutScreen(
         ) {
             item {
                 Box(
-                    modifier = Modifier,
+                    modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
+                        modifier = Modifier.size(logoSize),
                         painter = painterResource(Res.drawable.logo_new),
-                        contentScale = ContentScale.Crop,
+                        contentScale = ContentScale.Fit,
                         contentDescription = stringResource(Res.string.app_icon_info)
                     )
                 }
@@ -103,11 +109,7 @@ fun JvmAboutScreen(
                     title = stringResource(Res.string.current_version),
                     info = aboutViewModel.versionInfo
                 ) {
-
                 }
-
-            }
-            item {
             }
             item {
                 SettingItemComponent(title = stringResource(Res.string.problem_feedback)) {

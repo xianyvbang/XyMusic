@@ -69,7 +69,6 @@ import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.about
 import xymusic_kmp.composeapp.generated.resources.album_playback_history
 import xymusic_kmp.composeapp.generated.resources.allow_simultaneous_playback
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.broadcast_while_down
 import xymusic_kmp.composeapp.generated.resources.cache_limit
 import xymusic_kmp.composeapp.generated.resources.cache_location
@@ -84,11 +83,9 @@ import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
 import xymusic_kmp.composeapp.generated.resources.language
 import xymusic_kmp.composeapp.generated.resources.online_music_quality
 import xymusic_kmp.composeapp.generated.resources.poxy_config
-import xymusic_kmp.composeapp.generated.resources.return_home
 import xymusic_kmp.composeapp.generated.resources.settings
 import xymusic_kmp.composeapp.generated.resources.song_cache_location
 import xymusic_kmp.composeapp.generated.resources.storage_management
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 /**
  * 设置页面
@@ -121,17 +118,6 @@ fun JvmSettingScreen(
                 TopAppBarTitle(
                     title = stringResource(Res.string.settings)
                 )
-            }, navigationIcon = {
-                IconButton(
-                    onClick = {
-                        navigator.goBack()
-                    },
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.arrow_back_24px),
-                        contentDescription = stringResource(Res.string.return_home)
-                    )
-                }
             })
 
         LazyColumnNotComponent(
@@ -143,14 +129,16 @@ fun JvmSettingScreen(
                 JvmSettingRoundedSurfaceColumn {
                     MusicSettingSwitchItemComponent(
                         title = stringResource(Res.string.broadcast_while_down),
-                        ifChecked = settingsViewModel.settingDataNow.ifEnableEdgeDownload
-                    ) { bol ->
-                        coroutineScope.launch {
-                            settingsViewModel.settingsManager.setIfEnableEdgeDownload(
-                                bol
-                            )
+                        ifChecked = settingsViewModel.settingDataNow.ifEnableEdgeDownload,
+                        false,
+                        { bol ->
+                            coroutineScope.launch {
+                                settingsViewModel.settingsManager.setIfEnableEdgeDownload(
+                                    bol
+                                )
+                            }
                         }
-                    }
+                    )
 
                     AnimatedVisibility(visible = settingsViewModel.settingDataNow.ifEnableEdgeDownload) {
                         SettingItemComponent(title = stringResource(Res.string.cache_limit)) {

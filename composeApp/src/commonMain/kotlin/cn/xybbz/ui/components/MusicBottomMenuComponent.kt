@@ -119,7 +119,7 @@ import xymusic_kmp.composeapp.generated.resources.favorite_24px
 import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
 import xymusic_kmp.composeapp.generated.resources.format
 import xymusic_kmp.composeapp.generated.resources.info_24px
-import xymusic_kmp.composeapp.generated.resources.keyboard_double_arrow_right_24px
+import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_right_24px
 import xymusic_kmp.composeapp.generated.resources.max_24_hours
 import xymusic_kmp.composeapp.generated.resources.media_source
 import xymusic_kmp.composeapp.generated.resources.minutes
@@ -151,7 +151,8 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 
 var bottomMenuMusicInfo = mutableStateListOf<XyMusic>()
-private var bottomMenuMusicInitialActions = mutableStateMapOf<String, MusicBottomMenuInitialAction>()
+private var bottomMenuMusicInitialActions =
+    mutableStateMapOf<String, MusicBottomMenuInitialAction>()
 
 enum class MusicBottomMenuInitialAction {
     Menu,
@@ -205,7 +206,8 @@ fun MusicBottomMenuComponent(
             musicBottomMenuViewModel.refreshVolume()
         }
 
-        val initialAction = bottomMenuMusicInitialActions[music.itemId] ?: MusicBottomMenuInitialAction.Menu
+        val initialAction =
+            bottomMenuMusicInitialActions[music.itemId] ?: MusicBottomMenuInitialAction.Menu
 
         //收藏信息
         val favoriteState by remember {
@@ -377,7 +379,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        painter = painterResource(Res.drawable.keyboard_double_arrow_right_24px),
+                        painter = painterResource(Res.drawable.keyboard_arrow_right_24px),
                         text = stringResource(Res.string.skip_head_tail),
                         onClick = {
                             coroutineScope.launch {

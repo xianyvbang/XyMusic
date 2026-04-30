@@ -8,7 +8,6 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
-import cn.xybbz.ui.screens.AboutScreen
 import cn.xybbz.ui.screens.AlbumInfoDesktopScreen
 import cn.xybbz.ui.screens.ArtistDesktopScreen
 import cn.xybbz.ui.screens.ArtistInfoDesktopScreen
@@ -28,13 +27,13 @@ import cn.xybbz.ui.screens.JvmAboutScreen
 import cn.xybbz.ui.screens.JvmAlbumScreen
 import cn.xybbz.ui.screens.JvmMusicScreen
 import cn.xybbz.ui.screens.JvmSearchScreen
+import cn.xybbz.ui.screens.JvmSettingScreen
 import cn.xybbz.ui.screens.LanguageConfigScreen
 import cn.xybbz.ui.screens.LocalScreen
 import cn.xybbz.ui.screens.MemoryManagementScreen
 import cn.xybbz.ui.screens.ProxyConfigScreen
 import cn.xybbz.ui.screens.SelectLibraryScreen
 import cn.xybbz.ui.screens.SetBackgroundImageScreen
-import cn.xybbz.ui.screens.SettingScreen
 import cn.xybbz.ui.screens.StreamingQualityScreen
 import cn.xybbz.ui.xy.XyImage
 import org.jetbrains.compose.resources.stringResource
@@ -68,7 +67,7 @@ private val jvmDesktopEntryProvider2 = entryProvider<NavKey> {
     desktopNode<AlbumInfo> { AlbumInfoDesktopScreen(it) }
     desktopNode<ArtistInfo> { ArtistInfoDesktopScreen(it) }
 
-    desktopNode<Setting> { SettingScreen() }
+    desktopNode<Setting> { JvmSettingScreen() }
     desktopNode<ConnectionManagement> { ConnectionManagement() }
     desktopNode<ConnectionInfo> { ConnectionConfigInfoScreen(connectionId = it.connectionId) }
     desktopNode<MemoryManagement> { MemoryManagementScreen() }
