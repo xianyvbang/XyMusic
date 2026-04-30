@@ -15,6 +15,7 @@ import cn.xybbz.ui.windows.LocalDesktopWindowChromeController
 import cn.xybbz.ui.windows.LocalDesktopWindowDecorators
 import cn.xybbz.ui.windows.LocalDesktopWindowFrameState
 import cn.xybbz.ui.windows.rememberWindowsWindowChromeController
+import cn.xybbz.ui.xy.LocalModalSideSheetContent
 
 fun main() = application {
     initKoin {}
@@ -42,6 +43,8 @@ fun main() = application {
         )
 
         CompositionLocalProvider(
+            // JVM 桌面端统一给通用 LazyColumn 显示右侧滚动条。
+            LocalModalSideSheetContent provides true,
             LocalDesktopWindowChromeController provides chromeController,
             // WindowDraggableArea 只能在 desktopApp 入口侧拿到，这里向 composeApp 注入拖拽包装能力。
             LocalDesktopWindowDecorators provides object : DesktopWindowDecorators {

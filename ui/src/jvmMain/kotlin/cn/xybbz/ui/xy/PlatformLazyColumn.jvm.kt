@@ -41,7 +41,7 @@ import cn.xybbz.ui.components.SidebarVerticalScrollbar
 /**
  * JVM 平台列表实现。
  *
- * 普通页面仍然渲染原始 LazyColumn；当列表位于右侧弹窗内容区时，
+ * 默认渲染原始 LazyColumn；当 JVM 桌面入口启用滚动条标记时，
  * 额外在列表右侧叠加桌面端垂直滚动条。
  *
  * @param modifier 列表本体的 Modifier，继续透传给 LazyColumn，避免改变原有布局尺寸。
@@ -60,7 +60,7 @@ internal actual fun PlatformLazyColumn(
     horizontalAlignment: Alignment.Horizontal,
     content: LazyListScope.() -> Unit
 ) {
-    // 只有右侧弹窗内的列表需要桌面滚动条，避免影响普通页面已有滚动条布局。
+    // JVM 桌面入口启用后，通用 LazyColumn 会自动补充桌面滚动条。
     if (LocalModalSideSheetContent.current) {
         val hoverInteractionSource = remember {
             MutableInteractionSource()
@@ -89,7 +89,7 @@ internal actual fun PlatformLazyColumn(
                 }
             }
 
-            // 滚动条贴在弹窗内容区域右侧，并与当前 LazyListState 共享滚动位置。
+            // 滚动条贴在列表右侧，并与当前 LazyListState 共享滚动位置。
             SidebarVerticalScrollbar(
                 visible = scrollbarVisible,
                 modifier = Modifier

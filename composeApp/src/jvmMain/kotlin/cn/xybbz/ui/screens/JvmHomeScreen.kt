@@ -228,12 +228,6 @@ fun JvmHomeScreen(
                 )
             }
         }
-
-        SidebarVerticalScrollbar(
-            visible = showScrollbar,
-            modifier = Modifier.align(Alignment.CenterEnd),
-            adapter = rememberScrollbarAdapter(scrollState = homeListState),
-        )
     }
 }
 

@@ -21,8 +21,8 @@ package cn.xybbz.ui.xy
 import androidx.compose.runtime.staticCompositionLocalOf
 
 /**
- * 标记当前组合树是否位于 JVM 右侧弹窗内容区内。
+ * 标记当前组合树是否需要给 JVM 通用 LazyColumn 显示桌面滚动条。
  *
- * 普通页面默认是 false；右侧弹窗会临时提供 true，让内部通用列表可以按桌面端习惯补充滚动条。
+ * 默认是 false；JVM 桌面入口会统一提供 true，让内部通用列表按桌面端习惯补充滚动条。
  */
-internal val LocalModalSideSheetContent = staticCompositionLocalOf { false }
+val LocalModalSideSheetContent = staticCompositionLocalOf { false }

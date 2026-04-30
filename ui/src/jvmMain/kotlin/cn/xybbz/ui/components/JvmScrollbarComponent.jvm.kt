@@ -47,26 +47,6 @@ fun SidebarVerticalScrollbar(
     }
 }
 
-@Composable
-fun JvmVerticalScrollbar(
-    visible: Boolean,
-    modifier: Modifier = Modifier,
-    adapter: ScrollbarAdapter,
-) {
-    JvmScrollbarStyleProvider {
-        AnimatedVisibility(
-            visible = visible,
-            enter = fadeIn(),
-            exit = fadeOut(),
-            modifier = modifier,
-        ) {
-            VerticalScrollbar(
-                modifier = Modifier.fillMaxHeight(),
-                adapter = adapter,
-            )
-        }
-    }
-}
 
 @Composable
 fun JvmHorizontalScrollbar(

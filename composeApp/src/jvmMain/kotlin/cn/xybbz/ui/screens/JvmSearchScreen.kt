@@ -268,12 +268,5 @@ fun JvmSearchResultScreen(
                 }
             }
         }
-
-        SidebarVerticalScrollbar(
-            visible = showScrollbar,
-            modifier = Modifier.align(Alignment.CenterEnd),
-            adapter = rememberScrollbarAdapter(scrollState = lazyListState),
-        )
-
     }
 }

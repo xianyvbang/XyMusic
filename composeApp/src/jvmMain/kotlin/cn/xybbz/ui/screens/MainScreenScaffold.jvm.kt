@@ -194,11 +194,6 @@ actual fun MainScreenScaffold(
                                 }
                             }
                         }
-                        SidebarVerticalScrollbar(
-                            visible = showScrollbar,
-                            modifier = Modifier.align(Alignment.CenterEnd),
-                            adapter = rememberScrollbarAdapter(scrollState = sidebarListState),
-                        )
                     }
 
                     Box(modifier = Modifier.weight(1f)) {
