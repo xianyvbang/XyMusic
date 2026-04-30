@@ -22,7 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
+import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyTextSub
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -151,40 +151,46 @@ fun XyPopTipHost(
 
     val tip = currentTip ?: return
     val text = tip.text ?: tip.textRes?.let { stringResource(it) } ?: return
+    val dimens = XyTheme.dimens
+    val iconContainerSize = dimens.innerHorizontalPadding * 2
+    val iconSize = dimens.contentPadding * 2
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .statusBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
+            .padding(horizontal = dimens.outerHorizontalPadding, vertical = dimens.innerVerticalPadding),
         contentAlignment = Alignment.TopCenter
     ) {
         Surface(
-            shape = RoundedCornerShape(14.dp),
-            shadowElevation = 18.dp,
-            tonalElevation = 6.dp,
+            shape = RoundedCornerShape(dimens.corner),
+            shadowElevation = dimens.dialogCorner,
+            tonalElevation = dimens.outerVerticalPadding,
             color = backgroundColor(tip.style)
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.padding(
+                    horizontal = dimens.innerHorizontalPadding,
+                    vertical = dimens.outerVerticalPadding
+                ),
+                horizontalArrangement = Arrangement.spacedBy(dimens.contentPadding),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .background(color = iconContainerColor(tip.style), shape = CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (tip.style == XyPopTipStyle.Hint) {
-                        LoadingIndicator(
-                            modifier = Modifier.size(18.dp)
-                        )
-                    } else {
+                if (tip.style == XyPopTipStyle.Hint) {
+                    LoadingIndicator(
+                        modifier = Modifier.size(iconContainerSize)
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(iconContainerSize)
+                            .background(color = iconContainerColor(tip.style), shape = CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
                             painter = painterResource(iconResource(tip.style)),
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(iconSize),
                             tint = iconTint(tip.style)
                         )
                     }
@@ -214,7 +220,7 @@ private fun iconResource(style: XyPopTipStyle): DrawableResource {
 private fun backgroundColor(style: XyPopTipStyle): Color {
     return when (style) {
         XyPopTipStyle.Default -> MaterialTheme.colorScheme.surface
-        XyPopTipStyle.Success -> MaterialTheme.colorScheme.surface
+        XyPopTipStyle.Success -> Color(0xFFD1FAE5)
         XyPopTipStyle.Error -> MaterialTheme.colorScheme.surface
         XyPopTipStyle.Hint -> Color(0xFFFFF3E0)
     }
@@ -223,6 +229,7 @@ private fun backgroundColor(style: XyPopTipStyle): Color {
 @Composable
 private fun contentColor(style: XyPopTipStyle): Color {
     return when (style) {
+        XyPopTipStyle.Success -> Color(0xFF065F46)
         XyPopTipStyle.Hint -> Color(0xFF7A4D00)
         else -> MaterialTheme.colorScheme.onSurface
     }
@@ -232,7 +239,7 @@ private fun contentColor(style: XyPopTipStyle): Color {
 private fun iconContainerColor(style: XyPopTipStyle): Color {
     return when (style) {
         XyPopTipStyle.Default -> MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
-        XyPopTipStyle.Success -> Color(0xFFDCFCE7)
+        XyPopTipStyle.Success -> Color(0xFFD1FAE5)
         XyPopTipStyle.Error -> Color(0xFFFEE2E2)
         XyPopTipStyle.Hint -> Color(0xFFFFE0B2)
     }
@@ -242,7 +249,7 @@ private fun iconContainerColor(style: XyPopTipStyle): Color {
 private fun iconTint(style: XyPopTipStyle): Color {
     return when (style) {
         XyPopTipStyle.Default -> MaterialTheme.colorScheme.primary
-        XyPopTipStyle.Success -> Color(0xFF15803D)
+        XyPopTipStyle.Success -> Color(0xFF10B981)
         XyPopTipStyle.Error -> Color(0xFFB91C1C)
         XyPopTipStyle.Hint -> Color(0xFFB45309)
     }
