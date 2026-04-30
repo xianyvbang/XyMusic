@@ -24,6 +24,7 @@ import cn.xybbz.ui.screens.GenresInfoScreen
 import cn.xybbz.ui.screens.GenresScreen
 import cn.xybbz.ui.screens.HomeScreen
 import cn.xybbz.ui.screens.InterfaceSettingScreen
+import cn.xybbz.ui.screens.JvmAboutScreen
 import cn.xybbz.ui.screens.JvmAlbumScreen
 import cn.xybbz.ui.screens.JvmMusicScreen
 import cn.xybbz.ui.screens.JvmSearchScreen
@@ -75,7 +76,7 @@ private val jvmDesktopEntryProvider2 = entryProvider<NavKey> {
     desktopNode<LanguageConfig> { LanguageConfigScreen() }
     desktopNode<Genres> { GenresScreen() }
     desktopNode<GenreInfo> { GenresInfoScreen(genreId = it.genreId) }
-    desktopNode<About> { AboutScreen() }
+    desktopNode<About> { JvmAboutScreen() }
     desktopNode<CacheLimit> { CacheLimitScreen() }
     desktopNode<SelectLibrary> {
         SelectLibraryScreen(connectionId = it.connectionId, thisLibraryId = it.libraryIds)

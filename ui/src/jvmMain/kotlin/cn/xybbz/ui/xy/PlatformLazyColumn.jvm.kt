@@ -18,15 +18,9 @@
 
 package cn.xybbz.ui.xy
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
-import androidx.compose.foundation.LocalScrollbarStyle
-import androidx.compose.foundation.ScrollbarStyle
-import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,16 +30,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.components.SidebarVerticalScrollbar
 
 /**
  * JVM 平台列表实现。
@@ -99,12 +90,12 @@ internal actual fun PlatformLazyColumn(
             }
 
             // 滚动条贴在弹窗内容区域右侧，并与当前 LazyListState 共享滚动位置。
-            ModalSideSheetVerticalScrollbar(
+            SidebarVerticalScrollbar(
                 visible = scrollbarVisible,
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .fillMaxHeight(),
-                lazyListState = lazyListState
+                adapter = rememberScrollbarAdapter(scrollState = lazyListState)
             )
         }
     } else {
@@ -117,45 +108,5 @@ internal actual fun PlatformLazyColumn(
             horizontalAlignment = horizontalAlignment,
             content = content
         )
-    }
-}
-
-/**
- * 右侧弹窗内 LazyColumn 使用的 JVM 垂直滚动条。
- *
- * @param visible 当前列表是否可滚动；不可滚动时隐藏滚动条。
- * @param modifier 滚动条本体的布局修饰符，通常由调用方指定右侧对齐和高度。
- * @param lazyListState 与 LazyColumn 共享的滚动状态。
- */
-@Composable
-private fun ModalSideSheetVerticalScrollbar(
-    visible: Boolean,
-    modifier: Modifier = Modifier,
-    lazyListState: LazyListState
-) {
-    // 使用与项目现有桌面滚动条一致的颜色、厚度和悬停动画。
-    CompositionLocalProvider(
-        LocalScrollbarStyle provides ScrollbarStyle(
-            minimalHeight = 16.dp,
-            thickness = XyTheme.dimens.outerHorizontalPadding / 2,
-            shape = MaterialTheme.shapes.small,
-            hoverDurationMillis = 300,
-            unhoverColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-            hoverColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.50f),
-        )
-    ) {
-        // 滚动条出现和消失时淡入淡出，避免列表可滚动状态变化时显得突兀。
-        AnimatedVisibility(
-            visible = visible,
-            enter = fadeIn(),
-            exit = fadeOut(),
-            modifier = modifier.padding(end = XyTheme.dimens.innerHorizontalPadding / 2)
-        ) {
-            // rememberScrollbarAdapter 会把 LazyListState 转为桌面 VerticalScrollbar 可识别的适配器。
-            VerticalScrollbar(
-                modifier = Modifier.fillMaxHeight(),
-                adapter = rememberScrollbarAdapter(scrollState = lazyListState)
-            )
-        }
     }
 }

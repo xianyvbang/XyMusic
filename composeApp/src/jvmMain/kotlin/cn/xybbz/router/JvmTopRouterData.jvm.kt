@@ -5,6 +5,7 @@ import org.jetbrains.compose.resources.StringResource
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.album_24px
 import xymusic_kmp.composeapp.generated.resources.album
+import xymusic_kmp.composeapp.generated.resources.all_music
 import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
 import xymusic_kmp.composeapp.generated.resources.favorite
 import xymusic_kmp.composeapp.generated.resources.home
@@ -12,6 +13,7 @@ import xymusic_kmp.composeapp.generated.resources.menu_open_24px
 import xymusic_kmp.composeapp.generated.resources.music_library
 import xymusic_kmp.composeapp.generated.resources.person_24px
 import xymusic_kmp.composeapp.generated.resources.artist
+import xymusic_kmp.composeapp.generated.resources.music_note_24px
 import xymusic_kmp.composeapp.generated.resources.search
 import xymusic_kmp.composeapp.generated.resources.search_24px
 
@@ -28,8 +30,8 @@ val jvmTopRouterDataList = listOf(
         route = Home
     ),
     JvmTopRouterData(
-        title = Res.string.music_library,
-        icon = Res.drawable.menu_open_24px,
+        title = Res.string.all_music,
+        icon = Res.drawable.music_note_24px,
         route = Music
     ),
     JvmTopRouterData(

@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,15 +45,12 @@ import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.about
 import xymusic_kmp.composeapp.generated.resources.app_icon_info
 import xymusic_kmp.composeapp.generated.resources.app_name
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.current_version
 import xymusic_kmp.composeapp.generated.resources.function_not_implemented
 import xymusic_kmp.composeapp.generated.resources.logo_new
 import xymusic_kmp.composeapp.generated.resources.no_official_website_yet
 import xymusic_kmp.composeapp.generated.resources.official_website
 import xymusic_kmp.composeapp.generated.resources.problem_feedback
-import xymusic_kmp.composeapp.generated.resources.return_setting_screen
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 
 @OptIn(
@@ -64,8 +60,6 @@ import cn.xybbz.ui.xy.XyIconButton as IconButton
 fun JvmAboutScreen(
     aboutViewModel: AboutViewModel = koinViewModel<AboutViewModel>()
 ) {
-    val navigator = LocalNavigator.current
-
     val functionNotImplemented = stringResource(Res.string.function_not_implemented)
     val noOfficialWebsiteYet = stringResource(Res.string.no_official_website_yet)
 
@@ -77,17 +71,6 @@ fun JvmAboutScreen(
                 TopAppBarTitle(
                     title = stringResource(Res.string.about)
                 )
-            }, navigationIcon = {
-                IconButton(
-                    onClick = {
-                        navigator.goBack()
-                    },
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.arrow_back_24px),
-                        contentDescription = stringResource(Res.string.return_setting_screen)
-                    )
-                }
             })
 
         LazyColumnNotComponent(

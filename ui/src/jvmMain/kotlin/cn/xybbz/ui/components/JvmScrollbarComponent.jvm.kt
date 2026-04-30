@@ -22,7 +22,7 @@ import cn.xybbz.ui.theme.XyTheme
 
 private val JvmScrollbarThickness: @Composable () -> Dp =
     @Composable { XyTheme.dimens.outerHorizontalPadding / 2 }
-internal val JvmHorizontalScrollbarBottomPadding: @Composable () -> Dp =
+val JvmHorizontalScrollbarBottomPadding: @Composable () -> Dp =
     { XyTheme.dimens.outerHorizontalPadding }
 
 @Composable
@@ -31,52 +31,50 @@ fun SidebarVerticalScrollbar(
     modifier: Modifier = Modifier,
     adapter: ScrollbarAdapter,
 ) {
-    CompositionLocalProvider(
-        LocalScrollbarStyle provides ScrollbarStyle(
-            minimalHeight = 16.dp,
-            thickness = JvmScrollbarThickness(),
-            shape = MaterialTheme.shapes.small,
-            hoverDurationMillis = 300,
-            unhoverColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-            hoverColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.50f),
-        ),
-    ) {
+    JvmScrollbarStyleProvider {
+        AnimatedVisibility(
+            visible = visible,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = modifier.padding(bottom = XyTheme.dimens.snackBarPlayerHeight)
+                .padding(end = XyTheme.dimens.outerVerticalPadding),
+        ) {
+            VerticalScrollbar(
+                modifier = Modifier.fillMaxHeight(),
+                adapter = adapter,
+            )
+        }
+    }
+}
+
+@Composable
+fun JvmVerticalScrollbar(
+    visible: Boolean,
+    modifier: Modifier = Modifier,
+    adapter: ScrollbarAdapter,
+) {
+    JvmScrollbarStyleProvider {
         AnimatedVisibility(
             visible = visible,
             enter = fadeIn(),
             exit = fadeOut(),
             modifier = modifier,
         ) {
-            Row(
-                modifier = Modifier
-                    .padding(bottom = XyTheme.dimens.snackBarPlayerHeight)
-                    .padding(end = XyTheme.dimens.outerVerticalPadding),
-            ) {
-                VerticalScrollbar(
-                    modifier = Modifier.fillMaxHeight(),
-                    adapter = adapter,
-                )
-            }
+            VerticalScrollbar(
+                modifier = Modifier.fillMaxHeight(),
+                adapter = adapter,
+            )
         }
     }
 }
 
 @Composable
-internal fun JvmHorizontalScrollbar(
+fun JvmHorizontalScrollbar(
     visible: Boolean,
     modifier: Modifier = Modifier,
     adapter: ScrollbarAdapter,
 ) {
-    CompositionLocalProvider(
-        LocalScrollbarStyle provides ScrollbarStyle(
-            minimalHeight = 16.dp,
-            thickness = JvmScrollbarThickness(),
-            shape = MaterialTheme.shapes.small,
-            hoverDurationMillis = 300,
-            unhoverColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-            hoverColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.50f),
-        ),
-    ) {
+    JvmScrollbarStyleProvider {
         AnimatedVisibility(
             visible = visible,
             enter = fadeIn(),
@@ -88,5 +86,23 @@ internal fun JvmHorizontalScrollbar(
                 adapter = adapter,
             )
         }
+    }
+}
+
+@Composable
+private fun JvmScrollbarStyleProvider(
+    content: @Composable () -> Unit,
+) {
+    CompositionLocalProvider(
+        LocalScrollbarStyle provides ScrollbarStyle(
+            minimalHeight = 16.dp,
+            thickness = JvmScrollbarThickness(),
+            shape = MaterialTheme.shapes.small,
+            hoverDurationMillis = 300,
+            unhoverColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+            hoverColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.50f),
+        ),
+    ) {
+        content()
     }
 }
