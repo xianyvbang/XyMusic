@@ -166,9 +166,12 @@ import xymusic_kmp.composeapp.generated.resources.splitscreen_add_24px
 import xymusic_kmp.composeapp.generated.resources.view_more
 import xymusic_kmp.composeapp.generated.resources.warning_24px
 
+@Composable
+expect fun HomeScreen()
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun HomeScreen(
+internal fun MobileHomeScreen(
     homeViewModel: HomeViewModel = koinViewModel<HomeViewModel>()
 ) {
     SideEffect {

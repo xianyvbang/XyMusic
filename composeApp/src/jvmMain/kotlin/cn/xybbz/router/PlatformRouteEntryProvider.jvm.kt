@@ -22,9 +22,9 @@ import cn.xybbz.ui.screens.DownloadScreen
 import cn.xybbz.ui.screens.FavoriteDesktopScreen
 import cn.xybbz.ui.screens.GenresInfoScreen
 import cn.xybbz.ui.screens.GenresScreen
+import cn.xybbz.ui.screens.HomeScreen
 import cn.xybbz.ui.screens.InterfaceSettingScreen
 import cn.xybbz.ui.screens.JvmAlbumScreen
-import cn.xybbz.ui.screens.JvmHomeScreen
 import cn.xybbz.ui.screens.JvmMusicScreen
 import cn.xybbz.ui.screens.JvmSearchScreen
 import cn.xybbz.ui.screens.LanguageConfigScreen
@@ -58,7 +58,7 @@ private val jvmDesktopEntryProvider = buildDefaultRouteEntryProvider()
 
 private val jvmDesktopEntryProvider2 = entryProvider<NavKey> {
     desktopNode<Connection> { ConnectionScreen(it.connectionUiType) }
-    desktopNode<Home> { JvmHomeScreen() }
+    desktopNode<Home> { HomeScreen() }
     desktopNode<Search> { JvmSearchScreen(searchQuery = it.searchQuery) }
     desktopNode<Music> { JvmMusicScreen() }
     desktopNode<Album> { JvmAlbumScreen() }
