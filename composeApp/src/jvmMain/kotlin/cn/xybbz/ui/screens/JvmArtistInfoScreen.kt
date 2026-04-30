@@ -106,7 +106,6 @@ import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
-import cn.xybbz.router.ArtistInfo
 import cn.xybbz.ui.components.LazyListComponent
 import cn.xybbz.ui.components.LazyLoadingAndStatus
 import cn.xybbz.ui.components.LazyVerticalGridComponent
@@ -116,6 +115,7 @@ import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.VerticalGridListComponent
 import cn.xybbz.ui.components.XySelectAllComponent
+import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
@@ -184,6 +184,9 @@ fun JvmArtistInfoScreen(
 
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
+
+    // 相似艺术家列表复用统一的艺术家打开逻辑。
+    val artistClickHandler = rememberMusicArtistClickHandler()
     val lazyListState1 = rememberLazyListState()
     val lazyListState = rememberLazyListState()
     val parentState = rememberLazyListState()
@@ -886,12 +889,7 @@ fun JvmArtistInfoScreen(
                                                     artist = artist,
                                                     enabled = true
                                                 ) {
-                                                    navigator.navigate(
-                                                        ArtistInfo(
-                                                            it,
-                                                            artist.name ?: ""
-                                                        )
-                                                    )
+                                                    artistClickHandler.openArtist(it, artist.name)
                                                 }
                                             }
                                             item(span = { GridItemSpan(maxLineSpan) }) {

@@ -14,12 +14,12 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalNavigator
-import cn.xybbz.router.ArtistInfo
 import cn.xybbz.ui.components.IndexBar
 import cn.xybbz.ui.components.MusicArtistCardComponent
 import cn.xybbz.ui.components.SwipeRefreshVerticalGridListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
+import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.ArtistViewModel
 import kotlinx.coroutines.delay
@@ -53,6 +53,9 @@ fun JvmArtistScreen(
     val coroutineScope = rememberCoroutineScope()
 
     val navigator = LocalNavigator.current
+
+    // 艺术家列表卡片点击也使用统一处理器，后续逻辑变化只需要改一处。
+    val artistClickHandler = rememberMusicArtistClickHandler()
 
     XyColumnScreen {
         TopAppBarComponent(
@@ -122,7 +125,7 @@ fun JvmArtistScreen(
                             artist = artist,
                             enabled = !it
                         ) { artistId ->
-                            navigator.navigate(ArtistInfo(artistId, artist.name ?: ""))
+                            artistClickHandler.openArtist(artistId, artist.name)
                         }
                     }
                 }

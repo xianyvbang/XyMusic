@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -69,17 +68,17 @@ import xymusic_kmp.composeapp.generated.resources.album_24px
 import xymusic_kmp.composeapp.generated.resources.artist
 import xymusic_kmp.composeapp.generated.resources.av_timer_24px
 import xymusic_kmp.composeapp.generated.resources.chevron_right_24px
+import xymusic_kmp.composeapp.generated.resources.double_speed
 import xymusic_kmp.composeapp.generated.resources.download
 import xymusic_kmp.composeapp.generated.resources.download_24px
-import xymusic_kmp.composeapp.generated.resources.double_speed
 import xymusic_kmp.composeapp.generated.resources.favorite_24px
 import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
 import xymusic_kmp.composeapp.generated.resources.info_24px
 import xymusic_kmp.composeapp.generated.resources.keyboard_double_arrow_right_24px
 import xymusic_kmp.composeapp.generated.resources.music_note_24px
 import xymusic_kmp.composeapp.generated.resources.person_24px
-import xymusic_kmp.composeapp.generated.resources.play_next
 import xymusic_kmp.composeapp.generated.resources.play_arrow_24px
+import xymusic_kmp.composeapp.generated.resources.play_next
 import xymusic_kmp.composeapp.generated.resources.playback
 import xymusic_kmp.composeapp.generated.resources.playlist_add_24px
 import xymusic_kmp.composeapp.generated.resources.playlist_play_24px

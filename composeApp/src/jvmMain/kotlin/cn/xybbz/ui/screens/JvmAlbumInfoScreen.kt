@@ -99,6 +99,7 @@ import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.XySelectAllComponent
 import cn.xybbz.ui.components.getExportPlaylistsAlertDialogObject
 import cn.xybbz.ui.components.importPlaylistsCompose
+import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.debounceClickable
@@ -186,6 +187,9 @@ fun JvmAlbumInfoScreen(
     val coroutineScope = rememberCoroutineScope()
     val lazyListState = rememberLazyListState()
     val navigator = LocalNavigator.current
+
+    // 专辑头部的艺术家文本点击使用统一处理器，兼容多个专辑艺术家。
+    val artistClickHandler = rememberMusicArtistClickHandler()
     val isSticking by remember(lazyListState) { lazyListState.isSticking(1) }
 
     val favoriteSet by albumInfoViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
@@ -469,6 +473,9 @@ fun JvmAlbumInfoScreen(
                                 itemId,
                                 it
                             )
+                        },
+                        onOpenArtists = {
+                            artistClickHandler.openAlbumArtists(albumInfoViewModel.xyAlbumInfoData)
                         }
                     )
                 }
@@ -691,6 +698,8 @@ private fun JvmMusicAlbumInfoComponent(
     albumPic: String?,
     onIfSavePlaybackHistory: () -> Boolean,
     onSetIfSavePlaybackHistory: (Boolean) -> Unit,
+    // 点击专辑艺术家文本时执行，调用方负责传入统一的艺术家打开逻辑。
+    onOpenArtists: () -> Unit,
     ifShowPlaybackHistory: Boolean = true
 ) {
     val album = onData()
@@ -741,6 +750,7 @@ private fun JvmMusicAlbumInfoComponent(
                 XyTextSub(
                     text = onData()?.artists ?: "",
                     maxLines = 3,
+                    onClick = onOpenArtists,
                 )
             }
 

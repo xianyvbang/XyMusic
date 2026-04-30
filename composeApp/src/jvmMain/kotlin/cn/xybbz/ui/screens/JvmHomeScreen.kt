@@ -41,6 +41,7 @@ import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SidebarVerticalScrollbar
 import cn.xybbz.ui.components.SongTableColumns
+import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyRow
@@ -81,6 +82,9 @@ fun JvmHomeScreen(
     val mostPlayedAlbumList by homeViewModel.homeDataRepository.mostPlayedAlbums.collectAsStateWithLifecycle()
     val recommendedMusicList by homeViewModel.homeDataRepository.recommendedMusic.collectAsStateWithLifecycle()
     val navigator = LocalNavigator.current
+
+    // 首页歌曲表格里的艺术家文本和右键菜单共用同一套打开逻辑。
+    val artistClickHandler = rememberMusicArtistClickHandler()
     val dailyRecommendations = stringResource(Res.string.daily_recommendations)
     val latestAlbums = stringResource(Res.string.latest_albums)
     val recentlyPlayedMusic = stringResource(Res.string.recently_played_music)
@@ -108,6 +112,7 @@ fun JvmHomeScreen(
                     title = dailyRecommendations,
                     musicList = recommendedMusicList,
                     navigator = navigator,
+                    onOpenArtist = artistClickHandler::openMusicArtists,
                     onSongClick = { music ->
                         homeViewModel.musicList(
                             onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
@@ -157,6 +162,7 @@ fun JvmHomeScreen(
                     title = recentlyPlayedMusic,
                     musicList = recentMusicList,
                     navigator = navigator,
+                    onOpenArtist = artistClickHandler::openMusicArtists,
                     onSongClick = { music ->
                         homeViewModel.musicList(
                             onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
@@ -212,6 +218,7 @@ fun JvmHomeScreen(
                     title = mostPlayed,
                     musicList = mostPlayedMusicList,
                     navigator = navigator,
+                    onOpenArtist = artistClickHandler::openMusicArtists,
                     onSongClick = { music ->
                         homeViewModel.musicList(
                             onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
@@ -236,6 +243,7 @@ private fun LazyListScope.homeMusicSection(
     musicList: List<XyMusic>,
     onSongClick: (XyMusic) -> Unit,
     navigator: Navigator,
+    onOpenArtist: (XyMusic) -> Unit,
     headerAction: @Composable (() -> Unit)? = null,
 ) {
     item(key = "${sectionKey}_header") {
@@ -254,6 +262,7 @@ private fun LazyListScope.homeMusicSection(
                 navigator.navigate(AlbumInfo(music.album, MusicDataTypeEnum.ALBUM))
             }
         },
+        onOpenArtist = onOpenArtist,
     )
 }
 

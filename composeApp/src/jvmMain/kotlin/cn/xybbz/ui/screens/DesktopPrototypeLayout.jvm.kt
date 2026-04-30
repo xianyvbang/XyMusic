@@ -45,12 +45,12 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.Album
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.router.Artist
-import cn.xybbz.router.ArtistInfo
 import cn.xybbz.router.FavoriteList
 import cn.xybbz.router.Home
 import cn.xybbz.router.Music
 import cn.xybbz.router.Search
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import org.jetbrains.compose.resources.painterResource
 import xymusic_kmp.composeapp.generated.resources.*
 
@@ -61,6 +61,9 @@ import xymusic_kmp.composeapp.generated.resources.*
 @Composable
 internal fun DesktopPrototypeScreen(destination: DesktopDestination) {
     val navigator = LocalNavigator.current
+
+    // 桌面原型底栏里的艺术家入口也走统一处理器。
+    val artistClickHandler = rememberMusicArtistClickHandler()
     var queueOpen by remember { mutableStateOf(false) }
     var playbackProgress by remember { mutableFloatStateOf(0.3f) }
     var volumeProgress by remember { mutableFloatStateOf(0.6f) }
@@ -121,7 +124,7 @@ internal fun DesktopPrototypeScreen(destination: DesktopDestination) {
                     onVolumeChange = { volumeProgress = it },
                     onToggleQueue = { queueOpen = !queueOpen },
                     onOpenAlbum = { navigator.navigate(AlbumInfo("player-album", MusicDataTypeEnum.ALBUM)) },
-                    onOpenArtist = { navigator.navigate(ArtistInfo("player-artist", "The Synth Band")) },
+                    onOpenArtist = { artistClickHandler.openArtist("player-artist", "The Synth Band") },
                 )
             }
         }
@@ -148,6 +151,9 @@ private fun DesktopDestination.toSidebarDestination(): SidebarDestination = when
 @Composable
 private fun DesktopPageContent(destination: DesktopDestination) {
     val navigator = LocalNavigator.current
+
+    // 原型页内容区的艺术家占位入口统一走这里，保持桌面端行为一致。
+    val artistClickHandler = rememberMusicArtistClickHandler()
     Crossfade(targetState = destination, modifier = Modifier.fillMaxSize()) { page ->
         when (page) {
             DesktopDestination.Home -> HomeDesktopContent()
@@ -157,15 +163,15 @@ private fun DesktopPageContent(destination: DesktopDestination) {
                 navigator.navigate(AlbumInfo("desktop-album", MusicDataTypeEnum.ALBUM))
             })
             DesktopDestination.Artists -> ArtistsDesktopContent(onOpenArtist = {
-                navigator.navigate(ArtistInfo("desktop-artist", "The Synth Band"))
+                artistClickHandler.openArtist("desktop-artist", "The Synth Band")
             })
             DesktopDestination.PlaylistDetail -> PlaylistDetailDesktopContent(
                 onOpenAlbum = { navigator.navigate(AlbumInfo("playlist-album", MusicDataTypeEnum.ALBUM)) },
-                onOpenArtist = { navigator.navigate(ArtistInfo("playlist-artist", "The Synth Band")) },
+                onOpenArtist = { artistClickHandler.openArtist("playlist-artist", "The Synth Band") },
             )
             is DesktopDestination.AlbumDetail -> AlbumDetailDesktopContent(
                 title = page.title,
-                onOpenArtist = { navigator.navigate(ArtistInfo("album-artist", "The Synth Band")) },
+                onOpenArtist = { artistClickHandler.openArtist("album-artist", "The Synth Band") },
             )
             is DesktopDestination.ArtistDetail -> ArtistDetailDesktopContent(
                 name = page.name,

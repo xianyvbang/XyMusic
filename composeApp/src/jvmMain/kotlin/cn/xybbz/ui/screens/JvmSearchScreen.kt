@@ -55,7 +55,6 @@ import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
-import cn.xybbz.router.ArtistInfo
 import cn.xybbz.ui.components.JvmLazyRowComponent
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicArtistCardComponent
@@ -64,6 +63,7 @@ import cn.xybbz.ui.components.SidebarVerticalScrollbar
 import cn.xybbz.ui.components.SongRow
 import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.TopAppBarTitle
+import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyRow
@@ -159,6 +159,9 @@ fun JvmSearchResultScreen(
 ) {
     val navigator = LocalNavigator.current
 
+    // 搜索结果中的艺术家卡片和歌曲行艺术家入口统一走这里。
+    val artistClickHandler = rememberMusicArtistClickHandler()
+
     val lazyListState = rememberLazyListState()
     val scrollbarInteractionSource = remember { MutableInteractionSource() }
     val scrollbarHovered by scrollbarInteractionSource.collectIsHoveredAsState()
@@ -192,7 +195,7 @@ fun JvmSearchResultScreen(
                             MusicArtistCardComponent(
                                 artist = artist,
                                 onRouter = {
-                                    navigator.navigate(ArtistInfo(it, artist.name ?: ""))
+                                    artistClickHandler.openArtist(it, artist.name)
                                 }
                             )
                         }
@@ -257,6 +260,9 @@ fun JvmSearchResultScreen(
                         onFavoriteClick = {
                             musicController.invokingOnFavorite(music.itemId)
                         },
+                        onOpenArtist = {
+                            artistClickHandler.openMusicArtists(music)
+                        },
                     )
                 }
             }
@@ -270,6 +276,4 @@ fun JvmSearchResultScreen(
 
     }
 }
-
-
 

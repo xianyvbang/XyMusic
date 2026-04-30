@@ -183,10 +183,6 @@ fun MusicBottomMenuComponent(
     val coroutineScope = rememberCoroutineScope()
     val contextWrapper = koinInject<ContextWrapper>()
 
-    var ifShowArtistList by remember {
-        mutableStateOf(false)
-    }
-
     SideEffect {
         Log.i("=====", "MusicBottomMenuComponent重组一次")
     }
@@ -196,11 +192,6 @@ fun MusicBottomMenuComponent(
     val timerClose = stringResource(Res.string.timer_close)
 
 
-    ArtistItemListBottomSheet(
-        artistList = musicBottomMenuViewModel.xyArtists,
-        onIfShowArtistList = { ifShowArtistList },
-        onSetShowArtistList = { ifShowArtistList = it },
-    )
     val favoriteMusicMap by musicBottomMenuViewModel.favoriteSet.collectAsStateWithLifecycle(
         emptyList()
     )
@@ -256,6 +247,19 @@ fun MusicBottomMenuComponent(
         var ifShowFadeInOut by remember {
             mutableStateOf(false)
         }
+
+        // 统一处理艺术家点击：多艺术家弹选择列表，单艺术家直接进入详情页。
+        val artistClickHandler = rememberMusicArtistClickHandler(
+            musicBottomMenuViewModel = musicBottomMenuViewModel,
+            onBeforeOpen = {
+                sheetState.hide()
+            },
+            onBeforeSingleArtistNavigate = onPlayerSheetClose,
+            onAfterOpen = {
+                ifShowBottom = false
+                music.dismiss()
+            }
+        )
 
         /**
          * 是否可以删除数据
@@ -349,29 +353,7 @@ fun MusicBottomMenuComponent(
                         painter = painterResource(Res.drawable.person_24px),
                         text = "${stringResource(Res.string.artist)}: ${music.artists}",
                         onClick = {
-                            //获得歌手信息
-                            music.artistIds?.let { artistIds ->
-                                if (artistIds.isNotEmpty()) {
-                                    coroutineScope.launch {
-                                        sheetState.hide()
-                                        if (artistIds.size > 1) {
-                                            ifShowArtistList = true
-                                            musicBottomMenuViewModel.getArtistInfos(artistIds)
-                                        } else {
-                                            onPlayerSheetClose()
-                                            navigator.navigate(
-                                                ArtistInfo(
-                                                    artistIds[0],
-                                                    music.artists?.get(0) ?: ""
-                                                )
-                                            )
-                                        }
-                                    }.invokeOnCompletion {
-                                        ifShowBottom = false
-                                        music.dismiss()
-                                    }
-                                }
-                            }
+                            artistClickHandler.openMusicArtists(music)
                         })
                 }
 

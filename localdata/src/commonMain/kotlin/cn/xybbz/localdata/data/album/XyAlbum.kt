@@ -30,7 +30,7 @@ data class XyAlbum(
      */
     val artists: String? = "",
     /**
-     * 音乐艺术家id->使用"/"分割
+     * 音乐艺术家id->使用 LocalConstants.ARTIST_DELIMITER 分割
      */
     val artistIds: String? = "",
     /**
