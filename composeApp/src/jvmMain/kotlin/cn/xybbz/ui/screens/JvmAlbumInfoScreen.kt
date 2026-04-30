@@ -30,18 +30,14 @@ import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -49,7 +45,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -62,12 +57,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
@@ -91,10 +84,11 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.progress.Progress
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.ui.components.AlertDialogObject
-import cn.xybbz.ui.components.LazyListComponent
+import cn.xybbz.ui.components.ErrorContent
+import cn.xybbz.ui.components.ErrorMoreRetryItem
+import cn.xybbz.ui.components.LazyLoadingAndStatus
 import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.SelectSortBottomSheetComponent
-import cn.xybbz.ui.components.SwipeRefreshListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.XySelectAllComponent
 import cn.xybbz.ui.components.getExportPlaylistsAlertDialogObject
@@ -106,6 +100,7 @@ import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
@@ -132,6 +127,7 @@ import xymusic_kmp.composeapp.generated.resources.delete_24px
 import xymusic_kmp.composeapp.generated.resources.delete_playback_history
 import xymusic_kmp.composeapp.generated.resources.delete_playlist
 import xymusic_kmp.composeapp.generated.resources.edit_24px
+import xymusic_kmp.composeapp.generated.resources.empty_info
 import xymusic_kmp.composeapp.generated.resources.enable_playback_history
 import xymusic_kmp.composeapp.generated.resources.export_playlist
 import xymusic_kmp.composeapp.generated.resources.favorite_24px
@@ -142,6 +138,7 @@ import xymusic_kmp.composeapp.generated.resources.import_info
 import xymusic_kmp.composeapp.generated.resources.import_playlist
 import xymusic_kmp.composeapp.generated.resources.import_playlist_hint
 import xymusic_kmp.composeapp.generated.resources.login_24px
+import xymusic_kmp.composeapp.generated.resources.loading
 import xymusic_kmp.composeapp.generated.resources.modify_playlist_name
 import xymusic_kmp.composeapp.generated.resources.more_vert_24px
 import xymusic_kmp.composeapp.generated.resources.music_xy_placeholder_foreground
@@ -152,6 +149,7 @@ import xymusic_kmp.composeapp.generated.resources.play_circle_24px
 import xymusic_kmp.composeapp.generated.resources.played_progress_percent
 import xymusic_kmp.composeapp.generated.resources.playlist
 import xymusic_kmp.composeapp.generated.resources.playlist_add_check_24px
+import xymusic_kmp.composeapp.generated.resources.reached_bottom
 import xymusic_kmp.composeapp.generated.resources.rename_playlist
 import xymusic_kmp.composeapp.generated.resources.resume_playback
 import xymusic_kmp.composeapp.generated.resources.return_album_page
@@ -215,28 +213,7 @@ fun JvmAlbumInfoScreen(
     val editPlaylistAlertTitle = stringResource(Res.string.modify_playlist_name)
     val importPlaylistAlertTitle = stringResource(Res.string.import_playlist)
 
-    val nestedScrollConnection = remember {
-        object : NestedScrollConnection {
-            override fun onPreScroll(
-                available: Offset,
-                source: NestedScrollSource
-            ): Offset {
-                val delta = available.y
-                return if (delta > 0) Offset.Zero else {
-                    val y =
-                        -lazyListState.dispatchRawDelta(-delta)
-                    Offset(
-                        x = 0f,
-                        y = y
-                    )
-                }
-            }
-        }
-    }
-
-    BoxWithConstraints {
-        val maxHeight = this.maxHeight
-        XyColumnScreen {
+    XyColumnScreen {
             TopAppBarComponent(
                 title = {
 
@@ -275,18 +252,6 @@ fun JvmAlbumInfoScreen(
                             )
                         }
 
-                    }
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = {
-                            navigator.goBack()
-                        },
-                    ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.arrow_back_24px),
-                            contentDescription = stringResource(Res.string.return_album_page)
-                        )
                     }
                 },
                 actions = {
@@ -453,14 +418,9 @@ fun JvmAlbumInfoScreen(
                 }
             )
 
-            SwipeRefreshListComponent(
-                collectAsLazyPagingItems = musicListPage,
-                lazyState = lazyListState,
-                lazyColumBottom = null,
-                bottomItem = null,
-                modifier = Modifier
-                    .nestedScroll(nestedScrollConnection)
-            ) { list ->
+            LazyColumnNotComponent(
+                state = lazyListState
+            ) {
                 item {
                     JvmMusicAlbumInfoComponent(
                         onData = {
@@ -491,65 +451,103 @@ fun JvmAlbumInfoScreen(
                     )
                 }
 
-                item {
-                    LazyListComponent(
-                        modifier = Modifier.height(
-                            maxHeight - JvmDefaultAlbumInfoHeight - /*XyTheme.dimens.contentPadding -*/ TopAppBarDefaults.TopAppBarExpandedHeight - WindowInsets.statusBars.asPaddingValues()
-                                .calculateTopPadding() + XyTheme.dimens.snackBarPlayerHeight - XyTheme.dimens.outerHorizontalPadding
-                        ),
-                        collectAsLazyPagingItems = musicListPage
-                    ) {
-                        items(
-                            list.itemCount,
-                            key = list.itemKey { item -> item.itemId },
-                            contentType = list.itemContentType { MusicTypeEnum.MUSIC }
-                        ) { index ->
-
-                            list[index]?.let { music ->
-                                MusicItemComponent(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    backgroundColor = Color.Transparent,
-                                    music = music,
-                                    onIfFavorite = {
-                                        music.itemId in favoriteSet
-                                    },
-                                    ifDownload = music.itemId in downloadMusicIds,
-                                    ifPlay = playbackState.musicInfo?.itemId == music.itemId,
-                                    subordination =
-                                        if (albumInfoViewModel.albumPlayerHistoryProgressMap.containsKey(
-                                                music.itemId
-                                            )
-                                        ) stringResource(
-                                            Res.string.played_progress_percent,
-                                            albumInfoViewModel.albumPlayerHistoryProgressMap[music.itemId]
-                                                ?: 0
-                                        ) else music.artists?.joinToString()
-                                            ?: "",
-                                    onMusicPlay = { parameter ->
-                                        coroutineScope.launch {
-                                            albumInfoViewModel.musicPlayContext.album(
-                                                parameter
-                                            )
-                                        }
-                                    },
-                                    ifSelect = selectUiState.isOpen,
-                                    ifSelectCheckBox = { music.itemId in selectUiState.selectedMusicIds },
-                                    trailingOnSelectClick = { _ ->
-                                        albumInfoViewModel.selectControl.toggleSelection(
-                                            music.itemId,
-                                            onIsSelectAll = {
-                                                selectUiState.selectedMusicIds.containsAll(
-                                                    musicListPage.itemSnapshotList.items.map { it.itemId }
-                                                )
-                                            }
+                items(
+                    musicListPage.itemCount,
+                    key = musicListPage.itemKey { item -> item.itemId },
+                    contentType = musicListPage.itemContentType { MusicTypeEnum.MUSIC }
+                ) { index ->
+                    musicListPage[index]?.let { music ->
+                        MusicItemComponent(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = Color.Transparent,
+                            music = music,
+                            onIfFavorite = {
+                                music.itemId in favoriteSet
+                            },
+                            ifDownload = music.itemId in downloadMusicIds,
+                            ifPlay = playbackState.musicInfo?.itemId == music.itemId,
+                            subordination =
+                                if (albumInfoViewModel.albumPlayerHistoryProgressMap.containsKey(
+                                        music.itemId
+                                    )
+                                ) stringResource(
+                                    Res.string.played_progress_percent,
+                                    albumInfoViewModel.albumPlayerHistoryProgressMap[music.itemId]
+                                        ?: 0
+                                ) else music.artists?.joinToString()
+                                    ?: "",
+                            onMusicPlay = { parameter ->
+                                coroutineScope.launch {
+                                    albumInfoViewModel.musicPlayContext.album(
+                                        parameter
+                                    )
+                                }
+                            },
+                            ifSelect = selectUiState.isOpen,
+                            ifSelectCheckBox = { music.itemId in selectUiState.selectedMusicIds },
+                            trailingOnSelectClick = { _ ->
+                                albumInfoViewModel.selectControl.toggleSelection(
+                                    music.itemId,
+                                    onIsSelectAll = {
+                                        selectUiState.selectedMusicIds.containsAll(
+                                            musicListPage.itemSnapshotList.items.map { it.itemId }
                                         )
-                                    },
-                                    trailingOnClick = {
-                                        coroutineScope.launch {
-                                            music.show()
-                                        }
                                     }
                                 )
+                            },
+                            trailingOnClick = {
+                                coroutineScope.launch {
+                                    music.show()
+                                }
+                            }
+                        )
+                    }
+                }
+
+                val refreshState = musicListPage.loadState.refresh
+                val appendState = musicListPage.loadState.append
+                val hasData = musicListPage.itemCount > 0
+                val isInitialLoading = refreshState is LoadState.Loading && !hasData
+                val isAppending = appendState is LoadState.Loading && hasData
+                val isAppendEndReached =
+                    hasData && appendState is LoadState.NotLoading && appendState.endOfPaginationReached
+                val isEmpty =
+                    !hasData && refreshState is LoadState.NotLoading && appendState is LoadState.NotLoading
+                val appendError = appendState is LoadState.Error && hasData
+                val refreshError = refreshState is LoadState.Error
+                item {
+                    LazyLoadingAndStatus(
+                        text = stringResource(
+                            when {
+                                isEmpty -> Res.string.reached_bottom
+                                isInitialLoading || isAppending -> Res.string.loading
+                                isAppendEndReached -> Res.string.reached_bottom
+                                else -> Res.string.empty_info
+                            }
+                        ),
+                        ifLoading = isInitialLoading || isAppending
+                    )
+                }
+
+                when {
+                    appendError -> {
+                        item(key = 8888) {
+                            ErrorMoreRetryItem {
+                                musicListPage.retry()
+                            }
+                        }
+                    }
+
+                    refreshError -> {
+                        item(key = 7777) {
+                            if (!hasData) {
+                                ErrorContent {
+                                    musicListPage.retry()
+                                }
+                            } else {
+                                ErrorMoreRetryItem {
+                                    musicListPage.retry()
+                                }
                             }
                         }
                     }
@@ -557,7 +555,6 @@ fun JvmAlbumInfoScreen(
             }
         }
     }
-}
 
 /**
  * 音乐列表操作栏
