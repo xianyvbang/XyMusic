@@ -120,9 +120,7 @@ fun JvmHomeScreen(
 
         if (newestAlbumList.isNotEmpty()) {
             if (hasPreviousSection) {
-                item(key = "latest_album_spacing") {
-                    Spacer(modifier = Modifier.height(40.dp))
-                }
+                homeSectionSpacing(sectionKey = "latest_album")
             }
             homeAlbumSection(
                 sectionKey = "latest_album",
@@ -137,9 +135,7 @@ fun JvmHomeScreen(
 
         if (recentMusicList.isNotEmpty()) {
             if (hasPreviousSection) {
-                item(key = "recent_music_spacing") {
-                    Spacer(modifier = Modifier.height(40.dp))
-                }
+                homeSectionSpacing(sectionKey = "recent_music")
             }
             homeMusicSection(
                 sectionKey = "recent_music",
@@ -159,9 +155,7 @@ fun JvmHomeScreen(
 
         if (recentAlbumList.isNotEmpty()) {
             if (hasPreviousSection) {
-                item(key = "recent_album_spacing") {
-                    Spacer(modifier = Modifier.height(40.dp))
-                }
+                homeSectionSpacing(sectionKey = "recent_album")
             }
             homeAlbumSection(
                 sectionKey = "recent_album",
@@ -176,9 +170,7 @@ fun JvmHomeScreen(
 
         if (mostPlayedAlbumList.isNotEmpty()) {
             if (hasPreviousSection) {
-                item(key = "most_played_album_spacing") {
-                    Spacer(modifier = Modifier.height(40.dp))
-                }
+                homeSectionSpacing(sectionKey = "most_played_album")
             }
             homeAlbumSection(
                 sectionKey = "most_played_album",
@@ -193,9 +185,7 @@ fun JvmHomeScreen(
 
         if (mostPlayedMusicList.isNotEmpty()) {
             if (hasPreviousSection) {
-                item(key = "most_played_music_spacing") {
-                    Spacer(modifier = Modifier.height(40.dp))
-                }
+                homeSectionSpacing(sectionKey = "most_played_music")
             }
             homeMusicSection(
                 sectionKey = "most_played_music",
@@ -212,6 +202,17 @@ fun JvmHomeScreen(
             )
         }
     }
+}
+
+private fun LazyListScope.homeSectionSpacing(sectionKey: String) {
+    item(key = "${sectionKey}_spacing") {
+        HomeSectionSpacing()
+    }
+}
+
+@Composable
+private fun HomeSectionSpacing() {
+    Spacer(modifier = Modifier.height(20.dp))
 }
 
 private fun LazyListScope.homeMusicSection(

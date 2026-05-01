@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -52,10 +51,10 @@ import cn.xybbz.ui.components.JvmLazyRowComponent
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicArtistCardComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
-import cn.xybbz.ui.components.SongRow
 import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
+import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyRow
@@ -114,8 +113,6 @@ fun JvmSearchScreen(
             }
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
         JvmSearchResultScreen(
             musicList = searchViewModel.musicList,
             albumList = searchViewModel.albumList,
@@ -157,7 +154,7 @@ fun JvmSearchResultScreen(
 
     ScreenLazyColumn(
         modifier = Modifier
-            .padding(top = XyTheme.dimens.outerVerticalPadding)
+//            .padding(top = XyTheme.dimens.outerVerticalPadding)
             .fillMaxSize(),
         state = lazyListState,
         ifLoading = onLoadingState()
@@ -217,38 +214,29 @@ fun JvmSearchResultScreen(
                     XyText(text = stringResource(Res.string.music))
                 }
             }
-            itemsIndexed(
-                items = musicList,
-                key = { _, music -> music.itemId }
-            ) { index, music ->
-                SongRow(
-                    music = music,
-                    index = index,
-                    columns = SearchMusicTableColumns,
-                    ifFavorite = music.itemId in onFavoriteList(),
-                    ifPlay = music.itemId == currentPlayingMusicId,
-                    onClick = {
-                        onAddMusic(music)
-                    },
-                    onOpenAlbum = {
-                        if (music.album.isNotBlank()) {
-                            navigator.navigate(
-                                AlbumInfo(
-                                    music.album,
-                                    MusicDataTypeEnum.ALBUM
-                                )
+            songTableItems(
+                tableKey = "search_music",
+                songs = musicList,
+                columns = SearchMusicTableColumns,
+                ifFavorite = { music -> music.itemId in onFavoriteList() },
+                ifPlay = { music -> music.itemId == currentPlayingMusicId },
+                onSongClick = onAddMusic,
+                onOpenAlbum = { music ->
+                    if (music.album.isNotBlank()) {
+                        navigator.navigate(
+                            AlbumInfo(
+                                music.album,
+                                MusicDataTypeEnum.ALBUM
                             )
-                        }
-                    },
-                    onFavoriteClick = {
-                        musicController.invokingOnFavorite(music.itemId)
-                    },
-                    onDownloadClick = {},
-                    onOpenArtist = {
-                        artistClickHandler.openMusicArtists(music)
-                    },
-                )
-            }
+                        )
+                    }
+                },
+                onOpenArtist = artistClickHandler::openMusicArtists,
+                onFavoriteClick = { music ->
+                    musicController.invokingOnFavorite(music.itemId)
+                },
+                onDownloadClick = {},
+            )
         }
     }
 }
