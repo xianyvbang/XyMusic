@@ -23,8 +23,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.DownloadTypes
 import cn.xybbz.common.utils.Log
@@ -35,12 +35,13 @@ import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
+import kotlinx.coroutines.flow.any
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
-class DailyRecommendViewModel (
+class DailyRecommendViewModel(
     private val db: LocalDatabaseClient,
     private val downloadDb: DownloadDatabaseClient,
     private val dataSourceManager: DataSourceManager,
@@ -121,7 +122,7 @@ class DailyRecommendViewModel (
             musicPlayContext.musicList(
                 onMusicPlayParameter,
                 playMusicList.map {
-                    it.copy(ifFavoriteStatus = db.musicDao.selectIfFavoriteByMusic(it.itemId))
+                    it.copy(ifFavoriteStatus = favoriteSet.any { favoriteId -> it.itemId in favoriteId })
                 }
             )
         }

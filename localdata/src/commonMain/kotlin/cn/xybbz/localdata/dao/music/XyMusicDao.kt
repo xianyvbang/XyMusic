@@ -45,9 +45,23 @@ import kotlin.time.Clock
 @Dao
 interface XyMusicDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun saveDataBatch(data: List<XyMusic>): List<Long>
+    @Transaction
+    suspend fun saveDataBatch(data: List<XyMusic>): List<Long> {
+        var favoriteIndex = selectFavoriteIndex() ?: -1
+        saveFavoriteMusic(data.filter { it.ifFavoriteStatus }.map {
+            favoriteIndex += 1
+            FavoriteMusic(
+                musicId = it.itemId,
+                index = favoriteIndex,
+                connectionId = it.connectionId
+            )
+        })
+        return saveBatch(data)
+    }
 
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveBatch(data: List<XyMusic>): List<Long>
 
     @Transaction
     suspend fun saveBatch(
@@ -59,16 +73,6 @@ interface XyMusicDao {
         mediaLibraryId: String? = null
     ) {
         saveDataBatch(data)
-
-        var favoriteIndex = selectFavoriteIndex() ?: -1
-        saveFavoriteMusic(data.filter { it.ifFavoriteStatus }.map {
-            favoriteIndex += 1
-            FavoriteMusic(
-                musicId = it.itemId,
-                index = favoriteIndex,
-                connectionId = connectionId
-            )
-        })
         when (dataType) {
             MusicDataTypeEnum.HOME -> {
 
@@ -1178,14 +1182,17 @@ interface XyMusicDao {
     @Query("delete from playlistmusic where playlistId = :playlistId and musicId = :musicId and connectionId = (select connectionId from xy_settings)")
     suspend fun removeByPlaylistMusicByMusicId(playlistId: String, musicId: String)
 
-    @Query("""
+    @Query(
+        """
         SELECT EXISTS (
             SELECT 1
             FROM favoritemusic
             WHERE connectionId = (SELECT connectionId FROM xy_settings)
             AND musicId = :itemId
+            AND ifFavorite = 1
             AND `index` IS NOT NULL
         )
-    """)
+    """
+    )
     suspend fun selectIfFavoriteByMusic(itemId: String): Boolean
 }
