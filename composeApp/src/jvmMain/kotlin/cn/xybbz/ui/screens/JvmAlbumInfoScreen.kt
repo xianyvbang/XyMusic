@@ -105,6 +105,7 @@ import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopTooltipBox
+import cn.xybbz.ui.windows.DesktopTooltipIconButton
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
@@ -409,8 +410,9 @@ fun JvmAlbumInfoScreen(
                             ) else stringResource(
                                 Res.string.favorite_removed
                             )
-                        DesktopTooltipBox(tooltip = favoriteTooltipText) {
-                            IconButton(onClick = composeClick {
+                        DesktopTooltipIconButton(
+                            tooltip = favoriteTooltipText,
+                            onClick = composeClick {
                                 coroutineScope.launch {
                                     val ifFavoriteData =
                                         FavoriteCoordinator.setFavoriteData(
@@ -423,13 +425,13 @@ fun JvmAlbumInfoScreen(
                                         )
                                     albumInfoViewModel.updateIfFavorite(ifFavoriteData)
                                 }
-                            }) {
-                                Icon(
-                                    painter = painterResource(if (albumInfoViewModel.ifFavorite) Res.drawable.favorite_border_24px else Res.drawable.favorite_24px),
-                                    contentDescription = favoriteTooltipText,
-                                    tint = if (albumInfoViewModel.ifFavorite) Color.Red else LocalContentColor.current
-                                )
-                            }
+                            },
+                        ) {
+                            Icon(
+                                painter = painterResource(if (albumInfoViewModel.ifFavorite) Res.drawable.favorite_border_24px else Res.drawable.favorite_24px),
+                                contentDescription = favoriteTooltipText,
+                                tint = if (albumInfoViewModel.ifFavorite) Color.Red else LocalContentColor.current
+                            )
                         }
                     }
                 }
@@ -659,15 +661,16 @@ private fun JvmMusicListOperation(
                 onSelectAll = onSelectAll
             )
             val closeSelectionText = stringResource(Res.string.close_selection)
-            DesktopTooltipBox(tooltip = closeSelectionText) {
-                IconButton(onClick = {
+            DesktopTooltipIconButton(
+                tooltip = closeSelectionText,
+                onClick = {
                     selectControl.dismiss()
-                }) {
-                    Icon(
-                        painter = painterResource(Res.drawable.close_24px),
-                        contentDescription = closeSelectionText
-                    )
-                }
+                },
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.close_24px),
+                    contentDescription = closeSelectionText
+                )
             }
         } else {
             Row(
@@ -696,15 +699,16 @@ private fun JvmMusicListOperation(
             }
             if (showPlaybackHistoryAction) {
                 val deletePlaybackHistoryText = stringResource(Res.string.delete_playback_history)
-                DesktopTooltipBox(tooltip = deletePlaybackHistoryText) {
-                    IconButton(onClick = {
+                DesktopTooltipIconButton(
+                    tooltip = deletePlaybackHistoryText,
+                    onClick = {
                         onRemovePlayerHistory(playbackHistoryProgress.musicId)
-                    }) {
-                        Icon(
-                            painter = painterResource(Res.drawable.close_24px),
-                            contentDescription = deletePlaybackHistoryText
-                        )
-                    }
+                    },
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.close_24px),
+                        contentDescription = deletePlaybackHistoryText
+                    )
                 }
             } else {
                 Row(
@@ -714,15 +718,16 @@ private fun JvmMusicListOperation(
                     sortContent()
 
                     val selectText = stringResource(Res.string.select)
-                    DesktopTooltipBox(tooltip = selectText) {
-                        IconButton(onClick = {
+                    DesktopTooltipIconButton(
+                        tooltip = selectText,
+                        onClick = {
                             selectControl.show(true)
-                        }) {
-                            Icon(
-                                painter = painterResource(Res.drawable.playlist_add_check_24px),
-                                contentDescription = selectText
-                            )
-                        }
+                        },
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.playlist_add_check_24px),
+                            contentDescription = selectText
+                        )
                     }
                 }
             }

@@ -79,9 +79,7 @@ import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.TabListEnum
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.image.rememberArtistCoverUrls
-import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.select.SelectControl
-import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.extension.isSticking
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -100,6 +98,7 @@ import cn.xybbz.ui.components.show
 import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.windows.DesktopTooltipIconButton
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.LazyColumnParentComponent
 import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
@@ -125,13 +124,11 @@ import xymusic_kmp.composeapp.generated.resources.favorite_added
 import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
 import xymusic_kmp.composeapp.generated.resources.favorite_removed
 import xymusic_kmp.composeapp.generated.resources.no_description
-import xymusic_kmp.composeapp.generated.resources.play_circle_24px
 import xymusic_kmp.composeapp.generated.resources.playlist_add_check_24px
 import xymusic_kmp.composeapp.generated.resources.reached_bottom
 import xymusic_kmp.composeapp.generated.resources.return_home
 import xymusic_kmp.composeapp.generated.resources.select
 import xymusic_kmp.composeapp.generated.resources.songs_count_suffix
-import xymusic_kmp.composeapp.generated.resources.start_playback
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 private val JvmArtistInfoDesktopCoverSize = 232.dp
@@ -318,8 +315,6 @@ fun JvmArtistInfoScreen(
                     TabListEnum.Music -> {
                         item {
                             JvmArtistMusicListOperation(
-                                artistId = artistId,
-                                musicPlayContext = artistInfoViewModel.musicPlayContext,
                                 selectControl = artistInfoViewModel.selectControl,
                                 onSelectAll = {
                                     artistInfoViewModel.selectControl.toggleSelectionAll(
@@ -618,8 +613,6 @@ private fun ArtistInfoCardGridRow(
  */
 @Composable
 private fun JvmArtistMusicListOperation(
-    artistId: String,
-    musicPlayContext: MusicPlayContext,
     selectControl: SelectControl,
     ifOpenSelect: Boolean,
     isSelectAll: Boolean,
@@ -630,25 +623,16 @@ private fun JvmArtistMusicListOperation(
         modifier = Modifier
             .debounceClickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null
+                indication = null,
+                enabled = ifOpenSelect,
             ) {
-                if (ifOpenSelect) {
-                    onSelectAll()
-                } else {
-                    musicPlayContext.artist(
-                        OnMusicPlayParameter(
-                            musicId = "",
-                            artistId = artistId
-                        ),
-                        index = 0,
-                        artistId = artistId
-                    )
-                }
+                onSelectAll()
             }
             .height(XyTheme.dimens.itemHeight),
         paddingValues = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding
-        )
+        ),
+        horizontalArrangement = if (ifOpenSelect) Arrangement.SpaceBetween else Arrangement.End
     ) {
 
 
@@ -668,28 +652,20 @@ private fun JvmArtistMusicListOperation(
         } else {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Icon(
-                    painter = painterResource(Res.drawable.play_circle_24px),
-                    contentDescription = stringResource(Res.string.start_playback)
-                )
-                Text(text = stringResource(Res.string.start_playback))
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.End
             ) {
                 sortContent()
 
-                IconButton(onClick = {
-                    selectControl.show(
-                        true
-                    )
-                }) {
+                val selectText = stringResource(Res.string.select)
+                DesktopTooltipIconButton(
+                    tooltip = selectText,
+                    onClick = {
+                        selectControl.show(true)
+                    },
+                ) {
                     Icon(
                         painter = painterResource(Res.drawable.playlist_add_check_24px),
-                        contentDescription = stringResource(Res.string.select)
+                        contentDescription = selectText
                     )
                 }
             }

@@ -50,7 +50,7 @@ import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.screens.desktopColors
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.windows.DesktopTooltipBox
+import cn.xybbz.ui.windows.DesktopTooltipIconButton
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
@@ -525,22 +525,21 @@ private fun HoverActionIcon(
     enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
-    DesktopTooltipBox(tooltip = tooltip) {
-        IconButton(
-            onClick = composeClick { onClick() },
-            enabled = enabled,
-            modifier = Modifier.size(SongTableDefaults.actionButtonSize)
-                .pointerHoverIcon(PointerIcon.Hand)
-        ) {
-            Icon(
-                painter = painterResource(iconRes),
-                contentDescription = null,
-                modifier = Modifier.size(SongTableDefaults.actionIconSize),
-                tint = if (enabled) desktopColors.textSecondary else desktopColors.textSecondary.copy(
-                    alpha = 0.38f
-                ),
-            )
-        }
+    DesktopTooltipIconButton(
+        tooltip = tooltip,
+        onClick = composeClick { onClick() },
+        enabled = enabled,
+        modifier = Modifier.size(SongTableDefaults.actionButtonSize)
+            .pointerHoverIcon(PointerIcon.Hand),
+    ) {
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = null,
+            modifier = Modifier.size(SongTableDefaults.actionIconSize),
+            tint = if (enabled) desktopColors.textSecondary else desktopColors.textSecondary.copy(
+                alpha = 0.38f
+            ),
+        )
     }
 }
 
