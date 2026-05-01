@@ -123,6 +123,8 @@ internal object SongTableDefaults {
     val actionButtonSpacing = 8.dp
 }
 
+private val songFavoriteTint = Color(0xFFE94157)
+
 /**
  * 歌曲表格中的单行内容。
  * 组件直接使用 XyMusic，展示文案、收藏状态和播放状态通过参数覆盖，避免额外包装展示对象。
@@ -439,7 +441,7 @@ private fun SongFavoriteCell(
                 ),
                 contentDescription = null,
                 modifier = Modifier.size(SongTableDefaults.actionIconSize),
-                tint = if (isFavorite) Color.Red else desktopColors.textSecondary,
+                tint = if (isFavorite) songFavoriteTint else desktopColors.textSecondary,
             )
         }
     }
