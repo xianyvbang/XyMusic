@@ -94,9 +94,6 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.favorite_24px
-import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
-import xymusic_kmp.composeapp.generated.resources.favorite_button
 import xymusic_kmp.composeapp.generated.resources.info_24px
 import xymusic_kmp.composeapp.generated.resources.list_loop
 import xymusic_kmp.composeapp.generated.resources.music_cover
@@ -239,21 +236,15 @@ internal fun JvmSnackBarPlaybackBar(
                         horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding / 3),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        JvmSnackBarIconButton(
-                            iconRes = if (currentMusic?.itemId in favoriteSet) {
-                                Res.drawable.favorite_border_24px
-                            } else {
-                                Res.drawable.favorite_24px
-                            },
-                            contentDescription = stringResource(Res.string.favorite_button),
-                            tint = if (currentMusic?.itemId in favoriteSet) {
-                                Color.Red
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            },
+                        FavoriteIconButton(
+                            isFavorite = currentMusic?.itemId in favoriteSet,
                             enabled = currentMusic != null,
+                            modifier = Modifier
+                                .size(JvmSnackBarIconButtonSize),
+                            favoriteTint = Color.Red,
+                            normalTint = MaterialTheme.colorScheme.onSurfaceVariant,
                             onClick = {
-                                currentMusic ?: return@JvmSnackBarIconButton
+                                currentMusic ?: return@FavoriteIconButton
                                 coroutineScope.launch {
                                     onToggleFavorite(currentMusic)
                                 }

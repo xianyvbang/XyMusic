@@ -50,7 +50,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
@@ -100,9 +99,6 @@ import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.album_cover
 import xymusic_kmp.composeapp.generated.resources.close_player_screen
 import xymusic_kmp.composeapp.generated.resources.disc_placeholder
-import xymusic_kmp.composeapp.generated.resources.favorite_24px
-import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
-import xymusic_kmp.composeapp.generated.resources.favorite_button
 import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
 import xymusic_kmp.composeapp.generated.resources.more_vert_24px
 import xymusic_kmp.composeapp.generated.resources.music_list
@@ -610,7 +606,8 @@ private fun FavoriteMusicIconComponent(
 ) {
     val coroutineScope = rememberCoroutineScope()
 
-    IconButton(
+    FavoriteIconButton(
+        isFavorite = musicDetail.itemId in onFavoriteMusicIdSet(),
         onClick = {
             coroutineScope.launch {
                 FavoriteCoordinator.setFavoriteData(
@@ -622,21 +619,8 @@ private fun FavoriteMusicIconComponent(
                 )
             }
         },
-    ) {
-        Icon(
-            modifier = Modifier
-                .size(60.dp),
-            painter =
-                painterResource(
-                    if (musicDetail.itemId in onFavoriteMusicIdSet())
-                        Res.drawable.favorite_border_24px
-                    else
-                        Res.drawable.favorite_24px
-                ),
-            contentDescription = stringResource(Res.string.favorite_button),
-            tint = if (musicDetail.itemId in onFavoriteMusicIdSet()) Color.Red else LocalContentColor.current
-        )
-    }
+        iconModifier = Modifier.size(60.dp),
+    )
 
 }
 

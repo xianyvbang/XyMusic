@@ -14,6 +14,7 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.ui.components.FavoriteIconButton
 import cn.xybbz.ui.components.IndexBar
 import cn.xybbz.ui.components.MusicArtistCardComponent
 import cn.xybbz.ui.components.SwipeRefreshVerticalGridListComponent
@@ -30,8 +31,6 @@ import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.artist
-import xymusic_kmp.composeapp.generated.resources.favorite_24px
-import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
 import xymusic_kmp.composeapp.generated.resources.get_all_artists
 import xymusic_kmp.composeapp.generated.resources.get_favorite_artists
 import xymusic_kmp.composeapp.generated.resources.return_home
@@ -75,7 +74,18 @@ fun JvmArtistScreen(
                     )
                 }
             }, actions = {
-                IconButton(onClick = {
+                val isFavoriteFilter = artistViewModel.ifFavorite == true
+                val favoriteFilterText = if (isFavoriteFilter) {
+                    stringResource(Res.string.get_all_artists)
+                } else {
+                    stringResource(Res.string.get_favorite_artists)
+                }
+                FavoriteIconButton(
+                    isFavorite = isFavoriteFilter,
+                    contentDescription = favoriteFilterText,
+                    tooltip = favoriteFilterText,
+                    normalTint = Color.Red,
+                    onClick = {
                     coroutineScope.launch {
                         if (artistViewModel.sortBy.value.isFavorite == true) {
                             artistViewModel.setFavoriteFilterData(null)
@@ -86,15 +96,7 @@ fun JvmArtistScreen(
                     }.invokeOnCompletion {
 //                        artistListPaging.refresh()
                     }
-                }) {
-                    Icon(
-                        painter = painterResource(if (artistViewModel.ifFavorite == true) Res.drawable.favorite_border_24px else Res.drawable.favorite_24px),
-                        contentDescription = if (artistViewModel.ifFavorite == true) stringResource(
-                            Res.string.get_all_artists
-                        ) else stringResource(Res.string.get_favorite_artists),
-                        tint = Color.Red
-                    )
-                }
+                })
             })
 
         IndexBar(

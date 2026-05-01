@@ -23,6 +23,8 @@
     <string name="cancel">Cancel</string>
     <string name="confirm">Confirm</string>
     <string name="image_suffix">的图片</string>
+    <string name="favorite_added">已收藏</string>
+    <string name="favorite_removed">未收藏</string>
     <string name="favorited">已收藏</string>
     <string name="downloaded">已下载</string>
     <string name="selected">已选择</string>

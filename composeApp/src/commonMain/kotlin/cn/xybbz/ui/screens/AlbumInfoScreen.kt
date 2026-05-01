@@ -46,7 +46,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -91,6 +90,7 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.progress.Progress
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.FavoriteIconButton
 import cn.xybbz.ui.components.LazyListComponent
 import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.SelectSortBottomSheetComponent
@@ -133,10 +133,6 @@ import xymusic_kmp.composeapp.generated.resources.delete_playlist
 import xymusic_kmp.composeapp.generated.resources.edit_24px
 import xymusic_kmp.composeapp.generated.resources.enable_playback_history
 import xymusic_kmp.composeapp.generated.resources.export_playlist
-import xymusic_kmp.composeapp.generated.resources.favorite_24px
-import xymusic_kmp.composeapp.generated.resources.favorite_added
-import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
-import xymusic_kmp.composeapp.generated.resources.favorite_removed
 import xymusic_kmp.composeapp.generated.resources.import_info
 import xymusic_kmp.composeapp.generated.resources.import_playlist
 import xymusic_kmp.composeapp.generated.resources.import_playlist_hint
@@ -423,29 +419,23 @@ fun AlbumInfoScreen(
                             )
                         }
                     else
-                        IconButton(onClick = composeClick {
-                            coroutineScope.launch {
-                                val ifFavoriteData =
-                                    FavoriteCoordinator.setFavoriteData(
-                                        dataSourceManager = albumInfoViewModel.dataSourceManager,
-                                        type = MusicTypeEnum.ALBUM,
-                                        itemId = albumInfoViewModel.xyAlbumInfoData?.itemId ?: "",
-                                        ifFavorite = albumInfoViewModel.ifFavorite,
-                                        musicController = albumInfoViewModel.musicController
-                                    )
-                                albumInfoViewModel.updateIfFavorite(ifFavoriteData)
-                            }
-                        }) {
-                            Icon(
-                                painter = painterResource(if (albumInfoViewModel.ifFavorite) Res.drawable.favorite_border_24px else Res.drawable.favorite_24px),
-                                contentDescription = if (albumInfoViewModel.ifFavorite) stringResource(
-                                    Res.string.favorite_added
-                                ) else stringResource(
-                                    Res.string.favorite_removed
-                                ),
-                                tint = if (albumInfoViewModel.ifFavorite) Color.Red else LocalContentColor.current
-                            )
-                        }
+                        FavoriteIconButton(
+                            isFavorite = albumInfoViewModel.ifFavorite,
+                            onClick = composeClick {
+                                coroutineScope.launch {
+                                    val ifFavoriteData =
+                                        FavoriteCoordinator.setFavoriteData(
+                                            dataSourceManager = albumInfoViewModel.dataSourceManager,
+                                            type = MusicTypeEnum.ALBUM,
+                                            itemId = albumInfoViewModel.xyAlbumInfoData?.itemId
+                                                ?: "",
+                                            ifFavorite = albumInfoViewModel.ifFavorite,
+                                            musicController = albumInfoViewModel.musicController
+                                        )
+                                    albumInfoViewModel.updateIfFavorite(ifFavoriteData)
+                                }
+                            },
+                        )
                 }
             )
 

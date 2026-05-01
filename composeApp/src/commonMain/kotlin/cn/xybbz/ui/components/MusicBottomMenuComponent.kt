@@ -115,8 +115,6 @@ import xymusic_kmp.composeapp.generated.resources.double_speed
 import xymusic_kmp.composeapp.generated.resources.download
 import xymusic_kmp.composeapp.generated.resources.download_24px
 import xymusic_kmp.composeapp.generated.resources.duration
-import xymusic_kmp.composeapp.generated.resources.favorite_24px
-import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
 import xymusic_kmp.composeapp.generated.resources.format
 import xymusic_kmp.composeapp.generated.resources.info_24px
 import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_right_24px
@@ -319,10 +317,7 @@ fun MusicBottomMenuComponent(
                         music = music,
                         ifDownload = music.itemId in downloadMusicIds,
                         backgroundColor = Color.Transparent,
-                        trailingIcon = if (favoriteState)
-                            Res.drawable.favorite_border_24px
-                        else
-                            Res.drawable.favorite_24px,
+                        favoriteState = favoriteState,
                         trailingOnClick = {
                             coroutineScope.launch {
                                 sheetState.hide()
@@ -335,7 +330,6 @@ fun MusicBottomMenuComponent(
 
                             }
                         },
-                        trailingColor = if (favoriteState) Color.Red else MaterialTheme.colorScheme.onSurface,
                     )
                 }
 

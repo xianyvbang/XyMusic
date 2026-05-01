@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.runtime.Composable
@@ -73,8 +72,6 @@ import xymusic_kmp.composeapp.generated.resources.chevron_right_24px
 import xymusic_kmp.composeapp.generated.resources.double_speed
 import xymusic_kmp.composeapp.generated.resources.download
 import xymusic_kmp.composeapp.generated.resources.download_24px
-import xymusic_kmp.composeapp.generated.resources.favorite_24px
-import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
 import xymusic_kmp.composeapp.generated.resources.info_24px
 import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_right_24px
 import xymusic_kmp.composeapp.generated.resources.more_horiz_24px
@@ -434,16 +431,14 @@ private fun SongFavoriteCell(
         modifier = Modifier.width(SongTableDefaults.favoriteWidth),
         contentAlignment = Alignment.Center,
     ) {
-        IconButton(onClick = onClick, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
-            Icon(
-                painter = painterResource(
-                    if (isFavorite) Res.drawable.favorite_border_24px else Res.drawable. favorite_24px
-                ),
-                contentDescription = null,
-                modifier = Modifier.size(SongTableDefaults.actionIconSize),
-                tint = if (isFavorite) songFavoriteTint else desktopColors.textSecondary,
-            )
-        }
+        FavoriteIconButton(
+            isFavorite = isFavorite,
+            onClick = onClick,
+            modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
+            iconModifier = Modifier.size(SongTableDefaults.actionIconSize),
+            favoriteTint = songFavoriteTint,
+            normalTint = desktopColors.textSecondary,
+        )
     }
 }
 

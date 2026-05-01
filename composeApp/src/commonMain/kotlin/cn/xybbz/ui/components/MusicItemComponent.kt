@@ -38,7 +38,6 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.favorite_button
 import xymusic_kmp.composeapp.generated.resources.more_vert_24px
 import xymusic_kmp.composeapp.generated.resources.other_operations_button_suffix
 import cn.xybbz.ui.xy.XyIconButton as IconButton
@@ -195,9 +194,8 @@ fun MusicItemNotClickComponent(
     backgroundColor: Color = MaterialTheme.colorScheme.background,
     picSize: Dp = 62.dp,
     brush: Brush? = null,
-    trailingIcon: DrawableResource,
+    favoriteState: Boolean,
     trailingOnClick: () -> Unit,
-    trailingColor: Color
 ) {
     val coverUrls = rememberMusicCoverUrls(music)
 
@@ -215,19 +213,14 @@ fun MusicItemNotClickComponent(
         ifDownload = ifDownload,
         ifPlay = ifPlay,
         trailingContent = {
-            IconButton(
+            FavoriteIconButton(
+                isFavorite = favoriteState,
                 modifier = Modifier.offset(x = (10).dp),
                 onClick = {
                     trailingOnClick.invoke()
                 },
-            ) {
-                Icon(
-                    painter = painterResource(trailingIcon),
-                    contentDescription = stringResource(Res.string.favorite_button),
-                    tint = trailingColor
-                )
-            }
-
+                normalTint = MaterialTheme.colorScheme.onSurface,
+            )
         }
     )
 }

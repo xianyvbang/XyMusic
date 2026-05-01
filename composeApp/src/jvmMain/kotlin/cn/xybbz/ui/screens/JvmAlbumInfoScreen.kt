@@ -43,7 +43,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
@@ -89,6 +88,7 @@ import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.ErrorContent
 import cn.xybbz.ui.components.ErrorMoreRetryItem
+import cn.xybbz.ui.components.FavoriteIconButton
 import cn.xybbz.ui.components.LazyLoadingAndStatus
 import cn.xybbz.ui.components.SelectSortBottomSheetComponent
 import cn.xybbz.ui.components.SongTableColumns
@@ -134,10 +134,6 @@ import xymusic_kmp.composeapp.generated.resources.edit_24px
 import xymusic_kmp.composeapp.generated.resources.empty_info
 import xymusic_kmp.composeapp.generated.resources.enable_playback_history
 import xymusic_kmp.composeapp.generated.resources.export_playlist
-import xymusic_kmp.composeapp.generated.resources.favorite_24px
-import xymusic_kmp.composeapp.generated.resources.favorite_added
-import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
-import xymusic_kmp.composeapp.generated.resources.favorite_removed
 import xymusic_kmp.composeapp.generated.resources.import_info
 import xymusic_kmp.composeapp.generated.resources.import_playlist
 import xymusic_kmp.composeapp.generated.resources.import_playlist_hint
@@ -404,14 +400,8 @@ fun JvmAlbumInfoScreen(
                             )
                         }
                     else {
-                        val favoriteTooltipText =
-                            if (albumInfoViewModel.ifFavorite) stringResource(
-                                Res.string.favorite_added
-                            ) else stringResource(
-                                Res.string.favorite_removed
-                            )
-                        DesktopTooltipIconButton(
-                            tooltip = favoriteTooltipText,
+                        FavoriteIconButton(
+                            isFavorite = albumInfoViewModel.ifFavorite,
                             onClick = composeClick {
                                 coroutineScope.launch {
                                     val ifFavoriteData =
@@ -426,13 +416,7 @@ fun JvmAlbumInfoScreen(
                                     albumInfoViewModel.updateIfFavorite(ifFavoriteData)
                                 }
                             },
-                        ) {
-                            Icon(
-                                painter = painterResource(if (albumInfoViewModel.ifFavorite) Res.drawable.favorite_border_24px else Res.drawable.favorite_24px),
-                                contentDescription = favoriteTooltipText,
-                                tint = if (albumInfoViewModel.ifFavorite) Color.Red else LocalContentColor.current
-                            )
-                        }
+                        )
                     }
                 }
             )

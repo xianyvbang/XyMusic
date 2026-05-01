@@ -110,6 +110,7 @@ import cn.xybbz.router.ArtistInfo
 import cn.xybbz.ui.components.LazyListComponent
 import cn.xybbz.ui.components.LazyLoadingAndStatus
 import cn.xybbz.ui.components.LazyVerticalGridComponent
+import cn.xybbz.ui.components.FavoriteIconButton
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicArtistCardComponent
 import cn.xybbz.ui.components.MusicItemComponent
@@ -137,10 +138,6 @@ import xymusic_kmp.composeapp.generated.resources.artist_cover
 import xymusic_kmp.composeapp.generated.resources.artrist_info
 import xymusic_kmp.composeapp.generated.resources.close_24px
 import xymusic_kmp.composeapp.generated.resources.close_selection
-import xymusic_kmp.composeapp.generated.resources.favorite_24px
-import xymusic_kmp.composeapp.generated.resources.favorite_added
-import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
-import xymusic_kmp.composeapp.generated.resources.favorite_removed
 import xymusic_kmp.composeapp.generated.resources.no_description
 import xymusic_kmp.composeapp.generated.resources.play_circle_24px
 import xymusic_kmp.composeapp.generated.resources.playlist_add_check_24px
@@ -572,25 +569,21 @@ fun ArtistInfoScreen(
                                     .height(TopAppBarDefaults.TopAppBarExpandedHeight),
                                 contentAlignment = Alignment.Center
                             ) {
-                                IconButton(onClick = {
-                                    coroutineScope.launch {
-                                        val ifFavorite =
-                                            artistInfoViewModel.dataSourceManager.setFavoriteData(
-                                                type = MusicTypeEnum.ARTIST,
-                                                itemId = artistId,
-                                                ifFavorite = artistInfoViewModel.ifFavorite
-                                            )
-                                        artistInfoViewModel.updateFavorite(ifFavorite)
-                                    }
-                                }) {
-                                    Icon(
-                                        painter = painterResource(if (artistInfoViewModel.ifFavorite) Res.drawable.favorite_24px else Res.drawable.favorite_border_24px),
-                                        contentDescription = if (artistInfoViewModel.ifFavorite) stringResource(
-                                            Res.string.favorite_added
-                                        ) else stringResource(Res.string.favorite_removed),
-                                        tint = Color.Red
-                                    )
-                                }
+                                FavoriteIconButton(
+                                    isFavorite = artistInfoViewModel.ifFavorite,
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            val ifFavorite =
+                                                artistInfoViewModel.dataSourceManager.setFavoriteData(
+                                                    type = MusicTypeEnum.ARTIST,
+                                                    itemId = artistId,
+                                                    ifFavorite = artistInfoViewModel.ifFavorite
+                                                )
+                                            artistInfoViewModel.updateFavorite(ifFavorite)
+                                        }
+                                    },
+                                    normalTint = Color.Red,
+                                )
                             }
                         },
                         navigationIcon = {
