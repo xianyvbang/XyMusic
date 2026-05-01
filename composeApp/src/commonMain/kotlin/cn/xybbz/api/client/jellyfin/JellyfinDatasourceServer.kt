@@ -1368,7 +1368,7 @@ class JellyfinDatasourceServer(
             pic = itemImageUrl,
             name = item.name ?: getString(Constants.UNKNOWN_MUSIC),
             downloadUrl = createDownloadUrl(item.id),
-            album = albumId.toString(),
+            album = albumId ?: "",
             albumName = item.album,
             connectionId = getConnectionId(),
             artists = item.artistItems?.mapNotNull { artist -> artist.name },
