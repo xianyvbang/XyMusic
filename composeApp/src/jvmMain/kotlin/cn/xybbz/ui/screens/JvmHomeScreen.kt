@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextButton
@@ -277,10 +277,10 @@ private fun LazyListScope.homeAlbumSection(
             horizontalArrangement = Arrangement.spacedBy(gridSpacing),
             verticalArrangement = Arrangement.spacedBy(gridSpacing),
         ) {
-            items(
+            itemsIndexed(
                 items = albumList,
-                key = { album -> "${sectionKey}_${album.itemId}" },
-            ) { album ->
+                key = { index, album -> "${sectionKey}_${album.itemId}_$index" },
+            ) { _, album ->
                 MusicAlbumCardComponent(
                     album = album,
                     imageSize = MusicCardImageSize,

@@ -375,6 +375,9 @@ private fun SongTitleCell(
     ifPlay: Boolean,
     onOpenArtist: () -> Unit,
 ) {
+    val artistsText = music.artists?.joinToString().orEmpty()
+    val mediaText = getMusicMedia(music.codec, music.bitRate)
+
     Row(
         modifier = Modifier.width(SongTableDefaults.titleWidth),
         verticalAlignment = Alignment.CenterVertically,
@@ -396,7 +399,7 @@ private fun SongTitleCell(
             )
 
             XyTextSub(
-                text = music.artists?.joinToString().orEmpty(),
+                text = "$mediaText $artistsText",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),

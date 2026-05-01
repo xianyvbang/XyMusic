@@ -98,7 +98,7 @@ internal fun LazyListScope.songTableItems(
     }
     itemsIndexed(
         items = songs,
-        key = { _, music -> music.itemId }
+        key = { index, music -> "${tableKey}_${music.itemId}_$index" }
     ) { index, music ->
         SongRow(
             music = music,

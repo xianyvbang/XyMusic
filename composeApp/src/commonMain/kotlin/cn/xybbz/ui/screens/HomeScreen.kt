@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Badge
@@ -877,9 +878,9 @@ private fun HomeMusicItemLazyRow(
         contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
         horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
     ) {
-        items(
+        itemsIndexed(
             musicList,
-            key = { item -> item.itemId }) { music ->
+            key = { index, item -> "${item.itemId}_$index" }) { _, music ->
             MusicMusicCardComponent(
                 onItem = { music },
                 imageSize = MusicCardImageSize,
@@ -929,9 +930,9 @@ private fun HomeAlbumItemLazyRow(
         contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
         horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
     ) {
-        items(
+        itemsIndexed(
             albumList,
-            key = { item -> item.itemId }) { album ->
+            key = { index, item -> "${item.itemId}_$index" }) { _, album ->
             MusicAlbumCardComponent(
                 onItem = { album },
                 imageSize = MusicCardImageSize,
