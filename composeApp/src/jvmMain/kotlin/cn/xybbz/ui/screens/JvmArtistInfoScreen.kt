@@ -18,9 +18,11 @@
 
 package cn.xybbz.ui.screens
 
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
@@ -31,36 +33,27 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -72,16 +65,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
@@ -92,28 +82,31 @@ import cn.xybbz.config.image.rememberArtistCoverUrls
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
+import cn.xybbz.extension.isSticking
+import cn.xybbz.localdata.data.album.XyAlbum
+import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
-import cn.xybbz.ui.components.LazyListComponent
 import cn.xybbz.ui.components.LazyLoadingAndStatus
-import cn.xybbz.ui.components.LazyVerticalGridComponent
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicArtistCardComponent
 import cn.xybbz.ui.components.MusicItemComponent
+import cn.xybbz.ui.components.PagingUiState
 import cn.xybbz.ui.components.TopAppBarComponent
-import cn.xybbz.ui.components.VerticalGridListComponent
 import cn.xybbz.ui.components.XySelectAllComponent
+import cn.xybbz.ui.components.lazyColumBottomComponent
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
+import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.LazyColumnParentComponent
 import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.ArtistInfoViewModel
-import com.github.panpf.sketch.ability.bindPauseLoadWhenScrolling
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -122,6 +115,7 @@ import org.koin.core.parameter.parametersOf
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.album
 import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.artist
 import xymusic_kmp.composeapp.generated.resources.artist_cover
 import xymusic_kmp.composeapp.generated.resources.artrist_info
 import xymusic_kmp.composeapp.generated.resources.close_24px
@@ -154,11 +148,6 @@ fun JvmArtistInfoScreen(
         )
     }
 ) {
-
-    val horPagerState =
-        rememberPagerState(initialPage = 0) {
-            3
-        }
     val musicPage =
         artistInfoViewModel.musicList.collectAsLazyPagingItems()
     val albumPageList =
@@ -175,151 +164,16 @@ fun JvmArtistInfoScreen(
 
     // 相似艺术家列表复用统一的艺术家打开逻辑。
     val artistClickHandler = rememberMusicArtistClickHandler()
-    val lazyListState1 = rememberLazyListState()
     val lazyListState = rememberLazyListState()
-    val parentState = rememberLazyListState()
-
-    bindPauseLoadWhenScrolling(lazyListState1)
-    bindPauseLoadWhenScrolling(lazyListState)
-    bindPauseLoadWhenScrolling(parentState)
-
-    val density = LocalDensity.current
-
-    val tabHeightDp = XyTheme.dimens.itemHeight * 0.6f
-    val surface = MaterialTheme.colorScheme.onSurface
-    val artistHeaderHeight = JvmArtistInfoDesktopCoverSize + XyTheme.dimens.outerVerticalPadding * 2
-    val topBarBottomPx = with(density) {
-        (
-                TopAppBarDefaults.TopAppBarExpandedHeight +
-                        WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-                ).toPx()
-    }
-    val collapseRangePx = with(density) {
-        (artistHeaderHeight.toPx() - topBarBottomPx).coerceAtLeast(1f)
-    }
-
-    val isParentAtTop by remember {
-        derivedStateOf { isLazyListAtTop(parentState) }
-    }
-    val isCurrentListAtTop by remember {
-        derivedStateOf { isLazyListAtTop(lazyListState1) }
-    }
-    val distanceToTopBarBottomPx by remember {
-        derivedStateOf {
-            val item2OffsetPx =
-                parentState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == 2 }?.offset?.toFloat()
-            when {
-                item2OffsetPx != null -> item2OffsetPx - topBarBottomPx
-                parentState.firstVisibleItemIndex > 2 -> 0f
-                else -> collapseRangePx + 1f
-            }
-        }
-    }
-
-    val rawCollapseProgress by remember {
-        derivedStateOf {
-            ((collapseRangePx - distanceToTopBarBottomPx) / collapseRangePx).coerceIn(0f, 1f)
-        }
-    }
-    val current by remember {
-        derivedStateOf {
-            if (isParentAtTop && !parentState.isScrollInProgress) {
-                0f
-            } else {
-                rawCollapseProgress
-            }
-        }
-    }
+    val isSticking by remember(lazyListState) { lazyListState.isSticking(1) }
+    var selectedTab by remember { mutableStateOf(TabListEnum.Music) }
     //是否文本描述超过最大行数
     var isOverflow by remember { mutableStateOf(false) }
     //是否打开描述信息页面
     var ifOpenDescribe by remember { mutableStateOf(false) }
 
-    // 使用 animateFloatAsState 实现平滑过渡
-    val collapseProgress by animateFloatAsState(
-        targetValue = current,
-        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
-        label = "artist_collapse_progress"
-    )
-    val topBarAlpha by animateFloatAsState(
-        targetValue = rangeProgress(collapseProgress, start = 0.55f, end = 1f),
-        animationSpec = tween(durationMillis = 180, easing = LinearOutSlowInEasing),
-        label = "artist_topbar_alpha"
-    )
-
-    val scrollConnection = remember {
-        object : NestedScrollConnection {
-            override fun onPreScroll(
-                available: Offset,
-                source: NestedScrollSource,
-            ): Offset {
-                if (source == NestedScrollSource.UserInput &&
-                    available.y > 0 &&
-                    isParentAtTop &&
-                    isCurrentListAtTop
-                ) {
-                    return Offset(x = 0f, y = available.y)
-                }
-
-                return if (available.y > 0) {
-                    Offset.Zero
-                } else {
-                    Offset(
-                        x = 0f,
-                        y = -lazyListState1.dispatchRawDelta(
-                            -available.y
-                        )
-                    )
-                }
-            }
-
-            override suspend fun onPreFling(available: Velocity): Velocity {
-                return Velocity.Zero
-            }
-
-            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
-                return Velocity.Zero
-            }
-        }
-    }
-
-    val parentScrollConnection = remember {
-        object : NestedScrollConnection {
-            override fun onPreScroll(
-                available: Offset,
-                source: NestedScrollSource,
-            ): Offset {
-                if (source == NestedScrollSource.UserInput &&
-                    available.y > 0 &&
-                    isParentAtTop &&
-                    isCurrentListAtTop
-                ) {
-                    return Offset(x = 0f, y = available.y)
-                }
-
-                return if (available.y > 0) {
-                    Offset.Zero
-                } else {
-                    Offset(
-                        x = 0f,
-                        y = -parentState.dispatchRawDelta(
-                            -available.y
-                        )
-                    )
-                }
-            }
-
-            override suspend fun onPreFling(available: Velocity): Velocity {
-                return Velocity.Zero
-            }
-
-            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
-                return Velocity.Zero
-            }
-        }
-    }
     ModalBottomSheetExtendComponent(
-        modifier = Modifier,
+        modifier = Modifier.statusBarsPadding(),
         onIfDisplay = { ifOpenDescribe },
         onClose = { bool -> ifOpenDescribe = bool },
         titleText = artistName,
@@ -337,120 +191,78 @@ fun JvmArtistInfoScreen(
                     modifier = Modifier,
                     style = MaterialTheme.typography.titleSmall.copy(lineHeight = 15.sp),
                     overflow = TextOverflow.Visible,
-
-                    )
+                )
             }
         }
-
     }
-
 
     BoxWithConstraints(
         modifier = Modifier.fillMaxSize()
     ) {
-        val artistHeaderHeight =
-            JvmArtistInfoDesktopCoverSize + XyTheme.dimens.outerVerticalPadding * 2
-        val maxHeight =
-            (this.maxHeight - artistHeaderHeight - tabHeightDp -
-                    TopAppBarDefaults.TopAppBarExpandedHeight -
-                    WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
-                .coerceAtLeast(1.dp)
-
-        val parentMaxHeight = this.maxHeight
+        val gridSpacing = XyTheme.dimens.outerVerticalPadding
+        val gridColumns = remember(maxWidth, gridSpacing) {
+            (maxWidth.value / (MusicCardImageSize + gridSpacing).value)
+                .toInt()
+                .coerceAtLeast(1)
+        }
         val artistCoverUrls = rememberArtistCoverUrls(artistInfoViewModel.artistInfoData)
 
         XyColumnScreen {
-
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .nestedScroll(parentScrollConnection),
-                state = parentState,
-            ) {
-                stickyHeader {
-                    TopAppBarComponent(
-                        title = {
-                            Box(
-                                modifier = Modifier
-                                    .padding(
-                                        top = WindowInsets.statusBars.asPaddingValues()
-                                            .calculateTopPadding()
-                                    )
-                                    .height(TopAppBarDefaults.TopAppBarExpandedHeight),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                BasicText(
-                                    text = artistName,
-                                    modifier = Modifier.basicMarquee(
-                                        iterations = Int.MAX_VALUE
-                                    ),
-                                    color = {
-                                        surface.copy(alpha = topBarAlpha)
-                                    },
-                                    style = LocalTextStyle.current
-
+            TopAppBarComponent(
+                title = {
+                    AnimatedContent(
+                        targetState = isSticking,
+                        label = "artist_info_title",
+                        transitionSpec = {
+                            (fadeIn() togetherWith fadeOut()).using(
+                                SizeTransform(clip = false)
+                            )
+                        }
+                    ) { sticking ->
+                        Text(
+                            text = if (sticking) artistName else stringResource(Res.string.artist),
+                            modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE)
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        coroutineScope.launch {
+                            val ifFavorite =
+                                artistInfoViewModel.dataSourceManager.setFavoriteData(
+                                    type = MusicTypeEnum.ARTIST,
+                                    itemId = artistId,
+                                    ifFavorite = artistInfoViewModel.ifFavorite
                                 )
-                            }
-
+                            artistInfoViewModel.updateFavorite(ifFavorite)
+                        }
+                    }) {
+                        Icon(
+                            painter = painterResource(if (artistInfoViewModel.ifFavorite) Res.drawable.favorite_24px else Res.drawable.favorite_border_24px),
+                            contentDescription = if (artistInfoViewModel.ifFavorite) stringResource(
+                                Res.string.favorite_added
+                            ) else stringResource(Res.string.favorite_removed),
+                            tint = Color.Red
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(
+                        onClick = {
+                            navigator.goBack()
                         },
-                        actions = {
-                            Box(
-                                modifier = Modifier
-                                    .padding(
-                                        top = WindowInsets.statusBars.asPaddingValues()
-                                            .calculateTopPadding()
-                                    )
-                                    .height(TopAppBarDefaults.TopAppBarExpandedHeight),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                IconButton(onClick = {
-                                    coroutineScope.launch {
-                                        val ifFavorite =
-                                            artistInfoViewModel.dataSourceManager.setFavoriteData(
-                                                type = MusicTypeEnum.ARTIST,
-                                                itemId = artistId,
-                                                ifFavorite = artistInfoViewModel.ifFavorite
-                                            )
-                                        artistInfoViewModel.updateFavorite(ifFavorite)
-                                    }
-                                }) {
-                                    Icon(
-                                        painter = painterResource(if (artistInfoViewModel.ifFavorite) Res.drawable.favorite_24px else Res.drawable.favorite_border_24px),
-                                        contentDescription = if (artistInfoViewModel.ifFavorite) stringResource(
-                                            Res.string.favorite_added
-                                        ) else stringResource(Res.string.favorite_removed),
-                                        tint = Color.Red
-                                    )
-                                }
-                            }
-                        },
-                        navigationIcon = {
-                            Box(
-                                modifier = Modifier
-                                    .padding(
-                                        top = WindowInsets.statusBars.asPaddingValues()
-                                            .calculateTopPadding()
-                                    )
-                                    .height(TopAppBarDefaults.TopAppBarExpandedHeight),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                IconButton(
-                                    onClick = {
-                                        navigator.goBack()
-                                    },
-                                ) {
-                                    Icon(
-                                        painter = painterResource(Res.drawable.arrow_back_24px),
-                                        contentDescription = stringResource(Res.string.return_home)
-                                    )
-                                }
-                            }
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.arrow_back_24px),
+                            contentDescription = stringResource(Res.string.return_home)
+                        )
+                    }
+                },
+            )
 
-
-                        },
-//                scrollBehavior = scrollBehavior
-                    )
-                }
+            LazyColumnNotComponent(
+                state = lazyListState
+            ) {
                 item {
                     JvmArtistDesktopHeader(
                         artistName = artistName,
@@ -476,190 +288,124 @@ fun JvmArtistInfoScreen(
                             )
                     )
                 }
-                item(key = 2) {
-                    LazyColumn(
-                        state = lazyListState1,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(
-                                parentMaxHeight - TopAppBarDefaults.TopAppBarExpandedHeight -
-                                        WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-                            )
-                            .nestedScroll(scrollConnection)
-                            .background(MaterialTheme.colorScheme.background)
+                stickyHeader(key = 1) {
+                    PrimaryTabRow(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        selectedTabIndex = TabListEnum.entries.indexOf(selectedTab),
+                        divider = {},
                     ) {
-                        stickyHeader {
-                            PrimaryTabRow(
-                                containerColor = MaterialTheme.colorScheme.background,
-                                selectedTabIndex = horPagerState.currentPage,
-                                divider = {},
-                            ) {
-                                TabListEnum.entries.forEachIndexed { index, it ->
-                                    Tab(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(XyTheme.dimens.corner)),
-                                        selected = horPagerState.currentPage == index,
-                                        onClick = {
-                                            coroutineScope
-                                                .launch {
-                                                    horPagerState.animateScrollToPage(index)
-                                                }
-                                        },
-                                        text = {
-                                            Text(
-                                                text = stringResource(it.message),
-                                                maxLines = 2,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        }
+                        TabListEnum.entries.forEach { tab ->
+                            Tab(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(XyTheme.dimens.corner)),
+                                selected = selectedTab == tab,
+                                onClick = {
+                                    selectedTab = tab
+                                },
+                                text = {
+                                    Text(
+                                        text = stringResource(tab.message),
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
-                            }
+                            )
                         }
+                    }
+                }
 
-                    item {
-                        HorizontalPager(
-                            state = horPagerState,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(maxHeight)
-                                .background(MaterialTheme.colorScheme.background)
-                        ) { page: Int ->
-                            when (TabListEnum.entries[page]) {
-                                TabListEnum.Music -> {
-                                    LazyListComponent(
-                                        state = lazyListState,
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .height(maxHeight),
-                                        collectAsLazyPagingItems = musicPage
-                                    ) { list ->
-                                        item {
-                                            JvmArtistMusicListOperation(
-                                                artistId = artistId,
-                                                musicPlayContext = artistInfoViewModel.musicPlayContext,
-                                                selectControl = artistInfoViewModel.selectControl,
-                                                onSelectAll = {
-                                                    artistInfoViewModel.selectControl.toggleSelectionAll(
-                                                        musicPage.itemSnapshotList.items.map { it.itemId })
-                                                },
-                                                ifOpenSelect = selectUiState.isOpen,
-                                                isSelectAll = selectUiState.isSelectAll,
-                                                sortContent = {}
+                when (selectedTab) {
+                    TabListEnum.Music -> {
+                        item {
+                            JvmArtistMusicListOperation(
+                                artistId = artistId,
+                                musicPlayContext = artistInfoViewModel.musicPlayContext,
+                                selectControl = artistInfoViewModel.selectControl,
+                                onSelectAll = {
+                                    artistInfoViewModel.selectControl.toggleSelectionAll(
+                                        musicPage.itemSnapshotList.items.map { it.itemId })
+                                },
+                                ifOpenSelect = selectUiState.isOpen,
+                                isSelectAll = selectUiState.isSelectAll,
+                                sortContent = {}
+                            )
+                        }
+                        items(
+                            musicPage.itemCount,
+                            key = musicPage.itemKey { item -> item.itemId },
+                            contentType = musicPage.itemContentType { MusicTypeEnum.MUSIC }
+                        ) { index ->
+                            musicPage[index]?.let { music ->
+                                MusicItemComponent(
+                                    music = music,
+                                    onIfFavorite = {
+                                        music.itemId in favoriteSet
+                                    },
+                                    ifDownload = music.itemId in downloadMusicIds,
+                                    ifPlay = playbackState.musicInfo?.itemId == music.itemId,
+                                    backgroundColor = Color.Transparent,
+                                    trailingOnClick = {
+                                        music.show()
+                                    },
+                                    onMusicPlay = {
+                                        coroutineScope.launch {
+                                            artistInfoViewModel.musicPlayContext.artist(
+                                                onMusicPlayParameter = it.copy(
+                                                    artistId = artistId
+                                                ),
+                                                index = index,
+                                                artistId = artistId
                                             )
                                         }
-                                        items(
-                                            list.itemCount,
-                                            key = list.itemKey { item -> item.itemId },
-                                            contentType = list.itemContentType { MusicTypeEnum.MUSIC }
-                                        ) { index ->
-                                            list[index]?.let { music ->
-                                                MusicItemComponent(
-                                                    music = music,
-                                                    onIfFavorite = {
-                                                        music.itemId in favoriteSet
-                                                    },
-                                                    ifDownload = music.itemId in downloadMusicIds,
-                                                    ifPlay = playbackState.musicInfo?.itemId == music.itemId,
-                                                    backgroundColor = Color.Transparent,
-                                                    trailingOnClick = {
-                                                        music.show()
-                                                    },
-                                                    onMusicPlay = {
-                                                        coroutineScope.launch {
-                                                            artistInfoViewModel.musicPlayContext.artist(
-                                                                onMusicPlayParameter = it.copy(
-                                                                    artistId = artistId
-                                                                ),
-                                                                index = index,
-                                                                artistId = artistId
-                                                            )
-                                                        }
-                                                    },
-                                                    ifSelect = selectUiState.isOpen,
-                                                    ifSelectCheckBox = { music.itemId in selectUiState.selectedMusicIds },
-                                                    trailingOnSelectClick = { _ ->
-                                                        artistInfoViewModel.selectControl.toggleSelection(
-                                                            music.itemId,
-                                                            onIsSelectAll = {
-                                                                selectUiState.selectedMusicIds.containsAll(
-                                                                    list.itemSnapshotList.items.map { it.itemId }
-                                                                )
-                                                            }
-                                                        )
-                                                    }
+                                    },
+                                    ifSelect = selectUiState.isOpen,
+                                    ifSelectCheckBox = { music.itemId in selectUiState.selectedMusicIds },
+                                    trailingOnSelectClick = { _ ->
+                                        artistInfoViewModel.selectControl.toggleSelection(
+                                            music.itemId,
+                                            onIsSelectAll = {
+                                                selectUiState.selectedMusicIds.containsAll(
+                                                    musicPage.itemSnapshotList.items.map { it.itemId }
                                                 )
                                             }
-                                        }
+                                        )
                                     }
-
-                                }
-
-                                TabListEnum.Album -> {
-
-                                    VerticalGridListComponent(
-                                        modifier = Modifier.height(maxHeight),
-                                        collectAsLazyPagingItems = albumPageList,
-                                    ) {
-                                        items(
-                                            count = albumPageList.itemCount,
-                                            key = albumPageList.itemKey { it.itemId },
-                                            contentType = albumPageList.itemContentType { MusicTypeEnum.ALBUM.code }) { index ->
-                                            albumPageList[index]?.let { album ->
-                                                MusicAlbumCardComponent(
-                                                    modifier = Modifier,
-                                                    album = album,
-                                                    onRouter = {
-                                                        navigator.navigate(
-                                                            AlbumInfo(
-                                                                it,
-                                                                MusicDataTypeEnum.ALBUM
-                                                            )
-                                                        )
-                                                    }
-                                                )
-
-                                            }
-                                        }
-                                    }
-                                }
-
-                                TabListEnum.RESEMBLANCE_ARTIST -> {
-
-                                    LazyVerticalGridComponent(
-                                        modifier = Modifier.height(maxHeight),
-                                    ) {
-                                        items(
-                                            artistInfoViewModel.resemblanceArtistList,
-                                            key = { item -> item.artistId },
-                                            contentType = { MusicTypeEnum.ARTIST }
-                                        ) { artist ->
-                                            MusicArtistCardComponent(
-                                                modifier = Modifier,
-                                                artist = artist,
-                                                enabled = true
-                                            ) {
-                                                artistClickHandler.openArtist(it, artist.name)
-                                            }
-                                        }
-                                        item(span = { GridItemSpan(maxLineSpan) }) {
-                                            LazyLoadingAndStatus(
-                                                text = stringResource(Res.string.reached_bottom),
-                                                ifLoading = false
-                                            )
-                                        }
-                                    }
-                                }
+                                )
                             }
                         }
+                        lazyColumBottomComponent(
+                            pagingUiState = musicPage.toArtistInfoPagingUiState(),
+                        ) { musicPage }
+                    }
+
+                    TabListEnum.Album -> {
+                        artistAlbumGridItems(
+                            albumPageList = albumPageList,
+                            gridColumns = gridColumns,
+                            onOpenAlbum = { albumId ->
+                                navigator.navigate(
+                                    AlbumInfo(
+                                        albumId,
+                                        MusicDataTypeEnum.ALBUM
+                                    )
+                                )
+                            }
+                        )
+                    }
+
+                    TabListEnum.RESEMBLANCE_ARTIST -> {
+                        artistGridItems(
+                            artistList = artistInfoViewModel.resemblanceArtistList,
+                            gridColumns = gridColumns,
+                            onOpenArtist = { artist ->
+                                artistClickHandler.openArtist(artist.artistId, artist.name)
+                            }
+                        )
                     }
                 }
             }
         }
     }
-}
-
-
 }
 
 
@@ -749,6 +495,124 @@ private fun JvmArtistDesktopHeader(
 }
 
 
+private fun LazyListScope.artistAlbumGridItems(
+    albumPageList: LazyPagingItems<XyAlbum>,
+    gridColumns: Int,
+    onOpenAlbum: (String) -> Unit,
+) {
+    val rowCount = (albumPageList.itemCount + gridColumns - 1) / gridColumns
+
+    items(
+        count = rowCount,
+        key = { rowIndex -> "artist_album_row_$rowIndex" },
+        contentType = { MusicTypeEnum.ALBUM.code },
+    ) { rowIndex ->
+        ArtistInfoCardGridRow {
+            repeat(gridColumns) { columnIndex ->
+                val itemIndex = rowIndex * gridColumns + columnIndex
+                val album = if (itemIndex < albumPageList.itemCount) {
+                    albumPageList[itemIndex]
+                } else {
+                    null
+                }
+                if (album != null) {
+                    MusicAlbumCardComponent(
+                        modifier = Modifier.width(MusicCardImageSize),
+                        album = album,
+                        imageSize = MusicCardImageSize,
+                        onRouter = onOpenAlbum,
+                    )
+                } else {
+                    Box(modifier = Modifier.width(MusicCardImageSize))
+                }
+            }
+        }
+    }
+    lazyColumBottomComponent(
+        pagingUiState = albumPageList.toArtistInfoPagingUiState(),
+    ) { albumPageList }
+}
+
+private fun <T : Any> LazyPagingItems<T>.toArtistInfoPagingUiState(): PagingUiState {
+    val refreshState = loadState.refresh
+    val appendState = loadState.append
+    val hasData = itemCount > 0
+    val isIdle = loadState.isIdle
+    val hasError = loadState.hasError
+
+    return PagingUiState(
+        isInitialLoading = refreshState is LoadState.Loading && !hasData,
+        isRefreshing = refreshState is LoadState.Loading && hasData,
+        isEmpty = isIdle && !hasError && !hasData,
+        isAppending = appendState is LoadState.Loading && hasData,
+        isAppendEndReached = hasData && appendState.endOfPaginationReached,
+        hasData = hasData,
+        refreshError = refreshState is LoadState.Error,
+        appendError = appendState is LoadState.Error && hasData,
+    )
+}
+
+private fun LazyListScope.artistGridItems(
+    artistList: List<XyArtist>,
+    gridColumns: Int,
+    onOpenArtist: (XyArtist) -> Unit,
+) {
+    val rowCount = (artistList.size + gridColumns - 1) / gridColumns
+
+    items(
+        count = rowCount,
+        key = { rowIndex -> "artist_resemblance_row_$rowIndex" },
+        contentType = { MusicTypeEnum.ARTIST.code },
+    ) { rowIndex ->
+        ArtistInfoCardGridRow {
+            repeat(gridColumns) { columnIndex ->
+                val itemIndex = rowIndex * gridColumns + columnIndex
+                val artist = artistList.getOrNull(itemIndex)
+                if (artist != null) {
+                    MusicArtistCardComponent(
+                        modifier = Modifier.width(MusicCardImageSize),
+                        artist = artist,
+                        imageSize = MusicCardImageSize,
+                        enabled = true,
+                    ) {
+                        onOpenArtist(artist)
+                    }
+                } else {
+                    Box(modifier = Modifier.width(MusicCardImageSize))
+                }
+            }
+        }
+    }
+    item {
+        LazyLoadingAndStatus(
+            text = stringResource(Res.string.reached_bottom),
+            ifLoading = false
+        )
+    }
+}
+
+@Composable
+private fun ArtistInfoCardGridRow(
+    content: @Composable () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = XyTheme.dimens.outerHorizontalPadding,
+                vertical = XyTheme.dimens.innerVerticalPadding / 2,
+            ),
+        horizontalArrangement = Arrangement.spacedBy(
+            XyTheme.dimens.outerVerticalPadding,
+            Alignment.CenterHorizontally
+        ),
+        verticalAlignment = Alignment.Top,
+    ) {
+        content()
+    }
+}
+
+
 /**
  * 音乐列表操作栏
  */
@@ -832,13 +696,4 @@ private fun JvmArtistMusicListOperation(
         }
 
     }
-}
-
-private fun rangeProgress(value: Float, start: Float, end: Float): Float {
-    if (end <= start) return if (value >= end) 1f else 0f
-    return ((value - start) / (end - start)).coerceIn(0f, 1f)
-}
-
-private fun isLazyListAtTop(state: LazyListState): Boolean {
-    return state.firstVisibleItemIndex == 0 && state.firstVisibleItemScrollOffset == 0
 }
