@@ -28,6 +28,7 @@ internal fun SongTable(
     accentColor: (Int, XyMusic) -> androidx.compose.ui.graphics.Color = ::defaultSongAccentColor,
     ifFavorite: (XyMusic) -> Boolean = { it.ifFavoriteStatus },
     ifPlay: (XyMusic) -> Boolean = { false },
+    isSelected: (XyMusic) -> Boolean = { false },
     onSongClick: (XyMusic) -> Unit = {},
     onOpenAlbum: (XyMusic) -> Unit = {},
     onOpenArtist: (XyMusic) -> Unit = {},
@@ -40,6 +41,7 @@ internal fun SongTable(
         ).show()
     },
     onMoreClick: (XyMusic) -> Unit = { music -> music.show() },
+    onSelectionClick: (String) -> Unit = {},
 ) {
     Column(modifier = androidx.compose.ui.Modifier.fillMaxWidth()) {
         SongTableHeader(columns = columns)
@@ -54,6 +56,7 @@ internal fun SongTable(
                 metaText = metaText(music),
                 durationText = durationText(music),
                 accentColor = accentColor(index, music),
+                isSelected = isSelected(music),
                 onClick = { onSongClick(music) },
                 onOpenAlbum = { onOpenAlbum(music) },
                 onOpenArtist = { onOpenArtist(music) },
@@ -61,6 +64,7 @@ internal fun SongTable(
                 onDownloadClick = { onDownloadClick(music) },
                 onAddToPlaylistClick = { onAddToPlaylistClick(music) },
                 onMoreClick = { onMoreClick(music) },
+                onSelectionClick = onSelectionClick,
             )
         }
     }
@@ -80,6 +84,7 @@ internal fun LazyListScope.songTableItems(
     accentColor: (Int, XyMusic) -> androidx.compose.ui.graphics.Color = ::defaultSongAccentColor,
     ifFavorite: (XyMusic) -> Boolean = { it.ifFavoriteStatus },
     ifPlay: (XyMusic) -> Boolean = { false },
+    isSelected: (XyMusic) -> Boolean = { false },
     onSongClick: (XyMusic) -> Unit = {},
     onOpenAlbum: (XyMusic) -> Unit = {},
     onOpenArtist: (XyMusic) -> Unit = {},
@@ -92,6 +97,7 @@ internal fun LazyListScope.songTableItems(
         ).show()
     },
     onMoreClick: (XyMusic) -> Unit = { music -> music.show() },
+    onSelectionClick: (String) -> Unit = {},
 ) {
     item(key = "${tableKey}_table_header") {
         SongTableHeader(columns = columns)
@@ -110,6 +116,7 @@ internal fun LazyListScope.songTableItems(
             metaText = metaText(music),
             durationText = durationText(music),
             accentColor = accentColor(index, music),
+            isSelected = isSelected(music),
             onClick = { onSongClick(music) },
             onOpenAlbum = { onOpenAlbum(music) },
             onOpenArtist = { onOpenArtist(music) },
@@ -117,6 +124,7 @@ internal fun LazyListScope.songTableItems(
             onDownloadClick = { onDownloadClick(music) },
             onAddToPlaylistClick = { onAddToPlaylistClick(music) },
             onMoreClick = { onMoreClick(music) },
+            onSelectionClick = onSelectionClick,
         )
     }
 }
@@ -156,6 +164,9 @@ internal fun SongTableHeader(
                     desktopColors.textSecondary,
                     textAlign = TextAlign.End
                 )
+            }
+            if (columns.showSelectionColumn) {
+                SongTableSpacer(SongTableDefaults.selectionWidth)
             }
         }
         HorizontalDivider(color = desktopColors.divider)

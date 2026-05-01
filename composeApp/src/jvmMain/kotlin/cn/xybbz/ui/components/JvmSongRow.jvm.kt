@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -101,6 +102,7 @@ internal data class SongTableColumns(
     val showAlbumColumn: Boolean = true,
     val showMetaColumn: Boolean = true,
     val showDurationColumn: Boolean = true,
+    val showSelectionColumn: Boolean = false,
 )
 
 /**
@@ -114,6 +116,7 @@ internal object SongTableDefaults {
     val albumWidth = 240.dp
     val metaWidth = 140.dp
     val durationWidth = 72.dp
+    val selectionWidth = 52.dp
     val coverSize = 40.dp
     val actionButtonSize = 32.dp
     val actionIconSize = 24.dp
@@ -136,6 +139,7 @@ internal fun SongRow(
     metaText: String = "",
     durationText: String = DateUtil.millisecondsToTime(music.runTimeTicks),
     accentColor: Color = defaultSongAccentColor(index, music),
+    isSelected: Boolean = false,
     onClick: () -> Unit,
     onOpenAlbum: () -> Unit,
     onOpenArtist: () -> Unit,
@@ -150,6 +154,7 @@ internal fun SongRow(
     onMoreClick: () -> Unit = {
         music.show()
     },
+    onSelectionClick: (String) -> Unit = {},
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
@@ -226,6 +231,12 @@ internal fun SongRow(
                     width = SongTableDefaults.durationWidth,
                     color = desktopColors.textSecondary,
                     textAlign = TextAlign.End
+                )
+            }
+            if (columns.showSelectionColumn) {
+                SongSelectionCell(
+                    isSelected = isSelected,
+                    onClick = { onSelectionClick(music.itemId) },
                 )
             }
         }
@@ -431,6 +442,26 @@ private fun SongFavoriteCell(
                 tint = if (isFavorite) desktopColors.theme else desktopColors.textSecondary,
             )
         }
+    }
+}
+
+/**
+ * 选择按钮列。
+ */
+@Composable
+private fun SongSelectionCell(
+    isSelected: Boolean,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier.width(SongTableDefaults.selectionWidth),
+        contentAlignment = Alignment.Center,
+    ) {
+        RadioButton(
+            selected = isSelected,
+            onClick = onClick,
+            modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
+        )
     }
 }
 
