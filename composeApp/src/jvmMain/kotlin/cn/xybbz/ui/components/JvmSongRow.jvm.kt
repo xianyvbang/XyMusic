@@ -435,11 +435,11 @@ private fun SongFavoriteCell(
         IconButton(onClick = onClick, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
             Icon(
                 painter = painterResource(
-                    if (isFavorite) Res.drawable.favorite_24px else Res.drawable.favorite_border_24px
+                    if (isFavorite) Res.drawable.favorite_border_24px else Res.drawable. favorite_24px
                 ),
                 contentDescription = null,
                 modifier = Modifier.size(SongTableDefaults.actionIconSize),
-                tint = if (isFavorite) desktopColors.theme else desktopColors.textSecondary,
+                tint = if (isFavorite) Color.Red else desktopColors.textSecondary,
             )
         }
     }
