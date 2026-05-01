@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -67,15 +68,16 @@ internal actual fun PlatformLazyColumn(
         }
         val isMouseInList by hoverInteractionSource.collectIsHoveredAsState()
 
-        // Box 用来把滚动条叠在 LazyColumn 右侧，LazyColumn 本身仍保留调用方传入的 modifier。
+        // Box 用来把滚动条叠在 LazyColumn 右侧；调用方的尺寸约束必须落在外层容器上，
+        // 否则嵌套在 LazyColumn item 中时滚动条会拿到无界高度。
         Box(
-            modifier = Modifier
+            modifier = modifier
                 // 通过 InteractionSource 收集悬停状态，鼠标进入列表区域时才允许显示滚动条。
                 .hoverable(interactionSource = hoverInteractionSource)
         ) {
             LazyColumn(
                 state = lazyListState,
-                modifier = modifier,
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = contentPadding,
                 verticalArrangement = verticalArrangement,
                 horizontalAlignment = horizontalAlignment,

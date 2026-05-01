@@ -82,7 +82,7 @@ fun MusicScreen(
 
     XyColumnScreen {
         MusicSelectTopBarComponent(
-            modifier = Modifier.statusBarsPadding(),
+            modifier = Modifier,
             title = stringResource(Res.string.music),
             musicViewModel = musicViewModel,
             onIfShowMusicDropdownMenu = { musicViewModel.dataSourceManager.dataSourceType?.ifShowMusicDropdownMenu == true },
