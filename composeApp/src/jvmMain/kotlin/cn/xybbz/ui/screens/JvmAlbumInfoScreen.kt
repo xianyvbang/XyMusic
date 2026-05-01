@@ -144,6 +144,7 @@ import xymusic_kmp.composeapp.generated.resources.modify_playlist_name
 import xymusic_kmp.composeapp.generated.resources.more_vert_24px
 import xymusic_kmp.composeapp.generated.resources.music_xy_placeholder_foreground
 import xymusic_kmp.composeapp.generated.resources.open_operation_menu
+import xymusic_kmp.composeapp.generated.resources.open_sort_and_filter_menu
 import xymusic_kmp.composeapp.generated.resources.pause_circle_24px
 import xymusic_kmp.composeapp.generated.resources.pause_playback
 import xymusic_kmp.composeapp.generated.resources.play_circle_24px
@@ -395,30 +396,36 @@ fun JvmAlbumInfoScreen(
                                 )
                             )
                         }
-                    else
-                        IconButton(onClick = composeClick {
-                            coroutineScope.launch {
-                                val ifFavoriteData =
-                                    FavoriteCoordinator.setFavoriteData(
-                                        dataSourceManager = albumInfoViewModel.dataSourceManager,
-                                        type = MusicTypeEnum.ALBUM,
-                                        itemId = albumInfoViewModel.xyAlbumInfoData?.itemId ?: "",
-                                        ifFavorite = albumInfoViewModel.ifFavorite,
-                                        musicController = albumInfoViewModel.musicController
-                                    )
-                                albumInfoViewModel.updateIfFavorite(ifFavoriteData)
-                            }
-                        }) {
-                            Icon(
-                                painter = painterResource(if (albumInfoViewModel.ifFavorite) Res.drawable.favorite_border_24px else Res.drawable.favorite_24px),
-                                contentDescription = if (albumInfoViewModel.ifFavorite) stringResource(
-                                    Res.string.favorite_added
-                                ) else stringResource(
-                                    Res.string.favorite_removed
-                                ),
-                                tint = if (albumInfoViewModel.ifFavorite) Color.Red else LocalContentColor.current
+                    else {
+                        val favoriteTooltipText =
+                            if (albumInfoViewModel.ifFavorite) stringResource(
+                                Res.string.favorite_added
+                            ) else stringResource(
+                                Res.string.favorite_removed
                             )
+                        DesktopTooltipBox(tooltip = favoriteTooltipText) {
+                            IconButton(onClick = composeClick {
+                                coroutineScope.launch {
+                                    val ifFavoriteData =
+                                        FavoriteCoordinator.setFavoriteData(
+                                            dataSourceManager = albumInfoViewModel.dataSourceManager,
+                                            type = MusicTypeEnum.ALBUM,
+                                            itemId = albumInfoViewModel.xyAlbumInfoData?.itemId
+                                                ?: "",
+                                            ifFavorite = albumInfoViewModel.ifFavorite,
+                                            musicController = albumInfoViewModel.musicController
+                                        )
+                                    albumInfoViewModel.updateIfFavorite(ifFavoriteData)
+                                }
+                            }) {
+                                Icon(
+                                    painter = painterResource(if (albumInfoViewModel.ifFavorite) Res.drawable.favorite_border_24px else Res.drawable.favorite_24px),
+                                    contentDescription = favoriteTooltipText,
+                                    tint = if (albumInfoViewModel.ifFavorite) Color.Red else LocalContentColor.current
+                                )
+                            }
                         }
+                    }
                 }
             )
 
@@ -852,46 +859,50 @@ private fun JvmStickyHeaderOperationParent(
         ifOpenSelect = ifOpenSelect,
         isSelectAll = isSelectAll,
         sortContent = {
-            SelectSortBottomSheetComponent(
-                onIfSelectOneYear = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifAlbumInfoSelectOneYear },
-                onIfStartEndYear = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifAlbumInfoSelectStartEndYear },
-                onIfSort = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifAlbumInfoSort },
-                onIfFavoriteFilter = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifAlbumInfoFavoriteFilter },
-                onSortTypeClick = {
-                    albumInfoViewModel.setSortedData(it) { musicListPage.refresh() }
-                },
-                onSortType = { sortBy.sortType },
-                onDefaultSortType = { albumInfoViewModel.defaultSortType },
-                onIfFavorite = { sortBy.isFavorite == true },
-                setFavorite = {
-                    albumInfoViewModel.setFavorite(
-                        it
-                    ) { musicListPage.refresh() }
-                },
-                sortTypeList = listOf(
-                    SortTypeEnum.CREATE_TIME_ASC,
-                    SortTypeEnum.CREATE_TIME_DESC,
-                    SortTypeEnum.MUSIC_NAME_ASC,
-                    SortTypeEnum.MUSIC_NAME_DESC
-                ),
-                onYearSet = { mainViewModel.yearSet },
-                onSelectYear = { sortBy.yearList?.get(0) },
-                onSetSelectYear = { year ->
-                    year?.let {
-                        albumInfoViewModel.setFilterYear(
-                            listOf(it)
+            val openSortAndFilterMenuText =
+                stringResource(Res.string.open_sort_and_filter_menu)
+            DesktopTooltipBox(tooltip = openSortAndFilterMenuText) {
+                SelectSortBottomSheetComponent(
+                    onIfSelectOneYear = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifAlbumInfoSelectOneYear },
+                    onIfStartEndYear = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifAlbumInfoSelectStartEndYear },
+                    onIfSort = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifAlbumInfoSort },
+                    onIfFavoriteFilter = { albumInfoViewModel.dataSourceManager.dataSourceType?.ifAlbumInfoFavoriteFilter },
+                    onSortTypeClick = {
+                        albumInfoViewModel.setSortedData(it) { musicListPage.refresh() }
+                    },
+                    onSortType = { sortBy.sortType },
+                    onDefaultSortType = { albumInfoViewModel.defaultSortType },
+                    onIfFavorite = { sortBy.isFavorite == true },
+                    setFavorite = {
+                        albumInfoViewModel.setFavorite(
+                            it
                         ) { musicListPage.refresh() }
-                    }
-                },
-                onSelectRangeYear = { sortBy.yearList },
-                onSetSelectRangeYear = { years ->
-                    albumInfoViewModel.setFilterYear(
-                        years.mapNotNull { it }
-                    ) { musicListPage.refresh() }
-                },
-                onEnabledClearClick = { albumInfoViewModel.isSortChange() }
-            ) {
-                albumInfoViewModel.clearFilterOrSort { musicListPage.refresh() }
+                    },
+                    sortTypeList = listOf(
+                        SortTypeEnum.CREATE_TIME_ASC,
+                        SortTypeEnum.CREATE_TIME_DESC,
+                        SortTypeEnum.MUSIC_NAME_ASC,
+                        SortTypeEnum.MUSIC_NAME_DESC
+                    ),
+                    onYearSet = { mainViewModel.yearSet },
+                    onSelectYear = { sortBy.yearList?.get(0) },
+                    onSetSelectYear = { year ->
+                        year?.let {
+                            albumInfoViewModel.setFilterYear(
+                                listOf(it)
+                            ) { musicListPage.refresh() }
+                        }
+                    },
+                    onSelectRangeYear = { sortBy.yearList },
+                    onSetSelectRangeYear = { years ->
+                        albumInfoViewModel.setFilterYear(
+                            years.mapNotNull { it }
+                        ) { musicListPage.refresh() }
+                    },
+                    onEnabledClearClick = { albumInfoViewModel.isSortChange() }
+                ) {
+                    albumInfoViewModel.clearFilterOrSort { musicListPage.refresh() }
+                }
             }
         }
     )
