@@ -43,6 +43,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -63,8 +64,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemContentType
-import androidx.paging.compose.itemKey
 import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
@@ -76,30 +75,32 @@ import cn.xybbz.config.image.rememberAlbumCoverUrls
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.Sort
-import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.extension.isSticking
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.progress.Progress
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.ErrorContent
 import cn.xybbz.ui.components.ErrorMoreRetryItem
 import cn.xybbz.ui.components.LazyLoadingAndStatus
-import cn.xybbz.ui.components.MusicItemComponent
 import cn.xybbz.ui.components.SelectSortBottomSheetComponent
+import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.XySelectAllComponent
 import cn.xybbz.ui.components.getExportPlaylistsAlertDialogObject
 import cn.xybbz.ui.components.importPlaylistsCompose
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
+import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.windows.DesktopTooltipBox
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
@@ -146,7 +147,6 @@ import xymusic_kmp.composeapp.generated.resources.open_operation_menu
 import xymusic_kmp.composeapp.generated.resources.pause_circle_24px
 import xymusic_kmp.composeapp.generated.resources.pause_playback
 import xymusic_kmp.composeapp.generated.resources.play_circle_24px
-import xymusic_kmp.composeapp.generated.resources.played_progress_percent
 import xymusic_kmp.composeapp.generated.resources.playlist
 import xymusic_kmp.composeapp.generated.resources.playlist_add_check_24px
 import xymusic_kmp.composeapp.generated.resources.reached_bottom
@@ -160,6 +160,13 @@ import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 
 internal val JvmDefaultAlbumInfoHeight = 124.dp
+
+private val JvmAlbumMusicTableColumns = SongTableColumns(
+    showFavoriteColumn = true,
+    showInlineActions = true,
+    showAlbumColumn = false,
+    showMetaColumn = false,
+)
 
 /**
  * 专辑详情,通过分类或者其他跳转
@@ -191,9 +198,6 @@ fun JvmAlbumInfoScreen(
     val isSticking by remember(lazyListState) { lazyListState.isSticking(1) }
 
     val favoriteSet by albumInfoViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
-    val downloadMusicIds by albumInfoViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
-        emptyList()
-    )
     val selectUiState by albumInfoViewModel.selectControl.uiState.collectAsStateWithLifecycle()
     val playbackState by albumInfoViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
 
@@ -440,69 +444,85 @@ fun JvmAlbumInfoScreen(
                     )
                 }
                 stickyHeader(key = 2) {
-                    JvmStickyHeaderOperationParent(
-                        albumInfoViewModel = albumInfoViewModel,
-                        musicListPage = musicListPage,
-                        ifOpenSelect = selectUiState.isOpen,
-                        isSelectAll = selectUiState.isSelectAll,
-                        currentPlayAlbumId = playbackState.musicInfo?.album.orEmpty(),
-                        playState = playbackState.state,
-                        sortBy = sortBy
-                    )
-                }
-
-                items(
-                    musicListPage.itemCount,
-                    key = musicListPage.itemKey { item -> item.itemId },
-                    contentType = musicListPage.itemContentType { MusicTypeEnum.MUSIC }
-                ) { index ->
-                    musicListPage[index]?.let { music ->
-                        MusicItemComponent(
-                            modifier = Modifier.fillMaxWidth(),
-                            backgroundColor = Color.Transparent,
-                            music = music,
-                            onIfFavorite = {
-                                music.itemId in favoriteSet
-                            },
-                            ifDownload = music.itemId in downloadMusicIds,
-                            ifPlay = playbackState.musicInfo?.itemId == music.itemId,
-                            subordination =
-                                if (albumInfoViewModel.albumPlayerHistoryProgressMap.containsKey(
-                                        music.itemId
-                                    )
-                                ) stringResource(
-                                    Res.string.played_progress_percent,
-                                    albumInfoViewModel.albumPlayerHistoryProgressMap[music.itemId]
-                                        ?: 0
-                                ) else music.artists?.joinToString()
-                                    ?: "",
-                            onMusicPlay = { parameter ->
-                                coroutineScope.launch {
-                                    albumInfoViewModel.musicPlayContext.album(
-                                        parameter
-                                    )
-                                }
-                            },
-                            ifSelect = selectUiState.isOpen,
-                            ifSelectCheckBox = { music.itemId in selectUiState.selectedMusicIds },
-                            trailingOnSelectClick = { _ ->
-                                albumInfoViewModel.selectControl.toggleSelection(
-                                    music.itemId,
-                                    onIsSelectAll = {
-                                        selectUiState.selectedMusicIds.containsAll(
-                                            musicListPage.itemSnapshotList.items.map { it.itemId }
-                                        )
-                                    }
-                                )
-                            },
-                            trailingOnClick = {
-                                coroutineScope.launch {
-                                    music.show()
-                                }
-                            }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.background)
+                    ) {
+                        JvmStickyHeaderOperationParent(
+                            albumInfoViewModel = albumInfoViewModel,
+                            musicListPage = musicListPage,
+                            ifOpenSelect = selectUiState.isOpen,
+                            isSelectAll = selectUiState.isSelectAll,
+                            currentPlayAlbumId = playbackState.musicInfo?.album.orEmpty(),
+                            playState = playbackState.state,
+                            sortBy = sortBy
                         )
                     }
                 }
+
+                songTableItems(
+                    tableKey = "album_info_music",
+                    pagingItems = musicListPage,
+                    columns = JvmAlbumMusicTableColumns.copy(
+                        showInlineActions = !selectUiState.isOpen,
+                        showSelectionColumn = selectUiState.isOpen,
+                    ),
+                    ifFavorite = { music -> music.itemId in favoriteSet },
+                    ifPlay = { music -> playbackState.musicInfo?.itemId == music.itemId },
+                    isSelected = { music -> music.itemId in selectUiState.selectedMusicIds },
+                    onSongClick = { music ->
+                        if (selectUiState.isOpen) {
+                            albumInfoViewModel.selectControl.toggleSelection(
+                                music.itemId,
+                                onIsSelectAll = {
+                                    selectUiState.selectedMusicIds.containsAll(
+                                        musicListPage.itemSnapshotList.items.map { it.itemId }
+                                    )
+                                }
+                            )
+                        } else {
+                            coroutineScope.launch {
+                                albumInfoViewModel.musicPlayContext.album(
+                                    OnMusicPlayParameter(
+                                        musicId = music.itemId,
+                                        albumId = music.album,
+                                    )
+                                )
+                            }
+                        }
+                    },
+                    onOpenArtist = artistClickHandler::openMusicArtists,
+                    onOpenAlbum = { music ->
+                        if (music.album.isNotBlank()) {
+                            navigator.navigate(
+                                AlbumInfo(
+                                    music.album,
+                                    MusicDataTypeEnum.ALBUM,
+                                )
+                            )
+                        }
+                    },
+                    onFavoriteClick = { music ->
+                        albumInfoViewModel.musicController.invokingOnFavorite(music.itemId)
+                    },
+                    onDownloadClick = {},
+                    onMoreClick = { music ->
+                        coroutineScope.launch {
+                            music.show()
+                        }
+                    },
+                    onSelectionClick = { musicId ->
+                        albumInfoViewModel.selectControl.toggleSelection(
+                            musicId,
+                            onIsSelectAll = {
+                                selectUiState.selectedMusicIds.containsAll(
+                                    musicListPage.itemSnapshotList.items.map { it.itemId }
+                                )
+                            }
+                        )
+                    }
+                )
 
                 val refreshState = musicListPage.loadState.refresh
                 val appendState = musicListPage.loadState.append
@@ -630,13 +650,16 @@ private fun JvmMusicListOperation(
                 isSelectAll = isSelectAll,
                 onSelectAll = onSelectAll
             )
-            IconButton(onClick = {
-                selectControl.dismiss()
-            }) {
-                Icon(
-                    painter = painterResource(Res.drawable.close_24px),
-                    contentDescription = stringResource(Res.string.close_selection)
-                )
+            val closeSelectionText = stringResource(Res.string.close_selection)
+            DesktopTooltipBox(tooltip = closeSelectionText) {
+                IconButton(onClick = {
+                    selectControl.dismiss()
+                }) {
+                    Icon(
+                        painter = painterResource(Res.drawable.close_24px),
+                        contentDescription = closeSelectionText
+                    )
+                }
             }
         } else {
             Row(
@@ -652,13 +675,16 @@ private fun JvmMusicListOperation(
                 Text(text = playActionText)
             }
             if (showPlaybackHistoryAction) {
-                IconButton(onClick = {
-                    onRemovePlayerHistory(playbackHistoryProgress.musicId)
-                }) {
-                    Icon(
-                        painter = painterResource(Res.drawable.close_24px),
-                        contentDescription = stringResource(Res.string.delete_playback_history)
-                    )
+                val deletePlaybackHistoryText = stringResource(Res.string.delete_playback_history)
+                DesktopTooltipBox(tooltip = deletePlaybackHistoryText) {
+                    IconButton(onClick = {
+                        onRemovePlayerHistory(playbackHistoryProgress.musicId)
+                    }) {
+                        Icon(
+                            painter = painterResource(Res.drawable.close_24px),
+                            contentDescription = deletePlaybackHistoryText
+                        )
+                    }
                 }
             } else {
                 Row(
@@ -667,13 +693,16 @@ private fun JvmMusicListOperation(
                 ) {
                     sortContent()
 
-                    IconButton(onClick = {
-                        selectControl.show(true)
-                    }) {
-                        Icon(
-                            painter = painterResource(Res.drawable.playlist_add_check_24px),
-                            contentDescription = stringResource(Res.string.select)
-                        )
+                    val selectText = stringResource(Res.string.select)
+                    DesktopTooltipBox(tooltip = selectText) {
+                        IconButton(onClick = {
+                            selectControl.show(true)
+                        }) {
+                            Icon(
+                                painter = painterResource(Res.drawable.playlist_add_check_24px),
+                                contentDescription = selectText
+                            )
+                        }
                     }
                 }
             }

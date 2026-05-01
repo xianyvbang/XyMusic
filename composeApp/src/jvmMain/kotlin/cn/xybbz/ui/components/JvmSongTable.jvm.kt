@@ -7,6 +7,9 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.screens.desktopColors
@@ -126,6 +129,68 @@ internal fun LazyListScope.songTableItems(
             onMoreClick = { onMoreClick(music) },
             onSelectionClick = onSelectionClick,
         )
+    }
+}
+
+/**
+ * Paging 版本的歌曲表格构建器。
+ * 使用 LazyPagingItems[index] 渲染行，保留滚动接近底部时自动加载下一页的行为。
+ */
+internal fun LazyListScope.songTableItems(
+    tableKey: String,
+    pagingItems: LazyPagingItems<XyMusic>,
+    columns: SongTableColumns = SongTableColumns(),
+    albumText: (XyMusic) -> String = { it.albumName.orEmpty() },
+    metaText: (XyMusic) -> String = { "" },
+    durationText: (XyMusic) -> String = { DateUtil.millisecondsToTime(it.runTimeTicks) },
+    accentColor: (Int, XyMusic) -> androidx.compose.ui.graphics.Color = ::defaultSongAccentColor,
+    ifFavorite: (XyMusic) -> Boolean = { it.ifFavoriteStatus },
+    ifPlay: (XyMusic) -> Boolean = { false },
+    isSelected: (XyMusic) -> Boolean = { false },
+    onSongClick: (XyMusic) -> Unit = {},
+    onOpenAlbum: (XyMusic) -> Unit = {},
+    onOpenArtist: (XyMusic) -> Unit = {},
+    onFavoriteClick: (XyMusic) -> Unit = {},
+    onDownloadClick: (XyMusic) -> Unit = {},
+    onAddToPlaylistClick: (XyMusic) -> Unit = { music ->
+        AddPlaylistBottomData(
+            ifShow = true,
+            musicInfoList = listOf(music.itemId),
+        ).show()
+    },
+    onMoreClick: (XyMusic) -> Unit = { music -> music.show() },
+    onSelectionClick: (String) -> Unit = {},
+) {
+    item(key = "${tableKey}_table_header") {
+        SongTableHeader(columns = columns)
+    }
+    items(
+        count = pagingItems.itemCount,
+        key = pagingItems.itemKey { music -> "${tableKey}_${music.itemId}" },
+        contentType = pagingItems.itemContentType { "${tableKey}_song_table_row" },
+    ) { index ->
+        pagingItems[index]?.let { music ->
+            SongRow(
+                music = music,
+                index = index,
+                columns = columns,
+                ifFavorite = ifFavorite(music),
+                ifPlay = ifPlay(music),
+                albumText = albumText(music),
+                metaText = metaText(music),
+                durationText = durationText(music),
+                accentColor = accentColor(index, music),
+                isSelected = isSelected(music),
+                onClick = { onSongClick(music) },
+                onOpenAlbum = { onOpenAlbum(music) },
+                onOpenArtist = { onOpenArtist(music) },
+                onFavoriteClick = { onFavoriteClick(music) },
+                onDownloadClick = { onDownloadClick(music) },
+                onAddToPlaylistClick = { onAddToPlaylistClick(music) },
+                onMoreClick = { onMoreClick(music) },
+                onSelectionClick = onSelectionClick,
+            )
+        }
     }
 }
 
