@@ -33,13 +33,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -55,9 +56,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -102,13 +106,11 @@ import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopTooltipBox
 import cn.xybbz.ui.xy.LazyColumnNotComponent
-import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyItemSwitcher
 import cn.xybbz.ui.xy.XyRow
-import cn.xybbz.ui.xy.XySmallImage
-import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.AlbumInfoViewModel
@@ -155,12 +157,16 @@ import xymusic_kmp.composeapp.generated.resources.rename_playlist
 import xymusic_kmp.composeapp.generated.resources.resume_playback
 import xymusic_kmp.composeapp.generated.resources.return_album_page
 import xymusic_kmp.composeapp.generated.resources.select
+import xymusic_kmp.composeapp.generated.resources.songs_count_suffix
 import xymusic_kmp.composeapp.generated.resources.start_playback
 import kotlin.io.encoding.ExperimentalEncodingApi
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 
-internal val JvmDefaultAlbumInfoHeight = 124.dp
+internal val JvmDefaultAlbumInfoHeight = 220.dp
+
+private val JvmAlbumInfoCoverSize = 188.dp
+private val JvmAlbumStickyOperationHeight = 72.dp
 
 private val JvmAlbumMusicTableColumns = SongTableColumns(
     showFavoriteColumn = true,
@@ -451,21 +457,15 @@ fun JvmAlbumInfoScreen(
                     )
                 }
                 stickyHeader(key = 2) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.background)
-                    ) {
-                        JvmStickyHeaderOperationParent(
-                            albumInfoViewModel = albumInfoViewModel,
-                            musicListPage = musicListPage,
-                            ifOpenSelect = selectUiState.isOpen,
-                            isSelectAll = selectUiState.isSelectAll,
-                            currentPlayAlbumId = playbackState.musicInfo?.album.orEmpty(),
-                            playState = playbackState.state,
-                            sortBy = sortBy
-                        )
-                    }
+                    JvmStickyHeaderOperationParent(
+                        albumInfoViewModel = albumInfoViewModel,
+                        musicListPage = musicListPage,
+                        ifOpenSelect = selectUiState.isOpen,
+                        isSelectAll = selectUiState.isSelectAll,
+                        currentPlayAlbumId = playbackState.musicInfo?.album.orEmpty(),
+                        playState = playbackState.state,
+                        sortBy = sortBy
+                    )
                 }
 
                 songTableItems(
@@ -624,6 +624,7 @@ private fun JvmMusicListOperation(
 
     XyRow(
         modifier = Modifier
+            .background(MaterialTheme.colorScheme.background)
             .debounceClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
@@ -645,7 +646,7 @@ private fun JvmMusicListOperation(
                     }
                 }
             }
-            .height(XyTheme.dimens.itemHeight),
+            .height(JvmAlbumStickyOperationHeight),
         paddingValues = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding
         ),
@@ -674,12 +675,24 @@ private fun JvmMusicListOperation(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 playIcon?.let { painter ->
-                    Icon(
-                        painter = painterResource(painter),
-                        contentDescription = playActionText
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            painter = painterResource(painter),
+                            contentDescription = playActionText,
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                        )
+                    }
                 }
-                Text(text = playActionText)
+                Text(
+                    text = playActionText,
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
             if (showPlaybackHistoryAction) {
                 val deletePlaybackHistoryText = stringResource(Res.string.delete_playback_history)
@@ -737,30 +750,51 @@ private fun JvmMusicAlbumInfoComponent(
 ) {
     val album = onData()
     val coverUrls = rememberAlbumCoverUrls(album, albumPic)
+    val typeText = if (album?.ifPlaylist == true) {
+        stringResource(Res.string.playlist)
+    } else {
+        stringResource(Res.string.album)
+    }
+    val songsCountSuffix = stringResource(Res.string.songs_count_suffix)
+    val subText = buildList {
+        album?.artists?.takeIf { it.isNotBlank() }?.let { add(it) }
+        album?.year?.let { add(it.toString()) }
+        album?.musicCount?.takeIf { it > 0 }?.let { add("$it$songsCountSuffix") }
+    }.joinToString(" • ")
 
-    XyColumn(
-        backgroundColor = Color.Transparent,
-        paddingValues = PaddingValues(
-            start = XyTheme.dimens.outerHorizontalPadding,
-            end = XyTheme.dimens.outerHorizontalPadding,
-            top = XyTheme.dimens.outerVerticalPadding
-        )
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.surfaceContainerHighest,
+                        MaterialTheme.colorScheme.background,
+                    )
+                )
+            )
+            .padding(
+                start = XyTheme.dimens.outerHorizontalPadding,
+                end = XyTheme.dimens.outerHorizontalPadding,
+                top = XyTheme.dimens.outerVerticalPadding,
+            )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(JvmDefaultAlbumInfoHeight),
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.Start
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            XySmallImage(
+            XyImage(
                 modifier = Modifier
-                    .aspectRatio(1F)
+                    .size(JvmAlbumInfoCoverSize)
+                    .clip(RoundedCornerShape(XyTheme.dimens.corner))
                     .background(
                         Brush.linearGradient(
                             colors = listOf(Color(0xff3b82f6), Color(0xff8b5cf6)),
-                            start = Offset(x = Float.POSITIVE_INFINITY, y = 0f), // 右上角
-                            end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)   // 左下角
+                            start = Offset(x = Float.POSITIVE_INFINITY, y = 0f),
+                            end = Offset(x = 0f, y = Float.POSITIVE_INFINITY)
                         )
                     ),
                 model = coverUrls.primaryUrl,
@@ -770,21 +804,34 @@ private fun JvmMusicAlbumInfoComponent(
                 fallback = Res.drawable.music_xy_placeholder_foreground,
                 contentDescription = stringResource(Res.string.album_cover),
             )
-            Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
             Column(
                 modifier = Modifier
-                    .fillMaxHeight(),
+                    .weight(1f)
+                    .padding(bottom = XyTheme.dimens.contentPadding),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                XyText(
+                Text(
+                    text = typeText,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
                     text = album?.name ?: "",
+                    modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold,
                     maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(modifier = Modifier.height(XyTheme.dimens.contentPadding))
-                XyTextSub(
-                    text = onData()?.artists ?: "",
-                    maxLines = 3,
-                    onClick = onOpenArtists,
-                )
+                if (subText.isNotBlank()) {
+                    XyTextSub(
+                        text = subText,
+                        maxLines = 2,
+                        onClick = if (album?.artists.isNullOrBlank()) null else onOpenArtists,
+                    )
+                }
             }
 
         }
