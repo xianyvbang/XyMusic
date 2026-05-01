@@ -223,22 +223,26 @@ fun JvmArtistInfoScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        coroutineScope.launch {
-                            val ifFavorite =
-                                artistInfoViewModel.dataSourceManager.setFavoriteData(
-                                    type = MusicTypeEnum.ARTIST,
-                                    itemId = artistId,
-                                    ifFavorite = artistInfoViewModel.ifFavorite
-                                )
-                            artistInfoViewModel.updateFavorite(ifFavorite)
-                        }
-                    }) {
+                    val favoriteTooltipText = if (artistInfoViewModel.ifFavorite) stringResource(
+                        Res.string.favorite_added
+                    ) else stringResource(Res.string.favorite_removed)
+                    DesktopTooltipIconButton(
+                        tooltip = favoriteTooltipText,
+                        onClick = {
+                            coroutineScope.launch {
+                                val ifFavorite =
+                                    artistInfoViewModel.dataSourceManager.setFavoriteData(
+                                        type = MusicTypeEnum.ARTIST,
+                                        itemId = artistId,
+                                        ifFavorite = artistInfoViewModel.ifFavorite
+                                    )
+                                artistInfoViewModel.updateFavorite(ifFavorite)
+                            }
+                        },
+                    ) {
                         Icon(
                             painter = painterResource(if (artistInfoViewModel.ifFavorite) Res.drawable.favorite_24px else Res.drawable.favorite_border_24px),
-                            contentDescription = if (artistInfoViewModel.ifFavorite) stringResource(
-                                Res.string.favorite_added
-                            ) else stringResource(Res.string.favorite_removed),
+                            contentDescription = favoriteTooltipText,
                             tint = Color.Red
                         )
                     }
