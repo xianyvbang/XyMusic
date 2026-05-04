@@ -75,14 +75,18 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import cn.xybbz.common.enums.MusicTypeEnum
+import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.enums.TabListEnum
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.image.rememberArtistCoverUrls
+import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.select.SelectControl
+import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.extension.isSticking
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.FavoriteIconButton
 import cn.xybbz.ui.components.JvmLazyListComponent
@@ -119,14 +123,20 @@ import xymusic_kmp.composeapp.generated.resources.artrist_info
 import xymusic_kmp.composeapp.generated.resources.close_24px
 import xymusic_kmp.composeapp.generated.resources.close_selection
 import xymusic_kmp.composeapp.generated.resources.no_description
+import xymusic_kmp.composeapp.generated.resources.pause_circle_24px
+import xymusic_kmp.composeapp.generated.resources.pause_playback
+import xymusic_kmp.composeapp.generated.resources.play_circle_24px
 import xymusic_kmp.composeapp.generated.resources.playlist_add_check_24px
 import xymusic_kmp.composeapp.generated.resources.reached_bottom
+import xymusic_kmp.composeapp.generated.resources.resume_playback
 import xymusic_kmp.composeapp.generated.resources.return_home
 import xymusic_kmp.composeapp.generated.resources.select
 import xymusic_kmp.composeapp.generated.resources.songs_count_suffix
+import xymusic_kmp.composeapp.generated.resources.start_playback
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 private val JvmArtistInfoDesktopCoverSize = 232.dp
+private val JvmArtistStickyOperationHeight = 72.dp
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -327,6 +337,21 @@ fun JvmArtistInfoScreen(
                     TabListEnum.Music -> {
                         item {
                             JvmArtistMusicListOperation(
+                                artistId = artistId,
+                                musicPlayContext = artistInfoViewModel.musicPlayContext,
+                                currentPlayArtistId = artistInfoViewModel.musicPlayContext
+                                    .musicPlayData
+                                    ?.onMusicPlayParameter
+                                    ?.artistId,
+                                playDataType = playbackState.playDataType,
+                                playState = playbackState.state,
+                                onPlayOrPause = {
+                                    if (playbackState.state != PlayStateEnum.Pause) {
+                                        artistInfoViewModel.musicController.pause()
+                                    } else {
+                                        artistInfoViewModel.musicController.resume()
+                                    }
+                                },
                                 selectControl = artistInfoViewModel.selectControl,
                                 onSelectAll = {
                                     artistInfoViewModel.selectControl.toggleSelectionAll(
@@ -600,26 +625,66 @@ private fun ArtistInfoCardGridRow(
  */
 @Composable
 private fun JvmArtistMusicListOperation(
+    artistId: String,
+    musicPlayContext: MusicPlayContext,
+    currentPlayArtistId: String?,
+    playDataType: MusicPlayTypeEnum,
+    playState: PlayStateEnum,
+    onPlayOrPause: () -> Unit,
     selectControl: SelectControl,
     ifOpenSelect: Boolean,
     isSelectAll: Boolean,
     onSelectAll: () -> Unit,
     sortContent: @Composable () -> Unit
 ) {
+    val coroutineScope = rememberCoroutineScope()
+    val pauseText = stringResource(Res.string.pause_playback)
+    val resumeText = stringResource(Res.string.resume_playback)
+    val startText = stringResource(Res.string.start_playback)
+    val isCurrentArtist = playDataType == MusicPlayTypeEnum.ARTIST &&
+            artistId == currentPlayArtistId
+    val isPlayingCurrentArtist = isCurrentArtist && playState == PlayStateEnum.Playing
+    val playIcon = if (isPlayingCurrentArtist) {
+        Res.drawable.pause_circle_24px
+    } else {
+        Res.drawable.play_circle_24px
+    }
+    val playActionText = when {
+        isPlayingCurrentArtist -> pauseText
+        isCurrentArtist -> resumeText
+        else -> startText
+    }
+
     XyRow(
         modifier = Modifier
+            .background(MaterialTheme.colorScheme.background)
             .debounceClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                enabled = ifOpenSelect,
             ) {
-                onSelectAll()
+                if (ifOpenSelect) {
+                    onSelectAll()
+                } else {
+                    coroutineScope.launch {
+                        if (isCurrentArtist) {
+                            onPlayOrPause()
+                        } else {
+                            musicPlayContext.artist(
+                                OnMusicPlayParameter(
+                                    musicId = "",
+                                    artistId = artistId,
+                                ),
+                                index = 0,
+                                artistId = artistId,
+                            )
+                        }
+                    }
+                }
             }
-            .height(XyTheme.dimens.itemHeight),
+            .height(JvmArtistStickyOperationHeight),
         paddingValues = PaddingValues(
             horizontal = XyTheme.dimens.outerHorizontalPadding
         ),
-        horizontalArrangement = if (ifOpenSelect) Arrangement.SpaceBetween else Arrangement.End
     ) {
 
 
@@ -628,15 +693,41 @@ private fun JvmArtistMusicListOperation(
                 isSelectAll = isSelectAll,
                 onSelectAll = onSelectAll
             )
-            IconButton(onClick = {
-                selectControl.dismiss()
-            }) {
+            val closeSelectionText = stringResource(Res.string.close_selection)
+            DesktopTooltipIconButton(
+                tooltip = closeSelectionText,
+                onClick = {
+                    selectControl.dismiss()
+                },
+            ) {
                 Icon(
                     painter = painterResource(Res.drawable.close_24px),
-                    contentDescription = stringResource(Res.string.close_selection)
+                    contentDescription = closeSelectionText
                 )
             }
         } else {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        painter = painterResource(playIcon),
+                        contentDescription = playActionText,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                    )
+                }
+                Text(
+                    text = playActionText,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.End

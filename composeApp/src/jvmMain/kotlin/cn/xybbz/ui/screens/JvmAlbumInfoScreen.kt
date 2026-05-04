@@ -700,14 +700,7 @@ private fun JvmMusicAlbumInfoComponent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.surfaceContainerHighest,
-                        MaterialTheme.colorScheme.background,
-                    )
-                )
-            )
+            .background(MaterialTheme.colorScheme.background)
             .padding(
                 start = XyTheme.dimens.outerHorizontalPadding,
                 end = XyTheme.dimens.outerHorizontalPadding,
