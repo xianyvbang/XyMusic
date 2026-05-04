@@ -59,7 +59,10 @@ class MusicArtistClickHandler internal constructor(
      * 打开普通音乐数据中的艺术家。
      */
     fun openMusicArtists(music: XyMusic) {
-        onOpenArtists(music.artistIds, music.artists)
+        onOpenArtists(
+            music.artistIds.takeUnless { it.isNullOrEmpty() } ?: music.albumArtistIds,
+            music.artists.takeUnless { it.isNullOrEmpty() } ?: music.albumArtist,
+        )
     }
 
     /**

@@ -56,6 +56,10 @@ data class HomeMusic(
      */
     val album: String = "",
     /**
+     * 专辑名称
+     */
+    val albumName: String? = "",
+    /**
      * 编码
      */
     val codec: String? = "",
@@ -74,6 +78,7 @@ data class HomeMusic(
             name = name,
             downloadUrl = "",
             album = album,
+            albumName = albumName,
             connectionId = connectionId,
             artists = artists,
             codec = codec,

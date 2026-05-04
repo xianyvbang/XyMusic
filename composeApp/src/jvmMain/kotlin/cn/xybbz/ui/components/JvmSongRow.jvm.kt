@@ -134,7 +134,7 @@ internal fun SongRow(
     ifFavorite: Boolean,
     ifPlay: Boolean,
     modifier: Modifier = Modifier,
-    albumText: String = music.albumName.orEmpty(),
+    albumText: String = defaultSongAlbumText(music),
     metaText: String = "",
     durationText: String = DateUtil.millisecondsToTime(music.runTimeTicks),
     accentColor: Color = defaultSongAccentColor(index, music),
@@ -624,4 +624,8 @@ internal fun defaultSongAccentColor(
     )
     val paletteIndex = (music.itemId.hashCode().absoluteValue + index) % palette.size
     return palette[paletteIndex]
+}
+
+internal fun defaultSongAlbumText(music: XyMusic): String {
+    return music.albumName?.takeIf { it.isNotBlank() } ?: music.album
 }

@@ -58,7 +58,7 @@ private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.desktopNode(n
 private val jvmDesktopEntryProvider = buildDefaultRouteEntryProvider()
 
 
-private val jvmDesktopEntryProvider2 = entryProvider<NavKey> {
+private val jvmDesktopEntryProvider2 = entryProvider {
     desktopNode<Connection> { ConnectionScreen(it.connectionUiType) }
     desktopNode<Home> { HomeScreen() }
     desktopNode<Search> { JvmSearchScreen(searchQuery = it.searchQuery) }
@@ -67,7 +67,6 @@ private val jvmDesktopEntryProvider2 = entryProvider<NavKey> {
     desktopNode<Artist> { ArtistDesktopScreen() }
     desktopNode<FavoriteList> { FavoriteDesktopScreen() }
     desktopNode<AlbumInfo> { JvmAlbumInfoScreen(it.itemId, it.dataType) }
-//    desktopNode<ArtistInfo> { ArtistInfoDesktopScreen(it) }
     desktopNode<ArtistInfo> { JvmArtistInfoScreen(it.artistId,it.artistName) }
 
     desktopNode<Setting> { JvmSettingScreen() }

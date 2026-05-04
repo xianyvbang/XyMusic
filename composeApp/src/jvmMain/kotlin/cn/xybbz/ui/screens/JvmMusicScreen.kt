@@ -29,22 +29,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemContentType
-import androidx.paging.compose.itemKey
-import cn.xybbz.common.enums.MusicTypeEnum
-import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
+import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
-import cn.xybbz.ui.components.MusicItemComponent
+import cn.xybbz.router.AlbumInfo
+import cn.xybbz.ui.components.JvmLazyListComponent
 import cn.xybbz.ui.components.SelectSortBottomSheetComponent
-import cn.xybbz.ui.components.SwipeRefreshListComponent
+import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.XySelectAllComponent
+import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
+import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.MusicViewModel
@@ -53,16 +53,21 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.close_24px
 import xymusic_kmp.composeapp.generated.resources.close_selection
 import xymusic_kmp.composeapp.generated.resources.music
 import xymusic_kmp.composeapp.generated.resources.open_selection_function
 import xymusic_kmp.composeapp.generated.resources.playlist_add_check_24px
 import xymusic_kmp.composeapp.generated.resources.random_play
-import xymusic_kmp.composeapp.generated.resources.return_home
 import xymusic_kmp.composeapp.generated.resources.shuffle_24px
 import cn.xybbz.ui.xy.XyIconButton as IconButton
+
+private val JvmMusicTableColumns = SongTableColumns(
+    showFavoriteColumn = true,
+    showInlineActions = true,
+    showAlbumColumn = true,
+    showMetaColumn = false,
+)
 
 @Composable
 fun JvmMusicScreen(
@@ -71,12 +76,11 @@ fun JvmMusicScreen(
 
     val coroutineScope = rememberCoroutineScope()
     val mainViewModel = LocalMainViewModel.current
+    val navigator = LocalNavigator.current
+    val artistClickHandler = rememberMusicArtistClickHandler()
     val homeMusicPager = musicViewModel.listPage.collectAsLazyPagingItems()
     val playbackState by musicViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
     val favoriteSet by musicViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
-    val downloadMusicIds by musicViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
-        emptyList()
-    )
     val sortBy by musicViewModel.sortBy.collectAsStateWithLifecycle()
     val selectUiState by musicViewModel.selectControl.uiState.collectAsStateWithLifecycle()
 
@@ -136,52 +140,74 @@ fun JvmMusicScreen(
             }
         )
 
-        SwipeRefreshListComponent(
-            collectAsLazyPagingItems = homeMusicPager
-        ) { page ->
-            items(
-                page.itemCount,
-                page.itemKey { it.itemId },
-                page.itemContentType { MusicTypeEnum.MUSIC.code }) { index ->
-                // 加上remember就可以防止重组
-                page[index]?.let { music ->
-                    MusicItemComponent(
-                        music = music,
-                        onIfFavorite = {
-                            music.itemId in favoriteSet
-                        },
-                        ifDownload = music.itemId in downloadMusicIds,
-                        ifPlay = playbackState.musicInfo?.itemId == music.itemId,
-                        onMusicPlay = {
-                            musicViewModel.musicPlayContext.music(
-                                onMusicPlayParameter = it,
-                                index = index,
-                                type = MusicPlayTypeEnum.FOUNDATION
-                            )
-                        },
-                        backgroundColor = Color.Transparent,
-                        ifSelect = selectUiState.isOpen,
-                        ifSelectCheckBox = {
-                            music.itemId in selectUiState.selectedMusicIds
-                        },
-                        trailingOnSelectClick = { select ->
-                            Log.i("======", "数据是否一起变化${select}")
-                            musicViewModel.selectControl.toggleSelection(
-                                music.itemId,
-                                onIsSelectAll = {
-                                    selectUiState.selectedMusicIds.containsAll(
-                                        homeMusicPager.itemSnapshotList.items.map { it.itemId }
-                                    )
-                                })
-                        },
-                        trailingOnClick = {
-                            coroutineScope.launch {
-                                musicViewModel.getMusicInfoById(music.itemId)?.show()
+        JvmLazyListComponent(
+            pagingItems = homeMusicPager,
+        ) {
+            songTableItems(
+                tableKey = "music_screen",
+                pagingItems = homeMusicPager,
+                columns = JvmMusicTableColumns.copy(
+                    showInlineActions = !selectUiState.isOpen,
+                    showSelectionColumn = selectUiState.isOpen,
+                ),
+                ifFavorite = { music -> music.itemId in favoriteSet },
+                ifPlay = { music -> playbackState.musicInfo?.itemId == music.itemId },
+                isSelected = { music -> music.itemId in selectUiState.selectedMusicIds },
+                onSongClick = { index, music ->
+                    if (selectUiState.isOpen) {
+                        musicViewModel.selectControl.toggleSelection(
+                            music.itemId,
+                            onIsSelectAll = {
+                                selectUiState.selectedMusicIds.containsAll(
+                                    homeMusicPager.itemSnapshotList.items.map { it.itemId }
+                                )
                             }
+                        )
+                    } else {
+                        musicViewModel.musicPlayContext.music(
+                            onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
+                            index = index,
+                            type = MusicPlayTypeEnum.FOUNDATION
+                        )
+                    }
+                },
+                onOpenArtist = { music ->
+                    coroutineScope.launch {
+                        artistClickHandler.openMusicArtists(
+                            musicViewModel.getMusicInfoById(music.itemId) ?: music
+                        )
+                    }
+                },
+                onOpenAlbum = { music ->
+                    if (music.album.isNotBlank()) {
+                        navigator.navigate(
+                            AlbumInfo(
+                                music.album,
+                                MusicDataTypeEnum.ALBUM
+                            )
+                        )
+                    }
+                },
+                onFavoriteClick = { music ->
+                    musicViewModel.musicController.invokingOnFavorite(music.itemId)
+                },
+                onDownloadClick = {},
+                onMoreClick = { music ->
+                    coroutineScope.launch {
+                        musicViewModel.getMusicInfoById(music.itemId)?.show()
+                    }
+                },
+                onSelectionClick = { musicId ->
+                    musicViewModel.selectControl.toggleSelection(
+                        musicId,
+                        onIsSelectAll = {
+                            selectUiState.selectedMusicIds.containsAll(
+                                homeMusicPager.itemSnapshotList.items.map { it.itemId }
+                            )
                         }
                     )
                 }
-            }
+            )
         }
     }
 }
@@ -216,19 +242,6 @@ private fun MusicSelectTopBarComponent(
                     title = title
                 )
             }
-        }, navigationIcon = {
-            IconButton(
-                onClick = {
-                    navigator.goBack()
-                },
-            ) {
-                Icon(
-                    painter = painterResource(Res.drawable.arrow_back_24px),
-                    contentDescription = stringResource(Res.string.return_home)
-                )
-            }
-
-
         }, actions = {
             if (ifOpenSelect) {
                 IconButton(onClick = {

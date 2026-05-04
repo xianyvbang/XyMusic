@@ -85,6 +85,7 @@ interface XyMusicDao {
                         name = it.name,
                         artists = it.artists,
                         album = it.album,
+                        albumName = it.albumName,
                         codec = it.codec,
                         bitRate = it.bitRate,
                         index = index,
