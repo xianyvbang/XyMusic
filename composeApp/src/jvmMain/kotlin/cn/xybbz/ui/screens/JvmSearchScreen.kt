@@ -220,7 +220,7 @@ fun JvmSearchResultScreen(
                 columns = SearchMusicTableColumns,
                 ifFavorite = { music -> music.itemId in onFavoriteList() },
                 ifPlay = { music -> music.itemId == currentPlayingMusicId },
-                onSongClick = onAddMusic,
+                onSongClick = { _, music -> onAddMusic(music) },
                 onOpenAlbum = { music ->
                     if (music.album.isNotBlank()) {
                         navigator.navigate(

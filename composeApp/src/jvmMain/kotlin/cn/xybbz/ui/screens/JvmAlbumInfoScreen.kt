@@ -458,7 +458,7 @@ fun JvmAlbumInfoScreen(
                     ifFavorite = { music -> music.itemId in favoriteSet },
                     ifPlay = { music -> playbackState.musicInfo?.itemId == music.itemId },
                     isSelected = { music -> music.itemId in selectUiState.selectedMusicIds },
-                    onSongClick = { music ->
+                    onSongClick = { _, music ->
                         if (selectUiState.isOpen) {
                             albumInfoViewModel.selectControl.toggleSelection(
                                 music.itemId,

@@ -97,7 +97,7 @@ fun JvmHomeScreen(
                 musicList = recommendedMusicList,
                 navigator = navigator,
                 onOpenArtist = artistClickHandler::openMusicArtists,
-                onSongClick = { music ->
+                onSongClick = { _, music ->
                     homeViewModel.musicList(
                         onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
                         musicList = recommendedMusicList
@@ -143,7 +143,7 @@ fun JvmHomeScreen(
                 musicList = recentMusicList,
                 navigator = navigator,
                 onOpenArtist = artistClickHandler::openMusicArtists,
-                onSongClick = { music ->
+                onSongClick = { _, music ->
                     homeViewModel.musicList(
                         onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
                         musicList = recentMusicList
@@ -193,7 +193,7 @@ fun JvmHomeScreen(
                 musicList = mostPlayedMusicList,
                 navigator = navigator,
                 onOpenArtist = artistClickHandler::openMusicArtists,
-                onSongClick = { music ->
+                onSongClick = { _, music ->
                     homeViewModel.musicList(
                         onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
                         musicList = mostPlayedMusicList
@@ -219,7 +219,7 @@ private fun LazyListScope.homeMusicSection(
     sectionKey: String,
     title: String,
     musicList: List<XyMusic>,
-    onSongClick: (XyMusic) -> Unit,
+    onSongClick: (Int, XyMusic) -> Unit,
     navigator: Navigator,
     onOpenArtist: (XyMusic) -> Unit,
     headerAction: @Composable (() -> Unit)? = null,

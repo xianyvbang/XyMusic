@@ -72,8 +72,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemContentType
-import androidx.paging.compose.itemKey
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.enums.TabListEnum
@@ -93,12 +91,13 @@ import cn.xybbz.ui.components.JvmLazyListComponent
 import cn.xybbz.ui.components.LazyLoadingAndStatus
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicArtistCardComponent
-import cn.xybbz.ui.components.MusicItemComponent
+import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.XySelectAllComponent
 import cn.xybbz.ui.components.jvmLazyColumnBottomComponent
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
+import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
@@ -137,6 +136,12 @@ import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 private val JvmArtistInfoDesktopCoverSize = 232.dp
 private val JvmArtistStickyOperationHeight = 72.dp
+private val JvmArtistMusicTableColumns = SongTableColumns(
+    showFavoriteColumn = true,
+    showInlineActions = true,
+    showAlbumColumn = true,
+    showMetaColumn = false,
+)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -155,9 +160,6 @@ fun JvmArtistInfoScreen(
     val albumPageList =
         artistInfoViewModel.albumList.collectAsLazyPagingItems()
     val favoriteSet by artistInfoViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
-    val downloadMusicIds by artistInfoViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
-        emptyList()
-    )
     val selectUiState by artistInfoViewModel.selectControl.uiState.collectAsStateWithLifecycle()
     val playbackState by artistInfoViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
 
@@ -351,49 +353,70 @@ fun JvmArtistInfoScreen(
                                 sortContent = {}
                             )
                         }
-                        items(
-                            musicPage.itemCount,
-                            key = musicPage.itemKey { item -> item.itemId },
-                            contentType = musicPage.itemContentType { MusicTypeEnum.MUSIC }
-                        ) { index ->
-                            musicPage[index]?.let { music ->
-                                MusicItemComponent(
-                                    music = music,
-                                    onIfFavorite = {
-                                        music.itemId in favoriteSet
-                                    },
-                                    ifDownload = music.itemId in downloadMusicIds,
-                                    ifPlay = playbackState.musicInfo?.itemId == music.itemId,
-                                    backgroundColor = Color.Transparent,
-                                    trailingOnClick = {
-                                        music.show()
-                                    },
-                                    onMusicPlay = {
-                                        coroutineScope.launch {
-                                            artistInfoViewModel.musicPlayContext.artist(
-                                                onMusicPlayParameter = it.copy(
-                                                    artistId = artistId
-                                                ),
-                                                index = index,
-                                                artistId = artistId
+                        songTableItems(
+                            tableKey = "artist_info_music",
+                            pagingItems = musicPage,
+                            columns = JvmArtistMusicTableColumns.copy(
+                                showInlineActions = !selectUiState.isOpen,
+                                showSelectionColumn = selectUiState.isOpen,
+                            ),
+                            ifFavorite = { music -> music.itemId in favoriteSet },
+                            ifPlay = { music -> playbackState.musicInfo?.itemId == music.itemId },
+                            isSelected = { music -> music.itemId in selectUiState.selectedMusicIds },
+                            onSongClick = { index, music ->
+                                if (selectUiState.isOpen) {
+                                    artistInfoViewModel.selectControl.toggleSelection(
+                                        music.itemId,
+                                        onIsSelectAll = {
+                                            selectUiState.selectedMusicIds.containsAll(
+                                                musicPage.itemSnapshotList.items.map { it.itemId }
                                             )
                                         }
-                                    },
-                                    ifSelect = selectUiState.isOpen,
-                                    ifSelectCheckBox = { music.itemId in selectUiState.selectedMusicIds },
-                                    trailingOnSelectClick = { _ ->
-                                        artistInfoViewModel.selectControl.toggleSelection(
-                                            music.itemId,
-                                            onIsSelectAll = {
-                                                selectUiState.selectedMusicIds.containsAll(
-                                                    musicPage.itemSnapshotList.items.map { it.itemId }
-                                                )
-                                            }
+                                    )
+                                } else {
+                                    coroutineScope.launch {
+                                        artistInfoViewModel.musicPlayContext.artist(
+                                            onMusicPlayParameter = OnMusicPlayParameter(
+                                                musicId = music.itemId,
+                                                artistId = artistId,
+                                            ),
+                                            index = index,
+                                            artistId = artistId,
+                                        )
+                                    }
+                                }
+                            },
+                            onOpenArtist = artistClickHandler::openMusicArtists,
+                            onOpenAlbum = { music ->
+                                if (music.album.isNotBlank()) {
+                                    navigator.navigate(
+                                        AlbumInfo(
+                                            music.album,
+                                            MusicDataTypeEnum.ALBUM,
+                                        )
+                                    )
+                                }
+                            },
+                            onFavoriteClick = { music ->
+                                artistInfoViewModel.musicController.invokingOnFavorite(music.itemId)
+                            },
+                            onDownloadClick = {},
+                            onMoreClick = { music ->
+                                coroutineScope.launch {
+                                    music.show()
+                                }
+                            },
+                            onSelectionClick = { musicId ->
+                                artistInfoViewModel.selectControl.toggleSelection(
+                                    musicId,
+                                    onIsSelectAll = {
+                                        selectUiState.selectedMusicIds.containsAll(
+                                            musicPage.itemSnapshotList.items.map { it.itemId }
                                         )
                                     }
                                 )
                             }
-                        }
+                        )
                     }
 
                     TabListEnum.Album -> {
