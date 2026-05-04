@@ -243,19 +243,7 @@ fun JvmArtistInfoScreen(
                         },
                         normalTint = Color.Red,
                     )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = {
-                            navigator.goBack()
-                        },
-                    ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.arrow_back_24px),
-                            contentDescription = stringResource(Res.string.return_home)
-                        )
-                    }
-                },
+                }
             )
 
             JvmLazyListComponent(
@@ -309,6 +297,7 @@ fun JvmArtistInfoScreen(
                 }
                 stickyHeader(key = 1) {
                     PrimaryTabRow(
+                        modifier = Modifier.padding(bottom = XyTheme.dimens.innerVerticalPadding),
                         containerColor = MaterialTheme.colorScheme.background,
                         selectedTabIndex = TabListEnum.entries.indexOf(selectedTab),
                         divider = {},
