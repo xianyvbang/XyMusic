@@ -70,7 +70,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
@@ -85,22 +84,21 @@ import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
-import cn.xybbz.ui.components.LazyLoadingAndStatus
 import cn.xybbz.ui.components.FavoriteIconButton
+import cn.xybbz.ui.components.JvmLazyListComponent
+import cn.xybbz.ui.components.LazyLoadingAndStatus
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.MusicArtistCardComponent
 import cn.xybbz.ui.components.MusicItemComponent
-import cn.xybbz.ui.components.PagingUiState
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.XySelectAllComponent
-import cn.xybbz.ui.components.lazyColumBottomComponent
+import cn.xybbz.ui.components.jvmLazyColumnBottomComponent
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopTooltipIconButton
-import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.LazyColumnParentComponent
 import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
 import cn.xybbz.ui.xy.XyColumnScreen
@@ -250,8 +248,29 @@ fun JvmArtistInfoScreen(
                 },
             )
 
-            LazyColumnNotComponent(
-                state = lazyListState
+            JvmLazyListComponent(
+                lazyState = lazyListState,
+                pagingItems = when (selectedTab) {
+                    TabListEnum.Music -> musicPage
+                    TabListEnum.Album -> albumPageList
+                    TabListEnum.RESEMBLANCE_ARTIST -> null
+                },
+                lazyColumnBottom = if (selectedTab == TabListEnum.RESEMBLANCE_ARTIST) {
+                    null
+                } else {
+                    { pagingUiState ->
+                        jvmLazyColumnBottomComponent(
+                            pagingUiState = pagingUiState,
+                            retry = {
+                                when (selectedTab) {
+                                    TabListEnum.Music -> musicPage.retry()
+                                    TabListEnum.Album -> albumPageList.retry()
+                                    TabListEnum.RESEMBLANCE_ARTIST -> Unit
+                                }
+                            },
+                        )
+                    }
+                }
             ) {
                 item {
                     JvmArtistDesktopHeader(
@@ -361,9 +380,6 @@ fun JvmArtistInfoScreen(
                                 )
                             }
                         }
-                        lazyColumBottomComponent(
-                            pagingUiState = musicPage.toArtistInfoPagingUiState(),
-                        ) { musicPage }
                     }
 
                     TabListEnum.Album -> {
@@ -516,28 +532,6 @@ private fun LazyListScope.artistAlbumGridItems(
             }
         }
     }
-    lazyColumBottomComponent(
-        pagingUiState = albumPageList.toArtistInfoPagingUiState(),
-    ) { albumPageList }
-}
-
-private fun <T : Any> LazyPagingItems<T>.toArtistInfoPagingUiState(): PagingUiState {
-    val refreshState = loadState.refresh
-    val appendState = loadState.append
-    val hasData = itemCount > 0
-    val isIdle = loadState.isIdle
-    val hasError = loadState.hasError
-
-    return PagingUiState(
-        isInitialLoading = refreshState is LoadState.Loading && !hasData,
-        isRefreshing = refreshState is LoadState.Loading && hasData,
-        isEmpty = isIdle && !hasError && !hasData,
-        isAppending = appendState is LoadState.Loading && hasData,
-        isAppendEndReached = hasData && appendState.endOfPaginationReached,
-        hasData = hasData,
-        refreshError = refreshState is LoadState.Error,
-        appendError = appendState is LoadState.Error && hasData,
-    )
 }
 
 private fun LazyListScope.artistGridItems(

@@ -64,7 +64,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import cn.xybbz.api.client.FavoriteCoordinator
@@ -86,10 +85,8 @@ import cn.xybbz.localdata.data.progress.Progress
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.AlertDialogObject
-import cn.xybbz.ui.components.ErrorContent
-import cn.xybbz.ui.components.ErrorMoreRetryItem
 import cn.xybbz.ui.components.FavoriteIconButton
-import cn.xybbz.ui.components.LazyLoadingAndStatus
+import cn.xybbz.ui.components.JvmLazyListComponent
 import cn.xybbz.ui.components.SelectSortBottomSheetComponent
 import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.TopAppBarComponent
@@ -106,7 +103,6 @@ import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopTooltipBox
 import cn.xybbz.ui.windows.DesktopTooltipIconButton
-import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyItemSwitcher
@@ -131,14 +127,12 @@ import xymusic_kmp.composeapp.generated.resources.delete_24px
 import xymusic_kmp.composeapp.generated.resources.delete_playback_history
 import xymusic_kmp.composeapp.generated.resources.delete_playlist
 import xymusic_kmp.composeapp.generated.resources.edit_24px
-import xymusic_kmp.composeapp.generated.resources.empty_info
 import xymusic_kmp.composeapp.generated.resources.enable_playback_history
 import xymusic_kmp.composeapp.generated.resources.export_playlist
 import xymusic_kmp.composeapp.generated.resources.import_info
 import xymusic_kmp.composeapp.generated.resources.import_playlist
 import xymusic_kmp.composeapp.generated.resources.import_playlist_hint
 import xymusic_kmp.composeapp.generated.resources.login_24px
-import xymusic_kmp.composeapp.generated.resources.loading
 import xymusic_kmp.composeapp.generated.resources.modify_playlist_name
 import xymusic_kmp.composeapp.generated.resources.more_vert_24px
 import xymusic_kmp.composeapp.generated.resources.music_xy_placeholder_foreground
@@ -149,7 +143,6 @@ import xymusic_kmp.composeapp.generated.resources.pause_playback
 import xymusic_kmp.composeapp.generated.resources.play_circle_24px
 import xymusic_kmp.composeapp.generated.resources.playlist
 import xymusic_kmp.composeapp.generated.resources.playlist_add_check_24px
-import xymusic_kmp.composeapp.generated.resources.reached_bottom
 import xymusic_kmp.composeapp.generated.resources.rename_playlist
 import xymusic_kmp.composeapp.generated.resources.resume_playback
 import xymusic_kmp.composeapp.generated.resources.return_album_page
@@ -421,8 +414,9 @@ fun JvmAlbumInfoScreen(
                 }
             )
 
-            LazyColumnNotComponent(
-                state = lazyListState
+            JvmLazyListComponent(
+                lazyState = lazyListState,
+                pagingItems = musicListPage,
             ) {
                 item {
                     JvmMusicAlbumInfoComponent(
@@ -517,54 +511,6 @@ fun JvmAlbumInfoScreen(
                     }
                 )
 
-                val refreshState = musicListPage.loadState.refresh
-                val appendState = musicListPage.loadState.append
-                val hasData = musicListPage.itemCount > 0
-                val isInitialLoading = refreshState is LoadState.Loading && !hasData
-                val isAppending = appendState is LoadState.Loading && hasData
-                val isAppendEndReached =
-                    hasData && appendState is LoadState.NotLoading && appendState.endOfPaginationReached
-                val isEmpty =
-                    !hasData && refreshState is LoadState.NotLoading && appendState is LoadState.NotLoading
-                val appendError = appendState is LoadState.Error && hasData
-                val refreshError = refreshState is LoadState.Error
-                item {
-                    LazyLoadingAndStatus(
-                        text = stringResource(
-                            when {
-                                isEmpty -> Res.string.reached_bottom
-                                isInitialLoading || isAppending -> Res.string.loading
-                                isAppendEndReached -> Res.string.reached_bottom
-                                else -> Res.string.empty_info
-                            }
-                        ),
-                        ifLoading = isInitialLoading || isAppending
-                    )
-                }
-
-                when {
-                    appendError -> {
-                        item(key = 8888) {
-                            ErrorMoreRetryItem {
-                                musicListPage.retry()
-                            }
-                        }
-                    }
-
-                    refreshError -> {
-                        item(key = 7777) {
-                            if (!hasData) {
-                                ErrorContent {
-                                    musicListPage.retry()
-                                }
-                            } else {
-                                ErrorMoreRetryItem {
-                                    musicListPage.retry()
-                                }
-                            }
-                        }
-                    }
-                }
             }
         }
     }
