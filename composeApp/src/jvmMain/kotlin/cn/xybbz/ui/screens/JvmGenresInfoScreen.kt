@@ -27,6 +27,7 @@ import org.koin.core.parameter.parametersOf
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.back_to_genres_list
+import xymusic_kmp.composeapp.generated.resources.genres
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,23 +49,11 @@ fun JvmGenresInfoScreen(
         TopAppBarComponent(
             title = {
                 Text(
-                    text = genresInfoViewModel.genreInfo?.name ?: "",
+                    text = "${stringResource(Res.string.genres)}: ${genresInfoViewModel.genreInfo?.name}" ,
                     modifier = Modifier.basicMarquee(
                         iterations = Int.MAX_VALUE
                     )
                 )
-            },
-            navigationIcon = {
-                IconButton(
-                    onClick = {
-                        navigator.goBack()
-                    },
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.arrow_back_24px),
-                        contentDescription = stringResource(Res.string.back_to_genres_list)
-                    )
-                }
             }
         )
 

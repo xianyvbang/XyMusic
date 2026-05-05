@@ -29,6 +29,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -90,7 +92,14 @@ internal fun JvmMusicCardComponent(
             modifier = modifier
                 .offset(y = liftOffset)
                 .fillMaxWidth()
-                .aspectRatio(1F),
+                .aspectRatio(1F)
+                .then(
+                    if (enabled) {
+                        Modifier.pointerHoverIcon(PointerIcon.Hand)
+                    } else {
+                        Modifier
+                    }
+                ),
             enabled = enabled,
             shape = shape,
             colors = CardDefaults.cardColors(containerColor = Color.Transparent),
