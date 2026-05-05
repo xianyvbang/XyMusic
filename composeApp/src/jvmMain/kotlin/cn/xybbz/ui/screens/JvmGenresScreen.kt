@@ -58,7 +58,7 @@ fun JvmGenresScreen(
             ) { index ->
                 genreLazyPagingItems[index]?.let { genre ->
                     MusicGenreCardComponent(
-                        onItem = { genre },
+                        genre = genre,
                         onRouter = {
                             navigator.navigate(GenreInfo(genre.itemId))
                         }

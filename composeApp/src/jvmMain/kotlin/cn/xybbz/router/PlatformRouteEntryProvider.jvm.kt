@@ -8,9 +8,6 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
-import cn.xybbz.ui.screens.AlbumInfoDesktopScreen
-import cn.xybbz.ui.screens.ArtistDesktopScreen
-import cn.xybbz.ui.screens.ArtistInfoDesktopScreen
 import cn.xybbz.ui.screens.CacheLimitScreen
 import cn.xybbz.ui.screens.ConnectionConfigInfoScreen
 import cn.xybbz.ui.screens.ConnectionManagement
@@ -18,9 +15,6 @@ import cn.xybbz.ui.screens.ConnectionScreen
 import cn.xybbz.ui.screens.CustomApiScreen
 import cn.xybbz.ui.screens.DailyRecommendScreen
 import cn.xybbz.ui.screens.DownloadScreen
-import cn.xybbz.ui.screens.FavoriteDesktopScreen
-import cn.xybbz.ui.screens.GenresInfoScreen
-import cn.xybbz.ui.screens.GenresScreen
 import cn.xybbz.ui.screens.HomeScreen
 import cn.xybbz.ui.screens.InterfaceSettingScreen
 import cn.xybbz.ui.screens.JvmAboutScreen
@@ -29,6 +23,7 @@ import cn.xybbz.ui.screens.JvmAlbumScreen
 import cn.xybbz.ui.screens.JvmArtistInfoScreen
 import cn.xybbz.ui.screens.JvmArtistScreen
 import cn.xybbz.ui.screens.JvmFavoriteScreen
+import cn.xybbz.ui.screens.JvmGenresInfoScreen
 import cn.xybbz.ui.screens.JvmGenresScreen
 import cn.xybbz.ui.screens.JvmMusicScreen
 import cn.xybbz.ui.screens.JvmSearchScreen
@@ -79,7 +74,7 @@ private val jvmDesktopEntryProvider2 = entryProvider {
     desktopNode<InterfaceSetting> { InterfaceSettingScreen() }
     desktopNode<LanguageConfig> { LanguageConfigScreen() }
     desktopNode<Genres> { JvmGenresScreen() }
-    desktopNode<GenreInfo> { GenresInfoScreen(genreId = it.genreId) }
+    desktopNode<GenreInfo> { JvmGenresInfoScreen(genreId = it.genreId) }
     desktopNode<About> { JvmAboutScreen() }
     desktopNode<CacheLimit> { CacheLimitScreen() }
     desktopNode<SelectLibrary> {
