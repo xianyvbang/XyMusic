@@ -27,3 +27,24 @@ val Migration_1_2 =  object : Migration(1, 2) {
     override fun migrate(connection: SQLiteConnection) {
     }
 }
+
+val Migration_4_5 = object : Migration(4, 5) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("ALTER TABLE HomeMusic ADD COLUMN runTimeTicks INTEGER NOT NULL DEFAULT 0")
+        connection.execSQL(
+            """
+            UPDATE HomeMusic
+            SET runTimeTicks = COALESCE(
+                (
+                    SELECT mi.runTimeTicks
+                    FROM xy_music mi
+                    WHERE mi.itemId = HomeMusic.musicId
+                    AND mi.connectionId = HomeMusic.connectionId
+                    LIMIT 1
+                ),
+                0
+            )
+            """.trimIndent()
+        )
+    }
+}

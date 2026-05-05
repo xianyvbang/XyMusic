@@ -88,6 +88,7 @@ interface XyMusicDao {
                         albumName = it.albumName,
                         codec = it.codec,
                         bitRate = it.bitRate,
+                        runTimeTicks = it.runTimeTicks,
                         index = index,
                         connectionId = connectionId
                     )

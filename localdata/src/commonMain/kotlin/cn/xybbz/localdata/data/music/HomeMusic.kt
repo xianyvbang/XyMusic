@@ -18,6 +18,7 @@
 
 package cn.xybbz.localdata.data.music
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.TypeConverters
@@ -30,6 +31,7 @@ import kotlin.time.Clock
  * @date 2025/05/19
  * @constructor 创建[HomeMusic]
  * @param [musicId] 音乐ID
+ * @param [runTimeTicks] 播放时长，单位毫秒
  * @param [cachedAt] 缓存时间
  */
 @Entity(
@@ -67,6 +69,11 @@ data class HomeMusic(
      * 比特率
      */
     val bitRate: Int? = 0,
+    /**
+     * 播放时长，单位毫秒
+     */
+    @ColumnInfo(defaultValue = "0")
+    val runTimeTicks: Long = 0,
     val connectionId: Long,
     val index:Int,
     val cachedAt: Long = Clock.System.now().toEpochMilliseconds()// 缓存时间戳（Clock.System.now().toEpochMilliseconds()）
@@ -83,6 +90,7 @@ data class HomeMusic(
             artists = artists,
             codec = codec,
             bitRate = bitRate,
+            runTimeTicks = runTimeTicks,
         )
     }
 }

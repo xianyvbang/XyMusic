@@ -10,6 +10,7 @@ internal const val DB_FILE_NAME = "appData.db"
  */
 fun getLocalRoomDatabase(contextWrapper: ContextWrapper): LocalDatabaseClient {
     return createDatabaseClientBuilder<LocalDatabaseClient>(DB_FILE_NAME, contextWrapper)
+        .addMigrations(Migration_4_5)
         .fallbackToDestructiveMigration(true)
         .build()
 }
