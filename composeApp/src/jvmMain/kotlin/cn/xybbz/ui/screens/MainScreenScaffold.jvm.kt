@@ -1,7 +1,6 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +29,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -44,7 +45,7 @@ import cn.xybbz.ui.components.DesktopWindowTitleBar
 import cn.xybbz.ui.components.JvmRightClickDropdownMenuComponent
 import cn.xybbz.ui.components.MusicPlaylistItemComponent
 import cn.xybbz.ui.components.show
-import cn.xybbz.ui.ext.debounceClickable
+import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyEdit
@@ -167,7 +168,9 @@ actual fun MainScreenScaffold(
                         } else {
                             items(playlists, key = { item -> item.itemId }) { playlist ->
                                 MusicPlaylistItemComponent(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .pointerHoverIcon(PointerIcon.Hand),
                                     name = playlist.name,
                                     subordination = "${playlist.musicCount}${songsCountSuffix}",
                                     imgUrl = playlist.pic,
@@ -215,8 +218,7 @@ private fun DesktopNavigationItem(
         modifier = Modifier
             .clip(RoundedCornerShape(XyTheme.dimens.corner))
             .background(backgroundColor)
-            .hoverable(interactionSource = interactionSource)
-            .debounceClickable(
+            .jvmHoverDebounceClickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick
