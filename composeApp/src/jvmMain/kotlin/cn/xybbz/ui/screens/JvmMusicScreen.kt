@@ -226,7 +226,6 @@ private fun MusicSelectTopBarComponent(
     selectControl: SelectControl,
     sortOrFilterContent: @Composable () -> Unit
 ) {
-    val navigator = LocalNavigator.current
 
     TopAppBarComponent(
         modifier = modifier,

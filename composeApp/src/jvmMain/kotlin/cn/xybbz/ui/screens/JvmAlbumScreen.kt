@@ -74,17 +74,6 @@ fun JvmAlbumScreen(
                 TopAppBarTitle(
                     title = stringResource(Res.string.album)
                 )
-            }, navigationIcon = {
-                IconButton(
-                    onClick = {
-                        navigator.goBack()
-                    },
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.arrow_back_24px),
-                        contentDescription = stringResource(Res.string.return_home)
-                    )
-                }
             }, actions = {
                 SelectSortBottomSheetComponent(
                     onIfSelectOneYear = { albumViewModel.dataSourceManager.dataSourceType?.ifAlbumSelectOneYear },
