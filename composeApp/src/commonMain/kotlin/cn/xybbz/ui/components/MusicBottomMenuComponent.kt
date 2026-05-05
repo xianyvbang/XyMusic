@@ -118,6 +118,7 @@ import xymusic_kmp.composeapp.generated.resources.duration
 import xymusic_kmp.composeapp.generated.resources.format
 import xymusic_kmp.composeapp.generated.resources.info_24px
 import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_right_24px
+import xymusic_kmp.composeapp.generated.resources.keyboard_double_arrow_right_24px
 import xymusic_kmp.composeapp.generated.resources.max_24_hours
 import xymusic_kmp.composeapp.generated.resources.media_source
 import xymusic_kmp.composeapp.generated.resources.minutes
@@ -373,7 +374,7 @@ fun MusicBottomMenuComponent(
 
                 item {
                     XyItemIcon(
-                        painter = painterResource(Res.drawable.keyboard_arrow_right_24px),
+                        painter = painterResource(Res.drawable.keyboard_double_arrow_right_24px),
                         text = stringResource(Res.string.skip_head_tail),
                         onClick = {
                             coroutineScope.launch {

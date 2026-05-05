@@ -69,7 +69,7 @@ fun XyDropdownMenu(
                 XyDropdownMenuItem(
                     text = data.title,
                     enabled = data.enabled,
-                    leadingIcon = data.leadingIcon,
+                    leadingIcon = if (data.showLeadingIcon) data.leadingIcon else null,
                     trailingIcon = data.trailingIcon,
                     onClick = {
                         if (hasSubMenu) {
@@ -129,4 +129,5 @@ data class MenuItemDefaultData(
     val subMenuOffset: DpOffset = DpOffset(180.dp, 0.dp),
     val colors: @Composable () -> MenuItemColors = { MenuDefaults.itemColors() },
     val backgroundColor: @Composable () -> Color = { Color.Transparent },
+    val showLeadingIcon: Boolean = true,
 )

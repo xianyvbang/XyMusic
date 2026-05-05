@@ -87,6 +87,7 @@ import xymusic_kmp.composeapp.generated.resources.skip_head_tail
 import xymusic_kmp.composeapp.generated.resources.song_info
 import xymusic_kmp.composeapp.generated.resources.speed_24px
 import xymusic_kmp.composeapp.generated.resources.timer_close
+import xymusic_kmp.composeapp.generated.resources.visibility_24px
 import kotlin.math.absoluteValue
 
 /**
@@ -278,6 +279,7 @@ private fun rememberSongRowContextMenuItems(
                 songContextMenuItem(
                     title = playlist.name,
                     iconRes = Res.drawable.playlist_add_24px,
+                    showLeadingIcon = false,
                     onClick = {
                         coroutineScope.launch {
                             musicBottomMenuViewModel.dataSourceManager.saveMusicPlaylist(
@@ -304,7 +306,7 @@ private fun rememberSongRowContextMenuItems(
         ),
         songContextMenuItem(
             title = "查看",
-            iconRes = Res.drawable.info_24px,
+            iconRes = Res.drawable.visibility_24px,
             trailingIconRes = Res.drawable.chevron_right_24px,
             dismissOnClick = false,
             subItems = listOf(
@@ -349,6 +351,7 @@ private fun songContextMenuItem(
     subItems: List<MenuItemDefaultData> = emptyList(),
     subMenuModifier: Modifier = Modifier,
     subMenuOffset: DpOffset = DpOffset(180.dp, 0.dp),
+    showLeadingIcon: Boolean = true,
     onClick: () -> Unit,
 ): MenuItemDefaultData {
     return MenuItemDefaultData(
@@ -359,6 +362,7 @@ private fun songContextMenuItem(
         subItems = subItems,
         subMenuModifier = subMenuModifier,
         subMenuOffset = subMenuOffset,
+        showLeadingIcon = showLeadingIcon,
         onClick = onClick,
     )
 }
