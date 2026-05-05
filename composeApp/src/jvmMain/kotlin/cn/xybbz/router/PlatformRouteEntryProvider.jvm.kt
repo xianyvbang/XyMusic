@@ -27,6 +27,7 @@ import cn.xybbz.ui.screens.JvmAboutScreen
 import cn.xybbz.ui.screens.JvmAlbumInfoScreen
 import cn.xybbz.ui.screens.JvmAlbumScreen
 import cn.xybbz.ui.screens.JvmArtistInfoScreen
+import cn.xybbz.ui.screens.JvmArtistScreen
 import cn.xybbz.ui.screens.JvmMusicScreen
 import cn.xybbz.ui.screens.JvmSearchScreen
 import cn.xybbz.ui.screens.JvmSettingScreen
@@ -64,7 +65,7 @@ private val jvmDesktopEntryProvider2 = entryProvider {
     desktopNode<Search> { JvmSearchScreen(searchQuery = it.searchQuery) }
     desktopNode<Music> { JvmMusicScreen() }
     desktopNode<Album> { JvmAlbumScreen() }
-    desktopNode<Artist> { ArtistDesktopScreen() }
+    desktopNode<Artist> { JvmArtistScreen() }
     desktopNode<FavoriteList> { FavoriteDesktopScreen() }
     desktopNode<AlbumInfo> { JvmAlbumInfoScreen(it.itemId, it.dataType) }
     desktopNode<ArtistInfo> { JvmArtistInfoScreen(it.artistId,it.artistName) }
