@@ -35,11 +35,11 @@ import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
+import cn.xybbz.ui.components.JvmVerticalGridListComponent
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.SelectSortBottomSheetComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
-import cn.xybbz.ui.components.VerticalGridListComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.AlbumViewModel
 import org.jetbrains.compose.resources.painterResource
@@ -121,7 +121,7 @@ fun JvmAlbumScreen(
                     albumViewModel.clearFilterOrSort { albumPageListItems.refresh() }
                 }
             })
-        VerticalGridListComponent(
+        JvmVerticalGridListComponent(
             modifier = Modifier.fillMaxSize(),
             collectAsLazyPagingItems = albumPageListItems
         ) {
