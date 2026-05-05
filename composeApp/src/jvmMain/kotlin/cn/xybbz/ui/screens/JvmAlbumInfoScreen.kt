@@ -480,6 +480,7 @@ fun JvmAlbumInfoScreen(
                         }
                     },
                     onOpenArtist = artistClickHandler::openMusicArtists,
+                    showViewAlbumMenuItem = false,
                     onOpenAlbum = { music ->
                         if (music.album.isNotBlank()) {
                             navigator.navigate(

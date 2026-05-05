@@ -155,6 +155,8 @@ internal fun SongRow(
         music.show()
     },
     onSelectionClick: (String) -> Unit = {},
+    showViewArtistMenuItem: Boolean = true,
+    showViewAlbumMenuItem: Boolean = true,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
@@ -165,6 +167,8 @@ internal fun SongRow(
         onPlay = onClick,
         onOpenAlbum = onOpenAlbum,
         onOpenArtist = onOpenArtist,
+        showViewArtistMenuItem = showViewArtistMenuItem,
+        showViewAlbumMenuItem = showViewAlbumMenuItem,
     )
 
     JvmRightClickDropdownMenuBox(
@@ -249,14 +253,36 @@ private fun rememberSongRowContextMenuItems(
     onPlay: () -> Unit,
     onOpenAlbum: () -> Unit,
     onOpenArtist: () -> Unit,
+    showViewArtistMenuItem: Boolean,
+    showViewAlbumMenuItem: Boolean,
     musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
     sidebarPlaylistViewModel: SidebarPlaylistViewModel = koinViewModel<SidebarPlaylistViewModel>(),
 ): List<MenuItemDefaultData> {
     val coroutineScope = rememberCoroutineScope()
     val playlists by sidebarPlaylistViewModel.playlists.collectAsStateWithLifecycle()
     val addToNextPlaySuccess = stringResource(Res.string.add_to_next_play_success)
+    val viewSubItems = listOfNotNull(
+        if (showViewArtistMenuItem) {
+            songContextMenuItem(
+                title = stringResource(Res.string.artist),
+                iconRes = Res.drawable.person_24px,
+                onClick = onOpenArtist,
+            )
+        } else {
+            null
+        },
+        if (showViewAlbumMenuItem) {
+            songContextMenuItem(
+                title = stringResource(Res.string.album),
+                iconRes = Res.drawable.album_24px,
+                onClick = onOpenAlbum,
+            )
+        } else {
+            null
+        },
+    )
 
-    return listOf(
+    return listOfNotNull(
         songContextMenuItem(
             title = stringResource(Res.string.playback),
             iconRes = Res.drawable.play_arrow_24px,
@@ -304,27 +330,20 @@ private fun rememberSongRowContextMenuItems(
             iconRes = Res.drawable.info_24px,
             onClick = { music.show(MusicBottomMenuInitialAction.SongInfo) },
         ),
-        songContextMenuItem(
-            title = "查看",
-            iconRes = Res.drawable.visibility_24px,
-            trailingIconRes = Res.drawable.chevron_right_24px,
-            dismissOnClick = false,
-            subItems = listOf(
-                songContextMenuItem(
-                    title = stringResource(Res.string.artist),
-                    iconRes = Res.drawable.person_24px,
-                    onClick = onOpenArtist,
-                ),
-                songContextMenuItem(
-                    title = stringResource(Res.string.album),
-                    iconRes = Res.drawable.album_24px,
-                    onClick = onOpenAlbum,
-                ),
-            ),
-            subMenuModifier = Modifier.width(180.dp),
-            subMenuOffset = DpOffset(220.dp, 0.dp),
-            onClick = {},
-        ),
+        if (viewSubItems.isNotEmpty()) {
+            songContextMenuItem(
+                title = "查看",
+                iconRes = Res.drawable.visibility_24px,
+                trailingIconRes = Res.drawable.chevron_right_24px,
+                dismissOnClick = false,
+                subItems = viewSubItems,
+                subMenuModifier = Modifier.width(180.dp),
+                subMenuOffset = DpOffset(220.dp, 0.dp),
+                onClick = {},
+            )
+        } else {
+            null
+        },
         songContextMenuItem(
             title = stringResource(Res.string.double_speed),
             iconRes = Res.drawable.speed_24px,

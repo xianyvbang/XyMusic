@@ -387,6 +387,7 @@ fun JvmArtistInfoScreen(
                                 }
                             },
                             onOpenArtist = artistClickHandler::openMusicArtists,
+                            showViewArtistMenuItem = false,
                             onOpenAlbum = { music ->
                                 if (music.album.isNotBlank()) {
                                     navigator.navigate(

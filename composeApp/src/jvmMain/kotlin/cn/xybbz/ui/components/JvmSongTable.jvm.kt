@@ -45,6 +45,8 @@ internal fun SongTable(
     },
     onMoreClick: (XyMusic) -> Unit = { music -> music.show() },
     onSelectionClick: (String) -> Unit = {},
+    showViewArtistMenuItem: Boolean = true,
+    showViewAlbumMenuItem: Boolean = true,
 ) {
     Column(modifier = androidx.compose.ui.Modifier.fillMaxWidth()) {
         SongTableHeader(columns = columns)
@@ -68,6 +70,8 @@ internal fun SongTable(
                 onAddToPlaylistClick = { onAddToPlaylistClick(music) },
                 onMoreClick = { onMoreClick(music) },
                 onSelectionClick = onSelectionClick,
+                showViewArtistMenuItem = showViewArtistMenuItem,
+                showViewAlbumMenuItem = showViewAlbumMenuItem,
             )
         }
     }
@@ -101,6 +105,8 @@ internal fun LazyListScope.songTableItems(
     },
     onMoreClick: (XyMusic) -> Unit = { music -> music.show() },
     onSelectionClick: (String) -> Unit = {},
+    showViewArtistMenuItem: Boolean = true,
+    showViewAlbumMenuItem: Boolean = true,
 ) {
     item(key = "${tableKey}_table_header") {
         SongTableHeader(columns = columns)
@@ -128,6 +134,8 @@ internal fun LazyListScope.songTableItems(
             onAddToPlaylistClick = { onAddToPlaylistClick(music) },
             onMoreClick = { onMoreClick(music) },
             onSelectionClick = onSelectionClick,
+            showViewArtistMenuItem = showViewArtistMenuItem,
+            showViewAlbumMenuItem = showViewAlbumMenuItem,
         )
     }
 }
@@ -160,6 +168,8 @@ internal fun LazyListScope.songTableItems(
     },
     onMoreClick: (XyMusic) -> Unit = { music -> music.show() },
     onSelectionClick: (String) -> Unit = {},
+    showViewArtistMenuItem: Boolean = true,
+    showViewAlbumMenuItem: Boolean = true,
 ) {
     item(key = "${tableKey}_table_header") {
         SongTableHeader(columns = columns)
@@ -189,6 +199,8 @@ internal fun LazyListScope.songTableItems(
                 onAddToPlaylistClick = { onAddToPlaylistClick(music) },
                 onMoreClick = { onMoreClick(music) },
                 onSelectionClick = onSelectionClick,
+                showViewArtistMenuItem = showViewArtistMenuItem,
+                showViewAlbumMenuItem = showViewAlbumMenuItem,
             )
         }
     }
