@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.style.TextAlign
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
@@ -15,67 +16,7 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.screens.desktopColors
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyRow
-import androidx.compose.ui.text.style.TextAlign
 
-/**
- * 非懒加载场景下的歌曲表格容器。
- * 供桌面原型页等直接使用整块表格的地方复用。
- */
-@Composable
-internal fun SongTable(
-    songs: List<XyMusic>,
-    columns: SongTableColumns = SongTableColumns(),
-    albumText: (XyMusic) -> String = ::defaultSongAlbumText,
-    metaText: (XyMusic) -> String = { "" },
-    durationText: (XyMusic) -> String = { DateUtil.millisecondsToTime(it.runTimeTicks) },
-    accentColor: (Int, XyMusic) -> androidx.compose.ui.graphics.Color = ::defaultSongAccentColor,
-    ifFavorite: (XyMusic) -> Boolean = { it.ifFavoriteStatus },
-    ifPlay: (XyMusic) -> Boolean = { false },
-    isSelected: (XyMusic) -> Boolean = { false },
-    onSongClick: (Int, XyMusic) -> Unit = { _, _ -> },
-    onOpenAlbum: (XyMusic) -> Unit = {},
-    onOpenArtist: (XyMusic) -> Unit = {},
-    onFavoriteClick: (XyMusic) -> Unit = {},
-    onDownloadClick: (XyMusic) -> Unit = {},
-    onAddToPlaylistClick: (XyMusic) -> Unit = { music ->
-        AddPlaylistBottomData(
-            ifShow = true,
-            musicInfoList = listOf(music.itemId),
-        ).show()
-    },
-    onMoreClick: (XyMusic) -> Unit = { music -> music.show() },
-    onSelectionClick: (String) -> Unit = {},
-    showViewArtistMenuItem: Boolean = true,
-    showViewAlbumMenuItem: Boolean = true,
-) {
-    Column(modifier = androidx.compose.ui.Modifier.fillMaxWidth()) {
-        SongTableHeader(columns = columns)
-        songs.forEachIndexed { index, music ->
-            SongRow(
-                music = music,
-                index = index,
-                columns = columns,
-                ifFavorite = ifFavorite(music),
-                ifPlay = ifPlay(music),
-                albumText = albumText(music),
-                metaText = metaText(music),
-                durationText = durationText(music),
-                accentColor = accentColor(index, music),
-                isSelected = isSelected(music),
-                onClick = { onSongClick(index, music) },
-                onOpenAlbum = { onOpenAlbum(music) },
-                onOpenArtist = { onOpenArtist(music) },
-                onFavoriteClick = { onFavoriteClick(music) },
-                onDownloadClick = { onDownloadClick(music) },
-                onAddToPlaylistClick = { onAddToPlaylistClick(music) },
-                onMoreClick = { onMoreClick(music) },
-                onSelectionClick = onSelectionClick,
-                showViewArtistMenuItem = showViewArtistMenuItem,
-                showViewAlbumMenuItem = showViewAlbumMenuItem,
-            )
-        }
-    }
-}
 
 /**
  * LazyListScope 版本的歌曲表格构建器。
