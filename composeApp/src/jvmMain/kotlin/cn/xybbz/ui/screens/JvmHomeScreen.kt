@@ -86,7 +86,7 @@ fun JvmHomeScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
         state = homeListState,
-        contentPadding = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
+        contentPadding = PaddingValues(/*horizontal = XyTheme.dimens.outerHorizontalPadding*/),
     ) {
         var hasPreviousSection = false
 
@@ -227,9 +227,9 @@ private fun LazyListScope.homeMusicSection(
     item(key = "${sectionKey}_header") {
         JvmHomeDesktopSectionHeader(title = title, action = headerAction)
     }
-    item(key = "${sectionKey}_header_spacing") {
+    /*item(key = "${sectionKey}_header_spacing") {
         Spacer(modifier = Modifier.height(6.dp))
-    }
+    }*/
     songTableItems(
         tableKey = sectionKey,
         songs = musicList,
@@ -297,7 +297,7 @@ private fun JvmHomeDesktopSectionHeader(
     title: String,
     action: @Composable (() -> Unit)? = null,
 ) {
-    XyRow(paddingValues = PaddingValues(vertical = XyTheme.dimens.outerVerticalPadding)) {
+    XyRow(paddingValues = PaddingValues(/*vertical = XyTheme.dimens.outerVerticalPadding*/)) {
         XyTextLarge(text = title)
         if (action != null) {
             action()
