@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.api.converter.jsonSerializer
 import cn.xybbz.api.state.Source
 import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.common.constants.Constants
@@ -32,13 +33,17 @@ import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.common.enums.DownloadTypes
 import cn.xybbz.common.enums.HomeRefreshReason
 import cn.xybbz.common.enums.LoginType
+import cn.xybbz.common.enums.getDownloadType
 import cn.xybbz.common.utils.DataRefreshEstimateUtils
 import cn.xybbz.common.utils.DataSourceChangeUtils
 import cn.xybbz.common.utils.Log
+import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.HomeDataRepository
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.recommender.DailyRecommender
+import cn.xybbz.download.DownloaderManager
+import cn.xybbz.download.core.DownloadRequest
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.download.enums.DownloadStatus
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
@@ -51,6 +56,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.add_download_list
 
 @KoinViewModel
 class HomeViewModel(
@@ -58,9 +65,10 @@ class HomeViewModel(
     private val downloadDb: DownloadDatabaseClient,
     val dataSourceManager: DataSourceManager,
     val musicPlayContext: MusicPlayContext,
-    private val musicController: MusicCommonController,
+    val musicController: MusicCommonController,
     private val dailyRecommender: DailyRecommender,
-    val homeDataRepository: HomeDataRepository
+    val homeDataRepository: HomeDataRepository,
+    private val downloaderManager: DownloaderManager,
 ) : ViewModel() {
 
     var isRefreshing by mutableStateOf(false)
@@ -77,6 +85,8 @@ class HomeViewModel(
      */
     var downloadCount by mutableIntStateOf(0)
         private set
+
+    val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
 
     /**
@@ -371,6 +381,31 @@ class HomeViewModel(
                 playMusicList,
                 playerModeEnum
             )
+        }
+    }
+
+    fun toggleFavorite(itemId: String) {
+        musicController.invokingOnFavorite(itemId)
+    }
+
+    fun downloadMusic(musicData: XyMusic) {
+        viewModelScope.launch {
+            val downloadTypes = getDownloadType(dataSourceManager.dataSourceType)
+            downloaderManager.enqueue(
+                DownloadRequest(
+                    url = musicData.downloadUrl,
+                    fileName = musicData.name + "." + musicData.container,
+                    fileSize = musicData.size ?: 0,
+                    uid = musicData.itemId,
+                    title = musicData.name,
+                    type = downloadTypes.toString(),
+                    cover = musicData.pic,
+                    duration = musicData.runTimeTicks,
+                    mediaLibraryId = dataSourceManager.getConnectionId().toString(),
+                    data = jsonSerializer.encodeToString(musicData),
+                )
+            )
+            MessageUtils.sendPopTip(Res.string.add_download_list)
         }
     }
 

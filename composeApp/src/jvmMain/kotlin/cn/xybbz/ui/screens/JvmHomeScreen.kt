@@ -34,6 +34,7 @@ import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
+import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyRow
@@ -70,6 +71,8 @@ fun JvmHomeScreen(
     val recentAlbumList by homeViewModel.homeDataRepository.recentAlbums.collectAsStateWithLifecycle()
     val mostPlayedAlbumList by homeViewModel.homeDataRepository.mostPlayedAlbums.collectAsStateWithLifecycle()
     val recommendedMusicList by homeViewModel.homeDataRepository.recommendedMusic.collectAsStateWithLifecycle()
+    val playbackState by homeViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val favoriteSet by homeViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val navigator = LocalNavigator.current
 
     // 首页歌曲表格里的艺术家文本和右键菜单共用同一套打开逻辑。
@@ -96,12 +99,20 @@ fun JvmHomeScreen(
                 title = dailyRecommendations,
                 musicList = recommendedMusicList,
                 navigator = navigator,
+                currentPlayingMusicId = playbackState.musicInfo?.itemId,
+                favoriteSet = favoriteSet,
                 onOpenArtist = artistClickHandler::openMusicArtists,
                 onSongClick = { _, music ->
                     homeViewModel.musicList(
                         onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
                         musicList = recommendedMusicList
                     )
+                },
+                onFavoriteClick = { music ->
+                    homeViewModel.toggleFavorite(music.itemId)
+                },
+                onDownloadClick = { music ->
+                    homeViewModel.downloadMusic(music)
                 },
                 headerAction = {
                     TextButton(
@@ -142,13 +153,21 @@ fun JvmHomeScreen(
                 title = recentlyPlayedMusic,
                 musicList = recentMusicList,
                 navigator = navigator,
+                currentPlayingMusicId = playbackState.musicInfo?.itemId,
+                favoriteSet = favoriteSet,
                 onOpenArtist = artistClickHandler::openMusicArtists,
                 onSongClick = { _, music ->
                     homeViewModel.musicList(
                         onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
                         musicList = recentMusicList
                     )
-                }
+                },
+                onFavoriteClick = { music ->
+                    homeViewModel.toggleFavorite(music.itemId)
+                },
+                onDownloadClick = { music ->
+                    homeViewModel.downloadMusic(music)
+                },
             )
             hasPreviousSection = true
         }
@@ -192,13 +211,21 @@ fun JvmHomeScreen(
                 title = mostPlayed,
                 musicList = mostPlayedMusicList,
                 navigator = navigator,
+                currentPlayingMusicId = playbackState.musicInfo?.itemId,
+                favoriteSet = favoriteSet,
                 onOpenArtist = artistClickHandler::openMusicArtists,
                 onSongClick = { _, music ->
                     homeViewModel.musicList(
                         onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
                         musicList = mostPlayedMusicList
                     )
-                }
+                },
+                onFavoriteClick = { music ->
+                    homeViewModel.toggleFavorite(music.itemId)
+                },
+                onDownloadClick = { music ->
+                    homeViewModel.downloadMusic(music)
+                },
             )
         }
     }
@@ -221,20 +248,23 @@ private fun LazyListScope.homeMusicSection(
     musicList: List<XyMusic>,
     onSongClick: (Int, XyMusic) -> Unit,
     navigator: Navigator,
+    currentPlayingMusicId: String?,
+    favoriteSet: List<String>,
     onOpenArtist: (XyMusic) -> Unit,
+    onFavoriteClick: (XyMusic) -> Unit,
+    onDownloadClick: (XyMusic) -> Unit,
     headerAction: @Composable (() -> Unit)? = null,
 ) {
     item(key = "${sectionKey}_header") {
         JvmHomeDesktopSectionHeader(title = title, action = headerAction)
     }
-    /*item(key = "${sectionKey}_header_spacing") {
-        Spacer(modifier = Modifier.height(6.dp))
-    }*/
+
     songTableItems(
         tableKey = sectionKey,
         songs = musicList,
         columns = HomeMusicTableColumns,
-        ifPlay = { false },
+        ifFavorite = { music -> music.itemId in favoriteSet },
+        ifPlay = { music -> music.itemId == currentPlayingMusicId },
         isSelected = { false },
         onSongClick = onSongClick,
         onOpenAlbum = { music ->
@@ -243,8 +273,9 @@ private fun LazyListScope.homeMusicSection(
             }
         },
         onOpenArtist = onOpenArtist,
-        onFavoriteClick = {},
-        onDownloadClick = {},
+        onFavoriteClick = onFavoriteClick,
+        onDownloadClick = onDownloadClick,
+        onMoreClick = { music -> music.show() },
         onSelectionClick = {},
     )
 }
