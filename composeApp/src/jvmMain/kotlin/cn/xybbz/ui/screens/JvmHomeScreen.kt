@@ -234,6 +234,8 @@ private fun LazyListScope.homeMusicSection(
         tableKey = sectionKey,
         songs = musicList,
         columns = HomeMusicTableColumns,
+        ifPlay = { false },
+        isSelected = { false },
         onSongClick = onSongClick,
         onOpenAlbum = { music ->
             if (music.album.isNotBlank()) {
@@ -241,6 +243,9 @@ private fun LazyListScope.homeMusicSection(
             }
         },
         onOpenArtist = onOpenArtist,
+        onFavoriteClick = {},
+        onDownloadClick = {},
+        onSelectionClick = {},
     )
 }
 

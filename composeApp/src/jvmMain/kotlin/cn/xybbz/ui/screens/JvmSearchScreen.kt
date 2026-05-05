@@ -220,6 +220,7 @@ fun JvmSearchResultScreen(
                 columns = SearchMusicTableColumns,
                 ifFavorite = { music -> music.itemId in onFavoriteList() },
                 ifPlay = { music -> music.itemId == currentPlayingMusicId },
+                isSelected = { false },
                 onSongClick = { _, music -> onAddMusic(music) },
                 onOpenAlbum = { music ->
                     if (music.album.isNotBlank()) {
@@ -236,6 +237,7 @@ fun JvmSearchResultScreen(
                     musicController.invokingOnFavorite(music.itemId)
                 },
                 onDownloadClick = {},
+                onSelectionClick = {},
             )
         }
     }

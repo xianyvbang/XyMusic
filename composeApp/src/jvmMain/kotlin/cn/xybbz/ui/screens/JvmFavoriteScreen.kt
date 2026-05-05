@@ -84,6 +84,7 @@ fun JvmFavoriteScreen(
                 columns = JvmFavoriteMusicTableColumns,
                 ifFavorite = { music -> favoriteList.contains(music.itemId) },
                 ifPlay = { music -> playbackState.musicInfo?.itemId == music.itemId },
+                isSelected = { false },
                 onSongClick = { index, music ->
                     favoriteViewModel.musicPlayContext.favorite(
                         OnMusicPlayParameter(
@@ -113,6 +114,7 @@ fun JvmFavoriteScreen(
                         favoriteViewModel.getMusicInfo(music.itemId)?.show()
                     }
                 },
+                onSelectionClick = {},
             )
         }
     }

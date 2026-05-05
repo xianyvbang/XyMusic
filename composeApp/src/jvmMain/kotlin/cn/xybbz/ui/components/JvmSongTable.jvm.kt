@@ -31,13 +31,13 @@ internal fun LazyListScope.songTableItems(
     durationText: (XyMusic) -> String = { DateUtil.millisecondsToTime(it.runTimeTicks) },
     accentColor: (Int, XyMusic) -> androidx.compose.ui.graphics.Color = ::defaultSongAccentColor,
     ifFavorite: (XyMusic) -> Boolean = { it.ifFavoriteStatus },
-    ifPlay: (XyMusic) -> Boolean = { false },
-    isSelected: (XyMusic) -> Boolean = { false },
-    onSongClick: (Int, XyMusic) -> Unit = { _, _ -> },
-    onOpenAlbum: (XyMusic) -> Unit = {},
-    onOpenArtist: (XyMusic) -> Unit = {},
-    onFavoriteClick: (XyMusic) -> Unit = {},
-    onDownloadClick: (XyMusic) -> Unit = {},
+    ifPlay: (XyMusic) -> Boolean,
+    isSelected: (XyMusic) -> Boolean,
+    onSongClick: (Int, XyMusic) -> Unit,
+    onOpenAlbum: (XyMusic) -> Unit,
+    onOpenArtist: (XyMusic) -> Unit,
+    onFavoriteClick: (XyMusic) -> Unit,
+    onDownloadClick: (XyMusic) -> Unit,
     onAddToPlaylistClick: (XyMusic) -> Unit = { music ->
         AddPlaylistBottomData(
             ifShow = true,
@@ -45,7 +45,7 @@ internal fun LazyListScope.songTableItems(
         ).show()
     },
     onMoreClick: (XyMusic) -> Unit = { music -> music.show() },
-    onSelectionClick: (String) -> Unit = {},
+    onSelectionClick: (String) -> Unit,
     showViewArtistMenuItem: Boolean = true,
     showViewAlbumMenuItem: Boolean = true,
 ) {
@@ -94,13 +94,13 @@ internal fun LazyListScope.songTableItems(
     durationText: (XyMusic) -> String = { DateUtil.millisecondsToTime(it.runTimeTicks) },
     accentColor: (Int, XyMusic) -> androidx.compose.ui.graphics.Color = ::defaultSongAccentColor,
     ifFavorite: (XyMusic) -> Boolean = { it.ifFavoriteStatus },
-    ifPlay: (XyMusic) -> Boolean = { false },
-    isSelected: (XyMusic) -> Boolean = { false },
-    onSongClick: (Int, XyMusic) -> Unit = { _, _ -> },
-    onOpenAlbum: (XyMusic) -> Unit = {},
-    onOpenArtist: (XyMusic) -> Unit = {},
-    onFavoriteClick: (XyMusic) -> Unit = {},
-    onDownloadClick: (XyMusic) -> Unit = {},
+    ifPlay: (XyMusic) -> Boolean,
+    isSelected: (XyMusic) -> Boolean,
+    onSongClick: (Int, XyMusic) -> Unit,
+    onOpenAlbum: (XyMusic) -> Unit,
+    onOpenArtist: (XyMusic) -> Unit,
+    onFavoriteClick: (XyMusic) -> Unit,
+    onDownloadClick: (XyMusic) -> Unit,
     onAddToPlaylistClick: (XyMusic) -> Unit = { music ->
         AddPlaylistBottomData(
             ifShow = true,
@@ -108,7 +108,7 @@ internal fun LazyListScope.songTableItems(
         ).show()
     },
     onMoreClick: (XyMusic) -> Unit = { music -> music.show() },
-    onSelectionClick: (String) -> Unit = {},
+    onSelectionClick: (String) -> Unit,
     showViewArtistMenuItem: Boolean = true,
     showViewAlbumMenuItem: Boolean = true,
 ) {
