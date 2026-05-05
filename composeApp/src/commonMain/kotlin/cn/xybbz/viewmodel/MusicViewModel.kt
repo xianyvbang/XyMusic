@@ -63,6 +63,7 @@ class MusicViewModel(
     }
 
     override suspend fun updateDataSourceRemoteKey() {
-        dataSourceManager.updateDataSourceRemoteKey(RemoteIdConstants.MUSIC)
+        val remoteId = RemoteIdConstants.MUSIC
+        dataSourceManager.updateDataSourceRemoteKey(remoteId)
     }
 }

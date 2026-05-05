@@ -46,7 +46,9 @@ class AlbumViewModel (
     }
 
     override suspend fun updateDataSourceRemoteKey() {
-        dataSourceManager.updateDataSourceRemoteKey(RemoteIdConstants.ALBUM)
+        val remoteId = RemoteIdConstants.ALBUM +
+                dataSourceManager.dataSourceType
+        dataSourceManager.updateDataSourceRemoteKey(remoteId)
     }
 
 }

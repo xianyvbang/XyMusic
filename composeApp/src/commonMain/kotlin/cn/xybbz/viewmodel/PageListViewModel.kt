@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 
@@ -47,22 +48,13 @@ abstract class PageListViewModel<T : Any>(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val listPage: Flow<PagingData<T>> =
-        dataSourceManager.mergeFlow
-            .flatMapLatest {
-                getFlowPageData(
-                    sortBy.value
-                )
+        combine(dataSourceManager.mergeFlow, sortBy) { _, sort ->
+            sort
+        }
+            .flatMapLatest { sort ->
+                getFlowPageData(sort)
             }
             .cachedIn(viewModelScope)
-
-    /*@OptIn(ExperimentalCoroutinesApi::class)
-    val listPage: Flow<PagingData<T>> =
-        dataSourceManager.loginStateFlow
-            .flatMapLatest {
-                Log.i("music数据变化","${sortBy.value.sortType}")
-                getFlowPageData(sortBy)
-            }
-            .cachedIn(viewModelScope)*/ // 只调用一次
 
 
     /**
@@ -106,7 +98,6 @@ abstract class PageListViewModel<T : Any>(
         this._sortType.update {
             sort
         }
-//        refreshPage()
     }
 
     /**
