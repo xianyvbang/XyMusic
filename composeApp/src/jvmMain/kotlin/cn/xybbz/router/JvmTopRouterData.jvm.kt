@@ -8,14 +8,12 @@ import xymusic_kmp.composeapp.generated.resources.album
 import xymusic_kmp.composeapp.generated.resources.all_music
 import xymusic_kmp.composeapp.generated.resources.favorite_border_24px
 import xymusic_kmp.composeapp.generated.resources.favorite
+import xymusic_kmp.composeapp.generated.resources.genres
 import xymusic_kmp.composeapp.generated.resources.home
-import xymusic_kmp.composeapp.generated.resources.menu_open_24px
-import xymusic_kmp.composeapp.generated.resources.music_library
+import xymusic_kmp.composeapp.generated.resources.label_24px
 import xymusic_kmp.composeapp.generated.resources.person_24px
 import xymusic_kmp.composeapp.generated.resources.artist
 import xymusic_kmp.composeapp.generated.resources.music_note_24px
-import xymusic_kmp.composeapp.generated.resources.search
-import xymusic_kmp.composeapp.generated.resources.search_24px
 
 data class JvmTopRouterData(
     val title: StringResource,
@@ -48,5 +46,10 @@ val jvmTopRouterDataList = listOf(
         title = Res.string.favorite,
         icon = Res.drawable.favorite_border_24px,
         route = FavoriteList
+    ),
+    JvmTopRouterData(
+        title = Res.string.genres,
+        icon = Res.drawable.label_24px,
+        route = Genres
     )
 )

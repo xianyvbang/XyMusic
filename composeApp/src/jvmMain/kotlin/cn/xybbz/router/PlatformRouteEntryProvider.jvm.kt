@@ -29,6 +29,7 @@ import cn.xybbz.ui.screens.JvmAlbumScreen
 import cn.xybbz.ui.screens.JvmArtistInfoScreen
 import cn.xybbz.ui.screens.JvmArtistScreen
 import cn.xybbz.ui.screens.JvmFavoriteScreen
+import cn.xybbz.ui.screens.JvmGenresScreen
 import cn.xybbz.ui.screens.JvmMusicScreen
 import cn.xybbz.ui.screens.JvmSearchScreen
 import cn.xybbz.ui.screens.JvmSettingScreen
@@ -77,7 +78,7 @@ private val jvmDesktopEntryProvider2 = entryProvider {
     desktopNode<MemoryManagement> { MemoryManagementScreen() }
     desktopNode<InterfaceSetting> { InterfaceSettingScreen() }
     desktopNode<LanguageConfig> { LanguageConfigScreen() }
-    desktopNode<Genres> { GenresScreen() }
+    desktopNode<Genres> { JvmGenresScreen() }
     desktopNode<GenreInfo> { GenresInfoScreen(genreId = it.genreId) }
     desktopNode<About> { JvmAboutScreen() }
     desktopNode<CacheLimit> { CacheLimitScreen() }

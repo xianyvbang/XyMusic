@@ -10,8 +10,8 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.router.GenreInfo
+import cn.xybbz.ui.components.JvmVerticalGridListComponent
 import cn.xybbz.ui.components.MusicGenreCardComponent
-import cn.xybbz.ui.components.SwipeRefreshVerticalGridListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.ext.composeClick
@@ -44,17 +44,10 @@ fun JvmGenresScreen(
                 TopAppBarTitle(
                     title = stringResource(Res.string.genres)
                 )
-            }, navigationIcon = {
-                IconButton(onClick = composeClick { navigator.goBack() }) {
-                    Icon(
-                        painter = painterResource(Res.drawable.arrow_back_24px),
-                        contentDescription = stringResource(Res.string.return_home)
-                    )
-                }
             })
 
 
-        SwipeRefreshVerticalGridListComponent(
+        JvmVerticalGridListComponent(
             modifier = Modifier.fillMaxSize(),
             collectAsLazyPagingItems = genreLazyPagingItems,
         ) {
@@ -66,7 +59,6 @@ fun JvmGenresScreen(
                 genreLazyPagingItems[index]?.let { genre ->
                     MusicGenreCardComponent(
                         onItem = { genre },
-                        enabled = !it,
                         onRouter = {
                             navigator.navigate(GenreInfo(genre.itemId))
                         }

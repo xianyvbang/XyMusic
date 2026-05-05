@@ -15,8 +15,8 @@ import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
+import cn.xybbz.ui.components.JvmVerticalGridListComponent
 import cn.xybbz.ui.components.MusicAlbumCardComponent
-import cn.xybbz.ui.components.SwipeRefreshVerticalGridListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.GenresInfoViewModel
@@ -68,7 +68,7 @@ fun JvmGenresInfoScreen(
             }
         )
 
-        SwipeRefreshVerticalGridListComponent(
+        JvmVerticalGridListComponent(
             modifier = Modifier,
             collectAsLazyPagingItems = albumListPage,
         ) {
