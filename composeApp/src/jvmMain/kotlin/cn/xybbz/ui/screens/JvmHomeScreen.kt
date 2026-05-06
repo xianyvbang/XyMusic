@@ -265,7 +265,6 @@ private fun LazyListScope.homeMusicSection(
         columns = HomeMusicTableColumns,
         ifFavorite = { music -> music.itemId in favoriteSet },
         ifPlay = { music -> music.itemId == currentPlayingMusicId },
-        isSelected = { false },
         onSongClick = onSongClick,
         onOpenAlbum = { music ->
             if (music.album.isNotBlank()) {
@@ -276,7 +275,6 @@ private fun LazyListScope.homeMusicSection(
         onFavoriteClick = onFavoriteClick,
         onDownloadClick = onDownloadClick,
         onMoreClick = { music -> music.show() },
-        onSelectionClick = {},
     )
 }
 

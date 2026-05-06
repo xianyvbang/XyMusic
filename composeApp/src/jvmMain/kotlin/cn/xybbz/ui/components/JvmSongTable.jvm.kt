@@ -32,7 +32,7 @@ internal fun LazyListScope.songTableItems(
     accentColor: (Int, XyMusic) -> androidx.compose.ui.graphics.Color = ::defaultSongAccentColor,
     ifFavorite: (XyMusic) -> Boolean = { it.ifFavoriteStatus },
     ifPlay: (XyMusic) -> Boolean,
-    isSelected: (XyMusic) -> Boolean,
+    isSelected: (XyMusic) -> Boolean = {false},
     onSongClick: (Int, XyMusic) -> Unit,
     onOpenAlbum: (XyMusic) -> Unit,
     onOpenArtist: (XyMusic) -> Unit,
@@ -45,7 +45,7 @@ internal fun LazyListScope.songTableItems(
         ).show()
     },
     onMoreClick: (XyMusic) -> Unit = { music -> music.show() },
-    onSelectionClick: (String) -> Unit,
+    onSelectionClick: (String) -> Unit = {},
     showViewArtistMenuItem: Boolean = true,
     showViewAlbumMenuItem: Boolean = true,
 ) {
