@@ -83,150 +83,113 @@ fun JvmHomeScreen(
     val recentlyPlayedAlbums = stringResource(Res.string.recently_played_albums)
     val mostPlayed = stringResource(Res.string.most_played)
     val viewMore = stringResource(Res.string.view_more)
+    // 将首页音乐分区共用的状态和事件收束到同一个作用域，避免每个 homeMusicSection 重复传参。
+    val homeMusicSectionScope = HomeMusicSectionScope(
+        homeViewModel = homeViewModel,
+        navigator = navigator,
+        onOpenArtist = artistClickHandler::openMusicArtists,
+        currentPlayingMusicId = playbackState.musicInfo?.itemId,
+        favoriteMusicIds = favoriteSet,
+    )
 
     ScreenLazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
         state = homeListState,
-        contentPadding = PaddingValues(/*horizontal = XyTheme.dimens.outerHorizontalPadding*/),
+        contentPadding = PaddingValues(),
     ) {
-        var hasPreviousSection = false
+        // 让 LazyListScope 同时拥有 HomeMusicSectionScope 的上下文，下面可直接调用统一封装后的 homeMusicSection。
+        with(homeMusicSectionScope) {
+            var hasPreviousSection = false
 
-        if (recommendedMusicList.isNotEmpty()) {
-            homeMusicSection(
-                sectionKey = "recommended_music",
-                title = dailyRecommendations,
-                musicList = recommendedMusicList,
-                navigator = navigator,
-                currentPlayingMusicId = playbackState.musicInfo?.itemId,
-                favoriteSet = favoriteSet,
-                onOpenArtist = artistClickHandler::openMusicArtists,
-                onSongClick = { _, music ->
-                    homeViewModel.musicList(
-                        onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
-                        musicList = recommendedMusicList
-                    )
-                },
-                onFavoriteClick = { music ->
-                    homeViewModel.toggleFavorite(music.itemId)
-                },
-                onDownloadClick = { music ->
-                    homeViewModel.downloadMusic(music)
-                },
-                headerAction = {
-                    TextButton(
-                        modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
-                        onClick = { navigator.navigate(DailyRecommend) },
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        XyText(
-                            text = viewMore,
-                        )
+            if (recommendedMusicList.isNotEmpty()) {
+                homeMusicSection(
+                    sectionKey = "recommended_music",
+                    title = dailyRecommendations,
+                    musicList = recommendedMusicList,
+                    headerAction = {
+                        TextButton(
+                            modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
+                            onClick = { navigator.navigate(DailyRecommend) },
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            XyText(
+                                text = viewMore,
+                            )
+                        }
                     }
+                )
+                hasPreviousSection = true
+            }
+
+            if (newestAlbumList.isNotEmpty()) {
+                if (hasPreviousSection) {
+                    homeSectionSpacing(sectionKey = "latest_album")
                 }
-            )
-            hasPreviousSection = true
-        }
-
-        if (newestAlbumList.isNotEmpty()) {
-            if (hasPreviousSection) {
-                homeSectionSpacing(sectionKey = "latest_album")
+                homeAlbumSection(
+                    sectionKey = "latest_album",
+                    title = latestAlbums,
+                    albumList = newestAlbumList,
+                    onOpenAlbum = { album ->
+                        navigator.navigate(AlbumInfo(album.itemId, MusicDataTypeEnum.ALBUM))
+                    }
+                )
+                hasPreviousSection = true
             }
-            homeAlbumSection(
-                sectionKey = "latest_album",
-                title = latestAlbums,
-                albumList = newestAlbumList,
-                onOpenAlbum = { album ->
-                    navigator.navigate(AlbumInfo(album.itemId, MusicDataTypeEnum.ALBUM))
+
+            if (recentMusicList.isNotEmpty()) {
+                if (hasPreviousSection) {
+                    homeSectionSpacing(sectionKey = "recent_music")
                 }
-            )
-            hasPreviousSection = true
-        }
-
-        if (recentMusicList.isNotEmpty()) {
-            if (hasPreviousSection) {
-                homeSectionSpacing(sectionKey = "recent_music")
+                homeMusicSection(
+                    sectionKey = "recent_music",
+                    title = recentlyPlayedMusic,
+                    musicList = recentMusicList,
+                )
+                hasPreviousSection = true
             }
-            homeMusicSection(
-                sectionKey = "recent_music",
-                title = recentlyPlayedMusic,
-                musicList = recentMusicList,
-                navigator = navigator,
-                currentPlayingMusicId = playbackState.musicInfo?.itemId,
-                favoriteSet = favoriteSet,
-                onOpenArtist = artistClickHandler::openMusicArtists,
-                onSongClick = { _, music ->
-                    homeViewModel.musicList(
-                        onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
-                        musicList = recentMusicList
-                    )
-                },
-                onFavoriteClick = { music ->
-                    homeViewModel.toggleFavorite(music.itemId)
-                },
-                onDownloadClick = { music ->
-                    homeViewModel.downloadMusic(music)
-                },
-            )
-            hasPreviousSection = true
-        }
 
-        if (recentAlbumList.isNotEmpty()) {
-            if (hasPreviousSection) {
-                homeSectionSpacing(sectionKey = "recent_album")
-            }
-            homeAlbumSection(
-                sectionKey = "recent_album",
-                title = recentlyPlayedAlbums,
-                albumList = recentAlbumList,
-                onOpenAlbum = { album ->
-                    navigator.navigate(AlbumInfo(album.itemId, MusicDataTypeEnum.ALBUM))
+            if (recentAlbumList.isNotEmpty()) {
+                if (hasPreviousSection) {
+                    homeSectionSpacing(sectionKey = "recent_album")
                 }
-            )
-            hasPreviousSection = true
-        }
-
-        if (mostPlayedAlbumList.isNotEmpty()) {
-            if (hasPreviousSection) {
-                homeSectionSpacing(sectionKey = "most_played_album")
+                homeAlbumSection(
+                    sectionKey = "recent_album",
+                    title = recentlyPlayedAlbums,
+                    albumList = recentAlbumList,
+                    onOpenAlbum = { album ->
+                        navigator.navigate(AlbumInfo(album.itemId, MusicDataTypeEnum.ALBUM))
+                    }
+                )
+                hasPreviousSection = true
             }
-            homeAlbumSection(
-                sectionKey = "most_played_album",
-                title = mostPlayed,
-                albumList = mostPlayedAlbumList,
-                onOpenAlbum = { album ->
-                    navigator.navigate(AlbumInfo(album.itemId, MusicDataTypeEnum.ALBUM))
+
+            if (mostPlayedAlbumList.isNotEmpty()) {
+                if (hasPreviousSection) {
+                    homeSectionSpacing(sectionKey = "most_played_album")
                 }
-            )
-            hasPreviousSection = true
-        }
-
-        if (mostPlayedMusicList.isNotEmpty()) {
-            if (hasPreviousSection) {
-                homeSectionSpacing(sectionKey = "most_played_music")
+                homeAlbumSection(
+                    sectionKey = "most_played_album",
+                    title = mostPlayed,
+                    albumList = mostPlayedAlbumList,
+                    onOpenAlbum = { album ->
+                        navigator.navigate(AlbumInfo(album.itemId, MusicDataTypeEnum.ALBUM))
+                    }
+                )
+                hasPreviousSection = true
             }
-            homeMusicSection(
-                sectionKey = "most_played_music",
-                title = mostPlayed,
-                musicList = mostPlayedMusicList,
-                navigator = navigator,
-                currentPlayingMusicId = playbackState.musicInfo?.itemId,
-                favoriteSet = favoriteSet,
-                onOpenArtist = artistClickHandler::openMusicArtists,
-                onSongClick = { _, music ->
-                    homeViewModel.musicList(
-                        onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
-                        musicList = mostPlayedMusicList
-                    )
-                },
-                onFavoriteClick = { music ->
-                    homeViewModel.toggleFavorite(music.itemId)
-                },
-                onDownloadClick = { music ->
-                    homeViewModel.downloadMusic(music)
-                },
-            )
+
+            if (mostPlayedMusicList.isNotEmpty()) {
+                if (hasPreviousSection) {
+                    homeSectionSpacing(sectionKey = "most_played_music")
+                }
+                homeMusicSection(
+                    sectionKey = "most_played_music",
+                    title = mostPlayed,
+                    musicList = mostPlayedMusicList,
+                )
+            }
         }
     }
 }
@@ -242,40 +205,78 @@ private fun HomeSectionSpacing() {
     Spacer(modifier = Modifier.height(20.dp))
 }
 
-private fun LazyListScope.homeMusicSection(
-    sectionKey: String,
-    title: String,
-    musicList: List<XyMusic>,
-    onSongClick: (Int, XyMusic) -> Unit,
-    navigator: Navigator,
-    currentPlayingMusicId: String?,
-    favoriteSet: List<String>,
-    onOpenArtist: (XyMusic) -> Unit,
-    onFavoriteClick: (XyMusic) -> Unit,
-    onDownloadClick: (XyMusic) -> Unit,
-    headerAction: @Composable (() -> Unit)? = null,
+/**
+ * 首页音乐分区构建作用域。
+ *
+ * 这里集中保存各个 homeMusicSection 都会用到的页面级依赖和状态，
+ * 调用处只需要关心当前分区的 key、标题、音乐列表和少量自定义头部动作。
+ *
+ * @property homeViewModel 首页 ViewModel，统一处理播放列表、收藏切换和下载。
+ * @property navigator 页面导航器，统一处理专辑详情等页面跳转。
+ * @property onOpenArtist 艺人打开回调，统一复用艺术家文本和右键菜单的打开逻辑。
+ * @property currentPlayingMusicId 当前正在播放的歌曲 ID，用于标记表格中的播放行。
+ * @property favoriteMusicIds 已收藏歌曲 ID 列表，用于标记表格中的收藏状态。
+ */
+private class HomeMusicSectionScope(
+    private val homeViewModel: HomeViewModel,
+    private val navigator: Navigator,
+    private val onOpenArtist: (XyMusic) -> Unit,
+    private val currentPlayingMusicId: String?,
+    private val favoriteMusicIds: List<String>,
 ) {
-    item(key = "${sectionKey}_header") {
-        JvmHomeDesktopSectionHeader(title = title, action = headerAction)
-    }
+    /**
+     * 构建首页中的歌曲分区。
+     *
+     * 该方法统一封装歌曲表格的播放、收藏、下载、专辑跳转、艺人打开和更多菜单逻辑，
+     * 避免每个首页音乐分区重复实现同一套 songTableItems 参数。
+     */
+    fun LazyListScope.homeMusicSection(
+        sectionKey: String,
+        title: String,
+        musicList: List<XyMusic>,
+        headerAction: @Composable (() -> Unit)? = null,
+    ) {
+        // 每个分区先添加独立 header，headerAction 用于推荐歌曲的“查看更多”等差异化按钮。
+        item(key = "${sectionKey}_header") {
+            JvmHomeDesktopSectionHeader(title = title, action = headerAction)
+        }
 
-    songTableItems(
-        tableKey = sectionKey,
-        songs = musicList,
-        columns = HomeMusicTableColumns,
-        ifFavorite = { music -> music.itemId in favoriteSet },
-        ifPlay = { music -> music.itemId == currentPlayingMusicId },
-        onSongClick = onSongClick,
-        onOpenAlbum = { music ->
-            if (music.album.isNotBlank()) {
-                navigator.navigate(AlbumInfo(music.album, MusicDataTypeEnum.ALBUM))
-            }
-        },
-        onOpenArtist = onOpenArtist,
-        onFavoriteClick = onFavoriteClick,
-        onDownloadClick = onDownloadClick,
-        onMoreClick = { music -> music.show() },
-    )
+        // 歌曲表格的通用行为集中在这里，调用处只需要传入当前分区自己的 musicList。
+        songTableItems(
+            tableKey = sectionKey,
+            songs = musicList,
+            columns = HomeMusicTableColumns,
+            // 根据全局收藏列表判断当前行是否收藏。
+            ifFavorite = { music -> music.itemId in favoriteMusicIds },
+            // 根据播放器状态判断当前行是否正在播放。
+            ifPlay = { music -> music.itemId == currentPlayingMusicId },
+            onSongClick = { _, music ->
+                // 点击任意歌曲时，使用当前分区的完整列表作为播放队列。
+                homeViewModel.musicList(
+                    onMusicPlayParameter = OnMusicPlayParameter(musicId = music.itemId),
+                    musicList = musicList,
+                )
+            },
+            onOpenAlbum = { music ->
+                // 只有存在专辑 ID 时才打开专辑详情，避免空 ID 触发无效导航。
+                if (music.album.isNotBlank()) {
+                    navigator.navigate(AlbumInfo(music.album, MusicDataTypeEnum.ALBUM))
+                }
+            },
+            // 艺人打开逻辑由外部统一传入，保证文本点击和菜单点击行为一致。
+            onOpenArtist = onOpenArtist,
+            onFavoriteClick = { music ->
+                // 收藏按钮统一调用首页 ViewModel，避免各分区重复实现。
+                homeViewModel.toggleFavorite(music.itemId)
+            },
+            onDownloadClick = { music ->
+                // 下载按钮统一调用首页 ViewModel，下载参数由 ViewModel 内部补齐。
+                homeViewModel.downloadMusic(music)
+            },
+            // 更多菜单沿用歌曲实体已有的弹出菜单能力。
+            onMoreClick = { music -> music.show() },
+        )
+    }
 }
 
 private fun LazyListScope.homeAlbumSection(
