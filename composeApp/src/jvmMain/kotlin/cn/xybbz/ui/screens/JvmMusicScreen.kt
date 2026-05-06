@@ -43,6 +43,7 @@ import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.XySelectAllComponent
+import cn.xybbz.ui.components.rememberJvmSongDownloadClickHandler
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
@@ -80,6 +81,7 @@ fun JvmMusicScreen(
     val mainViewModel = LocalMainViewModel.current
     val navigator = LocalNavigator.current
     val artistClickHandler = rememberMusicArtistClickHandler()
+    val songDownloadClickHandler = rememberJvmSongDownloadClickHandler()
     val homeMusicPager = musicViewModel.listPage.collectAsLazyPagingItems()
     val favoriteSet by musicViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val sortBy by musicViewModel.sortBy.collectAsStateWithLifecycle()
@@ -197,7 +199,7 @@ fun JvmMusicScreen(
                 onFavoriteClick = { music ->
                     musicViewModel.musicController.invokingOnFavorite(music.itemId)
                 },
-                onDownloadClick = {},
+                onDownloadClick = songDownloadClickHandler,
                 onMoreClick = { music ->
                     coroutineScope.launch {
                         musicViewModel.getMusicInfoById(music.itemId)?.show()

@@ -54,6 +54,7 @@ import cn.xybbz.ui.components.MusicArtistCardComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.TopAppBarTitle
+import cn.xybbz.ui.components.rememberJvmSongDownloadClickHandler
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.theme.XyTheme
@@ -156,6 +157,7 @@ fun JvmSearchResultScreen(
 
     // 搜索结果中的艺术家卡片和歌曲行艺术家入口统一走这里。
     val artistClickHandler = rememberMusicArtistClickHandler()
+    val songDownloadClickHandler = rememberJvmSongDownloadClickHandler()
 
     val lazyListState = rememberLazyListState()
 
@@ -227,7 +229,6 @@ fun JvmSearchResultScreen(
                 columns = SearchMusicTableColumns,
                 ifFavorite = { music -> music.itemId in onFavoriteList() },
                 currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
-                isSelected = { false },
                 onSongClick = { _, music -> onAddMusic(music) },
                 onOpenAlbum = { music ->
                     if (music.album.isNotBlank()) {
@@ -243,8 +244,7 @@ fun JvmSearchResultScreen(
                 onFavoriteClick = { music ->
                     musicController.invokingOnFavorite(music.itemId)
                 },
-                onDownloadClick = {},
-                onSelectionClick = {},
+                onDownloadClick = songDownloadClickHandler,
             )
         }
     }
