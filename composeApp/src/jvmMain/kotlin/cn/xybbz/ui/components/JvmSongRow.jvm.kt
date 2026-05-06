@@ -127,19 +127,6 @@ internal object SongTableDefaults {
 private val songFavoriteTint = Color(0xFFE94157)
 
 /**
- * 桌面歌曲表格通用下载动作。
- * 复用底部菜单的下载 ViewModel，保证行内下载按钮和歌曲菜单里的下载行为一致。
- */
-@Composable
-internal fun rememberJvmSongDownloadClickHandler(
-    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
-): (XyMusic) -> Unit {
-    return remember(musicBottomMenuViewModel) {
-        { music -> musicBottomMenuViewModel.downloadMusic(music) }
-    }
-}
-
-/**
  * 歌曲表格中的单行内容。
  * 组件直接使用 XyMusic，展示文案、收藏状态和播放状态通过参数覆盖，避免额外包装展示对象。
  */

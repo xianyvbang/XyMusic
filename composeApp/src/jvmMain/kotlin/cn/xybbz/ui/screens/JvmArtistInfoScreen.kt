@@ -95,7 +95,6 @@ import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.XySelectAllComponent
 import cn.xybbz.ui.components.jvmLazyColumnBottomComponent
-import cn.xybbz.ui.components.rememberJvmSongDownloadClickHandler
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
@@ -177,7 +176,6 @@ fun JvmArtistInfoScreen(
 
     // 相似艺术家列表复用统一的艺术家打开逻辑。
     val artistClickHandler = rememberMusicArtistClickHandler()
-    val songDownloadClickHandler = rememberJvmSongDownloadClickHandler()
     val lazyListState = rememberLazyListState()
     val isSticking by remember(lazyListState) { lazyListState.isSticking(1) }
     var selectedTab by remember { mutableStateOf(TabListEnum.Music) }
@@ -411,7 +409,9 @@ fun JvmArtistInfoScreen(
                             onFavoriteClick = { music ->
                                 artistInfoViewModel.musicController.invokingOnFavorite(music.itemId)
                             },
-                            onDownloadClick = songDownloadClickHandler,
+                            onDownloadClick = { music ->
+                                artistInfoViewModel.downloadMusic(music)
+                            },
                             onMoreClick = { music ->
                                 coroutineScope.launch {
                                     music.show()

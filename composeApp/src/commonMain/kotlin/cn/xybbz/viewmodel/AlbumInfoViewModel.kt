@@ -32,9 +32,11 @@ import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.PlaylistFileUtils
 import cn.xybbz.common.utils.PlaylistParser
+import cn.xybbz.config.download.enqueueMusicDownload
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.select.SelectControl
+import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.config.LocalDatabaseClient
@@ -61,6 +63,7 @@ class AlbumInfoViewModel(
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicCommonController,
     val selectControl: SelectControl,
+    private val downloaderManager: DownloaderManager,
 ) : PageListViewModel<XyMusic>(dataSourceManager, SortTypeEnum.MUSIC_NAME_ASC) {
 
     val downloadMusicIdsFlow =
@@ -265,6 +268,12 @@ class AlbumInfoViewModel(
      */
     fun updateIfFavorite(ifFavorite: Boolean) {
         this.ifFavorite = ifFavorite
+    }
+
+    fun downloadMusic(musicData: XyMusic) {
+        viewModelScope.launch {
+            downloaderManager.enqueueMusicDownload(musicData, dataSourceManager)
+        }
     }
 
     /**

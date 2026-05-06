@@ -27,20 +27,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.FavoriteCoordinator
-import cn.xybbz.api.converter.jsonSerializer
 import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.DownloadTypes
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
-import cn.xybbz.common.enums.getDownloadType
 import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
+import cn.xybbz.config.download.enqueueMusicDownload
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.volume.VolumeServer
 import cn.xybbz.download.DownloaderManager
-import cn.xybbz.download.core.DownloadRequest
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -57,7 +55,6 @@ import kotlinx.datetime.format.byUnicodePattern
 import kotlinx.datetime.toLocalDateTime
 import org.koin.core.annotation.KoinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.add_download_list
 import xymusic_kmp.composeapp.generated.resources.cancel_timer_close_message
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
@@ -267,22 +264,7 @@ class MusicBottomMenuViewModel(
 
     fun downloadMusic(musicData: XyMusic) {
         viewModelScope.launch {
-            val downloadTypes = getDownloadType(dataSourceManager.dataSourceType)
-            downloaderManager.enqueue(
-                DownloadRequest(
-                    url = musicData.downloadUrl,
-                    fileName = musicData.name + "." + musicData.container,
-                    fileSize = musicData.size ?: 0,
-                    uid = musicData.itemId,
-                    title = musicData.name,
-                    type = downloadTypes.toString(),
-                    cover = musicData.pic,
-                    duration = musicData.runTimeTicks,
-                    mediaLibraryId = dataSourceManager.getConnectionId().toString(),
-                    data = jsonSerializer.encodeToString(musicData)
-                )
-            )
-            MessageUtils.sendPopTip(Res.string.add_download_list)
+            downloaderManager.enqueueMusicDownload(musicData, dataSourceManager)
         }
 
     }

@@ -93,7 +93,6 @@ import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.XySelectAllComponent
 import cn.xybbz.ui.components.getExportPlaylistsAlertDialogObject
 import cn.xybbz.ui.components.importPlaylistsCompose
-import cn.xybbz.ui.components.rememberJvmSongDownloadClickHandler
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
@@ -194,7 +193,6 @@ fun JvmAlbumInfoScreen(
 
     // 专辑头部的艺术家文本点击使用统一处理器，兼容多个专辑艺术家。
     val artistClickHandler = rememberMusicArtistClickHandler()
-    val songDownloadClickHandler = rememberJvmSongDownloadClickHandler()
     val isSticking by remember(lazyListState) { lazyListState.isSticking(1) }
 
     val favoriteSet by albumInfoViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
@@ -503,7 +501,9 @@ fun JvmAlbumInfoScreen(
                     onFavoriteClick = { music ->
                         albumInfoViewModel.musicController.invokingOnFavorite(music.itemId)
                     },
-                    onDownloadClick = songDownloadClickHandler,
+                    onDownloadClick = { music ->
+                        albumInfoViewModel.downloadMusic(music)
+                    },
                     onMoreClick = { music ->
                         coroutineScope.launch {
                             music.show()

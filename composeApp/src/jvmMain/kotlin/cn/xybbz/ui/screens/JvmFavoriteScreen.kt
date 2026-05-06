@@ -34,7 +34,6 @@ import cn.xybbz.ui.components.JvmLazyListComponent
 import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
-import cn.xybbz.ui.components.rememberJvmSongDownloadClickHandler
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
@@ -67,7 +66,6 @@ fun JvmFavoriteScreen(
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
     val artistClickHandler = rememberMusicArtistClickHandler()
-    val songDownloadClickHandler = rememberJvmSongDownloadClickHandler()
     val favoriteList by favoriteViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val currentPlayingMusicIdFlow = remember(favoriteViewModel) {
         favoriteViewModel.musicController.musicInfoFlow.map { musicInfo ->
@@ -115,7 +113,9 @@ fun JvmFavoriteScreen(
                 onFavoriteClick = { music ->
                     favoriteViewModel.musicController.invokingOnFavorite(music.itemId)
                 },
-                onDownloadClick = songDownloadClickHandler,
+                onDownloadClick = { music ->
+                    favoriteViewModel.downloadMusic(music)
+                },
                 onMoreClick = { music ->
                     coroutineScope.launch {
                         favoriteViewModel.getMusicInfo(music.itemId)?.show()

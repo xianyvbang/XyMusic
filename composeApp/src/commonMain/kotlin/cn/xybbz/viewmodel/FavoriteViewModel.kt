@@ -23,13 +23,16 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.DownloadTypes
+import cn.xybbz.config.download.enqueueMusicDownload
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
+import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
@@ -38,7 +41,8 @@ class FavoriteViewModel(
     db: LocalDatabaseClient,
     downloadDb: DownloadDatabaseClient,
     val musicPlayContext: MusicPlayContext,
-    val musicController: MusicCommonController
+    val musicController: MusicCommonController,
+    private val downloaderManager: DownloaderManager,
 ) : ViewModel() {
 
     val downloadMusicIdsFlow =
@@ -56,7 +60,11 @@ class FavoriteViewModel(
             }
             .cachedIn(viewModelScope)
 
-
+    fun downloadMusic(musicData: XyMusic) {
+        viewModelScope.launch {
+            downloaderManager.enqueueMusicDownload(musicData, dataSourceManager)
+        }
+    }
 
     /**
      * 获得音乐数据

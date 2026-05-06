@@ -26,12 +26,15 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.DownloadTypes
+import cn.xybbz.config.download.enqueueMusicDownload
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.select.SelectControl
+import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.artist.XyArtist
+import cn.xybbz.localdata.data.music.XyMusic
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
@@ -51,7 +54,8 @@ class ArtistInfoViewModel(
     val musicController: MusicCommonController,
     val db: LocalDatabaseClient,
     val downloadDb: DownloadDatabaseClient,
-    val selectControl: SelectControl
+    val selectControl: SelectControl,
+    private val downloaderManager: DownloaderManager,
 ) : ViewModel() {
 
     val downloadMusicIdsFlow =
@@ -150,5 +154,11 @@ class ArtistInfoViewModel(
      */
     fun updateFavorite(ifFavorite: Boolean) {
         this.ifFavorite = ifFavorite
+    }
+
+    fun downloadMusic(musicData: XyMusic) {
+        viewModelScope.launch {
+            downloaderManager.enqueueMusicDownload(musicData, dataSourceManager)
+        }
     }
 }

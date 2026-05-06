@@ -33,7 +33,9 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.DownloadTypes
 import cn.xybbz.common.utils.Log
+import cn.xybbz.config.download.enqueueMusicDownload
 import cn.xybbz.config.music.MusicCommonController
+import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -50,6 +52,7 @@ class SearchViewModel(
     private val downloadDb: DownloadDatabaseClient,
     private val dataSourceManager: DataSourceManager,
     val musicController: MusicCommonController,
+    private val downloaderManager: DownloaderManager,
 ) : ViewModel() {
 
     val downloadMusicIdsFlow =
@@ -177,6 +180,12 @@ class SearchViewModel(
             )
         }
 
+    }
+
+    fun downloadMusic(musicData: XyMusic) {
+        viewModelScope.launch {
+            downloaderManager.enqueueMusicDownload(musicData, dataSourceManager)
+        }
     }
 
     /**
