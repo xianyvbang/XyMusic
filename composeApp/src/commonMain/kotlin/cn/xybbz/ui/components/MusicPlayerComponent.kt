@@ -206,13 +206,14 @@ fun MusicPlayerScreen(
 
 
     val cacheScheduleData by musicPlayerViewModel.downloadCacheController.cacheSchedule.collectAsStateWithLifecycle()
-    val playbackState by musicPlayerViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val musicInfo by musicPlayerViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
+    val coverRefreshVersion by musicPlayerViewModel.musicController.coverRefreshVersionFlow.collectAsStateWithLifecycle()
     val originMusicList by musicPlayerViewModel.musicController.originMusicListFlow.collectAsStateWithLifecycle()
     val lrcState by musicPlayerViewModel.lrcServer.lrcStateFlow.collectAsStateWithLifecycle()
     val favoriteList by musicPlayerViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val coverUrls = rememberPlayMusicCoverUrls(
         musicDetail,
-        playbackState.coverRefreshVersion
+        coverRefreshVersion
     )
 
     val coroutineScope = rememberCoroutineScope()
@@ -398,7 +399,7 @@ fun MusicPlayerScreen(
                             onClick = {
                                 coroutineScope.launch {
                                     val itemId =
-                                        playbackState.musicInfo?.itemId
+                                        musicInfo?.itemId
                                     itemId?.let {
                                         musicPlayerViewModel.dataSourceManager.selectMusicInfoById(
                                             it
@@ -409,7 +410,7 @@ fun MusicPlayerScreen(
                         ) {
                             Icon(
                                 painter = painterResource(Res.drawable.more_vert_24px),
-                                contentDescription = "${playbackState.musicInfo?.name}${
+                                contentDescription = "${musicInfo?.name}${
                                     stringResource(
                                         Res.string.other_operations_button_suffix
                                     )
@@ -495,19 +496,19 @@ private fun PlayerTypeComponent(
     musicController: MusicCommonController
 ) {
     val mainViewModel = LocalMainViewModel.current
-    val playbackState by musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val playMode by musicController.playModeFlow.collectAsStateWithLifecycle()
     IconButton(
         onClick = {
             mainViewModel.setNowPlayerTypeData()
         },
     ) {
         Box(contentAlignment = Alignment.Center) {
-            if (playbackState.playMode.code == PlayerModeEnum.SINGLE_LOOP.code) {
+            if (playMode.code == PlayerModeEnum.SINGLE_LOOP.code) {
                 Text(text = "1", fontSize = 10.sp)
             }
             Icon(
-                painter = painterResource(mainViewModel.iconList[playbackState.playMode.code].icon),
-                contentDescription = stringResource(mainViewModel.iconList[playbackState.playMode.code].message),
+                painter = painterResource(mainViewModel.iconList[playMode.code].icon),
+                contentDescription = stringResource(mainViewModel.iconList[playMode.code].message),
             )
         }
 
@@ -524,7 +525,7 @@ private fun PlayerCurrentPosition(
 ) {
 
     val currentPosition by musicController.progressStateFlow.collectAsStateWithLifecycle()
-    val playbackState by musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val duration by musicController.durationFlow.collectAsStateWithLifecycle()
 
     XyColumn(
         backgroundColor = Color.Transparent,
@@ -538,11 +539,11 @@ private fun PlayerCurrentPosition(
             MusicProgressBar(
                 currentTime = currentPosition,
                 progressStateFlow = musicController.progressStateFlow,
-                totalTime = playbackState.duration,
+                totalTime = duration,
                 cacheProgress = onCacheProgress(),
                 onProgressChanged = { newProgress ->
                     musicController.seekTo(
-                        (playbackState.duration * newProgress).roundToInt().toLong()
+                        (duration * newProgress).roundToInt().toLong()
                     )
                 })
         }
@@ -557,7 +558,7 @@ fun PlayerStateComponent(
     size: Dp = 60.dp,
     musicController: MusicCommonController
 ) {
-    val playbackState by musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val state by musicController.stateFlow.collectAsStateWithLifecycle()
     Box(
         modifier = Modifier
             .clip(CircleShape)
@@ -565,18 +566,18 @@ fun PlayerStateComponent(
 
         Icon(
             painter = painterResource(
-                if (playbackState.state == PlayStateEnum.Playing
-                    || playbackState.state == PlayStateEnum.Loading
+                if (state == PlayStateEnum.Playing
+                    || state == PlayStateEnum.Loading
                 ) Res.drawable.pause_24px else Res.drawable.play_arrow_24px
             ),
-            contentDescription = if (playbackState.state == PlayStateEnum.Playing) stringResource(
+            contentDescription = if (state == PlayStateEnum.Playing) stringResource(
                 Res.string.playing
             ) else stringResource(Res.string.pause),
             modifier = Modifier
                 .size(size)
                 .clip(CircleShape)
                 .debounceClickable {
-                    if (playbackState.state != PlayStateEnum.Pause) {
+                    if (state != PlayStateEnum.Pause) {
                         musicController.pause()
                     } else {
                         musicController.resume()
@@ -584,7 +585,7 @@ fun PlayerStateComponent(
 
                 }
         )
-        if (playbackState.state == PlayStateEnum.Loading) {
+        if (state == PlayStateEnum.Loading) {
             CircularProgressIndicator(
                 modifier = Modifier
                     .clip(CircleShape),

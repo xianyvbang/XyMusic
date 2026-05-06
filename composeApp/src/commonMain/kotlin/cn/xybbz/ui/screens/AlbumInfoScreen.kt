@@ -189,7 +189,8 @@ fun AlbumInfoScreen(
         emptyList()
     )
     val selectUiState by albumInfoViewModel.selectControl.uiState.collectAsStateWithLifecycle()
-    val playbackState by albumInfoViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val musicInfo by albumInfoViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
+    val playState by albumInfoViewModel.musicController.stateFlow.collectAsStateWithLifecycle()
 
     val musicListPage =
         albumInfoViewModel.listPage.collectAsLazyPagingItems()
@@ -468,8 +469,8 @@ fun AlbumInfoScreen(
                         musicListPage = musicListPage,
                         ifOpenSelect = selectUiState.isOpen,
                         isSelectAll = selectUiState.isSelectAll,
-                        currentPlayAlbumId = playbackState.musicInfo?.album.orEmpty(),
-                        playState = playbackState.state,
+                        currentPlayAlbumId = musicInfo?.album.orEmpty(),
+                        playState = playState,
                         sortBy = sortBy
                     )
                 }
@@ -497,7 +498,7 @@ fun AlbumInfoScreen(
                                         music.itemId in favoriteSet
                                     },
                                     ifDownload = music.itemId in downloadMusicIds,
-                                    ifPlay = playbackState.musicInfo?.itemId == music.itemId,
+                                    ifPlay = musicInfo?.itemId == music.itemId,
                                     subordination =
                                         if (albumInfoViewModel.albumPlayerHistoryProgressMap.containsKey(
                                                 music.itemId

@@ -100,7 +100,9 @@ fun JvmSnackBarPlayerComponent(
     }
     val coroutineScope = rememberCoroutineScope()
     val selectUiState by snackBarPlayerViewModel.selectControl.uiState.collectAsStateWithLifecycle()
-    val playbackState by snackBarPlayerViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val musicInfo by snackBarPlayerViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
+    val picByte by snackBarPlayerViewModel.musicController.picByteFlow.collectAsStateWithLifecycle()
+    val curOriginIndex by snackBarPlayerViewModel.musicController.curOriginIndexFlow.collectAsStateWithLifecycle()
     val originMusicList by snackBarPlayerViewModel.musicController.originMusicListFlow.collectAsStateWithLifecycle()
     val cacheScheduleData by snackBarPlayerViewModel.musicController.downloadCacheController.cacheSchedule.collectAsStateWithLifecycle()
     val favoriteSet by mainViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
@@ -152,10 +154,10 @@ fun JvmSnackBarPlayerComponent(
         )
     }
 
-    playbackState.musicInfo?.let {
+    musicInfo?.let {
         JvmMusicPlayerComponent(
             music = it,
-            playbackState.picByte,
+            picByte,
             sharedCoverSourceBoundsOnScreen = sharedCoverSourceBoundsOnScreen,
             sheetStateR = playerSheetState,
             onSetState = { musicListState = it }
@@ -164,7 +166,7 @@ fun JvmSnackBarPlayerComponent(
 
     MusicListComponent(
         musicListState = musicListState,
-        curOriginIndex = playbackState.curOriginIndex,
+        curOriginIndex = curOriginIndex,
         originMusicList = originMusicList,
         onSetState = { musicListState = it },
         onClearPlayerList = {

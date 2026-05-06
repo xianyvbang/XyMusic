@@ -81,7 +81,7 @@ fun JvmSearchScreen(
     searchQuery: String = "",
     searchViewModel: SearchViewModel = koinViewModel<SearchViewModel>()
 ) {
-    val playbackState by searchViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val musicInfo by searchViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
     val favoriteList by searchViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val routeSearchQuery = searchQuery.trim()
 
@@ -124,7 +124,7 @@ fun JvmSearchScreen(
                 searchViewModel.isSearchLoad
             },
             onFavoriteList = { favoriteList },
-            currentPlayingMusicId = playbackState.musicInfo?.itemId,
+            currentPlayingMusicId = musicInfo?.itemId,
             musicController = searchViewModel.musicController
         )
     }

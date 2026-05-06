@@ -161,7 +161,9 @@ fun JvmArtistInfoScreen(
         artistInfoViewModel.albumList.collectAsLazyPagingItems()
     val favoriteSet by artistInfoViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val selectUiState by artistInfoViewModel.selectControl.uiState.collectAsStateWithLifecycle()
-    val playbackState by artistInfoViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val musicInfo by artistInfoViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
+    val playDataType by artistInfoViewModel.musicController.playDataTypeFlow.collectAsStateWithLifecycle()
+    val playState by artistInfoViewModel.musicController.stateFlow.collectAsStateWithLifecycle()
 
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
@@ -334,10 +336,10 @@ fun JvmArtistInfoScreen(
                                     .musicPlayData
                                     ?.onMusicPlayParameter
                                     ?.artistId,
-                                playDataType = playbackState.playDataType,
-                                playState = playbackState.state,
+                                playDataType = playDataType,
+                                playState = playState,
                                 onPlayOrPause = {
-                                    if (playbackState.state != PlayStateEnum.Pause) {
+                                    if (playState != PlayStateEnum.Pause) {
                                         artistInfoViewModel.musicController.pause()
                                     } else {
                                         artistInfoViewModel.musicController.resume()
@@ -361,7 +363,7 @@ fun JvmArtistInfoScreen(
                                 showSelectionColumn = selectUiState.isOpen,
                             ),
                             ifFavorite = { music -> music.itemId in favoriteSet },
-                            ifPlay = { music -> playbackState.musicInfo?.itemId == music.itemId },
+                            ifPlay = { music -> musicInfo?.itemId == music.itemId },
                             isSelected = { music -> music.itemId in selectUiState.selectedMusicIds },
                             onSongClick = { index, music ->
                                 if (selectUiState.isOpen) {

@@ -41,65 +41,84 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     val musicCurrentPositionMap: Map<String, Long>
         get() = musicCurrentPositionMapFlow.value
 
-    // 播放器主状态的唯一响应式来源
-    private val _playbackStateFlow = MutableStateFlow(PlaybackState())
-    val playbackStateFlow = _playbackStateFlow.asStateFlow()
-
     // 当前播放歌曲在原始列表中的索引
+    private val _curOriginIndexFlow = MutableStateFlow(Constants.MINUS_ONE_INT)
+    val curOriginIndexFlow = _curOriginIndexFlow.asStateFlow()
     val curOriginIndex: Int
-        get() = playbackStateFlow.value.curOriginIndex
+        get() = curOriginIndexFlow.value
 
     // 当前播放歌曲在实际播放列表中的索引
+    private val _curRealIndexFlow = MutableStateFlow(Constants.MINUS_ONE_INT)
+    val curRealIndexFlow = _curRealIndexFlow.asStateFlow()
     val curRealIndex: Int
-        get() = playbackStateFlow.value.curRealIndex
+        get() = curRealIndexFlow.value
 
     // 当前分页页码
+    private val _pageNumFlow = MutableStateFlow(Constants.ZERO)
+    val pageNumFlow = _pageNumFlow.asStateFlow()
     val pageNum: Int
-        get() = playbackStateFlow.value.pageNum
+        get() = pageNumFlow.value
 
     // 当前分页大小
+    private val _pageSizeFlow = MutableStateFlow(Constants.ZERO)
+    val pageSizeFlow = _pageSizeFlow.asStateFlow()
     val pageSize: Int
-        get() = playbackStateFlow.value.pageSize
+        get() = pageSizeFlow.value
 
     // 当前播放歌曲信息
+    private val _musicInfoFlow = MutableStateFlow<XyPlayMusic?>(null)
+    val musicInfoFlow = _musicInfoFlow.asStateFlow()
     val musicInfo: XyPlayMusic?
-        get() = playbackStateFlow.value.musicInfo
+        get() = musicInfoFlow.value
 
     // 当前歌曲封面字节流
-    val picByte: ByteArray?
-        get() = playbackStateFlow.value.picByte
+    private val _picByteFlow = MutableStateFlow<ByteArray?>(null)
+    val picByteFlow = _picByteFlow.asStateFlow()
 
     // 当前封面刷新版本号
-    val coverRefreshVersion: Int
-        get() = playbackStateFlow.value.coverRefreshVersion
+    private val _coverRefreshVersionFlow = MutableStateFlow(Constants.ZERO)
+    val coverRefreshVersionFlow = _coverRefreshVersionFlow.asStateFlow()
+
 
     // 当前歌曲总时长
+    private val _durationFlow = MutableStateFlow(Constants.ZERO.toLong())
+    val durationFlow = _durationFlow.asStateFlow()
     val duration: Long
-        get() = playbackStateFlow.value.duration
+        get() = durationFlow.value
 
     // 当前播放器状态
+    private val _stateFlow = MutableStateFlow(PlayStateEnum.None)
+    val stateFlow = _stateFlow.asStateFlow()
     val state: PlayStateEnum
-        get() = playbackStateFlow.value.state
+        get() = stateFlow.value
 
     // 播放进度
     private val _progressStateFlow = MutableStateFlow(0L)
     val progressStateFlow = _progressStateFlow.asStateFlow()
 
     // 当前播放数据类型
+    private val _playDataTypeFlow = MutableStateFlow(MusicPlayTypeEnum.FOUNDATION)
+    val playDataTypeFlow = _playDataTypeFlow.asStateFlow()
     val playDataType: MusicPlayTypeEnum
-        get() = playbackStateFlow.value.playDataType
+        get() = playDataTypeFlow.value
 
     // 片头跳过时间
+    private val _headTimeFlow = MutableStateFlow(Constants.ZERO.toLong())
+    val headTimeFlow = _headTimeFlow.asStateFlow()
     val headTime: Long
-        get() = playbackStateFlow.value.headTime
+        get() = headTimeFlow.value
 
     // 片尾跳过时间
+    private val _endTimeFlow = MutableStateFlow(Constants.ZERO.toLong())
+    val endTimeFlow = _endTimeFlow.asStateFlow()
     val endTime: Long
-        get() = playbackStateFlow.value.endTime
+        get() = endTimeFlow.value
 
     // 当前播放模式
+    private val _playModeFlow = MutableStateFlow(PlayerModeEnum.SEQUENTIAL_PLAYBACK)
+    val playModeFlow = _playModeFlow.asStateFlow()
     val playMode: PlayerModeEnum
-        get() = playbackStateFlow.value.playMode
+        get() = playModeFlow.value
 
     // 是否能加载下一页
     var ifNextPage = true
@@ -202,7 +221,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
      * 设置播放类型
      */
     open fun setPlayTypeData(playerModeEnum: PlayerModeEnum) {
-        updatePlaybackState { it.copy(playMode = playerModeEnum) }
+        _playModeFlow.value = playerModeEnum
         updateEvent(PlayerEvent.PlayerTypeChange(playerModeEnum))
         updatePlayerMode()
         if (isPlayMusicListMutable) {
@@ -278,9 +297,8 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
      * 设置跳过片头片尾时间
      */
     open fun setHeadAndEntTime(headTime: Long, endTime: Long) {
-        updatePlaybackState {
-            it.copy(headTime = headTime, endTime = endTime)
-        }
+        _headTimeFlow.value = headTime
+        _endTimeFlow.value = endTime
     }
 
     /**
@@ -341,14 +359,14 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
      * 更新播放器状态。
      */
     fun updateState(state: PlayStateEnum) {
-        updatePlaybackState { it.copy(state = state) }
+        _stateFlow.value = state
     }
 
     /**
      * 更新当前歌曲总时长。
      */
     fun updateDuration(duration: Long) {
-        updatePlaybackState { it.copy(duration = duration) }
+        _durationFlow.value = duration
     }
 
     /**
@@ -389,7 +407,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
      * 设置 PageNum
      */
     fun setPageNumData(pageNum: Int) {
-        updatePlaybackState { it.copy(pageNum = pageNum) }
+        _pageNumFlow.value = pageNum
     }
 
     /**
@@ -501,12 +519,8 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
         } else {
             curRealIndex
         }
-        updatePlaybackState {
-            it.copy(
-                curOriginIndex = originIndex,
-                curRealIndex = newRealIndex
-            )
-        }
+        _curOriginIndexFlow.value = originIndex
+        _curRealIndexFlow.value = newRealIndex
         syncCurrentMusicAfterOriginIndexChanged()
     }
 
@@ -520,12 +534,8 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
         } else {
             curOriginIndex
         }
-        updatePlaybackState {
-            it.copy(
-                curRealIndex = realIndex,
-                curOriginIndex = newOriginIndex
-            )
-        }
+        _curRealIndexFlow.value = realIndex
+        _curOriginIndexFlow.value = newOriginIndex
         syncCurrentMusicAfterOriginIndexChanged()
     }
 
@@ -567,37 +577,35 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
      * 更新 coverRefreshVersion 版本号
      */
     fun updateCoverRefreshVersion(version: Int) {
-        updatePlaybackState {
-            it.copy(coverRefreshVersion = it.coverRefreshVersion + version)
-        }
+        _coverRefreshVersionFlow.value += version
     }
 
     /**
      * 更新当前播放音乐
      */
     protected fun updateCurrentMusic(music: XyPlayMusic?) {
-        updatePlaybackState { it.copy(musicInfo = music) }
+        _musicInfoFlow.value = music
     }
 
     /**
      * 更新当前页面字节码
      */
     fun updatePicBytes(picBytes: ByteArray?) {
-        updatePlaybackState { it.copy(picByte = picBytes) }
+        _picByteFlow.value = picBytes
     }
 
     /**
      * 更新分页大小
      */
     fun updatePageSize(pageSize: Int) {
-        updatePlaybackState { it.copy(pageSize = pageSize) }
+        _pageSizeFlow.value = pageSize
     }
 
     /**
      * 更新当前播放数据类型
      */
     open fun updatePlayDataType(playDataType: MusicPlayTypeEnum) {
-        updatePlaybackState { it.copy(playDataType = playDataType) }
+        _playDataTypeFlow.value = playDataType
     }
 
     /**
@@ -634,19 +642,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
         _originMusicListFlow.value = emptyList()
         _playMusicListFlow.value = emptyList()
         replaceMusicCurrentPositionMap(emptyMap())
-        updatePlaybackState {
-            it.copy(
-                curOriginIndex = Constants.MINUS_ONE_INT,
-                curRealIndex = Constants.MINUS_ONE_INT,
-                musicInfo = null,
-                duration = Constants.ZERO.toLong(),
-                state = PlayStateEnum.None,
-                headTime = Constants.ZERO.toLong(),
-                endTime = Constants.ZERO.toLong(),
-                pageNum = Constants.ZERO,
-                pageSize = Constants.ZERO
-            )
-        }
+        resetPlaybackSessionState()
         setCurrentPositionData(Constants.ZERO.toLong())
     }
 
@@ -655,27 +651,20 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
         _originMusicListFlow.value = emptyList()
         _playMusicListFlow.value = emptyList()
         replaceMusicCurrentPositionMap(emptyMap())
-        updatePlaybackState {
-            it.copy(
-                curOriginIndex = Constants.MINUS_ONE_INT,
-                curRealIndex = Constants.MINUS_ONE_INT,
-                musicInfo = null,
-                duration = Constants.ZERO.toLong(),
-                state = PlayStateEnum.None,
-                headTime = Constants.ZERO.toLong(),
-                endTime = Constants.ZERO.toLong(),
-                pageNum = Constants.ZERO,
-                pageSize = Constants.ZERO
-            )
-        }
+        resetPlaybackSessionState()
         setCurrentPositionData(Constants.ZERO.toLong())
         super.close()
     }
 
-    /**
-     * 统一更新播放器主状态，避免外部散落写入多个字段。
-     */
-    private inline fun updatePlaybackState(transform: (PlaybackState) -> PlaybackState) {
-        _playbackStateFlow.update(transform)
+    private fun resetPlaybackSessionState() {
+        _curOriginIndexFlow.value = Constants.MINUS_ONE_INT
+        _curRealIndexFlow.value = Constants.MINUS_ONE_INT
+        _musicInfoFlow.value = null
+        _durationFlow.value = Constants.ZERO.toLong()
+        _stateFlow.value = PlayStateEnum.None
+        _headTimeFlow.value = Constants.ZERO.toLong()
+        _endTimeFlow.value = Constants.ZERO.toLong()
+        _pageNumFlow.value = Constants.ZERO
+        _pageSizeFlow.value = Constants.ZERO
     }
 }

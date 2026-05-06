@@ -129,7 +129,9 @@ fun SnackBarPlayerComponent(
     }
     val coroutineScope = rememberCoroutineScope()
     val selectUiState by snackBarPlayerViewModel.selectControl.uiState.collectAsStateWithLifecycle()
-    val playbackState by snackBarPlayerViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val musicInfo by snackBarPlayerViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
+    val picByte by snackBarPlayerViewModel.musicController.picByteFlow.collectAsStateWithLifecycle()
+    val curOriginIndex by snackBarPlayerViewModel.musicController.curOriginIndexFlow.collectAsStateWithLifecycle()
     val originMusicList by snackBarPlayerViewModel.musicController.originMusicListFlow.collectAsStateWithLifecycle()
 
     val defaultSnackBarColor = MaterialTheme.colorScheme.surfaceContainerLowest
@@ -166,10 +168,10 @@ fun SnackBarPlayerComponent(
             }
         })
 
-    playbackState.musicInfo?.let {
+    musicInfo?.let {
         MusicPlayerComponent(
             music = it,
-            playbackState.picByte,
+            picByte,
             sheetStateR = playerSheetState,
             toNext = {
                 Log.i("=====", "数据调用SnackBarPlayerComponent")
@@ -182,7 +184,7 @@ fun SnackBarPlayerComponent(
 
     MusicListComponent(
         musicListState = musicListState,
-        curOriginIndex = playbackState.curOriginIndex,
+        curOriginIndex = curOriginIndex,
         originMusicList = originMusicList,
         onSetState = { musicListState = it },
         onClearPlayerList = {
@@ -357,7 +359,7 @@ fun SnackBarPlayerComponent(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
                         ) {
-                            if (playbackState.musicInfo != null) {
+                            if (musicInfo != null) {
                                 onClick()
                             }
                         },
@@ -430,14 +432,15 @@ fun RowScope.HorizontalPagerSnackBar(
     musicController: MusicCommonController
 ) {
     val originMusicList by musicController.originMusicListFlow.collectAsStateWithLifecycle()
-    val playbackState by musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val curOriginIndex by musicController.curOriginIndexFlow.collectAsStateWithLifecycle()
+    val playMode by musicController.playModeFlow.collectAsStateWithLifecycle()
 
     if (originMusicList.isNotEmpty()) {
         val basePage by remember {
             derivedStateOf {
                 val mid = Int.MAX_VALUE / 2
                 val size = originMusicList.size
-                if (size == 0) 0 else mid - (mid % size) + (playbackState.curOriginIndex % size)
+                if (size == 0) 0 else mid - (mid % size) + (curOriginIndex % size)
             }
 
         }
@@ -459,7 +462,7 @@ fun RowScope.HorizontalPagerSnackBar(
 
         val intState = remember {
             derivedStateOf {
-                playbackState.curOriginIndex
+                curOriginIndex
             }
         }
         LaunchedEffect(intState) {
@@ -482,7 +485,7 @@ fun RowScope.HorizontalPagerSnackBar(
             //详见文档：https://developer.android.com/jetpack/compose/side-effects#snapshotFlow
             snapshotFlow { shouldLoadMore.value }.collect {
                 if (!it && basePage != horPagerState.currentPage
-                    && playbackState.curOriginIndex != Constants.MINUS_ONE_INT
+                    && curOriginIndex != Constants.MINUS_ONE_INT
                 ) {
                     if (basePage > horPagerState.currentPage) {
                         Log.d("Pager", "向右滑动 ->")
@@ -506,21 +509,21 @@ fun RowScope.HorizontalPagerSnackBar(
                 page,
                 basePage,
                 originMusicList,
-                playbackState.curOriginIndex,
-                playbackState.playMode
+                curOriginIndex,
+                playMode
             ) {
                 derivedStateOf {
                     if (originMusicList.isEmpty()) {
                         0
                     } else {
                         val listSize = originMusicList.size
-                        val currentIndex = playbackState.curOriginIndex
+                        val currentIndex = curOriginIndex
                             .takeIf { it in originMusicList.indices }
                             ?: 0
                         val fallbackIndex =
                             (page % listSize + listSize) % listSize
 
-                        if (playbackState.playMode != PlayerModeEnum.RANDOM_PLAY) {
+                        if (playMode != PlayerModeEnum.RANDOM_PLAY) {
                             fallbackIndex
                         } else {
                             when (page - basePage) {
@@ -563,8 +566,9 @@ private val logger = KotlinLogging.logger("CircularProgressIndicatorComp")
 
 @Composable
 private fun CircularProgressIndicatorComp(musicController: MusicCommonController) {
-    val playbackState by musicController.playbackStateFlow.collectAsStateWithLifecycle()
-    val progress by playProgress(playbackState.duration, musicController.progressStateFlow)
+    val duration by musicController.durationFlow.collectAsStateWithLifecycle()
+    val state by musicController.stateFlow.collectAsStateWithLifecycle()
+    val progress by playProgress(duration, musicController.progressStateFlow)
 
     Box(
         modifier = Modifier
@@ -572,7 +576,7 @@ private fun CircularProgressIndicatorComp(musicController: MusicCommonController
             .clip(CircleShape),
         contentAlignment = Alignment.Center
     ) {
-        if (playbackState.state == PlayStateEnum.Loading) {
+        if (state == PlayStateEnum.Loading) {
             //这个放在一个单独的组件里
             CircularProgressIndicator(
                 modifier = Modifier
@@ -606,8 +610,8 @@ private fun CircularProgressIndicatorComp(musicController: MusicCommonController
         }
 
         Icon(
-            painter = painterResource(if (playbackState.state == PlayStateEnum.Playing || playbackState.state == PlayStateEnum.Loading) Res.drawable.pause_24px else Res.drawable.play_arrow_24px),
-            contentDescription = if (playbackState.state == PlayStateEnum.Playing) stringResource(
+            painter = painterResource(if (state == PlayStateEnum.Playing || state == PlayStateEnum.Loading) Res.drawable.pause_24px else Res.drawable.play_arrow_24px),
+            contentDescription = if (state == PlayStateEnum.Playing) stringResource(
                 Res.string.playing
             ) else stringResource(Res.string.pause),
             modifier = Modifier
@@ -617,7 +621,7 @@ private fun CircularProgressIndicatorComp(musicController: MusicCommonController
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null
                 ) {
-                    if (playbackState.state != PlayStateEnum.Pause) {
+                    if (state != PlayStateEnum.Pause) {
                         musicController.pause()
                     } else {
                         musicController.resume()
@@ -634,14 +638,15 @@ private fun ImageCover(
     isDarkTheme: Boolean,
     onSetColor: (Color?) -> Unit
 ) {
-    val playbackState by musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val musicInfo by musicController.musicInfoFlow.collectAsStateWithLifecycle()
+    val coverRefreshVersion by musicController.coverRefreshVersionFlow.collectAsStateWithLifecycle()
+    val byteCoverModel by musicController.picByteFlow.collectAsStateWithLifecycle()
     val coverUrls = rememberPlayMusicCoverUrls(
-        playbackState.musicInfo,
-        playbackState.coverRefreshVersion
+        musicInfo,
+        coverRefreshVersion
     )
     val primaryCoverModel = coverUrls.primaryUrl
     val fallbackCoverModel = coverUrls.fallbackUrl
-    val byteCoverModel = playbackState.picByte
     val activeCoverModel = primaryCoverModel ?: fallbackCoverModel ?: byteCoverModel
     val backupCoverModel = if (activeCoverModel == byteCoverModel) null else byteCoverModel
     val defaultSnackBarColor = MaterialTheme.colorScheme.surfaceContainerLowest

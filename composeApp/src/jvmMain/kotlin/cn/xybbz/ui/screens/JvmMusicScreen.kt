@@ -79,7 +79,7 @@ fun JvmMusicScreen(
     val navigator = LocalNavigator.current
     val artistClickHandler = rememberMusicArtistClickHandler()
     val homeMusicPager = musicViewModel.listPage.collectAsLazyPagingItems()
-    val playbackState by musicViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val musicInfo by musicViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
     val favoriteSet by musicViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val sortBy by musicViewModel.sortBy.collectAsStateWithLifecycle()
     val selectUiState by musicViewModel.selectControl.uiState.collectAsStateWithLifecycle()
@@ -151,7 +151,7 @@ fun JvmMusicScreen(
                     showSelectionColumn = selectUiState.isOpen,
                 ),
                 ifFavorite = { music -> music.itemId in favoriteSet },
-                ifPlay = { music -> playbackState.musicInfo?.itemId == music.itemId },
+                ifPlay = { music -> musicInfo?.itemId == music.itemId },
                 isSelected = { music -> music.itemId in selectUiState.selectedMusicIds },
                 onSongClick = { index, music ->
                     if (selectUiState.isOpen) {

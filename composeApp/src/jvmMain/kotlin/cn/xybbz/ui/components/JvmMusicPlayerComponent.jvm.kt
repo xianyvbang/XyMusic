@@ -278,12 +278,13 @@ fun JvmMusicPlayerScreen(
     val decorators = LocalDesktopWindowDecorators.current
     val titleBarHitTestOwner = LocalDesktopTitleBarHitTestOwner.current
     val cacheScheduleData by musicPlayerViewModel.downloadCacheController.cacheSchedule.collectAsStateWithLifecycle()
-    val playbackState by musicPlayerViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val coverRefreshVersion by musicPlayerViewModel.musicController.coverRefreshVersionFlow.collectAsStateWithLifecycle()
+    val state by musicPlayerViewModel.musicController.stateFlow.collectAsStateWithLifecycle()
     val originMusicList by musicPlayerViewModel.musicController.originMusicListFlow.collectAsStateWithLifecycle()
     val favoriteList by musicPlayerViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val coverUrls = rememberPlayMusicCoverUrls(
         musicDetail,
-        playbackState.coverRefreshVersion
+        coverRefreshVersion
     )
     val coroutineScope = rememberCoroutineScope()
     val density = LocalDensity.current
@@ -321,8 +322,8 @@ fun JvmMusicPlayerScreen(
     val artistLabel = remember(musicDetail.artists) {
         musicDetail.artistLabel()
     }
-    val isCoverPlaybackActive = playbackState.state == PlayStateEnum.Playing ||
-            playbackState.state == PlayStateEnum.Loading
+    val isCoverPlaybackActive = state == PlayStateEnum.Playing ||
+            state == PlayStateEnum.Loading
     val isPlayerFullyOpened = sharedCoverProgress >= JvmMusicPlayerCoverRotationReadyProgress
     val shouldRotateCover = isCoverPlaybackActive && isPlayerFullyOpened
     val coverRotation = remember {

@@ -196,7 +196,8 @@ fun JvmAlbumInfoScreen(
 
     val favoriteSet by albumInfoViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val selectUiState by albumInfoViewModel.selectControl.uiState.collectAsStateWithLifecycle()
-    val playbackState by albumInfoViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val musicInfo by albumInfoViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
+    val playState by albumInfoViewModel.musicController.stateFlow.collectAsStateWithLifecycle()
 
     val musicListPage =
         albumInfoViewModel.listPage.collectAsLazyPagingItems()
@@ -442,8 +443,8 @@ fun JvmAlbumInfoScreen(
                         musicListPage = musicListPage,
                         ifOpenSelect = selectUiState.isOpen,
                         isSelectAll = selectUiState.isSelectAll,
-                        currentPlayAlbumId = playbackState.musicInfo?.album.orEmpty(),
-                        playState = playbackState.state,
+                        currentPlayAlbumId = musicInfo?.album.orEmpty(),
+                        playState = playState,
                         sortBy = sortBy
                     )
                 }
@@ -456,7 +457,7 @@ fun JvmAlbumInfoScreen(
                         showSelectionColumn = selectUiState.isOpen,
                     ),
                     ifFavorite = { music -> music.itemId in favoriteSet },
-                    ifPlay = { music -> playbackState.musicInfo?.itemId == music.itemId },
+                    ifPlay = { music -> musicInfo?.itemId == music.itemId },
                     isSelected = { music -> music.itemId in selectUiState.selectedMusicIds },
                     onSongClick = { _, music ->
                         if (selectUiState.isOpen) {

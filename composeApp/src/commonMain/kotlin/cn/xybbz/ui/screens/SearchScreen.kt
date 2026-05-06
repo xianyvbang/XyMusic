@@ -100,7 +100,7 @@ fun SearchScreen(
 ) {
     val navigator = LocalNavigator.current
 
-    val playbackState by searchViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val musicInfo by searchViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
     val favoriteList by searchViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val downloadMusicIds by searchViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
         emptyList()
@@ -188,7 +188,7 @@ fun SearchScreen(
                     },
                     onFavoriteList = { favoriteList },
                     onDownloadMusicIdList = { downloadMusicIds },
-                    currentPlayingMusicId = playbackState.musicInfo?.itemId,
+                    currentPlayingMusicId = musicInfo?.itemId,
                     musicController = searchViewModel.musicController
                 )
             } else {

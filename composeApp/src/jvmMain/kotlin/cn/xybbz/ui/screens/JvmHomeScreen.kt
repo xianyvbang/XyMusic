@@ -71,7 +71,7 @@ fun JvmHomeScreen(
     val recentAlbumList by homeViewModel.homeDataRepository.recentAlbums.collectAsStateWithLifecycle()
     val mostPlayedAlbumList by homeViewModel.homeDataRepository.mostPlayedAlbums.collectAsStateWithLifecycle()
     val recommendedMusicList by homeViewModel.homeDataRepository.recommendedMusic.collectAsStateWithLifecycle()
-    val playbackState by homeViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val musicInfo by homeViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
     val favoriteSet by homeViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val navigator = LocalNavigator.current
 
@@ -88,7 +88,7 @@ fun JvmHomeScreen(
         homeViewModel = homeViewModel,
         navigator = navigator,
         onOpenArtist = artistClickHandler::openMusicArtists,
-        currentPlayingMusicId = playbackState.musicInfo?.itemId,
+        currentPlayingMusicId = musicInfo?.itemId,
         favoriteMusicIds = favoriteSet,
     )
 
@@ -339,4 +339,3 @@ private fun JvmHomeDesktopSectionHeader(
         }
     }
 }
-

@@ -62,7 +62,7 @@ fun FavoriteScreen(
         favoriteViewModel.favoriteMusicList.collectAsLazyPagingItems()
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
-    val playbackState by favoriteViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val musicInfo by favoriteViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
     val favoriteList by favoriteViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val downloadMusicIdList by favoriteViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
         emptyList()
@@ -98,7 +98,7 @@ fun FavoriteScreen(
                                 favoriteList.contains(music.itemId)
                             },
                             ifDownload = music.itemId in downloadMusicIdList,
-                            ifPlay = playbackState.musicInfo?.itemId == music.itemId,
+                            ifPlay = musicInfo?.itemId == music.itemId,
                             backgroundColor = Color.Transparent,
                             onMusicPlay = {
 

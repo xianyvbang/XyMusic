@@ -72,7 +72,7 @@ fun MusicScreen(
     val coroutineScope = rememberCoroutineScope()
     val mainViewModel = LocalMainViewModel.current
     val homeMusicPager = musicViewModel.listPage.collectAsLazyPagingItems()
-    val playbackState by musicViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val musicInfo by musicViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
     val favoriteSet by musicViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val downloadMusicIds by musicViewModel.downloadMusicIdsFlow.collectAsStateWithLifecycle(
         emptyList()
@@ -151,7 +151,7 @@ fun MusicScreen(
                             music.itemId in favoriteSet
                         },
                         ifDownload = music.itemId in downloadMusicIds,
-                        ifPlay = playbackState.musicInfo?.itemId == music.itemId,
+                        ifPlay = musicInfo?.itemId == music.itemId,
                         onMusicPlay = {
                             musicViewModel.musicPlayContext.music(
                                 onMusicPlayParameter = it,

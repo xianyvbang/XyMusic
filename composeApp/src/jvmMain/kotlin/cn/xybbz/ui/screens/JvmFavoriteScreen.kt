@@ -64,7 +64,7 @@ fun JvmFavoriteScreen(
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
     val artistClickHandler = rememberMusicArtistClickHandler()
-    val playbackState by favoriteViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val musicInfo by favoriteViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
     val favoriteList by favoriteViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
 
 
@@ -83,7 +83,7 @@ fun JvmFavoriteScreen(
                 pagingItems = favoriteMusicListPage,
                 columns = JvmFavoriteMusicTableColumns,
                 ifFavorite = { music -> favoriteList.contains(music.itemId) },
-                ifPlay = { music -> playbackState.musicInfo?.itemId == music.itemId },
+                ifPlay = { music -> musicInfo?.itemId == music.itemId },
                 isSelected = { false },
                 onSongClick = { index, music ->
                     favoriteViewModel.musicPlayContext.favorite(

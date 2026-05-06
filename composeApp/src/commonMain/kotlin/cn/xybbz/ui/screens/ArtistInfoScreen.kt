@@ -177,7 +177,7 @@ fun ArtistInfoScreen(
         emptyList()
     )
     val selectUiState by artistInfoViewModel.selectControl.uiState.collectAsStateWithLifecycle()
-    val playbackState by artistInfoViewModel.musicController.playbackStateFlow.collectAsStateWithLifecycle()
+    val musicInfo by artistInfoViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
 
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
@@ -800,7 +800,7 @@ fun ArtistInfoScreen(
                                                             music.itemId in favoriteSet
                                                         },
                                                         ifDownload = music.itemId in downloadMusicIds,
-                                                        ifPlay = playbackState.musicInfo?.itemId == music.itemId,
+                                                        ifPlay = musicInfo?.itemId == music.itemId,
                                                         backgroundColor = Color.Transparent,
                                                         trailingOnClick = {
                                                             music.show()
