@@ -111,6 +111,7 @@ import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.AlbumInfoViewModel
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -198,6 +199,11 @@ fun JvmAlbumInfoScreen(
     val selectUiState by albumInfoViewModel.selectControl.uiState.collectAsStateWithLifecycle()
     val musicInfo by albumInfoViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
     val playState by albumInfoViewModel.musicController.stateFlow.collectAsStateWithLifecycle()
+    val currentPlayingMusicIdFlow = remember(albumInfoViewModel) {
+        albumInfoViewModel.musicController.musicInfoFlow.map { musicInfo ->
+            musicInfo?.itemId
+        }
+    }
 
     val musicListPage =
         albumInfoViewModel.listPage.collectAsLazyPagingItems()
@@ -457,7 +463,7 @@ fun JvmAlbumInfoScreen(
                         showSelectionColumn = selectUiState.isOpen,
                     ),
                     ifFavorite = { music -> music.itemId in favoriteSet },
-                    ifPlay = { music -> musicInfo?.itemId == music.itemId },
+                    currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
                     isSelected = { music -> music.itemId in selectUiState.selectedMusicIds },
                     onSongClick = { _, music ->
                         if (selectUiState.isOpen) {

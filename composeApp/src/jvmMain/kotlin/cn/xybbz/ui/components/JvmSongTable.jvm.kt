@@ -16,6 +16,7 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.screens.desktopColors
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyRow
+import kotlinx.coroutines.flow.Flow
 
 
 /**
@@ -31,8 +32,8 @@ internal fun LazyListScope.songTableItems(
     durationText: (XyMusic) -> String = { DateUtil.millisecondsToTime(it.runTimeTicks) },
     accentColor: (Int, XyMusic) -> androidx.compose.ui.graphics.Color = ::defaultSongAccentColor,
     ifFavorite: (XyMusic) -> Boolean = { it.ifFavoriteStatus },
-    ifPlay: (XyMusic) -> Boolean,
-    isSelected: (XyMusic) -> Boolean = {false},
+    currentPlayingMusicIdFlow: Flow<String?>,
+    isSelected: (XyMusic) -> Boolean = { false },
     onSongClick: (Int, XyMusic) -> Unit,
     onOpenAlbum: (XyMusic) -> Unit,
     onOpenArtist: (XyMusic) -> Unit,
@@ -61,7 +62,7 @@ internal fun LazyListScope.songTableItems(
             index = index,
             columns = columns,
             ifFavorite = ifFavorite(music),
-            ifPlay = ifPlay(music),
+            currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
             albumText = albumText(music),
             metaText = metaText(music),
             durationText = durationText(music),
@@ -94,7 +95,7 @@ internal fun LazyListScope.songTableItems(
     durationText: (XyMusic) -> String = { DateUtil.millisecondsToTime(it.runTimeTicks) },
     accentColor: (Int, XyMusic) -> androidx.compose.ui.graphics.Color = ::defaultSongAccentColor,
     ifFavorite: (XyMusic) -> Boolean = { it.ifFavoriteStatus },
-    ifPlay: (XyMusic) -> Boolean,
+    currentPlayingMusicIdFlow: Flow<String?>,
     isSelected: (XyMusic) -> Boolean,
     onSongClick: (Int, XyMusic) -> Unit,
     onOpenAlbum: (XyMusic) -> Unit,
@@ -126,7 +127,7 @@ internal fun LazyListScope.songTableItems(
                 index = index,
                 columns = columns,
                 ifFavorite = ifFavorite(music),
-                ifPlay = ifPlay(music),
+                currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
                 albumText = albumText(music),
                 metaText = metaText(music),
                 durationText = durationText(music),

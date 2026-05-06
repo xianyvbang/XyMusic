@@ -24,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,6 +49,7 @@ import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.MusicViewModel
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -79,10 +81,14 @@ fun JvmMusicScreen(
     val navigator = LocalNavigator.current
     val artistClickHandler = rememberMusicArtistClickHandler()
     val homeMusicPager = musicViewModel.listPage.collectAsLazyPagingItems()
-    val musicInfo by musicViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
     val favoriteSet by musicViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val sortBy by musicViewModel.sortBy.collectAsStateWithLifecycle()
     val selectUiState by musicViewModel.selectControl.uiState.collectAsStateWithLifecycle()
+    val currentPlayingMusicIdFlow = remember(musicViewModel) {
+        musicViewModel.musicController.musicInfoFlow.map { musicInfo ->
+            musicInfo?.itemId
+        }
+    }
 
     XyColumnScreen {
         MusicSelectTopBarComponent(
@@ -151,7 +157,7 @@ fun JvmMusicScreen(
                     showSelectionColumn = selectUiState.isOpen,
                 ),
                 ifFavorite = { music -> music.itemId in favoriteSet },
-                ifPlay = { music -> musicInfo?.itemId == music.itemId },
+                currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
                 isSelected = { music -> music.itemId in selectUiState.selectedMusicIds },
                 onSongClick = { index, music ->
                     if (selectUiState.isOpen) {

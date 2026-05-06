@@ -33,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextRange
@@ -60,6 +61,8 @@ import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.viewmodel.SearchViewModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
@@ -81,9 +84,13 @@ fun JvmSearchScreen(
     searchQuery: String = "",
     searchViewModel: SearchViewModel = koinViewModel<SearchViewModel>()
 ) {
-    val musicInfo by searchViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
     val favoriteList by searchViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val routeSearchQuery = searchQuery.trim()
+    val currentPlayingMusicIdFlow = remember(searchViewModel) {
+        searchViewModel.musicController.musicInfoFlow.map { musicInfo ->
+            musicInfo?.itemId
+        }
+    }
 
     LaunchedEffect(routeSearchQuery) {
         if (routeSearchQuery.isNotBlank()) {
@@ -124,7 +131,7 @@ fun JvmSearchScreen(
                 searchViewModel.isSearchLoad
             },
             onFavoriteList = { favoriteList },
-            currentPlayingMusicId = musicInfo?.itemId,
+            currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
             musicController = searchViewModel.musicController
         )
     }
@@ -142,7 +149,7 @@ fun JvmSearchResultScreen(
     onAddMusic: (XyMusic) -> Unit,
     onLoadingState: () -> Boolean,
     onFavoriteList: () -> List<String>,
-    currentPlayingMusicId: String?,
+    currentPlayingMusicIdFlow: Flow<String?>,
     musicController: MusicCommonController
 ) {
     val navigator = LocalNavigator.current
@@ -219,7 +226,7 @@ fun JvmSearchResultScreen(
                 songs = musicList,
                 columns = SearchMusicTableColumns,
                 ifFavorite = { music -> music.itemId in onFavoriteList() },
-                ifPlay = { music -> music.itemId == currentPlayingMusicId },
+                currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
                 isSelected = { false },
                 onSongClick = { _, music -> onAddMusic(music) },
                 onOpenAlbum = { music ->

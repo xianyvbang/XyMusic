@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -41,6 +42,8 @@ import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextLarge
 import cn.xybbz.viewmodel.HomeViewModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
@@ -71,9 +74,13 @@ fun JvmHomeScreen(
     val recentAlbumList by homeViewModel.homeDataRepository.recentAlbums.collectAsStateWithLifecycle()
     val mostPlayedAlbumList by homeViewModel.homeDataRepository.mostPlayedAlbums.collectAsStateWithLifecycle()
     val recommendedMusicList by homeViewModel.homeDataRepository.recommendedMusic.collectAsStateWithLifecycle()
-    val musicInfo by homeViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
     val favoriteSet by homeViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val navigator = LocalNavigator.current
+    val currentPlayingMusicIdFlow = remember(homeViewModel) {
+        homeViewModel.musicController.musicInfoFlow.map { musicInfo ->
+            musicInfo?.itemId
+        }
+    }
 
     // 首页歌曲表格里的艺术家文本和右键菜单共用同一套打开逻辑。
     val artistClickHandler = rememberMusicArtistClickHandler()
@@ -88,7 +95,7 @@ fun JvmHomeScreen(
         homeViewModel = homeViewModel,
         navigator = navigator,
         onOpenArtist = artistClickHandler::openMusicArtists,
-        currentPlayingMusicId = musicInfo?.itemId,
+        currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
         favoriteMusicIds = favoriteSet,
     )
 
@@ -214,14 +221,14 @@ private fun HomeSectionSpacing() {
  * @property homeViewModel 首页 ViewModel，统一处理播放列表、收藏切换和下载。
  * @property navigator 页面导航器，统一处理专辑详情等页面跳转。
  * @property onOpenArtist 艺人打开回调，统一复用艺术家文本和右键菜单的打开逻辑。
- * @property currentPlayingMusicId 当前正在播放的歌曲 ID，用于标记表格中的播放行。
+ * @property currentPlayingMusicIdFlow 当前正在播放的歌曲 ID 流，交给 SongRow 按行监听播放状态。
  * @property favoriteMusicIds 已收藏歌曲 ID 列表，用于标记表格中的收藏状态。
  */
 private class HomeMusicSectionScope(
     private val homeViewModel: HomeViewModel,
     private val navigator: Navigator,
     private val onOpenArtist: (XyMusic) -> Unit,
-    private val currentPlayingMusicId: String?,
+    private val currentPlayingMusicIdFlow: Flow<String?>,
     private val favoriteMusicIds: List<String>,
 ) {
     /**
@@ -248,8 +255,8 @@ private class HomeMusicSectionScope(
             columns = HomeMusicTableColumns,
             // 根据全局收藏列表判断当前行是否收藏。
             ifFavorite = { music -> music.itemId in favoriteMusicIds },
-            // 根据播放器状态判断当前行是否正在播放。
-            ifPlay = { music -> music.itemId == currentPlayingMusicId },
+            // 播放状态下沉到 SongRow 内按行监听，避免 JvmHomeScreen 顶层跟随播放状态重组。
+            currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
             onSongClick = { _, music ->
                 // 点击任意歌曲时，使用当前分区的完整列表作为播放队列。
                 homeViewModel.musicList(

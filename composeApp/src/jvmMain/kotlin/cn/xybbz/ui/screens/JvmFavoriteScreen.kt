@@ -22,6 +22,7 @@ package cn.xybbz.ui.screens
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -38,6 +39,7 @@ import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.FavoriteViewModel
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -64,8 +66,12 @@ fun JvmFavoriteScreen(
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
     val artistClickHandler = rememberMusicArtistClickHandler()
-    val musicInfo by favoriteViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
     val favoriteList by favoriteViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
+    val currentPlayingMusicIdFlow = remember(favoriteViewModel) {
+        favoriteViewModel.musicController.musicInfoFlow.map { musicInfo ->
+            musicInfo?.itemId
+        }
+    }
 
 
     XyColumnScreen {
@@ -83,7 +89,7 @@ fun JvmFavoriteScreen(
                 pagingItems = favoriteMusicListPage,
                 columns = JvmFavoriteMusicTableColumns,
                 ifFavorite = { music -> favoriteList.contains(music.itemId) },
-                ifPlay = { music -> musicInfo?.itemId == music.itemId },
+                currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
                 isSelected = { false },
                 onSongClick = { index, music ->
                     favoriteViewModel.musicPlayContext.favorite(

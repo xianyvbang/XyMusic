@@ -56,6 +56,9 @@ import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import cn.xybbz.viewmodel.SidebarPlaylistViewModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -133,7 +136,7 @@ internal fun SongRow(
     index: Int,
     columns: SongTableColumns,
     ifFavorite: Boolean,
-    ifPlay: Boolean,
+    currentPlayingMusicIdFlow: Flow<String?>,
     modifier: Modifier = Modifier,
     albumText: String = defaultSongAlbumText(music),
     metaText: String = "",
@@ -161,7 +164,11 @@ internal fun SongRow(
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
     val coverUrls = rememberMusicCoverUrls(music)
-    val rowBackgroundColor = if (ifPlay) desktopColors.bgHover else Color.Transparent
+    val rowIfPlay = rememberSongRowPlaying(
+        musicId = music.itemId,
+        currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
+    )
+    val rowBackgroundColor = if (rowIfPlay) desktopColors.bgHover else Color.Transparent
     val menuItems = rememberSongRowContextMenuItems(
         music = music,
         onPlay = onClick,
@@ -197,7 +204,7 @@ internal fun SongRow(
                 accentColor = accentColor,
                 coverUrl = coverUrls.primaryUrl,
                 fallbackCoverUrl = coverUrls.fallbackUrl,
-                ifPlay = ifPlay,
+                ifPlay = rowIfPlay,
                 onOpenArtist = onOpenArtist
             )
             if (columns.showFavoriteColumn) {
@@ -245,6 +252,24 @@ internal fun SongRow(
             }
         }
     }
+}
+
+/**
+ * 歌曲行播放状态。
+ *
+ * 由行组件按自己的 musicId 订阅当前播放歌曲 ID，避免外层页面逐行计算播放状态。
+ */
+@Composable
+private fun rememberSongRowPlaying(
+    musicId: String,
+    currentPlayingMusicIdFlow: Flow<String?>,
+): Boolean {
+    val ifPlay by remember(currentPlayingMusicIdFlow, musicId) {
+        currentPlayingMusicIdFlow
+            .map { currentPlayingMusicId -> currentPlayingMusicId == musicId }
+            .distinctUntilChanged()
+    }.collectAsStateWithLifecycle(false)
+    return ifPlay
 }
 
 @Composable
