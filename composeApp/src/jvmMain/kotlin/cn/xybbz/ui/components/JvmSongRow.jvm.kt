@@ -100,6 +100,7 @@ import kotlin.math.absoluteValue
 internal data class SongTableColumns(
     val showFavoriteColumn: Boolean = false,
     val showInlineActions: Boolean = false,
+    val showInlineDownloadButton: Boolean = true,
     val showAlbumColumn: Boolean = true,
     val showMetaColumn: Boolean = true,
     val showDurationColumn: Boolean = true,
@@ -216,6 +217,7 @@ internal fun SongRow(
             if (columns.showInlineActions) {
                 SongInlineActions(
                     hovered = hovered,
+                    showDownloadButton = columns.showInlineDownloadButton,
                     onDownloadClick = onDownloadClick,
                     onAddToPlaylistClick = onAddToPlaylistClick,
                     onMoreClick = onMoreClick,
@@ -517,6 +519,7 @@ private fun SongSelectionCell(
 @Composable
 private fun SongInlineActions(
     hovered: Boolean,
+    showDownloadButton: Boolean,
     onDownloadClick: () -> Unit,
     onAddToPlaylistClick: () -> Unit,
     onMoreClick: () -> Unit,
@@ -538,11 +541,13 @@ private fun SongInlineActions(
                 ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                HoverActionIcon(
-                    iconRes = Res.drawable.download_24px,
-                    tooltip = stringResource(Res.string.download),
-                    onClick = onDownloadClick,
-                )
+                if (showDownloadButton) {
+                    HoverActionIcon(
+                        iconRes = Res.drawable.download_24px,
+                        tooltip = stringResource(Res.string.download),
+                        onClick = onDownloadClick,
+                    )
+                }
                 HoverActionIcon(
                     iconRes = Res.drawable.playlist_add_24px,
                     tooltip = stringResource(Res.string.add_to_playlist),

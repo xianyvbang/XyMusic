@@ -45,6 +45,8 @@ import xymusic_kmp.composeapp.generated.resources.local_music
 
 private val JvmLocalMusicTableColumns = SongTableColumns(
     showFavoriteColumn = true,
+    showInlineActions = true,
+    showInlineDownloadButton = false,
     showAlbumColumn = true,
     showMetaColumn = false,
 )
