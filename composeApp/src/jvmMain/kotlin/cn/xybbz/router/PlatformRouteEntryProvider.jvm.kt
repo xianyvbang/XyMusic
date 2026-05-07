@@ -25,6 +25,7 @@ import cn.xybbz.ui.screens.JvmArtistScreen
 import cn.xybbz.ui.screens.JvmFavoriteScreen
 import cn.xybbz.ui.screens.JvmGenresInfoScreen
 import cn.xybbz.ui.screens.JvmGenresScreen
+import cn.xybbz.ui.screens.JvmLocalScreen
 import cn.xybbz.ui.screens.JvmMusicScreen
 import cn.xybbz.ui.screens.JvmSearchScreen
 import cn.xybbz.ui.screens.JvmSettingScreen
@@ -82,7 +83,7 @@ private val jvmDesktopEntryProvider2 = entryProvider {
     }
     desktopNode<DailyRecommend> { DailyRecommendScreen() }
     desktopNode<Download> { DownloadScreen() }
-    desktopNode<Local> { LocalScreen() }
+    desktopNode<Local> { JvmLocalScreen() }
     desktopNode<SetBackgroundImage> { SetBackgroundImageScreen() }
     desktopNode<ProxyConfig> { ProxyConfigScreen() }
     desktopNode<StreamingQuality> { StreamingQualityScreen() }
