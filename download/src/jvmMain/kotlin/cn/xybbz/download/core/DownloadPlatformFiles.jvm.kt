@@ -3,9 +3,8 @@ package cn.xybbz.download.core
 import cn.xybbz.download.enums.DownloadStatus
 import cn.xybbz.platform.ContextWrapper
 import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.exhausted
 import io.ktor.utils.io.readAvailable
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 import java.io.RandomAccessFile
@@ -61,12 +60,13 @@ internal actual object DownloadPlatformFiles {
         return file.exists() && file.length() == 0L && file.delete()
     }
 
+    @Suppress("BlockingMethodInNonBlockingContext")
     actual suspend fun writeResponseToFile(
         path: String,
         startOffset: Long,
         source: ByteReadChannel,
         onChunkWritten: suspend (currentBytes: Long) -> DownloadStatus,
-    ): DownloadWriteResult = withContext(Dispatchers.IO) {
+    ): DownloadWriteResult {
         val targetFile = File(path)
         targetFile.parentFile?.mkdirs()
         val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
@@ -75,7 +75,7 @@ internal actual object DownloadPlatformFiles {
         RandomAccessFile(targetFile, "rw").use { output ->
             output.seek(startOffset)
 
-            while (true) {
+            while (!source.exhausted()) {
                 val bytesRead = source.readAvailable(buffer, 0, buffer.size)
                 if (bytesRead == -1) {
                     break
@@ -89,16 +89,16 @@ internal actual object DownloadPlatformFiles {
 
                 when (onChunkWritten(currentBytes)) {
                     DownloadStatus.PAUSED ->
-                        return@withContext DownloadWriteResult(DownloadStatus.PAUSED, currentBytes)
+                        return DownloadWriteResult(DownloadStatus.PAUSED, currentBytes)
 
                     DownloadStatus.CANCEL ->
-                        return@withContext DownloadWriteResult(DownloadStatus.CANCEL, currentBytes)
+                        return DownloadWriteResult(DownloadStatus.CANCEL, currentBytes)
 
                     else -> Unit
                 }
             }
         }
 
-        DownloadWriteResult(DownloadStatus.COMPLETED, currentBytes)
+        return DownloadWriteResult(DownloadStatus.COMPLETED, currentBytes)
     }
 }

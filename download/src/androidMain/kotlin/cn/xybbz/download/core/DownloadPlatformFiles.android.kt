@@ -5,6 +5,7 @@ import cn.xybbz.download.enums.DownloadStatus
 import cn.xybbz.download.utils.FileUtil
 import cn.xybbz.platform.ContextWrapper
 import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.exhausted
 import io.ktor.utils.io.readAvailable
 import okhttp3.internal.platform.PlatformRegistry.applicationContext
 import java.io.File
@@ -70,7 +71,7 @@ internal actual object DownloadPlatformFiles {
         RandomAccessFile(targetFile, "rw").use { output ->
             // 从断点位置继续写，保持和旧 Android 下载逻辑一致。
             output.seek(startOffset)
-            while (true) {
+            while (!source.exhausted()) {
                 val bytesRead = source.readAvailable(buffer, 0, buffer.size)
                 if (bytesRead == -1) {
                     break
