@@ -133,6 +133,7 @@ fun SnackBarPlayerComponent(
     val picByte by snackBarPlayerViewModel.musicController.picByteFlow.collectAsStateWithLifecycle()
     val curOriginIndex by snackBarPlayerViewModel.musicController.curOriginIndexFlow.collectAsStateWithLifecycle()
     val originMusicList by snackBarPlayerViewModel.musicController.originMusicListFlow.collectAsStateWithLifecycle()
+    val state by snackBarPlayerViewModel.musicController.stateFlow.collectAsStateWithLifecycle()
 
     val defaultSnackBarColor = MaterialTheme.colorScheme.surfaceContainerLowest
 
@@ -185,6 +186,7 @@ fun SnackBarPlayerComponent(
     MusicListComponent(
         musicListState = musicListState,
         curOriginIndex = curOriginIndex,
+        isPlaying = state == PlayStateEnum.Playing,
         originMusicList = originMusicList,
         onSetState = { musicListState = it },
         onClearPlayerList = {

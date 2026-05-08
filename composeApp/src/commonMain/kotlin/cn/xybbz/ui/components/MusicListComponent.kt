@@ -19,6 +19,7 @@
 package cn.xybbz.ui.components
 
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -40,12 +41,21 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -72,13 +82,13 @@ import xymusic_kmp.composeapp.generated.resources.current_playlist
 import xymusic_kmp.composeapp.generated.resources.playing
 import xymusic_kmp.composeapp.generated.resources.reached_bottom
 import xymusic_kmp.composeapp.generated.resources.remove_from_playlist
-import xymusic_kmp.composeapp.generated.resources.signal_cellular_alt_24px
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MusicListComponent(
     musicListState: Boolean,
     curOriginIndex: Int,
+    isPlaying: Boolean,
     originMusicList: List<XyPlayMusic>,
     onSetState: (Boolean) -> Unit,
     onClearPlayerList: () -> Unit,
@@ -135,6 +145,7 @@ fun MusicListComponent(
                 )
                 MusicList(
                     curOriginIndex = curOriginIndex,
+                    isPlaying = isPlaying,
                     originMusicList = originMusicList,
                     onSeekToIndex = onSeekToIndex,
                     onRemovePlayerMusicItem = onRemovePlayerMusicItem
@@ -154,6 +165,7 @@ internal expect fun platformMusicListContentHeight(maxHeight: Dp): Dp
 @Composable
 fun MusicList(
     curOriginIndex: Int,
+    isPlaying: Boolean,
     originMusicList: List<XyPlayMusic>,
     onSeekToIndex: (Int) -> Unit,
     onRemovePlayerMusicItem: (Int) -> Unit
@@ -173,6 +185,7 @@ fun MusicList(
         itemsIndexed(originMusicList) { index, it ->
             MusicListItem(
                 curOriginIndex = curOriginIndex,
+                isPlaying = isPlaying,
                 onIndex = { index },
                 xyMusic = it,
                 onSeekToIndex = onSeekToIndex,
@@ -191,6 +204,7 @@ fun MusicList(
 @Composable
 fun MusicListItem(
     curOriginIndex: Int,
+    isPlaying: Boolean,
     onIndex: () -> Int,
     xyMusic: XyPlayMusic,
     onSeekToIndex: (Int) -> Unit,
@@ -199,27 +213,28 @@ fun MusicListItem(
     val index by remember {
         mutableIntStateOf(onIndex())
     }
+    val isCurrentMusic = curOriginIndex == index
+    val currentTextStyle = MaterialTheme.typography.bodyLarge
+    val normalTextStyle = MaterialTheme.typography.bodySmall
+    val itemTextStyle = if (isCurrentMusic) currentTextStyle else normalTextStyle
+    val itemTextColor = if (isCurrentMusic) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.onSurface
+    }
     val text = buildAnnotatedString {
         withStyle(
             style = SpanStyle(
-                fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                color = if (curOriginIndex == index) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurface
-                }
+                fontSize = itemTextStyle.fontSize,
+                color = itemTextColor
             ), block = {
                 append(xyMusic.name)
             })
         if (xyMusic.artists != null) {
             withStyle(
                 style = SpanStyle(
-                    fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                    color = if (curOriginIndex == index) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    }
+                    fontSize = itemTextStyle.fontSize,
+                    color = itemTextColor
                 ), block = {
                     append("  - ")
                     append(xyMusic.artists?.joinToString())
@@ -244,8 +259,8 @@ fun MusicListItem(
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = if (curOriginIndex == index) FontWeight.W500 else FontWeight.W400,
+            style = itemTextStyle,
+            fontWeight = if (isCurrentMusic) FontWeight.W500 else FontWeight.W400,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
@@ -255,13 +270,12 @@ fun MusicListItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            if (curOriginIndex == index) {
-                Icon(
-                    painter = painterResource(Res.drawable.signal_cellular_alt_24px),
+            if (isCurrentMusic) {
+                PlayingEqualizer(
+                    modifier = Modifier.padding(horizontal = 3.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    isPlaying = isPlaying,
                     contentDescription = stringResource(Res.string.playing),
-                    modifier = Modifier
-                        .padding(horizontal = 3.dp),
-                    tint = MaterialTheme.colorScheme.primary
                 )
             }
             Icon(
@@ -277,3 +291,65 @@ fun MusicListItem(
         }
     }
 }
+
+@Composable
+private fun PlayingEqualizer(
+    color: Color,
+    isPlaying: Boolean,
+    contentDescription: String,
+    modifier: Modifier = Modifier,
+) {
+    var elapsedNanos by remember { mutableStateOf(0L) }
+    val barPhases = remember {
+        listOf(0f, 0.42f, 0.78f)
+    }
+    LaunchedEffect(isPlaying) {
+        if (!isPlaying) {
+            return@LaunchedEffect
+        }
+
+        var lastFrameNanos: Long? = null
+        while (true) {
+            val frameNanos = withFrameNanos { it }
+            val previousFrameNanos = lastFrameNanos
+            if (previousFrameNanos != null) {
+                val deltaNanos = frameNanos - previousFrameNanos
+                elapsedNanos =
+                    (elapsedNanos + deltaNanos) % PlayingEqualizerAnimationDurationNanos
+            }
+            lastFrameNanos = frameNanos
+        }
+    }
+    val progress = elapsedNanos.toFloat() / PlayingEqualizerAnimationDurationNanos
+
+    Canvas(
+        modifier = modifier
+            .size(width = 18.dp, height = 16.dp)
+            .semantics {
+                this.contentDescription = contentDescription
+            }
+    ) {
+        val barCount = barPhases.size
+        val gap = size.width * 0.16f
+        val barWidth = (size.width - gap * (barCount - 1)) / barCount
+        val minBarHeight = size.height * 0.28f
+        val maxBarHeight = size.height * 0.92f
+
+        barPhases.forEachIndexed { index, phase ->
+            val wave = kotlin.math.sin((progress + phase) * kotlin.math.PI.toFloat() * 2f)
+            val normalized = (wave + 1f) / 2f
+            val barHeight = minBarHeight + (maxBarHeight - minBarHeight) * normalized
+            val left = index * (barWidth + gap)
+            val top = size.height - barHeight
+
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(left, top),
+                size = Size(barWidth, barHeight),
+                cornerRadius = CornerRadius(barWidth / 2f, barWidth / 2f)
+            )
+        }
+    }
+}
+
+private const val PlayingEqualizerAnimationDurationNanos = 760L * 1_000_000L
