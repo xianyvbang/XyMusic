@@ -46,7 +46,6 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
@@ -105,7 +104,6 @@ fun JvmSnackBarPlayerComponent(
     val picByte by snackBarPlayerViewModel.musicController.picByteFlow.collectAsStateWithLifecycle()
     val curOriginIndex by snackBarPlayerViewModel.musicController.curOriginIndexFlow.collectAsStateWithLifecycle()
     val originMusicList by snackBarPlayerViewModel.musicController.originMusicListFlow.collectAsStateWithLifecycle()
-    val state by snackBarPlayerViewModel.musicController.stateFlow.collectAsStateWithLifecycle()
     val cacheScheduleData by snackBarPlayerViewModel.musicController.downloadCacheController.cacheSchedule.collectAsStateWithLifecycle()
     val favoriteSet by mainViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
 
@@ -169,7 +167,7 @@ fun JvmSnackBarPlayerComponent(
     MusicListComponent(
         musicListState = musicListState,
         curOriginIndex = curOriginIndex,
-        isPlaying = state == PlayStateEnum.Playing,
+        musicController = snackBarPlayerViewModel.musicController,
         originMusicList = originMusicList,
         onSetState = { musicListState = it },
         onClearPlayerList = {

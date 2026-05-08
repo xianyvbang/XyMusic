@@ -186,7 +186,7 @@ fun SnackBarPlayerComponent(
     MusicListComponent(
         musicListState = musicListState,
         curOriginIndex = curOriginIndex,
-        isPlaying = state == PlayStateEnum.Playing,
+        musicController = snackBarPlayerViewModel.musicController,
         originMusicList = originMusicList,
         onSetState = { musicListState = it },
         onClearPlayerList = {

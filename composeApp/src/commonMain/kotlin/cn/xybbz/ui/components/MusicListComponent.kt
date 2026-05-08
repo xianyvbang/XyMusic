@@ -65,7 +65,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.compositionLocal.LocalMainViewModel
+import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.ui.ext.debounceClickable
@@ -88,7 +90,7 @@ import xymusic_kmp.composeapp.generated.resources.remove_from_playlist
 fun MusicListComponent(
     musicListState: Boolean,
     curOriginIndex: Int,
-    isPlaying: Boolean,
+    musicController: MusicCommonController,
     originMusicList: List<XyPlayMusic>,
     onSetState: (Boolean) -> Unit,
     onClearPlayerList: () -> Unit,
@@ -100,6 +102,8 @@ fun MusicListComponent(
     )
 
     val mainViewModel = LocalMainViewModel.current
+    val state by musicController.stateFlow.collectAsStateWithLifecycle()
+    val isPlaying = state == PlayStateEnum.Playing || state == PlayStateEnum.Loading
     MusicBottomMenuPlatformSheet(
         onIfDisplay = { musicListState },
         onClose = {
