@@ -19,6 +19,8 @@
 package cn.xybbz.ui.components
 
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -54,6 +56,8 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
@@ -220,7 +224,12 @@ fun MusicListItem(
     val isCurrentMusic = curOriginIndex == index
     val currentTextStyle = MaterialTheme.typography.bodyLarge
     val normalTextStyle = MaterialTheme.typography.bodySmall
-    val itemTextStyle = if (isCurrentMusic) currentTextStyle else normalTextStyle
+    val normalTextScale = normalTextStyle.fontSize.value / currentTextStyle.fontSize.value
+    val animatedTextScale by animateFloatAsState(
+        targetValue = if (isCurrentMusic) 1f else normalTextScale,
+        animationSpec = tween(durationMillis = 220),
+        label = "musicListItemTextScale"
+    )
     val itemTextColor = if (isCurrentMusic) {
         MaterialTheme.colorScheme.primary
     } else {
@@ -229,7 +238,7 @@ fun MusicListItem(
     val text = buildAnnotatedString {
         withStyle(
             style = SpanStyle(
-                fontSize = itemTextStyle.fontSize,
+                fontSize = currentTextStyle.fontSize,
                 color = itemTextColor
             ), block = {
                 append(xyMusic.name)
@@ -237,7 +246,7 @@ fun MusicListItem(
         if (xyMusic.artists != null) {
             withStyle(
                 style = SpanStyle(
-                    fontSize = itemTextStyle.fontSize,
+                    fontSize = currentTextStyle.fontSize,
                     color = itemTextColor
                 ), block = {
                     append("  - ")
@@ -263,11 +272,17 @@ fun MusicListItem(
     ) {
         Text(
             text = text,
-            style = itemTextStyle,
+            style = currentTextStyle,
             fontWeight = if (isCurrentMusic) FontWeight.W500 else FontWeight.W400,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .graphicsLayer {
+                    transformOrigin = TransformOrigin(0f, 0.5f)
+                    scaleX = animatedTextScale
+                    scaleY = animatedTextScale
+                }
         )
 
         Row(
