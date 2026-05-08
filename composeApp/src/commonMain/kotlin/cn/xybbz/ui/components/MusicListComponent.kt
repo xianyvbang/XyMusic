@@ -51,6 +51,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -103,7 +104,7 @@ fun MusicListComponent(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(this.maxHeight.times(0.8f))
+                    .height(platformMusicListContentHeight(this.maxHeight))
             ) {
 
                 XyRow(
@@ -147,6 +148,8 @@ fun MusicListComponent(
 
 }
 
+
+internal expect fun platformMusicListContentHeight(maxHeight: Dp): Dp
 
 @Composable
 fun MusicList(
