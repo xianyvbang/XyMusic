@@ -20,7 +20,6 @@ import uk.co.caprica.vlcj.media.Meta
 import uk.co.caprica.vlcj.media.ParseFlag
 import uk.co.caprica.vlcj.player.base.MediaPlayer
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter
-import java.io.File
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -481,7 +480,7 @@ class JvmMusicController : MusicCommonController() {
         updateEvent(PlayerEvent.AddMusicList(artistId, ifInitPlayerList))
 
         // 远程地址需要先解析为最终可播地址；准备期间如果用户又切了别的歌，
-        ensurePlaylistPrepared(playMusicList)
+//        ensurePlaylistPrepared(playMusicList)
         if (ifInitPlayerList) {
             updateState(PlayStateEnum.Pause)
             setCurrentPositionData(
@@ -791,7 +790,7 @@ class JvmMusicController : MusicCommonController() {
     private fun preparePlaylistSource(music: XyPlayMusic): String {
         val localPath = music.filePath
         val playerUrl = if (!localPath.isNullOrBlank()) {
-            File(localPath).toURI().toString()
+            Paths.get(localPath).toUri().toASCIIString()
         } else {
             resolveRemotePlaybackUrl(music)
         }
@@ -919,7 +918,7 @@ class JvmMusicController : MusicCommonController() {
         val player = ensureMediaPlayer() ?: return
         val music = playMusicList.getOrNull(realIndex) ?: return
         val mediaSource = playbackSourceOf(music)
-        Log.i("=====", "音乐播放链接${music.musicUrl}")
+        Log.i("=====", "音乐播放链接$mediaSource")
         playWhenReady = true
         updateState(PlayStateEnum.Loading)
         setCurrentPositionData(0L)
