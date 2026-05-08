@@ -60,7 +60,6 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnParentComponent
-import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyTextSubSmall
 import org.jetbrains.compose.resources.painterResource
@@ -90,7 +89,7 @@ fun MusicListComponent(
     )
 
     val mainViewModel = LocalMainViewModel.current
-    ModalBottomSheetExtendComponent(
+    MusicBottomMenuPlatformSheet(
         onIfDisplay = { musicListState },
         onClose = {
             mainViewModel.putIterations(1)

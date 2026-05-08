@@ -196,7 +196,7 @@ internal fun JvmSnackBarPlaybackBar(
 
         XyRow(
             modifier = Modifier.then(openPlayerModifier),
-            paddingValues = PaddingValues(bottom = 2.dp),
+            paddingValues = PaddingValues(bottom = 2.dp,end = XyTheme.dimens.outerHorizontalPadding),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
