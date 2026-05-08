@@ -10,14 +10,14 @@ import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.proxy.JvmReverseProxyServer
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory
+import uk.co.caprica.vlcj.log.LogEventListener
+import uk.co.caprica.vlcj.log.LogLevel
+import uk.co.caprica.vlcj.log.NativeLog
 import uk.co.caprica.vlcj.media.Media
 import uk.co.caprica.vlcj.media.MediaParsedStatus
 import uk.co.caprica.vlcj.media.MediaRef
 import uk.co.caprica.vlcj.media.Meta
 import uk.co.caprica.vlcj.media.ParseFlag
-import uk.co.caprica.vlcj.log.LogEventListener
-import uk.co.caprica.vlcj.log.LogLevel
-import uk.co.caprica.vlcj.log.NativeLog
 import uk.co.caprica.vlcj.player.base.MediaPlayer
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter
 import java.io.File
@@ -138,7 +138,6 @@ class JvmMusicController : MusicCommonController() {
             }
             submitMediaPlayerTask(mediaPlayer) {
                 try {
-                    syncCurrentMusicFromMedia(retainedMedia)
                     refreshArtworkBytes(retainedMedia)
                     val appliedPendingStartPosition = applyPendingStartPosition()
                     if (!appliedPendingStartPosition) {
@@ -589,8 +588,8 @@ class JvmMusicController : MusicCommonController() {
         val playerTime = safeVlcValue { player?.status()?.time() }
         val playerPosition = safeVlcValue { player?.status()?.position() }
         val playerLength = safeVlcValue { player?.status()?.length() }
-        val playerPlayable = safeVlcValue { player?.status()?.isPlayable() }
-        val mediaValid = safeVlcValue { player?.media()?.isValid() }
+        val playerPlayable = safeVlcValue { player?.status()?.isPlayable }
+        val mediaValid = safeVlcValue { player?.media()?.isValid }
         val mediaMrl = safeVlcValue { player?.media()?.info()?.mrl() }
         val mediaType = safeVlcValue { player?.media()?.info()?.type() }
         val mediaState = safeVlcValue { player?.media()?.info()?.state() }
@@ -807,56 +806,6 @@ class JvmMusicController : MusicCommonController() {
         return music.getPlayerUrl().takeIf { it.isNotBlank() } ?: preparePlaylistSource(music)
     }
 
-    /**
-     * VLC 返回的本地 mrl 可能与 File.toURI() 的字符串细节不同，
-     * 比如斜杠数量、编码或盘符大小写。比较本地文件时统一转成 Windows 路径。
-     */
-    private fun isSamePlaybackSource(expectedMrl: String, currentMrl: String): Boolean {
-        if (expectedMrl == currentMrl) {
-            return true
-        }
-
-        val expectedPath = localPathFromMrl(expectedMrl) ?: return false
-        val currentPath = localPathFromMrl(currentMrl) ?: return false
-        return expectedPath.equals(currentPath, ignoreCase = true)
-    }
-
-    /**
-     * 将 file mrl 或裸本地路径转成可比较的规范路径。
-     */
-    private fun localPathFromMrl(mrl: String): String? {
-        if (mrl.isBlank()) {
-            return null
-        }
-
-        if (isWindowsAbsolutePath(mrl)) {
-            return runCatching {
-                File(mrl).toPath().toAbsolutePath().normalize().toString()
-            }.getOrNull()
-        }
-
-        val uri = runCatching { URI(mrl) }.getOrNull()
-        if (uri?.scheme.equals("file", ignoreCase = true)) {
-            return runCatching {
-                Paths.get(uri).toAbsolutePath().normalize().toString()
-            }.getOrNull()
-        }
-
-        if (uri?.scheme == null) {
-            return runCatching {
-                File(mrl).toPath().toAbsolutePath().normalize().toString()
-            }.getOrNull()
-        }
-
-        return null
-    }
-
-    private fun isWindowsAbsolutePath(path: String): Boolean {
-        return path.length >= 3 &&
-                path[1] == ':' &&
-                path[0].isLetter() &&
-                (path[2] == '\\' || path[2] == '/')
-    }
 
     /**
      * 延迟初始化 VLC 播放器体系。
@@ -877,7 +826,7 @@ class JvmMusicController : MusicCommonController() {
 
         val createdNativeLog = runCatching {
             factory.application().newLog().apply {
-                setLevel(LogLevel.WARNING)
+                level = LogLevel.WARNING
                 addLogListener(nativeLogListener)
             }
         }.onFailure {
@@ -919,25 +868,6 @@ class JvmMusicController : MusicCommonController() {
         val startPositionMs = restoredPositionForCurrentMusic().takeIf { it > 0L } ?: return false
         seekTo(startPositionMs)
         return true
-    }
-
-    /**
-     * 音频切换的时候更新索引和播放对象
-     */
-    private fun syncCurrentMusicFromMedia(media: Media) {
-        val currentMrl = media.info().mrl() ?: return
-        val currentIndex = playMusicList.indexOfFirst { music ->
-            isSamePlaybackSource(playbackSourceOf(music), currentMrl)
-        }
-        if (currentIndex !in playMusicList.indices) {
-            return
-        }
-
-        val currentMusic = playMusicList[currentIndex]
-        if (currentIndex == curRealIndex && musicInfo?.itemId == currentMusic.itemId) {
-            return
-        }
-        updateRealIndex(currentIndex)
     }
 
     /**
@@ -988,7 +918,7 @@ class JvmMusicController : MusicCommonController() {
     private fun playMusicAtRealIndex(realIndex: Int) {
         val player = ensureMediaPlayer() ?: return
         val music = playMusicList.getOrNull(realIndex) ?: return
-        val mediaSource = preparePlaylistSource(music)
+        val mediaSource = playbackSourceOf(music)
         Log.i("=====", "音乐播放链接${music.musicUrl}")
         playWhenReady = true
         updateState(PlayStateEnum.Loading)
