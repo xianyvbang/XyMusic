@@ -138,7 +138,7 @@ import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 internal val JvmMusicPlayerSharedCoverTargetSize = 650.dp
 private val JvmMusicPlayerSharedCoverDisplayMaxSize = 650.dp
-private const val JvmMusicPlayerSharedCoverDurationMillis = 920
+private const val JvmMusicPlayerSharedCoverDurationMillis = 520
 private const val JvmMusicPlayerDialogEnterDurationMillis = 260
 private const val JvmMusicPlayerCoverRotationDurationMillis = 18_000
 private const val JvmMusicPlayerCoverRotationReadyProgress = 0.999f
@@ -176,7 +176,7 @@ fun JvmMusicPlayerComponent(
         targetValue = if (mainViewModel.sheetState) 1f else 0f,
         animationSpec = tween(
             durationMillis = JvmMusicPlayerSharedCoverDurationMillis,
-            easing = FastOutSlowInEasing
+            easing = LinearEasing
         ),
         label = "JvmMusicPlayerSharedCoverProgress"
     )
