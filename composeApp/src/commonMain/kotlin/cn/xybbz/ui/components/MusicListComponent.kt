@@ -258,7 +258,7 @@ fun MusicListItem(
                     contentDescription = stringResource(Res.string.playing),
                     modifier = Modifier
                         .padding(horizontal = 3.dp),
-                    tint = Color(0xffFB6580)
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
             Icon(
