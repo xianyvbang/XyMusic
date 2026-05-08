@@ -15,6 +15,9 @@ import uk.co.caprica.vlcj.media.MediaParsedStatus
 import uk.co.caprica.vlcj.media.MediaRef
 import uk.co.caprica.vlcj.media.Meta
 import uk.co.caprica.vlcj.media.ParseFlag
+import uk.co.caprica.vlcj.log.LogEventListener
+import uk.co.caprica.vlcj.log.LogLevel
+import uk.co.caprica.vlcj.log.NativeLog
 import uk.co.caprica.vlcj.player.base.MediaPlayer
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter
 import java.io.File
@@ -28,11 +31,30 @@ class JvmMusicController : MusicCommonController() {
 
     private var mediaPlayerFactory: MediaPlayerFactory? = null
     private var mediaPlayer: MediaPlayer? = null
+    private var nativeLog: NativeLog? = null
     private var mediaPlayerListenerRegistered = false
     private var ignoreNextStoppedEvent = false
     // VLC loading is asynchronous, so keep the latest user play/pause intent separately.
     @Volatile
     private var playWhenReady = false
+
+    private val nativeLogListener = LogEventListener { level, module, file, line, name, header, id, message ->
+        if (level == LogLevel.ERROR || level == LogLevel.WARNING) {
+            Log.e(
+                "vlc-native",
+                formatNativeLogMessage(
+                    level = level,
+                    module = module,
+                    file = file,
+                    line = line,
+                    name = name,
+                    header = header,
+                    id = id,
+                    message = message
+                )
+            )
+        }
+    }
 
     private val playerListener = object : MediaPlayerEventAdapter() {
         /**
@@ -136,7 +158,15 @@ class JvmMusicController : MusicCommonController() {
          * 播放异常时回退为空闲状态。
          */
         override fun error(mediaPlayer: MediaPlayer?) {
-            Log.i("vlc", "播放异常")
+            val appState = state
+            val wasPlayWhenReady = playWhenReady
+            val currentMusic = musicInfo
+            submitMediaPlayerTask(mediaPlayer) { player ->
+                logPlaybackError(player, appState, wasPlayWhenReady, currentMusic)
+            }
+            if (mediaPlayer == null) {
+                logPlaybackError(null, appState, wasPlayWhenReady, currentMusic)
+            }
             clearIgnoredStoppedEvent()
             playWhenReady = false
             downloadCacheController.updateCacheSchedule(0f)
@@ -493,6 +523,9 @@ class JvmMusicController : MusicCommonController() {
         eventApi?.removeMediaPlayerEventListener(playerListener)
         eventApi?.removeMediaEventListener(listener)
         mediaPlayerListenerRegistered = false
+        nativeLog?.removeLogListener(nativeLogListener)
+        nativeLog?.release()
+        nativeLog = null
         mediaPlayer?.release()
         mediaPlayer = null
         mediaPlayerFactory?.release()
@@ -506,6 +539,106 @@ class JvmMusicController : MusicCommonController() {
      */
     private fun resolveRemotePlaybackUrl(music: XyPlayMusic): String {
         return JvmReverseProxyServer.wrapTargetUrl(music.musicUrl)
+    }
+
+    /**
+     * 格式化 libVLC 原生层日志，保留模块和源码位置，方便追具体解码/访问错误。
+     */
+    private fun formatNativeLogMessage(
+        level: LogLevel,
+        module: String?,
+        file: String?,
+        line: Int?,
+        name: String?,
+        header: String?,
+        id: Int?,
+        message: String?
+    ): String {
+        val context = listOfNotNull(
+            module?.takeIf { it.isNotBlank() }?.let { "module=$it" },
+            name?.takeIf { it.isNotBlank() }?.let { "name=$it" },
+            header?.takeIf { it.isNotBlank() }?.let { "header=$it" },
+            id?.let { "id=$it" },
+            file?.takeIf { it.isNotBlank() }?.let { sourceFile ->
+                if (line != null) {
+                    "source=$sourceFile:$line"
+                } else {
+                    "source=$sourceFile"
+                }
+            }
+        ).joinToString(", ")
+
+        val prefix = if (context.isBlank()) {
+            "[$level]"
+        } else {
+            "[$level] $context"
+        }
+        return "$prefix ${message.orEmpty()}"
+    }
+
+    /**
+     * VLC 的 error 回调没有 Throwable，这里主动抓取播放器与当前媒体状态。
+     */
+    private fun logPlaybackError(
+        player: MediaPlayer?,
+        appState: PlayStateEnum,
+        wasPlayWhenReady: Boolean,
+        currentMusic: XyPlayMusic?
+    ) {
+        val playerState = safeVlcValue { player?.status()?.state() }
+        val playerTime = safeVlcValue { player?.status()?.time() }
+        val playerPosition = safeVlcValue { player?.status()?.position() }
+        val playerLength = safeVlcValue { player?.status()?.length() }
+        val playerPlayable = safeVlcValue { player?.status()?.isPlayable() }
+        val mediaValid = safeVlcValue { player?.media()?.isValid() }
+        val mediaMrl = safeVlcValue { player?.media()?.info()?.mrl() }
+        val mediaType = safeVlcValue { player?.media()?.info()?.type() }
+        val mediaState = safeVlcValue { player?.media()?.info()?.state() }
+        val mediaDuration = safeVlcValue { player?.media()?.info()?.duration() }
+        val mediaParsedStatus = safeVlcValue { player?.media()?.parsing()?.status() }
+        val mediaStatistics = safeVlcValue { player?.media()?.info()?.statistics() }
+
+        Log.e(
+            "vlc",
+            buildString {
+                appendLine("播放异常")
+                appendLine("appState=$appState, playWhenReady=$wasPlayWhenReady")
+                appendLine(
+                    "playerState=$playerState, playable=$playerPlayable, " +
+                            "time=$playerTime, position=$playerPosition, length=$playerLength"
+                )
+                appendLine(
+                    "mediaValid=$mediaValid, mediaState=$mediaState, mediaType=$mediaType, " +
+                            "duration=$mediaDuration, parsed=$mediaParsedStatus"
+                )
+                appendLine("mrl=$mediaMrl")
+                appendLine("statistics=$mediaStatistics")
+                append("music=")
+                append(currentMusic?.let(::formatMusicForLog) ?: "null")
+            }
+        )
+    }
+
+    private fun formatMusicForLog(music: XyPlayMusic): String {
+        return buildString {
+            append("id=${music.itemId}, ")
+            append("name=${music.name}, ")
+            append("filePath=${music.filePath}, ")
+            append("musicUrl=${music.musicUrl}, ")
+            append("playerUrl=${music.getPlayerUrl()}, ")
+            append("container=${music.container}, ")
+            append("ifHls=${music.ifHls}, ")
+            append("static=${music.static}, ")
+            append("duration=${music.runTimeTicks}")
+        }
+    }
+
+    private inline fun <T> safeVlcValue(block: () -> T): String {
+        return runCatching {
+            block()?.toString() ?: "null"
+        }.getOrElse { error ->
+            "读取失败: ${error.message ?: error::class.simpleName}"
+        }
     }
 
     /**
@@ -668,6 +801,64 @@ class JvmMusicController : MusicCommonController() {
     }
 
     /**
+     * 获取当前歌曲真正交给 VLC 播放的地址。
+     */
+    private fun playbackSourceOf(music: XyPlayMusic): String {
+        return music.getPlayerUrl().takeIf { it.isNotBlank() } ?: preparePlaylistSource(music)
+    }
+
+    /**
+     * VLC 返回的本地 mrl 可能与 File.toURI() 的字符串细节不同，
+     * 比如斜杠数量、编码或盘符大小写。比较本地文件时统一转成 Windows 路径。
+     */
+    private fun isSamePlaybackSource(expectedMrl: String, currentMrl: String): Boolean {
+        if (expectedMrl == currentMrl) {
+            return true
+        }
+
+        val expectedPath = localPathFromMrl(expectedMrl) ?: return false
+        val currentPath = localPathFromMrl(currentMrl) ?: return false
+        return expectedPath.equals(currentPath, ignoreCase = true)
+    }
+
+    /**
+     * 将 file mrl 或裸本地路径转成可比较的规范路径。
+     */
+    private fun localPathFromMrl(mrl: String): String? {
+        if (mrl.isBlank()) {
+            return null
+        }
+
+        if (isWindowsAbsolutePath(mrl)) {
+            return runCatching {
+                File(mrl).toPath().toAbsolutePath().normalize().toString()
+            }.getOrNull()
+        }
+
+        val uri = runCatching { URI(mrl) }.getOrNull()
+        if (uri?.scheme.equals("file", ignoreCase = true)) {
+            return runCatching {
+                Paths.get(uri).toAbsolutePath().normalize().toString()
+            }.getOrNull()
+        }
+
+        if (uri?.scheme == null) {
+            return runCatching {
+                File(mrl).toPath().toAbsolutePath().normalize().toString()
+            }.getOrNull()
+        }
+
+        return null
+    }
+
+    private fun isWindowsAbsolutePath(path: String): Boolean {
+        return path.length >= 3 &&
+                path[1] == ':' &&
+                path[0].isLetter() &&
+                (path[2] == '\\' || path[2] == '/')
+    }
+
+    /**
      * 延迟初始化 VLC 播放器体系。
      * 这里仅创建真正承载单曲播放的 MediaPlayer。
      */
@@ -684,9 +875,20 @@ class JvmMusicController : MusicCommonController() {
             Log.e("vlc", "创建 VLC 播放器工厂失败", it)
         }.getOrNull() ?: return null
 
+        val createdNativeLog = runCatching {
+            factory.application().newLog().apply {
+                setLevel(LogLevel.WARNING)
+                addLogListener(nativeLogListener)
+            }
+        }.onFailure {
+            Log.e("vlc", "启用 VLC 原生日志失败", it)
+        }.getOrNull()
+
         val createdPlayer = runCatching {
             factory.mediaPlayers().newMediaPlayer()
         }.onFailure {
+            createdNativeLog?.removeLogListener(nativeLogListener)
+            createdNativeLog?.release()
             runCatching { factory.release() }
             Log.e("vlc", "创建 VLC 音频播放器失败", it)
         }.getOrNull() ?: return null
@@ -695,6 +897,7 @@ class JvmMusicController : MusicCommonController() {
         createdPlayer.events().addMediaEventListener(listener)
         createdPlayer.audio().setVolume(60)
         mediaPlayerListenerRegistered = true
+        nativeLog = createdNativeLog
         mediaPlayerFactory = factory
         mediaPlayer = createdPlayer
         return createdPlayer
@@ -723,7 +926,9 @@ class JvmMusicController : MusicCommonController() {
      */
     private fun syncCurrentMusicFromMedia(media: Media) {
         val currentMrl = media.info().mrl() ?: return
-        val currentIndex = playMusicList.indexOfFirst { resolveRemotePlaybackUrl(it) == currentMrl }
+        val currentIndex = playMusicList.indexOfFirst { music ->
+            isSamePlaybackSource(playbackSourceOf(music), currentMrl)
+        }
         if (currentIndex !in playMusicList.indices) {
             return
         }
@@ -793,8 +998,7 @@ class JvmMusicController : MusicCommonController() {
         updateRealIndex(realIndex)
 
         ignoreStoppedEventOnce()
-        //todo 需要试验断网后这里的逻辑
-        /*val played = */runCatching {
+        val played = runCatching {
             player.media().play(mediaSource,
                 ":network-caching=${0.toLong()}",
                 ":file-caching=${(music.runTimeTicks * 0.1).toLong()}",
@@ -803,10 +1007,20 @@ class JvmMusicController : MusicCommonController() {
             clearIgnoredStoppedEvent()
             Log.e("vlc", "直接播放媒体失败: $mediaSource", it)
         }.getOrDefault(false)
-        /*if (!played) {
+
+        if (!played) {
             clearIgnoredStoppedEvent()
+            Log.e(
+                "vlc",
+                buildString {
+                    appendLine("VLC 拒绝提交播放任务")
+                    appendLine("mediaSource=$mediaSource")
+                    append("music=")
+                    append(formatMusicForLog(music))
+                }
+            )
             updateState(PlayStateEnum.None)
-        }*/
+        }
     }
 
     /**
@@ -853,7 +1067,6 @@ class JvmMusicController : MusicCommonController() {
          * `--no-media-library` 则避免媒体库相关的额外状态介入当前播放器实例。
          */
         private val VLC_FACTORY_ARGUMENTS = arrayOf(
-            "--quiet",
             "--intf=dummy",
             "--ignore-config",
             "--no-media-library"
