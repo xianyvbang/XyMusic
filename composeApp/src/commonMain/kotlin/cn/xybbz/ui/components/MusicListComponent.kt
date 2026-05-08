@@ -200,9 +200,11 @@ fun MusicListItem(
         withStyle(
             style = SpanStyle(
                 fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                color = if (curOriginIndex == index) Color(
-                    0xffFB6580
-                ) else MaterialTheme.colorScheme.onSurface
+                color = if (curOriginIndex == index) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                }
             ), block = {
                 append(xyMusic.name)
             })
@@ -210,9 +212,11 @@ fun MusicListItem(
             withStyle(
                 style = SpanStyle(
                     fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                    color = if (curOriginIndex == index) Color(
-                        0xffFB6580
-                    ) else MaterialTheme.colorScheme.onSurface
+                    color = if (curOriginIndex == index) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    }
                 ), block = {
                     append("  - ")
                     append(xyMusic.artists?.joinToString())
