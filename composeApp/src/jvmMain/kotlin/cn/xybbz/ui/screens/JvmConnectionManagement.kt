@@ -72,7 +72,6 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.add_card_24px
 import xymusic_kmp.composeapp.generated.resources.check_24px
 import xymusic_kmp.composeapp.generated.resources.chinese_list_separator
 import xymusic_kmp.composeapp.generated.resources.confirm_delete_connection
@@ -80,9 +79,9 @@ import xymusic_kmp.composeapp.generated.resources.connection_media_library_all_l
 import xymusic_kmp.composeapp.generated.resources.connection_media_library_label
 import xymusic_kmp.composeapp.generated.resources.connection_permission_read_only
 import xymusic_kmp.composeapp.generated.resources.connection_permissions_label
-import xymusic_kmp.composeapp.generated.resources.connection_settings_list
 import xymusic_kmp.composeapp.generated.resources.connection_server_version_label
 import xymusic_kmp.composeapp.generated.resources.connection_server_version_unknown_label
+import xymusic_kmp.composeapp.generated.resources.connection_settings_list
 import xymusic_kmp.composeapp.generated.resources.current_connection
 import xymusic_kmp.composeapp.generated.resources.delete_24px
 import xymusic_kmp.composeapp.generated.resources.delete_connection
@@ -90,9 +89,9 @@ import xymusic_kmp.composeapp.generated.resources.delete_prefix
 import xymusic_kmp.composeapp.generated.resources.download
 import xymusic_kmp.composeapp.generated.resources.edit_24px
 import xymusic_kmp.composeapp.generated.resources.folder_managed_24px
+import xymusic_kmp.composeapp.generated.resources.library_add_24px
 import xymusic_kmp.composeapp.generated.resources.modify_connection
 import xymusic_kmp.composeapp.generated.resources.music_library
-import xymusic_kmp.composeapp.generated.resources.queue_music_24px
 import xymusic_kmp.composeapp.generated.resources.warning
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
@@ -121,7 +120,7 @@ fun JvmConnectionManagement(
                 IconButton(onClick = {
                     navigator.navigate(Connection(connectionUiType = ConnectionUiType.ADD_CONNECTION))
                 }) {
-                    Icon(painter = painterResource(Res.drawable.add_card_24px), contentDescription = "")
+                    Icon(painter = painterResource(Res.drawable.library_add_24px), contentDescription = "")
                 }
             })
         LazyVerticalGrid(

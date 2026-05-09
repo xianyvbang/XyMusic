@@ -62,11 +62,11 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.add_card_24px
 import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.confirm_delete_connection
 import xymusic_kmp.composeapp.generated.resources.connection_settings_list
 import xymusic_kmp.composeapp.generated.resources.delete_connection
+import xymusic_kmp.composeapp.generated.resources.library_add_24px
 import xymusic_kmp.composeapp.generated.resources.modify_connection
 import xymusic_kmp.composeapp.generated.resources.more_vert_24px
 import xymusic_kmp.composeapp.generated.resources.music_library
@@ -103,7 +103,7 @@ fun ConnectionManagement(
                 IconButton(onClick = {
                     navigator.navigate(Connection(connectionUiType = ConnectionUiType.ADD_CONNECTION))
                 }) {
-                    Icon(painter = painterResource(Res.drawable.add_card_24px), contentDescription = "")
+                    Icon(painter = painterResource(Res.drawable.library_add_24px), contentDescription = "")
                 }
             }, navigationIcon = {
                 IconButton(
