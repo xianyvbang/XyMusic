@@ -21,6 +21,7 @@ import cn.xybbz.ui.screens.JvmAlbumInfoScreen
 import cn.xybbz.ui.screens.JvmAlbumScreen
 import cn.xybbz.ui.screens.JvmArtistInfoScreen
 import cn.xybbz.ui.screens.JvmArtistScreen
+import cn.xybbz.ui.screens.JvmConnectionConfigInfoScreen
 import cn.xybbz.ui.screens.JvmConnectionManagement
 import cn.xybbz.ui.screens.JvmFavoriteScreen
 import cn.xybbz.ui.screens.JvmGenresInfoScreen
@@ -70,7 +71,7 @@ private val jvmDesktopEntryProvider2 = entryProvider {
 
     desktopNode<Setting> { JvmSettingScreen() }
     desktopNode<ConnectionManagement> { JvmConnectionManagement() }
-    desktopNode<ConnectionInfo> { ConnectionConfigInfoScreen(connectionId = it.connectionId) }
+    desktopNode<ConnectionInfo> { JvmConnectionConfigInfoScreen(connectionId = it.connectionId) }
     desktopNode<MemoryManagement> { MemoryManagementScreen() }
     desktopNode<InterfaceSetting> { InterfaceSettingScreen() }
     desktopNode<LanguageConfig> { LanguageConfigScreen() }
