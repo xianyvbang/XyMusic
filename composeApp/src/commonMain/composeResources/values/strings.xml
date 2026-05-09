@@ -119,6 +119,14 @@
     <!--链接管理页面-->
     <string name="connection_settings_list">连接设置列表</string>
     <string name="view_connection_info">查看%1$s中的信息</string>
+    <string name="connection_media_library_label">媒体库：%1$s</string>
+    <string name="connection_media_library_all_label">媒体库：全部</string>
+    <string name="connection_server_version_label">版本：%1$s</string>
+    <string name="connection_server_version_unknown_label">版本：未知</string>
+    <string name="connection_permissions_label">权限：%1$s</string>
+    <string name="connection_permission_read_only">只读</string>
+    <string name="current_connection">当前</string>
+    <string name="chinese_list_separator">、</string>
     <!--链接页面-->
     <string name="server_connection">服务器连接</string>
     <string name="connect_to_service">连接到%1$s</string>

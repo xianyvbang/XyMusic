@@ -74,10 +74,20 @@ import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.add_card_24px
 import xymusic_kmp.composeapp.generated.resources.check_24px
+import xymusic_kmp.composeapp.generated.resources.chinese_list_separator
 import xymusic_kmp.composeapp.generated.resources.confirm_delete_connection
+import xymusic_kmp.composeapp.generated.resources.connection_media_library_all_label
+import xymusic_kmp.composeapp.generated.resources.connection_media_library_label
+import xymusic_kmp.composeapp.generated.resources.connection_permission_read_only
+import xymusic_kmp.composeapp.generated.resources.connection_permissions_label
 import xymusic_kmp.composeapp.generated.resources.connection_settings_list
+import xymusic_kmp.composeapp.generated.resources.connection_server_version_label
+import xymusic_kmp.composeapp.generated.resources.connection_server_version_unknown_label
+import xymusic_kmp.composeapp.generated.resources.current_connection
 import xymusic_kmp.composeapp.generated.resources.delete_24px
 import xymusic_kmp.composeapp.generated.resources.delete_connection
+import xymusic_kmp.composeapp.generated.resources.delete_prefix
+import xymusic_kmp.composeapp.generated.resources.download
 import xymusic_kmp.composeapp.generated.resources.edit_24px
 import xymusic_kmp.composeapp.generated.resources.modify_connection
 import xymusic_kmp.composeapp.generated.resources.music_library
@@ -126,16 +136,21 @@ fun JvmConnectionManagement(
                 key = { it.id }) { connectionConfig ->
                 val isCurrentConnection = connectionManagementViewModel.connectionId == connectionConfig.id
                 val cardShape = RoundedCornerShape(XyTheme.dimens.corner)
+                val downloadText = stringResource(Res.string.download)
+                val deleteText = stringResource(Res.string.delete_prefix)
+                val readOnlyText = stringResource(Res.string.connection_permission_read_only)
                 val libraryText = connectionManagementViewModel.selectedLibraryNames(connectionConfig)
-                    ?.joinToString("、", prefix = "媒体库：")
-                    ?: "媒体库：全部"
+                    ?.joinToString(stringResource(Res.string.chinese_list_separator))
+                    ?.let { stringResource(Res.string.connection_media_library_label, it) }
+                    ?: stringResource(Res.string.connection_media_library_all_label)
                 val versionText = connectionConfig.serverVersion.takeIf { it.isNotBlank() }?.let {
-                    "版本：$it"
-                } ?: "版本：未知"
-                val capabilityText = "权限：" + (buildList {
-                    if (connectionConfig.ifEnabledDownload) add("下载")
-                    if (connectionConfig.ifEnabledDelete) add("删除")
-                }.takeIf { it.isNotEmpty() }?.joinToString(" / ") ?: "只读")
+                    stringResource(Res.string.connection_server_version_label, it)
+                } ?: stringResource(Res.string.connection_server_version_unknown_label)
+                val capabilityValue = buildList {
+                    if (connectionConfig.ifEnabledDownload) add(downloadText)
+                    if (connectionConfig.ifEnabledDelete) add(deleteText)
+                }.takeIf { it.isNotEmpty() }?.joinToString(" / ") ?: readOnlyText
+                val capabilityText = stringResource(Res.string.connection_permissions_label, capabilityValue)
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -199,7 +214,7 @@ fun JvmConnectionManagement(
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
                                         XyTextSubSmall(
-                                            text = "当前",
+                                            text = stringResource(Res.string.current_connection),
                                             color = MaterialTheme.colorScheme.primary,
                                             maxLines = 1,
                                         )
