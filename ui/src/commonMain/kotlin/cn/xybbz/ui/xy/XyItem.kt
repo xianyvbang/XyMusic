@@ -259,6 +259,7 @@ fun ItemTrailingArrowRight(
     toneQuality: String? = null,
     enabled: Boolean = true,
     backgroundColor: Color = MaterialTheme.colorScheme.background,
+    imageAlpha: Float = 1f,
     shadowElevation: Dp = ListItemDefaults.Elevation,
     onClick: (() -> Unit)? = null,
     trailingContent: @Composable (() -> Unit)? = null,
@@ -307,6 +308,7 @@ fun ItemTrailingArrowRight(
         },
         leadingContent = {
             XySmallImage(
+                modifier = Modifier.alpha(imageAlpha),
                 model = img,
                 contentDescription = "${name}${stringResource(Res.string.image_suffix)}"
             )

@@ -125,11 +125,7 @@ fun JvmConnectionManagement(
                     } else {
                         Color.Transparent
                     },
-                    imageOverlayColor = if (isCurrentConnection) {
-                        null
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
-                    },
+                    imageAlpha = if (isCurrentConnection) 1f else 0.45f,
                     name = connectionConfig.type.title + "-" + connectionConfig.username,
                     subordination = connectionConfig.address,
                     img = connectionConfig.type.img.let { img ->
