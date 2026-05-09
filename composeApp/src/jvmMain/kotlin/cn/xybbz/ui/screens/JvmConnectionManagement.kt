@@ -126,12 +126,12 @@ fun JvmConnectionManagement(
                 key = { it.id }) { connectionConfig ->
                 val isCurrentConnection = connectionManagementViewModel.connectionId == connectionConfig.id
                 val cardShape = RoundedCornerShape(XyTheme.dimens.corner)
-                val libraryText = connectionConfig.libraryIds?.takeIf { it.isNotEmpty() }?.let {
-                    "媒体库：${it.size} 个"
-                } ?: "媒体库：全部"
+                val libraryText = connectionManagementViewModel.selectedLibraryNames(connectionConfig)
+                    ?.joinToString("、", prefix = "媒体库：")
+                    ?: "媒体库：全部"
                 val versionText = connectionConfig.serverVersion.takeIf { it.isNotBlank() }?.let {
-                    "版本 $it"
-                } ?: "版本未知"
+                    "版本：$it"
+                } ?: "版本：未知"
                 val capabilityText = "权限：" + (buildList {
                     if (connectionConfig.ifEnabledDownload) add("下载")
                     if (connectionConfig.ifEnabledDelete) add("删除")

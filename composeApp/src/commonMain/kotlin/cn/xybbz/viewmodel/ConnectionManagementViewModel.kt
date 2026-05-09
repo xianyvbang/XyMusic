@@ -51,6 +51,8 @@ class ConnectionManagementViewModel (
     //获得所有链接信息
     var connectionList by mutableStateOf<List<ConnectionConfig>>(emptyList())
 
+    private var libraryNameMap by mutableStateOf<Map<Long, Map<String, String>>>(emptyMap())
+
     var connectionId by mutableLongStateOf(0L)
         private set
 
@@ -64,8 +66,18 @@ class ConnectionManagementViewModel (
         viewModelScope.launch {
             db.connectionConfigDao.selectAllDataExtFlow().collect {
                 connectionList = it
+                libraryNameMap = it.associate { connectionConfig ->
+                    connectionConfig.id to db.libraryDao.selectListByConnectionId(connectionConfig.id)
+                        .associate { library -> library.id to library.name }
+                }
             }
         }
+    }
+
+    fun selectedLibraryNames(connectionConfig: ConnectionConfig): List<String>? {
+        val libraryIds = connectionConfig.libraryIds?.takeIf { it.isNotEmpty() } ?: return null
+        val libraryNames = libraryNameMap[connectionConfig.id].orEmpty()
+        return libraryIds.map { libraryId -> libraryNames[libraryId] ?: libraryId }
     }
 
     private fun getNowConnectionId() {
