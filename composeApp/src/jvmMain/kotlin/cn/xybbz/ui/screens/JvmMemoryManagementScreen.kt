@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -225,14 +226,18 @@ fun JvmMemoryManagementItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    horizontal = XyTheme.dimens.innerHorizontalPadding
-                )
+                    start = XyTheme.dimens.innerHorizontalPadding,
+                    top = XyTheme.dimens.innerVerticalPadding,
+                    end = XyTheme.dimens.innerHorizontalPadding,
+                    bottom = XyTheme.dimens.innerVerticalPadding / 2,
+                ),
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 XyText(
-                    modifier = Modifier.padding(
-                        top = XyTheme.dimens.innerVerticalPadding
-                    ), text = text
+                    text = text
                 )
                 XyTextSubSmall(
                     modifier = Modifier,
@@ -252,6 +257,7 @@ fun JvmMemoryManagementItem(
                 .fillMaxWidth()
                 .padding(
                     start = XyTheme.dimens.innerHorizontalPadding,
+                    top = XyTheme.dimens.innerVerticalPadding / 2,
                     end = XyTheme.dimens.innerHorizontalPadding,
                     bottom = XyTheme.dimens.innerVerticalPadding,
                 ),
@@ -285,6 +291,7 @@ private fun JvmStorageDonutChart(
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
+                .offset(y = (-36).dp)
                 .padding(
                     start = XyTheme.dimens.innerHorizontalPadding,
                     top = XyTheme.dimens.innerVerticalPadding,
@@ -305,7 +312,7 @@ private fun JvmStorageDonutChart(
             }
         }
 
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
@@ -314,10 +321,14 @@ private fun JvmStorageDonutChart(
                     end = XyTheme.dimens.innerHorizontalPadding,
                     bottom = XyTheme.dimens.innerVerticalPadding,
                 ),
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.innerVerticalPadding / 2),
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.innerHorizontalPadding / 2),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             segments.forEach { segment ->
-                JvmStorageDonutLegendItem(segment = segment)
+                JvmStorageDonutLegendItem(
+                    modifier = Modifier.weight(1f),
+                    segment = segment,
+                )
             }
         }
     }
@@ -331,7 +342,7 @@ private fun JvmStorageDonutCanvas(
     val trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f)
 
     Canvas(modifier = modifier) {
-        val strokeWidth = size.minDimension * 0.16f
+        val strokeWidth = size.minDimension * 0.38f
         val diameter = size.minDimension - strokeWidth
         if (diameter <= 0f) return@Canvas
 
@@ -383,11 +394,12 @@ private fun JvmStorageDonutCanvas(
 
 @Composable
 private fun JvmStorageDonutLegendItem(
+    modifier: Modifier = Modifier,
     segment: JvmStorageChartSegment,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Start,
+        modifier = modifier,
+        horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Canvas(modifier = Modifier.size(10.dp)) {
