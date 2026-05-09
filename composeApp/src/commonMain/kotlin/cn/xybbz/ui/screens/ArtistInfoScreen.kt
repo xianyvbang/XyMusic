@@ -46,7 +46,6 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
@@ -108,7 +107,6 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.router.ArtistInfo
 import cn.xybbz.ui.components.LazyListComponent
-import cn.xybbz.ui.components.LazyLoadingAndStatus
 import cn.xybbz.ui.components.LazyVerticalGridComponent
 import cn.xybbz.ui.components.FavoriteIconButton
 import cn.xybbz.ui.components.MusicAlbumCardComponent
@@ -141,7 +139,6 @@ import xymusic_kmp.composeapp.generated.resources.close_selection
 import xymusic_kmp.composeapp.generated.resources.no_description
 import xymusic_kmp.composeapp.generated.resources.play_circle_24px
 import xymusic_kmp.composeapp.generated.resources.playlist_add_check_24px
-import xymusic_kmp.composeapp.generated.resources.reached_bottom
 import xymusic_kmp.composeapp.generated.resources.return_home
 import xymusic_kmp.composeapp.generated.resources.select
 import xymusic_kmp.composeapp.generated.resources.start_playback
@@ -886,12 +883,6 @@ fun ArtistInfoScreen(
                                                         )
                                                     )
                                                 }
-                                            }
-                                            item(span = { GridItemSpan(maxLineSpan) }) {
-                                                LazyLoadingAndStatus(
-                                                    text = stringResource(Res.string.reached_bottom),
-                                                    ifLoading = false
-                                                )
                                             }
                                         }
                                     }

@@ -32,7 +32,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -54,6 +53,7 @@ import cn.xybbz.router.Connection
 import cn.xybbz.router.ConnectionInfo
 import cn.xybbz.router.SelectLibrary
 import cn.xybbz.ui.components.AlertDialogObject
+import cn.xybbz.ui.components.LazyVerticalGridComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.show
@@ -123,9 +123,9 @@ fun JvmConnectionManagement(
                     Icon(painter = painterResource(Res.drawable.library_add_24px), contentDescription = "")
                 }
             })
-        LazyVerticalGrid(
+        LazyVerticalGridComponent(
             modifier = Modifier.fillMaxSize(),
-            state = lazyGridState,
+            lazyGridState = lazyGridState,
             columns = GridCells.Adaptive(minSize = 420.dp),
             contentPadding = PaddingValues(8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),

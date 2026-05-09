@@ -18,28 +18,32 @@
 
 package cn.xybbz.ui.components
 
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.paging.compose.LazyPagingItems
 
 @Composable
-internal fun <T : Any> JvmVerticalGridListComponent(
-    modifier: Modifier = Modifier,
-    lazyGridState: LazyGridState = rememberLazyGridState(),
-    collectAsLazyPagingItems: LazyPagingItems<T>,
-    content: LazyGridScope.() -> Unit,
+internal actual fun PlatformLazyVerticalGridComponent(
+    modifier: Modifier,
+    lazyGridState: LazyGridState,
+    columns: GridCells,
+    contentPadding: PaddingValues,
+    verticalArrangement: Arrangement.Vertical,
+    horizontalArrangement: Arrangement.Horizontal,
+    content: LazyGridScope.() -> Unit
 ) {
-    val pagingUiState = collectAsLazyPagingItems.toPagingUiState()
-
-    LazyVerticalGridComponent(
-        modifier = modifier.fillMaxSize(),
-        pageListItems = collectAsLazyPagingItems,
-        lazyGridState = lazyGridState,
-        pagingUiState = pagingUiState,
-        content = content,
+    LazyVerticalGrid(
+        state = lazyGridState,
+        columns = columns,
+        modifier = modifier,
+        contentPadding = contentPadding,
+        verticalArrangement = verticalArrangement,
+        horizontalArrangement = horizontalArrangement,
+        content = content
     )
 }

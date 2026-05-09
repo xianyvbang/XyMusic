@@ -27,7 +27,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -40,6 +39,8 @@ import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.theme.XyTheme
 import com.github.panpf.sketch.ability.bindPauseLoadWhenScrolling
 import org.jetbrains.compose.resources.stringResource
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.reached_bottom
 
 /**
  * LazyVerticalGrid组件抽取-可以拖拽
@@ -56,6 +57,7 @@ fun <T : Any> SwipeRefreshVerticalGridListComponent(
     modifier: Modifier = Modifier,
     lazyGridState: LazyGridState = rememberLazyGridState(),
     collectAsLazyPagingItems: LazyPagingItems<T>,
+    bottomItem: (LazyGridScope.() -> Unit)? = null,
     content: LazyGridScope.(Boolean) -> Unit
 ) {
     val pagingUiState = collectAsLazyPagingItems.toPagingUiState()
@@ -73,6 +75,7 @@ fun <T : Any> SwipeRefreshVerticalGridListComponent(
             pageListItems = collectAsLazyPagingItems,
             lazyGridState = lazyGridState,
             pagingUiState = pagingUiState,
+            bottomItem = bottomItem,
             content = {
                 content.invoke(this, pagingUiState.isRefreshing)
             }
@@ -87,6 +90,7 @@ fun <T : Any> VerticalGridListComponent(
     modifier: Modifier = Modifier,
     lazyGridState: LazyGridState = rememberLazyGridState(),
     collectAsLazyPagingItems: LazyPagingItems<T>,
+    bottomItem: (LazyGridScope.() -> Unit)? = null,
     content: LazyGridScope.() -> Unit
 ) {
     val pagingUiState = collectAsLazyPagingItems.toPagingUiState()
@@ -95,6 +99,7 @@ fun <T : Any> VerticalGridListComponent(
         pageListItems = collectAsLazyPagingItems,
         lazyGridState = lazyGridState,
         pagingUiState = pagingUiState,
+        bottomItem = bottomItem,
         content = content
     )
 
@@ -109,12 +114,14 @@ fun <T : Any> LazyVerticalGridComponent(
     pageListItems: LazyPagingItems<T>?,
     lazyGridState: LazyGridState,
     pagingUiState: PagingUiState,
+    bottomItem: (LazyGridScope.() -> Unit)? = null,
     content: LazyGridScope.() -> Unit
 ) {
 
     LazyVerticalGridComponent(
         modifier = modifier,
         lazyGridState = lazyGridState,
+        bottomItem = bottomItem,
     ) {
         content()
         lazyColumBottomComponent(
@@ -130,26 +137,40 @@ fun <T : Any> LazyVerticalGridComponent(
 fun LazyVerticalGridComponent(
     modifier: Modifier = Modifier,
     lazyGridState: LazyGridState = rememberLazyGridState(),
+    columns: GridCells = GridCells.Adaptive(MusicCardImageSize),
+    contentPadding: PaddingValues = PaddingValues(
+        horizontal = XyTheme.dimens.outerHorizontalPadding,
+        vertical = XyTheme.dimens.outerVerticalPadding
+    ),
+    verticalArrangement: Arrangement.Vertical =
+        Arrangement.spacedBy(XyTheme.dimens.innerVerticalPadding),
+    horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(
+        XyTheme.dimens.outerVerticalPadding /*VERTICAL_INTERNAL_DP.dp*/,
+        Alignment.CenterHorizontally
+    ),
+    bottomItem: (LazyGridScope.() -> Unit)? = {
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            LazyLoadingAndStatus(
+                text = stringResource(Res.string.reached_bottom),
+                ifLoading = false
+            )
+        }
+    },
     content: LazyGridScope.() -> Unit
 ) {
 
     bindPauseLoadWhenScrolling(lazyGridState)
-    LazyVerticalGrid(
-        state = lazyGridState,
-        columns = GridCells.Adaptive(MusicCardImageSize),
+    PlatformLazyVerticalGridComponent(
+        lazyGridState = lazyGridState,
+        columns = columns,
         modifier = modifier
             .fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.innerVerticalPadding),
-        horizontalArrangement = Arrangement.spacedBy(
-            XyTheme.dimens.outerVerticalPadding /*VERTICAL_INTERNAL_DP.dp*/,
-            Alignment.CenterHorizontally
-        ),
-        contentPadding = PaddingValues(
-            horizontal = XyTheme.dimens.outerHorizontalPadding,
-            vertical = XyTheme.dimens.outerVerticalPadding
-        ),
+        verticalArrangement = verticalArrangement,
+        horizontalArrangement = horizontalArrangement,
+        contentPadding = contentPadding,
         content = {
             content()
+            bottomItem?.invoke(this)
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Spacer(
                     modifier = Modifier.height(
@@ -160,6 +181,17 @@ fun LazyVerticalGridComponent(
         }
     )
 }
+
+@Composable
+internal expect fun PlatformLazyVerticalGridComponent(
+    modifier: Modifier,
+    lazyGridState: LazyGridState,
+    columns: GridCells,
+    contentPadding: PaddingValues,
+    verticalArrangement: Arrangement.Vertical,
+    horizontalArrangement: Arrangement.Horizontal,
+    content: LazyGridScope.() -> Unit
+)
 
 /**
  * lazyColum底部组件集合
