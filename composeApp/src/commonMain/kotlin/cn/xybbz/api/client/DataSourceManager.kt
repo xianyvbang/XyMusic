@@ -115,6 +115,13 @@ open class DataSourceManager(
     var dataSourceType by mutableStateOf<DataSourceType?>(null)
         private set
 
+    /**
+     * 当前连接 ID 的轻量缓存。
+     * 数据源服务对象尚未完成创建时，标题栏等同步 UI 仍可读取这个值，避免启动阶段访问 lateinit。
+     */
+    var currentConnectionId by mutableStateOf<Long?>(null)
+        private set
+
 
     init {
         createScope()
@@ -125,7 +132,20 @@ open class DataSourceManager(
      */
     private lateinit var dataSourceServer: IDataSourceParentServer
 
+    /**
+     * 标记当前 dataSourceServer 是否处于可用状态。
+     * release 后 lateinit 本身无法反初始化，因此单独用这个标记隔离旧对象。
+     */
+    private var dataSourceServerActive = false
+
     val dataSourceServerFlow = MutableStateFlow<IDataSourceParentServer?>(null)
+
+    /**
+     * 安全读取当前数据源服务。
+     * 启动自动登录还未切换数据源时返回 null，让调用方走空态兜底。
+     */
+    private fun currentDataSourceServerOrNull(): IDataSourceParentServer? =
+        if (dataSourceServerActive && ::dataSourceServer.isInitialized) dataSourceServer else null
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val loginStateFlow: Flow<LoginStateType> =
@@ -188,6 +208,7 @@ open class DataSourceManager(
             //获得启用的连接信息
             val connectionConfig =
                 db.connectionConfigDao.selectById(connectionId)
+            // 先缓存连接 ID，再创建具体数据源，避免 UI 首帧同步读取时遇到未初始化对象。
             switchDataSource(dataSourceType)
             for (listener in listeners) {
                 listener.autoLoginBefore(connectionConfig)
@@ -221,6 +242,8 @@ open class DataSourceManager(
         loginType: LoginType = LoginType.TOKEN,
         connectionConfig: ConnectionConfig?
     ) {
+        // 刷新登录可能在服务对象可用前触发，先保留连接 ID 给同步读取兜底。
+        currentConnectionId = connectionConfig?.id ?: currentConnectionId
         ifLoginError = false
         autoLogin(loginType, connectionConfig).collect { loginState ->
             loginStatus = loginState
@@ -321,6 +344,7 @@ open class DataSourceManager(
         Log.i("=====", "数据源开始切换")
         getDataSourceServerByType(dataSourceType, false).let {
             dataSourceServer = it
+            dataSourceServerActive = true
             dataSourceServerFlow.value = it
         }
         Log.i("=====", "数据源切换完成")
@@ -347,6 +371,8 @@ open class DataSourceManager(
      */
     suspend fun changeDataSource(connectionConfig: ConnectionConfig) {
         release()
+        // 切换连接时先写入目标连接 ID，等待新数据源创建期间 UI 仍可展示当前选择。
+//        currentConnectionId = connectionConfig.id
         switchDataSource(connectionConfig.type)
         for (listener in listeners) {
             listener.autoLoginBefore(connectionConfig)
@@ -402,14 +428,20 @@ open class DataSourceManager(
      * 获得连接id
      */
     override fun getConnectionId(): Long {
-        return dataSourceServer.getConnectionId()
+        // 优先读取真实数据源；启动空窗期使用缓存连接 ID；没有配置时保持原来的 0 兜底。
+        return currentDataSourceServerOrNull()
+            ?.getConnectionId()
+            ?.takeIf { it != 0L }
+            ?: currentConnectionId
+            ?: 0L
     }
 
     /**
      * 获得连接地址
      */
     override fun getConnectionAddress(): String {
-        return dataSourceServer.getConnectionAddress()
+        // 数据源尚未初始化时返回空地址，避免组合阶段因 lateinit 未就绪崩溃。
+        return currentDataSourceServerOrNull()?.getConnectionAddress().orEmpty()
     }
 
     /**
@@ -812,8 +844,10 @@ open class DataSourceManager(
      * @return [List<XyPlaylist>?]
      */
     override suspend fun getPlaylists(): List<XyAlbum>? {
+        // 首次进入侧边栏时可能还没完成自动登录，未就绪就跳过这次远程刷新。
+        val server = currentDataSourceServerOrNull() ?: return null
         return try {
-            dataSourceServer.getPlaylists()
+            server.getPlaylists()
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获取歌单失败", e)
             null
@@ -1253,9 +1287,12 @@ open class DataSourceManager(
     }
 
     fun release() {
-        dataSourceServer.close()
+        currentDataSourceServerOrNull()?.close()
+        // 释放后禁用旧服务对象，等待下一次 switchDataSource 重新发布可用服务。
+        dataSourceServerActive = false
         dataSourceServerFlow.value = null
         dataSourceType = null
+        currentConnectionId = null
     }
 
     override fun close() {

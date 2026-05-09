@@ -45,9 +45,9 @@ class SidebarPlaylistViewModel(
     private var playlistJob: Job? = null
 
     init {
+        // 启动时先监听本地歌单缓存，远程刷新等数据源登录或媒体库事件就绪后再触发。
         startPlaylistObserver()
         observePlaylistChanges()
-        refreshPlaylists()
     }
 
     private fun observePlaylistChanges() {
