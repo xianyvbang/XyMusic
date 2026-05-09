@@ -21,6 +21,7 @@ package cn.xybbz.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import cn.xybbz.ui.components.JvmLazyListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.theme.XyTheme
@@ -102,56 +104,59 @@ fun JvmConnectionConfigInfoScreen(
             }
         )
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 32.dp, vertical = 24.dp),
-            contentAlignment = Alignment.TopCenter
+        JvmLazyListComponent(
+            modifier = Modifier.fillMaxSize(),
+            pagingItems = null,
+            contentPadding = PaddingValues(horizontal = 32.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            lazyColumnBottom = null
         ) {
-            Column(
-                modifier = Modifier
-                    .widthIn(max = 760.dp)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                JvmConnectionSummaryHeader(
-                    name = connectionName,
-                    version = serverVersionText,
-                    address = connectionConfigInfoViewModel.address
-                )
-
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(XyTheme.dimens.corner),
-                    color = MaterialTheme.colorScheme.surfaceContainerLowest
+            item {
+                Column(
+                    modifier = Modifier
+                        .widthIn(max = 760.dp)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    JvmConnectionSummaryHeader(
+                        name = connectionName,
+                        version = serverVersionText,
+                        address = connectionConfigInfoViewModel.address
+                    )
+
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(XyTheme.dimens.corner),
+                        color = MaterialTheme.colorScheme.surfaceContainerLowest
                     ) {
-                        JvmConnectionFormRow(label = stringResource(Res.string.connection_address)) {
-                            AddressInputEdit(
-                                address = connectionConfigInfoViewModel.address
-                            ) {
-                                connectionConfigInfoViewModel.updateAddress(it)
+                        Column(
+                            modifier = Modifier.padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            JvmConnectionFormRow(label = stringResource(Res.string.connection_address)) {
+                                AddressInputEdit(
+                                    address = connectionConfigInfoViewModel.address
+                                ) {
+                                    connectionConfigInfoViewModel.updateAddress(it)
+                                }
                             }
-                        }
 
-                        JvmConnectionFormRow(label = stringResource(Res.string.username)) {
-                            UsernameInputEdit(username = connectionConfigInfoViewModel.username) {
-                                connectionConfigInfoViewModel.updateUsername(it)
+                            JvmConnectionFormRow(label = stringResource(Res.string.username)) {
+                                UsernameInputEdit(username = connectionConfigInfoViewModel.username) {
+                                    connectionConfigInfoViewModel.updateUsername(it)
+                                }
                             }
-                        }
 
-                        JvmConnectionFormRow(label = stringResource(Res.string.password)) {
-                            PasswordInputEdit(password = connectionConfigInfoViewModel.password) {
-                                connectionConfigInfoViewModel.updatePassword(it)
+                            JvmConnectionFormRow(label = stringResource(Res.string.password)) {
+                                PasswordInputEdit(password = connectionConfigInfoViewModel.password) {
+                                    connectionConfigInfoViewModel.updatePassword(it)
+                                }
                             }
-                        }
 
-                        JvmConnectionFormRow(label = stringResource(Res.string.set_alias)) {
-                            ConnectionNameInputEdit(connectionName = connectionConfigInfoViewModel.connectionName) {
-                                connectionConfigInfoViewModel.updateConnectionName(it)
+                            JvmConnectionFormRow(label = stringResource(Res.string.set_alias)) {
+                                ConnectionNameInputEdit(connectionName = connectionConfigInfoViewModel.connectionName) {
+                                    connectionConfigInfoViewModel.updateConnectionName(it)
+                                }
                             }
                         }
                     }
