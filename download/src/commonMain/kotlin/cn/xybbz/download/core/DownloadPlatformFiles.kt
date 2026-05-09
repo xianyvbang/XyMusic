@@ -11,8 +11,8 @@ internal data class DownloadWriteResult(
 )
 
 internal expect object DownloadPlatformFiles {
-    // 解析平台默认下载目录。非 Android 端先保留空实现。
-    fun defaultDownloadDirectory(contextWrapper: ContextWrapper? = null): String
+    // 解析平台默认下载目录。
+    fun defaultDownloadDirectory(contextWrapper: ContextWrapper): String
 
     // 创建下载使用的临时文件路径。
     fun createTempDownloadFilePath(contextWrapper: ContextWrapper): String

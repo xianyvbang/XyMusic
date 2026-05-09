@@ -1,3 +1,9 @@
 package cn.xybbz.platform
 
-actual class ContextWrapper
+import java.io.File
+
+actual class ContextWrapper {
+    val applicationDirectory: File = File(
+        System.getProperty("user.dir").orEmpty().ifBlank { "." }
+    ).absoluteFile
+}

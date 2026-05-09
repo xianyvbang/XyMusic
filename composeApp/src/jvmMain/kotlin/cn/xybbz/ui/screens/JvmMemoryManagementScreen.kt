@@ -39,6 +39,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -46,6 +50,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.components.AlertDialogObject
@@ -73,9 +79,9 @@ import xymusic_kmp.composeapp.generated.resources.database_data_description
 import xymusic_kmp.composeapp.generated.resources.essential_data
 import xymusic_kmp.composeapp.generated.resources.essential_data_description
 import xymusic_kmp.composeapp.generated.resources.storage_management
-import xymusic_kmp.composeapp.generated.resources.temporary_cache
-import xymusic_kmp.composeapp.generated.resources.temporary_cache_description
 import xymusic_kmp.composeapp.generated.resources.warning
+import kotlin.math.atan2
+import kotlin.math.hypot
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,7 +91,6 @@ fun JvmMemoryManagementScreen(
 
     val warning = stringResource(Res.string.warning)
     val audioCacheTitle = stringResource(Res.string.audio_cache)
-    val temporaryCacheTitle = stringResource(Res.string.temporary_cache)
     val databaseDataTitle = stringResource(Res.string.database_data)
     val essentialDataTitle = stringResource(Res.string.essential_data)
     val chartSegments = listOf(
@@ -93,11 +98,6 @@ fun JvmMemoryManagementScreen(
             title = audioCacheTitle,
             sizeBytes = memoryManagementViewModel.musicCacheSize.toStorageBytes(),
             color = MaterialTheme.colorScheme.primary,
-        ),
-        JvmStorageChartSegment(
-            title = temporaryCacheTitle,
-            sizeBytes = memoryManagementViewModel.cacheSize.toStorageBytes(),
-            color = MaterialTheme.colorScheme.secondary,
         ),
         JvmStorageChartSegment(
             title = databaseDataTitle,
@@ -153,16 +153,6 @@ fun JvmMemoryManagementScreen(
                         describe = stringResource(Res.string.audio_cache_description)
                     )
                 }
-                item {
-                    JvmMemoryManagementItem(
-                        modifier = Modifier.widthIn(max = 520.dp),
-                        cacheSize = memoryManagementViewModel.cacheSize,
-                        onClick = { memoryManagementViewModel.clearAllCache() },
-                        text = temporaryCacheTitle,
-                        describe = stringResource(Res.string.temporary_cache_description)
-                    )
-                }
-
                 item {
                     JvmMemoryManagementItem(
                         modifier = Modifier.widthIn(max = 520.dp),
@@ -279,6 +269,12 @@ private data class JvmStorageChartSegment(
     val color: Color,
 )
 
+private data class JvmStorageChartArc(
+    val segmentIndex: Int,
+    val startAngle: Float,
+    val sweepAngle: Float,
+)
+
 @Composable
 private fun JvmStorageDonutChart(
     modifier: Modifier = Modifier,
@@ -340,8 +336,31 @@ private fun JvmStorageDonutCanvas(
     segments: List<JvmStorageChartSegment>,
 ) {
     val trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f)
+    var hoveredSegmentIndex by remember { mutableStateOf<Int?>(null) }
 
-    Canvas(modifier = modifier) {
+    Canvas(
+        modifier = modifier.pointerInput(segments) {
+            val chartArcs = buildChartArcs(segments)
+            awaitPointerEventScope {
+                while (true) {
+                    val event = awaitPointerEvent()
+                    val change = event.changes.firstOrNull()
+                    hoveredSegmentIndex = when {
+                        event.type == PointerEventType.Exit -> null
+                        change != null -> findHoveredSegment(
+                            pointer = change.position,
+                            canvasSize = size,
+                            arcs = chartArcs,
+                        )
+                        else -> hoveredSegmentIndex
+                    }
+                    if (event.type == PointerEventType.Exit) {
+                        hoveredSegmentIndex = null
+                    }
+                }
+            }
+        }
+    ) {
         val strokeWidth = size.minDimension * 0.38f
         val diameter = size.minDimension - strokeWidth
         if (diameter <= 0f) return@Canvas
@@ -370,25 +389,102 @@ private fun JvmStorageDonutCanvas(
         val totalBytes = visibleSegments.sumOf { it.sizeBytes }
         if (totalBytes <= 0.0) return@Canvas
 
-        val gapAngle = if (visibleSegments.size > 1) 2f else 0f
-        var startAngle = -90f
-        visibleSegments.forEach { segment ->
-            val sweepAngle = (segment.sizeBytes / totalBytes * 360.0).toFloat()
-            val visibleSweepAngle = (sweepAngle - gapAngle).coerceAtLeast(0f)
+        buildChartArcs(segments).forEach { arc ->
+            val segment = segments[arc.segmentIndex]
+            val expanded = hoveredSegmentIndex == arc.segmentIndex
+            val expansion = if (expanded) size.minDimension * 0.035f else 0f
+            val arcTopLeft = Offset(
+                x = topLeft.x - expansion / 2f,
+                y = topLeft.y - expansion / 2f,
+            )
+            val arcSize = Size(
+                width = chartSize.width + expansion,
+                height = chartSize.height + expansion,
+            )
+            drawArc(
+                color = segment.color,
+                startAngle = arc.startAngle,
+                sweepAngle = arc.sweepAngle,
+                useCenter = false,
+                topLeft = arcTopLeft,
+                size = arcSize,
+                style = stroke,
+            )
+        }
+    }
+}
 
+private fun buildChartArcs(
+    segments: List<JvmStorageChartSegment>,
+): List<JvmStorageChartArc> {
+    val visibleSegments = segments.withIndex().filter { it.value.sizeBytes > 0.0 }
+    val totalBytes = visibleSegments.sumOf { it.value.sizeBytes }
+    if (totalBytes <= 0.0) return emptyList()
+
+    val gapAngle = if (visibleSegments.size > 1) 2f else 0f
+    var startAngle = -90f
+    return buildList {
+        visibleSegments.forEach { indexedSegment ->
+            val sweepAngle = (indexedSegment.value.sizeBytes / totalBytes * 360.0).toFloat()
+            val visibleSweepAngle = (sweepAngle - gapAngle).coerceAtLeast(0f)
             if (visibleSweepAngle > 0f) {
-                drawArc(
-                    color = segment.color,
-                    startAngle = startAngle + gapAngle / 2f,
-                    sweepAngle = visibleSweepAngle,
-                    useCenter = false,
-                    topLeft = topLeft,
-                    size = chartSize,
-                    style = stroke,
+                add(
+                    JvmStorageChartArc(
+                        segmentIndex = indexedSegment.index,
+                        startAngle = startAngle + gapAngle / 2f,
+                        sweepAngle = visibleSweepAngle,
+                    )
                 )
             }
             startAngle += sweepAngle
         }
+    }
+}
+
+private fun findHoveredSegment(
+    pointer: Offset,
+    canvasSize: androidx.compose.ui.unit.IntSize,
+    arcs: List<JvmStorageChartArc>,
+): Int? {
+    if (arcs.isEmpty()) return null
+
+    val minDimension = minOf(canvasSize.width, canvasSize.height).toFloat()
+    val strokeWidth = minDimension * 0.38f
+    val radius = (minDimension - strokeWidth) / 2f
+    val innerRadius = (radius - strokeWidth / 2f).coerceAtLeast(0f)
+    val outerRadius = radius + strokeWidth / 2f + minDimension * 0.04f
+    val center = Offset(canvasSize.width / 2f, canvasSize.height / 2f)
+    val distance = hypot(
+        x = pointer.x - center.x,
+        y = pointer.y - center.y,
+    )
+    if (distance !in innerRadius..outerRadius) return null
+
+    val angle = ((Math.toDegrees(
+        atan2(
+            y = pointer.y - center.y,
+            x = pointer.x - center.x,
+        ).toDouble()
+    ) + 360.0) % 360.0).toFloat()
+
+    return arcs.firstOrNull { arc ->
+        arc.contains(angle)
+    }?.segmentIndex
+}
+
+private fun Float.normalizedAngle(): Float {
+    return ((this % 360f) + 360f) % 360f
+}
+
+private fun JvmStorageChartArc.contains(angle: Float): Boolean {
+    if (sweepAngle >= 359.5f) return true
+
+    val start = startAngle.normalizedAngle()
+    val end = (startAngle + sweepAngle).normalizedAngle()
+    return if (start <= end) {
+        angle in start..end
+    } else {
+        angle >= start || angle <= end
     }
 }
 

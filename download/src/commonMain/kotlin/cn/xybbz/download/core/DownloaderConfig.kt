@@ -8,7 +8,7 @@ class DownloaderConfig(
 ) {
 
     // Builder 保留在 commonMain，但默认目录解析走平台 actual。
-    class Builder(contextWrapper: ContextWrapper? = null) {
+    class Builder(contextWrapper: ContextWrapper) {
         private var maxConcurrentDownloads: Int = 3
         private var finalDirectory: String =
             DownloadPlatformFiles.defaultDownloadDirectory(contextWrapper)

@@ -6,7 +6,7 @@ import io.ktor.utils.io.ByteReadChannel
 
 // iOS 端先留空，当前只保证 KMP 结构完整。
 internal actual object DownloadPlatformFiles {
-    actual fun defaultDownloadDirectory(contextWrapper: ContextWrapper?): String = ""
+    actual fun defaultDownloadDirectory(contextWrapper: ContextWrapper): String = ""
 
     actual fun createTempDownloadFilePath(contextWrapper: ContextWrapper): String = ""
 

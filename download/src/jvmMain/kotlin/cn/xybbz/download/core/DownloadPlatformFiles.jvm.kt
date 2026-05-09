@@ -10,18 +10,8 @@ import java.io.IOException
 import java.io.RandomAccessFile
 
 internal actual object DownloadPlatformFiles {
-    private fun applicationDirectory(): File {
-        val appDirPath = System.getProperty("user.dir").orEmpty().ifBlank { "." }
-        val appDir = File(appDirPath).absoluteFile
-        if (!appDir.exists() && !appDir.mkdirs()) {
-            throw IOException("Failed to create application directory: ${appDir.absolutePath}")
-        }
-        return appDir
-    }
-
-    actual fun defaultDownloadDirectory(contextWrapper: ContextWrapper?): String {
-        val targetDir = File(File(applicationDirectory(), "Downloads"), "XyMusic")
-
+    actual fun defaultDownloadDirectory(contextWrapper: ContextWrapper): String {
+        val targetDir = jvmDefaultDownloadDirectory(contextWrapper)
         if (!targetDir.exists() && !targetDir.mkdirs()) {
             throw IOException("Failed to create download directory: ${targetDir.absolutePath}")
         }
@@ -29,7 +19,7 @@ internal actual object DownloadPlatformFiles {
     }
 
     actual fun createTempDownloadFilePath(contextWrapper: ContextWrapper): String {
-        val directory = File(File(applicationDirectory(), "temp"), "xy-downloads")
+        val directory = jvmTempDownloadDirectory(contextWrapper)
         if (!directory.exists() && !directory.mkdirs()) {
             throw IOException("Failed to create temp directory: ${directory.absolutePath}")
         }
@@ -101,4 +91,28 @@ internal actual object DownloadPlatformFiles {
 
         return DownloadWriteResult(DownloadStatus.COMPLETED, currentBytes)
     }
+}
+
+fun getJvmDownloadDirectory(contextWrapper: ContextWrapper): File {
+    return jvmDefaultDownloadDirectory(contextWrapper)
+}
+
+fun getJvmDownloadTempDirectory(contextWrapper: ContextWrapper): File {
+    return jvmTempDownloadDirectory(contextWrapper)
+}
+
+private fun jvmApplicationDirectory(contextWrapper: ContextWrapper): File {
+    val appDir = contextWrapper.applicationDirectory
+    if (!appDir.exists() && !appDir.mkdirs()) {
+        throw IOException("Failed to create application directory: ${appDir.absolutePath}")
+    }
+    return appDir
+}
+
+private fun jvmDefaultDownloadDirectory(contextWrapper: ContextWrapper): File {
+    return File(File(jvmApplicationDirectory(contextWrapper), "Downloads"), "XyMusic")
+}
+
+private fun jvmTempDownloadDirectory(contextWrapper: ContextWrapper): File {
+    return File(File(jvmApplicationDirectory(contextWrapper), "temp"), "xy-downloads")
 }

@@ -13,8 +13,8 @@ import java.io.RandomAccessFile
 
 // Android 端继续沿用本地文件系统实现，把 commonMain 需要的行为补齐成 actual。
 internal actual object DownloadPlatformFiles {
-    actual fun defaultDownloadDirectory(contextWrapper: ContextWrapper?): String {
-        val context = contextWrapper?.context ?: return ""
+    actual fun defaultDownloadDirectory(contextWrapper: ContextWrapper): String {
+        val context = contextWrapper.context
         val publicDownloadsSubdirectory = FileUtil.resolvePublicDownloadsSubdirectory(contextWrapper)
         return (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             ?.let { File(it, publicDownloadsSubdirectory) }
