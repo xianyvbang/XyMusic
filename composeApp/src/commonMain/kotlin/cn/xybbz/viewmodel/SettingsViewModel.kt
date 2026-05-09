@@ -12,6 +12,7 @@ import cn.xybbz.common.utils.Log
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.PlaybackProgressReporter
 import cn.xybbz.config.setting.SettingsManager
+import cn.xybbz.download.DownloaderManager
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -23,7 +24,8 @@ class SettingsViewModel(
     private val db: LocalDatabaseClient,
     private val musicController: MusicCommonController,
     private val playbackProgressReporter: PlaybackProgressReporter,
-    private val dataSourceManager: DataSourceManager
+    private val dataSourceManager: DataSourceManager,
+    private val downloaderManager: DownloaderManager
 ) : ViewModel() {
 
 
@@ -33,6 +35,9 @@ class SettingsViewModel(
     var settingDataNow by mutableStateOf(
         settingsManager.get()
     )
+
+    val songStoragePath: String
+        get() = downloaderManager.config.finalDirectory
 
     init {
         getSetting()

@@ -111,6 +111,7 @@ fun JvmSettingScreen(
 
     val copySuccess = stringResource(Res.string.copy_success)
     val cacheFilePath by settingsViewModel.settingsManager.cacheFilePath.collectAsState()
+    val songStoragePath = settingsViewModel.songStoragePath
 
     XyColumnScreen {
         TopAppBarComponent(
@@ -291,11 +292,14 @@ fun JvmSettingScreen(
 
                     SettingItemComponent(
                         title = stringResource(Res.string.song_cache_location),
-                        bottomInfo = "",
+                        bottomInfo = songStoragePath,
                         maxLines = Int.MAX_VALUE,
-                        painter = null,
-                        enabled = false
+                        painter = null
                     ) {
+                        if (songStoragePath.isNotBlank()) {
+                            copyTextToClipboard(songStoragePath)
+                            MessageUtils.sendPopTip(copySuccess)
+                        }
                     }
 
                 }
