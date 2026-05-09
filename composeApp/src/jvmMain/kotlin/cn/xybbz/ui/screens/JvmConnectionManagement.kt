@@ -21,6 +21,7 @@ package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -28,9 +29,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -42,18 +43,14 @@ import cn.xybbz.router.Connection
 import cn.xybbz.router.ConnectionInfo
 import cn.xybbz.router.SelectLibrary
 import cn.xybbz.ui.components.AlertDialogObject
-import cn.xybbz.ui.components.BottomSheetObject
 import cn.xybbz.ui.components.ScreenLazyColumn
-import cn.xybbz.ui.components.SettingItemComponent
-import cn.xybbz.ui.components.SettingParentItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
-import cn.xybbz.ui.components.dismiss
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.windows.DesktopTooltipIconButton
 import cn.xybbz.ui.xy.ItemTrailingArrowRight
-import cn.xybbz.ui.xy.RoundedSurfaceColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.ConnectionManagementViewModel
@@ -63,15 +60,14 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.add_card_24px
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.confirm_delete_connection
 import xymusic_kmp.composeapp.generated.resources.connection_settings_list
+import xymusic_kmp.composeapp.generated.resources.delete_24px
 import xymusic_kmp.composeapp.generated.resources.delete_connection
+import xymusic_kmp.composeapp.generated.resources.edit_24px
 import xymusic_kmp.composeapp.generated.resources.modify_connection
-import xymusic_kmp.composeapp.generated.resources.more_vert_24px
 import xymusic_kmp.composeapp.generated.resources.music_library
-import xymusic_kmp.composeapp.generated.resources.return_setting_screen
-import xymusic_kmp.composeapp.generated.resources.view_connection_info
+import xymusic_kmp.composeapp.generated.resources.queue_music_24px
 import xymusic_kmp.composeapp.generated.resources.warning
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
@@ -87,9 +83,6 @@ fun JvmConnectionManagement(
     val lazyListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )
     val warning = stringResource(Res.string.warning)
 
     XyColumnScreen {
@@ -139,83 +132,64 @@ fun JvmConnectionManagement(
                         }
                     },
                     trailingContent = {
-                        IconButton(
-//                                colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Red),
-                            onClick = composeClick {
-                                BottomSheetObject(
-                                    sheetState = sheetState,
-                                    state = true,
-                                    titleText = connectionConfig.name,
-                                    dragHandle = null,
-                                    content = { sheetObject ->
-                                        RoundedSurfaceColumn {
-                                            SettingItemComponent(
-                                                title = stringResource(Res.string.modify_connection)
-                                            ) {
-                                                coroutineScope.launch {
-                                                    sheetState.hide()
-                                                }.invokeOnCompletion {
-                                                    sheetObject.dismiss()
-                                                    navigator.navigate(
-                                                        ConnectionInfo(connectionConfig.id)
-                                                    )
-                                                }
-
-                                            }
-                                            SettingItemComponent(
-                                                title = stringResource(Res.string.music_library),
-                                                onRouter = {
-                                                    coroutineScope.launch {
-                                                        sheetState.hide()
-                                                    }.invokeOnCompletion {
-                                                        sheetObject.dismiss()
-                                                        navigator.navigate(
-                                                            SelectLibrary(
-                                                                connectionConfig.id,
-                                                                connectionConfig.libraryIds
-                                                            )
-                                                        )
-                                                    }
-                                                }
-                                            )
-
-                                            SettingParentItemComponent(
-                                                title = stringResource(Res.string.delete_connection),
-                                                onClick = {
-                                                    AlertDialogObject(
-                                                        title = warning,
-                                                        content = {
-                                                            XyTextSubSmall(
-                                                                text = stringResource(Res.string.confirm_delete_connection)
-                                                            )
-                                                        },
-                                                        ifWarning = true,
-                                                        onConfirmation = {
-                                                            coroutineScope.launch {
-                                                                connectionManagementViewModel.removeConnection(
-                                                                    connectionConfig.id
-                                                                )
-                                                                sheetState.hide()
-                                                            }.invokeOnCompletion {
-                                                                sheetObject.dismiss()
-                                                            }
-                                                        }
-                                                    ).show()
-
-                                                }, textColor = Color.Red
-                                            )
-                                        }
-                                    },
-                                ).show()
-                            }) {
-                            Icon(
-                                painter = painterResource(Res.drawable.more_vert_24px),
-                                contentDescription =
-                                    stringResource(
-                                        Res.string.view_connection_info,
-                                        connectionConfig.type.title + "-" + connectionConfig.username
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.End,
+                        ) {
+                            DesktopTooltipIconButton(
+                                tooltip = stringResource(Res.string.modify_connection),
+                                onClick = composeClick {
+                                    navigator.navigate(ConnectionInfo(connectionConfig.id))
+                                },
+                            ) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.edit_24px),
+                                    contentDescription = stringResource(Res.string.modify_connection),
+                                )
+                            }
+                            DesktopTooltipIconButton(
+                                tooltip = stringResource(Res.string.music_library),
+                                onClick = composeClick {
+                                    navigator.navigate(
+                                        SelectLibrary(
+                                            connectionConfig.id,
+                                            connectionConfig.libraryIds
+                                        )
                                     )
-                            )
+                                },
+                            ) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.queue_music_24px),
+                                    contentDescription = stringResource(Res.string.music_library),
+                                )
+                            }
+                            DesktopTooltipIconButton(
+                                tooltip = stringResource(Res.string.delete_connection),
+                                onClick = composeClick {
+                                    AlertDialogObject(
+                                        title = warning,
+                                        content = {
+                                            XyTextSubSmall(
+                                                text = stringResource(Res.string.confirm_delete_connection)
+                                            )
+                                        },
+                                        ifWarning = true,
+                                        onConfirmation = {
+                                            coroutineScope.launch {
+                                                connectionManagementViewModel.removeConnection(
+                                                    connectionConfig.id
+                                                )
+                                            }
+                                        }
+                                    ).show()
+                                },
+                            ) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.delete_24px),
+                                    contentDescription = stringResource(Res.string.delete_connection),
+                                    tint = Color.Red,
+                                )
+                            }
                         }
                     }
                 )
