@@ -9,7 +9,6 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import cn.xybbz.ui.screens.CacheLimitScreen
-import cn.xybbz.ui.screens.ConnectionConfigInfoScreen
 import cn.xybbz.ui.screens.ConnectionScreen
 import cn.xybbz.ui.screens.CustomApiScreen
 import cn.xybbz.ui.screens.DailyRecommendScreen
@@ -27,12 +26,11 @@ import cn.xybbz.ui.screens.JvmFavoriteScreen
 import cn.xybbz.ui.screens.JvmGenresInfoScreen
 import cn.xybbz.ui.screens.JvmGenresScreen
 import cn.xybbz.ui.screens.JvmLocalScreen
+import cn.xybbz.ui.screens.JvmMemoryManagementScreen
 import cn.xybbz.ui.screens.JvmMusicScreen
 import cn.xybbz.ui.screens.JvmSearchScreen
 import cn.xybbz.ui.screens.JvmSettingScreen
 import cn.xybbz.ui.screens.LanguageConfigScreen
-import cn.xybbz.ui.screens.LocalScreen
-import cn.xybbz.ui.screens.MemoryManagementScreen
 import cn.xybbz.ui.screens.ProxyConfigScreen
 import cn.xybbz.ui.screens.SelectLibraryScreen
 import cn.xybbz.ui.screens.SetBackgroundImageScreen
@@ -72,7 +70,7 @@ private val jvmDesktopEntryProvider2 = entryProvider {
     desktopNode<Setting> { JvmSettingScreen() }
     desktopNode<ConnectionManagement> { JvmConnectionManagement() }
     desktopNode<ConnectionInfo> { JvmConnectionConfigInfoScreen(connectionId = it.connectionId) }
-    desktopNode<MemoryManagement> { MemoryManagementScreen() }
+    desktopNode<MemoryManagement> { JvmMemoryManagementScreen() }
     desktopNode<InterfaceSetting> { InterfaceSettingScreen() }
     desktopNode<LanguageConfig> { LanguageConfigScreen() }
     desktopNode<Genres> { JvmGenresScreen() }

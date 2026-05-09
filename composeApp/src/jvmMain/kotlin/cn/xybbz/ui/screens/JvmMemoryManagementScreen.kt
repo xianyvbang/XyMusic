@@ -18,19 +18,35 @@
 
 package cn.xybbz.ui.screens
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextOverflow
-import cn.xybbz.compositionLocal.LocalNavigator
+import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
@@ -44,11 +60,9 @@ import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.MemoryManagementViewModel
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.audio_cache
 import xymusic_kmp.composeapp.generated.resources.audio_cache_description
 import xymusic_kmp.composeapp.generated.resources.clear
@@ -57,12 +71,10 @@ import xymusic_kmp.composeapp.generated.resources.database_data
 import xymusic_kmp.composeapp.generated.resources.database_data_description
 import xymusic_kmp.composeapp.generated.resources.essential_data
 import xymusic_kmp.composeapp.generated.resources.essential_data_description
-import xymusic_kmp.composeapp.generated.resources.return_setting_screen
 import xymusic_kmp.composeapp.generated.resources.storage_management
 import xymusic_kmp.composeapp.generated.resources.temporary_cache
 import xymusic_kmp.composeapp.generated.resources.temporary_cache_description
 import xymusic_kmp.composeapp.generated.resources.warning
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,9 +82,33 @@ fun JvmMemoryManagementScreen(
     memoryManagementViewModel: MemoryManagementViewModel = koinViewModel<MemoryManagementViewModel>()
 ) {
 
-    val navigator = LocalNavigator.current
-
     val warning = stringResource(Res.string.warning)
+    val audioCacheTitle = stringResource(Res.string.audio_cache)
+    val temporaryCacheTitle = stringResource(Res.string.temporary_cache)
+    val databaseDataTitle = stringResource(Res.string.database_data)
+    val essentialDataTitle = stringResource(Res.string.essential_data)
+    val chartSegments = listOf(
+        JvmStorageChartSegment(
+            title = audioCacheTitle,
+            sizeBytes = memoryManagementViewModel.musicCacheSize.toStorageBytes(),
+            color = MaterialTheme.colorScheme.primary,
+        ),
+        JvmStorageChartSegment(
+            title = temporaryCacheTitle,
+            sizeBytes = memoryManagementViewModel.cacheSize.toStorageBytes(),
+            color = MaterialTheme.colorScheme.secondary,
+        ),
+        JvmStorageChartSegment(
+            title = databaseDataTitle,
+            sizeBytes = memoryManagementViewModel.databaseSize.toStorageBytes(),
+            color = MaterialTheme.colorScheme.error,
+        ),
+        JvmStorageChartSegment(
+            title = essentialDataTitle,
+            sizeBytes = memoryManagementViewModel.appDataSize.toStorageBytes(),
+            color = MaterialTheme.colorScheme.tertiary,
+        ),
+    )
 
 
     LaunchedEffect(Unit) {
@@ -84,67 +120,79 @@ fun JvmMemoryManagementScreen(
                 TopAppBarTitle(
                     title = stringResource(Res.string.storage_management)
                 )
-            },
-            navigationIcon = {
-                IconButton(
-                    onClick = {
-                        navigator.goBack()
-                    },
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.arrow_back_24px),
-                        contentDescription = stringResource(Res.string.return_setting_screen)
-                    )
-                }
             }
         )
 
-        LazyColumnNotComponent {
-            item {
-                JvmMemoryManagementItem(
-                    cacheSize = memoryManagementViewModel.musicCacheSize,
-                    onClick = { memoryManagementViewModel.clearMusicCache() },
-                    text = stringResource(Res.string.audio_cache),
-                    describe = stringResource(Res.string.audio_cache_description)
-                )
-            }
-            item {
-                JvmMemoryManagementItem(
-                    cacheSize = memoryManagementViewModel.cacheSize,
-                    onClick = { memoryManagementViewModel.clearAllCache() },
-                    text = stringResource(Res.string.temporary_cache),
-                    describe = stringResource(Res.string.temporary_cache_description)
-                )
-            }
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.Top,
+        ) {
+            JvmStorageDonutChart(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                segments = chartSegments,
+            )
 
-            item {
-                JvmMemoryManagementItem(
-                    cacheSize = memoryManagementViewModel.databaseSize,
-                    onClick = {
-                        AlertDialogObject(
-                            title = warning,
-                            content = {
-                                XyTextSubSmall(
-                                    text = stringResource(Res.string.confirm_delete_database)
-                                )
-                            },
-                            ifWarning = true,
-                            onConfirmation = {
-                                memoryManagementViewModel.clearDatabaseData()
-                            }
-                        ).show()
-                    },
-                    text = stringResource(Res.string.database_data),
-                    describe = stringResource(Res.string.database_data_description)
-                )
-            }
-            item {
-                JvmMemoryManagementItem(
-                    cacheSize = memoryManagementViewModel.appDataSize,
-                    text = stringResource(Res.string.essential_data),
-                    describe = stringResource(Res.string.essential_data_description),
-                    ifShowButton = false
-                )
+            LazyColumnNotComponent(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                contentPadding = PaddingValues(
+                    vertical = XyTheme.dimens.outerVerticalPadding,
+                ),
+                horizontalAlignment = Alignment.End,
+            ) {
+                item {
+                    JvmMemoryManagementItem(
+                        modifier = Modifier.widthIn(max = 520.dp),
+                        cacheSize = memoryManagementViewModel.musicCacheSize,
+                        onClick = { memoryManagementViewModel.clearMusicCache() },
+                        text = audioCacheTitle,
+                        describe = stringResource(Res.string.audio_cache_description)
+                    )
+                }
+                item {
+                    JvmMemoryManagementItem(
+                        modifier = Modifier.widthIn(max = 520.dp),
+                        cacheSize = memoryManagementViewModel.cacheSize,
+                        onClick = { memoryManagementViewModel.clearAllCache() },
+                        text = temporaryCacheTitle,
+                        describe = stringResource(Res.string.temporary_cache_description)
+                    )
+                }
+
+                item {
+                    JvmMemoryManagementItem(
+                        modifier = Modifier.widthIn(max = 520.dp),
+                        cacheSize = memoryManagementViewModel.databaseSize,
+                        onClick = {
+                            AlertDialogObject(
+                                title = warning,
+                                content = {
+                                    XyTextSubSmall(
+                                        text = stringResource(Res.string.confirm_delete_database)
+                                    )
+                                },
+                                ifWarning = true,
+                                onConfirmation = {
+                                    memoryManagementViewModel.clearDatabaseData()
+                                }
+                            ).show()
+                        },
+                        text = databaseDataTitle,
+                        describe = stringResource(Res.string.database_data_description)
+                    )
+                }
+                item {
+                    JvmMemoryManagementItem(
+                        modifier = Modifier.widthIn(max = 520.dp),
+                        cacheSize = memoryManagementViewModel.appDataSize,
+                        text = essentialDataTitle,
+                        describe = stringResource(Res.string.essential_data_description),
+                        ifShowButton = false
+                    )
+                }
             }
         }
     }
@@ -168,13 +216,13 @@ fun JvmMemoryManagementItem(
     onClick: (() -> Unit)? = null,
 ) {
     RoundedSurfaceColumn(
+        modifier = modifier.heightIn(min = 132.dp),
         horizontalAlignment = Alignment.Start
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
-                .then(modifier)
                 .fillMaxWidth()
                 .padding(
                     horizontal = XyTheme.dimens.innerHorizontalPadding
@@ -217,6 +265,158 @@ fun JvmMemoryManagementItem(
         }
 
     }
+}
+
+private data class JvmStorageChartSegment(
+    val title: String,
+    val sizeBytes: Double,
+    val color: Color,
+)
+
+@Composable
+private fun JvmStorageDonutChart(
+    modifier: Modifier = Modifier,
+    segments: List<JvmStorageChartSegment>,
+) {
+    RoundedSurfaceColumn(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = XyTheme.dimens.innerHorizontalPadding,
+                    top = XyTheme.dimens.innerVerticalPadding,
+                    end = XyTheme.dimens.innerHorizontalPadding,
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            val chartSize = if (maxWidth < 280.dp) maxWidth else 280.dp
+
+            Box(
+                modifier = Modifier.size(chartSize),
+                contentAlignment = Alignment.Center,
+            ) {
+                JvmStorageDonutCanvas(
+                    modifier = Modifier.fillMaxSize(),
+                    segments = segments,
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = XyTheme.dimens.innerHorizontalPadding,
+                    top = XyTheme.dimens.innerVerticalPadding,
+                    end = XyTheme.dimens.innerHorizontalPadding,
+                    bottom = XyTheme.dimens.innerVerticalPadding,
+                ),
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.innerVerticalPadding / 2),
+        ) {
+            segments.forEach { segment ->
+                JvmStorageDonutLegendItem(segment = segment)
+            }
+        }
+    }
+}
+
+@Composable
+private fun JvmStorageDonutCanvas(
+    modifier: Modifier = Modifier,
+    segments: List<JvmStorageChartSegment>,
+) {
+    val trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f)
+
+    Canvas(modifier = modifier) {
+        val strokeWidth = size.minDimension * 0.16f
+        val diameter = size.minDimension - strokeWidth
+        if (diameter <= 0f) return@Canvas
+
+        val topLeft = Offset(
+            x = (size.width - diameter) / 2f,
+            y = (size.height - diameter) / 2f,
+        )
+        val chartSize = Size(diameter, diameter)
+        val stroke = Stroke(
+            width = strokeWidth,
+            cap = StrokeCap.Butt,
+        )
+
+        drawArc(
+            color = trackColor,
+            startAngle = -90f,
+            sweepAngle = 360f,
+            useCenter = false,
+            topLeft = topLeft,
+            size = chartSize,
+            style = stroke,
+        )
+
+        val visibleSegments = segments.filter { it.sizeBytes > 0.0 }
+        val totalBytes = visibleSegments.sumOf { it.sizeBytes }
+        if (totalBytes <= 0.0) return@Canvas
+
+        val gapAngle = if (visibleSegments.size > 1) 2f else 0f
+        var startAngle = -90f
+        visibleSegments.forEach { segment ->
+            val sweepAngle = (segment.sizeBytes / totalBytes * 360.0).toFloat()
+            val visibleSweepAngle = (sweepAngle - gapAngle).coerceAtLeast(0f)
+
+            if (visibleSweepAngle > 0f) {
+                drawArc(
+                    color = segment.color,
+                    startAngle = startAngle + gapAngle / 2f,
+                    sweepAngle = visibleSweepAngle,
+                    useCenter = false,
+                    topLeft = topLeft,
+                    size = chartSize,
+                    style = stroke,
+                )
+            }
+            startAngle += sweepAngle
+        }
+    }
+}
+
+@Composable
+private fun JvmStorageDonutLegendItem(
+    segment: JvmStorageChartSegment,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Canvas(modifier = Modifier.size(10.dp)) {
+            drawCircle(color = segment.color)
+        }
+        Spacer(modifier = Modifier.width(XyTheme.dimens.innerHorizontalPadding / 2))
+        XyTextSubSmall(
+            text = segment.title,
+            maxLines = 1,
+        )
+    }
+}
+
+private fun String.toStorageBytes(): Double {
+    val text = trim()
+    if (text.isEmpty()) return 0.0
+
+    val numberText = text.takeWhile { it.isDigit() || it == '.' }
+    val value = numberText.toDoubleOrNull() ?: return 0.0
+    val unit = text.drop(numberText.length).trim().uppercase()
+    val multiplier = when (unit) {
+        "PB" -> 1024.0 * 1024.0 * 1024.0 * 1024.0 * 1024.0
+        "TB" -> 1024.0 * 1024.0 * 1024.0 * 1024.0
+        "GB" -> 1024.0 * 1024.0 * 1024.0
+        "MB" -> 1024.0 * 1024.0
+        "KB" -> 1024.0
+        else -> 1.0
+    }
+    return value * multiplier
 }
 
 
