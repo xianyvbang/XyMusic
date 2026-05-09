@@ -22,7 +22,6 @@ import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.client.navidrome.data.FullResponse
 import cn.xybbz.api.client.navidrome.data.NavidromeCreatePlaylistResponse
 import cn.xybbz.api.client.navidrome.data.PlaylistAddMusicsUpdateRequest
-import cn.xybbz.api.client.navidrome.data.PlaylistAddMusicsUpdateResponse
 import cn.xybbz.api.client.navidrome.data.PlaylistCreateRequest
 import cn.xybbz.api.client.navidrome.data.PlaylistItemData
 import cn.xybbz.api.client.navidrome.data.PlaylistRemoveMusicsUpdateResponse
@@ -87,10 +86,10 @@ class NavidromePlaylistsApi(private val httpClient: HttpClient) : BaseApi {
     suspend fun addPlaylistMusics(
         playlistId: String,
         playlistAddMusicsRequest: PlaylistAddMusicsUpdateRequest
-    ): PlaylistAddMusicsUpdateResponse {
-        return httpClient.post("/api/playlist/$playlistId/tracks") {
+    ) {
+        httpClient.post("/api/playlist/$playlistId/tracks") {
             postBlock { setBody(playlistAddMusicsRequest) }
-        }.body()
+        }
     }
 
     suspend fun removePlaylistMusics(
