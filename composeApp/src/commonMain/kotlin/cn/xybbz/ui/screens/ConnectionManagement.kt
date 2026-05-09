@@ -19,7 +19,6 @@
 package cn.xybbz.ui.screens
 
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -131,12 +130,7 @@ fun ConnectionManagement(
                 val itemShape = RoundedCornerShape(XyTheme.dimens.corner)
                 ItemTrailingArrowRight(
                     modifier = Modifier
-                        .clip(itemShape)
-                        .border(
-                            1.dp,
-                            MaterialTheme.colorScheme.onSurfaceVariant,
-                            shape = itemShape
-                        ),
+                        .clip(itemShape),
                     backgroundColor = if (isCurrentConnection) {
                         MaterialTheme.colorScheme.surfaceContainerLowest
                     } else {
