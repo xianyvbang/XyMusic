@@ -70,6 +70,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onEach
 import org.jetbrains.compose.resources.getString
 import org.koin.core.component.get
 import xymusic_kmp.composeapp.generated.resources.Res
@@ -391,7 +392,13 @@ open class DataSourceManager(
         clientLoginInfoReq: ClientLoginInfoReq,
         connectionConfig: ConnectionConfig?
     ): Flow<ClientLoginInfoState> {
-        return dataSourceServer.addClientAndLogin(clientLoginInfoReq)
+        return dataSourceServer.addClientAndLogin(clientLoginInfoReq, connectionConfig).onEach { loginState ->
+            if (loginState is ClientLoginInfoState.UserLoginSuccess) {
+                // addClientAndLogin 内部会保存新连接并回写到数据源服务，这里同步给 Compose 启动门禁使用。
+                currentConnectionId = dataSourceServer.getConnectionId().takeIf { it != 0L }
+                    ?: currentConnectionId
+            }
+        }
     }
 
     override suspend fun autoLogin(
