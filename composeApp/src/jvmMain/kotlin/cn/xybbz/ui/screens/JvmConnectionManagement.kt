@@ -89,6 +89,7 @@ import xymusic_kmp.composeapp.generated.resources.delete_connection
 import xymusic_kmp.composeapp.generated.resources.delete_prefix
 import xymusic_kmp.composeapp.generated.resources.download
 import xymusic_kmp.composeapp.generated.resources.edit_24px
+import xymusic_kmp.composeapp.generated.resources.folder_managed_24px
 import xymusic_kmp.composeapp.generated.resources.modify_connection
 import xymusic_kmp.composeapp.generated.resources.music_library
 import xymusic_kmp.composeapp.generated.resources.queue_music_24px
@@ -260,7 +261,7 @@ fun JvmConnectionManagement(
                                 },
                             ) {
                                 Icon(
-                                    painter = painterResource(Res.drawable.queue_music_24px),
+                                    painter = painterResource(Res.drawable.folder_managed_24px),
                                     contentDescription = stringResource(Res.string.music_library),
                                 )
                             }
