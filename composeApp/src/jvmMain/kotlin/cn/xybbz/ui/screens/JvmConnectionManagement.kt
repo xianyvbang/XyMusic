@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -81,7 +81,7 @@ import cn.xybbz.ui.xy.XyIconButton as IconButton
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConnectionManagement(
+fun JvmConnectionManagement(
     connectionManagementViewModel: ConnectionManagementViewModel = koinViewModel<ConnectionManagementViewModel>()
 ) {
     val navigator = LocalNavigator.current
@@ -105,17 +105,6 @@ fun ConnectionManagement(
                     navigator.navigate(Connection(connectionUiType = ConnectionUiType.ADD_CONNECTION))
                 }) {
                     Icon(painter = painterResource(Res.drawable.add_card_24px), contentDescription = "")
-                }
-            }, navigationIcon = {
-                IconButton(
-                    onClick = {
-                        navigator.goBack()
-                    },
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.arrow_back_24px),
-                        contentDescription = stringResource(Res.string.return_setting_screen)
-                    )
                 }
             })
         ScreenLazyColumn(
@@ -244,5 +233,3 @@ fun ConnectionManagement(
         }
     }
 }
-
-

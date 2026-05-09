@@ -10,7 +10,6 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import cn.xybbz.ui.screens.CacheLimitScreen
 import cn.xybbz.ui.screens.ConnectionConfigInfoScreen
-import cn.xybbz.ui.screens.ConnectionManagement
 import cn.xybbz.ui.screens.ConnectionScreen
 import cn.xybbz.ui.screens.CustomApiScreen
 import cn.xybbz.ui.screens.DailyRecommendScreen
@@ -22,6 +21,7 @@ import cn.xybbz.ui.screens.JvmAlbumInfoScreen
 import cn.xybbz.ui.screens.JvmAlbumScreen
 import cn.xybbz.ui.screens.JvmArtistInfoScreen
 import cn.xybbz.ui.screens.JvmArtistScreen
+import cn.xybbz.ui.screens.JvmConnectionManagement
 import cn.xybbz.ui.screens.JvmFavoriteScreen
 import cn.xybbz.ui.screens.JvmGenresInfoScreen
 import cn.xybbz.ui.screens.JvmGenresScreen
@@ -69,7 +69,7 @@ private val jvmDesktopEntryProvider2 = entryProvider {
     desktopNode<ArtistInfo> { JvmArtistInfoScreen(it.artistId,it.artistName) }
 
     desktopNode<Setting> { JvmSettingScreen() }
-    desktopNode<ConnectionManagement> { ConnectionManagement() }
+    desktopNode<ConnectionManagement> { JvmConnectionManagement() }
     desktopNode<ConnectionInfo> { ConnectionConfigInfoScreen(connectionId = it.connectionId) }
     desktopNode<MemoryManagement> { MemoryManagementScreen() }
     desktopNode<InterfaceSetting> { InterfaceSettingScreen() }

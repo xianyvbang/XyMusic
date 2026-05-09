@@ -24,11 +24,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -257,6 +259,7 @@ fun ItemTrailingArrowRight(
     toneQuality: String? = null,
     enabled: Boolean = true,
     backgroundColor: Color = MaterialTheme.colorScheme.background,
+    imageOverlayColor: Color? = null,
     shadowElevation: Dp = ListItemDefaults.Elevation,
     onClick: (() -> Unit)? = null,
     trailingContent: @Composable (() -> Unit)? = null,
@@ -304,10 +307,22 @@ fun ItemTrailingArrowRight(
             }
         },
         leadingContent = {
-            XySmallImage(
-                model = img,
-                contentDescription = "${name}${stringResource(Res.string.image_suffix)}"
-            )
+            val imageShape = RoundedCornerShape(8.dp)
+            Box(modifier = Modifier.size(44.dp)) {
+                XySmallImage(
+                    modifier = Modifier.fillMaxSize(),
+                    model = img,
+                    shape = imageShape,
+                    contentDescription = "${name}${stringResource(Res.string.image_suffix)}"
+                )
+                imageOverlayColor?.let {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(color = it, shape = imageShape)
+                    )
+                }
+            }
         }, trailingContent = trailingContent
     )
 }
