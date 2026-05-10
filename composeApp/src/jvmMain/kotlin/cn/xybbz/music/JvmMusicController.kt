@@ -948,7 +948,7 @@ class JvmMusicController : MusicCommonController() {
         ignoreStoppedEventOnce()
         val played = runCatching {
             player.media().play(mediaSource,
-                ":network-caching=${0.toLong()}",
+                ":network-caching=${(music.runTimeTicks* 0.1f).toLong()}",
                 ":file-caching=${(music.runTimeTicks * 0.1).toLong()}",
                 ":http-reconnect")
         }.onFailure {
