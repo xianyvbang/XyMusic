@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit
 
 // 平台命令可能因为目录很大或系统异常卡住，超时后会回退到 walkFileTree。
 private const val COMMAND_TIMEOUT_SECONDS = 30L
+private val useStorageManagementMockData = true
 // Windows dir 汇总行中只需要提取“文件数”和“字节数”两个数字。
 private val windowsDirNumberRegex = Regex("\\d+")
 // macOS du 输出格式为“大小 路径”，用空白分隔取第一列。
@@ -26,6 +27,14 @@ actual fun getMemoryStorageInfo(
     contextWrapper: ContextWrapper,
     db: LocalDatabaseClient,
 ): MemoryStorageInfo {
+    if (useStorageManagementMockData) {
+        return MemoryStorageInfo(
+            cacheSize = JVM_STORAGE_MANAGEMENT_MOCK_SIZE_BYTES,
+            appDataSize = JVM_STORAGE_MANAGEMENT_MOCK_SIZE_BYTES,
+            databaseSize = JVM_STORAGE_MANAGEMENT_MOCK_SIZE_BYTES,
+        )
+    }
+
     // JVM 端数据库文件位于 java.io.tmpdir，包含主文件和 Room/SQLite 可能生成的附属文件。
     val databaseFiles = getLocalDatabaseFiles() + getDownloadDatabaseFiles()
     // 应用数据统计需要排除数据库文件，避免 databaseSize 和 appDataSize 重复计算。
