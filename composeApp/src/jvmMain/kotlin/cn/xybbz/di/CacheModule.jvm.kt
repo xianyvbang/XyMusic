@@ -14,6 +14,6 @@ actual class CacheModule {
     actual fun downloadCacheController(
         contextWrapper: ContextWrapper
     ): DownloadCacheCommonController {
-        return JvmDownloadCacheController()
+        return JvmDownloadCacheController(contextWrapper)
     }
 }

@@ -80,7 +80,9 @@ class JvmMusicController : MusicCommonController() {
          * VLC 上报的缓冲值是 0..100，这里转成 UI 进度条使用的 0..1。
          */
         override fun buffering(mediaPlayer: MediaPlayer?, newCache: Float) {
-            downloadCacheController.updateCacheSchedule(newCache / 100f)
+            if (!isCachePlaybackSource()) {
+                downloadCacheController.updateCacheSchedule(newCache / 100f)
+            }
         }
 
         /**
@@ -539,6 +541,12 @@ class JvmMusicController : MusicCommonController() {
         return JvmReverseProxyServer.wrapTargetUrl(music.musicUrl)
     }
 
+    private fun resolveCurrentRemotePlaybackUrl(music: XyPlayMusic): String {
+        val cachePlaybackUrl = (downloadCacheController as? JvmDownloadCacheController)
+            ?.preparePlaybackUrl(music)
+        return cachePlaybackUrl ?: resolveRemotePlaybackUrl(music)
+    }
+
     /**
      * 格式化 libVLC 原生层日志，保留模块和源码位置，方便追具体解码/访问错误。
      */
@@ -802,7 +810,18 @@ class JvmMusicController : MusicCommonController() {
      * 获取当前歌曲真正交给 VLC 播放的地址。
      */
     private fun playbackSourceOf(music: XyPlayMusic): String {
-        return music.getPlayerUrl().takeIf { it.isNotBlank() } ?: preparePlaylistSource(music)
+        val localPath = music.filePath
+        val playerUrl = if (!localPath.isNullOrBlank()) {
+            Paths.get(localPath).toUri().toASCIIString()
+        } else {
+            resolveCurrentRemotePlaybackUrl(music)
+        }
+        music.setPlayerUrl(playerUrl)
+        return playerUrl
+    }
+
+    private fun isCachePlaybackSource(): Boolean {
+        return musicInfo?.getPlayerUrl()?.contains("/cache-play?id=") == true
     }
 
 

@@ -1,6 +1,9 @@
 package cn.xybbz.proxy
 
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.music.CacheStatus
+import cn.xybbz.music.CacheStreamResult
+import cn.xybbz.music.JvmDownloadCacheController
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.expectSuccess
@@ -129,6 +132,7 @@ object JvmReverseProxyServer : KoinComponent {
                 },
                 module = {
                     installProxyRoutes()
+                    installCachePlaybackRoutes()
                 }
             ).start(wait = false)
             logger.info {
@@ -183,6 +187,19 @@ object JvmReverseProxyServer : KoinComponent {
                 patch { handleProxy(call) }
                 delete { handleProxy(call) }
                 options { handleProxy(call) }
+            }
+        }
+    }
+
+    /**
+     * 安装 JVM 播放缓存路由。
+     * VLC 通过这个本地 HTTP 入口读取正在下载的缓存文件，避免直接打开增长中的 file。
+     */
+    private fun Application.installCachePlaybackRoutes() {
+        routing {
+            route("/cache-play") {
+                get { handleCachePlayback(call, responseBody = true) }
+                head { handleCachePlayback(call, responseBody = false) }
             }
         }
     }
@@ -288,6 +305,100 @@ object JvmReverseProxyServer : KoinComponent {
         }
     }
 
+    private suspend fun handleCachePlayback(
+        call: ApplicationCall,
+        responseBody: Boolean,
+    ) {
+        val sessionId = call.request.queryParameters["id"]?.toLongOrNull()
+        if (sessionId == null) {
+            call.respondText(
+                text = "id 参数无效。",
+                status = HttpStatusCode.BadRequest
+            )
+            return
+        }
+
+        val cacheController = JvmDownloadCacheController.controllerOrNull()
+        if (cacheController == null) {
+            call.respondText(
+                text = "播放缓存服务不可用。",
+                status = HttpStatusCode.ServiceUnavailable
+            )
+            return
+        }
+
+        val snapshot = cacheController.getSessionSnapshot(sessionId)
+        if (snapshot == null) {
+            call.respondText(
+                text = "播放缓存会话不存在。",
+                status = HttpStatusCode.NotFound
+            )
+            return
+        }
+        if (snapshot.status == CacheStatus.FAILED || snapshot.status == CacheStatus.CANCELLED) {
+            call.respondText(
+                text = "播放缓存会话不可用。",
+                status = HttpStatusCode.ServiceUnavailable
+            )
+            return
+        }
+
+        val range = parseRangeHeader(
+            rangeHeader = call.request.headers[HttpHeaders.Range],
+            totalBytes = snapshot.totalBytes
+        )
+        if (range == null) {
+            call.respondText(
+                text = "Range 请求无效。",
+                status = HttpStatusCode.RequestedRangeNotSatisfiable
+            )
+            return
+        }
+
+        val contentLength = range.endInclusive - range.start + 1
+        val responseHeaders = Headers.build {
+            append(HttpHeaders.AcceptRanges, "bytes")
+            append(HttpHeaders.CacheControl, "no-store")
+            if (range.isPartial) {
+                append(
+                    HttpHeaders.ContentRange,
+                    "bytes ${range.start}-${range.endInclusive}/${snapshot.totalBytes}"
+                )
+            }
+        }
+
+        call.respond(
+            object : OutgoingContent.WriteChannelContent() {
+                override val status: HttpStatusCode =
+                    if (range.isPartial) HttpStatusCode.PartialContent else HttpStatusCode.OK
+                override val contentType: ContentType? =
+                    snapshot.contentType.takeIf { it.isNotBlank() }?.let { rawContentType ->
+                        runCatching { ContentType.parse(rawContentType) }.getOrNull()
+                    }
+                override val contentLength: Long = contentLength
+                override val headers: Headers = responseHeaders
+
+                override suspend fun writeTo(channel: ByteWriteChannel) {
+                    if (!responseBody) {
+                        return
+                    }
+                    when (
+                        cacheController.writeSessionTo(
+                            sessionId = sessionId,
+                            requestedStart = range.start,
+                            requestedEndInclusive = range.endInclusive,
+                            output = channel,
+                        )
+                    ) {
+                        CacheStreamResult.Streamed -> Unit
+                        CacheStreamResult.NotFound,
+                        CacheStreamResult.Unavailable -> Unit
+                    }
+                }
+            }
+        )
+    }
+
     /**
      * 校验并解析目标地址。
      * 仅允许代理 http/https 绝对地址，并阻止请求再次回到当前代理服务导致死循环。
@@ -364,4 +475,56 @@ object JvmReverseProxyServer : KoinComponent {
                 method != HttpMethod.Head &&
                 method != HttpMethod.Options
     }
+
+    private fun parseRangeHeader(
+        rangeHeader: String?,
+        totalBytes: Long,
+    ): PlaybackRange? {
+        if (totalBytes <= 0L) {
+            return null
+        }
+        if (rangeHeader.isNullOrBlank()) {
+            return PlaybackRange(
+                start = 0L,
+                endInclusive = totalBytes - 1,
+                isPartial = false,
+            )
+        }
+
+        if (!rangeHeader.startsWith("bytes=")) {
+            return null
+        }
+
+        val rangeValue = rangeHeader.removePrefix("bytes=").substringBefore(',')
+        val startText = rangeValue.substringBefore('-', "")
+        val endText = rangeValue.substringAfter('-', "")
+
+        val start = if (startText.isBlank()) {
+            val suffixLength = endText.toLongOrNull() ?: return null
+            (totalBytes - suffixLength).coerceAtLeast(0L)
+        } else {
+            startText.toLongOrNull() ?: return null
+        }
+        val endInclusive = if (endText.isBlank() || startText.isBlank()) {
+            totalBytes - 1
+        } else {
+            endText.toLongOrNull() ?: return null
+        }.coerceAtMost(totalBytes - 1)
+
+        if (start < 0L || start > endInclusive || start >= totalBytes) {
+            return null
+        }
+
+        return PlaybackRange(
+            start = start,
+            endInclusive = endInclusive,
+            isPartial = true,
+        )
+    }
+
+    private data class PlaybackRange(
+        val start: Long,
+        val endInclusive: Long,
+        val isPartial: Boolean,
+    )
 }
