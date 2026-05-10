@@ -4,6 +4,12 @@ import android.os.Environment
 import cn.xybbz.platform.ContextWrapper
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import java.io.File
+import java.io.IOException
+import java.nio.file.FileVisitResult
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.SimpleFileVisitor
+import java.nio.file.attribute.BasicFileAttributes
 
 actual fun getMemoryStorageInfo(
     contextWrapper: ContextWrapper,
@@ -54,9 +60,7 @@ actual fun clearPlatformCache(contextWrapper: ContextWrapper) {
 }
 
 private fun folderSize(file: File?): Long {
-    if (file == null || !file.exists()) return 0L
-    if (file.isFile) return file.length()
-    return file.listFiles()?.sumOf(::folderSize) ?: 0L
+    return walkSize(file)
 }
 
 private fun folderSizeExcluding(
@@ -64,24 +68,51 @@ private fun folderSizeExcluding(
     excludedPrefixes: List<String>,
     excludedDirectories: Set<String>,
 ): Long {
-    if (folder == null || !folder.exists()) return 0L
-    if (folder.isFile) return folder.length()
-
-    val files = folder.listFiles() ?: return 0L
-    var total = 0L
-    for (file in files) {
-        val absolutePath = file.absolutePath
-        if (file.isDirectory) {
-            val shouldSkip = excludedPrefixes.any { absolutePath.startsWith(it) } ||
-                excludedDirectories.contains(absolutePath)
-            if (!shouldSkip) {
-                total += folderSize(file)
-            }
-        } else {
-            total += file.length()
-        }
+    return walkSize(folder) { path ->
+        val absolutePath = path.toFile().absolutePath
+        excludedPrefixes.any { absolutePath.startsWith(it) } ||
+            excludedDirectories.contains(absolutePath)
     }
-    return total
+}
+
+private fun walkSize(
+    file: File?,
+    shouldSkipDirectory: (Path) -> Boolean = { false },
+): Long {
+    return runCatching {
+        if (file == null || !file.exists()) return@runCatching 0L
+
+        var total = 0L
+        Files.walkFileTree(
+            file.toPath(),
+            object : SimpleFileVisitor<Path>() {
+                override fun preVisitDirectory(
+                    dir: Path,
+                    attrs: BasicFileAttributes,
+                ): FileVisitResult {
+                    return if (shouldSkipDirectory(dir)) {
+                        FileVisitResult.SKIP_SUBTREE
+                    } else {
+                        FileVisitResult.CONTINUE
+                    }
+                }
+
+                override fun visitFile(
+                    file: Path,
+                    attrs: BasicFileAttributes,
+                ): FileVisitResult {
+                    total += attrs.size()
+                    return FileVisitResult.CONTINUE
+                }
+
+                override fun visitFileFailed(
+                    file: Path,
+                    exc: IOException,
+                ): FileVisitResult = FileVisitResult.CONTINUE
+            },
+        )
+        total
+    }.getOrDefault(0L)
 }
 
 private fun deleteRecursively(file: File?): Boolean {
