@@ -18,6 +18,9 @@
 
 package cn.xybbz.ui.screens
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,10 +42,18 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.TopAppBarComponent
@@ -72,6 +83,8 @@ import xymusic_kmp.composeapp.generated.resources.essential_data
 import xymusic_kmp.composeapp.generated.resources.essential_data_description
 import xymusic_kmp.composeapp.generated.resources.storage_management
 import xymusic_kmp.composeapp.generated.resources.warning
+import kotlin.math.atan2
+import kotlin.math.hypot
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -264,16 +277,22 @@ private fun JvmStorageDonutChart(
     modifier: Modifier = Modifier,
     segments: List<JvmStorageChartSegment>,
 ) {
-    val chartData = segments
-        .filter { it.sizeBytes > 0f }
-        .map { segment ->
+    var hoveredSegmentIndex by remember { mutableStateOf<Int?>(null) }
+    val visibleSegments = segments.filter { it.sizeBytes > 0f }
+    val chartData = visibleSegments
+        .mapIndexed { index, segment ->
             Pie(
                 label = segment.title,
                 data = segment.sizeBytes.toDouble(),
                 color = segment.color,
                 selectedColor = segment.color,
+                selected = hoveredSegmentIndex == index,
             )
         }
+    val scaleAnimationSpec = spring<Float>(
+        dampingRatio = Spring.DampingRatioMediumBouncy,
+        stiffness = Spring.StiffnessLow,
+    )
 
     RoundedSurfaceColumn(
         modifier = modifier,
@@ -300,9 +319,15 @@ private fun JvmStorageDonutChart(
                     PieChart(
                         modifier = Modifier.fillMaxSize(),
                         data = chartData,
-                        selectedScale = 1f,
+                        selectedScale = 1.08f,
                         spaceDegree = 0f,
-                        selectedPaddingDegree = 0f,
+                        selectedPaddingDegree = 2f,
+                        spaceDegreeAnimEnterSpec = scaleAnimationSpec,
+                        scaleAnimEnterSpec = scaleAnimationSpec,
+                        colorAnimEnterSpec = tween(220),
+                        colorAnimExitSpec = tween(180),
+                        scaleAnimExitSpec = tween(180),
+                        spaceDegreeAnimExitSpec = tween(180),
                         style = Pie.Style.Stroke(width = chartSize * 0.33f),
                     )
                 }
