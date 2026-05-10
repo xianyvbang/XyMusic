@@ -41,11 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.components.AlertDialogObject
@@ -61,6 +57,8 @@ import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.MemoryManagementViewModel
+import ir.ehsannarmani.compose_charts.PieChart
+import ir.ehsannarmani.compose_charts.models.Pie
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
@@ -266,6 +264,17 @@ private fun JvmStorageDonutChart(
     modifier: Modifier = Modifier,
     segments: List<JvmStorageChartSegment>,
 ) {
+    val chartData = segments
+        .filter { it.sizeBytes > 0f }
+        .map { segment ->
+            Pie(
+                label = segment.title,
+                data = segment.sizeBytes.toDouble(),
+                color = segment.color,
+                selectedColor = segment.color,
+            )
+        }
+
     RoundedSurfaceColumn(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -287,10 +296,16 @@ private fun JvmStorageDonutChart(
                 modifier = Modifier.size(chartSize),
                 contentAlignment = Alignment.Center,
             ) {
-                JvmStorageDonutCanvas(
-                    modifier = Modifier.fillMaxSize(),
-                    segments = segments,
-                )
+                if (chartData.isNotEmpty()) {
+                    PieChart(
+                        modifier = Modifier.fillMaxSize(),
+                        data = chartData,
+                        selectedScale = 1f,
+                        spaceDegree = 0f,
+                        selectedPaddingDegree = 0f,
+                        style = Pie.Style.Stroke(width = chartSize * 0.33f),
+                    )
+                }
             }
         }
 
@@ -312,66 +327,6 @@ private fun JvmStorageDonutChart(
                     segment = segment,
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun JvmStorageDonutCanvas(
-    modifier: Modifier = Modifier,
-    segments: List<JvmStorageChartSegment>,
-) {
-    val trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f)
-
-    Canvas(modifier = modifier) {
-        val outerDiameter = size.minDimension
-        if (outerDiameter <= 0f) return@Canvas
-
-        val holeRatio = 0.34f
-        val strokeWidth = outerDiameter * (1f - holeRatio) / 2f
-        val arcDiameter = outerDiameter - strokeWidth
-        val topLeft = Offset(
-            x = (size.width - arcDiameter) / 2f,
-            y = (size.height - arcDiameter) / 2f,
-        )
-        val arcSize = Size(arcDiameter, arcDiameter)
-        val stroke = Stroke(
-            width = strokeWidth,
-            cap = StrokeCap.Butt,
-        )
-
-        val visibleSegments = segments.filter { it.sizeBytes > 0f }
-        val totalBytes = visibleSegments.fold(0f) { total, segment ->
-            total + segment.sizeBytes
-        }
-
-        if (totalBytes <= 0f) {
-            drawArc(
-                color = trackColor,
-                startAngle = -90f,
-                sweepAngle = 360f,
-                useCenter = false,
-                topLeft = topLeft,
-                size = arcSize,
-                style = stroke,
-            )
-            return@Canvas
-        }
-
-        var startAngle = -90f
-        val overlapAngle = if (visibleSegments.size > 1) 0.2f else 0f
-        visibleSegments.forEach { segment ->
-            val sweepAngle = segment.sizeBytes / totalBytes * 360f
-            drawArc(
-                color = segment.color,
-                startAngle = startAngle,
-                sweepAngle = (sweepAngle + overlapAngle).coerceAtMost(360f),
-                useCenter = false,
-                topLeft = topLeft,
-                size = arcSize,
-                style = stroke,
-            )
-            startAngle += sweepAngle
         }
     }
 }
