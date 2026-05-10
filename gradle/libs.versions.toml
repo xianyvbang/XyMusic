@@ -46,7 +46,6 @@ sketch = "4.4.0-beta02"
 work = "2.11.1"
 accompanist = "0.37.3"
 vlcj = "4.8.3"
-composeCharts = "0.2.5"
 
 
 
@@ -147,7 +146,6 @@ accompanist-permissions = { module = "com.google.accompanist:accompanist-permiss
 
 # jvm 媒体播放器
 jvm-vlcj = { module = "uk.co.caprica:vlcj", version.ref = "vlcj" }
-compose-charts = { module = "io.github.ehsannarmani:compose-charts", version.ref = "composeCharts" }
 
 
 [plugins]

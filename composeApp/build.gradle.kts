@@ -115,7 +115,6 @@ kotlin {
             implementation(libs.kotlin.ktor.server.core)
             implementation(libs.kotlin.ktor.server.netty)
             implementation(libs.jvm.vlcj)
-            implementation(libs.compose.charts)
             //拼音相关
             implementation(libs.tinypinyin)
         }

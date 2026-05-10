@@ -18,9 +18,8 @@
 
 package cn.xybbz.ui.screens
 
-import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -49,7 +48,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
@@ -68,8 +70,6 @@ import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.MemoryManagementViewModel
-import ir.ehsannarmani.compose_charts.PieChart
-import ir.ehsannarmani.compose_charts.models.Pie
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
@@ -84,7 +84,9 @@ import xymusic_kmp.composeapp.generated.resources.essential_data_description
 import xymusic_kmp.composeapp.generated.resources.storage_management
 import xymusic_kmp.composeapp.generated.resources.warning
 import kotlin.math.atan2
+import kotlin.math.cos
 import kotlin.math.hypot
+import kotlin.math.sin
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -277,23 +279,6 @@ private fun JvmStorageDonutChart(
     modifier: Modifier = Modifier,
     segments: List<JvmStorageChartSegment>,
 ) {
-    var hoveredSegmentIndex by remember { mutableStateOf<Int?>(null) }
-    val visibleSegments = segments.filter { it.sizeBytes > 0f }
-    val chartData = visibleSegments
-        .mapIndexed { index, segment ->
-            Pie(
-                label = segment.title,
-                data = segment.sizeBytes.toDouble(),
-                color = segment.color,
-                selectedColor = segment.color,
-                selected = hoveredSegmentIndex == index,
-            )
-        }
-    val scaleAnimationSpec = spring<Float>(
-        dampingRatio = Spring.DampingRatioMediumBouncy,
-        stiffness = Spring.StiffnessLow,
-    )
-
     RoundedSurfaceColumn(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -315,22 +300,10 @@ private fun JvmStorageDonutChart(
                 modifier = Modifier.size(chartSize),
                 contentAlignment = Alignment.Center,
             ) {
-                if (chartData.isNotEmpty()) {
-                    PieChart(
-                        modifier = Modifier.fillMaxSize(),
-                        data = chartData,
-                        selectedScale = 1.08f,
-                        spaceDegree = 0f,
-                        selectedPaddingDegree = 2f,
-                        spaceDegreeAnimEnterSpec = scaleAnimationSpec,
-                        scaleAnimEnterSpec = scaleAnimationSpec,
-                        colorAnimEnterSpec = tween(220),
-                        colorAnimExitSpec = tween(180),
-                        scaleAnimExitSpec = tween(180),
-                        spaceDegreeAnimExitSpec = tween(180),
-                        style = Pie.Style.Stroke(width = chartSize * 0.33f),
-                    )
-                }
+                JvmStorageDonutCanvas(
+                    modifier = Modifier.fillMaxSize(),
+                    segments = segments,
+                )
             }
         }
 
@@ -354,6 +327,147 @@ private fun JvmStorageDonutChart(
             }
         }
     }
+}
+
+@Composable
+private fun JvmStorageDonutCanvas(
+    modifier: Modifier = Modifier,
+    segments: List<JvmStorageChartSegment>,
+) {
+    val trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f)
+    var hoveredSegmentIndex by remember { mutableStateOf<Int?>(null) }
+    val hoverProgress by animateFloatAsState(
+        targetValue = if (hoveredSegmentIndex == null) 0f else 1f,
+        animationSpec = spring(
+            dampingRatio = 0.72f,
+            stiffness = 360f,
+        ),
+        label = "storageDonutHoverProgress",
+    )
+
+    Canvas(
+        modifier = modifier.pointerInput(segments) {
+            awaitPointerEventScope {
+                while (true) {
+                    val event = awaitPointerEvent()
+                    val pointer = event.changes.firstOrNull()?.position
+                    hoveredSegmentIndex = when {
+                        event.type == PointerEventType.Exit -> null
+                        pointer == null -> null
+                        else -> findHoveredStorageSegment(
+                            pointer = pointer,
+                            canvasSize = size,
+                            segments = segments,
+                        )
+                    }
+                }
+            }
+        }
+    ) {
+        val outerDiameter = size.minDimension
+        if (outerDiameter <= 0f) return@Canvas
+
+        val holeRatio = 0.34f
+        val strokeWidth = outerDiameter * (1f - holeRatio) / 2f
+        val arcDiameter = outerDiameter - strokeWidth
+        val topLeft = Offset(
+            x = (size.width - arcDiameter) / 2f,
+            y = (size.height - arcDiameter) / 2f,
+        )
+        val arcSize = Size(arcDiameter, arcDiameter)
+        val baseStroke = Stroke(width = strokeWidth, cap = StrokeCap.Butt)
+
+        val visibleSegments = segments.filter { it.sizeBytes > 0f }
+        val totalBytes = visibleSegments.fold(0f) { total, segment ->
+            total + segment.sizeBytes
+        }
+
+        if (totalBytes <= 0f) {
+            drawArc(
+                color = trackColor,
+                startAngle = -90f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
+                style = baseStroke,
+            )
+            return@Canvas
+        }
+
+        var startAngle = -90f
+        val overlapAngle = if (visibleSegments.size > 1) 0.2f else 0f
+        visibleSegments.forEachIndexed { index, segment ->
+            val sweepAngle = segment.sizeBytes / totalBytes * 360f
+            val isHovered = hoveredSegmentIndex == index
+            val segmentProgress = if (isHovered) hoverProgress else 0f
+            val midAngleRadians = Math.toRadians((startAngle + sweepAngle / 2f).toDouble())
+            val expansion = outerDiameter * 0.018f * segmentProgress
+            val expandedTopLeft = Offset(
+                x = topLeft.x + cos(midAngleRadians).toFloat() * expansion - expansion / 2f,
+                y = topLeft.y + sin(midAngleRadians).toFloat() * expansion - expansion / 2f,
+            )
+            val expandedSize = Size(
+                width = arcSize.width + expansion,
+                height = arcSize.height + expansion,
+            )
+            val expandedStroke = Stroke(
+                width = strokeWidth + outerDiameter * 0.018f * segmentProgress,
+                cap = StrokeCap.Butt,
+            )
+
+            drawArc(
+                color = segment.color,
+                startAngle = startAngle,
+                sweepAngle = (sweepAngle + overlapAngle).coerceAtMost(360f),
+                useCenter = false,
+                topLeft = expandedTopLeft,
+                size = expandedSize,
+                style = expandedStroke,
+            )
+            startAngle += sweepAngle
+        }
+    }
+}
+
+private fun findHoveredStorageSegment(
+    pointer: Offset,
+    canvasSize: IntSize,
+    segments: List<JvmStorageChartSegment>,
+): Int? {
+    val visibleSegments = segments.filter { it.sizeBytes > 0f }
+    val totalBytes = visibleSegments.fold(0f) { total, segment ->
+        total + segment.sizeBytes
+    }
+    if (totalBytes <= 0f) return null
+
+    val minDimension = minOf(canvasSize.width, canvasSize.height).toFloat()
+    val center = Offset(canvasSize.width / 2f, canvasSize.height / 2f)
+    val distance = hypot(
+        x = pointer.x - center.x,
+        y = pointer.y - center.y,
+    )
+    val outerRadius = minDimension / 2f
+    val innerRadius = outerRadius * 0.34f
+    if (distance !in innerRadius..outerRadius) return null
+
+    val angle = ((Math.toDegrees(
+        atan2(
+            y = pointer.y - center.y,
+            x = pointer.x - center.x,
+        ).toDouble()
+    ) + 450.0) % 360.0).toFloat()
+
+    var startAngle = 0f
+    visibleSegments.forEachIndexed { index, segment ->
+        val sweepAngle = segment.sizeBytes / totalBytes * 360f
+        if (angle in startAngle..(startAngle + sweepAngle)) {
+            return index
+        }
+        startAngle += sweepAngle
+    }
+
+    return visibleSegments.lastIndex.takeIf { visibleSegments.isNotEmpty() }
 }
 
 @Composable
