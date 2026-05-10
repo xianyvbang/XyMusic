@@ -84,9 +84,7 @@ import xymusic_kmp.composeapp.generated.resources.essential_data_description
 import xymusic_kmp.composeapp.generated.resources.storage_management
 import xymusic_kmp.composeapp.generated.resources.warning
 import kotlin.math.atan2
-import kotlin.math.cos
 import kotlin.math.hypot
-import kotlin.math.sin
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -335,18 +333,24 @@ private fun JvmStorageDonutCanvas(
     segments: List<JvmStorageChartSegment>,
 ) {
     val trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f)
+    val visibleSegments = segments.filter { it.sizeBytes > 0f }
     var hoveredSegmentIndex by remember { mutableStateOf<Int?>(null) }
-    val hoverProgress by animateFloatAsState(
-        targetValue = if (hoveredSegmentIndex == null) 0f else 1f,
-        animationSpec = spring(
-            dampingRatio = 0.72f,
-            stiffness = 360f,
-        ),
-        label = "storageDonutHoverProgress",
-    )
+    val hoverProgresses = MutableList(visibleSegments.size) { 0f }
+
+    for (index in visibleSegments.indices) {
+        val progress by animateFloatAsState(
+            targetValue = if (hoveredSegmentIndex == index) 1f else 0f,
+            animationSpec = spring(
+                dampingRatio = 0.72f,
+                stiffness = 360f,
+            ),
+            label = "storageDonutHoverProgress$index",
+        )
+        hoverProgresses[index] = progress
+    }
 
     Canvas(
-        modifier = modifier.pointerInput(segments) {
+        modifier = modifier.pointerInput(visibleSegments) {
             awaitPointerEventScope {
                 while (true) {
                     val event = awaitPointerEvent()
@@ -357,7 +361,7 @@ private fun JvmStorageDonutCanvas(
                         else -> findHoveredStorageSegment(
                             pointer = pointer,
                             canvasSize = size,
-                            segments = segments,
+                            segments = visibleSegments,
                         )
                     }
                 }
@@ -368,67 +372,103 @@ private fun JvmStorageDonutCanvas(
         if (outerDiameter <= 0f) return@Canvas
 
         val holeRatio = 0.34f
-        val strokeWidth = outerDiameter * (1f - holeRatio) / 2f
-        val arcDiameter = outerDiameter - strokeWidth
-        val topLeft = Offset(
-            x = (size.width - arcDiameter) / 2f,
-            y = (size.height - arcDiameter) / 2f,
-        )
-        val arcSize = Size(arcDiameter, arcDiameter)
-        val baseStroke = Stroke(width = strokeWidth, cap = StrokeCap.Butt)
+        val center = Offset(size.width / 2f, size.height / 2f)
+        val maxOuterExpansion = outerDiameter * 0.04f
+        val baseOuterRadius = outerDiameter / 2f - maxOuterExpansion
+        val innerRadius = outerDiameter * holeRatio / 2f
 
-        val visibleSegments = segments.filter { it.sizeBytes > 0f }
         val totalBytes = visibleSegments.fold(0f) { total, segment ->
             total + segment.sizeBytes
         }
 
         if (totalBytes <= 0f) {
+            val centerlineRadius = (baseOuterRadius + innerRadius) / 2f
             drawArc(
                 color = trackColor,
                 startAngle = -90f,
                 sweepAngle = 360f,
                 useCenter = false,
-                topLeft = topLeft,
-                size = arcSize,
-                style = baseStroke,
+                topLeft = Offset(
+                    x = center.x - centerlineRadius,
+                    y = center.y - centerlineRadius,
+                ),
+                size = Size(
+                    width = centerlineRadius * 2f,
+                    height = centerlineRadius * 2f,
+                ),
+                style = Stroke(
+                    width = baseOuterRadius - innerRadius,
+                    cap = StrokeCap.Butt,
+                ),
             )
             return@Canvas
         }
 
-        var startAngle = -90f
-        val overlapAngle = if (visibleSegments.size > 1) 0.2f else 0f
-        visibleSegments.forEachIndexed { index, segment ->
-            val sweepAngle = segment.sizeBytes / totalBytes * 360f
-            val isHovered = hoveredSegmentIndex == index
-            val segmentProgress = if (isHovered) hoverProgress else 0f
-            val midAngleRadians = Math.toRadians((startAngle + sweepAngle / 2f).toDouble())
-            val expansion = outerDiameter * 0.018f * segmentProgress
-            val expandedTopLeft = Offset(
-                x = topLeft.x + cos(midAngleRadians).toFloat() * expansion - expansion / 2f,
-                y = topLeft.y + sin(midAngleRadians).toFloat() * expansion - expansion / 2f,
-            )
-            val expandedSize = Size(
-                width = arcSize.width + expansion,
-                height = arcSize.height + expansion,
-            )
-            val expandedStroke = Stroke(
-                width = strokeWidth + outerDiameter * 0.018f * segmentProgress,
-                cap = StrokeCap.Butt,
-            )
+        val arcs = buildList {
+            var nextStartAngle = -90f
+            visibleSegments.forEachIndexed { index, segment ->
+                val sweepAngle = segment.sizeBytes / totalBytes * 360f
+                add(
+                    JvmStorageChartArc(
+                        segmentIndex = index,
+                        startAngle = nextStartAngle,
+                        sweepAngle = sweepAngle,
+                    )
+                )
+                nextStartAngle += sweepAngle
+            }
+        }
+
+        fun drawStorageArc(
+            arc: JvmStorageChartArc,
+            progress: Float,
+        ) {
+            val segment = visibleSegments[arc.segmentIndex]
+            val outerRadius = baseOuterRadius + maxOuterExpansion * progress
+            val centerlineRadius = (outerRadius + innerRadius) / 2f
+            val strokeWidth = outerRadius - innerRadius
+            val overlapAngle = if (visibleSegments.size > 1) 0.2f else 0f
 
             drawArc(
                 color = segment.color,
-                startAngle = startAngle,
-                sweepAngle = (sweepAngle + overlapAngle).coerceAtMost(360f),
+                startAngle = arc.startAngle,
+                sweepAngle = (arc.sweepAngle + overlapAngle).coerceAtMost(360f),
                 useCenter = false,
-                topLeft = expandedTopLeft,
-                size = expandedSize,
-                style = expandedStroke,
+                topLeft = Offset(
+                    x = center.x - centerlineRadius,
+                    y = center.y - centerlineRadius,
+                ),
+                size = Size(
+                    width = centerlineRadius * 2f,
+                    height = centerlineRadius * 2f,
+                ),
+                style = Stroke(
+                    width = strokeWidth,
+                    cap = StrokeCap.Butt,
+                ),
             )
-            startAngle += sweepAngle
         }
+
+        arcs
+            .filter { arc -> hoverProgresses.getOrElse(arc.segmentIndex) { 0f } <= 0.001f }
+            .forEach { arc -> drawStorageArc(arc, 0f) }
+
+        arcs
+            .filter { arc -> hoverProgresses.getOrElse(arc.segmentIndex) { 0f } > 0.001f }
+            .forEach { arc ->
+                drawStorageArc(
+                    arc = arc,
+                    progress = hoverProgresses.getOrElse(arc.segmentIndex) { 0f },
+                )
+            }
     }
 }
+
+private data class JvmStorageChartArc(
+    val segmentIndex: Int,
+    val startAngle: Float,
+    val sweepAngle: Float,
+)
 
 private fun findHoveredStorageSegment(
     pointer: Offset,
