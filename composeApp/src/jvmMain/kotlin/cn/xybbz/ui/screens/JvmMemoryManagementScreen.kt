@@ -39,6 +39,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -54,12 +55,17 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.TopAppBarComponent
-import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
@@ -68,7 +74,6 @@ import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
-import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.MemoryManagementViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -83,8 +88,12 @@ import xymusic_kmp.composeapp.generated.resources.essential_data
 import xymusic_kmp.composeapp.generated.resources.essential_data_description
 import xymusic_kmp.composeapp.generated.resources.storage_management
 import xymusic_kmp.composeapp.generated.resources.warning
+import kotlin.math.PI
 import kotlin.math.atan2
+import kotlin.math.cos
 import kotlin.math.hypot
+import kotlin.math.roundToInt
+import kotlin.math.sin
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -101,16 +110,19 @@ fun JvmMemoryManagementScreen(
             title = audioCacheTitle,
             sizeBytes = memoryManagementViewModel.musicCacheSize.toStorageBytes(),
             color = MaterialTheme.colorScheme.primary,
+            labelColor = MaterialTheme.colorScheme.onPrimary,
         ),
         JvmStorageChartSegment(
             title = databaseDataTitle,
             sizeBytes = memoryManagementViewModel.databaseSize.toStorageBytes(),
             color = MaterialTheme.colorScheme.error,
+            labelColor = MaterialTheme.colorScheme.onError,
         ),
         JvmStorageChartSegment(
             title = essentialDataTitle,
             sizeBytes = memoryManagementViewModel.appDataSize.toStorageBytes(),
             color = MaterialTheme.colorScheme.tertiary,
+            labelColor = MaterialTheme.colorScheme.onTertiary,
         ),
     )
 
@@ -121,8 +133,10 @@ fun JvmMemoryManagementScreen(
     XyColumnScreen {
         TopAppBarComponent(
             title = {
-                TopAppBarTitle(
-                    title = stringResource(Res.string.storage_management)
+                Text(
+                    text = stringResource(Res.string.storage_management),
+                    fontWeight = FontWeight.W900,
+                    style = MaterialTheme.typography.headlineSmall,
                 )
             }
         )
@@ -164,8 +178,9 @@ fun JvmMemoryManagementScreen(
                             AlertDialogObject(
                                 title = warning,
                                 content = {
-                                    XyTextSubSmall(
-                                        text = stringResource(Res.string.confirm_delete_database)
+                                    XyTextSub(
+                                        text = stringResource(Res.string.confirm_delete_database),
+                                        style = MaterialTheme.typography.bodyMedium,
                                     )
                                 },
                                 ifWarning = true,
@@ -230,11 +245,14 @@ fun JvmMemoryManagementItem(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 XyText(
-                    text = text
+                    text = text,
+                    style = MaterialTheme.typography.titleMedium,
                 )
-                XyTextSubSmall(
+                XyTextSub(
                     modifier = Modifier,
-                    text = cacheSize
+                    text = cacheSize,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
             if (ifShowButton)
@@ -242,7 +260,8 @@ fun JvmMemoryManagementItem(
                     modifier = Modifier,
                     enabled = cacheSize != "0B",
                     onClick = { onClick?.invoke() },
-                    text = stringResource(Res.string.clear)
+                    text = stringResource(Res.string.clear),
+                    textStyle = MaterialTheme.typography.titleMedium,
                 )
         }
         Row(
@@ -259,6 +278,7 @@ fun JvmMemoryManagementItem(
         ) {
             XyTextSub(
                 text = describe,
+                style = MaterialTheme.typography.bodyMedium,
                 overflow = TextOverflow.Visible
             )
         }
@@ -270,6 +290,7 @@ private data class JvmStorageChartSegment(
     val title: String,
     val sizeBytes: Float,
     val color: Color,
+    val labelColor: Color,
 )
 
 @Composable
@@ -314,12 +335,14 @@ private fun JvmStorageDonutChart(
                     end = XyTheme.dimens.innerHorizontalPadding,
                     bottom = XyTheme.dimens.innerVerticalPadding,
                 ),
-            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.innerHorizontalPadding / 2),
+            horizontalArrangement = Arrangement.spacedBy(
+                space = XyTheme.dimens.innerHorizontalPadding / 3,
+                alignment = Alignment.CenterHorizontally,
+            ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             segments.forEach { segment ->
                 JvmStorageDonutLegendItem(
-                    modifier = Modifier.weight(1f),
                     segment = segment,
                 )
             }
@@ -327,12 +350,17 @@ private fun JvmStorageDonutChart(
     }
 }
 
+@OptIn(ExperimentalTextApi::class)
 @Composable
 private fun JvmStorageDonutCanvas(
     modifier: Modifier = Modifier,
     segments: List<JvmStorageChartSegment>,
 ) {
     val trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f)
+    val labelTextMeasurer = rememberTextMeasurer()
+    val labelTextStyle = MaterialTheme.typography.titleMedium.copy(
+        fontWeight = FontWeight.Bold,
+    )
     val visibleSegments = segments.filter { it.sizeBytes > 0f }
     var hoveredSegmentIndex by remember { mutableStateOf<Int?>(null) }
     val hoverProgresses = MutableList(visibleSegments.size) { 0f }
@@ -449,6 +477,50 @@ private fun JvmStorageDonutCanvas(
             )
         }
 
+        fun drawStorageLabel(
+            arc: JvmStorageChartArc,
+            progress: Float,
+        ) {
+            val segment = visibleSegments[arc.segmentIndex]
+            val labelText = formatStoragePercentLabel(
+                sizeBytes = segment.sizeBytes,
+                totalBytes = totalBytes,
+            )
+            if (labelText.isEmpty()) return
+
+            val outerRadius = baseOuterRadius + maxOuterExpansion * progress
+            val labelRadius = (outerRadius + innerRadius) / 2f
+            val availableThickness = outerRadius - innerRadius
+            val availableArcLength = labelRadius * (arc.sweepAngle * PI.toFloat() / 180f)
+            val labelHorizontalPadding = 8.dp.toPx()
+            val labelVerticalPadding = 4.dp.toPx()
+            val labelFontSize = (18f + 3f * progress).sp
+            val textLayoutResult = labelTextMeasurer.measure(
+                text = AnnotatedString(labelText),
+                style = labelTextStyle.copy(
+                    color = segment.labelColor,
+                    fontSize = labelFontSize,
+                ),
+            )
+
+            if (textLayoutResult.size.width + labelHorizontalPadding > availableArcLength) return
+            if (textLayoutResult.size.height + labelVerticalPadding > availableThickness) return
+
+            val centerAngle = (arc.startAngle + arc.sweepAngle / 2f) * PI.toFloat() / 180f
+            val labelCenter = Offset(
+                x = center.x + cos(centerAngle) * labelRadius,
+                y = center.y + sin(centerAngle) * labelRadius,
+            )
+
+            drawText(
+                textLayoutResult = textLayoutResult,
+                topLeft = Offset(
+                    x = labelCenter.x - textLayoutResult.size.width / 2f,
+                    y = labelCenter.y - textLayoutResult.size.height / 2f,
+                ),
+            )
+        }
+
         arcs
             .filter { arc -> hoverProgresses.getOrElse(arc.segmentIndex) { 0f } <= 0.001f }
             .forEach { arc -> drawStorageArc(arc, 0f) }
@@ -461,6 +533,19 @@ private fun JvmStorageDonutCanvas(
                     progress = hoverProgresses.getOrElse(arc.segmentIndex) { 0f },
                 )
             }
+
+        arcs
+            .filter { arc -> hoverProgresses.getOrElse(arc.segmentIndex) { 0f } <= 0.001f }
+            .forEach { arc -> drawStorageLabel(arc, 0f) }
+
+        arcs
+            .filter { arc -> hoverProgresses.getOrElse(arc.segmentIndex) { 0f } > 0.001f }
+            .forEach { arc ->
+                drawStorageLabel(
+                    arc = arc,
+                    progress = hoverProgresses.getOrElse(arc.segmentIndex) { 0f },
+                )
+            }
     }
 }
 
@@ -469,6 +554,20 @@ private data class JvmStorageChartArc(
     val startAngle: Float,
     val sweepAngle: Float,
 )
+
+private fun formatStoragePercentLabel(
+    sizeBytes: Float,
+    totalBytes: Float,
+): String {
+    if (sizeBytes <= 0f || totalBytes <= 0f) return ""
+
+    val percent = sizeBytes / totalBytes * 100f
+    return if (percent < 1f) {
+        "<1%"
+    } else {
+        "${percent.roundToInt()}%"
+    }
+}
 
 private fun findHoveredStorageSegment(
     pointer: Offset,
@@ -520,13 +619,15 @@ private fun JvmStorageDonutLegendItem(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Canvas(modifier = Modifier.size(10.dp)) {
-            drawCircle(color = segment.color)
+        Canvas(modifier = Modifier.size(12.dp)) {
+            drawRect(color = segment.color)
         }
-        Spacer(modifier = Modifier.width(XyTheme.dimens.innerHorizontalPadding / 2))
-        XyTextSubSmall(
+        Spacer(modifier = Modifier.width(XyTheme.dimens.innerHorizontalPadding / 3))
+        XyTextSub(
             text = segment.title,
+            style = MaterialTheme.typography.bodyMedium,
             maxLines = 1,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }

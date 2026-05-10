@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import cn.xybbz.ui.theme.XyTheme
@@ -40,7 +41,8 @@ fun XyButton(
     color: Color = Color.Unspecified,
     backgroundColor: Color = MaterialTheme.colorScheme.primary,
     enabled: Boolean = true,
-    paddingValues: PaddingValues = PaddingValues()
+    paddingValues: PaddingValues = PaddingValues(),
+    textStyle: TextStyle = MaterialTheme.typography.labelLarge,
 ) {
 
     Button(
@@ -56,6 +58,7 @@ fun XyButton(
             modifier = Modifier,
             color = color,
             textAlign = TextAlign.Center,
+            style = textStyle,
             overflow = TextOverflow.Ellipsis,
             maxLines = 1
         )
