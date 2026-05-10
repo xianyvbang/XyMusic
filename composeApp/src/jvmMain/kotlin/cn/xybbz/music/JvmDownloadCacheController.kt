@@ -42,6 +42,8 @@ class JvmDownloadCacheController(
 
     @Volatile
     private var currentSessionId: Long? = null
+    @Volatile
+    private var lastProgressLogTime = 0L
 
     init {
         createScope()
@@ -322,8 +324,26 @@ class JvmDownloadCacheController(
             } else {
                 0f
             }
+            logCacheProgress(session, progress)
             updateCacheSchedule(progress)
         }
+    }
+
+    private fun logCacheProgress(
+        session: CacheSession,
+        progress: Float,
+    ) {
+        val now = System.currentTimeMillis()
+        if (progress < 1f && now - lastProgressLogTime < PROGRESS_LOG_INTERVAL_MS) {
+            return
+        }
+        lastProgressLogTime = now
+        Log.i(
+            "jvm-cache",
+            "播放缓存进度 id=${session.id}, key=${session.cacheKey}, " +
+                    "progress=${(progress * 100).coerceIn(0f, 100f)}%, " +
+                    "downloaded=${session.downloadedBytes}, total=${session.totalBytes}"
+        )
     }
 
     private suspend fun waitForReadableEnd(session: CacheSession, position: Long): Long? {
@@ -415,6 +435,7 @@ class JvmDownloadCacheController(
         private const val STREAM_BUFFER_SIZE = 64 * 1024
         private const val STREAM_WAIT_TIMEOUT_MS = 15_000L
         private const val STREAM_WAIT_INTERVAL_MS = 100L
+        private const val PROGRESS_LOG_INTERVAL_MS = 1_000L
 
         fun controllerOrNull(): JvmDownloadCacheController? {
             return runCatching {

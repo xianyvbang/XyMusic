@@ -77,12 +77,9 @@ class JvmMusicController : MusicCommonController() {
         }
 
         /**
-         * VLC 上报的缓冲值是 0..100，这里转成 UI 进度条使用的 0..1。
+         * JVM 缓存进度只由 JvmDownloadCacheController 写入，避免 VLC 网络缓冲值覆盖磁盘缓存进度。
          */
         override fun buffering(mediaPlayer: MediaPlayer?, newCache: Float) {
-            if (!isCachePlaybackSource()) {
-                downloadCacheController.updateCacheSchedule(newCache / 100f)
-            }
         }
 
         /**
@@ -819,11 +816,6 @@ class JvmMusicController : MusicCommonController() {
         music.setPlayerUrl(playerUrl)
         return playerUrl
     }
-
-    private fun isCachePlaybackSource(): Boolean {
-        return musicInfo?.getPlayerUrl()?.contains("/cache-play?id=") == true
-    }
-
 
     /**
      * 延迟初始化 VLC 播放器体系。
