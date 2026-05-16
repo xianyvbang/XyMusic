@@ -124,6 +124,7 @@ class SettingsManager(
         this@SettingsManager._themeType.value = this@SettingsManager.get().themeType
         this@SettingsManager._isDynamic.value = this@SettingsManager.get().isDynamic
         this@SettingsManager._imageFilePath.value = this@SettingsManager.get().imageFilePath
+        this@SettingsManager._cacheFilePath.value = this@SettingsManager.get().cacheFilePath
 
         val connectionId = this@SettingsManager.get().connectionId
         val ifConnectionId = connectionId != null
@@ -638,6 +639,20 @@ class SettingsManager(
      */
     fun updateCacheFilePath(path: String) {
         this._cacheFilePath.value = path
+    }
+
+    /**
+     * 保存播放缓存目录。空字符串表示使用平台默认目录。
+     */
+    suspend fun setCacheFilePath(cacheFilePath: String) {
+        settings = get().copy(cacheFilePath = cacheFilePath)
+        if (get().id != AllDataEnum.All.code) {
+            db.settingsDao.updateCacheFilePath(cacheFilePath, get().id)
+        } else {
+            val settingId =
+                db.settingsDao.save(XySettings(cacheFilePath = cacheFilePath))
+            settings = get().copy(id = settingId)
+        }
     }
 
     fun sengTranscodingEvent(transcodingState:TranscodingState = TranscodingState.Transcoding) {

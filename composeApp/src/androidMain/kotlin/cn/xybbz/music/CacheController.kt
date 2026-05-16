@@ -20,7 +20,6 @@ package cn.xybbz.music
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.os.Environment
 import android.util.Log
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.DefaultDataSource
@@ -46,7 +45,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.io.File
 
 
 @SuppressLint("UnsafeOptInUsageError")
@@ -69,28 +67,16 @@ class CacheController(
 
     private val cacheCoroutineScope = XyCloseableCoroutineScope(SupervisorJob() + Dispatchers.IO + CoroutineName((this.javaClass.name)))
 
-    private val childPath = "cache"
+    private val cacheDir = resolveAndroidPlaybackCacheDirectory(context, settingsManager)
 
     private val _cacheSchedule = MutableStateFlow(0f)
     val cacheSchedule = _cacheSchedule.asStateFlow()
 
     init {
-        //2025年1月20日 11:12:19 修改缓存数据目录到cache中,使其可以被系统的清除缓存功能删除
-        val cacheParentDirectory =
-            if (Environment.MEDIA_MOUNTED == Environment.getExternalStorageState()) {
-                File(
-//                    context.externalCacheDir,
-                    context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
-                    childPath
-                )
-            } else {
-                File(context.filesDir, childPath)
-            }
-        Log.i("music", "缓存初始化 $cacheParentDirectory")
+        Log.i("music", "缓存初始化 $cacheDir")
         // 设置缓存目录和缓存机制，如果不需要清除缓存可以使用NoOpCacheEvictor
 
-        val cacheDir = File(cacheParentDirectory, "example_media_cache")
-        settingsManager.updateCacheFilePath(cacheDir.path)
+        settingsManager.updateCacheFilePath(cacheDir.absolutePath)
         cache = SimpleCache(
             cacheDir,
             //读取配置

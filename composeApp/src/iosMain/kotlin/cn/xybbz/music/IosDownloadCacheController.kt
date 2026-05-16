@@ -5,6 +5,16 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 
 class IosDownloadCacheController : DownloadCacheCommonController() {
 
+    init {
+        settingsManager.updateCacheFilePath("")
+    }
+
+    override val cacheDirectoryPath: String
+        get() = ""
+
+    override val isDefaultCacheDirectory: Boolean
+        get() = true
+
     override fun clearCache() {
     }
 

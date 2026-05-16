@@ -57,6 +57,32 @@ abstract class DownloadCacheCommonController : IoScoped(), KoinComponent {
     abstract fun getMediaItem(cacheKey: String): Any?
 
     /**
+     * 当前缓存目录路径。
+     */
+    open val cacheDirectoryPath: String
+        get() = settingsManager.cacheFilePath.value
+
+    /**
+     * 当前缓存目录是否为平台默认目录。
+     */
+    open val isDefaultCacheDirectory: Boolean
+        get() = true
+
+    /**
+     * 切换缓存目录。默认平台无自定义目录能力。
+     */
+    open suspend fun changeCacheDirectory(path: String): Boolean {
+        return false
+    }
+
+    /**
+     * 恢复默认缓存目录。默认平台无自定义目录能力。
+     */
+    open suspend fun restoreDefaultCacheDirectory(): Boolean {
+        return false
+    }
+
+    /**
      * 获得缓存key
      */
     fun getCacheKey(musicId: String): String {

@@ -151,4 +151,8 @@ data class XySettings @OptIn(ExperimentalUuidApi::class) constructor(
      * JVM 播放器音量百分比
      */
     val jvmVolume: Int? = null,
+    /**
+     * 播放缓存目录。空字符串表示使用平台默认目录。
+     */
+    val cacheFilePath: String = "",
 )

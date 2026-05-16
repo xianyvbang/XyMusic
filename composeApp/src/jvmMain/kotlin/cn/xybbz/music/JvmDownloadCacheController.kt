@@ -38,7 +38,11 @@ class JvmDownloadCacheController(
     private val sessions = ConcurrentHashMap<Long, CacheSession>()
     private val cacheKeyToSessionId = ConcurrentHashMap<String, Long>()
     private val idGenerator = AtomicLong(System.currentTimeMillis())
-    private val cacheDirectory = File(contextWrapper.applicationDirectory, CACHE_DIRECTORY_NAME)
+    private val defaultCacheDirectory = File(contextWrapper.applicationDirectory, CACHE_DIRECTORY_NAME)
+        .normalizedDirectory()
+
+    @Volatile
+    private var cacheDirectory = resolveInitialCacheDirectory()
 
     @Volatile
     private var currentSessionId: Long? = null
@@ -47,8 +51,9 @@ class JvmDownloadCacheController(
 
     init {
         createScope()
-        if (!cacheDirectory.exists()) {
-            cacheDirectory.mkdirs()
+        if (!ensureCacheDirectory(cacheDirectory)) {
+            cacheDirectory = defaultCacheDirectory
+            ensureCacheDirectory(cacheDirectory)
         }
         settingsManager.updateCacheFilePath(cacheDirectory.absolutePath)
         observeCacheLimit()
@@ -87,7 +92,14 @@ class JvmDownloadCacheController(
     }
 
     override fun getCacheSize() {
-        updateCacheSizeFlow(cacheDirectory.walkTopDown().filter { it.isFile }.sumOf { it.length() })
+        val directory = cacheDirectory
+        updateCacheSizeFlow(
+            if (directory.exists()) {
+                directory.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+            } else {
+                0L
+            }
+        )
     }
 
     override fun cacheMedia(
@@ -113,6 +125,21 @@ class JvmDownloadCacheController(
 
     override fun getMediaItem(cacheKey: String): Any? {
         return cacheKeyToSessionId[cacheKey]?.let(sessions::get)
+    }
+
+    override val cacheDirectoryPath: String
+        get() = cacheDirectory.absolutePath
+
+    override val isDefaultCacheDirectory: Boolean
+        get() = cacheDirectory.isSameDirectory(defaultCacheDirectory)
+
+    override suspend fun changeCacheDirectory(path: String): Boolean {
+        val targetPath = path.trim().takeIf { it.isNotEmpty() } ?: return false
+        return setActiveCacheDirectory(File(targetPath), persistAsDefault = false)
+    }
+
+    override suspend fun restoreDefaultCacheDirectory(): Boolean {
+        return setActiveCacheDirectory(defaultCacheDirectory, persistAsDefault = true)
     }
 
     internal suspend fun writeSessionTo(
@@ -170,13 +197,14 @@ class JvmDownloadCacheController(
         val sessionId = idGenerator.incrementAndGet()
         val extension = music.container?.takeIf { it.isNotBlank() } ?: "audio"
         val safeName = safeFileName(cacheKey)
+        val directory = cacheDirectory
         val session = CacheSession(
             id = sessionId,
             cacheKey = cacheKey,
             url = music.musicUrl,
             totalBytes = music.size ?: 0L,
-            tempFile = File(cacheDirectory, "$safeName.part"),
-            finalFile = File(cacheDirectory, "$safeName.$extension"),
+            tempFile = File(directory, "$safeName.part"),
+            finalFile = File(directory, "$safeName.$extension"),
             contentType = contentTypeFor(extension),
         )
         sessions[sessionId] = session
@@ -397,6 +425,69 @@ class JvmDownloadCacheController(
         }
     }
 
+    private fun resolveInitialCacheDirectory(): File {
+        return settingsManager.get()
+            .cacheFilePath
+            .trim()
+            .takeIf { it.isNotEmpty() }
+            ?.let { File(it).normalizedDirectory() }
+            ?: defaultCacheDirectory
+    }
+
+    private suspend fun setActiveCacheDirectory(
+        directory: File,
+        persistAsDefault: Boolean,
+    ): Boolean = withContext(Dispatchers.IO) {
+        val targetDirectory = directory.normalizedDirectory()
+        if (!ensureCacheDirectory(targetDirectory)) {
+            return@withContext false
+        }
+
+        val storedPath = if (
+            persistAsDefault ||
+            targetDirectory.isSameDirectory(defaultCacheDirectory)
+        ) {
+            ""
+        } else {
+            targetDirectory.absolutePath
+        }
+
+        val persisted = runCatching {
+            settingsManager.setCacheFilePath(storedPath)
+        }.isSuccess
+        if (!persisted) {
+            return@withContext false
+        }
+
+        if (targetDirectory.isSameDirectory(cacheDirectory)) {
+            settingsManager.updateCacheFilePath(targetDirectory.absolutePath)
+            getCacheSize()
+        } else {
+            switchCacheDirectory(targetDirectory)
+        }
+        true
+    }
+
+    private fun switchCacheDirectory(directory: File) {
+        synchronized(this) {
+            cancelInMemorySessions()
+            cacheDirectory = directory
+            settingsManager.updateCacheFilePath(directory.absolutePath)
+            updateCacheSchedule(0f)
+        }
+        getCacheSize()
+    }
+
+    private fun cancelInMemorySessions() {
+        sessions.values.forEach { session ->
+            session.job?.cancel()
+            session.status = CacheStatus.CANCELLED
+        }
+        sessions.clear()
+        cacheKeyToSessionId.clear()
+        currentSessionId = null
+    }
+
     private fun safeFileName(value: String): String {
         return URLEncoder.encode(value, StandardCharsets.UTF_8)
             .replace("%", "_")
@@ -422,6 +513,26 @@ class JvmDownloadCacheController(
                 file.delete()
             }
         }
+    }
+
+    private fun ensureCacheDirectory(directory: File): Boolean {
+        return runCatching {
+            if (directory.exists()) {
+                directory.isDirectory
+            } else {
+                directory.mkdirs()
+            }
+        }.getOrDefault(false)
+    }
+
+    private fun File.normalizedDirectory(): File {
+        return runCatching {
+            canonicalFile
+        }.getOrDefault(absoluteFile)
+    }
+
+    private fun File.isSameDirectory(other: File): Boolean {
+        return normalizedDirectory().absolutePath == other.normalizedDirectory().absolutePath
     }
 
     override fun close() {

@@ -40,6 +40,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -80,14 +81,20 @@ import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.audio_cache
 import xymusic_kmp.composeapp.generated.resources.audio_cache_description
+import xymusic_kmp.composeapp.generated.resources.adjust
+import xymusic_kmp.composeapp.generated.resources.cache_path
 import xymusic_kmp.composeapp.generated.resources.clear
 import xymusic_kmp.composeapp.generated.resources.confirm_delete_database
 import xymusic_kmp.composeapp.generated.resources.database_data
 import xymusic_kmp.composeapp.generated.resources.database_data_description
 import xymusic_kmp.composeapp.generated.resources.essential_data
 import xymusic_kmp.composeapp.generated.resources.essential_data_description
+import xymusic_kmp.composeapp.generated.resources.path
+import xymusic_kmp.composeapp.generated.resources.restore_default
 import xymusic_kmp.composeapp.generated.resources.storage_management
 import xymusic_kmp.composeapp.generated.resources.warning
+import java.io.File
+import javax.swing.JFileChooser
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -105,6 +112,7 @@ fun JvmMemoryManagementScreen(
     val audioCacheTitle = stringResource(Res.string.audio_cache)
     val databaseDataTitle = stringResource(Res.string.database_data)
     val essentialDataTitle = stringResource(Res.string.essential_data)
+    val cachePathTitle = stringResource(Res.string.cache_path)
     val chartSegments = listOf(
         JvmStorageChartSegment(
             title = audioCacheTitle,
@@ -166,6 +174,19 @@ fun JvmMemoryManagementScreen(
                         modifier = Modifier.widthIn(max = 520.dp),
                         cacheSize = memoryManagementViewModel.musicCacheSize,
                         onClick = { memoryManagementViewModel.clearMusicCache() },
+                        onPathClick = {
+                            showJvmCachePathDialog(
+                                title = cachePathTitle,
+                                cachePath = memoryManagementViewModel.musicCachePath,
+                                isDefaultPath = memoryManagementViewModel.isDefaultMusicCachePath,
+                                onChoosePath = { selectedPath ->
+                                    memoryManagementViewModel.changeMusicCacheDirectory(selectedPath)
+                                },
+                                onRestoreDefault = {
+                                    memoryManagementViewModel.restoreDefaultMusicCacheDirectory()
+                                }
+                            )
+                        },
                         text = audioCacheTitle,
                         describe = stringResource(Res.string.audio_cache_description)
                     )
@@ -223,6 +244,7 @@ fun JvmMemoryManagementItem(
     describe: String,
     ifShowButton: Boolean = true,
     onClick: (() -> Unit)? = null,
+    onPathClick: (() -> Unit)? = null,
 ) {
     RoundedSurfaceColumn(
         modifier = modifier.heightIn(min = 132.dp),
@@ -256,13 +278,27 @@ fun JvmMemoryManagementItem(
                 )
             }
             if (ifShowButton)
-                XyButton(
-                    modifier = Modifier,
-                    enabled = cacheSize != "0B",
-                    onClick = { onClick?.invoke() },
-                    text = stringResource(Res.string.clear),
-                    textStyle = MaterialTheme.typography.titleMedium,
-                )
+                Column(
+                    horizontalAlignment = Alignment.End,
+                ) {
+                    XyButton(
+                        modifier = Modifier,
+                        enabled = cacheSize != "0B",
+                        onClick = { onClick?.invoke() },
+                        text = stringResource(Res.string.clear),
+                        textStyle = MaterialTheme.typography.titleMedium,
+                    )
+                    onPathClick?.let { pathClick ->
+                        TextButton(
+                            onClick = pathClick,
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.path),
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                        }
+                    }
+                }
         }
         Row(
             modifier = Modifier
@@ -284,6 +320,59 @@ fun JvmMemoryManagementItem(
         }
 
     }
+}
+
+private fun showJvmCachePathDialog(
+    title: String,
+    cachePath: String,
+    isDefaultPath: Boolean,
+    onChoosePath: (String) -> Unit,
+    onRestoreDefault: () -> Unit,
+) {
+    AlertDialogObject(
+        title = title,
+        content = {
+            XyTextSub(
+                modifier = Modifier.widthIn(max = 420.dp),
+                text = cachePath,
+                style = MaterialTheme.typography.bodyMedium,
+                overflow = TextOverflow.Visible,
+            )
+        },
+        onDismissRequest = {
+            chooseJvmCacheDirectory(cachePath)?.let(onChoosePath)
+        },
+        onConfirmation = onRestoreDefault,
+        dismissText = Res.string.adjust,
+        confirmText = Res.string.restore_default,
+        confirmEnabled = !isDefaultPath,
+    ).show()
+}
+
+private fun chooseJvmCacheDirectory(currentPath: String): String? {
+    val initialDirectory = currentPath
+        .takeIf { it.isNotBlank() }
+        ?.let(::File)
+        ?.takeIf { it.exists() && it.isDirectory }
+        ?: defaultJvmCacheDirectoryChooserDirectory()
+
+    val chooser = JFileChooser(initialDirectory).apply {
+        dialogTitle = "选择缓存路径"
+        fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
+        isAcceptAllFileFilterUsed = false
+    }
+
+    return if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+        chooser.selectedFile?.absolutePath
+    } else {
+        null
+    }
+}
+
+private fun defaultJvmCacheDirectoryChooserDirectory(): File {
+    val userHome = File(System.getProperty("user.home") ?: ".")
+    val musicDir = File(userHome, "Music")
+    return if (musicDir.exists()) musicDir else userHome
 }
 
 private data class JvmStorageChartSegment(

@@ -115,4 +115,7 @@ interface SettingsDao {
 
     @Query("update xy_settings set jvmVolume = :jvmVolume where id = :id")
     suspend fun updateJvmVolume(jvmVolume: Int, id: Long)
+
+    @Query("update xy_settings set cacheFilePath = :cacheFilePath where id = :id")
+    suspend fun updateCacheFilePath(cacheFilePath: String, id: Long)
 }

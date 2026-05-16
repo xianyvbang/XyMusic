@@ -395,7 +395,7 @@ class JvmMusicController : MusicCommonController() {
      * 将歌曲插入到“下一首播放”位置。
      */
     override fun addNextPlayer(music: XyPlayMusic) {
-        preparePlaylistSource(music)
+        playbackSourceOf(music)
         if (originMusicList.isEmpty()) {
             addMusic(music)
             playMusicAtRealIndex(0)
@@ -434,7 +434,7 @@ class JvmMusicController : MusicCommonController() {
         val currentIndex = curOriginIndex
         val currentState = state
 
-        snapshot.forEach { preparePlaylistSource(it) }
+        snapshot.forEach { playbackSourceOf(it) }
 
         if ((currentState == PlayStateEnum.Playing ||
                     currentState == PlayStateEnum.Loading ||
@@ -539,8 +539,8 @@ class JvmMusicController : MusicCommonController() {
     }
 
     private fun resolveCurrentRemotePlaybackUrl(music: XyPlayMusic): String {
-        val cachePlaybackUrl = (downloadCacheController as? JvmDownloadCacheController)
-            ?.preparePlaybackUrl(music)
+        val cachePlaybackUrl = (downloadCacheController as JvmDownloadCacheController)
+            .preparePlaybackUrl(music)
         return cachePlaybackUrl ?: resolveRemotePlaybackUrl(music)
     }
 
@@ -783,28 +783,13 @@ class JvmMusicController : MusicCommonController() {
         musicList: List<XyPlayMusic>
     ): Boolean {
         musicList.forEach { music ->
-            preparePlaylistSource(music)
+            playbackSourceOf(music)
         }
         return true
     }
 
     /**
-     * 统一把业务歌曲对象转换成 VLC 可消费的媒体地址。
-     * 本地歌曲直接返回 file uri，远程歌曲先转成本地代理地址。
-     */
-    private fun preparePlaylistSource(music: XyPlayMusic): String {
-        val localPath = music.filePath
-        val playerUrl = if (!localPath.isNullOrBlank()) {
-            Paths.get(localPath).toUri().toASCIIString()
-        } else {
-            resolveRemotePlaybackUrl(music)
-        }
-        music.setPlayerUrl(playerUrl)
-        return playerUrl
-    }
-
-    /**
-     * 获取当前歌曲真正交给 VLC 播放的地址。
+     * 获取歌曲真正交给 VLC 播放的地址。
      */
     private fun playbackSourceOf(music: XyPlayMusic): String {
         val localPath = music.filePath

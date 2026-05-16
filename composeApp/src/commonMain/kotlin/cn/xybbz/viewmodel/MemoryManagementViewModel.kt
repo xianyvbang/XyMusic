@@ -59,11 +59,22 @@ class MemoryManagementViewModel(
     var databaseSize by mutableStateOf("0B")
         private set
 
+    var musicCachePath by mutableStateOf(downloadCacheController.cacheDirectoryPath)
+        private set
+
+    var isDefaultMusicCachePath by mutableStateOf(downloadCacheController.isDefaultCacheDirectory)
+        private set
+
     init {
         viewModelScope.launch {
             downloadCacheController.getCacheSize()
             downloadCacheController.allCacheSizeFlow.collect {
                 musicCacheSize = formatBytes(it)
+            }
+        }
+        viewModelScope.launch {
+            settingsManager.cacheFilePath.collect {
+                updateMusicCachePathState()
             }
         }
     }
@@ -97,6 +108,22 @@ class MemoryManagementViewModel(
         }
     }
 
+    fun changeMusicCacheDirectory(path: String) {
+        viewModelScope.launch {
+            downloadCacheController.changeCacheDirectory(path)
+            updateMusicCachePathState()
+            refreshStorageInfo()
+        }
+    }
+
+    fun restoreDefaultMusicCacheDirectory() {
+        viewModelScope.launch {
+            downloadCacheController.restoreDefaultCacheDirectory()
+            updateMusicCachePathState()
+            refreshStorageInfo()
+        }
+    }
+
     fun clearDatabaseData() {
         viewModelScope.launch {
             musicController.clearPlayerList()
@@ -106,5 +133,10 @@ class MemoryManagementViewModel(
             settingsManager.setSettingsData()
             refreshStorageInfo()
         }
+    }
+
+    private fun updateMusicCachePathState() {
+        musicCachePath = downloadCacheController.cacheDirectoryPath
+        isDefaultMusicCachePath = downloadCacheController.isDefaultCacheDirectory
     }
 }

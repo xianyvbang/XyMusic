@@ -68,6 +68,8 @@ val alertDialogObjectList = mutableStateListOf<AlertDialogObject>()
  * @param [properties] 属性
  * @param [dismissText] 取消问题
  * @param [confirmText] 确认文字
+ * @param [dismissEnabled] 取消按钮是否可用
+ * @param [confirmEnabled] 确认按钮是否可用
  */
 data class AlertDialogObject(
     val title: String? = null,
@@ -80,6 +82,8 @@ data class AlertDialogObject(
     val properties: DialogProperties = DialogProperties(),
     val dismissText: StringResource = Res.string.cancel,
     val confirmText: StringResource = Res.string.confirm,
+    val dismissEnabled: Boolean = true,
+    val confirmEnabled: Boolean = true,
 )
 
 /**
@@ -130,6 +134,7 @@ fun AlertDialogComponent() {
                                     it.dismiss()
                                 },
                                 text = stringResource(it.dismissText),
+                                enabled = it.dismissEnabled,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest
                             )
@@ -142,7 +147,8 @@ fun AlertDialogComponent() {
                                     it.onConfirmation.invoke()
                                     it.dismiss()
                                 },
-                                text = stringResource(it.confirmText)
+                                text = stringResource(it.confirmText),
+                                enabled = it.confirmEnabled,
                             )
                         }
                     }

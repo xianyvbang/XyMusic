@@ -20,7 +20,6 @@ package cn.xybbz.music
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.os.Environment
 import android.util.Log
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
@@ -50,9 +49,7 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
-import java.io.File
 import java.io.IOException
 import java.util.concurrent.Executors
 
@@ -80,27 +77,16 @@ class DownloadCacheController(
     private var download: Download? = null
     private var currentTaskId: String? = null
 
-    private val childPath = "cache"
+    private val cacheDir = resolveAndroidPlaybackCacheDirectory(context, settingsManager)
+    private val defaultCacheDir = defaultAndroidPlaybackCacheDirectory(context)
 
 
     init {
         val cacheApiClient: CacheApiClient = get()
-        //2025年1月20日 11:12:19 修改缓存数据目录到cache中,使其可以被系统的清除缓存功能删除
-        val cacheParentDirectory =
-            if (Environment.MEDIA_MOUNTED == Environment.getExternalStorageState()) {
-                File(
-//                    context.externalCacheDir,
-                    context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
-                    childPath
-                )
-            } else {
-                File(context.filesDir, childPath)
-            }
-        Log.i("music", "缓存初始化 $cacheParentDirectory")
+        Log.i("music", "缓存初始化 $cacheDir")
         // 设置缓存目录和缓存机制，如果不需要清除缓存可以使用NoOpCacheEvictor
 
-        val cacheDir = File(cacheParentDirectory, "example_media_cache")
-        settingsManager.updateCacheFilePath(cacheDir.path)
+        settingsManager.updateCacheFilePath(cacheDir.absolutePath)
         cache = SimpleCache(
             cacheDir,
             //读取配置
@@ -305,6 +291,12 @@ class DownloadCacheController(
     override fun getMediaItem(cacheKey: String): MediaItem? {
         return downloadManager.downloadIndex.getDownload(cacheKey)?.request?.toMediaItem()
     }
+
+    override val cacheDirectoryPath: String
+        get() = cacheDir.absolutePath
+
+    override val isDefaultCacheDirectory: Boolean
+        get() = cacheDir.isSameDirectory(defaultCacheDir)
 
     fun getMediaSourceFactory(): MediaSource.Factory {
         // 创建逐步加载数据的数据源

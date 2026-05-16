@@ -48,3 +48,9 @@ val Migration_4_5 = object : Migration(4, 5) {
         )
     }
 }
+
+val Migration_5_6 = object : Migration(5, 6) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("ALTER TABLE xy_settings ADD COLUMN cacheFilePath TEXT NOT NULL DEFAULT ''")
+    }
+}

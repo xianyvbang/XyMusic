@@ -219,6 +219,10 @@
     <string name="storage_management">存储管理</string>
     <string name="audio_cache">音频缓存</string>
     <string name="audio_cache_description">缓存音频数据,清理后将从远程获取数据进行播放</string>
+    <string name="cache_path">缓存路径</string>
+    <string name="path">路径</string>
+    <string name="adjust">调整</string>
+    <string name="restore_default">恢复默认</string>
     <string name="temporary_cache">临时缓存</string>
     <string name="temporary_cache_description">临时缓存是使用过程中产生的临时缓存，清理临时缓存不会影响应用的使用</string>
     <string name="database_data">数据库数据</string>
