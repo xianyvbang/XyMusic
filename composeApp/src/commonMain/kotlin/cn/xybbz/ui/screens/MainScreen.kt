@@ -69,7 +69,7 @@ fun MainScreen(
     // 当前数据源服务对象，自动登录启动过程中会从 null 变为具体服务。
     val dataSourceServer by mainViewModel.dataSourceManager.dataSourceServerFlow.collectAsStateWithLifecycle()
     // 当前连接 ID 会先于服务对象写入，用于判断已有连接配置的初始化进度。
-    val currentConnectionId = mainViewModel.dataSourceManager.currentConnectionId
+    val currentConnectionId by mainViewModel.dataSourceManager.currentConnectionId.collectAsStateWithLifecycle()
     // 有连接配置时，必须等数据源服务和连接 ID 都就绪，再创建标题栏/侧栏等会读取数据源的 UI。
     val dataSourceReady = dataSourceServer != null && currentConnectionId != null
     val currentSelectUiState = rememberUpdatedState(selectUiState)

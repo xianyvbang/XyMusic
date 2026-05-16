@@ -63,6 +63,8 @@ import io.ktor.client.network.sockets.SocketTimeoutException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
@@ -118,10 +120,10 @@ open class DataSourceManager(
 
     /**
      * 当前连接 ID 的轻量缓存。
-     * 数据源服务对象尚未完成创建时，标题栏等同步 UI 仍可读取这个值，避免启动阶段访问 lateinit。
+     * 数据源服务对象尚未完成创建时，UI 可先收集这个值，避免启动阶段访问 lateinit。
      */
-    var currentConnectionId by mutableStateOf<Long?>(null)
-        private set
+    private val _currentConnectionId = MutableStateFlow<Long?>(null)
+    val currentConnectionId: StateFlow<Long?> = _currentConnectionId.asStateFlow()
 
 
     init {
@@ -244,7 +246,7 @@ open class DataSourceManager(
         connectionConfig: ConnectionConfig?
     ) {
         // 刷新登录可能在服务对象可用前触发，先保留连接 ID 给同步读取兜底。
-        currentConnectionId = connectionConfig?.id ?: currentConnectionId
+        _currentConnectionId.value = connectionConfig?.id ?: _currentConnectionId.value
         ifLoginError = false
         autoLogin(loginType, connectionConfig).collect { loginState ->
             loginStatus = loginState
@@ -373,7 +375,7 @@ open class DataSourceManager(
     suspend fun changeDataSource(connectionConfig: ConnectionConfig) {
         release()
         // 切换连接时先写入目标连接 ID，等待新数据源创建期间 UI 仍可展示当前选择。
-//        currentConnectionId = connectionConfig.id
+//        _currentConnectionId.value = connectionConfig.id
         switchDataSource(connectionConfig.type)
         for (listener in listeners) {
             listener.autoLoginBefore(connectionConfig)
@@ -395,8 +397,8 @@ open class DataSourceManager(
         return dataSourceServer.addClientAndLogin(clientLoginInfoReq, connectionConfig).onEach { loginState ->
             if (loginState is ClientLoginInfoState.UserLoginSuccess) {
                 // addClientAndLogin 内部会保存新连接并回写到数据源服务，这里同步给 Compose 启动门禁使用。
-                currentConnectionId = dataSourceServer.getConnectionId().takeIf { it != 0L }
-                    ?: currentConnectionId
+                _currentConnectionId.value = dataSourceServer.getConnectionId().takeIf { it != 0L }
+                    ?: _currentConnectionId.value
             }
         }
     }
@@ -439,7 +441,7 @@ open class DataSourceManager(
         return currentDataSourceServerOrNull()
             ?.getConnectionId()
             ?.takeIf { it != 0L }
-            ?: currentConnectionId
+            ?: currentConnectionId.value
             ?: 0L
     }
 
@@ -1299,7 +1301,7 @@ open class DataSourceManager(
         dataSourceServerActive = false
         dataSourceServerFlow.value = null
         dataSourceType = null
-        currentConnectionId = null
+        _currentConnectionId.value = null
     }
 
     override fun close() {

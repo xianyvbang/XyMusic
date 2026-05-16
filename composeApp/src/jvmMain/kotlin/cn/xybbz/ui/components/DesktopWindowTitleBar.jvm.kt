@@ -276,11 +276,11 @@ private fun DesktopTitleActions(
     var ifShowConnectionMenu by remember { mutableStateOf(false) }
     val connectionList by db.connectionConfigDao.selectAllDataFlow().collectAsState(initial = emptyList())
     val noConnectionSelected = stringResource(Res.string.no_connection_selected)
-    val currentConnectionId = dataSourceManager.getConnectionId()
+    val currentConnectionId by dataSourceManager.currentConnectionId.collectAsState()
     val currentDataSource = remember(connectionList, currentConnectionId, dataSourceManager.dataSourceType) {
         readCurrentDataSourceInfo(
             connectionList = connectionList,
-            currentConnectionId = currentConnectionId,
+            currentConnectionId = currentConnectionId ?: dataSourceManager.getConnectionId(),
             dataSourceManager = dataSourceManager,
             fallbackTitle = noConnectionSelected
         )
