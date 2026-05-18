@@ -171,24 +171,31 @@ class JvmDownloadCacheController(
         val endInclusive = requestedEndInclusive ?: (session.totalBytes - 1).coerceAtLeast(0L)
         val buffer = ByteArray(STREAM_BUFFER_SIZE)
 
-        // VLC seek 到尚未顺序缓存的位置时，直接从上游拉当前片段，避免播放等待后台缓存追上。
-        if (shouldProxyRangeFromUpstream(session, position)) {
-            return if (proxyRangeFromUpstream(session, position, endInclusive, output)) {
-                CacheStreamResult.Streamed
-            } else {
-                CacheStreamResult.Unavailable
-            }
-        }
+        /*
+         * 临时关闭：VLC seek 到尚未顺序缓存的位置时，直接从上游拉当前片段，避免播放等待后台缓存追上。
+         * 先保留这段旁路逻辑，后续需要恢复 seek 快速响应时可以重新打开。
+         */
+//        if (shouldProxyRangeFromUpstream(session, position)) {
+//            return if (proxyRangeFromUpstream(session, position, endInclusive, output)) {
+//                CacheStreamResult.Streamed
+//            } else {
+//                CacheStreamResult.Unavailable
+//            }
+//        }
 
         while (position <= endInclusive) {
             val readableEnd = waitForReadableEnd(session, position)
                 ?: return if (position == requestedStart) {
-                    // 首字节都不可读时尝试旁路上游，保证边缓存边播放的首包能尽快返回。
-                    if (proxyRangeFromUpstream(session, position, endInclusive, output)) {
-                        CacheStreamResult.Streamed
-                    } else {
-                        CacheStreamResult.Unavailable
-                    }
+                    /*
+                     * 临时关闭：首字节不可读时直接旁路上游。
+                     * 这里先不删除代码，避免 seek 到未缓存位置时绕过顺序缓存。
+                     */
+//                    if (proxyRangeFromUpstream(session, position, endInclusive, output)) {
+//                        CacheStreamResult.Streamed
+//                    } else {
+//                        CacheStreamResult.Unavailable
+//                    }
+                    CacheStreamResult.Unavailable
                 } else {
                     CacheStreamResult.Streamed
                 }
