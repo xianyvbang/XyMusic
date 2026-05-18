@@ -18,4 +18,4 @@
 
 package cn.xybbz.localdata.data.setting
 
-internal actual val defaultIfEnableEdgeDownload: Boolean = false
+internal actual val defaultIfEnableEdgeDownload: Boolean = true

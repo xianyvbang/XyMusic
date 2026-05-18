@@ -6,6 +6,7 @@ import cn.xybbz.config.music.DownloadCacheCommonController
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.platform.ContextWrapper
+import cn.xybbz.proxy.JvmReverseProxyServer
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
@@ -73,7 +74,7 @@ class JvmDownloadCacheController(
             targetSession
         }
 
-        return "http://localhost:19180/cache-play?id=${session.id}"
+        return JvmReverseProxyServer.wrapCachePlaybackUrl(session.id)
     }
 
     override fun clearCache() {

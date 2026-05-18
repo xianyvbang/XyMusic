@@ -174,6 +174,13 @@ object JvmReverseProxyServer : KoinComponent {
     }
 
     /**
+     * 将缓存会话包装为本地播放地址。
+     */
+    fun wrapCachePlaybackUrl(sessionId: Long): String {
+        return "http://$PROXY_HOST:$PROXY_PORT/cache-play?id=$sessionId"
+    }
+
+    /**
      * 安装代理路由。
      * 这里使用通用 handle 以兼容 GET 以及后续扩展的 POST、PUT、DELETE 等方法。
      */

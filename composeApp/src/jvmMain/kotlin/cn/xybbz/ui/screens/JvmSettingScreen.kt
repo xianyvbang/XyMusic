@@ -131,7 +131,7 @@ fun JvmSettingScreen(
                     MusicSettingSwitchItemComponent(
                         title = stringResource(Res.string.broadcast_while_down),
                         ifChecked = settingsViewModel.settingDataNow.ifEnableEdgeDownload,
-                        false,
+                        true,
                         { bol ->
                             coroutineScope.launch {
                                 settingsViewModel.settingsManager.setIfEnableEdgeDownload(
