@@ -64,7 +64,7 @@ object JvmReverseProxyServer : KoinComponent {
     /**
      * 缓存未完成时，每次 HTTP Range 响应最多承诺给播放器的字节窗口。
      */
-    private const val CACHE_STREAM_WINDOW_BYTES = 512 * 1024L
+    private const val CACHE_STREAM_WINDOW_BYTES = 128 * 1024L
     private val proxyWorkerThreadCount =
         Runtime.getRuntime().availableProcessors().coerceAtLeast(4)
     private val proxyCallThreadCount = (proxyWorkerThreadCount * 2).coerceAtLeast(8)
@@ -372,7 +372,10 @@ object JvmReverseProxyServer : KoinComponent {
         }
 
         // 缓存未完成时不一次声明整首歌长度，避免播放器等待完整响应结束才进入播放。
-        val responseRange = resolveCacheResponseRange(requestedRange, resolvedSnapshot)
+        val responseRange = resolveCacheResponseRange(
+            requestedRange = requestedRange,
+            snapshot = resolvedSnapshot,
+        )
         val contentLength = responseRange.endInclusive - responseRange.start + 1
         val responseHeaders = Headers.build {
             append(HttpHeaders.AcceptRanges, "bytes")
