@@ -143,6 +143,16 @@ class JvmDownloadCacheController(
         return setActiveCacheDirectory(defaultCacheDirectory, persistAsDefault = true)
     }
 
+    /**
+     * 将指定缓存会话的字节范围写给本地代理响应。
+     * 优先读取已经落盘的缓存文件；当播放器请求明显超前于本地缓存时，才临时旁路读取上游 Range。
+     *
+     * @param sessionId 缓存会话 id，由本地反向代理播放地址携带。
+     * @param requestedStart 播放器请求的起始字节位置。
+     * @param requestedEndInclusive 播放器请求的结束字节位置，null 表示读到媒体末尾。
+     * @param output 本地代理响应的输出通道。
+     * @return 当前缓存会话的流式写出结果。
+     */
     internal suspend fun writeSessionTo(
         sessionId: Long,
         requestedStart: Long,
@@ -156,13 +166,32 @@ class JvmDownloadCacheController(
 
         startDownloadIfNeeded(session)
 
+        // 本地代理已根据 HTTP Range 算出响应范围，这里只负责从对应位置开始写出字节。
         var position = requestedStart.coerceAtLeast(0L)
         val endInclusive = requestedEndInclusive ?: (session.totalBytes - 1).coerceAtLeast(0L)
         val buffer = ByteArray(STREAM_BUFFER_SIZE)
 
+        // VLC seek 到尚未顺序缓存的位置时，直接从上游拉当前片段，避免播放等待后台缓存追上。
+        if (shouldProxyRangeFromUpstream(session, position)) {
+            return if (proxyRangeFromUpstream(session, position, endInclusive, output)) {
+                CacheStreamResult.Streamed
+            } else {
+                CacheStreamResult.Unavailable
+            }
+        }
+
         while (position <= endInclusive) {
             val readableEnd = waitForReadableEnd(session, position)
-                ?: return if (position == requestedStart) CacheStreamResult.Unavailable else CacheStreamResult.Streamed
+                ?: return if (position == requestedStart) {
+                    // 首字节都不可读时尝试旁路上游，保证边缓存边播放的首包能尽快返回。
+                    if (proxyRangeFromUpstream(session, position, endInclusive, output)) {
+                        CacheStreamResult.Streamed
+                    } else {
+                        CacheStreamResult.Unavailable
+                    }
+                } else {
+                    CacheStreamResult.Streamed
+                }
 
             val chunkEnd = minOf(readableEnd, endInclusive)
             readFileRange(session.readableFile(), position, chunkEnd, buffer, output)
@@ -181,6 +210,111 @@ class JvmDownloadCacheController(
             status = session.status,
             contentType = session.contentType,
         )
+    }
+
+    /**
+     * 判断当前请求是否需要绕过本地缓存文件直接读上游。
+     * 只在缓存未完成且请求起点明显超过本地可读长度时启用，避免和顺序缓存任务抢同一段数据。
+     *
+     * @param session 当前播放缓存会话。
+     * @param requestedStart 播放器请求的起始字节位置。
+     * @return true 表示需要从上游按 Range 临时读取，false 表示继续读取本地缓存文件。
+     */
+    private fun shouldProxyRangeFromUpstream(
+        session: CacheSession,
+        requestedStart: Long,
+    ): Boolean {
+        if (session.status == CacheStatus.COMPLETED) {
+            return false
+        }
+        val readableLength = session.readableLength()
+        return requestedStart > readableLength + UPSTREAM_RANGE_BYPASS_THRESHOLD_BYTES
+    }
+
+    /**
+     * 从原始音乐地址按 Range 拉取一小段数据并直接写给播放器。
+     * 旁路数据不写入本地缓存，后台顺序缓存仍然独立推进，避免破坏当前连续落盘文件。
+     *
+     * @param session 当前播放缓存会话。
+     * @param start 旁路读取的起始字节位置。
+     * @param endInclusive 旁路读取的结束字节位置。
+     * @param output 本地代理响应的输出通道。
+     * @return true 表示旁路数据已成功写出，false 表示上游无法提供该范围数据。
+     */
+    private suspend fun proxyRangeFromUpstream(
+        session: CacheSession,
+        start: Long,
+        endInclusive: Long,
+        output: ByteWriteChannel,
+    ): Boolean {
+        if (start > endInclusive) {
+            return true
+        }
+
+        val client = dataSourceManager.getHttpClient()
+        return runCatching {
+            val request = client.prepareGet(session.url) {
+                // 上游必须只返回播放器当前需要的小段数据，否则响应长度会和实际写出不一致。
+                header(HttpHeaders.Range, "bytes=$start-$endInclusive")
+            }
+            request.execute { response ->
+                // 大多数音频源会返回 206；只有从 0 开始且上游不支持 Range 时才允许 200。
+                if (response.status != HttpStatusCode.PartialContent &&
+                    !(response.status == HttpStatusCode.OK && start == 0L)
+                ) {
+                    return@execute false
+                }
+
+                // 旁路请求也可能拿到更准确的 Content-Type，顺手同步给后续代理响应。
+                val contentType = response.headers[HttpHeaders.ContentType]
+                if (!contentType.isNullOrBlank()) {
+                    session.contentType = contentType
+                }
+
+                copyLimited(
+                    source = response.bodyAsChannel(),
+                    output = output,
+                    bytesToCopy = endInclusive - start + 1,
+                )
+                true
+            }
+        }.onFailure { throwable ->
+            Log.e(
+                "jvm-cache",
+                "播放缓存旁路读取失败: id=${session.id}, range=$start-$endInclusive",
+                throwable
+            )
+        }.getOrDefault(false)
+    }
+
+    /**
+     * 限量复制上游响应体，确保写出的字节数不超过当前 HTTP 响应声明的 Content-Length。
+     *
+     * @param source 上游 HTTP 响应体读取通道。
+     * @param output 本地代理响应输出通道。
+     * @param bytesToCopy 最多允许复制的字节数。
+     */
+    private suspend fun copyLimited(
+        source: io.ktor.utils.io.ByteReadChannel,
+        output: ByteWriteChannel,
+        bytesToCopy: Long,
+    ) {
+        val buffer = ByteArray(STREAM_BUFFER_SIZE)
+        var remaining = bytesToCopy
+        while (remaining > 0L && !source.isClosedForRead) {
+            val readSize = minOf(buffer.size.toLong(), remaining).toInt()
+            val bytesRead = source.readAvailable(buffer, 0, readSize)
+            if (bytesRead == -1) {
+                break
+            }
+            if (bytesRead == 0) {
+                continue
+            }
+            output.writeFully(buffer, 0, bytesRead)
+            // 及时刷新给 VLC，避免小片段已经写入 Ktor 缓冲区但播放器仍等待更多数据。
+            output.flush()
+            remaining -= bytesRead
+        }
     }
 
     private fun isCacheable(music: XyPlayMusic): Boolean {
@@ -411,6 +545,8 @@ class JvmDownloadCacheController(
                     break
                 }
                 output.writeFully(buffer, 0, bytesRead)
+                // 缓存文件边增长边读时，要尽快把每块数据推给播放器。
+                output.flush()
                 remaining -= bytesRead
             }
         }
@@ -545,6 +681,10 @@ class JvmDownloadCacheController(
         private const val CACHE_DIRECTORY_NAME = "jvm-playback-cache"
         private const val DOWNLOAD_BUFFER_SIZE = 64 * 1024
         private const val STREAM_BUFFER_SIZE = 64 * 1024
+        /**
+         * 播放器请求起点超过本地可读长度多少后，改走上游 Range 旁路读取。
+         */
+        private const val UPSTREAM_RANGE_BYPASS_THRESHOLD_BYTES = 512 * 1024L
         private const val STREAM_WAIT_TIMEOUT_MS = 15_000L
         private const val STREAM_WAIT_INTERVAL_MS = 100L
         private const val PROGRESS_LOG_INTERVAL_MS = 1_000L
@@ -595,5 +735,14 @@ private data class CacheSession(
 ) {
     fun readableFile(): File {
         return if (finalFile.exists()) finalFile else tempFile
+    }
+
+    /**
+     * 获取当前播放器可直接读取的本地缓存文件长度。
+     *
+     * @return 已完成文件或临时缓存文件当前可读长度，不存在时返回 0。
+     */
+    fun readableLength(): Long {
+        return readableFile().takeIf { it.exists() }?.length() ?: 0L
     }
 }

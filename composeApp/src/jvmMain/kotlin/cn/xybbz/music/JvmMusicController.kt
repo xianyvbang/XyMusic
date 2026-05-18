@@ -925,8 +925,8 @@ class JvmMusicController : MusicCommonController() {
         ignoreStoppedEventOnce()
         val played = runCatching {
             player.media().play(mediaSource,
-                ":network-caching=${(music.runTimeTicks* 0.1f).toLong()}",
-                ":file-caching=${(music.runTimeTicks * 0.1).toLong()}",
+//                ":network-caching=$VLC_NETWORK_CACHING_MS",
+//                ":file-caching=$VLC_FILE_CACHING_MS",
                 ":http-reconnect")
         }.onFailure {
             clearIgnoredStoppedEvent()
@@ -996,5 +996,14 @@ class JvmMusicController : MusicCommonController() {
             "--ignore-config",
             "--no-media-library"
         )
+
+        /**
+         * VLC 网络媒体预缓冲时长，保留为缓存播放调优参数。
+         */
+        private const val VLC_NETWORK_CACHING_MS = 1_000
+        /**
+         * VLC 本地文件预缓冲时长，保留为缓存播放调优参数。
+         */
+        private const val VLC_FILE_CACHING_MS = 500
     }
 }

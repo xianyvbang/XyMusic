@@ -61,6 +61,10 @@ object JvmReverseProxyServer : KoinComponent {
 
     private const val PROXY_HOST = "localhost"
     private const val PROXY_PORT = 19180
+    /**
+     * 缓存未完成时，每次 HTTP Range 响应最多承诺给播放器的字节窗口。
+     */
+    private const val CACHE_STREAM_WINDOW_BYTES = 512 * 1024L
     private val proxyWorkerThreadCount =
         Runtime.getRuntime().availableProcessors().coerceAtLeast(4)
     private val proxyCallThreadCount = (proxyWorkerThreadCount * 2).coerceAtLeast(8)
@@ -350,11 +354,12 @@ object JvmReverseProxyServer : KoinComponent {
             return
         }
 
-        val range = parseRangeHeader(
+        // 先解析 VLC 请求的原始 Range，再根据缓存状态裁剪实际响应范围。
+        val requestedRange = parseRangeHeader(
             rangeHeader = call.request.headers[HttpHeaders.Range],
             totalBytes = snapshot.totalBytes
         )
-        if (range == null) {
+        if (requestedRange == null) {
             call.respondText(
                 text = "Range 请求无效。",
                 status = HttpStatusCode.RequestedRangeNotSatisfiable
@@ -362,14 +367,16 @@ object JvmReverseProxyServer : KoinComponent {
             return
         }
 
-        val contentLength = range.endInclusive - range.start + 1
+        // 缓存未完成时不一次声明整首歌长度，避免播放器等待完整响应结束才进入播放。
+        val responseRange = resolveCacheResponseRange(requestedRange, snapshot)
+        val contentLength = responseRange.endInclusive - responseRange.start + 1
         val responseHeaders = Headers.build {
             append(HttpHeaders.AcceptRanges, "bytes")
             append(HttpHeaders.CacheControl, "no-store")
-            if (range.isPartial) {
+            if (responseRange.isPartial) {
                 append(
                     HttpHeaders.ContentRange,
-                    "bytes ${range.start}-${range.endInclusive}/${snapshot.totalBytes}"
+                    "bytes ${responseRange.start}-${responseRange.endInclusive}/${snapshot.totalBytes}"
                 )
             }
         }
@@ -377,7 +384,7 @@ object JvmReverseProxyServer : KoinComponent {
         call.respond(
             object : OutgoingContent.WriteChannelContent() {
                 override val status: HttpStatusCode =
-                    if (range.isPartial) HttpStatusCode.PartialContent else HttpStatusCode.OK
+                    if (responseRange.isPartial) HttpStatusCode.PartialContent else HttpStatusCode.OK
                 override val contentType: ContentType? =
                     snapshot.contentType.takeIf { it.isNotBlank() }?.let { rawContentType ->
                         runCatching { ContentType.parse(rawContentType) }.getOrNull()
@@ -387,13 +394,14 @@ object JvmReverseProxyServer : KoinComponent {
 
                 override suspend fun writeTo(channel: ByteWriteChannel) {
                     if (!responseBody) {
+                        // HEAD 请求只需要响应头，不写响应体。
                         return
                     }
                     when (
                         cacheController.writeSessionTo(
                             sessionId = sessionId,
-                            requestedStart = range.start,
-                            requestedEndInclusive = range.endInclusive,
+                            requestedStart = responseRange.start,
+                            requestedEndInclusive = responseRange.endInclusive,
                             output = channel,
                         )
                     ) {
@@ -481,6 +489,33 @@ object JvmReverseProxyServer : KoinComponent {
         return method != HttpMethod.Get &&
                 method != HttpMethod.Head &&
                 method != HttpMethod.Options
+    }
+
+    /**
+     * 计算缓存播放实际响应给播放器的 Range。
+     * 缓存完成后按播放器请求原样返回；缓存未完成时裁剪成小窗口，促使播放器连续发起后续 Range。
+     *
+     * @param requestedRange 播放器原始请求的字节范围。
+     * @param snapshot 当前缓存会话的只读快照。
+     * @return 本地代理实际声明并写出的响应字节范围。
+     */
+    private fun resolveCacheResponseRange(
+        requestedRange: PlaybackRange,
+        snapshot: cn.xybbz.music.CacheSessionSnapshot,
+    ): PlaybackRange {
+        if (snapshot.status == CacheStatus.COMPLETED) {
+            return requestedRange
+        }
+
+        // 未完成缓存只暴露一个可快速返回的小窗口，避免单个响应绑定到整首歌。
+        val windowEnd = (requestedRange.start + CACHE_STREAM_WINDOW_BYTES - 1)
+            .coerceAtMost(snapshot.totalBytes - 1)
+        val endInclusive = minOf(requestedRange.endInclusive, windowEnd)
+
+        return requestedRange.copy(
+            endInclusive = endInclusive,
+            isPartial = true,
+        )
     }
 
     private fun parseRangeHeader(
