@@ -354,10 +354,14 @@ object JvmReverseProxyServer : KoinComponent {
             return
         }
 
+        // 响应头里的 Content-Type 以当前播放流的上游响应为准，给后台下载一个很短窗口先解析真实类型。
+        cacheController.awaitResolvedContentType(sessionId)
+        val resolvedSnapshot = cacheController.getSessionSnapshot(sessionId) ?: snapshot
+
         // 先解析 VLC 请求的原始 Range，再根据缓存状态裁剪实际响应范围。
         val requestedRange = parseRangeHeader(
             rangeHeader = call.request.headers[HttpHeaders.Range],
-            totalBytes = snapshot.totalBytes
+            totalBytes = resolvedSnapshot.totalBytes
         )
         if (requestedRange == null) {
             call.respondText(
@@ -368,7 +372,7 @@ object JvmReverseProxyServer : KoinComponent {
         }
 
         // 缓存未完成时不一次声明整首歌长度，避免播放器等待完整响应结束才进入播放。
-        val responseRange = resolveCacheResponseRange(requestedRange, snapshot)
+        val responseRange = resolveCacheResponseRange(requestedRange, resolvedSnapshot)
         val contentLength = responseRange.endInclusive - responseRange.start + 1
         val responseHeaders = Headers.build {
             append(HttpHeaders.AcceptRanges, "bytes")
@@ -376,7 +380,7 @@ object JvmReverseProxyServer : KoinComponent {
             if (responseRange.isPartial) {
                 append(
                     HttpHeaders.ContentRange,
-                    "bytes ${responseRange.start}-${responseRange.endInclusive}/${snapshot.totalBytes}"
+                    "bytes ${responseRange.start}-${responseRange.endInclusive}/${resolvedSnapshot.totalBytes}"
                 )
             }
         }
@@ -386,7 +390,7 @@ object JvmReverseProxyServer : KoinComponent {
                 override val status: HttpStatusCode =
                     if (responseRange.isPartial) HttpStatusCode.PartialContent else HttpStatusCode.OK
                 override val contentType: ContentType? =
-                    snapshot.contentType.takeIf { it.isNotBlank() }?.let { rawContentType ->
+                    resolvedSnapshot.contentType.takeIf { it.isNotBlank() }?.let { rawContentType ->
                         runCatching { ContentType.parse(rawContentType) }.getOrNull()
                     }
                 override val contentLength: Long = contentLength

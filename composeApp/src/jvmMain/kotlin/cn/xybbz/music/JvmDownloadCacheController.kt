@@ -213,6 +213,30 @@ class JvmDownloadCacheController(
     }
 
     /**
+     * 尽量在本地代理返回响应头前拿到上游真实 Content-Type。
+     * 播放链接可能是转码流，响应类型以服务端返回为准，不能依赖原始音乐容器。
+     *
+     * @param sessionId 缓存会话 id。
+     */
+    internal suspend fun awaitResolvedContentType(sessionId: Long) {
+        val session = sessions[sessionId] ?: return
+        if (session.contentType != DEFAULT_CONTENT_TYPE) {
+            return
+        }
+
+        startDownloadIfNeeded(session)
+        val startedAt = System.currentTimeMillis()
+        while (
+            session.contentType == DEFAULT_CONTENT_TYPE &&
+            session.status != CacheStatus.FAILED &&
+            session.status != CacheStatus.CANCELLED &&
+            System.currentTimeMillis() - startedAt < CONTENT_TYPE_WAIT_TIMEOUT_MS
+        ) {
+            delay(CONTENT_TYPE_WAIT_INTERVAL_MS)
+        }
+    }
+
+    /**
      * 判断当前请求是否需要绕过本地缓存文件直接读上游。
      * 只在缓存未完成且请求起点明显超过本地可读长度时启用，避免和顺序缓存任务抢同一段数据。
      *
@@ -265,11 +289,7 @@ class JvmDownloadCacheController(
                     return@execute false
                 }
 
-                // 旁路请求也可能拿到更准确的 Content-Type，顺手同步给后续代理响应。
-                val contentType = response.headers[HttpHeaders.ContentType]
-                if (!contentType.isNullOrBlank()) {
-                    session.contentType = contentType
-                }
+                updateSessionContentType(session, response.headers[HttpHeaders.ContentType])
 
                 copyLimited(
                     source = response.bodyAsChannel(),
@@ -340,7 +360,7 @@ class JvmDownloadCacheController(
             totalBytes = music.size ?: 0L,
             tempFile = File(directory, "$safeName.part"),
             finalFile = File(directory, "$safeName.$extension"),
-            contentType = contentTypeFor(extension),
+            contentType = DEFAULT_CONTENT_TYPE,
         )
         sessions[sessionId] = session
         cacheKeyToSessionId[cacheKey] = sessionId
@@ -408,10 +428,7 @@ class JvmDownloadCacheController(
                     session.downloadedBytes = 0L
                 }
 
-                val contentType = response.headers[HttpHeaders.ContentType]
-                if (!contentType.isNullOrBlank()) {
-                    session.contentType = contentType
-                }
+                updateSessionContentType(session, response.headers[HttpHeaders.ContentType])
 
                 writeResponseToTempFile(
                     session = session,
@@ -632,15 +649,19 @@ class JvmDownloadCacheController(
             .ifBlank { "cache-${idGenerator.incrementAndGet()}" }
     }
 
-    private fun contentTypeFor(extension: String): String {
-        return when (extension.lowercase()) {
-            "mp3" -> "audio/mpeg"
-            "flac" -> "audio/flac"
-            "m4a", "mp4" -> "audio/mp4"
-            "aac" -> "audio/aac"
-            "ogg", "oga" -> "audio/ogg"
-            "wav" -> "audio/wav"
-            else -> "application/octet-stream"
+    /**
+     * 使用上游响应头更新缓存会话的真实媒体类型。
+     * 当前播放地址可能是转码流，不能用原始音乐容器推断 Content-Type。
+     *
+     * @param session 当前播放缓存会话。
+     * @param contentType 上游 HTTP 响应返回的 Content-Type。
+     */
+    private fun updateSessionContentType(
+        session: CacheSession,
+        contentType: String?,
+    ) {
+        if (!contentType.isNullOrBlank()) {
+            session.contentType = contentType
         }
     }
 
@@ -679,6 +700,10 @@ class JvmDownloadCacheController(
 
     companion object {
         private const val CACHE_DIRECTORY_NAME = "jvm-playback-cache"
+        /**
+         * 上游还没返回真实 Content-Type 前使用的保守默认媒体类型。
+         */
+        private const val DEFAULT_CONTENT_TYPE = "application/octet-stream"
         private const val DOWNLOAD_BUFFER_SIZE = 64 * 1024
         private const val STREAM_BUFFER_SIZE = 64 * 1024
         /**
@@ -687,6 +712,11 @@ class JvmDownloadCacheController(
         private const val UPSTREAM_RANGE_BYPASS_THRESHOLD_BYTES = 512 * 1024L
         private const val STREAM_WAIT_TIMEOUT_MS = 15_000L
         private const val STREAM_WAIT_INTERVAL_MS = 100L
+        /**
+         * 本地代理返回缓存播放响应头前，等待上游真实 Content-Type 的最长时间。
+         */
+        private const val CONTENT_TYPE_WAIT_TIMEOUT_MS = 1_000L
+        private const val CONTENT_TYPE_WAIT_INTERVAL_MS = 50L
         private const val PROGRESS_LOG_INTERVAL_MS = 1_000L
 
         fun controllerOrNull(): JvmDownloadCacheController? {
