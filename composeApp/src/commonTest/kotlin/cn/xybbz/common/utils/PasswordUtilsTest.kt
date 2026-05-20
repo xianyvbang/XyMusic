@@ -5,8 +5,8 @@ import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertMatches
 import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalEncodingApi::class)
 class PasswordUtilsTest {
@@ -49,7 +49,7 @@ class PasswordUtilsTest {
     fun encryptMd5KeepsHexDigestAndBase64SaltFormat() {
         val encrypted = PasswordUtils.encryptMd5("XyMusic-Test-Password")
 
-        assertMatches(Regex("[0-9a-f]{32}"), encrypted.passwordMd5)
+        assertTrue(Regex("[0-9a-f]{32}").matches(encrypted.passwordMd5))
         assertNotEquals("", encrypted.encryptedSalt)
         assertEquals(16, Base64.decode(encrypted.encryptedSalt).size)
     }

@@ -1157,7 +1157,16 @@ abstract class IDataSourceParentServer(
             settingsManager.get().playSessionId
         )
 
-        return TranscodingAndMusicUrlData(audioBitRate, static, musicUrl, getDataSourceType().ifHls)
+        return TranscodingAndMusicUrlData(
+            audioBitRate = audioBitRate,
+            static = static,
+            musicUrl = musicUrl,
+            ifHls = resolvePlaybackIfHls(
+                static = static,
+                musicUrl = musicUrl,
+                dataSourceType = getDataSourceType(),
+            ),
+        )
     }
 
     /**
@@ -1545,4 +1554,26 @@ abstract class IDataSourceParentServer(
     }
 
 
+}
+
+internal fun resolvePlaybackIfHls(
+    static: Boolean,
+    musicUrl: String,
+    dataSourceType: DataSourceType,
+): Boolean {
+    if (static) {
+        return false
+    }
+    return musicUrlLooksLikeHls(musicUrl) || dataSourceType.ifHls
+}
+
+internal fun musicUrlLooksLikeHls(musicUrl: String): Boolean {
+    val normalized = musicUrl.trim().lowercase()
+    if (normalized.isBlank()) {
+        return false
+    }
+    val path = normalized.substringBefore('?').substringBefore('#')
+    return path.endsWith(".m3u8") ||
+            "transcodingprotocol=hls" in normalized ||
+            "format=m3u8" in normalized
 }

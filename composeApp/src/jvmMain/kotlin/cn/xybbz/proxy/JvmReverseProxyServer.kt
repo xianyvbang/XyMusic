@@ -3,6 +3,8 @@ package cn.xybbz.proxy
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.music.CacheStatus
 import cn.xybbz.music.CacheStreamResult
+import cn.xybbz.music.HlsResourceKind
+import cn.xybbz.music.HlsResourceStreamResult
 import cn.xybbz.music.JvmDownloadCacheController
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -45,6 +47,7 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.utils.io.ByteWriteChannel
 import io.ktor.utils.io.copyTo
+import io.ktor.utils.io.writeFully
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -137,6 +140,7 @@ object JvmReverseProxyServer : KoinComponent {
                 module = {
                     installProxyRoutes()
                     installCachePlaybackRoutes()
+                    installHlsPlaybackRoutes()
                 }
             ).start(wait = false)
             logger.info {
@@ -185,6 +189,35 @@ object JvmReverseProxyServer : KoinComponent {
     }
 
     /**
+     * 将 HLS playlist 包装为本地缓存代理地址。
+     */
+    internal fun wrapHlsPlaylistUrl(
+        sessionId: Long,
+        playlistUrl: String,
+    ): String {
+        return wrapHlsResourceUrl(
+            sessionId = sessionId,
+            resourceUrl = playlistUrl,
+            type = HlsResourceKind.PLAYLIST.routeValue,
+            cacheable = false,
+        )
+    }
+
+    /**
+     * 将 HLS 分片、key、map 或 child playlist 包装为本地缓存代理地址。
+     */
+    internal fun wrapHlsResourceUrl(
+        sessionId: Long,
+        resourceUrl: String,
+        type: String,
+        cacheable: Boolean,
+    ): String {
+        val encodedUrl = URLEncoder.encode(resourceUrl, StandardCharsets.UTF_8)
+        val cacheFlag = if (cacheable) "1" else "0"
+        return "http://$PROXY_HOST:$PROXY_PORT/hls-play?id=$sessionId&type=$type&cache=$cacheFlag&url=$encodedUrl"
+    }
+
+    /**
      * 安装代理路由。
      * 这里使用通用 handle 以兼容 GET 以及后续扩展的 POST、PUT、DELETE 等方法。
      */
@@ -211,6 +244,18 @@ object JvmReverseProxyServer : KoinComponent {
             route("/cache-play") {
                 get { handleCachePlayback(call, responseBody = true) }
                 head { handleCachePlayback(call, responseBody = false) }
+            }
+        }
+    }
+
+    /**
+     * 安装 JVM HLS 播放缓存路由。
+     */
+    private fun Application.installHlsPlaybackRoutes() {
+        routing {
+            route("/hls-play") {
+                get { handleHlsPlayback(call, responseBody = true) }
+                head { handleHlsPlayback(call, responseBody = false) }
             }
         }
     }
@@ -421,6 +466,100 @@ object JvmReverseProxyServer : KoinComponent {
         )
     }
 
+    private suspend fun handleHlsPlayback(
+        call: ApplicationCall,
+        responseBody: Boolean,
+    ) {
+        val sessionId = call.request.queryParameters["id"]?.toLongOrNull()
+        val resourceUrl = call.request.queryParameters["url"]
+        val kind = HlsResourceKind.fromRouteValue(call.request.queryParameters["type"])
+        if (sessionId == null || resourceUrl.isNullOrBlank() || kind == null) {
+            call.respondText(
+                text = "HLS 参数无效。",
+                status = HttpStatusCode.BadRequest,
+            )
+            return
+        }
+
+        val cacheController = JvmDownloadCacheController.controllerOrNull()
+        if (cacheController == null) {
+            call.respondText(
+                text = "播放缓存服务不可用。",
+                status = HttpStatusCode.ServiceUnavailable,
+            )
+            return
+        }
+
+        if (kind == HlsResourceKind.PLAYLIST) {
+            val playlist = cacheController.readHlsPlaylist(
+                sessionId = sessionId,
+                playlistUrl = resourceUrl,
+            )
+            if (playlist == null) {
+                call.respondText(
+                    text = "HLS playlist 不可用。",
+                    status = HttpStatusCode.BadGateway,
+                )
+                return
+            }
+            val bytes = playlist.text.encodeToByteArray()
+            call.respond(
+                object : OutgoingContent.WriteChannelContent() {
+                    override val status: HttpStatusCode = HttpStatusCode.OK
+                    override val contentType: ContentType? = parseContentTypeOrNull(playlist.contentType)
+                    override val contentLength: Long = bytes.size.toLong()
+                    override val headers: Headers = Headers.build {
+                        append(HttpHeaders.CacheControl, "no-store")
+                    }
+
+                    override suspend fun writeTo(channel: ByteWriteChannel) {
+                        if (responseBody) {
+                            channel.writeFully(bytes)
+                        }
+                    }
+                }
+            )
+            return
+        }
+
+        val cacheable = call.request.queryParameters["cache"] == "1"
+        val snapshot = cacheController.getHlsResourceSnapshot(
+            sessionId = sessionId,
+            resourceUrl = resourceUrl,
+        )
+        val fallbackContentType = defaultHlsResourceContentType(kind)
+        call.respond(
+            object : OutgoingContent.WriteChannelContent() {
+                override val status: HttpStatusCode = HttpStatusCode.OK
+                override val contentType: ContentType? =
+                    parseContentTypeOrNull(snapshot?.contentType ?: fallbackContentType)
+                override val contentLength: Long? = snapshot?.contentLength
+                override val headers: Headers = Headers.build {
+                    append(HttpHeaders.CacheControl, "no-store")
+                }
+
+                override suspend fun writeTo(channel: ByteWriteChannel) {
+                    if (!responseBody) {
+                        return
+                    }
+                    when (
+                        cacheController.writeHlsResourceTo(
+                            sessionId = sessionId,
+                            resourceUrl = resourceUrl,
+                            kind = kind,
+                            cacheable = cacheable,
+                            output = channel,
+                        )
+                    ) {
+                        HlsResourceStreamResult.Streamed -> Unit
+                        HlsResourceStreamResult.NotFound,
+                        HlsResourceStreamResult.Unavailable -> Unit
+                    }
+                }
+            }
+        )
+    }
+
     /**
      * 校验并解析目标地址。
      * 仅允许代理 http/https 绝对地址，并阻止请求再次回到当前代理服务导致死循环。
@@ -454,7 +593,27 @@ object JvmReverseProxyServer : KoinComponent {
                 normalizedHost == "::1"
         val targetPort = if (targetUrl.port > 0) targetUrl.port else targetUrl.protocol.defaultPort
 
-        return isLocalHost && targetPort == PROXY_PORT && targetUrl.encodedPath == "/proxy"
+        return isLocalHost &&
+                targetPort == PROXY_PORT &&
+                targetUrl.encodedPath in setOf("/proxy", "/cache-play", "/hls-play")
+    }
+
+    private fun parseContentTypeOrNull(rawContentType: String?): ContentType? {
+        if (rawContentType.isNullOrBlank()) {
+            return null
+        }
+        return runCatching {
+            ContentType.parse(rawContentType)
+        }.getOrNull()
+    }
+
+    private fun defaultHlsResourceContentType(kind: HlsResourceKind): String {
+        return when (kind) {
+            HlsResourceKind.KEY,
+            HlsResourceKind.MAP -> "application/octet-stream"
+            HlsResourceKind.SEGMENT -> "video/mp2t"
+            HlsResourceKind.PLAYLIST -> "application/vnd.apple.mpegurl"
+        }
     }
 
     /**
