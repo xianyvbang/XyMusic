@@ -739,7 +739,7 @@ class JvmDownloadCacheController(
     /**
      * 解析缓存上限枚举为字节数。
      *
-     * Auto 按可用空间选择 16G/8G/4G/2G，其它固定上限按 MB 转换。
+     * JVM 端不再提供自动上限；历史 Auto 配置按默认 2GB 处理，其它固定上限按 MB 转换。
      *
      * @param limit 当前缓存上限配置。
      * @return 最大缓存字节数；0 表示不执行 LRU，只由 No 清空。
@@ -747,15 +747,7 @@ class JvmDownloadCacheController(
     private fun resolveCacheLimitBytes(limit: CacheUpperLimitEnum): Long {
         return when (limit) {
             CacheUpperLimitEnum.No -> 0L
-            CacheUpperLimitEnum.Auto -> {
-                val freeBytes = cacheDirectory.usableSpace
-                when {
-                    freeBytes > 100L * GIB -> 16L * GIB
-                    freeBytes >= 50L * GIB -> 8L * GIB
-                    freeBytes >= 10L * GIB -> 4L * GIB
-                    else -> 2L * GIB
-                }
-            }
+            CacheUpperLimitEnum.Auto -> 2L * GIB
             else -> limit.value.toLong() * MIB
         }
     }
