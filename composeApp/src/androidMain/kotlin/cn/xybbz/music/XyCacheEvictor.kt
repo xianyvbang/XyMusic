@@ -18,8 +18,6 @@
 
 package cn.xybbz.music
 
-import android.os.Environment
-import android.os.StatFs
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.cache.Cache
@@ -97,27 +95,7 @@ class XyCacheEvictor(private val settingsManager: SettingsManager) : CacheEvicto
     }
 
     private fun onChangeMaxSize(cacheUpperLimit: CacheUpperLimitEnum) {
-        if (cacheUpperLimit == CacheUpperLimitEnum.Auto) {
-            val statFs = StatFs(Environment.getDataDirectory().path)
-            val size = statFs.blockSizeLong //每格所占的大小，一般是4KB==
-
-            val availableCounts = statFs.availableBlocksLong //获取可用的block数
-            val availROMSize = (availableCounts * size).toDouble() //可用内部存储大小
-
-            val gigabytes = availROMSize / (1024.0 * 1024.0 * 1024.0)
-
-            settingsManager.updateMaxBytes(
-                when {
-                gigabytes > 100 -> 16L * 1024 * 1024 * 1024
-                gigabytes > 50 && gigabytes <= 100 -> 8L * 1024 * 1024 * 1024
-                gigabytes > 10 -> 4L * 1024 * 1024 * 1024
-                else -> 2L * 1024 * 1024 * 1024
-            }
-            )
-
-        } else {
-            settingsManager.updateMaxBytes(cacheUpperLimit.value * 1024 * 1024L)
-        }
+        settingsManager.updateMaxBytes(cacheUpperLimit.androidCacheLimitBytes())
     }
 
     companion object {

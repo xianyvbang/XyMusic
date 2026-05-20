@@ -28,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
+import cn.xybbz.music.cacheUpperLimitOptions
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.theme.XyTheme
@@ -48,10 +49,10 @@ fun JvmCacheLimitScreen(
 ) {
 
     val coroutineScope = rememberCoroutineScope()
-    val cacheLimitOptions = CacheUpperLimitEnum.entries.filterNot { it == CacheUpperLimitEnum.Auto }
+    val cacheLimitOptions = cacheUpperLimitOptions()
 
     LaunchedEffect(Unit) {
-        if (cacheLimitViewModel.cacheUpperLimit == CacheUpperLimitEnum.Auto) {
+        if (cacheLimitOptions.none { it.limit == cacheLimitViewModel.cacheUpperLimit }) {
             cacheLimitViewModel.setCacheUpperLimitData(CacheUpperLimitEnum.ThreeG)
         }
     }
@@ -70,10 +71,10 @@ fun JvmCacheLimitScreen(
                     XyItemRadioButton(
                         text = it.message,
                         sub = null,
-                        selected = cacheLimitViewModel.cacheUpperLimit == it,
+                        selected = cacheLimitViewModel.cacheUpperLimit == it.limit,
                         onClick = {
                             coroutineScope.launch {
-                                cacheLimitViewModel.setCacheUpperLimitData(it)
+                                cacheLimitViewModel.setCacheUpperLimitData(it.limit)
 
                             }
                         })

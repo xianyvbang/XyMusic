@@ -30,6 +30,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
+import cn.xybbz.music.cacheUpperLimitOptions
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.theme.XyTheme
@@ -58,6 +59,7 @@ fun CacheLimitScreen(
 
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
+    val cacheLimitOptions = cacheUpperLimitOptions()
 
     LaunchedEffect(Unit) {
         cacheLimitViewModel.getAutomaticCacheSize()
@@ -83,20 +85,20 @@ fun CacheLimitScreen(
             })
 
         LazyColumnNotComponent(modifier = Modifier) {
-            items(CacheUpperLimitEnum.entries) {
+            items(cacheLimitOptions) {
                 Column {
                     XyItemRadioButton(
                         text = it.message,
-                        sub = if (it == CacheUpperLimitEnum.Auto)
+                        sub = if (it.limit == CacheUpperLimitEnum.Auto)
                             stringResource(
                                 Res.string.current_auto_cache_limit,
                                 cacheLimitViewModel.cacheSizeInfo
                             )
                         else null,
-                        selected = cacheLimitViewModel.cacheUpperLimit == it,
+                        selected = cacheLimitViewModel.cacheUpperLimit == it.limit,
                         onClick = {
                             coroutineScope.launch {
-                                cacheLimitViewModel.setCacheUpperLimitData(it)
+                                cacheLimitViewModel.setCacheUpperLimitData(it.limit)
 
                             }
                         })

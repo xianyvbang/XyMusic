@@ -739,17 +739,13 @@ class JvmDownloadCacheController(
     /**
      * 解析缓存上限枚举为字节数。
      *
-     * JVM 端不再提供自动上限；历史 Auto 配置按默认 2GB 处理，其它固定上限按 MB 转换。
+     * JVM 端不再提供自动上限；历史 Auto 配置由平台映射按默认 2GB 处理。
      *
      * @param limit 当前缓存上限配置。
      * @return 最大缓存字节数；0 表示不执行 LRU，只由 No 清空。
      */
     private fun resolveCacheLimitBytes(limit: CacheUpperLimitEnum): Long {
-        return when (limit) {
-            CacheUpperLimitEnum.No -> 0L
-            CacheUpperLimitEnum.Auto -> 2L * GIB
-            else -> limit.value.toLong() * MIB
-        }
+        return limit.jvmCacheLimitBytes()
     }
 
     /**
@@ -965,16 +961,6 @@ class JvmDownloadCacheController(
          * 使用字符串常量可以让缓存索引字段和 HTTP 标准头保持一致。
          */
         private const val LAST_MODIFIED_HEADER = "Last-Modified"
-
-        /**
-         * MiB 字节数，用于缓存上限枚举换算。
-         */
-        private const val MIB = 1024L * 1024L
-
-        /**
-         * GiB 字节数，用于 Auto 上限按磁盘可用空间换算。
-         */
-        private const val GIB = 1024L * MIB
 
         /**
          * 从 Koin 中安全获取 JVM 缓存控制器。
