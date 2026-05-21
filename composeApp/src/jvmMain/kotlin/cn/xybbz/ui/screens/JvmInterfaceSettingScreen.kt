@@ -47,14 +47,11 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.background_image_setting
 import xymusic_kmp.composeapp.generated.resources.check_24px
 import xymusic_kmp.composeapp.generated.resources.interface_settings
 import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
-import xymusic_kmp.composeapp.generated.resources.return_setting_screen
 import xymusic_kmp.composeapp.generated.resources.theme_mode
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 /**
  * 界面设置
@@ -79,18 +76,6 @@ fun JvmInterfaceSettingScreen(
                 TopAppBarTitle(
                     title = stringResource(Res.string.interface_settings)
                 )
-            },
-            navigationIcon = {
-                IconButton(
-                    onClick = {
-                        navigator.goBack()
-                    },
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.arrow_back_24px),
-                        contentDescription = stringResource(Res.string.return_setting_screen)
-                    )
-                }
             }
         )
 
