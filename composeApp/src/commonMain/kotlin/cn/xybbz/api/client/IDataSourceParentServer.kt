@@ -1161,11 +1161,7 @@ abstract class IDataSourceParentServer(
             audioBitRate = audioBitRate,
             static = static,
             musicUrl = musicUrl,
-            ifHls = resolvePlaybackIfHls(
-                static = static,
-                musicUrl = musicUrl,
-                dataSourceType = getDataSourceType(),
-            ),
+            ifHls = !static && getDataSourceType().ifHls
         )
     }
 
@@ -1553,27 +1549,4 @@ abstract class IDataSourceParentServer(
         this.libraryIds = null
     }
 
-
-}
-
-internal fun resolvePlaybackIfHls(
-    static: Boolean,
-    musicUrl: String,
-    dataSourceType: DataSourceType,
-): Boolean {
-    if (static) {
-        return false
-    }
-    return musicUrlLooksLikeHls(musicUrl) || dataSourceType.ifHls
-}
-
-internal fun musicUrlLooksLikeHls(musicUrl: String): Boolean {
-    val normalized = musicUrl.trim().lowercase()
-    if (normalized.isBlank()) {
-        return false
-    }
-    val path = normalized.substringBefore('?').substringBefore('#')
-    return path.endsWith(".m3u8") ||
-            "transcodingprotocol=hls" in normalized ||
-            "format=m3u8" in normalized
 }

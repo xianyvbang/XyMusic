@@ -140,6 +140,7 @@ object JvmReverseProxyServer : KoinComponent {
                 module = {
                     installProxyRoutes()
                     installCachePlaybackRoutes()
+                    // HLS 分片缓存通过独立路由处理，避免和单文件 Range 播放入口混用。
                     installHlsPlaybackRoutes()
                 }
             ).start(wait = false)
@@ -190,6 +191,10 @@ object JvmReverseProxyServer : KoinComponent {
 
     /**
      * 将 HLS playlist 包装为本地缓存代理地址。
+     *
+     * @param sessionId HLS 缓存会话 id。
+     * @param playlistUrl 上游 m3u8 地址。
+     * @return `/hls-play` 本地代理地址。
      */
     internal fun wrapHlsPlaylistUrl(
         sessionId: Long,
@@ -205,6 +210,11 @@ object JvmReverseProxyServer : KoinComponent {
 
     /**
      * 将 HLS 分片、key、map 或 child playlist 包装为本地缓存代理地址。
+     *
+     * @param sessionId HLS 缓存会话 id。
+     * @param resourceUrl 上游真实资源地址。
+     * @param type 资源类型，对应 [HlsResourceKind.routeValue]。
+     * @param cacheable true 表示该资源可以被缓存层写入本地文件。
      */
     internal fun wrapHlsResourceUrl(
         sessionId: Long,
@@ -212,7 +222,9 @@ object JvmReverseProxyServer : KoinComponent {
         type: String,
         cacheable: Boolean,
     ): String {
+        // 原始 URL 可能包含 query、# 或非 ASCII 字符，放进代理参数前必须编码。
         val encodedUrl = URLEncoder.encode(resourceUrl, StandardCharsets.UTF_8)
+        // 使用短标记减少 playlist 重写后的 URL 长度。
         val cacheFlag = if (cacheable) "1" else "0"
         return "http://$PROXY_HOST:$PROXY_PORT/hls-play?id=$sessionId&type=$type&cache=$cacheFlag&url=$encodedUrl"
     }
@@ -250,6 +262,8 @@ object JvmReverseProxyServer : KoinComponent {
 
     /**
      * 安装 JVM HLS 播放缓存路由。
+     *
+     * GET 返回实际内容，HEAD 只返回播放器探测所需的响应头。
      */
     private fun Application.installHlsPlaybackRoutes() {
         routing {
@@ -466,10 +480,17 @@ object JvmReverseProxyServer : KoinComponent {
         )
     }
 
+    /**
+     * 处理 HLS 本地播放请求。
+     *
+     * playlist 请求会读取上游 m3u8 并重写资源地址；分片、key 和 map 请求优先命中缓存，
+     * 未命中时回源并按资源缓存标记决定是否落盘。
+     */
     private suspend fun handleHlsPlayback(
         call: ApplicationCall,
         responseBody: Boolean,
     ) {
+        // 本地代理 URL 必须包含会话 id、资源原始 URL 和资源类型。
         val sessionId = call.request.queryParameters["id"]?.toLongOrNull()
         val resourceUrl = call.request.queryParameters["url"]
         val kind = HlsResourceKind.fromRouteValue(call.request.queryParameters["type"])
@@ -481,6 +502,7 @@ object JvmReverseProxyServer : KoinComponent {
             return
         }
 
+        // HLS 缓存控制器是 JVM 平台能力，获取不到时说明当前播放缓存服务不可用。
         val cacheController = JvmDownloadCacheController.controllerOrNull()
         if (cacheController == null) {
             call.respondText(
@@ -491,6 +513,7 @@ object JvmReverseProxyServer : KoinComponent {
         }
 
         if (kind == HlsResourceKind.PLAYLIST) {
+            // playlist 不能直接缓存旧文本，因为其中的子资源地址需要按当前 session 重写。
             val playlist = cacheController.readHlsPlaylist(
                 sessionId = sessionId,
                 playlistUrl = resourceUrl,
@@ -502,18 +525,24 @@ object JvmReverseProxyServer : KoinComponent {
                 )
                 return
             }
+            // Ktor 响应体需要 ByteArray，这里只转换重写后的 playlist 文本。
             val bytes = playlist.text.encodeToByteArray()
             call.respond(
                 object : OutgoingContent.WriteChannelContent() {
+                    /** playlist 请求成功时固定返回 200。 */
                     override val status: HttpStatusCode = HttpStatusCode.OK
+                    /** 使用上游 playlist 类型，解析失败时由 Ktor 省略 Content-Type。 */
                     override val contentType: ContentType? = parseContentTypeOrNull(playlist.contentType)
+                    /** 重写后的 playlist 字节长度。 */
                     override val contentLength: Long = bytes.size.toLong()
+                    /** playlist 是会话内动态重写内容，不交给外部 HTTP 缓存。 */
                     override val headers: Headers = Headers.build {
                         append(HttpHeaders.CacheControl, "no-store")
                     }
 
                     override suspend fun writeTo(channel: ByteWriteChannel) {
                         if (responseBody) {
+                            // HEAD 请求会传入 responseBody=false，只返回响应头。
                             channel.writeFully(bytes)
                         }
                     }
@@ -522,24 +551,32 @@ object JvmReverseProxyServer : KoinComponent {
             return
         }
 
+        // cache=1 来自 playlist 重写阶段，表示该资源适合完整写入分片缓存。
         val cacheable = call.request.queryParameters["cache"] == "1"
+        // 若资源已经缓存，先拿快照补齐 Content-Type / Content-Length 响应头。
         val snapshot = cacheController.getHlsResourceSnapshot(
             sessionId = sessionId,
             resourceUrl = resourceUrl,
         )
+        // 未命中缓存时仍要给播放器一个保守的媒体类型。
         val fallbackContentType = defaultHlsResourceContentType(kind)
         call.respond(
             object : OutgoingContent.WriteChannelContent() {
+                /** 分片代理成功入口固定返回 200，具体失败由写出阶段转为空响应。 */
                 override val status: HttpStatusCode = HttpStatusCode.OK
+                /** 优先使用缓存记录的真实类型，没有记录时按资源类型兜底。 */
                 override val contentType: ContentType? =
                     parseContentTypeOrNull(snapshot?.contentType ?: fallbackContentType)
+                /** 只有缓存命中且记录了长度时才声明 Content-Length。 */
                 override val contentLength: Long? = snapshot?.contentLength
+                /** HLS 分片由播放器按 playlist 调度，不使用外部 HTTP 缓存。 */
                 override val headers: Headers = Headers.build {
                     append(HttpHeaders.CacheControl, "no-store")
                 }
 
                 override suspend fun writeTo(channel: ByteWriteChannel) {
                     if (!responseBody) {
+                        // HEAD 请求只需要响应头，不读取缓存或回源。
                         return
                     }
                     when (
@@ -598,20 +635,30 @@ object JvmReverseProxyServer : KoinComponent {
                 targetUrl.encodedPath in setOf("/proxy", "/cache-play", "/hls-play")
     }
 
+    /**
+     * 安全解析 Content-Type。
+     */
     private fun parseContentTypeOrNull(rawContentType: String?): ContentType? {
         if (rawContentType.isNullOrBlank()) {
             return null
         }
         return runCatching {
+            // 上游可能返回非标准类型，解析失败时返回 null 交给 Ktor 省略。
             ContentType.parse(rawContentType)
         }.getOrNull()
     }
 
+    /**
+     * 根据 HLS 资源类型提供兜底 Content-Type。
+     */
     private fun defaultHlsResourceContentType(kind: HlsResourceKind): String {
         return when (kind) {
+            // key 和 map 都按二进制处理，避免播放器按文本解析。
             HlsResourceKind.KEY,
             HlsResourceKind.MAP -> "application/octet-stream"
+            // 传统 HLS 媒体分片默认是 MPEG-TS。
             HlsResourceKind.SEGMENT -> "video/mp2t"
+            // playlist 分支通常不会走到这里，保留兜底值。
             HlsResourceKind.PLAYLIST -> "application/vnd.apple.mpegurl"
         }
     }

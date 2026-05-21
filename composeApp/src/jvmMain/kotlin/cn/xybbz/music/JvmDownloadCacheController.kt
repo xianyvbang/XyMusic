@@ -74,6 +74,8 @@ class JvmDownloadCacheController(
 
     /**
      * HLS 业务缓存 key 到 session id 的映射。
+     *
+     * 同一首 HLS 歌曲重复播放时复用同一个 HLS session 和已解析的分片索引。
      */
     private val hlsCacheKeyToSessionId = ConcurrentHashMap<String, Long>()
 
@@ -110,6 +112,8 @@ class JvmDownloadCacheController(
 
     /**
      * 当前目录对应的 HLS 分片缓存存储层。
+     *
+     * 与 span 缓存共用同一个根目录，但 HLS 使用独立的 index.json 和分片文件命名。
      */
     @Volatile
     private var hlsCacheStore = JvmHlsCacheStore(cacheDirectory, DEFAULT_CONTENT_TYPE)
@@ -136,6 +140,7 @@ class JvmDownloadCacheController(
             cacheDirectory = defaultCacheDirectory
             ensureCacheDirectory(cacheDirectory)
         }
+        // span 缓存和 HLS 分片缓存都绑定到最终可用的缓存目录。
         cacheStore = JvmPlaybackCacheStore(cacheDirectory, DEFAULT_CONTENT_TYPE)
         hlsCacheStore = JvmHlsCacheStore(cacheDirectory, DEFAULT_CONTENT_TYPE)
         settingsManager.updateCacheFilePath(cacheDirectory.absolutePath)
@@ -152,6 +157,7 @@ class JvmDownloadCacheController(
      * @return `/cache-play?id=` 形式的本地播放地址；不可缓存时返回 null。
      */
     fun preparePlaybackUrl(music: XyPlayMusic): String? {
+        // HLS 播放先走 playlist 代理入口，由后续资源请求逐片缓存。
         if (isHlsCacheable(music)) {
             return prepareHlsPlaybackUrl(music)
         }
@@ -179,9 +185,11 @@ class JvmDownloadCacheController(
      */
     private fun prepareHlsPlaybackUrl(music: XyPlayMusic): String {
         val session = synchronized(this) {
+            // HLS 使用独立前缀，避免和同 itemId 的普通音频缓存互相覆盖。
             val cacheKey = HLS_CACHE_KEY_PREFIX + getCacheKey(music.itemId)
             val existingSession = hlsCacheKeyToSessionId[cacheKey]?.let(hlsSessions::get)
             val targetSession = existingSession ?: createHlsSession(cacheKey, music)
+            // 每次准备播放都刷新访问时间，容量淘汰时保护最近播放的 HLS 缓存。
             hlsCacheStore.markAccessed(targetSession.entry)
             switchCurrentSession(targetSession.id)
             startHlsPrefetchIfNeeded(targetSession)
@@ -228,6 +236,7 @@ class JvmDownloadCacheController(
         music: XyPlayMusic,
         ifStatic: Boolean,
     ) {
+        // 普通转码流不进入 JVM 边播边缓存；HLS 即使不是 static，也可以按分片缓存。
         if (!ifStatic && !music.ifHls) {
             return
         }
@@ -248,6 +257,7 @@ class JvmDownloadCacheController(
         }
         hlsSessions.values.forEach { session ->
             if (session.status != CacheStatus.COMPLETED) {
+                // HLS 已经落盘的分片保留，只暂停后续预取任务。
                 session.job?.cancel()
                 session.status = CacheStatus.PAUSED
             }
@@ -394,6 +404,7 @@ class JvmDownloadCacheController(
         sessionId: Long,
         resourceUrl: String,
     ): HlsResourceSnapshot? {
+        // 只有已经完整提交过的资源才有可靠的响应头快照。
         val session = hlsSessions[sessionId] ?: return null
         val resource = hlsCacheStore.cachedResource(session.entry, resourceUrl) ?: return null
         hlsCacheStore.markAccessed(session.entry)
@@ -411,16 +422,19 @@ class JvmDownloadCacheController(
         playlistUrl: String,
     ): HlsPlaylistResponse? {
         val session = hlsSessions[sessionId] ?: return null
+        // 失败或取消的会话不再向播放器提供重写后的 playlist。
         if (session.status == CacheStatus.FAILED || session.status == CacheStatus.CANCELLED) {
             return null
         }
 
+        // playlist 每次请求都重新读取并重写，确保动态 HLS 列表能拿到最新分片。
         val rawPlaylist = fetchHlsPlaylist(playlistUrl) ?: return null
         hlsCacheStore.updatePlaylistContentType(session.entry, rawPlaylist.contentType)
         val rewritten = JvmHlsPlaylistRewriter.rewrite(
             playlistText = rawPlaylist.text,
             playlistUrl = playlistUrl,
         ) { resource ->
+            // 将 playlist 中的上游资源地址替换成本地 /hls-play 入口。
             JvmReverseProxyServer.wrapHlsResourceUrl(
                 sessionId = sessionId,
                 resourceUrl = resource.url,
@@ -429,12 +443,14 @@ class JvmDownloadCacheController(
             )
         }
 
+        // 把本次 playlist 中发现的资源登记到 HLS 缓存索引，供命中判断和后台预取使用。
         hlsCacheStore.updateResources(
             entry = session.entry,
             playlistUrl = playlistUrl,
             resources = rewritten.resources,
         )
         refreshHlsSessionProgress(session)
+        // playlist 解析后才知道有哪些分片，因此预取从这里触发。
         startHlsPrefetchIfNeeded(session)
 
         return HlsPlaylistResponse(
@@ -454,12 +470,14 @@ class JvmDownloadCacheController(
         output: ByteWriteChannel,
     ): HlsResourceStreamResult {
         val session = hlsSessions[sessionId] ?: return HlsResourceStreamResult.NotFound
+        // 不可用会话拒绝继续回源，避免取消后仍产生网络和磁盘写入。
         if (session.status == CacheStatus.FAILED || session.status == CacheStatus.CANCELLED) {
             return HlsResourceStreamResult.Unavailable
         }
 
         val buffer = ByteArray(STREAM_BUFFER_SIZE)
         if (cacheable) {
+            // 可缓存资源优先从本地完整分片读取，命中时不再访问上游。
             val cached = hlsCacheStore.cachedResource(session.entry, resourceUrl)
             if (cached != null) {
                 hlsCacheStore.readResource(
@@ -473,6 +491,7 @@ class JvmDownloadCacheController(
             }
         }
 
+        // 未命中缓存时回源流式转发给播放器，并按 cacheable 决定是否同时写入临时文件。
         val streamed = proxyHlsResourceFromUpstreamWithCache(
             session = session,
             resourceUrl = resourceUrl,
@@ -510,10 +529,17 @@ class JvmDownloadCacheController(
         }
     }
 
+    /**
+     * 从上游获取 HLS playlist 原文。
+     *
+     * @param playlistUrl 上游 m3u8 地址。
+     * @return playlist 文本和响应类型；非 2xx 或异常时返回 null。
+     */
     private suspend fun fetchHlsPlaylist(playlistUrl: String): RawHlsPlaylist? {
         val client = dataSourceManager.getHttpClient()
         return runCatching {
             client.prepareGet(playlistUrl).execute { response ->
+                // HLS playlist 获取失败时不向播放器返回旧数据，避免播放列表和资源状态错位。
                 if (response.status.value !in 200..299) {
                     return@execute null
                 }
@@ -527,6 +553,12 @@ class JvmDownloadCacheController(
         }.getOrNull()
     }
 
+    /**
+     * 从上游读取 HLS 资源，并可选写入分片缓存。
+     *
+     * @param output 前台播放响应通道；后台预取时为 null。
+     * @return true 表示成功读到完整资源。
+     */
     private suspend fun proxyHlsResourceFromUpstreamWithCache(
         session: HlsCacheSession,
         resourceUrl: String,
@@ -534,6 +566,7 @@ class JvmDownloadCacheController(
         cacheable: Boolean,
         output: ByteWriteChannel?,
     ): Boolean {
+        // playlist 走 readHlsPlaylist 重写，不应该作为普通资源回源复制。
         if (kind == HlsResourceKind.PLAYLIST) {
             return false
         }
@@ -541,6 +574,7 @@ class JvmDownloadCacheController(
         val client = dataSourceManager.getHttpClient()
         return runCatching {
             client.prepareGet(resourceUrl).execute { response ->
+                // 非成功响应不写入缓存，交给播放器后续请求或上层错误处理。
                 if (response.status.value !in 200..299) {
                     return@execute false
                 }
@@ -560,6 +594,12 @@ class JvmDownloadCacheController(
         }.getOrDefault(false)
     }
 
+    /**
+     * 复制单个 HLS 资源。
+     *
+     * 前台请求会同时写给播放器和临时缓存文件；后台预取只写临时文件。
+     * 只有完整读完且长度校验通过的资源才会提交为正式缓存。
+     */
     private suspend fun copyHlsResource(
         session: HlsCacheSession,
         resourceUrl: String,
@@ -570,11 +610,13 @@ class JvmDownloadCacheController(
         contentType: String?,
         contentLength: Long?,
     ): Boolean = withContext(Dispatchers.IO) {
+        // 可缓存资源先写临时文件，等完整下载后再提交到 index.json。
         val tempFile = if (cacheable) {
             hlsCacheStore.createTempResourceFile(session.entry, resourceUrl)
         } else {
             null
         }
+        // 复用固定缓冲区流式读写，避免把整个分片读入内存。
         val buffer = ByteArray(STREAM_BUFFER_SIZE)
         var copied = 0L
 
@@ -584,19 +626,24 @@ class JvmDownloadCacheController(
                 while (!source.isClosedForRead) {
                     val bytesRead = source.readAvailable(buffer, 0, buffer.size)
                     if (bytesRead == -1) {
+                        // 上游流正常结束。
                         break
                     }
                     if (bytesRead == 0) {
+                        // Ktor 通道暂时没有数据时继续等待下一轮读取。
                         continue
                     }
 
+                    // 前台播放请求需要边读边写回播放器；后台预取时 output 为 null。
                     output?.writeFully(buffer, 0, bytesRead)
                     output?.flush()
+                    // 只有可缓存资源才会同时写入临时文件。
                     file?.write(buffer, 0, bytesRead)
                     copied += bytesRead
                 }
             }
 
+            // 如果上游声明了 Content-Length，必须完整匹配才允许提交缓存。
             val lengthMatches = contentLength == null || contentLength == copied
             if (tempFile != null && copied > 0L && lengthMatches) {
                 hlsCacheStore.commitResource(
@@ -609,10 +656,12 @@ class JvmDownloadCacheController(
                 )
                 refreshHlsSessionProgress(session)
             } else {
+                // 不完整、空文件或不可缓存资源都不留下临时文件。
                 tempFile?.delete()
             }
             copied > 0L && lengthMatches
         } catch (throwable: Throwable) {
+            // 异常中断时删除临时文件，避免下次命中半文件。
             tempFile?.delete()
             throw throwable
         }
@@ -772,6 +821,8 @@ class JvmDownloadCacheController(
 
     /**
      * 判断当前歌曲是否允许进入 JVM HLS 分片缓存。
+     *
+     * HLS 不依赖总字节数，只要有 playlist 地址且不是本地文件，就可以按分片缓存。
      */
     private fun isHlsCacheable(music: XyPlayMusic): Boolean {
         val settings = settingsManager.get()
@@ -819,6 +870,8 @@ class JvmDownloadCacheController(
 
     /**
      * 创建新的 HLS 播放缓存会话。
+     *
+     * 会话对象只存在于当前进程；跨重启复用依赖 [JvmHlsCacheStore] 保存的 index.json。
      */
     private fun createHlsSession(
         cacheKey: String,
@@ -826,11 +879,13 @@ class JvmDownloadCacheController(
     ): HlsCacheSession {
         val sessionId = idGenerator.incrementAndGet()
         val safeName = safeFileName(cacheKey)
+        // 打开或创建当前 HLS playlist 对应的缓存目录和索引。
         val entry = hlsCacheStore.openEntry(
             cacheKey = cacheKey,
             safeCacheKey = safeName,
             playlistUrl = music.musicUrl,
         )
+        // 新会话创建时先从已落盘索引恢复一次进度。
         val progress = hlsCacheStore.progress(entry)
         val session = HlsCacheSession(
             id = sessionId,
@@ -887,6 +942,7 @@ class JvmDownloadCacheController(
         }
         val existingJob = session.job
         if (existingJob != null && existingJob.isActive) {
+            // 已有活跃预取任务时不重复启动。
             return
         }
 
@@ -982,15 +1038,18 @@ class JvmDownloadCacheController(
                     return
                 }
 
+                // 预取只处理缓存索引中登记的下一个未完成媒体资源。
                 val resource = hlsCacheStore.nextPrefetchResource(session.entry)
                 if (resource == null) {
                     refreshHlsSessionProgress(session)
                     if (session.status != CacheStatus.COMPLETED) {
+                        // 可能 playlist 还没解析出分片，暂时暂停等待下一次 playlist 请求唤醒。
                         session.status = CacheStatus.PAUSED
                     }
                     return
                 }
 
+                // 索引里的 kind 来自本地代理路由值，异常时按普通媒体分片处理。
                 val kind = HlsResourceKind.fromRouteValue(resource.kind) ?: HlsResourceKind.SEGMENT
                 val fetched = proxyHlsResourceFromUpstreamWithCache(
                     session = session,
@@ -1000,12 +1059,14 @@ class JvmDownloadCacheController(
                     output = null,
                 )
                 if (!fetched) {
+                    // 预取失败不直接判定整首不可播；前台请求仍可继续按需回源。
                     session.status = CacheStatus.PAUSED
                     return
                 }
             }
         } catch (_: CancellationException) {
             if (session.status == CacheStatus.DOWNLOADING) {
+                // 切歌或取消缓存时把下载中状态回退为暂停。
                 session.status = CacheStatus.PAUSED
             }
             throw CancellationException("HLS playback cache prefetch cancelled")
@@ -1041,12 +1102,14 @@ class JvmDownloadCacheController(
      * 刷新 HLS 会话的分片缓存进度。
      */
     private fun refreshHlsSessionProgress(session: HlsCacheSession) {
+        // HLS 进度按可缓存媒体分片数量统计，不按字节数统计。
         val progress = hlsCacheStore.progress(session.entry)
         session.downloadedSegments = progress.cached
         session.totalSegments = progress.total
         if (hlsCacheStore.isComplete(session.entry)) {
             session.status = CacheStatus.COMPLETED
         } else if (session.status == CacheStatus.COMPLETED) {
+            // 索引被清洗后可能发现文件缺失，此时不能继续保持 completed。
             session.status = CacheStatus.PAUSED
         }
         updateHlsSessionProgress(session)
@@ -1074,6 +1137,7 @@ class JvmDownloadCacheController(
      */
     private fun updateHlsSessionProgress(session: HlsCacheSession) {
         if (currentSessionId == session.id) {
+            // UI 仍使用 0f..1f 的进度值，HLS 通过分片比例换算。
             val progress = if (session.totalSegments > 0) {
                 session.downloadedSegments.toFloat() / session.totalSegments.toFloat()
             } else {
@@ -1103,10 +1167,16 @@ class JvmDownloadCacheController(
             "jvm-cache",
             "播放缓存进度 id=${session.id}, key=${session.cacheKey}, " +
                     "progress=${(progress * 100).coerceIn(0f, 100f)}%, " +
-            "downloaded=${session.downloadedBytes}, total=${session.totalBytes}"
+                    "downloaded=${session.downloadedBytes}, total=${session.totalBytes}"
         )
     }
 
+    /**
+     * 输出 HLS 缓存进度日志。
+     *
+     * @param session 当前 HLS 播放缓存会话。
+     * @param progress 当前缓存进度，范围 0f..1f。
+     */
     private fun logHlsCacheProgress(
         session: HlsCacheSession,
         progress: Float,
@@ -1152,6 +1222,7 @@ class JvmDownloadCacheController(
             return
         }
         val protectedKeys = sessions.values.map { session -> session.cacheKey }.toSet()
+        // HLS 和普通 span 缓存共用容量上限，活跃 HLS 会话也需要一起保护。
         val protectedHlsKeys = hlsSessions.values.map { session -> session.cacheKey }.toSet()
         cacheStore.enforceLimit(
             limitBytes = limitBytes,
@@ -1244,6 +1315,7 @@ class JvmDownloadCacheController(
         synchronized(this) {
             cancelInMemorySessions(markStatus = CacheStatus.CANCELLED)
             cacheDirectory = directory
+            // 目录切换后两个存储层都要重新绑定到新目录。
             cacheStore = JvmPlaybackCacheStore(directory, DEFAULT_CONTENT_TYPE)
             hlsCacheStore = JvmHlsCacheStore(directory, DEFAULT_CONTENT_TYPE)
             settingsManager.updateCacheFilePath(directory.absolutePath)
@@ -1263,11 +1335,13 @@ class JvmDownloadCacheController(
             session.status = markStatus
         }
         hlsSessions.values.forEach { session ->
+            // HLS 后台预取任务也随普通缓存 session 一起取消，避免继续写旧目录。
             session.job?.cancel()
             session.status = markStatus
         }
         sessions.clear()
         cacheKeyToSessionId.clear()
+        // 清空 HLS 内存映射，不删除已经落盘的分片缓存。
         hlsSessions.clear()
         hlsCacheKeyToSessionId.clear()
         currentSessionId = null
@@ -1440,6 +1514,9 @@ internal data class CacheSessionSnapshot(
 
 /**
  * 本地代理返回 HLS playlist 所需的数据。
+ *
+ * @property text 已经重写成本地代理地址的 m3u8 文本。
+ * @property contentType playlist 响应类型。
  */
 internal data class HlsPlaylistResponse(
     val text: String,
@@ -1448,12 +1525,21 @@ internal data class HlsPlaylistResponse(
 
 /**
  * 本地代理生成 HLS 资源响应头所需的缓存快照。
+ *
+ * @property contentType 已缓存资源的响应类型。
+ * @property contentLength 已缓存资源长度；未知时为 null。
  */
 internal data class HlsResourceSnapshot(
     val contentType: String,
     val contentLength: Long?,
 )
 
+/**
+ * 上游原始 HLS playlist 响应。
+ *
+ * @property text 上游 m3u8 原文。
+ * @property contentType 上游返回的 Content-Type。
+ */
 private data class RawHlsPlaylist(
     val text: String,
     val contentType: String?,
@@ -1518,8 +1604,19 @@ internal sealed interface CacheStreamResult {
  * 本地代理写出 HLS 资源流的结果。
  */
 internal sealed interface HlsResourceStreamResult {
+    /**
+     * 数据已成功写入代理响应。
+     */
     data object Streamed : HlsResourceStreamResult
+
+    /**
+     * 请求的 HLS session 不存在。
+     */
     data object NotFound : HlsResourceStreamResult
+
+    /**
+     * HLS session 存在但当前不可用。
+     */
     data object Unavailable : HlsResourceStreamResult
 }
 
@@ -1550,6 +1647,15 @@ private data class CacheSession(
 
 /**
  * 进程内 HLS 播放缓存会话。
+ *
+ * @property id 本地代理 URL 使用的会话 id。
+ * @property cacheKey HLS 业务缓存 key。
+ * @property playlistUrl 上游主 playlist 地址。
+ * @property entry 当前 HLS 缓存条目。
+ * @property downloadedSegments 已缓存的媒体分片数量。
+ * @property totalSegments 需要缓存的媒体分片总数。
+ * @property status 当前会话状态。
+ * @property job 后台 HLS 预取任务；前台回源不挂在这里。
  */
 private data class HlsCacheSession(
     val id: Long,
