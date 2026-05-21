@@ -335,7 +335,13 @@ class JvmDownloadCacheController(
         val buffer = ByteArray(STREAM_BUFFER_SIZE)
 
         while (position <= endInclusive) {
-            val cachedSpan = cacheStore.findSpanContaining(session.entry, position)
+            var cachedSpan = cacheStore.findSpanContaining(session.entry, position)
+            if (cachedSpan == null && session.rangeRequestsSupported == false) {
+                if (!waitForCachedSpanContaining(session, position)) {
+                    return CacheStreamResult.Unavailable
+                }
+                cachedSpan = cacheStore.findSpanContaining(session.entry, position)
+            }
             if (cachedSpan != null) {
                 // span 命中时只读取当前 span 能覆盖的部分，剩余范围继续循环判断，避免跨文件读取错误。
                 val cachedEnd = minOf(cachedSpan.endInclusive, endInclusive)
@@ -349,6 +355,10 @@ class JvmDownloadCacheController(
                 )
                 position = cachedEnd + 1
                 continue
+            }
+
+            if (session.rangeRequestsSupported == false) {
+                return CacheStreamResult.Unavailable
             }
 
             val nextCachedStart = cacheStore.nextSpanStartAfter(session.entry, position)
@@ -391,6 +401,28 @@ class JvmDownloadCacheController(
             status = session.status,
             contentType = session.contentType,
         )
+    }
+
+    /**
+     * 非 Range 转码流只能顺序缓存，前台请求需要短暂等待后台完整 GET 提交出可读 span。
+     */
+    private suspend fun waitForCachedSpanContaining(
+        session: CacheSession,
+        position: Long,
+    ): Boolean {
+        startDownloadIfNeeded(session)
+        val startedAt = System.currentTimeMillis()
+        while (
+            session.status != CacheStatus.FAILED &&
+            session.status != CacheStatus.CANCELLED &&
+            System.currentTimeMillis() - startedAt < CACHE_SPAN_WAIT_TIMEOUT_MS
+        ) {
+            if (cacheStore.findSpanContaining(session.entry, position) != null) {
+                return true
+            }
+            delay(CACHE_SPAN_WAIT_INTERVAL_MS)
+        }
+        return cacheStore.findSpanContaining(session.entry, position) != null
     }
 
     /**
@@ -501,28 +533,86 @@ class JvmDownloadCacheController(
     }
 
     /**
-     * 尽量在本地代理返回响应头前拿到上游真实 Content-Type。
+     * 尽量在本地代理返回响应头前拿到上游真实媒体信息。
      *
-     * 播放链接可能是转码流，响应类型以服务端返回为准，不能依赖原始音乐容器。
+     * 播放链接可能是转码流，Content-Type 和总字节数都必须以当前上游响应为准，
+     * 不能依赖原始曲库里的容器和文件大小。
      *
      * @param sessionId 缓存会话 id。
+     * @return true 表示已经拿到可用于本地 Range 响应的总字节数。
      */
-    internal suspend fun awaitResolvedContentType(sessionId: Long) {
-        val session = sessions[sessionId] ?: return
-        if (session.contentType != DEFAULT_CONTENT_TYPE) {
-            return
+    internal suspend fun awaitResolvedMediaInfo(sessionId: Long): Boolean {
+        val session = sessions[sessionId] ?: return false
+        if (needsSessionMediaInfo(session)) {
+            startDownloadIfNeeded(session)
         }
 
-        startDownloadIfNeeded(session)
         val startedAt = System.currentTimeMillis()
         while (
-            session.contentType == DEFAULT_CONTENT_TYPE &&
+            needsSessionMediaInfo(session) &&
             session.status != CacheStatus.FAILED &&
             session.status != CacheStatus.CANCELLED &&
-            System.currentTimeMillis() - startedAt < CONTENT_TYPE_WAIT_TIMEOUT_MS
+            System.currentTimeMillis() - startedAt < MEDIA_INFO_WAIT_TIMEOUT_MS
         ) {
-            delay(CONTENT_TYPE_WAIT_INTERVAL_MS)
+            delay(MEDIA_INFO_WAIT_INTERVAL_MS)
         }
+        return session.totalBytes > 0L
+    }
+
+    /**
+     * 确保当前会话已经知道真实响应类型、媒体总长度以及上游 Range 能力。
+     */
+    private suspend fun resolveSessionMediaInfo(session: CacheSession): Boolean {
+        if (!needsSessionMediaInfo(session)) {
+            return true
+        }
+
+        val mediaInfo = fetchUpstreamMediaInfo(session.url) ?: return session.totalBytes > 0L
+        updateSessionMediaInfo(session, mediaInfo)
+        return session.totalBytes > 0L
+    }
+
+    /**
+     * 当前会话是否还缺少本地代理响应头所需的媒体信息。
+     */
+    private fun needsSessionMediaInfo(session: CacheSession): Boolean {
+        return session.totalBytes <= 0L ||
+                session.contentType == DEFAULT_CONTENT_TYPE ||
+                session.rangeRequestsSupported == null
+    }
+
+    /**
+     * 用最小 Range 请求解析当前播放 URL 的真实响应头。
+     *
+     * 206 的 Content-Range 能拿到完整媒体长度；如果上游忽略 Range 返回 200，
+     * 只能从 Content-Length 拿总长度，同时标记该地址不支持随机 Range。
+     */
+    private suspend fun fetchUpstreamMediaInfo(url: String): UpstreamMediaInfo? {
+        val client = dataSourceManager.getHttpClient()
+        return runCatching {
+            client.prepareGet(url) {
+                header(HttpHeaders.Range, "bytes=0-0")
+            }.execute { response ->
+                val status = response.status
+                if (status.value !in 200..299) {
+                    return@execute null
+                }
+
+                val contentRangeTotalBytes = parseContentRangeTotal(
+                    response.headers[HttpHeaders.ContentRange]
+                )
+                val contentLength = response.headers[HttpHeaders.ContentLength]?.toLongOrNull()
+                UpstreamMediaInfo(
+                    contentType = response.headers[HttpHeaders.ContentType],
+                    totalBytes = contentRangeTotalBytes ?: contentLength,
+                    rangeRequestsSupported = status == HttpStatusCode.PartialContent && contentRangeTotalBytes != null,
+                    etag = response.headers[ETAG_HEADER],
+                    lastModified = response.headers[LAST_MODIFIED_HEADER],
+                )
+            }
+        }.onFailure { throwable ->
+            Log.e("jvm-cache", "解析播放缓存媒体信息失败: $url", throwable)
+        }.getOrNull()
     }
 
     /**
@@ -694,18 +784,30 @@ class JvmDownloadCacheController(
             }
             request.execute { response ->
                 val status = response.status
-                val acceptsFullBodyFallback = status == HttpStatusCode.OK && start == 0L
+                val contentRangeTotalBytes = parseContentRangeTotal(
+                    response.headers[HttpHeaders.ContentRange]
+                )
+                val contentLength = response.headers[HttpHeaders.ContentLength]?.toLongOrNull()
+                val responseTotalBytes = contentRangeTotalBytes ?: contentLength
+                updateSessionMediaInfo(
+                    session = session,
+                    mediaInfo = UpstreamMediaInfo(
+                        contentType = response.headers[HttpHeaders.ContentType],
+                        totalBytes = responseTotalBytes,
+                        rangeRequestsSupported = status == HttpStatusCode.PartialContent && contentRangeTotalBytes != null,
+                        etag = response.headers[ETAG_HEADER],
+                        lastModified = response.headers[LAST_MODIFIED_HEADER],
+                    ),
+                )
+
+                val requestedBytes = endInclusive - start + 1
+                val acceptsFullBodyFallback = status == HttpStatusCode.OK &&
+                        start == 0L &&
+                        contentLength == requestedBytes
                 if (status != HttpStatusCode.PartialContent && !acceptsFullBodyFallback) {
                     // 上游不支持非 0 Range 时不能降级成 200，否则 VLC 收到的字节和 Content-Range 会不一致。
                     return@execute false
                 }
-
-                updateSessionContentType(session, response.headers[HttpHeaders.ContentType])
-                cacheStore.updateValidators(
-                    entry = session.entry,
-                    etag = response.headers[ETAG_HEADER],
-                    lastModified = response.headers[LAST_MODIFIED_HEADER],
-                )
 
                 return@execute copyUpstreamRange(
                     session = session,
@@ -811,8 +913,7 @@ class JvmDownloadCacheController(
                 settings.cacheUpperLimit != CacheUpperLimitEnum.No &&
                 !music.ifHls &&
                 music.filePath.isNullOrBlank() &&
-                music.musicUrl.isNotBlank() &&
-                (music.size ?: 0L) > 0L
+                music.musicUrl.isNotBlank()
     }
 
     /**
@@ -844,17 +945,23 @@ class JvmDownloadCacheController(
     ): CacheSession {
         val sessionId = idGenerator.incrementAndGet()
         val safeName = safeFileName(cacheKey)
+        val initialTotalBytes = if (music.static) {
+            music.size ?: 0L
+        } else {
+            // 转码流大小不能使用原始文件 size，稍后从上游响应头解析。
+            0L
+        }
         val entry = cacheStore.openEntry(
             cacheKey = cacheKey,
             safeCacheKey = safeName,
             sourceUrl = music.musicUrl,
-            totalBytes = music.size ?: 0L,
+            totalBytes = initialTotalBytes,
         )
         val session = CacheSession(
             id = sessionId,
             cacheKey = cacheKey,
             url = music.musicUrl,
-            totalBytes = music.size ?: 0L,
+            totalBytes = cacheStore.totalBytes(entry),
             entry = entry,
             contentType = cacheStore.contentType(entry),
         )
@@ -979,6 +1086,15 @@ class JvmDownloadCacheController(
         session.status = CacheStatus.DOWNLOADING
 
         try {
+            if (!resolveSessionMediaInfo(session)) {
+                session.status = CacheStatus.PAUSED
+                return
+            }
+            if (session.rangeRequestsSupported == false) {
+                prefetchFullSessionBody(session)
+                return
+            }
+
             while (session.status != CacheStatus.CANCELLED) {
                 refreshSessionProgress(session)
                 if (session.status == CacheStatus.COMPLETED) {
@@ -1018,6 +1134,136 @@ class JvmDownloadCacheController(
             refreshSessionProgress(session)
             enforceCacheLimitIfNeeded()
             getCacheSize()
+        }
+    }
+
+    /**
+     * 上游不支持 Range 时，使用一次完整 GET 顺序写入 span 缓存。
+     *
+     * 这类转码流不能随机补段，只能从 0 开始顺序缓存；拖动到尚未缓存的位置时仍需要等待。
+     */
+    private suspend fun prefetchFullSessionBody(session: CacheSession) {
+        val client = dataSourceManager.getHttpClient()
+        val fetched = runCatching {
+            client.prepareGet(session.url).execute { response ->
+                if (response.status.value !in 200..299) {
+                    return@execute false
+                }
+                updateSessionMediaInfo(
+                    session = session,
+                    mediaInfo = UpstreamMediaInfo(
+                        contentType = response.headers[HttpHeaders.ContentType],
+                        totalBytes = response.headers[HttpHeaders.ContentLength]?.toLongOrNull()
+                            ?: session.totalBytes,
+                        rangeRequestsSupported = false,
+                        etag = response.headers[ETAG_HEADER],
+                        lastModified = response.headers[LAST_MODIFIED_HEADER],
+                    ),
+                )
+                if (session.totalBytes <= 0L) {
+                    return@execute false
+                }
+                copyFullUpstreamBodyToCache(
+                    session = session,
+                    source = response.bodyAsChannel(),
+                )
+            }
+        }.onFailure { throwable ->
+            Log.e("jvm-cache", "播放缓存完整回源失败: id=${session.id}", throwable)
+        }.getOrDefault(false)
+
+        if (!fetched && session.status == CacheStatus.DOWNLOADING) {
+            session.status = CacheStatus.PAUSED
+        }
+    }
+
+    /**
+     * 将完整上游响应按固定大小提交为多个 span。
+     */
+    private suspend fun copyFullUpstreamBodyToCache(
+        session: CacheSession,
+        source: ByteReadChannel,
+    ): Boolean = withContext(Dispatchers.IO) {
+        val totalBytes = session.totalBytes
+        if (totalBytes <= 0L) {
+            return@withContext false
+        }
+
+        val buffer = ByteArray(STREAM_BUFFER_SIZE)
+        var copied = 0L
+        var spanStart = 0L
+        var spanEnd = -1L
+        var spanCopied = 0L
+        var tempFile: File? = null
+        var fileOutput: RandomAccessFile? = null
+
+        fun openNextSpan() {
+            spanStart = copied
+            spanEnd = (spanStart + PREFETCH_SPAN_BYTES - 1)
+                .coerceAtMost(totalBytes - 1)
+            spanCopied = 0L
+            tempFile = cacheStore.createTempSpanFile(session.entry, spanStart, spanEnd)
+            fileOutput = RandomAccessFile(tempFile, "rw")
+        }
+
+        fun closeCurrentSpan(deleteTemp: Boolean) {
+            fileOutput?.close()
+            fileOutput = null
+            if (deleteTemp) {
+                tempFile?.delete()
+            }
+            tempFile = null
+        }
+
+        fun commitCurrentSpan() {
+            val file = tempFile ?: return
+            closeCurrentSpan(deleteTemp = false)
+            cacheStore.commitSpan(
+                entry = session.entry,
+                start = spanStart,
+                endInclusive = spanEnd,
+                tempFile = file,
+            )
+            refreshSessionProgress(session)
+        }
+
+        try {
+            openNextSpan()
+            while (copied < totalBytes && session.status != CacheStatus.CANCELLED) {
+                val currentSpanRemaining = (spanEnd - spanStart + 1) - spanCopied
+                val remaining = minOf(
+                    buffer.size.toLong(),
+                    currentSpanRemaining,
+                    totalBytes - copied,
+                ).toInt()
+                val bytesRead = source.readAvailable(buffer, 0, remaining)
+                if (bytesRead == -1) {
+                    break
+                }
+                if (bytesRead == 0) {
+                    continue
+                }
+
+                fileOutput?.write(buffer, 0, bytesRead)
+                copied += bytesRead
+                spanCopied += bytesRead
+
+                if (spanCopied == spanEnd - spanStart + 1) {
+                    commitCurrentSpan()
+                    if (copied < totalBytes) {
+                        openNextSpan()
+                    }
+                }
+            }
+
+            val completed = copied == totalBytes
+            if (!completed && tempFile != null) {
+                closeCurrentSpan(deleteTemp = true)
+            }
+            completed
+        } catch (throwable: Throwable) {
+            closeCurrentSpan(deleteTemp = true)
+            throw throwable
         }
     }
 
@@ -1371,6 +1617,39 @@ class JvmDownloadCacheController(
     }
 
     /**
+     * 使用上游响应头刷新普通音频缓存会话元信息。
+     */
+    private fun updateSessionMediaInfo(
+        session: CacheSession,
+        mediaInfo: UpstreamMediaInfo,
+    ) {
+        updateSessionContentType(session, mediaInfo.contentType)
+        cacheStore.updateValidators(
+            entry = session.entry,
+            etag = mediaInfo.etag,
+            lastModified = mediaInfo.lastModified,
+        )
+        cacheStore.updateTotalBytes(session.entry, mediaInfo.totalBytes)
+        session.totalBytes = cacheStore.totalBytes(session.entry)
+        session.rangeRequestsSupported = mediaInfo.rangeRequestsSupported
+        refreshSessionProgress(session)
+    }
+
+    /**
+     * 解析 Content-Range 中的总长度，例如 `bytes 0-0/12345`。
+     */
+    private fun parseContentRangeTotal(contentRange: String?): Long? {
+        if (contentRange.isNullOrBlank()) {
+            return null
+        }
+        val totalText = contentRange.substringAfter('/', missingDelimiterValue = "")
+            .trim()
+            .takeIf { it.isNotEmpty() && it != "*" }
+            ?: return null
+        return totalText.toLongOrNull()?.takeIf { it > 0L }
+    }
+
+    /**
      * 确认缓存目录可用。
      *
      * @param directory 要检查或创建的目录。
@@ -1449,14 +1728,24 @@ class JvmDownloadCacheController(
         private const val PREFETCH_SPAN_BYTES = 512 * 1024L
 
         /**
-         * 本地代理返回缓存播放响应头前，等待上游真实 Content-Type 的最长时间，单位是毫秒。
+         * 本地代理返回缓存播放响应头前，等待上游真实媒体信息的最长时间，单位是毫秒。
          */
-        private const val CONTENT_TYPE_WAIT_TIMEOUT_MS = 1_000L
+        private const val MEDIA_INFO_WAIT_TIMEOUT_MS = 1_000L
 
         /**
-         * 等待 Content-Type 时的轮询间隔，单位是毫秒。
+         * 等待媒体信息时的轮询间隔，单位是毫秒。
          */
-        private const val CONTENT_TYPE_WAIT_INTERVAL_MS = 50L
+        private const val MEDIA_INFO_WAIT_INTERVAL_MS = 50L
+
+        /**
+         * 非 Range 转码流等待后台提交目标 span 的最长时间，单位是毫秒。
+         */
+        private const val CACHE_SPAN_WAIT_TIMEOUT_MS = 15_000L
+
+        /**
+         * 等待目标 span 时的轮询间隔，单位是毫秒。
+         */
+        private const val CACHE_SPAN_WAIT_INTERVAL_MS = 50L
 
         /**
          * 缓存进度日志最小间隔，单位是毫秒。
@@ -1542,6 +1831,23 @@ private data class RawHlsPlaylist(
 )
 
 /**
+ * 上游普通音频响应头中解析出的媒体信息。
+ *
+ * @property contentType 上游返回的 Content-Type。
+ * @property totalBytes 当前播放流的真实总字节数。
+ * @property rangeRequestsSupported 上游是否按 Range 请求返回 206。
+ * @property etag 上游 ETag 响应头。
+ * @property lastModified 上游 Last-Modified 响应头。
+ */
+private data class UpstreamMediaInfo(
+    val contentType: String?,
+    val totalBytes: Long?,
+    val rangeRequestsSupported: Boolean,
+    val etag: String?,
+    val lastModified: String?,
+)
+
+/**
  * JVM 播放缓存会话状态。
  */
 internal enum class CacheStatus {
@@ -1622,23 +1928,25 @@ internal sealed interface HlsResourceStreamResult {
  * @property id 本地代理 URL 使用的会话 id。
  * @property cacheKey 业务缓存 key。
  * @property url 上游真实播放地址。
- * @property totalBytes 媒体总字节数，单位是 byte。
+ * @property totalBytes 媒体总字节数，单位是 byte，会从上游响应头刷新。
  * @property entry 当前歌曲对应的 span 缓存条目。
  * @property contentType 当前媒体类型，会从上游响应头更新。
  * @property downloadedBytes 已缓存去重字节数，单位是 byte。
  * @property status 当前会话状态。
  * @property job 后台预取任务；前台回源不挂在这里。
+ * @property rangeRequestsSupported 上游是否支持随机 Range；false 时只能顺序缓存转码流。
  */
 private data class CacheSession(
     val id: Long,
     val cacheKey: String,
     val url: String,
-    val totalBytes: Long,
+    @Volatile var totalBytes: Long,
     val entry: JvmPlaybackCacheEntry,
     @Volatile var contentType: String,
     @Volatile var downloadedBytes: Long = 0L,
     @Volatile var status: CacheStatus = CacheStatus.QUEUED,
     @Volatile var job: Job? = null,
+    @Volatile var rangeRequestsSupported: Boolean? = null,
 )
 
 /**

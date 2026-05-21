@@ -44,7 +44,7 @@ internal class JvmPlaybackCacheStore(
      * @param cacheKey 业务缓存 key，包含歌曲 id、静态地址、转码格式和码率等影响播放内容的因素。
      * @param safeCacheKey 已经过文件名安全处理的缓存 key，用作歌曲缓存目录名。
      * @param sourceUrl 当前歌曲的真实上游播放地址，用于发现缓存是否对应同一个媒体内容。
-     * @param totalBytes 当前媒体总字节数，span 完整性判断依赖它。
+     * @param totalBytes 当前媒体总字节数，span 完整性判断依赖它；0 表示稍后由上游响应头解析。
      * @return 可供控制器持有的缓存条目。
      */
     fun openEntry(
@@ -59,10 +59,11 @@ internal class JvmPlaybackCacheStore(
         val indexFile = File(directory, INDEX_FILE_NAME)
         val loadedIndex = loadIndexOrNull(indexFile)
 
+        val requestedTotalBytes = totalBytes.takeIf { it > 0L }
         val indexMatchesRequest = loadedIndex != null &&
                 loadedIndex.cacheKey == cacheKey &&
                 loadedIndex.sourceUrl == sourceUrl &&
-                loadedIndex.totalBytes == totalBytes
+                (requestedTotalBytes == null || loadedIndex.totalBytes == requestedTotalBytes)
 
         val index = if (indexMatchesRequest) {
             val matchedIndex = requireNotNull(loadedIndex)
@@ -79,7 +80,7 @@ internal class JvmPlaybackCacheStore(
             PlaybackCacheIndex(
                 cacheKey = cacheKey,
                 sourceUrl = sourceUrl,
-                totalBytes = totalBytes,
+                totalBytes = requestedTotalBytes ?: 0L,
                 contentType = defaultContentType,
                 spans = emptyList(),
                 completed = false,
@@ -95,6 +96,13 @@ internal class JvmPlaybackCacheStore(
         )
         persistIndex(entry)
         return entry
+    }
+
+    /**
+     * 读取条目当前记录的媒体总长度。
+     */
+    fun totalBytes(entry: JvmPlaybackCacheEntry): Long = synchronized(entry.lock) {
+        entry.index.totalBytes
     }
 
     /**
@@ -123,6 +131,42 @@ internal class JvmPlaybackCacheStore(
             return@synchronized
         }
         entry.index = entry.index.copy(contentType = contentType)
+        persistIndex(entry)
+    }
+
+    /**
+     * 使用上游响应头解析出的真实媒体长度更新索引。
+     *
+     * 如果同一个播放 URL 的总长度发生变化，已有 span 不再可信，需要清掉后重新缓存。
+     */
+    fun updateTotalBytes(
+        entry: JvmPlaybackCacheEntry,
+        totalBytes: Long?,
+    ) = synchronized(entry.lock) {
+        val resolvedTotalBytes = totalBytes?.takeIf { it > 0L } ?: return@synchronized
+        if (entry.index.totalBytes == resolvedTotalBytes) {
+            return@synchronized
+        }
+
+        val shouldDropSpans = entry.index.totalBytes > 0L && entry.index.totalBytes != resolvedTotalBytes
+        if (shouldDropSpans) {
+            entry.index.spans.forEach { span ->
+                File(entry.directory, span.fileName).delete()
+            }
+            entry.directory.listFiles()
+                .orEmpty()
+                .filter { file -> file.isFile && file.extension == "tmp" }
+                .forEach { file -> file.delete() }
+        }
+
+        val nextSpans = if (shouldDropSpans) emptyList() else entry.index.spans
+        val nextIndex = entry.index.copy(
+            totalBytes = resolvedTotalBytes,
+            spans = nextSpans,
+            completed = coversWholeMedia(entry.index.copy(totalBytes = resolvedTotalBytes, spans = nextSpans)),
+            lastAccessTime = System.currentTimeMillis(),
+        )
+        entry.index = nextIndex
         persistIndex(entry)
     }
 

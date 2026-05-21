@@ -413,8 +413,14 @@ object JvmReverseProxyServer : KoinComponent {
             return
         }
 
-        // 响应头里的 Content-Type 以当前播放流的上游响应为准，给后台下载一个很短窗口先解析真实类型。
-        cacheController.awaitResolvedContentType(sessionId)
+        // 响应头里的媒体类型和总长度以当前播放流的上游响应为准，转码流不能复用原始文件大小。
+        if (!cacheController.awaitResolvedMediaInfo(sessionId)) {
+            call.respondText(
+                text = "播放缓存媒体信息不可用。",
+                status = HttpStatusCode.BadGateway
+            )
+            return
+        }
         val resolvedSnapshot = cacheController.getSessionSnapshot(sessionId) ?: snapshot
 
         // 先解析 VLC 请求的原始 Range，再根据缓存状态裁剪实际响应范围。
