@@ -62,18 +62,6 @@ fun JvmLanguageConfigScreen(
                     TopAppBarTitle(
                         title = stringResource(Res.string.language)
                     )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = {
-                            navigator.goBack()
-                        },
-                    ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.arrow_back_24px),
-                            contentDescription = stringResource(Res.string.return_setting_screen)
-                        )
-                    }
                 }
             )
 

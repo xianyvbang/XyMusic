@@ -62,6 +62,7 @@ import cn.xybbz.ui.xy.XyIconButton as IconButton
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InterfaceSettingScreen(
+    showBackButton: Boolean = true,
     interfaceSettingViewModel: InterfaceSettingViewModel = koinViewModel<InterfaceSettingViewModel>()
 ) {
 
@@ -81,15 +82,17 @@ fun InterfaceSettingScreen(
                 )
             },
             navigationIcon = {
-                IconButton(
-                    onClick = {
-                        navigator.goBack()
-                    },
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.arrow_back_24px),
-                        contentDescription = stringResource(Res.string.return_setting_screen)
-                    )
+                if (showBackButton) {
+                    IconButton(
+                        onClick = {
+                            navigator.goBack()
+                        },
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.arrow_back_24px),
+                            contentDescription = stringResource(Res.string.return_setting_screen)
+                        )
+                    }
                 }
             }
         )

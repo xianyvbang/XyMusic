@@ -26,13 +26,12 @@ import cn.xybbz.ui.screens.JvmConnectionManagement
 import cn.xybbz.ui.screens.JvmFavoriteScreen
 import cn.xybbz.ui.screens.JvmGenresInfoScreen
 import cn.xybbz.ui.screens.JvmGenresScreen
-import cn.xybbz.ui.screens.JvmInterfaceSettingScreen
+import cn.xybbz.ui.screens.JvmLanguageConfigScreen
 import cn.xybbz.ui.screens.JvmLocalScreen
 import cn.xybbz.ui.screens.JvmMemoryManagementScreen
 import cn.xybbz.ui.screens.JvmMusicScreen
 import cn.xybbz.ui.screens.JvmSearchScreen
 import cn.xybbz.ui.screens.JvmSettingScreen
-import cn.xybbz.ui.screens.LanguageConfigScreen
 import cn.xybbz.ui.screens.ProxyConfigScreen
 import cn.xybbz.ui.screens.SelectLibraryScreen
 import cn.xybbz.ui.screens.SetBackgroundImageScreen
@@ -73,8 +72,8 @@ private val jvmDesktopEntryProvider2 = entryProvider {
     desktopNode<ConnectionManagement> { JvmConnectionManagement() }
     desktopNode<ConnectionInfo> { JvmConnectionConfigInfoScreen(connectionId = it.connectionId) }
     desktopNode<MemoryManagement> { JvmMemoryManagementScreen() }
-    desktopNode<InterfaceSetting> { JvmInterfaceSettingScreen() }
-    desktopNode<LanguageConfig> { LanguageConfigScreen() }
+    desktopNode<InterfaceSetting> { InterfaceSettingScreen(showBackButton = false) }
+    desktopNode<LanguageConfig> { JvmLanguageConfigScreen() }
     desktopNode<Genres> { JvmGenresScreen() }
     desktopNode<GenreInfo> { JvmGenresInfoScreen(genreId = it.genreId) }
     desktopNode<About> { JvmAboutScreen() }
