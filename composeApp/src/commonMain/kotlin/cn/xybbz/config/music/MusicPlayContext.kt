@@ -388,15 +388,53 @@ class MusicPlayContext(
      */
     fun changeMusicPlaylist(){
         musicController.replacePlaylistItemUrl{
-            val andMusicUrlData =
-                dataSourceManager.getMusicPlayUrl(it.itemId, it.plexPlayKey)
-            it.copy(
-                ifHls = andMusicUrlData.ifHls,
-                musicUrl = andMusicUrlData.musicUrl,
-                static = andMusicUrlData.static,
-                audioBitRate = andMusicUrlData.audioBitRate,
-            )
+            fillPlaybackUrl(it)
         }
+    }
+
+    /**
+     * 添加歌曲列表到当前播放列表。
+     *
+     * 通过上下文统一补全播放地址后再调用播放器控制器，避免外部直接传入未解析的 musicUrl。
+     */
+    fun addMusicList(
+        musicList: List<XyPlayMusic>,
+        artistId: String? = null,
+        isPlayer: Boolean? = null,
+    ) {
+        musicController.addMusicList(
+            musicList = fillPlaybackUrl(musicList),
+            artistId = artistId,
+            isPlayer = isPlayer,
+        )
+    }
+
+    /**
+     * 添加下一首播放。
+     */
+    fun addNextPlayer(music: XyPlayMusic) {
+        musicController.addNextPlayer(fillPlaybackUrl(music))
+    }
+
+    /**
+     * 补全单首歌曲的当前播放地址信息。
+     */
+    private fun fillPlaybackUrl(music: XyPlayMusic): XyPlayMusic {
+        val andMusicUrlData =
+            dataSourceManager.getMusicPlayUrl(music.itemId, music.plexPlayKey)
+        return music.copy(
+            ifHls = andMusicUrlData.ifHls,
+            musicUrl = andMusicUrlData.musicUrl,
+            static = andMusicUrlData.static,
+            audioBitRate = andMusicUrlData.audioBitRate,
+        )
+    }
+
+    /**
+     * 批量补全歌曲播放地址信息。
+     */
+    private fun fillPlaybackUrl(musicList: List<XyPlayMusic>): List<XyPlayMusic> {
+        return musicList.map(::fillPlaybackUrl)
     }
 
     /**
@@ -422,16 +460,7 @@ class MusicPlayContext(
                 if (musicPlayData.onMusicPlayParameter.musicId.isNotBlank())
                     tmpIndex = xyMusicList
                         .indexOfFirst { item -> item.itemId == musicPlayData.onMusicPlayParameter.musicId }
-                tmpMusicList.addAll(xyMusicList.map {
-                    val andMusicUrlData =
-                        dataSourceManager.getMusicPlayUrl(it.itemId, it.plexPlayKey)
-                    it.copy(
-                        ifHls = andMusicUrlData.ifHls,
-                        musicUrl = andMusicUrlData.musicUrl,
-                        static = andMusicUrlData.static,
-                        audioBitRate = andMusicUrlData.audioBitRate,
-                    )
-                })
+                tmpMusicList.addAll(fillPlaybackUrl(xyMusicList))
 
             } else {
                 MessageUtils.sendPopTipError("请选择要播放的歌曲")

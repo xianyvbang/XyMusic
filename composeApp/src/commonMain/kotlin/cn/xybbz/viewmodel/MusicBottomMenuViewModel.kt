@@ -36,6 +36,7 @@ import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.download.enqueueMusicDownload
 import cn.xybbz.config.music.MusicCommonController
+import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.volume.VolumeServer
 import cn.xybbz.download.DownloaderManager
@@ -65,6 +66,7 @@ class MusicBottomMenuViewModel(
     private val db: LocalDatabaseClient,
     private val downloadDb: DownloadDatabaseClient,
     val musicController: MusicCommonController,
+    private val musicPlayContext: MusicPlayContext,
     val dataSourceManager: DataSourceManager,
     val volumeServer: VolumeServer,
     val downloaderManager: DownloaderManager
@@ -277,7 +279,7 @@ class MusicBottomMenuViewModel(
                 mediaLibraryId = dataSourceManager.getConnectionId().toString()
             )
             playMusic?.let {
-                musicController.addNextPlayer(it)
+                musicPlayContext.addNextPlayer(it)
             }
         }
 

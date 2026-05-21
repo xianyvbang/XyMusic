@@ -26,6 +26,7 @@ import cn.xybbz.common.utils.Log
 import cn.xybbz.config.lrc.LrcServer
 import cn.xybbz.config.music.DownloadCacheCommonController
 import cn.xybbz.config.music.MusicCommonController
+import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
@@ -39,6 +40,7 @@ import xymusic_kmp.composeapp.generated.resources.song_tab
 @KoinViewModel
 class MusicPlayerViewModel (
     val musicController: MusicCommonController,
+    private val musicPlayContext: MusicPlayContext,
     val dataSourceManager: DataSourceManager,
     val downloadCacheController: DownloadCacheCommonController,
     val lrcServer: LrcServer,
@@ -60,7 +62,7 @@ class MusicPlayerViewModel (
                 downloadDb = downloadDb,
                 mediaLibraryId = dataSourceManager.getConnectionId().toString()
             )?.let {
-                musicController.addNextPlayer(it)
+                musicPlayContext.addNextPlayer(it)
             }
         }
     }

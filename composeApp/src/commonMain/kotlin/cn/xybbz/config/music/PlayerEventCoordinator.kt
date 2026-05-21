@@ -361,7 +361,7 @@ class PlayerEventCoordinator(
             val newMusicList = musicPlayContext.musicPlayData?.onNextMusicList?.invoke(newPageNum)
             if (!newMusicList.isNullOrEmpty()) {
                 musicController.setPageNumData(newPageNum)
-                musicController.addMusicList(
+                musicPlayContext.addMusicList(
                     newMusicList,
                     musicPlayContext.musicPlayData?.onMusicPlayParameter?.artistId
                 )

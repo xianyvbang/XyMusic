@@ -249,7 +249,7 @@ fun JvmSnackBarPlayerComponent(
                         } else {
                             coroutineScope.launch {
                                 snackBarPlayerViewModel.selectControl.onAddPlaySelect(
-                                    snackBarPlayerViewModel.musicController,
+                                    snackBarPlayerViewModel.musicPlayContext,
                                     snackBarPlayerViewModel.db,
                                     snackBarPlayerViewModel.downloadDb
                                 )

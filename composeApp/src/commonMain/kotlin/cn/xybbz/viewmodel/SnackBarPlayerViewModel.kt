@@ -28,6 +28,7 @@ import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.music.DownloadCacheCommonController
 import cn.xybbz.config.music.MusicCommonController
+import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.select.SelectControl
 import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.core.DownloadRequest
@@ -43,6 +44,7 @@ import xymusic_kmp.composeapp.generated.resources.add_download_list
 @KoinViewModel
 class SnackBarPlayerViewModel(
     val musicController: MusicCommonController,
+    val musicPlayContext: MusicPlayContext,
     val db: LocalDatabaseClient,
     val downloadDb: DownloadDatabaseClient,
     private val downloadCacheController: DownloadCacheCommonController,
