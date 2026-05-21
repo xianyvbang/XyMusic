@@ -86,7 +86,6 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopInteractiveHitTestOwner
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyRow
-import cn.xybbz.ui.xy.XySmallImage
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import kotlinx.coroutines.launch
@@ -98,7 +97,6 @@ import xymusic_kmp.composeapp.generated.resources.info_24px
 import xymusic_kmp.composeapp.generated.resources.list_loop
 import xymusic_kmp.composeapp.generated.resources.music_cover
 import xymusic_kmp.composeapp.generated.resources.music_list
-import xymusic_kmp.composeapp.generated.resources.music_xy_placeholder_foreground
 import xymusic_kmp.composeapp.generated.resources.next_track
 import xymusic_kmp.composeapp.generated.resources.pause
 import xymusic_kmp.composeapp.generated.resources.pause_24px
@@ -660,12 +658,9 @@ private fun JvmImageCover(
         musicInfo,
         coverRefreshVersion
     )
-    val primaryCoverModel = coverUrls.primaryUrl
-    val fallbackCoverModel = coverUrls.fallbackUrl
-    val activeCoverModel = primaryCoverModel ?: fallbackCoverModel ?: byteCoverModel
-    val backupCoverModel = if (activeCoverModel == byteCoverModel) null else byteCoverModel
+    val coverModels = resolvePlayerCoverModels(coverUrls, byteCoverModel)
 
-    XySmallImage(
+    PlayerCoverImage(
         modifier = modifier.onGloballyPositioned { coordinates ->
             onBoundsChanged(
                 Rect(
@@ -677,12 +672,9 @@ private fun JvmImageCover(
                 )
             )
         },
-        model = activeCoverModel,
-        backModel = backupCoverModel,
+        model = coverModels.model,
+        backModel = coverModels.backModel,
         requestSize = requestSize,
-        placeholder = Res.drawable.music_xy_placeholder_foreground,
-        error = Res.drawable.music_xy_placeholder_foreground,
-        fallback = Res.drawable.music_xy_placeholder_foreground,
         contentDescription = stringResource(Res.string.music_cover),
     )
 }

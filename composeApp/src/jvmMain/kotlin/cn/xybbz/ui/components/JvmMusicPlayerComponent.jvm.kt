@@ -111,7 +111,6 @@ import cn.xybbz.ui.windows.LocalDesktopTitleBarHitTestOwner
 import cn.xybbz.ui.windows.LocalDesktopWindowDecorators
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.MusicBottomMenuViewModel
@@ -126,7 +125,6 @@ import xymusic_kmp.composeapp.generated.resources.album_cover
 import xymusic_kmp.composeapp.generated.resources.backward_offset
 import xymusic_kmp.composeapp.generated.resources.close_player_screen
 import xymusic_kmp.composeapp.generated.resources.confirm
-import xymusic_kmp.composeapp.generated.resources.disc_placeholder
 import xymusic_kmp.composeapp.generated.resources.forward_offset
 import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
 import xymusic_kmp.composeapp.generated.resources.recommend
@@ -286,6 +284,7 @@ fun JvmMusicPlayerScreen(
         musicDetail,
         coverRefreshVersion
     )
+    val coverModels = resolvePlayerCoverModels(coverUrls, picByte)
     val coroutineScope = rememberCoroutineScope()
     val density = LocalDensity.current
     val sharedCoverRequestSize = remember(density) {
@@ -398,12 +397,12 @@ fun JvmMusicPlayerScreen(
                     )
                 }
         ) {
-            XyImage(
+            PlayerCoverImage(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .fillMaxSize(),
-                model = coverUrls.primaryUrl ?: picByte,
-                backModel = coverUrls.fallbackUrl ?: picByte,
+                model = coverModels.model,
+                backModel = coverModels.backModel,
                 requestSize = sharedCoverRequestSize,
                 alpha = 0.2f,
                 contentDescription = stringResource(Res.string.album_cover),
@@ -413,8 +412,8 @@ fun JvmMusicPlayerScreen(
                 targetBoundsOnScreen = sharedCoverTargetBoundsOnScreen,
                 rootBoundsOnScreen = playerRootBoundsOnScreen,
                 progress = sharedCoverProgress,
-                model = coverUrls.primaryUrl ?: picByte,
-                backModel = coverUrls.fallbackUrl ?: picByte,
+                model = coverModels.model,
+                backModel = coverModels.backModel,
                 requestSize = sharedCoverRequestSize,
                 rotationDegrees = coverRotation.value
             )
@@ -537,19 +536,16 @@ fun JvmMusicPlayerScreen(
                                                         )
                                                     }
                                             ) {
-                                                XyImage(
+                                                PlayerCoverImage(
                                                     modifier = Modifier
                                                         .fillMaxSize()
                                                         .graphicsLayer {
                                                             rotationZ = coverRotation.value
                                                         }
                                                         .clip(CircleShape),
-                                                    model = coverUrls.primaryUrl ?: picByte,
-                                                    backModel = coverUrls.fallbackUrl ?: picByte,
+                                                    model = coverModels.model,
+                                                    backModel = coverModels.backModel,
                                                     requestSize = sharedCoverRequestSize,
-                                                    placeholder = Res.drawable.disc_placeholder,
-                                                    error = Res.drawable.disc_placeholder,
-                                                    fallback = Res.drawable.disc_placeholder,
                                                     alpha = if (showSharedCoverOverlay) 0f else 1f,
                                                     contentDescription = stringResource(Res.string.album_cover),
                                                 )
@@ -838,16 +834,13 @@ private fun JvmSharedCoverOverlay(
             )
             .clip(animatedShape)
     ) {
-        XyImage(
+        PlayerCoverImage(
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer { rotationZ = rotationDegrees },
             model = model,
             backModel = backModel,
             requestSize = requestSize,
-            placeholder = Res.drawable.disc_placeholder,
-            error = Res.drawable.disc_placeholder,
-            fallback = Res.drawable.disc_placeholder,
             contentDescription = stringResource(Res.string.album_cover),
         )
     }

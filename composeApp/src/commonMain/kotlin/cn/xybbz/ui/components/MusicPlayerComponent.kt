@@ -31,7 +31,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.captionBar
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -88,7 +87,6 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.ModalBottomSheetExtendFillMaxSizeComponent
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.MusicPlayerViewModel
 import kotlinx.coroutines.launch
@@ -98,7 +96,6 @@ import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.album_cover
 import xymusic_kmp.composeapp.generated.resources.close_player_screen
-import xymusic_kmp.composeapp.generated.resources.disc_placeholder
 import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
 import xymusic_kmp.composeapp.generated.resources.more_vert_24px
 import xymusic_kmp.composeapp.generated.resources.music_list
@@ -215,16 +212,17 @@ fun MusicPlayerScreen(
         musicDetail,
         coverRefreshVersion
     )
+    val coverModels = resolvePlayerCoverModels(coverUrls, picByte)
 
     val coroutineScope = rememberCoroutineScope()
 
     Box(modifier = Modifier.fillMaxSize()) {
-        XyImage(
+        PlayerCoverImage(
             modifier = Modifier
                 .align(Alignment.Center)
                 .fillMaxSize(),
-            model = coverUrls.primaryUrl ?: picByte,
-            backModel = coverUrls.fallbackUrl ?: picByte,
+            model = coverModels.model,
+            backModel = coverModels.backModel,
             alpha = 0.2f,
             contentDescription = stringResource(Res.string.album_cover),
         )
@@ -304,20 +302,16 @@ fun MusicPlayerScreen(
                             Box(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                XyImage(
+                                PlayerCoverImage(
                                     modifier = Modifier
                                         .align(Alignment.Center)
                                         .size(300.dp)
-                                        .aspectRatio(1F)
                                         .clip(
                                             CircleShape
                                         ),
-                                    model = coverUrls.primaryUrl ?: picByte,
-                                    backModel = coverUrls.fallbackUrl ?: picByte,
-                                    placeholder = Res.drawable.disc_placeholder,
+                                    model = coverModels.model,
+                                    backModel = coverModels.backModel,
                                     /*.graphicsLayer(rotationZ = rotationState)*/
-                                    error = Res.drawable.disc_placeholder,
-                                    fallback = Res.drawable.disc_placeholder,
                                     contentDescription = stringResource(Res.string.album_cover),
                                 )
                             }

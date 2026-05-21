@@ -83,7 +83,6 @@ import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.XySmallImage
 import cn.xybbz.viewmodel.SnackBarPlayerViewModel
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.launch
@@ -101,7 +100,6 @@ import xymusic_kmp.composeapp.generated.resources.heart_broken_24px
 import xymusic_kmp.composeapp.generated.resources.music_cover
 import xymusic_kmp.composeapp.generated.resources.music_list
 import xymusic_kmp.composeapp.generated.resources.music_remove_from_playlist
-import xymusic_kmp.composeapp.generated.resources.music_xy_placeholder_foreground
 import xymusic_kmp.composeapp.generated.resources.pause
 import xymusic_kmp.composeapp.generated.resources.pause_24px
 import xymusic_kmp.composeapp.generated.resources.play_arrow_24px
@@ -647,20 +645,15 @@ private fun ImageCover(
         musicInfo,
         coverRefreshVersion
     )
-    val primaryCoverModel = coverUrls.primaryUrl
-    val fallbackCoverModel = coverUrls.fallbackUrl
-    val activeCoverModel = primaryCoverModel ?: fallbackCoverModel ?: byteCoverModel
-    val backupCoverModel = if (activeCoverModel == byteCoverModel) null else byteCoverModel
+    val coverModels = resolvePlayerCoverModels(coverUrls, byteCoverModel)
     val defaultSnackBarColor = MaterialTheme.colorScheme.surfaceContainerLowest
 
-    XySmallImage(
+    PlayerCoverImage(
         modifier = Modifier
-            .size(XyTheme.dimens.snackBarPlayerHeight),
-        model = activeCoverModel,
-        backModel = backupCoverModel,
-        placeholder = Res.drawable.music_xy_placeholder_foreground,
-        error = Res.drawable.music_xy_placeholder_foreground,
-        fallback = Res.drawable.music_xy_placeholder_foreground,
+            .size(XyTheme.dimens.snackBarPlayerHeight)
+            .clip(RoundedCornerShape(XyTheme.dimens.corner)),
+        model = coverModels.model,
+        backModel = coverModels.backModel,
         contentDescription = stringResource(Res.string.music_cover),
         onSuccess = {
             readPaletteColor(
