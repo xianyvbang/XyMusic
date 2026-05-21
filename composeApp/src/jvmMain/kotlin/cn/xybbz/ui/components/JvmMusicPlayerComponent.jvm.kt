@@ -405,6 +405,7 @@ fun JvmMusicPlayerScreen(
                 backModel = coverModels.backModel,
                 requestSize = sharedCoverRequestSize,
                 alpha = 0.2f,
+                showPlaceholder = false,
                 contentDescription = stringResource(Res.string.album_cover),
             )
             JvmSharedCoverOverlay(

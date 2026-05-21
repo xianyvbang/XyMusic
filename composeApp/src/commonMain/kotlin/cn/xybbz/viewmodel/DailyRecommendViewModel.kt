@@ -28,9 +28,11 @@ import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.DownloadTypes
 import cn.xybbz.common.utils.Log
+import cn.xybbz.config.download.enqueueMusicDownload
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.recommender.DailyRecommender
+import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.config.LocalDatabaseClient
@@ -48,6 +50,7 @@ class DailyRecommendViewModel(
     val musicPlayContext: MusicPlayContext,
     val musicController: MusicCommonController,
     private val dailyRecommender: DailyRecommender,
+    private val downloaderManager: DownloaderManager,
 ) : ViewModel() {
 
     val downloadMusicIdsFlow =
@@ -107,6 +110,12 @@ class DailyRecommendViewModel(
             dailyRecommender.generate()
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "生成每日推荐错误", e)
+        }
+    }
+
+    fun downloadMusic(musicData: XyMusic) {
+        viewModelScope.launch {
+            downloaderManager.enqueueMusicDownload(musicData, dataSourceManager)
         }
     }
 

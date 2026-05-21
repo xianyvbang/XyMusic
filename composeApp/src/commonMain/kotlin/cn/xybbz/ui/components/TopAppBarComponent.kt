@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
@@ -44,6 +45,7 @@ fun TopAppBarTitle(title: String, modifier: Modifier = Modifier) {
     Text(
         text = title,
         modifier = modifier,
-        fontWeight = FontWeight.W900
+        fontWeight = FontWeight.W900,
+        style = MaterialTheme.typography.titleLarge,
     )
 }

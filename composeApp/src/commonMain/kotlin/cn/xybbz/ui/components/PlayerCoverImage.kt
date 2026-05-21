@@ -63,6 +63,7 @@ internal fun PlayerCoverImage(
     requestSize: IntSize? = null,
     contentScale: ContentScale = ContentScale.Crop,
     alpha: Float = DefaultAlpha,
+    showPlaceholder: Boolean = true,
     contentDescription: String? = null,
     onSuccess: ((LoadState.Success) -> Unit)? = null,
     onLoading: ((LoadState.Started) -> Unit)? = null,
@@ -73,12 +74,14 @@ internal fun PlayerCoverImage(
             this.alpha = alpha
         }
     ) {
-        Image(
-            modifier = Modifier.fillMaxSize(),
-            painter = painterResource(Res.drawable.disc_placeholder),
-            contentDescription = contentDescription,
-            contentScale = contentScale
-        )
+        if (showPlaceholder) {
+            Image(
+                modifier = Modifier.fillMaxSize(),
+                painter = painterResource(Res.drawable.disc_placeholder),
+                contentDescription = contentDescription,
+                contentScale = contentScale
+            )
+        }
         XyImage(
             modifier = Modifier.fillMaxSize(),
             model = model,

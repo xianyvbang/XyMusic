@@ -34,6 +34,7 @@ import cn.xybbz.ui.components.JvmLazyHorizontalGridComponent
 import cn.xybbz.ui.components.MusicAlbumCardComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SongTableColumns
+import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
@@ -62,6 +63,7 @@ private val HomeMusicTableColumns = SongTableColumns(
 )
 
 private const val HomeAlbumRowCount = 2
+private val HomeTopAppBarTitleHeight = 64.dp
 
 @Composable
 fun JvmHomeScreen(
@@ -115,6 +117,7 @@ fun JvmHomeScreen(
                     sectionKey = "recommended_music",
                     title = dailyRecommendations,
                     musicList = recommendedMusicList,
+                    alignTitleWithTopAppBar = true,
                     headerAction = {
                         TextButton(
                             modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
@@ -241,11 +244,16 @@ private class HomeMusicSectionScope(
         sectionKey: String,
         title: String,
         musicList: List<XyMusic>,
+        alignTitleWithTopAppBar: Boolean = false,
         headerAction: @Composable (() -> Unit)? = null,
     ) {
         // 每个分区先添加独立 header，headerAction 用于推荐歌曲的“查看更多”等差异化按钮。
         item(key = "${sectionKey}_header") {
-            JvmHomeDesktopSectionHeader(title = title, action = headerAction)
+            if (alignTitleWithTopAppBar) {
+                JvmHomeTopAppBarSectionHeader(title = title, action = headerAction)
+            } else {
+                JvmHomeDesktopSectionHeader(title = title, action = headerAction)
+            }
         }
 
         // 歌曲表格的通用行为集中在这里，调用处只需要传入当前分区自己的 musicList。
@@ -330,6 +338,22 @@ private fun LazyListScope.homeAlbumSection(
                     onRouter = { onOpenAlbum(album) },
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun JvmHomeTopAppBarSectionHeader(
+    title: String,
+    action: @Composable (() -> Unit)? = null,
+) {
+    XyRow(
+        modifier = Modifier.height(HomeTopAppBarTitleHeight),
+        paddingValues = PaddingValues(horizontal = XyTheme.dimens.outerHorizontalPadding),
+    ) {
+        TopAppBarTitle(title = title)
+        if (action != null) {
+            action()
         }
     }
 }
