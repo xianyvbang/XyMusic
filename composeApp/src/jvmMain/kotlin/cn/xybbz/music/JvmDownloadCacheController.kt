@@ -227,7 +227,7 @@ class JvmDownloadCacheController(
     /**
      * 按公共控制器约定缓存音乐。
      *
-     * JVM 端只有静态音频才进入边播边缓存路径，因此非静态请求直接忽略。
+     * JVM 端普通音频和普通转码流都走 span 缓存，HLS 走分片缓存。
      *
      * @param music 要缓存的歌曲。
      * @param ifStatic 调用方判断出的歌曲是否为静态资源。
@@ -236,10 +236,6 @@ class JvmDownloadCacheController(
         music: XyPlayMusic,
         ifStatic: Boolean,
     ) {
-        // 普通转码流不进入 JVM 边播边缓存；HLS 即使不是 static，也可以按分片缓存。
-        if (!ifStatic && !music.ifHls) {
-            return
-        }
         preparePlaybackUrl(music)
     }
 
@@ -804,6 +800,7 @@ class JvmDownloadCacheController(
      * 判断当前歌曲是否允许进入 JVM 边播边缓存。
      *
      * HLS 和本地文件不走 span 缓存，因为 HLS 有自己的分片协议，本地文件也不需要代理缓存。
+     * 普通转码流与静态音频一样通过本地 Range span 复用缓存。
      *
      * @param music 当前歌曲。
      * @return true 表示可以缓存。
@@ -812,7 +809,6 @@ class JvmDownloadCacheController(
         val settings = settingsManager.get()
         return settings.ifEnableEdgeDownload &&
                 settings.cacheUpperLimit != CacheUpperLimitEnum.No &&
-                music.static &&
                 !music.ifHls &&
                 music.filePath.isNullOrBlank() &&
                 music.musicUrl.isNotBlank() &&
