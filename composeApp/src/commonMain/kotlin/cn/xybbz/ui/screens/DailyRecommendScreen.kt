@@ -52,6 +52,9 @@ import xymusic_kmp.composeapp.generated.resources.daily_recommendations
 import xymusic_kmp.composeapp.generated.resources.return_home
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
+/**
+ * 推荐音乐列表
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DailyRecommendScreen(

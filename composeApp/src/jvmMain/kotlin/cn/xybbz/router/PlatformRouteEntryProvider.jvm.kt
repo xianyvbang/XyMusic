@@ -79,7 +79,11 @@ private val jvmDesktopEntryProvider2 = entryProvider {
     desktopNode<About> { JvmAboutScreen() }
     desktopNode<CacheLimit> { JvmCacheLimitScreen() }
     desktopNode<SelectLibrary> {
-        SelectLibraryScreen(connectionId = it.connectionId, thisLibraryId = it.libraryIds)
+        SelectLibraryScreen(
+            connectionId = it.connectionId,
+            thisLibraryId = it.libraryIds,
+            showBackButton = false
+        )
     }
     desktopNode<DailyRecommend> { DailyRecommendScreen() }
     desktopNode<Download> { DownloadScreen() }

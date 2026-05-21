@@ -60,6 +60,7 @@ import cn.xybbz.ui.xy.XyIconButton as IconButton
 fun SelectLibraryScreen(
     connectionId: Long,
     thisLibraryId: List<String>?,
+    showBackButton: Boolean = true,
     selectLibraryViewModel: SelectLibraryViewModel = koinViewModel<SelectLibraryViewModel>() {
         parametersOf(connectionId, thisLibraryId)
     }
@@ -75,15 +76,17 @@ fun SelectLibraryScreen(
                     title = stringResource(Res.string.media_library_selection)
                 )
             }, navigationIcon = {
-                IconButton(
-                    onClick = {
-                        navigator.goBack()
-                    },
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.arrow_back_24px),
-                        contentDescription = stringResource(Res.string.back_to_connection_info)
-                    )
+                if (showBackButton) {
+                    IconButton(
+                        onClick = {
+                            navigator.goBack()
+                        },
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.arrow_back_24px),
+                            contentDescription = stringResource(Res.string.back_to_connection_info)
+                        )
+                    }
                 }
             })
 
