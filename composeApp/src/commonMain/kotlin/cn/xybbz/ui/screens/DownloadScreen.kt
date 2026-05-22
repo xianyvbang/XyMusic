@@ -20,6 +20,7 @@ package cn.xybbz.ui.screens
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,8 +29,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -51,7 +53,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -85,6 +86,7 @@ import xymusic_kmp.composeapp.generated.resources.close_24px
 import xymusic_kmp.composeapp.generated.resources.confirm_delete_download
 import xymusic_kmp.composeapp.generated.resources.delete_24px
 import xymusic_kmp.composeapp.generated.resources.download_completed
+import xymusic_kmp.composeapp.generated.resources.download_failed
 import xymusic_kmp.composeapp.generated.resources.download_failed_with_reason
 import xymusic_kmp.composeapp.generated.resources.download_list
 import xymusic_kmp.composeapp.generated.resources.download_status_queued
@@ -99,8 +101,10 @@ import xymusic_kmp.composeapp.generated.resources.remove_download_title
 import xymusic_kmp.composeapp.generated.resources.return_home
 import xymusic_kmp.composeapp.generated.resources.settings_24px
 import xymusic_kmp.composeapp.generated.resources.tap_to_resume_download
-import kotlin.math.roundToLong
 import cn.xybbz.ui.xy.XyIconButton as IconButton
+
+private val DownloadCardMinHeight = 112.dp
+private val DownloadCardActionSize = 48.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -195,16 +199,23 @@ fun DownloadItemTrailingContent(
 
     val primary = MaterialTheme.colorScheme.primary
     val coroutineScope = rememberCoroutineScope()
+    val title = task.title ?: task.fileName
+    val progress = task.downloadProgressFraction()
+    val statusColor = downloadStatusColor(task.status)
+    val statusContainerColor = downloadStatusContainerColor(task.status)
+    val supportingText = downloadSupportingText(task)
 
     Card(
         shape = RoundedCornerShape(XyTheme.dimens.corner),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (brush != null) Color.Transparent else backgroundColor
         ), modifier = Modifier
-            .height(84.dp)
+            .heightIn(min = DownloadCardMinHeight)
             .fillMaxWidth()
+            .then(modifier)
             .combinedClickable(
+                enabled = enabled,
                 onClick = {
                     if (isMultiSelectMode) {
                         onItemClick()
@@ -221,98 +232,92 @@ fun DownloadItemTrailingContent(
             )
     ) {
         Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp)
+                .padding(
+                    horizontal = XyTheme.dimens.innerHorizontalPadding,
+                    vertical = XyTheme.dimens.outerVerticalPadding + 2.dp,
+                )
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Box(modifier = Modifier.height(30.dp)) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(
-                        text = (task.title ?: task.fileName),
-                        fontWeight = FontWeight.Bold,
+                        text = title,
+                        modifier = Modifier.weight(1f),
+                        fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         overflow = TextOverflow.Ellipsis,
                         color = textColor
+                    )
+                    DownloadStatusPill(
+                        text = downloadStatusText(task),
+                        contentColor = statusColor,
+                        containerColor = statusContainerColor,
                     )
                 }
 
                 Column(
-                    modifier
+                    Modifier
                         .fillMaxWidth()
-                        .height(30.dp)
+                        .height(26.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-
-                    when (task.status) {
-                        DownloadStatus.QUEUED -> {
-                            DownloadPrompt(
-                                text = stringResource(Res.string.download_status_queued),
-                                fontSize = 14.sp
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(5.dp),
+                        progress = { progress },
+                        color = if (task.status == DownloadStatus.FAILED) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            primary
+                        },
+                        drawStopIndicator = {
+                            drawStopIndicator(
+                                drawScope = this,
+                                stopSize = 0.dp,
+                                color = primary,
+                                strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
                             )
-                        }
-
-                        DownloadStatus.DOWNLOADING -> {
-                            Column {
-                                LinearProgressIndicator(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    progress = { if (task.totalBytes > 0) task.progress / 100f else 0f },
-                                    drawStopIndicator = {
-                                        drawStopIndicator(
-                                            drawScope = this,
-                                            stopSize = 0.dp,
-                                            color = primary,
-                                            strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
-                                        )
-                                    })
-                                Text(
-                                    "${formatBytes(task.downloadedBytes)} / ${formatBytes(task.totalBytes)}",
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.align(Alignment.End)
-                                )
-                            }
-                        }
-
-                        DownloadStatus.PAUSED -> {
-                            DownloadPrompt(
-                                text = stringResource(Res.string.tap_to_resume_download),
-                                fontSize = 14.sp,
-                            )
-                        }
-
-                        DownloadStatus.COMPLETED -> {
-                            DownloadPrompt(
-                                text = stringResource(Res.string.download_completed),
-                                fontSize = 14.sp,
-                            )
-                        }
-
-                        DownloadStatus.FAILED -> {
-                            DownloadPrompt(
-                                text = stringResource(
-                                    Res.string.download_failed_with_reason,
-                                    task.error ?: ""
-                                ),
-                                fontSize = 14.sp,
-                            )
-                        }
-
-                        DownloadStatus.CANCEL -> {
-                            DownloadPrompt(
-                                text = stringResource(Res.string.cancel_download),
-                                fontSize = 14.sp,
-                            )
-                        }
-                    }
+                        },
+                    )
+                    Text(
+                        text = "${(progress * 100).toInt()}% · ${downloadSizeText(task)}",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
 
+                if (supportingText.isNotBlank()) {
+                    Text(
+                        text = supportingText,
+                        fontSize = 12.sp,
+                        color = if (task.status == DownloadStatus.FAILED) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
 
             if (isMultiSelectMode) {
                 IconButton(
-                    modifier = Modifier.offset(x = (10).dp),
+                    modifier = Modifier.size(DownloadCardActionSize),
                     onClick = {
                         onItemClick()
                     },
@@ -323,7 +328,7 @@ fun DownloadItemTrailingContent(
                 }
             } else {
                 IconButton(
-                    modifier = Modifier.offset(x = (10).dp),
+                    modifier = Modifier.size(DownloadCardActionSize),
                     onClick = {
                         coroutineScope.launch {
                             task.uid?.let {
@@ -334,7 +339,7 @@ fun DownloadItemTrailingContent(
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.more_vert_24px),
-                        contentDescription = "${task.title ?: task.fileName}${stringResource(Res.string.other_operations_button_suffix)}"
+                        contentDescription = "${title}${stringResource(Res.string.other_operations_button_suffix)}"
                     )
                 }
             }
@@ -344,16 +349,86 @@ fun DownloadItemTrailingContent(
 }
 
 @Composable
-fun DownloadPrompt(
+private fun DownloadStatusPill(
     text: String,
-    fontSize: TextUnit = 14.sp,
-    color: Color = MaterialTheme.colorScheme.onSurfaceVariant
+    contentColor: Color,
+    containerColor: Color,
 ) {
-    Text(
-        text = text,
-        fontSize = fontSize,
-        color = color
-    )
+    Box(
+        modifier = Modifier
+            .background(
+                color = containerColor,
+                shape = RoundedCornerShape(999.dp),
+            )
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            color = contentColor,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun downloadStatusText(task: XyDownload): String {
+    return when (task.status) {
+        DownloadStatus.QUEUED -> stringResource(Res.string.download_status_queued)
+        DownloadStatus.DOWNLOADING -> "下载中"
+        DownloadStatus.PAUSED -> stringResource(Res.string.tap_to_resume_download)
+        DownloadStatus.COMPLETED -> stringResource(Res.string.download_completed)
+        DownloadStatus.FAILED -> stringResource(Res.string.download_failed)
+        DownloadStatus.CANCEL -> stringResource(Res.string.cancel_download)
+    }
+}
+
+@Composable
+private fun downloadSupportingText(task: XyDownload): String {
+    return when (task.status) {
+        DownloadStatus.QUEUED -> stringResource(Res.string.download_status_queued)
+        DownloadStatus.DOWNLOADING -> ""
+        DownloadStatus.PAUSED -> stringResource(Res.string.tap_to_resume_download)
+        DownloadStatus.COMPLETED -> stringResource(Res.string.download_completed)
+        DownloadStatus.FAILED -> stringResource(
+            Res.string.download_failed_with_reason,
+            task.error ?: ""
+        )
+        DownloadStatus.CANCEL -> stringResource(Res.string.cancel_download)
+    }
+}
+
+@Composable
+private fun downloadStatusColor(status: DownloadStatus): Color {
+    return when (status) {
+        DownloadStatus.DOWNLOADING -> MaterialTheme.colorScheme.primary
+        DownloadStatus.FAILED -> MaterialTheme.colorScheme.error
+        DownloadStatus.COMPLETED -> MaterialTheme.colorScheme.tertiary
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+}
+
+@Composable
+private fun downloadStatusContainerColor(status: DownloadStatus): Color {
+    return downloadStatusColor(status).copy(alpha = 0.12f)
+}
+
+private fun downloadSizeText(task: XyDownload): String {
+    return if (task.totalBytes > 0) {
+        "${formatBytes(task.downloadedBytes)} / ${formatBytes(task.totalBytes)}"
+    } else {
+        formatBytes(task.downloadedBytes)
+    }
+}
+
+private fun XyDownload.downloadProgressFraction(): Float {
+    return when {
+        totalBytes > 0 -> progress.coerceIn(0f, 100f) / 100f
+        status == DownloadStatus.COMPLETED -> 1f
+        else -> 0f
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
