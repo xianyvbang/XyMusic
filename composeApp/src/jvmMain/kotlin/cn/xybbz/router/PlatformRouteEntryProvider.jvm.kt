@@ -24,6 +24,7 @@ import cn.xybbz.ui.screens.JvmCacheLimitScreen
 import cn.xybbz.ui.screens.JvmConnectionConfigInfoScreen
 import cn.xybbz.ui.screens.JvmConnectionManagement
 import cn.xybbz.ui.screens.JvmDailyRecommendScreen
+import cn.xybbz.ui.screens.JvmDownloadScreen
 import cn.xybbz.ui.screens.JvmFavoriteScreen
 import cn.xybbz.ui.screens.JvmGenresInfoScreen
 import cn.xybbz.ui.screens.JvmGenresScreen
@@ -87,7 +88,7 @@ private val jvmDesktopEntryProvider2 = entryProvider {
         )
     }
     desktopNode<DailyRecommend> { JvmDailyRecommendScreen() }
-    desktopNode<Download> { DownloadScreen() }
+    desktopNode<Download> { JvmDownloadScreen() }
     desktopNode<Local> { JvmLocalScreen() }
     desktopNode<SetBackgroundImage> { SetBackgroundImageScreen() }
     desktopNode<ProxyConfig> { ProxyConfigScreen() }
