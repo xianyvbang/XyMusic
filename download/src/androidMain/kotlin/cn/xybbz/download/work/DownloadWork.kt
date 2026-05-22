@@ -38,9 +38,10 @@ class DownloadWork(
                 initialNotification
             )
         )
+        val httpClient = downloadGlobal.httpClientFactory.createHttpClient()
         try {
             httpClientDownloadCore.download(
-                client = downloadGlobal.httpClientFactory.createHttpClient(),
+                client = httpClient,
                 contextWrapper = ContextWrapper(applicationContext),
                 statusChange = statusChange,
                 xyDownload = downloadTask,
@@ -96,6 +97,9 @@ class DownloadWork(
                 isSendNotice = true,
             )
             return Result.failure()
+        } finally {
+            // 当前实现借用共享 HttpClient；释放动作交给 factory 判断是否真的需要 close。
+            downloadGlobal.httpClientFactory.releaseHttpClient(httpClient)
         }
         return Result.success()
     }

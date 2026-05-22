@@ -122,12 +122,12 @@ class DownloadDispatcherImpl(
     fun resume(ids: List<Long>) {
         scope.launch {
             ids.forEach { id ->
-                pausedTasks.remove(id)?.let {
-                    it.status = DownloadStatus.QUEUED
-                    readyTasks.add(it)
-                    db.downloadDao.updateStatus(it.id, DownloadStatus.QUEUED)
-                }
-                failedTasks.remove(id)?.let {
+                val task = pausedTasks.remove(id)
+                    ?: failedTasks.remove(id)
+                    ?: db.downloadDao.selectById(id)
+                        ?.takeIf { it.status == DownloadStatus.PAUSED || it.status == DownloadStatus.FAILED }
+
+                task?.let {
                     it.status = DownloadStatus.QUEUED
                     readyTasks.add(it)
                     db.downloadDao.updateStatus(it.id, DownloadStatus.QUEUED)

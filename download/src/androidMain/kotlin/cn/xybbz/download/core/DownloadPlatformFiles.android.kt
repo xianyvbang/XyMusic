@@ -70,6 +70,8 @@ internal actual object DownloadPlatformFiles {
         // 调用方已经通过 flowOn(Dispatchers.IO) 保证这段阻塞文件 IO 运行在 IO 线程池。
         RandomAccessFile(targetFile, "rw").use { output ->
             // 从断点位置继续写，保持和旧 Android 下载逻辑一致。
+            // 写入前先裁剪到断点位置，避免旧临时文件尾部残留破坏最终媒体文件。
+            output.setLength(startOffset)
             output.seek(startOffset)
             while (!source.exhausted()) {
                 val bytesRead = source.readAvailable(buffer, 0, buffer.size)

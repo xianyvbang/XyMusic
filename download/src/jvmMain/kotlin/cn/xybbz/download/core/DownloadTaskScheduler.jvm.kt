@@ -131,7 +131,7 @@ actual class DownloadTaskScheduler actual constructor(
                 isSendNotice = true,
             )
         } finally {
-            httpClient.close()
+            downloadGlobal.httpClientFactory.releaseHttpClient(httpClient)
         }
     }
 }

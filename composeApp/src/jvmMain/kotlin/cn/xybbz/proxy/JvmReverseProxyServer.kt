@@ -8,7 +8,9 @@ import cn.xybbz.music.HlsResourceStreamResult
 import cn.xybbz.music.JvmDownloadCacheController
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpTimeoutConfig
 import io.ktor.client.plugins.expectSuccess
+import io.ktor.client.plugins.timeout
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.prepareRequest
 import io.ktor.client.request.request
@@ -304,6 +306,10 @@ object JvmReverseProxyServer : KoinComponent {
                 // DataSourceManager 返回的 HttpClient 默认 expectSuccess=true，
                 // 代理场景需要按原样回传 4xx/5xx，因此这里对单次请求显式关闭。
                 expectSuccess = false
+                // JVM 播放代理是长时间流式转发，不能受普通接口 requestTimeout 总耗时限制影响。
+                timeout {
+                    requestTimeoutMillis = HttpTimeoutConfig.INFINITE_TIMEOUT_MS
+                }
 
                 // 先透传原始请求头，再补充业务要求中的自定义请求头。
                 copyHeaders(

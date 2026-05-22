@@ -52,6 +52,10 @@ class DownloadModule {
                     override fun createHttpClient(): HttpClient {
                         return dataSourceManager.getHttpClient()
                     }
+
+                    override fun releaseHttpClient(client: HttpClient) {
+                        // 这里返回的是数据源层共享 HttpClient，下载任务结束不能关闭它。
+                    }
                 }
             )
         return downLoadManager;

@@ -8,6 +8,8 @@ import cn.xybbz.download.internal.DownloadLogger
 import cn.xybbz.download.utils.FileUtil
 import cn.xybbz.platform.ContextWrapper
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpTimeoutConfig
+import io.ktor.client.plugins.timeout
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
@@ -34,6 +36,10 @@ class HttpClientDownloadCore : IDownloadCore {
         // 通过临时文件长度实现断点续传，commonMain 不直接接触平台文件类。
         val downloadedBytes = DownloadPlatformFiles.fileLength(xyDownload.tempFilePath)
         val request = client.prepareGet(xyDownload.url) {
+            // 下载是长时间流式传输，不能受普通接口 requestTimeout 总耗时限制影响。
+            timeout {
+                requestTimeoutMillis = HttpTimeoutConfig.INFINITE_TIMEOUT_MS
+            }
             header("Range", "bytes=${downloadedBytes}-")
         }
 
@@ -46,9 +52,23 @@ class HttpClientDownloadCore : IDownloadCore {
                     return@execute
                 }
 
-                var currentBytes = downloadedBytes
+                // 如果服务端忽略 Range 并返回 200 OK，响应体就是完整文件。
+                // 这种情况下必须从头覆盖临时文件，否则会把完整文件追加到旧半截后面。
+                val writeStartOffset = if (
+                    downloadedBytes > 0L &&
+                    response.status == HttpStatusCode.OK
+                ) {
+                    DownloadLogger.d(
+                        DownloadConstants.LOG_TAG,
+                        "Server ignored Range for ${xyDownload.url}, restarting download from beginning.",
+                    )
+                    0L
+                } else {
+                    downloadedBytes
+                }
+                var currentBytes = writeStartOffset
                 var lastUpdateTime = Clock.System.now().toEpochMilliseconds()
-                var lastDownloadBytes = downloadedBytes
+                var lastDownloadBytes = writeStartOffset
 
                 emit(
                     DownloadState.InProgress(
@@ -62,7 +82,7 @@ class HttpClientDownloadCore : IDownloadCore {
 
                 val writeResult = DownloadPlatformFiles.writeResponseToFile(
                     path = xyDownload.tempFilePath,
-                    startOffset = downloadedBytes,
+                    startOffset = writeStartOffset,
                     source = response.bodyAsChannel(),
                 ) { writtenBytes ->
                     // 每个分片写入后在这里统一计算进度，并感知暂停/取消指令。

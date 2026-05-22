@@ -7,6 +7,9 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.CacheUpperLimitEnum
 import cn.xybbz.platform.ContextWrapper
 import cn.xybbz.proxy.JvmReverseProxyServer
+import io.ktor.client.plugins.HttpTimeoutConfig
+import io.ktor.client.plugins.timeout
+import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsText
@@ -659,7 +662,9 @@ class JvmDownloadCacheController(
 
         val client = dataSourceManager.getHttpClient()
         return runCatching {
-            client.prepareGet(resourceUrl).execute { response ->
+            client.prepareGet(resourceUrl) {
+                disableRequestTimeoutForMediaStream()
+            }.execute { response ->
                 // 非成功响应不写入缓存，交给播放器后续请求或上层错误处理。
                 if (response.status.value !in 200..299) {
                     return@execute false
@@ -779,6 +784,7 @@ class JvmDownloadCacheController(
         val client = dataSourceManager.getHttpClient()
         return runCatching {
             val request = client.prepareGet(session.url) {
+                disableRequestTimeoutForMediaStream()
                 // 上游 Range 是 span 缓存的基础；非 0 seek 如果拿不到 206，就不能保证写出的内容对应声明区间。
                 header(HttpHeaders.Range, "bytes=$start-$endInclusive")
             }
@@ -1145,7 +1151,9 @@ class JvmDownloadCacheController(
     private suspend fun prefetchFullSessionBody(session: CacheSession) {
         val client = dataSourceManager.getHttpClient()
         val fetched = runCatching {
-            client.prepareGet(session.url).execute { response ->
+            client.prepareGet(session.url) {
+                disableRequestTimeoutForMediaStream()
+            }.execute { response ->
                 if (response.status.value !in 200..299) {
                     return@execute false
                 }
@@ -1647,6 +1655,16 @@ class JvmDownloadCacheController(
             .takeIf { it.isNotEmpty() && it != "*" }
             ?: return null
         return totalText.toLongOrNull()?.takeIf { it > 0L }
+    }
+
+    /**
+     * 播放缓存回源是长时间流式传输，不能受普通接口 requestTimeout 总耗时限制影响。
+     * 这里只关闭请求总耗时限制，连接超时和 socket 空闲超时仍沿用数据源 HttpClient 的配置。
+     */
+    private fun HttpRequestBuilder.disableRequestTimeoutForMediaStream() {
+        timeout {
+            requestTimeoutMillis = HttpTimeoutConfig.INFINITE_TIMEOUT_MS
+        }
     }
 
     /**

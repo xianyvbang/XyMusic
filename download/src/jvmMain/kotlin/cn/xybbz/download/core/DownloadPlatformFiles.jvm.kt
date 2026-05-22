@@ -63,6 +63,8 @@ internal actual object DownloadPlatformFiles {
         var currentBytes = startOffset
 
         RandomAccessFile(targetFile, "rw").use { output ->
+            // 写入前先裁剪到断点位置，避免旧临时文件尾部残留破坏最终媒体文件。
+            output.setLength(startOffset)
             output.seek(startOffset)
 
             while (!source.exhausted()) {
