@@ -11,7 +11,7 @@ import xymusic_kmp.composeapp.generated.resources.favorite
 import xymusic_kmp.composeapp.generated.resources.genres
 import xymusic_kmp.composeapp.generated.resources.home
 import xymusic_kmp.composeapp.generated.resources.label_24px
-import xymusic_kmp.composeapp.generated.resources.local_music
+import xymusic_kmp.composeapp.generated.resources.local_and_download
 import xymusic_kmp.composeapp.generated.resources.person_24px
 import xymusic_kmp.composeapp.generated.resources.artist
 import xymusic_kmp.composeapp.generated.resources.music_note_24px
@@ -35,7 +35,7 @@ val jvmTopRouterDataList = listOf(
         route = Music
     ),
     JvmTopRouterData(
-        title = Res.string.local_music,
+        title = Res.string.local_and_download,
         icon = Res.drawable.queue_music_24px,
         route = Local
     ),

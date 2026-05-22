@@ -440,6 +440,7 @@
     <string name="confirm_delete_download">注意! 已完成下载的任务,此处只会删除下载任务,不会删除音乐文件,  确定要删除这%1$d个下载吗?</string>
     <string name="download_list">下载列表</string>
     <string name="local_music">本地音乐</string>
+    <string name="local_and_download">本地和下载</string>
     <string name="add_download_list">已添加到下载列表</string>
     <string name="minutes">分钟</string>
     <string name="background_image">背景图片</string>

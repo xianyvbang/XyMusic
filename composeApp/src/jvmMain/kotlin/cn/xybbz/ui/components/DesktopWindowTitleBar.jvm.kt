@@ -84,9 +84,9 @@ import xymusic_kmp.composeapp.generated.resources.chevron_right_24px
 import xymusic_kmp.composeapp.generated.resources.clear
 import xymusic_kmp.composeapp.generated.resources.connection_link
 import xymusic_kmp.composeapp.generated.resources.download_24px
-import xymusic_kmp.composeapp.generated.resources.download_list
 import xymusic_kmp.composeapp.generated.resources.icon
 import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
+import xymusic_kmp.composeapp.generated.resources.local_and_download
 import xymusic_kmp.composeapp.generated.resources.logo_new
 import xymusic_kmp.composeapp.generated.resources.no_connection_selected
 import xymusic_kmp.composeapp.generated.resources.open_settings_page_button
@@ -407,7 +407,7 @@ private fun DesktopTitleActions(
                 enabled = true,
                 onClick = { navigator.navigate(Download) },
                 modifier = Modifier.desktopTitleBarHitTarget(hitTestOwner, "DownloadButton"),
-                contentDescription = stringResource(Res.string.download_list)
+                contentDescription = stringResource(Res.string.local_and_download)
             )
             DesktopToolbarIconButton(
                 resource = Res.drawable.refresh_24px,

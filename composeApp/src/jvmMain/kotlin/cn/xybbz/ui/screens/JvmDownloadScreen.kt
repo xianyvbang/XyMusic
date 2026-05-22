@@ -1,4 +1,4 @@
-﻿/*
+/*
  *   XyMusic
  *   Copyright (C) 2023 xianyvbang
  *
@@ -18,9 +18,8 @@
 
 package cn.xybbz.ui.screens
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -38,21 +37,22 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.ProgressIndicatorDefaults.drawStopIndicator
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
@@ -63,289 +63,473 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import cn.xybbz.api.converter.jsonSerializer
 import cn.xybbz.common.utils.formatBytes
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.download.database.data.XyDownload
 import cn.xybbz.download.enums.DownloadStatus
+import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.data.music.XyMusic
-import cn.xybbz.router.Setting
+import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import cn.xybbz.localdata.enums.PlayerModeEnum
+import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.ScreenLazyColumn
-import cn.xybbz.ui.components.TopAppBarComponent
-import cn.xybbz.ui.components.TopAppBarTitle
-import cn.xybbz.ui.components.XySelectAllComponent
+import cn.xybbz.ui.components.SongTableColumns
+import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
+import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyRow
+import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyTextLarge
+import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.DownloadViewModel
-import kotlinx.coroutines.launch
+import cn.xybbz.viewmodel.LocalViewModel
+import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.cancel_24px
 import xymusic_kmp.composeapp.generated.resources.cancel_download
-import xymusic_kmp.composeapp.generated.resources.close
-import xymusic_kmp.composeapp.generated.resources.close_24px
 import xymusic_kmp.composeapp.generated.resources.confirm_delete_download
 import xymusic_kmp.composeapp.generated.resources.delete_24px
+import xymusic_kmp.composeapp.generated.resources.download_24px
 import xymusic_kmp.composeapp.generated.resources.download_completed
 import xymusic_kmp.composeapp.generated.resources.download_failed_with_reason
-import xymusic_kmp.composeapp.generated.resources.download_list
 import xymusic_kmp.composeapp.generated.resources.download_status_queued
-import xymusic_kmp.composeapp.generated.resources.more_vert_24px
-import xymusic_kmp.composeapp.generated.resources.open_selection_function
-import xymusic_kmp.composeapp.generated.resources.open_settings_page_button
-import xymusic_kmp.composeapp.generated.resources.other_operations_button_suffix
+import xymusic_kmp.composeapp.generated.resources.local_and_download
+import xymusic_kmp.composeapp.generated.resources.music_note_24px
 import xymusic_kmp.composeapp.generated.resources.pause_24px
-import xymusic_kmp.composeapp.generated.resources.play_circle_24px
-import xymusic_kmp.composeapp.generated.resources.playlist_add_check_24px
 import xymusic_kmp.composeapp.generated.resources.remove_download_title
-import xymusic_kmp.composeapp.generated.resources.settings_24px
 import xymusic_kmp.composeapp.generated.resources.tap_to_resume_download
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
-private val JvmDownloadTitleColumnWidth = 320.dp
-private val JvmDownloadStatusColumnWidth = 116.dp
-private val JvmDownloadProgressColumnWidth = 220.dp
-private val JvmDownloadSizeColumnWidth = 180.dp
-private val JvmDownloadActionsColumnWidth = 176.dp
-private val JvmDownloadSelectionColumnWidth = 56.dp
-private val JvmDownloadRowHeight = 62.dp
-private val JvmDownloadActionButtonSize = 32.dp
+private val JvmDownloadSongColumnWidth = 420.dp
+private val JvmDownloadActionsColumnWidth = 112.dp
+private val JvmDownloadProgressColumnWidth = 300.dp
+private val JvmDownloadSizeColumnWidth = 120.dp
+private val JvmDownloadRowHeight = 58.dp
+private val JvmDownloadCoverSize = 38.dp
+private val JvmDownloadActionButtonSize = 30.dp
 private val JvmDownloadActionIconSize = 20.dp
+private val JvmDownloadToolbarButtonHeight = 32.dp
 
-@OptIn(ExperimentalMaterial3Api::class)
+private val JvmLocalMusicTableColumns = SongTableColumns(
+    showFavoriteColumn = true,
+    showInlineActions = true,
+    showInlineDownloadButton = false,
+    showAlbumColumn = true,
+    showMetaColumn = false,
+)
+
+internal enum class JvmLocalDownloadTab {
+    LocalSongs,
+    Downloading,
+}
+
 @Composable
 fun JvmDownloadScreen(
-    downloadViewModel: DownloadViewModel = koinViewModel<DownloadViewModel>()
+    downloadViewModel: DownloadViewModel = koinViewModel<DownloadViewModel>(),
+    localViewModel: LocalViewModel = koinViewModel<LocalViewModel>(),
 ) {
+    JvmLocalDownloadScreen(
+        initialTab = JvmLocalDownloadTab.Downloading,
+        downloadViewModel = downloadViewModel,
+        localViewModel = localViewModel,
+    )
+}
+
+@Composable
+internal fun JvmLocalDownloadScreen(
+    initialTab: JvmLocalDownloadTab,
+    downloadViewModel: DownloadViewModel = koinViewModel<DownloadViewModel>(),
+    localViewModel: LocalViewModel = koinViewModel<LocalViewModel>(),
+) {
+    val navigator = LocalNavigator.current
+    val artistClickHandler = rememberMusicArtistClickHandler()
+    val allDownloadTasks by downloadViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
+    val localSongs by localViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
+    val favoriteSet by localViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
+    val activeDownloadTasks = remember(allDownloadTasks) {
+        allDownloadTasks.filter(::isActiveDownloadTask)
+    }
+    val currentPlayingMusicIdFlow = remember(localViewModel) {
+        localViewModel.musicController.musicInfoFlow.map { musicInfo ->
+            musicInfo?.itemId
+        }
+    }
+    var selectedTab by remember(initialTab) {
+        mutableStateOf(initialTab)
+    }
 
     val removeDownloadTitle = stringResource(Res.string.remove_download_title)
+    val confirmClearDownloads = stringResource(
+        Res.string.confirm_delete_download,
+        activeDownloadTasks.size
+    )
 
-    val tasks by downloadViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
-    XyColumnScreen {
-        JvmMultiSelectTopAppEnd(
-            isMultiSelectMode = downloadViewModel.isMultiSelectMode,
-            isSelectAll = downloadViewModel.isSelectAll,
-            onExitMultiSelectMode = { downloadViewModel.exitMultiSelectMode() },
-            onEnterMultiSelectMode = { downloadViewModel.enterMultiSelectMode() },
-            onPause = { downloadViewModel.performBatchPause() },
-            onResume = { downloadViewModel.performBatchResume() },
-            onCancel = { downloadViewModel.performBatchCancel() },
-            onDelete = {
-                if (downloadViewModel.selectedTaskIds.isNotEmpty())
-                    AlertDialogObject(
-                        title = removeDownloadTitle,
-                        content = {
-                            XyTextSubSmall(
-                                text = stringResource(
-                                    Res.string.confirm_delete_download,
-                                    downloadViewModel.selectedTaskIds.size
+    ScreenLazyColumn(
+        contentPadding = PaddingValues(
+            horizontal = XyTheme.dimens.outerHorizontalPadding,
+        ),
+    ) {
+        item(key = "local_download_header") {
+            JvmLocalDownloadHeader(
+                selectedTab = selectedTab,
+                localCount = localSongs.size,
+                downloadingCount = activeDownloadTasks.size,
+                onSelectTab = { selectedTab = it },
+                onResumeAll = { downloadViewModel.resumeDownloads(activeDownloadTasks) },
+                onPauseAll = { downloadViewModel.pauseDownloads(activeDownloadTasks) },
+                onClearAll = {
+                    if (activeDownloadTasks.isNotEmpty()) {
+                        AlertDialogObject(
+                            title = removeDownloadTitle,
+                            content = {
+                                XyTextSubSmall(text = confirmClearDownloads)
+                            },
+                            onConfirmation = {
+                                downloadViewModel.deleteDownloads(activeDownloadTasks)
+                            },
+                            ifWarning = true,
+                        ).show()
+                    }
+                },
+            )
+        }
+
+        when (selectedTab) {
+            JvmLocalDownloadTab.LocalSongs -> {
+                songTableItems(
+                    tableKey = "local_download_local_music",
+                    songs = localSongs,
+                    columns = JvmLocalMusicTableColumns,
+                    ifFavorite = { music -> music.itemId in favoriteSet },
+                    currentPlayingMusicIdFlow = currentPlayingMusicIdFlow,
+                    onSongClick = { _, music ->
+                        localViewModel.musicList(
+                            OnMusicPlayParameter(
+                                musicId = music.itemId,
+                                albumId = music.album,
+                            ),
+                            downloadList = localSongs,
+                            playerModeEnum = PlayerModeEnum.SEQUENTIAL_PLAYBACK,
+                        )
+                    },
+                    onOpenArtist = artistClickHandler::openMusicArtists,
+                    onOpenAlbum = { music ->
+                        if (music.album.isNotBlank()) {
+                            navigator.navigate(
+                                AlbumInfo(
+                                    music.album,
+                                    MusicDataTypeEnum.ALBUM,
                                 )
                             )
-                        }, onConfirmation = {
-                            downloadViewModel.performBatchDelete()
-                        }, onDismissRequest = {
-                            downloadViewModel.enterMultiSelectMode()
-                        }, ifWarning = true
-                    ).show()
-            },
-            onSelectAll = {
-                downloadViewModel.toggleSelectionAll()
-            }
-        )
-
-        ScreenLazyColumn(
-            contentPadding = PaddingValues(
-                horizontal = XyTheme.dimens.outerHorizontalPadding
-            ),
-        ) {
-            item(key = "download_table_header") {
-                JvmDownloadTableHeader(
-                    isMultiSelectMode = downloadViewModel.isMultiSelectMode,
-                )
-            }
-            items(tasks, key = { it.id }) { task ->
-                JvmDownloadTableRow(
-                    task = task,
-                    isMultiSelectMode = downloadViewModel.isMultiSelectMode,
-                    isSelected = downloadViewModel.selectedTaskIds.contains(task.id),
-                    onItemClick = {
-                        if (downloadViewModel.isMultiSelectMode) {
-                            downloadViewModel.toggleSelection(task.id)
                         }
                     },
-                    onItemLongClick = {
-                        downloadViewModel.enterMultiSelectMode()
-                        downloadViewModel.toggleSelection(task.id)
+                    onFavoriteClick = { music ->
+                        localViewModel.musicController.invokingOnFavorite(music.itemId)
                     },
-                    onPause = { downloadViewModel.pauseDownload(task.id) },
-                    onResume = { downloadViewModel.resumeDownload(task.id) },
-                    onCancel = { downloadViewModel.cancelDownload(task.id) },
-                    onDelete = { downloadViewModel.deleteDownload(task.id) },
-                    onGetMusicInfo = { downloadViewModel.getMusicInfoById(it) }
+                    onDownloadClick = {},
+                    onMoreClick = { music ->
+                        music.show()
+                    },
                 )
+            }
+
+            JvmLocalDownloadTab.Downloading -> {
+                item(key = "download_table_header") {
+                    JvmDownloadTableHeader()
+                }
+                items(activeDownloadTasks, key = { it.id }) { task ->
+                    JvmDownloadTableRow(
+                        task = task,
+                        onPause = { downloadViewModel.pauseDownload(task.id) },
+                        onResume = { downloadViewModel.resumeDownload(task.id) },
+                        onDelete = { downloadViewModel.deleteDownload(task.id) },
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun JvmDownloadTableHeader(
-    isMultiSelectMode: Boolean,
+private fun JvmLocalDownloadHeader(
+    selectedTab: JvmLocalDownloadTab,
+    localCount: Int,
+    downloadingCount: Int,
+    onSelectTab: (JvmLocalDownloadTab) -> Unit,
+    onResumeAll: () -> Unit,
+    onPauseAll: () -> Unit,
+    onClearAll: () -> Unit,
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        XyRow(
-            paddingValues = PaddingValues(
-                horizontal = XyTheme.dimens.innerHorizontalPadding,
-                vertical = XyTheme.dimens.outerVerticalPadding,
-            )
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = XyTheme.dimens.outerVerticalPadding),
+    ) {
+        XyTextLarge(
+            text = stringResource(Res.string.local_and_download),
+            color = desktopColors.textPrimary,
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.headlineMedium.copy(fontSize = 30.sp),
+        )
+        Row(
+            modifier = Modifier.padding(top = 18.dp),
+            horizontalArrangement = Arrangement.spacedBy(32.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            JvmDownloadTableCell("标题", JvmDownloadTitleColumnWidth, desktopColors.textSecondary)
-            JvmDownloadTableCell("状态", JvmDownloadStatusColumnWidth, desktopColors.textSecondary)
-            JvmDownloadTableCell("进度", JvmDownloadProgressColumnWidth, desktopColors.textSecondary)
-            JvmDownloadTableCell("大小", JvmDownloadSizeColumnWidth, desktopColors.textSecondary)
-            if (isMultiSelectMode) {
-                JvmDownloadTableSpacer(JvmDownloadSelectionColumnWidth)
-            } else {
-                JvmDownloadTableCell(
-                    "操作",
-                    JvmDownloadActionsColumnWidth,
-                    desktopColors.textSecondary,
-                    textAlign = TextAlign.Center,
+            JvmLocalDownloadTabButton(
+                label = "本地歌曲$localCount",
+                selected = selectedTab == JvmLocalDownloadTab.LocalSongs,
+                onClick = { onSelectTab(JvmLocalDownloadTab.LocalSongs) },
+            )
+            JvmLocalDownloadTabButton(
+                label = "正在下载$downloadingCount",
+                selected = selectedTab == JvmLocalDownloadTab.Downloading,
+                onClick = { onSelectTab(JvmLocalDownloadTab.Downloading) },
+            )
+        }
+
+        if (selectedTab == JvmLocalDownloadTab.Downloading) {
+            Row(
+                modifier = Modifier.padding(top = 22.dp, bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                JvmDownloadToolbarButton(
+                    icon = Res.drawable.download_24px,
+                    text = "开始",
+                    onClick = onResumeAll,
+                )
+                JvmDownloadToolbarButton(
+                    icon = Res.drawable.pause_24px,
+                    text = "暂停",
+                    onClick = onPauseAll,
+                )
+                JvmDownloadToolbarButton(
+                    icon = Res.drawable.delete_24px,
+                    text = "清空",
+                    onClick = onClearAll,
                 )
             }
+        } else {
+            Spacer(modifier = Modifier.height(14.dp))
         }
-        HorizontalDivider(color = desktopColors.divider)
+    }
+}
+
+@Composable
+private fun JvmLocalDownloadTabButton(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(4.dp))
+            .clickable(onClick = onClick)
+            .pointerHoverIcon(PointerIcon.Hand)
+            .padding(horizontal = 2.dp, vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = label,
+            color = if (selected) desktopColors.theme else desktopColors.textPrimary,
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+            maxLines = 1,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Box(
+            modifier = Modifier
+                .width(26.dp)
+                .height(3.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(if (selected) desktopColors.theme else Color.Transparent),
+        )
+    }
+}
+
+@Composable
+private fun JvmDownloadToolbarButton(
+    icon: DrawableResource,
+    text: String,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .height(JvmDownloadToolbarButtonHeight)
+            .clip(RoundedCornerShape(JvmDownloadToolbarButtonHeight / 2))
+            .background(desktopColors.bgHover.copy(alpha = 0.86f))
+            .clickable(onClick = onClick)
+            .pointerHoverIcon(PointerIcon.Hand)
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = text,
+            tint = desktopColors.textPrimary,
+            modifier = Modifier.size(18.dp),
+        )
+        Text(
+            text = text,
+            color = desktopColors.textPrimary,
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 14.sp),
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun JvmDownloadTableHeader() {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = XyTheme.dimens.innerHorizontalPadding,
+                    vertical = XyTheme.dimens.outerVerticalPadding,
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            JvmDownloadTableCell("歌名/歌手", JvmDownloadSongColumnWidth, desktopColors.textSecondary)
+            JvmDownloadTableSpacer(JvmDownloadActionsColumnWidth)
+            JvmDownloadTableCell("进度", JvmDownloadProgressColumnWidth, desktopColors.textSecondary)
+            JvmDownloadTableCell(
+                "大小",
+                JvmDownloadSizeColumnWidth,
+                desktopColors.textSecondary,
+                textAlign = TextAlign.End,
+            )
+        }
+        HorizontalDivider(color = desktopColors.divider.copy(alpha = 0.45f))
     }
 }
 
 @Composable
 private fun JvmDownloadTableRow(
     task: XyDownload,
-    isMultiSelectMode: Boolean,
-    isSelected: Boolean,
-    onItemClick: () -> Unit,
-    onItemLongClick: () -> Unit,
     onPause: () -> Unit,
     onResume: () -> Unit,
-    onCancel: () -> Unit,
     onDelete: () -> Unit,
-    onGetMusicInfo: suspend (String) -> XyMusic?
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
-    val coroutineScope = rememberCoroutineScope()
-    val rowBackgroundColor = if (hovered || isSelected) {
-        desktopColors.bgHover
-    } else {
-        Color.Transparent
-    }
+    val rowBackgroundColor = desktopColors.bgHover.copy(alpha = if (hovered) 0.78f else 0.54f)
 
     Row(
         modifier = Modifier
             .height(JvmDownloadRowHeight)
             .fillMaxWidth()
-            .background(rowBackgroundColor, RoundedCornerShape(XyTheme.dimens.outerVerticalPadding / 2))
+            .clip(RoundedCornerShape(XyTheme.dimens.outerVerticalPadding / 2))
+            .background(rowBackgroundColor)
             .combinedClickable(
                 interactionSource = interactionSource,
                 indication = null,
-                onClick = {
-                    if (isMultiSelectMode) {
-                        onItemClick()
-                    }
-                },
-                onLongClick = onItemLongClick
+                onClick = {},
+                onLongClick = {},
             )
-            .pointerHoverIcon(PointerIcon.Hand)
             .padding(
                 horizontal = XyTheme.dimens.innerHorizontalPadding,
-                vertical = XyTheme.dimens.outerVerticalPadding,
+                vertical = XyTheme.dimens.outerVerticalPadding / 2,
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         JvmDownloadTitleCell(task = task)
-        JvmDownloadStatusCell(task = task)
+        JvmDownloadActionsCell(
+            task = task,
+            onPause = onPause,
+            onResume = onResume,
+            onDelete = onDelete,
+        )
         JvmDownloadProgressCell(task = task)
         JvmDownloadTableCell(
             text = jvmDownloadSizeText(task),
             width = JvmDownloadSizeColumnWidth,
             color = desktopColors.textSecondary,
+            textAlign = TextAlign.End,
         )
-        if (isMultiSelectMode) {
-            Box(
-                modifier = Modifier.width(JvmDownloadSelectionColumnWidth),
-                contentAlignment = Alignment.Center,
-            ) {
-                RadioButton(
-                    selected = isSelected,
-                    onClick = onItemClick,
-                    modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
-                )
-            }
-        } else {
-            JvmDownloadActionsCell(
-                task = task,
-                onPause = onPause,
-                onResume = onResume,
-                onCancel = onCancel,
-                onDelete = onDelete,
-                onMore = {
-                    coroutineScope.launch {
-                        task.uid?.let {
-                            onGetMusicInfo(it)?.show()
-                        }
-                    }
-                },
+    }
+}
+
+@Composable
+private fun JvmDownloadTitleCell(task: XyDownload) {
+    val music = remember(task.data) { task.toMusicOrNull() }
+    val artistText = music?.artists
+        ?.joinToString()
+        ?.takeIf { it.isNotBlank() }
+        ?: task.fileName.substringBeforeLast('.', missingDelimiterValue = "")
+    val title = task.title
+        ?: music?.name
+        ?: task.fileName.substringBeforeLast('.', missingDelimiterValue = task.fileName)
+    val coverUrl = task.cover ?: music?.pic
+
+    Row(
+        modifier = Modifier.width(JvmDownloadSongColumnWidth),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        JvmDownloadCover(coverUrl = coverUrl)
+        Column(
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.weight(1f),
+        ) {
+            Text(
+                text = title,
+                color = desktopColors.textPrimary,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp),
+            )
+            XyTextSub(
+                text = artistText,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = desktopColors.textSecondary,
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
             )
         }
     }
 }
 
 @Composable
-private fun JvmDownloadTitleCell(task: XyDownload) {
-    Column(
-        modifier = Modifier.width(JvmDownloadTitleColumnWidth),
-        verticalArrangement = Arrangement.Center,
-    ) {
-        XyText(
-            text = task.title ?: task.fileName,
-            fontWeight = FontWeight.Medium,
-            maxLines = 1,
-            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp),
-            color = desktopColors.textPrimary,
-        )
-        XyTextSubSmall(
-            text = task.fileName,
-            maxLines = 1,
-            color = desktopColors.textSecondary,
-        )
-    }
-}
-
-@Composable
-private fun JvmDownloadStatusCell(task: XyDownload) {
-    val statusColor = jvmDownloadStatusColor(task.status)
+private fun JvmDownloadCover(coverUrl: String?) {
     Box(
-        modifier = Modifier.width(JvmDownloadStatusColumnWidth),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        Text(
-            text = jvmDownloadStatusText(task),
-            color = statusColor,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.bodySmall.copy(
-                fontWeight = FontWeight.Medium,
-                fontSize = 13.sp,
+        modifier = Modifier
+            .size(JvmDownloadCoverSize)
+            .clip(RoundedCornerShape(4.dp))
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        desktopColors.theme.copy(alpha = 0.75f),
+                        desktopColors.bgHover,
+                    )
+                )
             ),
-        )
+        contentAlignment = Alignment.Center,
+    ) {
+        if (coverUrl.isNullOrBlank()) {
+            Icon(
+                painter = painterResource(Res.drawable.music_note_24px),
+                contentDescription = null,
+                tint = desktopColors.textPrimary,
+                modifier = Modifier.size(20.dp),
+            )
+        } else {
+            XyImage(
+                modifier = Modifier.matchParentSize(),
+                model = coverUrl,
+                contentDescription = null,
+            )
+        }
     }
 }
 
@@ -363,6 +547,8 @@ private fun JvmDownloadProgressCell(task: XyDownload) {
                 .fillMaxWidth()
                 .height(4.dp),
             progress = { progress },
+            color = desktopColors.theme,
+            trackColor = desktopColors.bgHover.copy(alpha = 0.72f),
             drawStopIndicator = {
                 drawStopIndicator(
                     drawScope = this,
@@ -372,29 +558,14 @@ private fun JvmDownloadProgressCell(task: XyDownload) {
                 )
             },
         )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 6.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "${(progress * 100).toInt()}%",
-                color = desktopColors.textSecondary,
-                maxLines = 1,
-                style = MaterialTheme.typography.labelSmall,
-            )
-            if (task.status == DownloadStatus.FAILED && !task.error.isNullOrBlank()) {
-                Text(
-                    text = task.error.orEmpty(),
-                    color = MaterialTheme.colorScheme.error,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.labelSmall,
-                )
-            }
-        }
+        Text(
+            modifier = Modifier.padding(top = 7.dp),
+            text = jvmDownloadStatusText(task),
+            color = jvmDownloadStatusColor(task.status),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
+        )
     }
 }
 
@@ -403,13 +574,11 @@ private fun JvmDownloadActionsCell(
     task: XyDownload,
     onPause: () -> Unit,
     onResume: () -> Unit,
-    onCancel: () -> Unit,
     onDelete: () -> Unit,
-    onMore: () -> Unit,
 ) {
     Row(
         modifier = Modifier.width(JvmDownloadActionsColumnWidth),
-        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         when (task.status) {
@@ -425,7 +594,7 @@ private fun JvmDownloadActionsCell(
             DownloadStatus.PAUSED,
             DownloadStatus.FAILED -> {
                 JvmDownloadActionButton(
-                    icon = Res.drawable.play_circle_24px,
+                    icon = Res.drawable.download_24px,
                     contentDescription = "Resume download",
                     onClick = onResume,
                 )
@@ -437,33 +606,10 @@ private fun JvmDownloadActionsCell(
             }
         }
 
-        if (task.status != DownloadStatus.COMPLETED && task.status != DownloadStatus.CANCEL) {
-            JvmDownloadActionButton(
-                icon = Res.drawable.cancel_24px,
-                contentDescription = "Cancel download",
-                onClick = onCancel,
-            )
-        } else {
-            Spacer(modifier = Modifier.size(JvmDownloadActionButtonSize))
-        }
-
-        if (task.status == DownloadStatus.COMPLETED ||
-            task.status == DownloadStatus.CANCEL ||
-            task.status == DownloadStatus.FAILED
-        ) {
-            JvmDownloadActionButton(
-                icon = Res.drawable.delete_24px,
-                contentDescription = "Delete download",
-                onClick = onDelete,
-            )
-        } else {
-            Spacer(modifier = Modifier.size(JvmDownloadActionButtonSize))
-        }
-
         JvmDownloadActionButton(
-            icon = Res.drawable.more_vert_24px,
-            contentDescription = "${task.title ?: task.fileName}${stringResource(Res.string.other_operations_button_suffix)}",
-            onClick = onMore,
+            icon = Res.drawable.delete_24px,
+            contentDescription = "Delete download",
+            onClick = onDelete,
         )
     }
 }
@@ -542,8 +688,9 @@ private fun jvmDownloadStatusColor(status: DownloadStatus): Color {
 }
 
 private fun jvmDownloadSizeText(task: XyDownload): String {
-    return if (task.totalBytes > 0) {
-        "${formatBytes(task.downloadedBytes)} / ${formatBytes(task.totalBytes)}"
+    val total = task.totalBytes.takeIf { it > 0 } ?: task.fileSize
+    return if (total > 0) {
+        formatBytes(total)
     } else {
         formatBytes(task.downloadedBytes)
     }
@@ -557,113 +704,22 @@ private fun XyDownload.progressFraction(): Float {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun JvmMultiSelectTopAppEnd(
-    isMultiSelectMode: Boolean,
-    isSelectAll: Boolean,
-    onExitMultiSelectMode: () -> Unit,
-    onEnterMultiSelectMode: () -> Unit,
-    onPause: () -> Unit,
-    onResume: () -> Unit,
-    onCancel: () -> Unit,
-    onDelete: () -> Unit,
-    onSelectAll: () -> Unit
-) {
-    val navigator = LocalNavigator.current
-
-    AnimatedContent(isMultiSelectMode, label = "animated content") {
-        if (it) {
-            TopAppBarComponent(
-                title = {},
-                navigationIcon = {
-                    Row(
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(onClick = composeClick {
-                            onExitMultiSelectMode()
-                        }) {
-                            Icon(
-                                painter = painterResource(Res.drawable.close_24px),
-                                contentDescription = stringResource(Res.string.close)
-                            )
-                        }
-                        XySelectAllComponent(
-                            isSelectAll = isSelectAll,
-                            horizontalArrangement = Arrangement.End,
-                            onSelectAll = onSelectAll
-                        )
-                    }
-
-
-                }, actions = {
-                    AnimatedVisibility(isMultiSelectMode) {
-                        Row() {
-                            IconButton(onClick = composeClick(onClick = onPause)) {
-                                Icon(
-                                    painter = painterResource(Res.drawable.pause_24px),
-                                    contentDescription = "Pause selected"
-                                )
-                            }
-                            IconButton(onClick = composeClick(onClick = onResume)) {
-                                Icon(
-                                    painter = painterResource(Res.drawable.play_circle_24px),
-                                    contentDescription = "Resume selected"
-                                )
-                            }
-                            IconButton(onClick = composeClick(onClick = onCancel)) {
-                                Icon(
-                                    painter = painterResource(Res.drawable.cancel_24px),
-                                    contentDescription = "Cancel selected"
-                                )
-                            }
-
-                            IconButton(onClick = composeClick(onClick = onDelete)) {
-                                Icon(
-                                    painter = painterResource(Res.drawable.delete_24px),
-                                    contentDescription = "Cancel selected"
-                                )
-                            }
-                        }
-                    }
-                })
-
-        } else {
-            TopAppBarComponent(
-                title = {
-                    TopAppBarTitle(
-                        title = stringResource(Res.string.download_list)
-                    )
-                }, actions = {
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        IconButton(onClick = {
-                            onEnterMultiSelectMode()
-                        }) {
-                            Icon(
-                                painter = painterResource(Res.drawable.playlist_add_check_24px),
-                                contentDescription = stringResource(Res.string.open_selection_function)
-                            )
-                        }
-
-                        IconButton(onClick = {
-                            navigator.navigate(Setting)
-                        }) {
-                            Icon(
-                                painter = painterResource(Res.drawable.settings_24px),
-                                contentDescription = stringResource(Res.string.open_settings_page_button)
-                            )
-                        }
-                    }
-
-                })
-        }
+private fun XyDownload.toMusicOrNull(): XyMusic? {
+    return data?.let {
+        runCatching {
+            jsonSerializer.decodeFromString<XyMusic>(it)
+        }.getOrNull()
     }
 }
 
+private fun isActiveDownloadTask(task: XyDownload): Boolean {
+    return when (task.status) {
+        DownloadStatus.COMPLETED,
+        DownloadStatus.CANCEL -> false
 
-
+        DownloadStatus.QUEUED,
+        DownloadStatus.DOWNLOADING,
+        DownloadStatus.PAUSED,
+        DownloadStatus.FAILED -> true
+    }
+}

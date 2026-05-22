@@ -29,6 +29,7 @@ import cn.xybbz.common.enums.DownloadTypes
 import cn.xybbz.download.DownloaderManager
 import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.download.database.data.XyDownload
+import cn.xybbz.download.enums.DownloadStatus
 import cn.xybbz.localdata.data.music.XyMusic
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.SharingStarted
@@ -73,6 +74,33 @@ class DownloadViewModel(
     fun resumeDownload(id: Long) = downloaderManager.resume(id)
     fun cancelDownload(id: Long) = downloaderManager.cancel(id)
     fun deleteDownload(id: Long) = downloaderManager.delete(id)
+
+    fun pauseDownloads(tasks: List<XyDownload>) {
+        val ids = tasks
+            .filter { it.status == DownloadStatus.QUEUED || it.status == DownloadStatus.DOWNLOADING }
+            .map { it.id }
+            .toLongArray()
+        if (ids.isNotEmpty()) {
+            downloaderManager.pause(*ids)
+        }
+    }
+
+    fun resumeDownloads(tasks: List<XyDownload>) {
+        val ids = tasks
+            .filter { it.status == DownloadStatus.PAUSED || it.status == DownloadStatus.FAILED }
+            .map { it.id }
+            .toLongArray()
+        if (ids.isNotEmpty()) {
+            downloaderManager.resume(*ids)
+        }
+    }
+
+    fun deleteDownloads(tasks: List<XyDownload>) {
+        val ids = tasks.map { it.id }.toLongArray()
+        if (ids.isNotEmpty()) {
+            downloaderManager.delete(*ids)
+        }
+    }
 
 
     fun enterMultiSelectMode() {
