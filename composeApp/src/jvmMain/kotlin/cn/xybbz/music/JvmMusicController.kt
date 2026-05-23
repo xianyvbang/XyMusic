@@ -925,8 +925,8 @@ class JvmMusicController : MusicCommonController() {
         ignoreStoppedEventOnce()
         val played = runCatching {
             player.media().play(mediaSource,
-//                ":network-caching=$VLC_NETWORK_CACHING_MS",
-//                ":file-caching=$VLC_FILE_CACHING_MS",
+                ":network-caching=$VLC_NETWORK_CACHING_MS",
+                ":file-caching=$VLC_FILE_CACHING_MS",
                 ":http-reconnect")
         }.onFailure {
             clearIgnoredStoppedEvent()

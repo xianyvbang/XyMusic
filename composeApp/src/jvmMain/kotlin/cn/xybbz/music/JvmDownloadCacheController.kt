@@ -23,10 +23,10 @@ import io.ktor.utils.io.writeFully
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.core.component.get
 import java.io.File
 import java.io.RandomAccessFile
@@ -81,6 +81,13 @@ class JvmDownloadCacheController(
      * 同一首 HLS 歌曲重复播放时复用同一个 HLS session 和已解析的分片索引。
      */
     private val hlsCacheKeyToSessionId = ConcurrentHashMap<String, Long>()
+
+    /**
+     * HLS 首包预热任务表。
+     *
+     * 预热只提前读取 playlist 并触发首批资源预取，不改变播放器请求路径。
+     */
+    private val hlsWarmUpJobs = ConcurrentHashMap<Long, Job>()
 
     /**
      * 本地代理 session id 生成器。
@@ -160,6 +167,18 @@ class JvmDownloadCacheController(
      * @return `/cache-play?id=` 形式的本地播放地址；不可缓存时返回 null。
      */
     fun preparePlaybackUrl(music: XyPlayMusic): String? {
+        return preparePlaybackUrl(music, startPrefetch = false)
+    }
+
+    /**
+     * 为 JVM 播放器准备本地缓存播放地址。
+     *
+     * @param startPrefetch true 表示调用方是主动缓存，不需要等待播放器首包，可以立即开始后台预取。
+     */
+    private fun preparePlaybackUrl(
+        music: XyPlayMusic,
+        startPrefetch: Boolean,
+    ): String? {
         // HLS 播放先走 playlist 代理入口，由后续资源请求逐片缓存。
         if (isHlsCacheable(music)) {
             return prepareHlsPlaybackUrl(music)
@@ -174,7 +193,9 @@ class JvmDownloadCacheController(
             val targetSession = existingSession ?: createSession(cacheKey, music)
             cacheStore.markAccessed(targetSession.entry)
             switchCurrentSession(targetSession.id)
-            startDownloadIfNeeded(targetSession)
+            if (startPrefetch) {
+                startDownloadIfNeeded(targetSession)
+            }
             targetSession
         }
 
@@ -195,7 +216,7 @@ class JvmDownloadCacheController(
             // 每次准备播放都刷新访问时间，容量淘汰时保护最近播放的 HLS 缓存。
             hlsCacheStore.markAccessed(targetSession.entry)
             switchCurrentSession(targetSession.id)
-            startHlsPrefetchIfNeeded(targetSession)
+            startHlsPlaylistWarmUpIfNeeded(targetSession)
             targetSession
         }
 
@@ -239,7 +260,7 @@ class JvmDownloadCacheController(
         music: XyPlayMusic,
         ifStatic: Boolean,
     ) {
-        preparePlaybackUrl(music)
+        preparePlaybackUrl(music, startPrefetch = true)
     }
 
     /**
@@ -261,6 +282,8 @@ class JvmDownloadCacheController(
                 session.status = CacheStatus.PAUSED
             }
         }
+        hlsWarmUpJobs.values.forEach { job -> job.cancel() }
+        hlsWarmUpJobs.clear()
         currentSessionId = null
         updateCacheSchedule(0f)
     }
@@ -331,7 +354,6 @@ class JvmDownloadCacheController(
         }
 
         cacheStore.markAccessed(session.entry)
-        startDownloadIfNeeded(session)
 
         var position = requestedStart.coerceAtLeast(0L)
         val endInclusive = (requestedEndInclusive ?: (session.totalBytes - 1)).coerceAtMost(session.totalBytes - 1)
@@ -340,10 +362,7 @@ class JvmDownloadCacheController(
         while (position <= endInclusive) {
             var cachedSpan = cacheStore.findSpanContaining(session.entry, position)
             if (cachedSpan == null && session.rangeRequestsSupported == false) {
-                if (!waitForCachedSpanContaining(session, position)) {
-                    return CacheStreamResult.Unavailable
-                }
-                cachedSpan = cacheStore.findSpanContaining(session.entry, position)
+                return CacheStreamResult.Unavailable
             }
             if (cachedSpan != null) {
                 // span 命中时只读取当前 span 能覆盖的部分，剩余范围继续循环判断，避免跨文件读取错误。
@@ -385,6 +404,9 @@ class JvmDownloadCacheController(
 
         refreshSessionProgress(session)
         enforceCacheLimitIfNeeded()
+        if (session.status != CacheStatus.COMPLETED && session.rangeRequestsSupported != false) {
+            startDownloadIfNeeded(session)
+        }
         return CacheStreamResult.Streamed
     }
 
@@ -399,33 +421,20 @@ class JvmDownloadCacheController(
         refreshSessionProgress(session)
         return CacheSessionSnapshot(
             id = session.id,
+            sourceUrl = session.url,
             totalBytes = session.totalBytes,
             downloadedBytes = session.downloadedBytes,
             status = session.status,
             contentType = session.contentType,
+            rangeRequestsSupported = session.rangeRequestsSupported,
         )
     }
 
     /**
-     * 非 Range 转码流只能顺序缓存，前台请求需要短暂等待后台完整 GET 提交出可读 span。
+     * 获取缓存会话的上游原始播放地址，供本地代理在缓存路径不可用时快速回退。
      */
-    private suspend fun waitForCachedSpanContaining(
-        session: CacheSession,
-        position: Long,
-    ): Boolean {
-        startDownloadIfNeeded(session)
-        val startedAt = System.currentTimeMillis()
-        while (
-            session.status != CacheStatus.FAILED &&
-            session.status != CacheStatus.CANCELLED &&
-            System.currentTimeMillis() - startedAt < CACHE_SPAN_WAIT_TIMEOUT_MS
-        ) {
-            if (cacheStore.findSpanContaining(session.entry, position) != null) {
-                return true
-            }
-            delay(CACHE_SPAN_WAIT_INTERVAL_MS)
-        }
-        return cacheStore.findSpanContaining(session.entry, position) != null
+    internal fun getSessionSourceUrl(sessionId: Long): String? {
+        return sessions[sessionId]?.url
     }
 
     /**
@@ -546,19 +555,15 @@ class JvmDownloadCacheController(
      */
     internal suspend fun awaitResolvedMediaInfo(sessionId: Long): Boolean {
         val session = sessions[sessionId] ?: return false
-        if (needsSessionMediaInfo(session)) {
-            startDownloadIfNeeded(session)
+        if (session.status == CacheStatus.COMPLETED && session.totalBytes > 0L) {
+            return true
+        }
+        if (needsPlaybackReadiness(session)) {
+            withTimeoutOrNull(MEDIA_INFO_WAIT_TIMEOUT_MS) {
+                resolveSessionMediaInfo(session)
+            }
         }
 
-        val startedAt = System.currentTimeMillis()
-        while (
-            needsSessionMediaInfo(session) &&
-            session.status != CacheStatus.FAILED &&
-            session.status != CacheStatus.CANCELLED &&
-            System.currentTimeMillis() - startedAt < MEDIA_INFO_WAIT_TIMEOUT_MS
-        ) {
-            delay(MEDIA_INFO_WAIT_INTERVAL_MS)
-        }
         return session.totalBytes > 0L
     }
 
@@ -582,6 +587,13 @@ class JvmDownloadCacheController(
         return session.totalBytes <= 0L ||
                 session.contentType == DEFAULT_CONTENT_TYPE ||
                 session.rangeRequestsSupported == null
+    }
+
+    /**
+     * 播放入口只必须知道总长度和 Range 能力；Content-Type 可以先用默认值兜底。
+     */
+    private fun needsPlaybackReadiness(session: CacheSession): Boolean {
+        return session.totalBytes <= 0L || session.rangeRequestsSupported == null
     }
 
     /**
@@ -1032,6 +1044,7 @@ class JvmDownloadCacheController(
                     previous.status = CacheStatus.PAUSED
                 }
             }
+            hlsWarmUpJobs.remove(previousSessionId)?.cancel()
             updateCacheSchedule(0f)
         }
         currentSessionId = sessionId
@@ -1078,6 +1091,27 @@ class JvmDownloadCacheController(
 
         session.job = scope.launch(Dispatchers.IO) {
             prefetchHlsSession(session)
+        }
+    }
+
+    /**
+     * 提前读取 HLS playlist，尽量让 VLC 首次请求分片前已有资源索引和预取任务。
+     */
+    private fun startHlsPlaylistWarmUpIfNeeded(session: HlsCacheSession) {
+        val existingJob = hlsWarmUpJobs[session.id]
+        if (existingJob != null && existingJob.isActive) {
+            return
+        }
+
+        hlsWarmUpJobs[session.id] = scope.launch(Dispatchers.IO) {
+            try {
+                readHlsPlaylist(
+                    sessionId = session.id,
+                    playlistUrl = session.playlistUrl,
+                )
+            } finally {
+                hlsWarmUpJobs.remove(session.id)
+            }
         }
     }
 
@@ -1589,11 +1623,13 @@ class JvmDownloadCacheController(
             session.job?.cancel()
             session.status = markStatus
         }
+        hlsWarmUpJobs.values.forEach { job -> job.cancel() }
         sessions.clear()
         cacheKeyToSessionId.clear()
         // 清空 HLS 内存映射，不删除已经落盘的分片缓存。
         hlsSessions.clear()
         hlsCacheKeyToSessionId.clear()
+        hlsWarmUpJobs.clear()
         currentSessionId = null
     }
 
@@ -1751,21 +1787,6 @@ class JvmDownloadCacheController(
         private const val MEDIA_INFO_WAIT_TIMEOUT_MS = 1_000L
 
         /**
-         * 等待媒体信息时的轮询间隔，单位是毫秒。
-         */
-        private const val MEDIA_INFO_WAIT_INTERVAL_MS = 50L
-
-        /**
-         * 非 Range 转码流等待后台提交目标 span 的最长时间，单位是毫秒。
-         */
-        private const val CACHE_SPAN_WAIT_TIMEOUT_MS = 15_000L
-
-        /**
-         * 等待目标 span 时的轮询间隔，单位是毫秒。
-         */
-        private const val CACHE_SPAN_WAIT_INTERVAL_MS = 50L
-
-        /**
          * 缓存进度日志最小间隔，单位是毫秒。
          */
         private const val PROGRESS_LOG_INTERVAL_MS = 1_000L
@@ -1802,17 +1823,21 @@ class JvmDownloadCacheController(
  * 本地代理生成响应头所需的缓存会话快照。
  *
  * @property id 缓存会话 id。
+ * @property sourceUrl 上游原始播放地址。
  * @property totalBytes 媒体总字节数，单位是 byte。
  * @property downloadedBytes 已缓存去重字节数，单位是 byte。
  * @property status 当前缓存会话状态。
  * @property contentType 当前已解析的媒体类型。
+ * @property rangeRequestsSupported 上游是否支持 HTTP Range；未知时为 null。
  */
 internal data class CacheSessionSnapshot(
     val id: Long,
+    val sourceUrl: String,
     val totalBytes: Long,
     val downloadedBytes: Long,
     val status: CacheStatus,
     val contentType: String,
+    val rangeRequestsSupported: Boolean?,
 )
 
 /**

@@ -37,6 +37,7 @@ import io.ktor.server.netty.Netty
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.receiveChannel
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
@@ -69,7 +70,7 @@ object JvmReverseProxyServer : KoinComponent {
     /**
      * 缓存未完成时，每次 HTTP Range 响应最多承诺给播放器的字节窗口。
      */
-    private const val CACHE_STREAM_WINDOW_BYTES = 128 * 1024L
+    private const val CACHE_STREAM_WINDOW_BYTES = 1024 * 1024L
     private val proxyWorkerThreadCount =
         Runtime.getRuntime().availableProcessors().coerceAtLeast(4)
     private val proxyCallThreadCount = (proxyWorkerThreadCount * 2).coerceAtLeast(8)
@@ -421,13 +422,31 @@ object JvmReverseProxyServer : KoinComponent {
 
         // 响应头里的媒体类型和总长度以当前播放流的上游响应为准，转码流不能复用原始文件大小。
         if (!cacheController.awaitResolvedMediaInfo(sessionId)) {
-            call.respondText(
-                text = "播放缓存媒体信息不可用。",
-                status = HttpStatusCode.BadGateway
+            respondWithPlainProxyPlayback(
+                call = call,
+                cacheController = cacheController,
+                sessionId = sessionId,
+                reason = "media-info-unavailable",
             )
             return
         }
         val resolvedSnapshot = cacheController.getSessionSnapshot(sessionId) ?: snapshot
+        if (
+            resolvedSnapshot.status != CacheStatus.COMPLETED &&
+            resolvedSnapshot.rangeRequestsSupported != true
+        ) {
+            respondWithPlainProxyPlayback(
+                call = call,
+                cacheController = cacheController,
+                sessionId = sessionId,
+                reason = if (resolvedSnapshot.rangeRequestsSupported == false) {
+                    "range-unsupported"
+                } else {
+                    "range-unknown"
+                },
+            )
+            return
+        }
 
         // 先解析 VLC 请求的原始 Range，再根据缓存状态裁剪实际响应范围。
         val requestedRange = parseRangeHeader(
@@ -489,6 +508,36 @@ object JvmReverseProxyServer : KoinComponent {
                     }
                 }
             }
+        )
+    }
+
+    /**
+     * 缓存播放入口无法安全按 Range span 服务时，快速回退到普通代理播放。
+     *
+     * 这样 VLC 可以继续从上游流式起播，避免等待缓存完整 span 导致开头卡住。
+     */
+    private suspend fun respondWithPlainProxyPlayback(
+        call: ApplicationCall,
+        cacheController: JvmDownloadCacheController,
+        sessionId: Long,
+        reason: String,
+    ) {
+        val sourceUrl = cacheController.getSessionSourceUrl(sessionId)
+        if (sourceUrl.isNullOrBlank()) {
+            call.respondText(
+                text = "播放缓存回退地址不可用。",
+                status = HttpStatusCode.BadGateway,
+            )
+            return
+        }
+
+        val proxyUrl = wrapTargetUrl(sourceUrl)
+        logger.info {
+            "缓存播放回退普通代理：sessionId=$sessionId, reason=$reason"
+        }
+        call.respondRedirect(
+            url = proxyUrl,
+            permanent = false,
         )
     }
 
@@ -724,7 +773,7 @@ object JvmReverseProxyServer : KoinComponent {
      * @param snapshot 当前缓存会话的只读快照。
      * @return 本地代理实际声明并写出的响应字节范围。
      */
-    private fun resolveCacheResponseRange(
+    internal fun resolveCacheResponseRange(
         requestedRange: PlaybackRange,
         snapshot: cn.xybbz.music.CacheSessionSnapshot,
     ): PlaybackRange {
@@ -789,7 +838,7 @@ object JvmReverseProxyServer : KoinComponent {
         )
     }
 
-    private data class PlaybackRange(
+    internal data class PlaybackRange(
         val start: Long,
         val endInclusive: Long,
         val isPartial: Boolean,
