@@ -155,7 +155,9 @@ class JvmDownloadCacheController(
         hlsCacheStore = JvmHlsCacheStore(cacheDirectory, DEFAULT_CONTENT_TYPE)
         settingsManager.updateCacheFilePath(cacheDirectory.absolutePath)
         observeCacheLimit()
-        getCacheSize()
+        scope.launch(Dispatchers.IO) {
+            getCacheSize()
+        }
     }
 
     /**

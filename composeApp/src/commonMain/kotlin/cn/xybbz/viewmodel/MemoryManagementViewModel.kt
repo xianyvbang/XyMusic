@@ -34,7 +34,10 @@ import cn.xybbz.config.storage.clearPlatformCache
 import cn.xybbz.config.storage.getMemoryStorageInfo
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.platform.ContextWrapper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
@@ -67,10 +70,12 @@ class MemoryManagementViewModel(
 
     init {
         viewModelScope.launch {
-            downloadCacheController.getCacheSize()
             downloadCacheController.allCacheSizeFlow.collect {
                 musicCacheSize = formatBytes(it)
             }
+        }
+        viewModelScope.launch {
+            refreshMusicCacheSize()
         }
         viewModelScope.launch {
             settingsManager.cacheFilePath.collect {
@@ -85,8 +90,17 @@ class MemoryManagementViewModel(
         }
     }
 
-    private fun refreshStorageInfo() {
-        updateStorageInfo(getMemoryStorageInfo(contextWrapper, db))
+    private suspend fun refreshStorageInfo() {
+        val storageInfo = withContext(Dispatchers.IO) {
+            getMemoryStorageInfo(contextWrapper, db)
+        }
+        updateStorageInfo(storageInfo)
+    }
+
+    private suspend fun refreshMusicCacheSize() {
+        withContext(Dispatchers.IO) {
+            downloadCacheController.getCacheSize()
+        }
     }
 
     private fun updateStorageInfo(storageInfo: MemoryStorageInfo) {
@@ -97,20 +111,27 @@ class MemoryManagementViewModel(
 
     fun clearAllCache() {
         viewModelScope.launch {
-            clearPlatformCache(contextWrapper)
+            withContext(Dispatchers.IO) {
+                clearPlatformCache(contextWrapper)
+            }
             refreshStorageInfo()
         }
     }
 
     fun clearMusicCache() {
         viewModelScope.launch {
-            downloadCacheController.clearCache()
+            withContext(Dispatchers.IO) {
+                downloadCacheController.clearCache()
+            }
+            refreshStorageInfo()
         }
     }
 
     fun changeMusicCacheDirectory(path: String) {
         viewModelScope.launch {
-            downloadCacheController.changeCacheDirectory(path)
+            withContext(Dispatchers.IO) {
+                downloadCacheController.changeCacheDirectory(path)
+            }
             updateMusicCachePathState()
             refreshStorageInfo()
         }
@@ -118,7 +139,9 @@ class MemoryManagementViewModel(
 
     fun restoreDefaultMusicCacheDirectory() {
         viewModelScope.launch {
-            downloadCacheController.restoreDefaultCacheDirectory()
+            withContext(Dispatchers.IO) {
+                downloadCacheController.restoreDefaultCacheDirectory()
+            }
             updateMusicCachePathState()
             refreshStorageInfo()
         }
@@ -127,10 +150,12 @@ class MemoryManagementViewModel(
     fun clearDatabaseData() {
         viewModelScope.launch {
             musicController.clearPlayerList()
-            dataSourceManager.release()
-            DatabaseUtils.clearAllDatabaseData(db)
+            withContext(Dispatchers.IO) {
+                dataSourceManager.release()
+                DatabaseUtils.clearAllDatabaseData(db)
+                settingsManager.setSettingsData()
+            }
             databaseSize = "0B"
-            settingsManager.setSettingsData()
             refreshStorageInfo()
         }
     }

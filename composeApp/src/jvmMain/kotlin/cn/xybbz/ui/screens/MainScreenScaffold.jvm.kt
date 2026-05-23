@@ -115,7 +115,9 @@ actual fun MainScreenScaffold(
                         items(jvmTopRouterDataList) { item ->
                             DesktopNavigationItem(
                                 item = item,
-                                selected = navigator.state.topLevelRoute == item.route,
+                                selected = (navigator.state.backStacks[navigator.state.topLevelRoute]
+                                    ?.lastOrNull()
+                                    ?: navigator.state.topLevelRoute) == item.route,
                                 onClick = { navigator.navigate(route = item.route) },
                             )
                         }

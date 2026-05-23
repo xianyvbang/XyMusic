@@ -8,7 +8,7 @@ data class PlatformNavigationConfig(
 
 internal val mobilePlatformNavigationConfig = PlatformNavigationConfig(
     startRoute = Home,
-    topLevelRoutes = setOf(Home, Album),
+    topLevelRoutes = setOf(Home),
     enableAnimations = true
 )
 
