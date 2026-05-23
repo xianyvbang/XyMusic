@@ -485,6 +485,7 @@
     <string name="modify_success">修改成功</string>
     <string name="test_connection_success">测试连接成功</string>
     <string name="test_connection_failed">测试连接失败</string>
+    <string name="proxy_address_cannot_be_empty">请输入代理地址</string>
     <string name="unknown_error">未知错误</string>
     <string name="response_code_error">响应码错误: %1$d</string>
     <string name="download_cancelled">取消下载</string>

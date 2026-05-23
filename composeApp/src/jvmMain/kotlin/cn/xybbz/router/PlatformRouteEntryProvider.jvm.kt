@@ -32,6 +32,7 @@ import cn.xybbz.ui.screens.JvmLanguageConfigScreen
 import cn.xybbz.ui.screens.JvmLocalScreen
 import cn.xybbz.ui.screens.JvmMemoryManagementScreen
 import cn.xybbz.ui.screens.JvmMusicScreen
+import cn.xybbz.ui.screens.JvmProxyConfigScreen
 import cn.xybbz.ui.screens.JvmSearchScreen
 import cn.xybbz.ui.screens.JvmSettingScreen
 import cn.xybbz.ui.screens.ProxyConfigScreen
@@ -91,7 +92,7 @@ private val jvmDesktopEntryProvider2 = entryProvider {
     desktopNode<Download> { JvmDownloadScreen() }
     desktopNode<Local> { JvmLocalScreen() }
     desktopNode<SetBackgroundImage> { SetBackgroundImageScreen() }
-    desktopNode<ProxyConfig> { ProxyConfigScreen() }
+    desktopNode<ProxyConfig> { JvmProxyConfigScreen() }
     desktopNode<StreamingQuality> { StreamingQualityScreen() }
     desktopNode<CustomApi> { CustomApiScreen() }
 }

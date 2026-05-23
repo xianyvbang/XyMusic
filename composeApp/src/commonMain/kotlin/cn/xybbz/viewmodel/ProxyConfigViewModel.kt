@@ -8,10 +8,14 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.api.client.provideClient
+import cn.xybbz.api.constants.ApiConstants
+import cn.xybbz.api.okhttp.proxy.getProxyConfig
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.proxy.ProxyConfigServer
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.proxy.XyProxyConfig
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.request
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpMethod
@@ -22,6 +26,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.KoinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.proxy_address_cannot_be_empty
 import xymusic_kmp.composeapp.generated.resources.test_connection_failed
 import xymusic_kmp.composeapp.generated.resources.test_connection_success
 
@@ -77,7 +82,13 @@ class ProxyConfigViewModel(
 
     fun testProxyConfig() {
         viewModelScope.launch {
-            val testSate = testUrlProxy()
+            val proxyAddress = addressValue.text.trim()
+            if (proxyAddress.isBlank()) {
+                MessageUtils.sendPopTipError(Res.string.proxy_address_cannot_be_empty)
+                return@launch
+            }
+
+            val testSate = testUrlProxy(proxyAddress)
             if (testSate) {
                 MessageUtils.sendPopTipSuccess(Res.string.test_connection_success)
             } else {
@@ -88,18 +99,45 @@ class ProxyConfigViewModel(
     }
 
 
-    suspend fun testUrlProxy(): Boolean = withContext(Dispatchers.IO) {
-        val httpClient = dataSourceManager.getHttpClient()
+    suspend fun testUrlProxy(proxyAddress: String = addressValue.text.trim()): Boolean {
+        return withContext(Dispatchers.IO) {
+            val connectionAddress = dataSourceManager.getConnectionAddress()
+                .takeIf { it.isNotBlank() }
+                ?: return@withContext false
 
-
-        try {
-            val response: HttpResponse = httpClient.request("/") {
-                method = HttpMethod.Head
+            val proxyConfig = try {
+                getProxyConfig(proxyAddress) ?: return@withContext false
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return@withContext false
             }
-            response.status.isSuccess()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false
+
+            val httpClient = try {
+                provideClient(proxyConfig).config {
+                    expectSuccess = false
+                    followRedirects = true
+                    install(HttpTimeout) {
+                        requestTimeoutMillis = ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
+                        connectTimeoutMillis = ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
+                        socketTimeoutMillis = ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return@withContext false
+            }
+
+            try {
+                val response: HttpResponse = httpClient.request(connectionAddress) {
+                    method = HttpMethod.Head
+                }
+                response.status.isSuccess()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                false
+            } finally {
+                httpClient.close()
+            }
         }
     }
 

@@ -1,47 +1,50 @@
 ﻿package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import cn.xybbz.compositionLocal.LocalNavigator
-import cn.xybbz.ui.components.MusicSettingSwitchItemComponent
-import cn.xybbz.ui.components.SettingItemComponent
-import cn.xybbz.ui.components.SettingParentItemComponent
+import cn.xybbz.common.constants.Constants
+import cn.xybbz.ui.components.JvmLazyListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
+import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.ProxyConfigViewModel
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.open_proxy
 import xymusic_kmp.composeapp.generated.resources.poxy_config
 import xymusic_kmp.composeapp.generated.resources.proxy_address
-import xymusic_kmp.composeapp.generated.resources.return_setting_screen
 import xymusic_kmp.composeapp.generated.resources.save
 import xymusic_kmp.composeapp.generated.resources.test_connection
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 /**
  * 代理设置页面
@@ -51,7 +54,6 @@ import cn.xybbz.ui.xy.XyIconButton as IconButton
 fun JvmProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = koinViewModel<ProxyConfigViewModel>()) {
 
 
-    val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
 
     XyColumnScreen {
@@ -60,18 +62,6 @@ fun JvmProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = koinViewMo
                 TopAppBarTitle(
                     title = stringResource(Res.string.poxy_config)
                 )
-            },
-            navigationIcon = {
-                IconButton(
-                    onClick = {
-                        navigator.goBack()
-                    },
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.arrow_back_24px),
-                        contentDescription = stringResource(Res.string.return_setting_screen)
-                    )
-                }
             },
             actions = {
                 TextButton(onClick = {
@@ -83,42 +73,68 @@ fun JvmProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = koinViewMo
                 }
             }
         )
-        LazyColumnNotComponent(
-            horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
-            contentPadding = PaddingValues()
+        JvmLazyListComponent(
+            modifier = Modifier.fillMaxSize(),
+            pagingItems = null,
+            contentPadding = PaddingValues(horizontal = 32.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            lazyColumnBottom = null
         ) {
             item {
-                SettingRoundedSurfaceColumn {
-                    MusicSettingSwitchItemComponent(
-                        title = stringResource(Res.string.open_proxy),
-                        ifChecked = proxyConfigViewModel.enabled
-                    ) { bol ->
-                        coroutineScope.launch {
-                            proxyConfigViewModel.updateEnabled(
-                                bol
+                Surface(
+                    modifier = Modifier
+                        .widthIn(max = 760.dp)
+                        .fillMaxWidth(),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(XyTheme.dimens.corner),
+                    color = MaterialTheme.colorScheme.surfaceContainerLowest
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        JvmProxyConfigFormRow(label = stringResource(Res.string.open_proxy)) {
+                            Switch(
+                                checked = proxyConfigViewModel.enabled,
+                                onCheckedChange = { bol ->
+                                    coroutineScope.launch {
+                                        proxyConfigViewModel.updateEnabled(bol)
+                                    }
+                                }
                             )
                         }
-                    }
-                }
-            }
-            item {
-                JvmProxyConfigComponent(
-                    proxyConfigViewModel.addressValue,
-                    updateAddress = { proxyConfigViewModel.updateAddress(it) }
-                )
-            }
 
-            item {
-                SettingRoundedSurfaceColumn {
-                    SettingItemComponent(
-                        title = stringResource(Res.string.test_connection),
-                        info = proxyConfigViewModel.getConnectionAddress(),
-                        painter = null,
-                        onClick = {
-                            proxyConfigViewModel.testProxyConfig()
+                        JvmProxyConfigComponent(
+                            proxyConfigViewModel.addressValue,
+                            updateAddress = { proxyConfigViewModel.updateAddress(it) }
+                        )
+
+                        JvmProxyConfigFormRow(label = stringResource(Res.string.test_connection)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                val connectionAddress = proxyConfigViewModel.getConnectionAddress()
+                                if (connectionAddress.isNotBlank()) {
+                                    XyTextSub(
+                                        modifier = Modifier.weight(1f),
+                                        text = connectionAddress,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        textAlign = TextAlign.End,
+                                        maxLines = 1
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                }
+                                TextButton(
+                                    onClick = {
+                                        proxyConfigViewModel.testProxyConfig()
+                                    }
+                                ) {
+                                    Text(stringResource(Res.string.test_connection))
+                                }
+                            }
                         }
-                    ) {}
+                    }
                 }
             }
         }
@@ -129,12 +145,14 @@ fun JvmProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = koinViewMo
 private fun JvmProxyConfigInput(
     text: TextFieldValue,
     onChange: (TextFieldValue) -> Unit,
+    modifier: Modifier = Modifier,
     hint: String? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     actionContent: (@Composable () -> Unit)? = null
 ) {
     XyEdit(
+        modifier = modifier,
         text = text,
         onChange = onChange,
         hint = hint,
@@ -156,29 +174,42 @@ fun JvmProxyConfigComponent(
     addressValue: TextFieldValue,
     updateAddress: (String) -> Unit,
 ) {
-
-    SettingRoundedSurfaceColumn {
-        SettingParentItemComponent(
-            title = stringResource(Res.string.proxy_address),
-            trailingContent = {
-                Row(
-                    modifier = Modifier.width(200.dp),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    JvmProxyConfigInput(
-                        text = addressValue,
-                        onChange = { newValue ->
-                            val newText = newValue.text
-                            updateAddress(newText)
-                        },
-                        hint = "127.0.0.1:19180"
-                    )
-                }
-
-            })
+    JvmProxyConfigFormRow(label = stringResource(Res.string.proxy_address)) {
+        JvmProxyConfigInput(
+            modifier = Modifier.fillMaxWidth(),
+            text = addressValue,
+            onChange = { newValue ->
+                val newText = newValue.text
+                updateAddress(newText)
+            },
+            hint = Constants.DEFAULT_PROXY_ADDRESS
+        )
     }
 }
 
+@Composable
+private fun JvmProxyConfigFormRow(
+    label: String,
+    content: @Composable () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(20.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        XyTextSub(
+            modifier = Modifier.width(96.dp),
+            text = label,
+            maxLines = 1,
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+        )
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            content()
+        }
+    }
+}
 
 
