@@ -27,6 +27,8 @@ import kotlinx.coroutines.withContext
 import org.koin.core.annotation.KoinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.proxy_address_cannot_be_empty
+import xymusic_kmp.composeapp.generated.resources.save_failed
+import xymusic_kmp.composeapp.generated.resources.save_success
 import xymusic_kmp.composeapp.generated.resources.test_connection_failed
 import xymusic_kmp.composeapp.generated.resources.test_connection_success
 
@@ -76,7 +78,15 @@ class ProxyConfigViewModel(
 
     fun saveConfig() {
         viewModelScope.launch {
-            poxyConfigServer.updateAddressAndEnabled(addressValue.text, enabled)
+            try {
+                withContext(Dispatchers.IO) {
+                    poxyConfigServer.updateAddressAndEnabled(addressValue.text, enabled)
+                }
+                MessageUtils.sendPopTipSuccess(Res.string.save_success)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                MessageUtils.sendPopTipError(Res.string.save_failed)
+            }
         }
     }
 

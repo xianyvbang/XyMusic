@@ -4,8 +4,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.setting.SettingsManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.KoinViewModel
+import xymusic_kmp.composeapp.generated.resources.Res
+import xymusic_kmp.composeapp.generated.resources.save_failed
+import xymusic_kmp.composeapp.generated.resources.save_success
 
 @KoinViewModel
 class CustomLyricsViewModel (
@@ -64,10 +73,22 @@ class CustomLyricsViewModel (
     /**
      * 保存页面配置到本地设置表
      */
-    suspend fun saveSettings() {
-        settingsManager.setIfPriorityMusicApi(ifPriorityMusicApi)
-        settingsManager.setCustomLrcSingleApi(customLrcSingleApiValue.trim())
-        settingsManager.setCustomLrcApiAuth(customLrcApiAuthValue.trim())
-        settingsManager.setCustomCoverApi(customCoverApiValue.trim())
+    fun saveSettings() {
+        viewModelScope.launch {
+            try {
+
+                withContext(Dispatchers.IO) {
+                    settingsManager.setIfPriorityMusicApi(ifPriorityMusicApi)
+                    settingsManager.setCustomLrcSingleApi(customLrcSingleApiValue.trim())
+                    settingsManager.setCustomLrcApiAuth(customLrcApiAuthValue.trim())
+                    settingsManager.setCustomCoverApi(customCoverApiValue.trim())
+                }
+                MessageUtils.sendPopTipSuccess(Res.string.save_success)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                MessageUtils.sendPopTipError(Res.string.save_failed)
+            }
+        }
+
     }
 }

@@ -85,7 +85,6 @@ import cn.xybbz.ui.xy.XyIconButton as IconButton
 fun JvmCustomApiScreen(
     customLyricsViewModel: CustomLyricsViewModel = koinViewModel<CustomLyricsViewModel>()
 ) {
-    val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
 
@@ -98,21 +97,9 @@ fun JvmCustomApiScreen(
                     title = stringResource(Res.string.customize_lyric_settings)
                 )
             },
-            navigationIcon = {
-                IconButton(
-                    onClick = { navigator.goBack() },
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.arrow_back_24px),
-                        contentDescription = stringResource(Res.string.return_setting_screen)
-                    )
-                }
-            },
             actions = {
                 TextButton(onClick = {
-                    coroutineScope.launch {
-                        customLyricsViewModel.saveSettings()
-                    }
+                    customLyricsViewModel.saveSettings()
                 }) {
                     Text(stringResource(Res.string.save))
                 }
