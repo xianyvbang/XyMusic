@@ -9,13 +9,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.client.provideClient
-import cn.xybbz.api.constants.ApiConstants
 import cn.xybbz.api.okhttp.proxy.getProxyConfig
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.config.proxy.ProxyConfigServer
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.proxy.XyProxyConfig
-import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.request
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpMethod
@@ -126,11 +124,6 @@ class ProxyConfigViewModel(
                 provideClient(proxyConfig).config {
                     expectSuccess = false
                     followRedirects = true
-                    install(HttpTimeout) {
-                        requestTimeoutMillis = ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
-                        connectTimeoutMillis = ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
-                        socketTimeoutMillis = ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
-                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

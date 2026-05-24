@@ -1,5 +1,6 @@
 package cn.xybbz.api.client
 
+import cn.xybbz.api.okhttp.proxy.ProxyManager
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.ProxyConfig
 import io.ktor.client.engine.okhttp.OkHttp
@@ -8,11 +9,12 @@ import okhttp3.Dispatcher
 import java.util.concurrent.TimeUnit
 
 actual fun provideClient(): HttpClient {
-    return provideClient(proxy = null)
+    return provideClient(proxy = ProxyManager.proxySelector())
 }
 
 actual fun provideClient(proxy: ProxyConfig?): HttpClient {
     return HttpClient(OkHttp) {
+        installXyCommonClientConfig()
         engine {
             this.proxy = proxy
             config {

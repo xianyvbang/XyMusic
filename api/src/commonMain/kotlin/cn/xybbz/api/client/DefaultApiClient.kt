@@ -23,32 +23,22 @@ import cn.xybbz.api.base.BaseApi
 import cn.xybbz.api.base.IDownLoadApi
 import cn.xybbz.api.client.subsonic.data.SubsonicResponse
 import cn.xybbz.api.constants.ApiConstants
-import cn.xybbz.api.constants.ApiConstants.DEFAULT_TIMEOUT_MILLISECONDS
-import cn.xybbz.api.converter.jsonSerializer
 import cn.xybbz.api.enums.subsonic.Status
 import cn.xybbz.api.events.ReLoginEventBus
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.exception.UnauthorizedException
-import cn.xybbz.api.okhttp.proxy.ProxyManager
 import cn.xybbz.api.utils.appendCustomRequestHeaders
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.DefaultRequest
-import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpResponseValidator
-import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.ServerResponseException
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logger
-import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.takeFrom
-import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.appendAll
 
 abstract class DefaultApiClient : ApiFactory, DownloadFactory {
@@ -77,7 +67,8 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
 
     private lateinit var defaultDownloadApi: IDownLoadApi
     protected val logger = KotlinLogging.logger {}
-        override fun createHttpClient(baseUrl: String, ifTmp: Boolean) {
+
+    override fun createHttpClient(baseUrl: String, ifTmp: Boolean) {
         this.ifTmp = ifTmp
         if (!ifTmp)
             TokenServer.updateBaseUrl(baseUrl)
@@ -88,9 +79,6 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
         httpClient = provideClient().config {
             expectSuccess = true
             followRedirects = true
-            engine {
-                proxy = ProxyManager.proxySelector()
-            }
             install(DefaultRequest) {
                 url {
                     if (baseUrl.isNotBlank())
@@ -108,28 +96,9 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
 
 
             }
-
-
-            install(Logging) {
-                logger = object : Logger {
-                    private val logger = KotlinLogging.logger {}
-                    override fun log(message: String) {
-                        logger.info { message }
-                    }
-                }
-                level = LogLevel.HEADERS
-            }
-            install(ContentNegotiation) {
-                json(jsonSerializer)
-            }
             /*install(HttpRequestRetry) {
 //                maxRetries = 1
             }*/
-            install(HttpTimeout) {
-                requestTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
-                connectTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
-                socketTimeoutMillis = DEFAULT_TIMEOUT_MILLISECONDS
-            }
             HttpResponseValidator {
                 validateResponse { response ->
                     val any = response.body<Any>()
