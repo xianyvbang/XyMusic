@@ -102,6 +102,7 @@ class JvmMusicController : MusicCommonController() {
                 clearIgnoredStoppedEvent()
                 return
             }
+            Log.i("vlc", "stopped")
             playWhenReady = false
             setCurrentPositionData(0L)
             downloadCacheController.updateCacheSchedule(0f)
@@ -112,12 +113,14 @@ class JvmMusicController : MusicCommonController() {
          * 播放自然结束时回退为空闲状态。
          */
         override fun finished(mediaPlayer: MediaPlayer?) {
+            Log.i("vlc", "finished")
+            val shouldContinuePlayback = playWhenReady
             musicInfo?.let {
                 updateEvent(PlayerEvent.RemovePlaybackProgress(it.itemId))
             }
             setCurrentPositionData(0L)
             submitMediaPlayerTask(mediaPlayer) {
-                handlePlaybackFinished()
+                handlePlaybackFinished(shouldContinuePlayback)
             }
         }
 
@@ -965,8 +968,8 @@ class JvmMusicController : MusicCommonController() {
     /**
      * 播放自然结束后，完全交给应用层的播放顺序与模式来决定后续行为。
      */
-    private fun handlePlaybackFinished() {
-        if (!playWhenReady) {
+    private fun handlePlaybackFinished(shouldContinuePlayback: Boolean) {
+        if (!shouldContinuePlayback) {
             return
         }
         val targetRealIndex = when (playMode) {

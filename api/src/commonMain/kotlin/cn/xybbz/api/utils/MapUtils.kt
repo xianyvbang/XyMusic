@@ -80,7 +80,7 @@ fun JsonObject.convertToListPairs(isConvertList: Boolean): List<Pair<String, Ite
             }
         }
     }
-    logger.error {  flatMap.joinToString(" || ") }
+    logger.info {  flatMap.joinToString(" || ") }
     return flatMap
 }
 
