@@ -34,6 +34,7 @@ internal class WindowsWindowChromeController(
     private var installed = false
 
     private var titleBarBounds: Rect = Rect.Zero
+    private val draggableAreaBounds = mutableMapOf<String, Rect>()
     private var minimizeButtonBounds: Rect = Rect.Zero
     private var maximizeButtonBounds: Rect = Rect.Zero
     private var closeButtonBounds: Rect = Rect.Zero
@@ -121,6 +122,15 @@ internal class WindowsWindowChromeController(
     override fun updateTitleBarBounds(bounds: Rect) {
         titleBarBounds = bounds
         installSkiaLayerProcedureIfNeeded()
+    }
+
+    override fun updateDraggableAreaBounds(targetId: String, bounds: Rect) {
+        draggableAreaBounds[targetId] = bounds
+        installSkiaLayerProcedureIfNeeded()
+    }
+
+    override fun removeDraggableAreaBounds(targetId: String) {
+        draggableAreaBounds.remove(targetId)
     }
 
     override fun updateMinimizeButtonBounds(bounds: Rect) {
@@ -230,7 +240,11 @@ internal class WindowsWindowChromeController(
             return WindowsChromeConstants.HTCLIENT
         }
 
-        if (!titleBarBounds.contains(clientX, clientY)) {
+        val inDraggableArea =
+            titleBarBounds.contains(clientX, clientY) ||
+                draggableAreaBounds.values.any { bounds -> bounds.contains(clientX, clientY) }
+
+        if (!inDraggableArea) {
             return WindowsChromeConstants.HTCLIENT
         }
 

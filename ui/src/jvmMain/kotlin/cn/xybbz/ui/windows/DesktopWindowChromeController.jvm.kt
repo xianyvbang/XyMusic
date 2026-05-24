@@ -15,6 +15,10 @@ interface DesktopWindowChromeController {
 
     fun updateTitleBarBounds(bounds: Rect)
 
+    fun updateDraggableAreaBounds(targetId: String, bounds: Rect)
+
+    fun removeDraggableAreaBounds(targetId: String)
+
     fun updateMinimizeButtonBounds(bounds: Rect)
 
     fun updateMaximizeButtonBounds(bounds: Rect)
@@ -41,6 +45,10 @@ interface DesktopWindowChromeController {
             override val isTitleBarHitTestEnabled: Boolean = false
 
             override fun updateTitleBarBounds(bounds: Rect) = Unit
+
+            override fun updateDraggableAreaBounds(targetId: String, bounds: Rect) = Unit
+
+            override fun removeDraggableAreaBounds(targetId: String) = Unit
 
             override fun updateMinimizeButtonBounds(bounds: Rect) = Unit
 

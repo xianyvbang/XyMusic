@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
+import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.router.Connection
@@ -151,7 +152,7 @@ fun MainScreen(
                 enableAnimations = navigationConfig.enableAnimations
             ) { bool ->
                 if (bool) {
-                    ConnectionScreen(connectionUiType = null)
+                    ConnectionScreen(connectionUiType = ConnectionUiType.FIRST_OPEN)
                 } else if (!dataSourceReady) {
                     // 自动登录仍在后台准备数据源时先展示加载态，避免主界面抢先读取 DataSourceManager。
                     LoadingCompose(modifier = Modifier.align(alignment = Alignment.Center))

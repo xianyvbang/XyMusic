@@ -66,6 +66,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import cn.xybbz.common.enums.ConnectionScreenType
 import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.common.enums.img
 import cn.xybbz.common.utils.Log
@@ -140,28 +141,6 @@ expect fun ConnectionScreen(
     modifier: Modifier = Modifier,
 )
 
-private enum class ScreenType {
-    /**
-     * 选择数据源
-     */
-    SELECT_DATA_SOURCE,
-
-    /**
-     * 输入地址
-     */
-    INPUT_DATA,
-
-    /**
-     * 选择地址
-     */
-    SELECT_ADDRESS,
-
-    /**
-     * 登陆
-     */
-    LOGIN
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun MobileConnectionScreen(
@@ -174,7 +153,7 @@ internal fun MobileConnectionScreen(
     val coroutineScope = rememberCoroutineScope()
     val ifConnectionConfig by connectionViewModel.settingsManager.ifConnectionConfig.collectAsState()
     var ifSelectDataSource by remember {
-        mutableStateOf(ScreenType.SELECT_DATA_SOURCE)
+        mutableStateOf(ConnectionScreenType.SELECT_DATA_SOURCE)
     }
 
     XyColumnScreen(
@@ -200,7 +179,7 @@ internal fun MobileConnectionScreen(
 
         })
 
-        AnimatedVisibility(visible = ifSelectDataSource != ScreenType.SELECT_DATA_SOURCE) {
+        AnimatedVisibility(visible = ifSelectDataSource != ConnectionScreenType.SELECT_DATA_SOURCE) {
             ItemTrailingArrowRight(
                 modifier = Modifier
                     .padding(horizontal = XyTheme.dimens.innerHorizontalPadding)
@@ -217,7 +196,7 @@ internal fun MobileConnectionScreen(
                 img = connectionViewModel.dataSourceType?.img?.let { img -> painterResource(img) },
                 onClick = {
                     connectionViewModel.setDataSourceTypeData(connectionViewModel.dataSourceType)
-                    ifSelectDataSource = ScreenType.INPUT_DATA
+                    ifSelectDataSource = ConnectionScreenType.INPUT_DATA
                 }
             )
             Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding / 2))
@@ -240,7 +219,7 @@ internal fun MobileConnectionScreen(
             }
         ) { screen ->
             when (screen) {
-                ScreenType.SELECT_DATA_SOURCE -> {
+                ConnectionScreenType.SELECT_DATA_SOURCE -> {
                     Box(modifier = Modifier.fillMaxSize()) {
                         LazyColumnNotComponent(
                             modifier = Modifier,
@@ -274,7 +253,7 @@ internal fun MobileConnectionScreen(
                                     img = painterResource(it.img),
                                     onClick = {
                                         connectionViewModel.setDataSourceTypeData(it)
-                                        ifSelectDataSource = ScreenType.INPUT_DATA
+                                        ifSelectDataSource = ConnectionScreenType.INPUT_DATA
                                     }
                                 )
                             }
@@ -282,7 +261,7 @@ internal fun MobileConnectionScreen(
                     }
                 }
 
-                ScreenType.INPUT_DATA -> {
+                ConnectionScreenType.INPUT_DATA -> {
                     LazyColumnComponent {
                         if (connectionViewModel.dataSourceType?.ifInputUrl == true)
                             item {
@@ -323,7 +302,7 @@ internal fun MobileConnectionScreen(
                                             }
                                             Log.i("ConnectionScreen", "noifInputUrl")
                                             coroutineScope.launch {
-                                                ifSelectDataSource = ScreenType.SELECT_ADDRESS
+                                                ifSelectDataSource = ConnectionScreenType.SELECT_ADDRESS
                                                 connectionViewModel.getResources()
                                             }.invokeOnCompletion {
                                                 connectionViewModel.updateResourceLoading(false)
@@ -332,9 +311,9 @@ internal fun MobileConnectionScreen(
                                             Log.i("ConnectionScreen", "ifInputUrl")
                                             if (!connectionViewModel.isHttpStartAndPortEnd()) {
                                                 connectionViewModel.createTmpAddress()
-                                                ifSelectDataSource = ScreenType.SELECT_ADDRESS
+                                                ifSelectDataSource = ConnectionScreenType.SELECT_ADDRESS
                                             } else {
-                                                ifSelectDataSource = ScreenType.LOGIN
+                                                ifSelectDataSource = ConnectionScreenType.LOGIN
                                                 coroutineScope.launch {
                                                     connectionViewModel.setTmpAddressData(
                                                         connectionViewModel.address
@@ -352,7 +331,7 @@ internal fun MobileConnectionScreen(
                                 Button(
                                     modifier = Modifier.width(width = 150.dp),
                                     onClick = {
-                                        ifSelectDataSource = ScreenType.SELECT_DATA_SOURCE
+                                        ifSelectDataSource = ConnectionScreenType.SELECT_DATA_SOURCE
                                     }
                                 ) {
                                     Text(text = stringResource(Res.string.reselect))
@@ -363,7 +342,7 @@ internal fun MobileConnectionScreen(
                     }
                 }
 
-                ScreenType.SELECT_ADDRESS -> {
+                ConnectionScreenType.SELECT_ADDRESS -> {
                     LazyColumnComponent {
                         if (connectionViewModel.resourceLoading) {
                             item {
@@ -447,7 +426,7 @@ internal fun MobileConnectionScreen(
                                                 connectionViewModel.setSelectUrlIndexData(
                                                     connectionViewModel.selectUrlIndex
                                                 )
-                                                ifSelectDataSource = ScreenType.LOGIN
+                                                ifSelectDataSource = ConnectionScreenType.LOGIN
                                                 connectionViewModel.inputAddress()
                                             }
                                         }) {
@@ -458,7 +437,7 @@ internal fun MobileConnectionScreen(
                                 Button(
                                     modifier = Modifier.width(width = 150.dp),
                                     onClick = {
-                                        ifSelectDataSource = ScreenType.INPUT_DATA
+                                        ifSelectDataSource = ConnectionScreenType.INPUT_DATA
                                     }) {
                                     Text(stringResource(Res.string.back_to_input_credentials))
                                 }
@@ -468,7 +447,7 @@ internal fun MobileConnectionScreen(
                     }
                 }
 
-                ScreenType.LOGIN -> {
+                ConnectionScreenType.LOGIN -> {
                     if (connectionViewModel.loading) {
                         XyLoadingItem(
                             modifier = Modifier.height(200.dp),
@@ -490,9 +469,9 @@ internal fun MobileConnectionScreen(
                                         onClick = {
                                             ifSelectDataSource =
                                                 if (connectionViewModel.isHttpStartAndPortEnd()) {
-                                                    ScreenType.INPUT_DATA
+                                                    ConnectionScreenType.INPUT_DATA
                                                 } else
-                                                    ScreenType.SELECT_ADDRESS
+                                                    ConnectionScreenType.SELECT_ADDRESS
                                         }) {
                                         Text(text = stringResource(Res.string.reconnect))
                                     }

@@ -66,6 +66,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import cn.xybbz.common.enums.ConnectionScreenType
 import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.common.enums.img
 import cn.xybbz.common.utils.Log
@@ -77,6 +78,8 @@ import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.debounceClickable
 import cn.xybbz.ui.theme.XyTheme
+import cn.xybbz.ui.windows.DesktopWindowControls
+import cn.xybbz.ui.windows.desktopWindowDragArea
 import cn.xybbz.ui.xy.ItemTrailingArrowRight
 import cn.xybbz.ui.xy.LazyColumnComponent
 import cn.xybbz.ui.xy.LazyColumnNotComponent
@@ -134,28 +137,6 @@ import xymusic_kmp.composeapp.generated.resources.visibility_24px
 import xymusic_kmp.composeapp.generated.resources.visibility_off_24px
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
-private enum class JvmScreenType {
-    /**
-     * 选择数据源
-     */
-    SELECT_DATA_SOURCE,
-
-    /**
-     * 输入地址
-     */
-    INPUT_DATA,
-
-    /**
-     * 选择地址
-     */
-    SELECT_ADDRESS,
-
-    /**
-     * 登陆
-     */
-    LOGIN
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JvmConnectionScreen(
@@ -168,8 +149,9 @@ fun JvmConnectionScreen(
     val coroutineScope = rememberCoroutineScope()
     val ifConnectionConfig by connectionViewModel.settingsManager.ifConnectionConfig.collectAsState()
     var ifSelectDataSource by remember {
-        mutableStateOf(JvmScreenType.SELECT_DATA_SOURCE)
+        mutableStateOf(ConnectionScreenType.SELECT_DATA_SOURCE)
     }
+    val isFirstOpenConnection = connectionUiType == ConnectionUiType.FIRST_OPEN
 
     XyColumnScreen(
         modifier = modifier
@@ -177,24 +159,36 @@ fun JvmConnectionScreen(
         background = MaterialTheme.colorScheme.background
     ) {
 
-        TopAppBarComponent(title = {
-            TopAppBarTitle(title = stringResource(Res.string.server_connection))
-        }, navigationIcon = {
-            if (connectionUiType != null && connectionUiType == ConnectionUiType.ADD_CONNECTION)
-                IconButton(
-                    onClick = composeClick {
-                        navigator.goBack()
-                    },
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.arrow_back_24px),
-                        contentDescription = stringResource(Res.string.return_setting_screen)
-                    )
+        TopAppBarComponent(
+            modifier = if (isFirstOpenConnection) {
+                Modifier.desktopWindowDragArea()
+            } else {
+                Modifier
+            },
+            title = {
+                TopAppBarTitle(title = stringResource(Res.string.server_connection))
+            },
+            navigationIcon = {
+                if (connectionUiType != null && connectionUiType == ConnectionUiType.ADD_CONNECTION)
+                    IconButton(
+                        onClick = composeClick {
+                            navigator.goBack()
+                        },
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.arrow_back_24px),
+                            contentDescription = stringResource(Res.string.return_setting_screen)
+                        )
+                    }
+            },
+            actions = {
+                if (isFirstOpenConnection) {
+                    DesktopWindowControls()
                 }
+            }
+        )
 
-        })
-
-        AnimatedVisibility(visible = ifSelectDataSource != JvmScreenType.SELECT_DATA_SOURCE) {
+        AnimatedVisibility(visible = ifSelectDataSource != ConnectionScreenType.SELECT_DATA_SOURCE) {
             ItemTrailingArrowRight(
                 modifier = Modifier
                     .padding(horizontal = XyTheme.dimens.innerHorizontalPadding)
@@ -211,7 +205,7 @@ fun JvmConnectionScreen(
                 img = connectionViewModel.dataSourceType?.img?.let { img -> painterResource(img) },
                 onClick = {
                     connectionViewModel.setDataSourceTypeData(connectionViewModel.dataSourceType)
-                    ifSelectDataSource = JvmScreenType.INPUT_DATA
+                    ifSelectDataSource = ConnectionScreenType.INPUT_DATA
                 }
             )
             Spacer(modifier = Modifier.height(XyTheme.dimens.outerVerticalPadding / 2))
@@ -234,7 +228,7 @@ fun JvmConnectionScreen(
             }
         ) { screen ->
             when (screen) {
-                JvmScreenType.SELECT_DATA_SOURCE -> {
+                ConnectionScreenType.SELECT_DATA_SOURCE -> {
                     Box(modifier = Modifier.fillMaxSize()) {
                         LazyColumnNotComponent(
                             modifier = Modifier,
@@ -268,7 +262,7 @@ fun JvmConnectionScreen(
                                     img = painterResource(it.img),
                                     onClick = {
                                         connectionViewModel.setDataSourceTypeData(it)
-                                        ifSelectDataSource = JvmScreenType.INPUT_DATA
+                                        ifSelectDataSource = ConnectionScreenType.INPUT_DATA
                                     }
                                 )
                             }
@@ -276,7 +270,7 @@ fun JvmConnectionScreen(
                     }
                 }
 
-                JvmScreenType.INPUT_DATA -> {
+                ConnectionScreenType.INPUT_DATA -> {
                     LazyColumnComponent {
                         if (connectionViewModel.dataSourceType?.ifInputUrl == true)
                             item {
@@ -317,7 +311,7 @@ fun JvmConnectionScreen(
                                             }
                                             Log.i("JvmConnectionScreen", "noifInputUrl")
                                             coroutineScope.launch {
-                                                ifSelectDataSource = JvmScreenType.SELECT_ADDRESS
+                                                ifSelectDataSource = ConnectionScreenType.SELECT_ADDRESS
                                                 connectionViewModel.getResources()
                                             }.invokeOnCompletion {
                                                 connectionViewModel.updateResourceLoading(false)
@@ -326,9 +320,9 @@ fun JvmConnectionScreen(
                                             Log.i("JvmConnectionScreen", "ifInputUrl")
                                             if (!connectionViewModel.isHttpStartAndPortEnd()) {
                                                 connectionViewModel.createTmpAddress()
-                                                ifSelectDataSource = JvmScreenType.SELECT_ADDRESS
+                                                ifSelectDataSource = ConnectionScreenType.SELECT_ADDRESS
                                             } else {
-                                                ifSelectDataSource = JvmScreenType.LOGIN
+                                                ifSelectDataSource = ConnectionScreenType.LOGIN
                                                 coroutineScope.launch {
                                                     connectionViewModel.setTmpAddressData(
                                                         connectionViewModel.address
@@ -346,7 +340,7 @@ fun JvmConnectionScreen(
                                 Button(
                                     modifier = Modifier.width(width = 150.dp),
                                     onClick = {
-                                        ifSelectDataSource = JvmScreenType.SELECT_DATA_SOURCE
+                                        ifSelectDataSource = ConnectionScreenType.SELECT_DATA_SOURCE
                                     }
                                 ) {
                                     Text(text = stringResource(Res.string.reselect))
@@ -357,7 +351,7 @@ fun JvmConnectionScreen(
                     }
                 }
 
-                JvmScreenType.SELECT_ADDRESS -> {
+                ConnectionScreenType.SELECT_ADDRESS -> {
                     LazyColumnComponent {
                         if (connectionViewModel.resourceLoading) {
                             item {
@@ -441,7 +435,7 @@ fun JvmConnectionScreen(
                                                 connectionViewModel.setSelectUrlIndexData(
                                                     connectionViewModel.selectUrlIndex
                                                 )
-                                                ifSelectDataSource = JvmScreenType.LOGIN
+                                                ifSelectDataSource = ConnectionScreenType.LOGIN
                                                 connectionViewModel.inputAddress()
                                             }
                                         }) {
@@ -452,7 +446,7 @@ fun JvmConnectionScreen(
                                 Button(
                                     modifier = Modifier.width(width = 150.dp),
                                     onClick = {
-                                        ifSelectDataSource = JvmScreenType.INPUT_DATA
+                                        ifSelectDataSource = ConnectionScreenType.INPUT_DATA
                                     }) {
                                     Text(stringResource(Res.string.back_to_input_credentials))
                                 }
@@ -462,7 +456,7 @@ fun JvmConnectionScreen(
                     }
                 }
 
-                JvmScreenType.LOGIN -> {
+                ConnectionScreenType.LOGIN -> {
                     if (connectionViewModel.loading) {
                         XyLoadingItem(
                             modifier = Modifier.height(200.dp),
@@ -484,9 +478,9 @@ fun JvmConnectionScreen(
                                         onClick = {
                                             ifSelectDataSource =
                                                 if (connectionViewModel.isHttpStartAndPortEnd()) {
-                                                    JvmScreenType.INPUT_DATA
+                                                    ConnectionScreenType.INPUT_DATA
                                                 } else
-                                                    JvmScreenType.SELECT_ADDRESS
+                                                    ConnectionScreenType.SELECT_ADDRESS
                                         }) {
                                         Text(text = stringResource(Res.string.reconnect))
                                     }
