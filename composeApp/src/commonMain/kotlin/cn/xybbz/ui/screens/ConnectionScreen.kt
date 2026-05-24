@@ -134,6 +134,12 @@ import xymusic_kmp.composeapp.generated.resources.visibility_24px
 import xymusic_kmp.composeapp.generated.resources.visibility_off_24px
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
+@Composable
+expect fun ConnectionScreen(
+    connectionUiType: ConnectionUiType?,
+    modifier: Modifier = Modifier,
+)
+
 private enum class ScreenType {
     /**
      * 选择数据源
@@ -158,7 +164,7 @@ private enum class ScreenType {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConnectionScreen(
+internal fun MobileConnectionScreen(
     connectionUiType: ConnectionUiType?,
     modifier: Modifier = Modifier,
     connectionViewModel: ConnectionViewModel = koinViewModel<ConnectionViewModel>(),
