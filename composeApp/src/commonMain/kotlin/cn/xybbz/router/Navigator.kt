@@ -35,12 +35,17 @@ class Navigator(
         } else {
             state.backStacks[state.topLevelRoute]?.add(route)
         }
-        for (listener in onDestinationChangedListeners.toList()) {
-            listener.onDestinationChanged(
-                this,
-                route
-            )
+        notifyDestinationChanged(route)
+    }
+
+    fun navigateToRoot(route: RouterConstants = state.startRoute) {
+        val currentStack = state.backStacks[route]
+            ?: error("Stack for $route not found")
+        while (currentStack.size > 1) {
+            currentStack.removeLastOrNull()
         }
+        state.topLevelRoute = route
+        notifyDestinationChanged(route)
     }
 
     fun goBack() {
@@ -58,14 +63,7 @@ class Navigator(
             route = currentStack.last()
         }
 
-        route.let {
-            for (listener in onDestinationChangedListeners.toList()) {
-                listener.onDestinationChanged(
-                    this,
-                    route
-                )
-            }
-        }
+        notifyDestinationChanged(route)
     }
 
 
@@ -75,5 +73,14 @@ class Navigator(
 
     fun removeOnDestinationChangedListener(listener: OnDestinationChangedListener) {
         onDestinationChangedListeners.remove(listener)
+    }
+
+    private fun notifyDestinationChanged(route: NavKey) {
+        for (listener in onDestinationChangedListeners.toList()) {
+            listener.onDestinationChanged(
+                this,
+                route
+            )
+        }
     }
 }

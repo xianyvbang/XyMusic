@@ -118,7 +118,13 @@ actual fun MainScreenScaffold(
                                 selected = (navigator.state.backStacks[navigator.state.topLevelRoute]
                                     ?.lastOrNull()
                                     ?: navigator.state.topLevelRoute) == item.route,
-                                onClick = { navigator.navigate(route = item.route) },
+                                onClick = {
+                                    if (item.route == navigationConfig.startRoute) {
+                                        navigator.navigateToRoot(item.route)
+                                    } else {
+                                        navigator.navigate(route = item.route)
+                                    }
+                                },
                             )
                         }
 
