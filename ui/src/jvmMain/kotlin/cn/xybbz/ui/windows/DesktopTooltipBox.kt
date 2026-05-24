@@ -18,6 +18,9 @@ import androidx.compose.runtime.remember
 import cn.xybbz.ui.xy.XyTextSub
 import kotlinx.coroutines.delay
 
+/**
+ * 移入提示
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DesktopTooltipBox(
