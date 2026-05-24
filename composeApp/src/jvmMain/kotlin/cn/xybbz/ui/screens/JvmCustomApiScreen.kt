@@ -19,19 +19,20 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,7 +48,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import cn.xybbz.api.constants.ApiConstants
-import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.MusicSettingSwitchItemComponent
 import cn.xybbz.ui.components.SettingItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
@@ -62,12 +62,9 @@ import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.CustomLyricsViewModel
-import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
 import xymusic_kmp.composeapp.generated.resources.custom_cover_api
 import xymusic_kmp.composeapp.generated.resources.custom_cover_api_hint
 import xymusic_kmp.composeapp.generated.resources.customize_lyric_settings
@@ -76,16 +73,13 @@ import xymusic_kmp.composeapp.generated.resources.lyrics_api_auth_key_hint
 import xymusic_kmp.composeapp.generated.resources.lyrics_single_api
 import xymusic_kmp.composeapp.generated.resources.lyrics_single_api_hint
 import xymusic_kmp.composeapp.generated.resources.prioritize_music_service_api
-import xymusic_kmp.composeapp.generated.resources.return_setting_screen
 import xymusic_kmp.composeapp.generated.resources.save
-import cn.xybbz.ui.xy.XyIconButton as IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JvmCustomApiScreen(
     customLyricsViewModel: CustomLyricsViewModel = koinViewModel<CustomLyricsViewModel>()
 ) {
-    val coroutineScope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
 
     // 页面整体：复用设置页背景渐变
@@ -108,17 +102,20 @@ fun JvmCustomApiScreen(
 
         // 内容区：开关 + 接口配置项
         LazyColumnNotComponent(
-            horizontalAlignment = Alignment.Start,
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding),
-            contentPadding = PaddingValues()
+            contentPadding = PaddingValues(horizontal = 32.dp, vertical = 24.dp)
         ) {
             item {
-                SettingRoundedSurfaceColumn {
-                    MusicSettingSwitchItemComponent(
-                        title = stringResource(Res.string.prioritize_music_service_api),
-                        ifChecked = customLyricsViewModel.ifPriorityMusicApi
-                    ) { bol ->
-                        customLyricsViewModel.updateIfPriorityMusicApi(bol)
+                JvmCustomApiContentContainer {
+                    SettingRoundedSurfaceColumn {
+                        MusicSettingSwitchItemComponent(
+                            title = stringResource(Res.string.prioritize_music_service_api),
+                            ifChecked = customLyricsViewModel.ifPriorityMusicApi
+                        ) { bol ->
+                            customLyricsViewModel.updateIfPriorityMusicApi(bol)
+                        }
                     }
                 }
             }
@@ -196,17 +193,19 @@ fun JvmCustomApiScreen(
 private fun JvmCustomLyricsSettingTitleItem(
     title: String,
 ) {
-    XyRow(
-        paddingValues = PaddingValues(
-            start = XyTheme.dimens.outerHorizontalPadding,
-            end = XyTheme.dimens.outerHorizontalPadding,
-            top = XyTheme.dimens.outerVerticalPadding
-        ),
-        horizontalArrangement = Arrangement.Start
-    ) {
-        XyTextSub(
-            text = title
-        )
+    JvmCustomApiContentContainer {
+        XyRow(
+            paddingValues = PaddingValues(
+                start = XyTheme.dimens.outerHorizontalPadding,
+                end = XyTheme.dimens.outerHorizontalPadding,
+                top = XyTheme.dimens.outerVerticalPadding
+            ),
+            horizontalArrangement = Arrangement.Start
+        ) {
+            XyTextSub(
+                text = title
+            )
+        }
     }
 }
 
@@ -219,28 +218,30 @@ private fun JvmCustomLyricsSettingInput(
     onValueChange: (String) -> Unit
 ) {
     // 通用设置输入行：复用 SettingItem 样式，右侧单行输入框
-    SettingRoundedSurfaceColumn {
-        SettingItemComponent(
-            title = title,
-            bottomInfo = bottomInfo,
-            painter = null,
-            onRouter = {},
-            trailingContent = {
-                XyEdit(
-                    modifier = Modifier.width(220.dp),
-                    text = value,
-                    onChange = { newValue -> onValueChange(newValue) },
-                    hint = hint,
-                    paddingValues = PaddingValues(),
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.End
-                    ),
-                    textContentAlignment = Alignment.CenterEnd,
-                    singleLine = true,
-                )
-            }
-        )
+    JvmCustomApiContentContainer {
+        SettingRoundedSurfaceColumn {
+            SettingItemComponent(
+                title = title,
+                bottomInfo = bottomInfo,
+                painter = null,
+                onRouter = {},
+                trailingContent = {
+                    XyEdit(
+                        modifier = Modifier.width(220.dp),
+                        text = value,
+                        onChange = { newValue -> onValueChange(newValue) },
+                        hint = hint,
+                        paddingValues = PaddingValues(),
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.End
+                        ),
+                        textContentAlignment = Alignment.CenterEnd,
+                        singleLine = true,
+                    )
+                }
+            )
+        }
     }
 
 }
@@ -257,52 +258,64 @@ private fun JvmCustomLyricsItemComponent(
     hint: String,
     onValueChange: (String) -> Unit
 ) {
-    SettingRoundedSurfaceColumn {
-        XyColumn(
-            modifier = modifier
-                .heightIn(min = XyTheme.dimens.itemHeight)
-                .fillMaxWidth(),
-            paddingValues = PaddingValues(
-                horizontal = XyTheme.dimens.outerHorizontalPadding,
-            ),
-            backgroundColor = Color.Transparent,
-            horizontalAlignment = Alignment.Start,
-        ) {
-            XyRow(
-                paddingValues = PaddingValues(top = XyTheme.dimens.innerVerticalPadding),
-                modifier = Modifier
+    JvmCustomApiContentContainer {
+        SettingRoundedSurfaceColumn {
+            XyColumn(
+                modifier = modifier
+                    .heightIn(min = XyTheme.dimens.itemHeight)
+                    .fillMaxWidth(),
+                paddingValues = PaddingValues(
+                    horizontal = XyTheme.dimens.outerHorizontalPadding,
+                ),
+                backgroundColor = Color.Transparent,
+                horizontalAlignment = Alignment.Start,
             ) {
-                XyText(
-                    text = title,
-                    color = if (enabled) textColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                XyEdit(
-                    modifier = Modifier.width(220.dp),
-                    text = value,
-                    onChange = { newValue -> onValueChange(newValue) },
-                    hint = hint,
-                    paddingValues = PaddingValues(),
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.End
-                    ),
-                    textContentAlignment = Alignment.CenterEnd,
-                    singleLine = true,
-                )
+                XyRow(
+                    paddingValues = PaddingValues(top = XyTheme.dimens.innerVerticalPadding),
+                    modifier = Modifier
+                ) {
+                    XyText(
+                        text = title,
+                        color = if (enabled) textColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    XyEdit(
+                        modifier = Modifier.width(220.dp),
+                        text = value,
+                        onChange = { newValue -> onValueChange(newValue) },
+                        hint = hint,
+                        paddingValues = PaddingValues(),
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.End
+                        ),
+                        textContentAlignment = Alignment.CenterEnd,
+                        singleLine = true,
+                    )
+                }
+                bottomInfo?.let {
+                    Spacer(modifier = Modifier.height(5.dp))
+                    XyTextSubSmall(
+                        text = bottomInfo,
+                        color = if (enabled) textColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                        overflow = TextOverflow.Visible
+                    )
+                    Spacer(modifier = Modifier.height(5.dp))
+                }
             }
-            bottomInfo?.let {
-                Spacer(modifier = Modifier.height(5.dp))
-                XyTextSubSmall(
-                    text = bottomInfo,
-                    color = if (enabled) textColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                    overflow = TextOverflow.Visible
-                )
-                Spacer(modifier = Modifier.height(5.dp))
-            }
-        }
 
+        }
     }
 }
 
-
-
+@Composable
+private fun JvmCustomApiContentContainer(
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .widthIn(max = 760.dp)
+            .fillMaxWidth()
+    ) {
+        content()
+    }
+}
