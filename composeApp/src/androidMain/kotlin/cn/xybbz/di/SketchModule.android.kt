@@ -22,7 +22,7 @@ actual class SketchModule {
             logger(level = Logger.Level.Debug)
             addIgnoreFetcherProvider(KtorHttpUriFetcherProvider::class)
             addComponents {
-                val httpStack = KtorStack(dataSourceManager.getHttpClient())
+                val httpStack = KtorStack(createSketchHttpClient(dataSourceManager))
                 addFetcher(KtorHttpUriFetcher.Factory(httpStack))
                 addInterceptor(PauseLoadWhenScrollingInterceptor())
             }
