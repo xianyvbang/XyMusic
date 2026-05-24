@@ -21,6 +21,7 @@ package cn.xybbz.viewmodel
 import androidx.paging.PagingData
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.RemoteIdConstants
+import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.data.album.XyAlbum
 import kotlinx.coroutines.flow.Flow
@@ -29,7 +30,7 @@ import org.koin.core.annotation.KoinViewModel
 @KoinViewModel
 class AlbumViewModel (
     val dataSourceManager: DataSourceManager
-) : PageListViewModel<XyAlbum>(dataSourceManager, null) {
+) : PageListViewModel<XyAlbum>(dataSourceManager, SortTypeEnum.ALBUM_NAME_ASC) {
 
     /**
      * 首页专辑信息

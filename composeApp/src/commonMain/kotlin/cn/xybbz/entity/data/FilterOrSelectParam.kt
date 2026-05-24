@@ -9,7 +9,7 @@ import cn.xybbz.common.enums.SortTypeEnum
 @Immutable
 data class Sort(
     // 排序类型
-    val sortType: SortTypeEnum? = null,
+    val sortType: SortTypeEnum,
     // 过滤条件年列表
     val yearList: List<Int>? = null,
     // 收藏条件, 收藏, 全部

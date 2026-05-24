@@ -37,7 +37,7 @@ import kotlinx.coroutines.flow.update
 
 abstract class PageListViewModel<T : Any>(
     dataSourceManager: DataSourceManager,
-    val defaultSortType: SortTypeEnum? = null
+    val defaultSortType: SortTypeEnum
 ) : ViewModel() {
 
     // 列表排序与筛选状态的唯一来源
@@ -61,7 +61,7 @@ abstract class PageListViewModel<T : Any>(
      * 设置排序配型
      */
     suspend fun setSortedData(
-        sortType: SortTypeEnum?,
+        sortType: SortTypeEnum,
         refreshPage: suspend () -> Unit
     ) {
         updateSort(_sortType.value.copy(sortType = sortType), refreshPage = refreshPage)

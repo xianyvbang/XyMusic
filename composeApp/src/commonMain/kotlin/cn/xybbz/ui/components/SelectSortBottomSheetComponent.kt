@@ -120,9 +120,9 @@ fun SelectSortBottomSheetComponent(
     onIfStartEndYear: () -> Boolean?,
     onIfSort: () -> Boolean?,
     onIfFavoriteFilter: () -> Boolean?,
-    onSortTypeClick: suspend (SortTypeEnum?) -> Unit,
+    onSortTypeClick: suspend (SortTypeEnum) -> Unit,
     onSortType: () -> SortTypeEnum?,
-    onDefaultSortType: () -> SortTypeEnum?,
+    onDefaultSortType: () -> SortTypeEnum,
     onIfFavorite: () -> Boolean,
     setFavorite: suspend (Boolean) -> Unit,
     sortTypeList: List<SortTypeEnum> = SortTypeEnum.entries,
@@ -264,7 +264,7 @@ fun SelectSortBottomSheetComponent(
                         )
 
                     },
-                    onClick = composeClick() {
+                    onClick = composeClick {
                         ifShowSortOrFilterMenu = false
                         coroutineScope.launch {
                             onClearFilterOrShort()

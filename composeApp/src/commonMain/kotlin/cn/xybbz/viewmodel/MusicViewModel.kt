@@ -23,6 +23,7 @@ import androidx.paging.PagingData
 import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.RemoteIdConstants
 import cn.xybbz.common.enums.DownloadTypes
+import cn.xybbz.common.enums.SortTypeEnum
 import cn.xybbz.config.download.enqueueMusicDownload
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.config.music.MusicPlayContext
@@ -34,8 +35,8 @@ import cn.xybbz.entity.data.Sort
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -49,7 +50,7 @@ class MusicViewModel(
     val musicController: MusicCommonController,
     val selectControl: SelectControl,
     private val downloaderManager: DownloaderManager,
-) : PageListViewModel<XyMusic>(dataSourceManager, null) {
+) : PageListViewModel<XyMusic>(dataSourceManager, SortTypeEnum.MUSIC_NAME_ASC) {
 
     val downloadMusicIdsFlow =
         downloadDb.downloadDao.getAllMusicTaskUidsFlow(
