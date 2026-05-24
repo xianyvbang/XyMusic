@@ -49,6 +49,7 @@ fun main() = application {
             // WindowDraggableArea 只能在 desktopApp 入口侧拿到，这里向 composeApp 注入拖拽包装能力。
             LocalDesktopWindowDecorators provides object : DesktopWindowDecorators {
                 @Composable
+                //todo 这里的东西没有生效
                 override fun DraggableArea(
                     content: @Composable () -> Unit,
                     hitTestOwner: DesktopWindowTitleBarHitTestOwner?,
