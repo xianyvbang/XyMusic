@@ -753,9 +753,7 @@ private fun JvmConnectionNewFormPanel(
         )
         Spacer(modifier = Modifier.height(18.dp))
 
-        Column(
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
+        Column {
             AnimatedVisibility(visible = selectedDataSource.ifInputUrl) {
                 Column {
                     JvmConnectionNewInputField(
@@ -784,6 +782,7 @@ private fun JvmConnectionNewFormPanel(
                         )
                         JvmConnectionNewChip(text = "支持 http / https")
                     }
+                    Spacer(modifier = Modifier.height(14.dp))
                 }
             }
 
@@ -802,6 +801,7 @@ private fun JvmConnectionNewFormPanel(
                     }
                 } else null
             )
+            Spacer(modifier = Modifier.height(14.dp))
 
             JvmConnectionNewInputField(
                 label = "密码",
@@ -831,13 +831,17 @@ private fun JvmConnectionNewFormPanel(
                     }
                 }
             )
+            Spacer(modifier = Modifier.height(14.dp))
 
             AnimatedVisibility(visible = !selectedDataSource.ifInputUrl) {
-                JvmConnectionNewChip(
-                    text = "Plex 将通过账号自动读取可用服务器",
-                    color = Color(0xFFA86200),
-                    backgroundColor = Color(0xFFFFF4DF),
-                )
+                Column {
+                    JvmConnectionNewChip(
+                        text = "Plex 将通过账号自动读取可用服务器",
+                        color = Color(0xFFA86200),
+                        backgroundColor = Color(0xFFFFF4DF),
+                    )
+                    Spacer(modifier = Modifier.height(14.dp))
+                }
             }
 
             Row(
@@ -881,7 +885,7 @@ private fun JvmConnectionNewInputField(
     ) {
         Text(
             text = label,
-            color = MaterialTheme.colorScheme.onSurface,
+//            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.W800,
             style = MaterialTheme.typography.bodySmall,
         )
@@ -891,7 +895,8 @@ private fun JvmConnectionNewInputField(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp),
-            backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+//            backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            paddingValues = PaddingValues(),
             hint = hint,
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
