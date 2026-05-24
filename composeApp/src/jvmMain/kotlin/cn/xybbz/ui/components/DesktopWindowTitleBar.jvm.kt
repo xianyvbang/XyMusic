@@ -3,13 +3,11 @@ package cn.xybbz.ui.components
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,7 +19,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -33,11 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
-import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.boundsInWindow
@@ -64,7 +56,7 @@ import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.screens.jvmRouterMenuWidth
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopInteractiveHitTestOwner
-import cn.xybbz.ui.windows.DesktopWindowTitleBar as UiDesktopWindowTitleBar
+import cn.xybbz.ui.windows.DesktopTooltipBox
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyText
 import kotlinx.coroutines.launch
@@ -89,13 +81,14 @@ import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
 import xymusic_kmp.composeapp.generated.resources.local_and_download
 import xymusic_kmp.composeapp.generated.resources.logo_new
 import xymusic_kmp.composeapp.generated.resources.no_connection_selected
-import xymusic_kmp.composeapp.generated.resources.open_settings_page_button
 import xymusic_kmp.composeapp.generated.resources.open_add_or_switch_data_sources
+import xymusic_kmp.composeapp.generated.resources.open_settings_page_button
 import xymusic_kmp.composeapp.generated.resources.refresh_24px
 import xymusic_kmp.composeapp.generated.resources.refresh_login
 import xymusic_kmp.composeapp.generated.resources.search_24px
 import xymusic_kmp.composeapp.generated.resources.search_music_album_artist
 import xymusic_kmp.composeapp.generated.resources.settings_24px
+import cn.xybbz.ui.windows.DesktopWindowTitleBar as UiDesktopWindowTitleBar
 
 /**
  * 桌面端主标题栏。
@@ -161,7 +154,8 @@ private fun DesktopTitleCenter(
     var keyword by remember { mutableStateOf("") }
     val currentStack = navigator.state.backStacks[navigator.state.topLevelRoute]
     val canGoBack = navigator.state.topLevelRoute != navigator.state.startRoute ||
-        currentStack?.lastOrNull() != navigator.state.topLevelRoute
+            currentStack?.lastOrNull() != navigator.state.topLevelRoute
+
     fun submitSearch() {
         val searchQuery = keyword.trim()
         print("搜索内容${searchQuery}")
@@ -274,17 +268,19 @@ private fun DesktopTitleActions(
     val musicController: MusicCommonController = remember { koin.get() }
     val coroutineScope = rememberCoroutineScope()
     var ifShowConnectionMenu by remember { mutableStateOf(false) }
-    val connectionList by db.connectionConfigDao.selectAllDataFlow().collectAsState(initial = emptyList())
+    val connectionList by db.connectionConfigDao.selectAllDataFlow()
+        .collectAsState(initial = emptyList())
     val noConnectionSelected = stringResource(Res.string.no_connection_selected)
     val currentConnectionId by dataSourceManager.currentConnectionId.collectAsState()
-    val currentDataSource = remember(connectionList, currentConnectionId, dataSourceManager.dataSourceType) {
-        readCurrentDataSourceInfo(
-            connectionList = connectionList,
-            currentConnectionId = currentConnectionId ?: dataSourceManager.getConnectionId(),
-            dataSourceManager = dataSourceManager,
-            fallbackTitle = noConnectionSelected
-        )
-    }
+    val currentDataSource =
+        remember(connectionList, currentConnectionId, dataSourceManager.dataSourceType) {
+            readCurrentDataSourceInfo(
+                connectionList = connectionList,
+                currentConnectionId = currentConnectionId ?: dataSourceManager.getConnectionId(),
+                dataSourceManager = dataSourceManager,
+                fallbackTitle = noConnectionSelected
+            )
+        }
     val colors = DesktopTitleBarColors.current
 
     Row(
@@ -362,7 +358,9 @@ private fun DesktopTitleActions(
                                     if (currentConnectionId == connection.id) {
                                         Icon(
                                             painter = painterResource(Res.drawable.check_24px),
-                                            contentDescription = connection.name + stringResource(Res.string.connection_link),
+                                            contentDescription = connection.name + stringResource(
+                                                Res.string.connection_link
+                                            ),
                                             tint = colors.foreground,
                                         )
                                     }
@@ -441,6 +439,7 @@ private fun DesktopTitleActions(
 private fun DesktopToolbarIconButton(
     resource: DrawableResource,
     enabled: Boolean,
+    tooltip: String = "",
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
@@ -461,27 +460,29 @@ private fun DesktopToolbarIconButton(
     } else {
         colors.foreground.copy(alpha = 0.45f)
     }
-
-    Box(
-        modifier = modifier
-            .size(36.dp)
-            .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .background(backgroundColor)
-            .border(
-                width = 1.dp,
-                color = borderColor,
-                shape = RoundedCornerShape(XyTheme.dimens.corner)
+    DesktopTooltipBox(tooltip = tooltip) {
+        Box(
+            modifier = modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(XyTheme.dimens.corner))
+                .background(backgroundColor)
+                .border(
+                    width = 1.dp,
+                    color = borderColor,
+                    shape = RoundedCornerShape(XyTheme.dimens.corner)
+                )
+                .debounceClickable(enabled = enabled, onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(resource),
+                contentDescription = contentDescription,
+                modifier = Modifier.size(18.dp),
+                tint = iconTint
             )
-            .debounceClickable(enabled = enabled, onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            painter = painterResource(resource),
-            contentDescription = contentDescription,
-            modifier = Modifier.size(18.dp),
-            tint = iconTint
-        )
+        }
     }
+
 }
 
 /**
