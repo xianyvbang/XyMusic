@@ -19,6 +19,7 @@ kotlin {
         implementation(libs.kotlin.ktor.apache)
         implementation(project.dependencies.platform(libs.koin.bom))
         implementation(libs.koin.core)
+        runtimeOnly(libs.logback.classic)
     }
 }
 

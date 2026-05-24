@@ -82,7 +82,6 @@ kotlin {
             implementation(libs.koin.annotations)
 
             implementation(libs.kotlin.logging)
-            implementation(libs.kotlin.logging.slf4j)
 
             implementation(libs.kotlinx.datetime)
             implementation(libs.cryptography.core)

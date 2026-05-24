@@ -74,7 +74,6 @@ kotlin {
                 implementation(libs.kotlin.ktor.content.negotiation)
                 implementation(libs.kotlin.ktor.json)
                 implementation(libs.kotlin.logging)
-                implementation(libs.kotlin.logging.slf4j)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotlinx.datetime)
 
