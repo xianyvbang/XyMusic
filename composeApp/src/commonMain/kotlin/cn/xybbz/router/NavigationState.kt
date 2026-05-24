@@ -28,7 +28,8 @@ import kotlinx.serialization.modules.polymorphic
 @Composable
 fun rememberNavigationState(
     startRoute: RouterConstants,
-    topLevelRoutes: Set<RouterConstants>
+    topLevelRoutes: Set<RouterConstants>,
+    enableTopLevelRoutes: Boolean
 ): NavigationState {
 
     // Creates the required serialization configuration for open polymorphism
@@ -54,7 +55,8 @@ fun rememberNavigationState(
         NavigationState(
             startRoute = startRoute,
             topLevelRoute = topLevelRoute,
-            backStacks = backStacks
+            backStacks = backStacks,
+            enableTopLevelRoutes = enableTopLevelRoutes
         )
     }
 }
@@ -69,7 +71,8 @@ fun rememberNavigationState(
 class NavigationState(
     val startRoute: RouterConstants,
     topLevelRoute: MutableState<RouterConstants>,
-    val backStacks: Map<RouterConstants, NavBackStack<NavKey>>
+    val backStacks: Map<RouterConstants, NavBackStack<NavKey>>,
+    val enableTopLevelRoutes: Boolean
 ) {
     var topLevelRoute: RouterConstants by topLevelRoute
     val stacksInUse: List<NavKey>

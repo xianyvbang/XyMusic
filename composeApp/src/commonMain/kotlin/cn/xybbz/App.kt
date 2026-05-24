@@ -43,7 +43,8 @@ fun App(
     val navigationConfig = platformNavigationConfig
     val navigationState = rememberNavigationState(
         startRoute = navigationConfig.startRoute,
-        topLevelRoutes = navigationConfig.topLevelRoutes
+        topLevelRoutes = navigationConfig.topLevelRoutes,
+        enableTopLevelRoutes = navigationConfig.enableTopLevelRoutes
     )
     val navigator = remember(navigationState) {
         Navigator(navigationState)
