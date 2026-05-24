@@ -46,7 +46,6 @@ import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.xy.LazyColumnBottomSheetComponent
-import cn.xybbz.ui.xy.ModalBottomSheetExtendComponent
 import cn.xybbz.ui.xy.XyItemIconSelect
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
@@ -90,9 +89,9 @@ fun SelectSortBottomSheet(
     ),
     ifDisplay: () -> Boolean,
     onSetDisplay: (Boolean) -> Unit,
-    filterContent: @Composable ColumnScope.() -> Unit
+    filterContent: @Composable ColumnScope.(suspend () -> Unit) -> Unit
 ) {
-    ModalBottomSheetExtendComponent(
+    SortFilterPlatformSheet(
         bottomSheetState = bottomSheetState,
         modifier = modifier,
         onIfDisplay = ifDisplay,
@@ -100,7 +99,10 @@ fun SelectSortBottomSheet(
         dragHandle = null,
         titleText = stringResource(Res.string.select_sort_method)
     ) {
-        filterContent()
+        filterContent {
+            hideSortFilterPlatformSheet(bottomSheetState)
+            onSetDisplay(false)
+        }
     }
 }
 
@@ -296,7 +298,7 @@ fun SelectSortBottomSheetComponent(
         bottomSheetState = bottomSheetState,
         ifDisplay = { ifOpenSortBottom },
         onSetDisplay = { ifOpenSortBottom = it },
-        filterContent = {
+        filterContent = { closeSheet ->
             LazyColumnBottomSheetComponent(vertical = 0.dp) {
                 items(sortTypeList) { item ->
                     XyItemIconSelect(
@@ -310,7 +312,7 @@ fun SelectSortBottomSheetComponent(
                                 onSortTypeClick(item)
                             }
 
-                            bottomSheetState.hide()
+                            closeSheet()
                         }.invokeOnCompletion {
                             ifShowSortOrFilterMenu = false
                         }
@@ -333,7 +335,7 @@ private fun YearFilterComponent(
     onSelectYear: () -> Int?,
     onSetSelectYear: suspend (Int?) -> Unit
 ) {
-    ModalBottomSheetExtendComponent(
+    SortFilterPlatformSheet(
         bottomSheetState = bottomSheetState,
         modifier = modifier,
         onIfDisplay = ifDisplay,
@@ -350,7 +352,7 @@ private fun YearFilterComponent(
         XyRow {
             TextButton(onClick = {
                 coroutineScope.launch {
-                    bottomSheetState.hide()
+                    hideSortFilterPlatformSheet(bottomSheetState)
                 }.invokeOnCompletion {
                     onSetDisplay(false)
                 }
@@ -363,7 +365,7 @@ private fun YearFilterComponent(
             TextButton(onClick = {
                 coroutineScope.launch {
                     onSetSelectYear(year)
-                    bottomSheetState.hide()
+                    hideSortFilterPlatformSheet(bottomSheetState)
                 }.invokeOnCompletion {
                     onSetDisplay(false)
                 }
@@ -402,7 +404,7 @@ private fun YearRangeFilterComponent(
 
     val coroutineScope = rememberCoroutineScope()
 
-    ModalBottomSheetExtendComponent(
+    SortFilterPlatformSheet(
         bottomSheetState = bottomSheetState,
         modifier = modifier,
         onIfDisplay = ifDisplay,
@@ -412,7 +414,7 @@ private fun YearRangeFilterComponent(
         XyRow {
             TextButton(onClick = {
                 coroutineScope.launch {
-                    bottomSheetState.hide()
+                    hideSortFilterPlatformSheet(bottomSheetState)
                 }.invokeOnCompletion {
                     onSetDisplay(false)
                 }
@@ -424,7 +426,7 @@ private fun YearRangeFilterComponent(
             TextButton(onClick = {
                 coroutineScope.launch {
                     onSetSelectRangeYear(yearList)
-                    bottomSheetState.hide()
+                    hideSortFilterPlatformSheet(bottomSheetState)
                 }.invokeOnCompletion {
                     onSetDisplay(false)
                 }
