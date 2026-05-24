@@ -70,6 +70,7 @@ import xymusic_kmp.composeapp.generated.resources.add_connection
 import xymusic_kmp.composeapp.generated.resources.app_icon_info
 import xymusic_kmp.composeapp.generated.resources.app_name
 import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.back
 import xymusic_kmp.composeapp.generated.resources.cancel_24px
 import xymusic_kmp.composeapp.generated.resources.check_24px
 import xymusic_kmp.composeapp.generated.resources.chevron_right_24px
@@ -175,6 +176,7 @@ private fun DesktopTitleCenter(
         DesktopToolbarIconButton(
             resource = Res.drawable.arrow_back_24px,
             enabled = canGoBack,
+            tooltip = stringResource(Res.string.back),
             onClick = navigator::goBack,
             modifier = Modifier.desktopTitleBarHitTarget(hitTestOwner, "BackButton"),
         )
@@ -403,6 +405,7 @@ private fun DesktopTitleActions(
             DesktopToolbarIconButton(
                 resource = Res.drawable.download_24px,
                 enabled = true,
+                tooltip = stringResource(Res.string.local_and_download),
                 onClick = { navigator.navigate(Download) },
                 modifier = Modifier.desktopTitleBarHitTarget(hitTestOwner, "DownloadButton"),
                 contentDescription = stringResource(Res.string.local_and_download)
@@ -410,6 +413,7 @@ private fun DesktopTitleActions(
             DesktopToolbarIconButton(
                 resource = Res.drawable.refresh_24px,
                 enabled = true,
+                tooltip = stringResource(Res.string.refresh_login),
                 onClick = {
                     coroutineScope.launch {
                         dataSourceManager.serverLogin(
@@ -424,6 +428,7 @@ private fun DesktopTitleActions(
             DesktopToolbarIconButton(
                 resource = Res.drawable.settings_24px,
                 enabled = true,
+                tooltip = stringResource(Res.string.open_settings_page_button),
                 onClick = { navigator.navigate(Setting) },
                 modifier = Modifier.desktopTitleBarHitTarget(hitTestOwner, "SettingsButton"),
                 contentDescription = stringResource(Res.string.open_settings_page_button)
