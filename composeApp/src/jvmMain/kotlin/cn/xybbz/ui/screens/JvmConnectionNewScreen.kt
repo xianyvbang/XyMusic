@@ -1391,13 +1391,13 @@ private fun JvmConnectionNewLoginStatusPanel(
             )
         }
 
-        Row(
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
         ) {
             listOf("验证账号", "建立会话", "同步资料").forEachIndexed { index, text ->
                 JvmConnectionNewLoginProgressItem(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxWidth(),
                     text = text,
                     done = index < activeIndex,
                     active = index == activeIndex,
