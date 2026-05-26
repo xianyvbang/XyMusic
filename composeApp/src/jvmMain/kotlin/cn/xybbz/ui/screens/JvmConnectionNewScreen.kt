@@ -270,13 +270,13 @@ private fun JvmConnectionNewTitleBar() {
     ) {
         Image(
             modifier = Modifier
-                .size(28.dp)
-                .clip(RoundedCornerShape(7.dp)),
+                .size(XyTheme.dimens.outerHorizontalPadding + XyTheme.dimens.contentPadding)
+                .clip(RoundedCornerShape(XyTheme.dimens.corner / 2)),
             painter = painterResource(Res.drawable.logo_new),
             contentDescription = null,
             contentScale = ContentScale.Crop
         )
-        Spacer(modifier = Modifier.width(10.dp))
+        Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
         Text(
             text = "XyMusic",
             modifier = Modifier.weight(1f),
@@ -326,7 +326,7 @@ private fun JvmConnectionNewSidebar(
         }
 
         Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
         ) {
             dataSourceTypes.forEach { dataSourceType ->
                 JvmConnectionNewProtocolItem(
@@ -349,7 +349,7 @@ private fun JvmConnectionNewProtocolItem(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    val shape = RoundedCornerShape(8.dp)
+    val shape = RoundedCornerShape(XyTheme.dimens.corner)
     val borderColor = if (selected) {
         MaterialTheme.colorScheme.primary.copy(alpha = 0.56f)
     } else {
@@ -404,11 +404,16 @@ private fun JvmConnectionNewProtocolItem(
 private fun JvmConnectionNewProtocolLogo(
     painter: Painter,
     contentDescription: String?,
-    size: Dp = 44.dp,
+    size: Dp? = null,
 ) {
+    val logoSize = size
+        ?: XyTheme.dimens.innerHorizontalPadding +
+        XyTheme.dimens.innerHorizontalPadding +
+        XyTheme.dimens.contentPadding
+
     Surface(
-        modifier = Modifier.size(size),
-        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier.size(logoSize),
+        shape = RoundedCornerShape(XyTheme.dimens.corner),
         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.08f),
     ) {
         Image(
@@ -434,11 +439,11 @@ private fun JvmConnectionNewStatusPill(
                 vertical = XyTheme.dimens.innerVerticalPadding / 2
             ),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.innerVerticalPadding / 2)
     ) {
         Box(
             modifier = Modifier
-                .size(7.dp)
+                .size(XyTheme.dimens.innerVerticalPadding / 2)
                 .clip(CircleShape)
                 .background(successColor)
         )
@@ -460,12 +465,12 @@ private fun JvmConnectionNewStepPanel(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(XyTheme.dimens.corner))
             .background(MaterialTheme.colorScheme.background.copy(alpha = 0.72f))
             .border(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(XyTheme.dimens.corner)
             )
             .padding(XyTheme.dimens.contentPadding),
         verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
@@ -506,14 +511,14 @@ private fun JvmConnectionNewStepItem(
     ) {
         Box(
             modifier = Modifier
-                .size(24.dp)
+                .size(XyTheme.dimens.contentPadding + XyTheme.dimens.innerVerticalPadding)
                 .clip(CircleShape)
                 .background(circleColor),
             contentAlignment = Alignment.Center
         ) {
             if (done) {
                 Icon(
-                    modifier = Modifier.size(15.dp),
+                    modifier = Modifier.size(XyTheme.dimens.outerHorizontalPadding),
                     painter = painterResource(Res.drawable.check_24px),
                     contentDescription = null,
                     tint = Color.White
@@ -663,7 +668,7 @@ private fun JvmConnectionNewHeader(
 
     if (compact) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
         ) {
             JvmConnectionNewHeaderText(titleCopy = titleCopy)
             JvmConnectionNewSelectedService(dataSourceType = selectedDataSource)
@@ -732,7 +737,7 @@ private fun JvmConnectionNewSelectedService(
     ) {
         Box(
             modifier = Modifier
-                .size(22.dp)
+                .size(XyTheme.dimens.dialogCorner)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
@@ -807,7 +812,7 @@ private fun JvmConnectionNewFormPanel(
                     )
                     Spacer(modifier = Modifier.height(7.dp))
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(7.dp)
+                        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
                     ) {
                         JvmConnectionNewChip(
                             text = "默认端口 ${selectedDataSource.httpPort}",
@@ -884,17 +889,17 @@ private fun JvmConnectionNewFormPanel(
             ) {
                 OutlinedButton(
                     onClick = onReset,
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(XyTheme.dimens.corner),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = MaterialTheme.colorScheme.onSurface
                     )
                 ) {
                     Text(text = "重新选择")
                 }
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
                 Button(
                     onClick = onConnect,
-                    shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(XyTheme.dimens.corner)
                 ) {
                     Text(text = "连接")
                 }
@@ -915,7 +920,7 @@ private fun JvmConnectionNewInputField(
     actionContent: (@Composable () -> Unit)? = null,
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(7.dp)
+        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
     ) {
         Text(
             text = label,
@@ -966,6 +971,12 @@ private fun JvmConnectionNewSummaryPanel(
     address: String,
     modifier: Modifier = Modifier,
 ) {
+    val accentBlockSize = XyTheme.dimens.innerHorizontalPadding +
+        XyTheme.dimens.contentPadding +
+        XyTheme.dimens.innerVerticalPadding +
+        XyTheme.dimens.innerVerticalPadding / 2
+    val heroLogoSize = accentBlockSize + accentBlockSize
+
     JvmConnectionNewPanel(
         modifier = modifier,
     ) {
@@ -973,7 +984,7 @@ private fun JvmConnectionNewSummaryPanel(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(150.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(XyTheme.dimens.corner))
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
@@ -986,21 +997,21 @@ private fun JvmConnectionNewSummaryPanel(
         ) {
             Box(
                 modifier = Modifier
-                    .size(92.dp)
-                    .clip(RoundedCornerShape(22.dp))
+                    .size(heroLogoSize)
+                    .clip(RoundedCornerShape(XyTheme.dimens.dialogCorner))
                     .background(MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.78f))
                     .border(
                         width = 1.dp,
                         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                        shape = RoundedCornerShape(22.dp)
+                        shape = RoundedCornerShape(XyTheme.dimens.dialogCorner)
                     )
-                    .padding(17.dp),
+                    .padding(XyTheme.dimens.outerHorizontalPadding),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
                     modifier = Modifier
                         .fillMaxSize()
-                        .clip(RoundedCornerShape(14.dp)),
+                        .clip(RoundedCornerShape(XyTheme.dimens.corner)),
                     painter = painterResource(selectedDataSource.img),
                     contentDescription = selectedDataSource.title,
                     contentScale = ContentScale.Crop
@@ -1029,12 +1040,12 @@ private fun JvmConnectionNewSummaryPanel(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(XyTheme.dimens.corner))
                 .background(MaterialTheme.colorScheme.surfaceContainerLowest)
                 .border(
                     width = 1.dp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                    shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(XyTheme.dimens.corner)
                 )
                 .padding(XyTheme.dimens.contentPadding),
             verticalAlignment = Alignment.CenterVertically,
@@ -1042,8 +1053,8 @@ private fun JvmConnectionNewSummaryPanel(
         ) {
             Box(
                 modifier = Modifier
-                    .size(46.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .size(accentBlockSize)
+                    .clip(RoundedCornerShape(XyTheme.dimens.corner))
                     .background(
                         Brush.linearGradient(
                             listOf(
@@ -1142,14 +1153,14 @@ private fun JvmConnectionNewResourcePanel(
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onEditConnectionInfo,
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(XyTheme.dimens.corner),
             ) {
                 Text(text = "修改连接信息")
             }
         }
         Spacer(modifier = Modifier.height(14.dp))
         Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
         ) {
             resources.forEachIndexed { index, item ->
                 JvmConnectionNewResourceItem(
@@ -1172,7 +1183,7 @@ private fun JvmConnectionNewResourceItem(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    val shape = RoundedCornerShape(8.dp)
+    val shape = RoundedCornerShape(XyTheme.dimens.corner)
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1204,7 +1215,7 @@ private fun JvmConnectionNewResourceItem(
     ) {
         Box(
             modifier = Modifier
-                .size(18.dp)
+                .size(XyTheme.dimens.contentPadding + XyTheme.dimens.innerVerticalPadding / 2)
                 .clip(CircleShape)
                 .border(
                     width = if (selected) 5.dp else 2.dp,
@@ -1252,12 +1263,12 @@ private fun JvmConnectionNewSuccessBanner(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(XyTheme.dimens.corner))
             .background(successColor.copy(alpha = 0.1f))
             .border(
                 width = 1.dp,
                 color = successColor.copy(alpha = 0.24f),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(XyTheme.dimens.corner)
             )
             .padding(
                 horizontal = XyTheme.dimens.outerHorizontalPadding,
@@ -1286,7 +1297,7 @@ private fun JvmConnectionNewSuccessBanner(
         Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
         Button(
             onClick = {},
-            shape = RoundedCornerShape(8.dp)
+            shape = RoundedCornerShape(XyTheme.dimens.corner)
         ) {
             Text(text = "进入主页")
         }
@@ -1300,7 +1311,7 @@ private fun JvmConnectionNewPanel(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(XyTheme.dimens.corner),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
         ),
