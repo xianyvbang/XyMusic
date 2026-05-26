@@ -53,6 +53,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -60,6 +61,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -87,6 +89,7 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopWindowControls
 import cn.xybbz.ui.windows.desktopWindowDragArea
 import cn.xybbz.ui.xy.XyEdit
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.cancel_24px
@@ -127,8 +130,27 @@ fun JvmConnectionNewScreen(
     var selectedResourceIndex by remember {
         mutableIntStateOf(-1)
     }
-    val connectionReady by remember(showResourcePanel, selectedResourceIndex) {
-        derivedStateOf { showResourcePanel && selectedResourceIndex >= 0 }
+    var loginStage by remember {
+        mutableStateOf(JvmConnectionNewLoginStage.Idle)
+    }
+    val connectionReady by remember(showResourcePanel, selectedResourceIndex, loginStage) {
+        derivedStateOf {
+            showResourcePanel &&
+                selectedResourceIndex >= 0 &&
+                loginStage == JvmConnectionNewLoginStage.Success
+        }
+    }
+
+    LaunchedEffect(selectedDataSource, address, selectedResourceIndex) {
+        if (selectedResourceIndex < 0) {
+            loginStage = JvmConnectionNewLoginStage.Idle
+            return@LaunchedEffect
+        }
+        loginStage = JvmConnectionNewLoginStage.LoggingIn
+        delay(650)
+        loginStage = JvmConnectionNewLoginStage.Syncing
+        delay(800)
+        loginStage = JvmConnectionNewLoginStage.Success
     }
 
     BoxWithConstraints(
@@ -161,7 +183,7 @@ fun JvmConnectionNewScreen(
                         dataSourceTypes = dataSourceTypes,
                         selectedDataSource = selectedDataSource,
                         activeStep = when {
-                            connectionReady -> 3
+                            selectedResourceIndex >= 0 -> 3
                             showResourcePanel -> 2
                             else -> 1
                         },
@@ -169,6 +191,7 @@ fun JvmConnectionNewScreen(
                             selectedDataSource = it
                             showResourcePanel = false
                             selectedResourceIndex = -1
+                            loginStage = JvmConnectionNewLoginStage.Idle
                         }
                     )
                     JvmConnectionNewMainContent(
@@ -181,6 +204,7 @@ fun JvmConnectionNewScreen(
                         showPassword = showPassword,
                         showResourcePanel = showResourcePanel,
                         selectedResourceIndex = selectedResourceIndex,
+                        loginStage = loginStage,
                         connectionReady = connectionReady,
                         onAddressChange = { address = it },
                         onUsernameChange = { username = it },
@@ -189,10 +213,12 @@ fun JvmConnectionNewScreen(
                         onConnect = {
                             showResourcePanel = true
                             selectedResourceIndex = -1
+                            loginStage = JvmConnectionNewLoginStage.Idle
                         },
                         onReset = {
                             showResourcePanel = false
                             selectedResourceIndex = -1
+                            loginStage = JvmConnectionNewLoginStage.Idle
                         },
                         onSelectResource = { selectedResourceIndex = it }
                     )
@@ -209,7 +235,7 @@ fun JvmConnectionNewScreen(
                         dataSourceTypes = dataSourceTypes,
                         selectedDataSource = selectedDataSource,
                         activeStep = when {
-                            connectionReady -> 3
+                            selectedResourceIndex >= 0 -> 3
                             showResourcePanel -> 2
                             else -> 1
                         },
@@ -217,6 +243,7 @@ fun JvmConnectionNewScreen(
                             selectedDataSource = it
                             showResourcePanel = false
                             selectedResourceIndex = -1
+                            loginStage = JvmConnectionNewLoginStage.Idle
                         }
                     )
                     JvmConnectionNewMainContent(
@@ -232,6 +259,7 @@ fun JvmConnectionNewScreen(
                         showPassword = showPassword,
                         showResourcePanel = showResourcePanel,
                         selectedResourceIndex = selectedResourceIndex,
+                        loginStage = loginStage,
                         connectionReady = connectionReady,
                         onAddressChange = { address = it },
                         onUsernameChange = { username = it },
@@ -240,10 +268,12 @@ fun JvmConnectionNewScreen(
                         onConnect = {
                             showResourcePanel = true
                             selectedResourceIndex = -1
+                            loginStage = JvmConnectionNewLoginStage.Idle
                         },
                         onReset = {
                             showResourcePanel = false
                             selectedResourceIndex = -1
+                            loginStage = JvmConnectionNewLoginStage.Idle
                         },
                         onSelectResource = { selectedResourceIndex = it }
                     )
@@ -461,7 +491,7 @@ private fun JvmConnectionNewStatusPill(
 private fun JvmConnectionNewStepPanel(
     activeStep: Int,
 ) {
-    val steps = listOf("选择服务", "输入凭据", "选择资源", "进入主页")
+    val steps = listOf("选择服务", "输入凭据", "选择资源", "登录验证")
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -554,6 +584,7 @@ private fun JvmConnectionNewMainContent(
     showPassword: Boolean,
     showResourcePanel: Boolean,
     selectedResourceIndex: Int,
+    loginStage: JvmConnectionNewLoginStage,
     connectionReady: Boolean,
     onAddressChange: (String) -> Unit,
     onUsernameChange: (String) -> Unit,
@@ -589,6 +620,7 @@ private fun JvmConnectionNewMainContent(
                         selectedDataSource = selectedDataSource,
                         address = address,
                         selectedResourceIndex = selectedResourceIndex,
+                        loginStage = loginStage,
                         onSelectResource = onSelectResource,
                         onEditConnectionInfo = onReset
                     )
@@ -641,6 +673,7 @@ private fun JvmConnectionNewMainContent(
                             selectedDataSource = selectedDataSource,
                             address = address,
                             selectedResourceIndex = selectedResourceIndex,
+                            loginStage = loginStage,
                             onSelectResource = onSelectResource
                         )
                     } else {
@@ -1121,6 +1154,7 @@ private fun JvmConnectionNewResourcePanel(
     selectedDataSource: DataSourceType,
     address: String,
     selectedResourceIndex: Int,
+    loginStage: JvmConnectionNewLoginStage,
     onSelectResource: (Int) -> Unit,
     modifier: Modifier = Modifier,
     onEditConnectionInfo: (() -> Unit)? = null,
@@ -1169,6 +1203,17 @@ private fun JvmConnectionNewResourcePanel(
                     tag = item.tag,
                     selected = index == selectedResourceIndex,
                     onClick = { onSelectResource(index) }
+                )
+            }
+        }
+        AnimatedVisibility(visible = selectedResourceIndex >= 0) {
+            val selectedResource = resources.getOrNull(selectedResourceIndex)
+            Column {
+                Spacer(modifier = Modifier.height(14.dp))
+                JvmConnectionNewLoginStatusPanel(
+                    selectedDataSource = selectedDataSource,
+                    resourceAddress = selectedResource?.address.orEmpty(),
+                    stage = loginStage,
                 )
             }
         }
@@ -1256,6 +1301,195 @@ private fun JvmConnectionNewResourceItem(
 }
 
 @Composable
+private fun JvmConnectionNewLoginStatusPanel(
+    selectedDataSource: DataSourceType,
+    resourceAddress: String,
+    stage: JvmConnectionNewLoginStage,
+    modifier: Modifier = Modifier,
+) {
+    val successColor = Color(0xFF16824A)
+    val activeStage = if (stage == JvmConnectionNewLoginStage.Idle) {
+        JvmConnectionNewLoginStage.LoggingIn
+    } else {
+        stage
+    }
+    val isSuccess = activeStage == JvmConnectionNewLoginStage.Success
+    val activeIndex = when (activeStage) {
+        JvmConnectionNewLoginStage.Idle,
+        JvmConnectionNewLoginStage.LoggingIn -> 1
+        JvmConnectionNewLoginStage.Syncing -> 2
+        JvmConnectionNewLoginStage.Success -> 3
+    }
+    val title = when (activeStage) {
+        JvmConnectionNewLoginStage.Idle,
+        JvmConnectionNewLoginStage.LoggingIn -> "正在登录"
+        JvmConnectionNewLoginStage.Syncing -> "正在同步资料"
+        JvmConnectionNewLoginStage.Success -> "登录成功"
+    }
+    val detail = when (activeStage) {
+        JvmConnectionNewLoginStage.Idle,
+        JvmConnectionNewLoginStage.LoggingIn -> "正在使用 ${selectedDataSource.title} 账号登录所选资源。"
+        JvmConnectionNewLoginStage.Syncing -> "会话已建立，正在读取用户资料和媒体库入口。"
+        JvmConnectionNewLoginStage.Success -> "账号和资源地址已确认，可以进入主页。"
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(XyTheme.dimens.corner))
+            .background(
+                if (isSuccess) {
+                    successColor.copy(alpha = 0.1f)
+                } else {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                }
+            )
+            .border(
+                width = 1.dp,
+                color = if (isSuccess) {
+                    successColor.copy(alpha = 0.24f)
+                } else {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.24f)
+                },
+                shape = RoundedCornerShape(XyTheme.dimens.corner)
+            )
+            .padding(XyTheme.dimens.contentPadding),
+        verticalArrangement = Arrangement.spacedBy(13.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            JvmConnectionNewLoginIndicator(
+                success = isSuccess,
+                successColor = successColor
+            )
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = title,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.W900,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = detail,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            JvmConnectionNewChip(
+                text = if (isSuccess) "完成" else if (activeStage == JvmConnectionNewLoginStage.Syncing) "同步中" else "登录中",
+                color = if (isSuccess) successColor else MaterialTheme.colorScheme.primary,
+                backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest
+            )
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+        ) {
+            listOf("验证账号", "建立会话", "同步资料").forEachIndexed { index, text ->
+                JvmConnectionNewLoginProgressItem(
+                    modifier = Modifier.weight(1f),
+                    text = text,
+                    done = index < activeIndex,
+                    active = index == activeIndex,
+                    successColor = successColor
+                )
+            }
+        }
+
+        JvmConnectionNewMetaRow(
+            label = "资源地址",
+            value = resourceAddress.ifBlank { selectedDataSource.defaultAddress.ifBlank { "自动发现" } }
+        )
+    }
+}
+
+@Composable
+private fun JvmConnectionNewLoginIndicator(
+    success: Boolean,
+    successColor: Color,
+) {
+    Box(
+        modifier = Modifier.size(30.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        if (success) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(CircleShape)
+                    .background(successColor),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    modifier = Modifier.size(18.dp),
+                    painter = painterResource(Res.drawable.check_24px),
+                    contentDescription = null,
+                    tint = Color.White
+                )
+            }
+        } else {
+            CircularProgressIndicator(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.primary,
+                strokeWidth = 3.dp
+            )
+        }
+    }
+}
+
+@Composable
+private fun JvmConnectionNewLoginProgressItem(
+    text: String,
+    done: Boolean,
+    active: Boolean,
+    successColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    val color = when {
+        done -> successColor
+        active -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(XyTheme.dimens.corner))
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f))
+            .padding(
+                horizontal = XyTheme.dimens.outerHorizontalPadding / 2,
+                vertical = XyTheme.dimens.outerVerticalPadding
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(XyTheme.dimens.outerVerticalPadding)
+                .clip(CircleShape)
+                .background(color.copy(alpha = if (done || active) 1f else 0.55f))
+        )
+        Text(
+            text = text,
+            color = color,
+            fontWeight = FontWeight.W800,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.labelSmall
+        )
+    }
+}
+
+@Composable
 private fun JvmConnectionNewSuccessBanner(
     selectedDataSource: DataSourceType,
 ) {
@@ -1287,7 +1521,7 @@ private fun JvmConnectionNewSuccessBanner(
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = "${selectedDataSource.title} 资源已准备好，可以进入主页。",
+                text = "${selectedDataSource.title} 登录完成，可以进入主页。",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -1391,6 +1625,13 @@ private fun DataSourceType.sampleResources(address: String): List<JvmConnectionN
             )
         )
     }
+}
+
+private enum class JvmConnectionNewLoginStage {
+    Idle,
+    LoggingIn,
+    Syncing,
+    Success,
 }
 
 private data class JvmConnectionNewResource(

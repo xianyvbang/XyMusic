@@ -1,0 +1,1347 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>XyMusic JVM Connection Mockup</title>
+    <style>
+        :root {
+            --primary: #0470e6;
+            --primary-soft: #eaf3ff;
+            --on-surface: #1e1715;
+            --on-surface-variant: #757575;
+            --surface: #f3f3f3;
+            --surface-lowest: #ffffff;
+            --line: #d9d9d9;
+            --line-strong: #bcbcbc;
+            --success: #16824a;
+            --success-soft: #e8f6ee;
+            --warning: #a86200;
+            --warning-soft: #fff4df;
+            --danger: #b42318;
+            --info-soft: #eef6ff;
+            --shadow: 0 22px 60px rgba(16, 24, 40, .14);
+            color-scheme: light;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background:
+                linear-gradient(135deg, rgba(4, 112, 230, .08), transparent 34%),
+                linear-gradient(315deg, rgba(22, 130, 74, .08), transparent 32%),
+                #e8e9eb;
+            color: var(--on-surface);
+            font-family:
+                "Microsoft YaHei UI",
+                "Microsoft YaHei",
+                "PingFang SC",
+                "Segoe UI",
+                sans-serif;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        button {
+            border: 0;
+            cursor: pointer;
+        }
+
+        .window {
+            width: min(1120px, 100%);
+            min-height: 680px;
+            background: var(--surface);
+            border: 1px solid rgba(30, 23, 21, .08);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .titlebar {
+            height: 48px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            border-bottom: 1px solid rgba(30, 23, 21, .08);
+            background: rgba(255, 255, 255, .78);
+            backdrop-filter: blur(18px);
+        }
+
+        .title-left {
+            display: flex;
+            min-width: 0;
+            align-items: center;
+            gap: 10px;
+            padding: 0 18px;
+            font-weight: 900;
+            letter-spacing: 0;
+        }
+
+        .app-logo {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            object-fit: cover;
+            box-shadow: inset 0 0 0 1px rgba(30, 23, 21, .08);
+        }
+
+        .window-controls {
+            height: 48px;
+            display: flex;
+            align-items: stretch;
+        }
+
+        .window-controls button {
+            width: 46px;
+            color: var(--on-surface);
+            background: transparent;
+            font-size: 15px;
+        }
+
+        .window-controls button:hover {
+            background: rgba(30, 23, 21, .08);
+        }
+
+        .window-controls button.close:hover {
+            color: #fff;
+            background: #d92d20;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 324px minmax(0, 1fr);
+            min-height: 632px;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            padding: 22px 16px 18px;
+            background: var(--surface-lowest);
+            border-right: 1px solid rgba(30, 23, 21, .08);
+        }
+
+        .side-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 0 4px;
+        }
+
+        .side-heading h2,
+        .main-heading h1,
+        .panel h3 {
+            margin: 0;
+            line-height: 1.18;
+            letter-spacing: 0;
+        }
+
+        .side-heading h2 {
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 28px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            color: var(--success);
+            background: var(--success-soft);
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .protocols {
+            display: grid;
+            gap: 8px;
+        }
+
+        .protocol {
+            display: grid;
+            grid-template-columns: 44px minmax(0, 1fr) auto;
+            gap: 12px;
+            align-items: center;
+            min-height: 68px;
+            padding: 10px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            background: var(--surface-lowest);
+            color: var(--on-surface);
+            text-align: left;
+        }
+
+        .protocol:hover {
+            background: #f7f9fb;
+            border-color: var(--line);
+        }
+
+        .protocol.active {
+            background: var(--primary-soft);
+            border-color: rgba(4, 112, 230, .56);
+        }
+
+        .protocol-logo {
+            width: 44px;
+            height: 44px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            border-radius: 8px;
+            background: #f0f0f0;
+            color: var(--primary);
+            font-size: 18px;
+            font-weight: 900;
+            box-shadow: inset 0 0 0 1px rgba(30, 23, 21, .06);
+        }
+
+        .protocol-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .protocol-title {
+            overflow: hidden;
+        }
+
+        .protocol-title strong {
+            display: block;
+            overflow: hidden;
+            color: var(--on-surface);
+            font-size: 15px;
+            font-weight: 800;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .protocol-title span {
+            display: block;
+            overflow: hidden;
+            margin-top: 2px;
+            color: var(--on-surface-variant);
+            font-size: 12px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .port {
+            padding: 3px 8px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--on-surface-variant);
+            background: #fff;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .steps {
+            margin-top: auto;
+            display: grid;
+            gap: 7px;
+            padding: 12px;
+            border: 1px solid rgba(30, 23, 21, .08);
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        .step {
+            display: grid;
+            grid-template-columns: 24px minmax(0, 1fr);
+            gap: 9px;
+            align-items: center;
+            color: var(--on-surface-variant);
+            font-size: 13px;
+        }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: #ececec;
+            color: var(--on-surface-variant);
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .step.done,
+        .step.active {
+            color: var(--on-surface);
+            font-weight: 700;
+        }
+
+        .step.done .step-number {
+            color: #fff;
+            background: var(--success);
+        }
+
+        .step.active .step-number {
+            color: #fff;
+            background: var(--primary);
+        }
+
+        .main {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            min-width: 0;
+            padding: 24px 28px;
+        }
+
+        .main-heading {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .main-heading h1 {
+            font-size: clamp(26px, 4vw, 38px);
+            font-weight: 900;
+        }
+
+        .main-heading p {
+            max-width: 640px;
+            margin: 9px 0 0;
+            color: var(--on-surface-variant);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .selected-service {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            min-height: 34px;
+            padding: 5px 11px 5px 7px;
+            border: 1px solid rgba(4, 112, 230, .2);
+            border-radius: 999px;
+            background: #fff;
+            color: var(--primary);
+            font-size: 13px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .selected-service span:first-child {
+            width: 22px;
+            height: 22px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--primary-soft);
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: minmax(360px, 1fr) 290px;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .panel {
+            min-width: 0;
+            padding: 18px;
+            border: 1px solid rgba(30, 23, 21, .08);
+            border-radius: 8px;
+            background: var(--surface-lowest);
+        }
+
+        .panel h3 {
+            font-size: 17px;
+            font-weight: 900;
+        }
+
+        .panel-subtitle {
+            margin: 5px 0 0;
+            color: var(--on-surface-variant);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .form {
+            display: grid;
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .field {
+            display: grid;
+            gap: 7px;
+        }
+
+        .field label {
+            color: var(--on-surface);
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .input-shell {
+            display: grid;
+            grid-template-columns: 32px minmax(0, 1fr) auto;
+            align-items: center;
+            min-height: 48px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        .input-shell:focus-within {
+            border-color: rgba(4, 112, 230, .72);
+            box-shadow: 0 0 0 3px rgba(4, 112, 230, .12);
+        }
+
+        .field-icon {
+            display: grid;
+            place-items: center;
+            color: var(--on-surface-variant);
+        }
+
+        .input-shell input {
+            width: 100%;
+            min-width: 0;
+            height: 46px;
+            border: 0;
+            outline: 0;
+            color: var(--on-surface);
+            background: transparent;
+            font-size: 14px;
+        }
+
+        .input-action {
+            margin-right: 6px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            color: var(--on-surface-variant);
+            background: transparent;
+        }
+
+        .input-action:hover {
+            background: #f0f0f0;
+        }
+
+        .hint-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            color: var(--on-surface-variant);
+            font-size: 12px;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            min-height: 24px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: #f1f1f1;
+            color: var(--on-surface-variant);
+            font-weight: 700;
+        }
+
+        .chip.primary {
+            color: var(--primary);
+            background: var(--primary-soft);
+        }
+
+        .chip.warning {
+            color: var(--warning);
+            background: var(--warning-soft);
+        }
+
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .button {
+            min-width: 112px;
+            min-height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 0 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .button.primary {
+            color: #fff;
+            background: var(--primary);
+        }
+
+        .button.primary:hover {
+            background: #035fca;
+        }
+
+        .button.secondary {
+            color: var(--on-surface);
+            background: #eeeeee;
+        }
+
+        .button.secondary:hover {
+            background: #e2e2e2;
+        }
+
+        .summary {
+            display: grid;
+            gap: 14px;
+        }
+
+        .server-card {
+            display: grid;
+            gap: 12px;
+        }
+
+        .server-art {
+            min-height: 150px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            background:
+                linear-gradient(135deg, rgba(4, 112, 230, .18), rgba(22, 130, 74, .12)),
+                #eef2f6;
+        }
+
+        .server-art-inner {
+            width: 92px;
+            height: 92px;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(4, 112, 230, .18);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, .78);
+            box-shadow: 0 12px 30px rgba(4, 112, 230, .16);
+        }
+
+        .server-art-inner img {
+            width: 58px;
+            height: 58px;
+            border-radius: 14px;
+            object-fit: cover;
+        }
+
+        .meta-list {
+            display: grid;
+            gap: 9px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .meta-list li {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            color: var(--on-surface-variant);
+            font-size: 13px;
+        }
+
+        .meta-list strong {
+            overflow: hidden;
+            color: var(--on-surface);
+            font-weight: 800;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .resource-panel {
+            display: none;
+        }
+
+        .resource-panel.show {
+            display: block;
+        }
+
+        .resource-list {
+            display: grid;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .resource-item {
+            display: grid;
+            grid-template-columns: 20px minmax(0, 1fr) auto;
+            gap: 10px;
+            align-items: center;
+            min-height: 58px;
+            padding: 9px 10px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+        }
+
+        .resource-item.active {
+            border-color: rgba(4, 112, 230, .48);
+            background: var(--primary-soft);
+        }
+
+        .radio {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--line-strong);
+            border-radius: 50%;
+            background: #fff;
+        }
+
+        .resource-item.active .radio {
+            border: 5px solid var(--primary);
+        }
+
+        .resource-title {
+            overflow: hidden;
+        }
+
+        .resource-title strong,
+        .resource-title span {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .resource-title strong {
+            font-size: 14px;
+        }
+
+        .resource-title span {
+            margin-top: 2px;
+            color: var(--on-surface-variant);
+            font-size: 12px;
+        }
+
+        .resource-tag {
+            padding: 3px 7px;
+            border-radius: 999px;
+            color: var(--success);
+            background: var(--success-soft);
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .login-status {
+            display: none;
+            gap: 13px;
+            margin-top: 14px;
+            padding: 14px;
+            border: 1px solid rgba(4, 112, 230, .24);
+            border-radius: 8px;
+            background: var(--info-soft);
+        }
+
+        .login-status.show {
+            display: grid;
+        }
+
+        .login-status.success {
+            border-color: rgba(22, 130, 74, .24);
+            background: var(--success-soft);
+        }
+
+        .login-status-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .login-status-title {
+            display: grid;
+            grid-template-columns: 30px minmax(0, 1fr);
+            gap: 10px;
+            align-items: center;
+            min-width: 0;
+        }
+
+        .login-indicator {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(4, 112, 230, .18);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 900ms linear infinite;
+        }
+
+        .login-status.success .login-indicator {
+            display: grid;
+            place-items: center;
+            border: 0;
+            color: #fff;
+            background: var(--success);
+            animation: none;
+        }
+
+        .login-status.success .login-indicator::before {
+            content: "✓";
+            font-size: 17px;
+            font-weight: 900;
+        }
+
+        .login-status-title strong,
+        .login-status-title span {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .login-status-title strong {
+            color: var(--on-surface);
+            font-size: 15px;
+            font-weight: 900;
+        }
+
+        .login-status-title span {
+            margin-top: 2px;
+            color: var(--on-surface-variant);
+            font-size: 12px;
+        }
+
+        .login-state-pill {
+            display: inline-flex;
+            align-items: center;
+            min-height: 26px;
+            padding: 3px 9px;
+            border-radius: 999px;
+            color: var(--primary);
+            background: #fff;
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .login-status.success .login-state-pill {
+            color: var(--success);
+        }
+
+        .login-progress {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .login-progress-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            min-width: 0;
+            padding: 8px 9px;
+            border-radius: 8px;
+            color: var(--on-surface-variant);
+            background: rgba(255, 255, 255, .62);
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .login-progress-item.active {
+            color: var(--primary);
+            background: #fff;
+        }
+
+        .login-progress-item.done {
+            color: var(--success);
+            background: #fff;
+        }
+
+        .login-progress-dot {
+            width: 8px;
+            height: 8px;
+            flex: 0 0 auto;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: .55;
+        }
+
+        .login-progress-item.active .login-progress-dot,
+        .login-progress-item.done .login-progress-dot {
+            opacity: 1;
+        }
+
+        .login-target {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            min-width: 0;
+            padding-top: 2px;
+            color: var(--on-surface-variant);
+            font-size: 12px;
+        }
+
+        .login-target strong {
+            overflow: hidden;
+            color: var(--on-surface);
+            font-weight: 800;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .result-banner {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 16px;
+            border: 1px solid rgba(22, 130, 74, .24);
+            border-radius: 8px;
+            background: var(--success-soft);
+        }
+
+        .result-banner.show {
+            display: flex;
+        }
+
+        .result-banner strong {
+            display: block;
+            color: var(--success);
+            font-size: 15px;
+        }
+
+        .result-banner span {
+            display: block;
+            margin-top: 2px;
+            color: var(--on-surface-variant);
+            font-size: 13px;
+        }
+
+        .mini-player {
+            display: grid;
+            grid-template-columns: 46px minmax(0, 1fr);
+            gap: 10px;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid rgba(30, 23, 21, .08);
+            border-radius: 8px;
+            background: #fff;
+        }
+
+        .mini-cover {
+            width: 46px;
+            height: 46px;
+            border-radius: 8px;
+            background:
+                linear-gradient(135deg, #0470e6, #16a06b);
+        }
+
+        .mini-player strong,
+        .mini-player span {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .mini-player strong {
+            font-size: 13px;
+        }
+
+        .mini-player span {
+            color: var(--on-surface-variant);
+            font-size: 12px;
+        }
+
+        @media (max-width: 920px) {
+            body {
+                padding: 0;
+                background: var(--surface);
+            }
+
+            .window {
+                min-height: 100vh;
+                border: 0;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            .workspace,
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .workspace {
+                min-height: auto;
+            }
+
+            .sidebar {
+                border-right: 0;
+                border-bottom: 1px solid rgba(30, 23, 21, .08);
+            }
+
+            .protocols {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .steps {
+                margin-top: 0;
+            }
+
+            .main-heading {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .protocols {
+                grid-template-columns: 1fr;
+            }
+
+            .main {
+                padding: 18px 14px;
+            }
+
+            .actions,
+            .result-banner {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="window" aria-label="XyMusic 连接页面设计预览">
+        <header class="titlebar">
+            <div class="title-left">
+                <img class="app-logo" src="../../../composeApp/src/commonMain/composeResources/drawable/logo_new.png" alt="">
+                <span>XyMusic</span>
+            </div>
+            <div class="window-controls" aria-label="窗口控制">
+                <button type="button" title="最小化">-</button>
+                <button type="button" title="最大化">□</button>
+                <button class="close" type="button" title="关闭">×</button>
+            </div>
+        </header>
+
+        <section class="workspace">
+            <aside class="sidebar">
+                <div class="side-heading">
+                    <h2>服务器连接</h2>
+                    <span class="status-pill"><span class="status-dot"></span>首次打开</span>
+                </div>
+
+                <div class="protocols" aria-label="选择协议">
+                    <button class="protocol active" type="button" data-protocol="Jellyfin" data-desc="jellyfin媒体服务器" data-port="8096" data-kind="url" data-logo="">
+                        <span class="protocol-logo">J</span>
+                        <span class="protocol-title">
+                            <strong>Jellyfin</strong>
+                            <span>jellyfin媒体服务器</span>
+                        </span>
+                        <span class="port">8096</span>
+                    </button>
+                    <button class="protocol" type="button" data-protocol="Subsonic" data-desc="Subsonic媒体服务器" data-port="4040" data-kind="url" data-logo="../../../composeApp/src/commonMain/composeResources/drawable/subsonic_logo.png">
+                        <span class="protocol-logo"><img src="../../../composeApp/src/commonMain/composeResources/drawable/subsonic_logo.png" alt=""></span>
+                        <span class="protocol-title">
+                            <strong>Subsonic</strong>
+                            <span>Subsonic媒体服务器</span>
+                        </span>
+                        <span class="port">4040</span>
+                    </button>
+                    <button class="protocol" type="button" data-protocol="Navidrome" data-desc="navidrome媒体服务器" data-port="4533" data-kind="url" data-logo="../../../composeApp/src/commonMain/composeResources/drawable/navidrome_icon.png">
+                        <span class="protocol-logo"><img src="../../../composeApp/src/commonMain/composeResources/drawable/navidrome_icon.png" alt=""></span>
+                        <span class="protocol-title">
+                            <strong>Navidrome</strong>
+                            <span>navidrome媒体服务器</span>
+                        </span>
+                        <span class="port">4533</span>
+                    </button>
+                    <button class="protocol" type="button" data-protocol="Emby" data-desc="emby媒体服务器" data-port="8096" data-kind="url" data-logo="../../../composeApp/src/commonMain/composeResources/drawable/emby_logo_24.png">
+                        <span class="protocol-logo"><img src="../../../composeApp/src/commonMain/composeResources/drawable/emby_logo_24.png" alt=""></span>
+                        <span class="protocol-title">
+                            <strong>Emby</strong>
+                            <span>emby媒体服务器</span>
+                        </span>
+                        <span class="port">8096</span>
+                    </button>
+                    <button class="protocol" type="button" data-protocol="Plex" data-desc="PLEX媒体服务器" data-port="32400" data-kind="discover" data-logo="../../../composeApp/src/commonMain/composeResources/drawable/plex_logos.jpeg">
+                        <span class="protocol-logo"><img src="../../../composeApp/src/commonMain/composeResources/drawable/plex_logos.jpeg" alt=""></span>
+                        <span class="protocol-title">
+                            <strong>Plex</strong>
+                            <span>PLEX媒体服务器</span>
+                        </span>
+                        <span class="port">32400</span>
+                    </button>
+                </div>
+
+                <div class="steps" aria-label="连接进度">
+                    <div class="step done"><span class="step-number">1</span><span>选择服务</span></div>
+                    <div class="step active"><span class="step-number">2</span><span>输入凭据</span></div>
+                    <div class="step"><span class="step-number">3</span><span>选择资源</span></div>
+                    <div class="step"><span class="step-number">4</span><span>登录验证</span></div>
+                </div>
+            </aside>
+
+            <section class="main">
+                <div class="main-heading">
+                    <div>
+                        <h1>连接到媒体服务器</h1>
+                        <p id="headline-copy">已选择 Jellyfin，输入服务地址和账号后即可读取媒体资源。</p>
+                    </div>
+                    <div class="selected-service" aria-live="polite">
+                        <span id="service-mark">J</span>
+                        <span id="selected-name">Jellyfin</span>
+                    </div>
+                </div>
+
+                <div class="result-banner" id="result-banner" aria-live="polite">
+                    <div>
+                        <strong>连接成功</strong>
+                        <span id="result-text">Jellyfin 资源已准备好，可以进入主页。</span>
+                    </div>
+                    <button class="button primary" type="button">进入主页</button>
+                </div>
+
+                <div class="content-grid">
+                    <section class="panel">
+                        <h3 id="form-title">Jellyfin 凭据</h3>
+                        <p class="panel-subtitle" id="form-subtitle">桌面首屏直接展示表单，避免先进入一整页协议列表。</p>
+
+                        <form class="form" id="connection-form">
+                            <div class="field" id="address-field">
+                                <label for="address">服务地址</label>
+                                <div class="input-shell">
+                                    <span class="field-icon">⌁</span>
+                                    <input id="address" value="http://192.168.1.12:8096" autocomplete="off">
+                                    <button class="input-action" type="button" title="清空">×</button>
+                                </div>
+                                <div class="hint-row">
+                                    <span class="chip primary" id="default-port">默认端口 8096</span>
+                                    <span class="chip">支持 http / https</span>
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label for="username">用户名</label>
+                                <div class="input-shell">
+                                    <span class="field-icon">○</span>
+                                    <input id="username" value="admin" autocomplete="username">
+                                    <button class="input-action" type="button" title="清空">×</button>
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label for="password">密码</label>
+                                <div class="input-shell">
+                                    <span class="field-icon">●</span>
+                                    <input id="password" type="password" value="password" autocomplete="current-password">
+                                    <button class="input-action" type="button" id="toggle-password" title="显示密码">◎</button>
+                                </div>
+                            </div>
+
+                            <div class="hint-row" id="plex-note" hidden>
+                                <span class="chip warning">Plex 将通过账号自动读取可用服务器</span>
+                            </div>
+
+                            <div class="actions">
+                                <button class="button secondary" type="button" id="reset-button">重新选择</button>
+                                <button class="button primary" type="submit" id="connect-button">连接</button>
+                            </div>
+                        </form>
+                    </section>
+
+                    <aside class="panel summary">
+                        <div class="server-card">
+                            <div class="server-art">
+                                <div class="server-art-inner" id="server-art-inner">
+                                    <img id="preview-logo" src="../../../composeApp/src/commonMain/composeResources/drawable/logo_new.png" alt="">
+                                </div>
+                            </div>
+                            <ul class="meta-list">
+                                <li><span>协议</span><strong id="meta-protocol">Jellyfin</strong></li>
+                                <li><span>地址</span><strong id="meta-address">192.168.1.12:8096</strong></li>
+                                <li><span>版本</span><strong id="meta-version">10.10.7+</strong></li>
+                            </ul>
+                        </div>
+                        <div class="mini-player">
+                            <span class="mini-cover"></span>
+                            <span>
+                                <strong>准备同步媒体库</strong>
+                                <span>歌曲、专辑、艺术家将在登录后读取</span>
+                            </span>
+                        </div>
+                    </aside>
+                </div>
+
+                <section class="panel resource-panel" id="resource-panel">
+                    <h3>选择资源地址</h3>
+                    <p class="panel-subtitle" id="resource-subtitle">已找到可连接的服务地址。</p>
+                    <div class="resource-list">
+                        <button class="resource-item active" type="button">
+                            <span class="radio"></span>
+                            <span class="resource-title">
+                                <strong id="resource-primary-title">主服务器</strong>
+                                <span id="resource-primary-address">http://192.168.1.12:8096</span>
+                            </span>
+                            <span class="resource-tag">推荐</span>
+                        </button>
+                        <button class="resource-item" type="button">
+                            <span class="radio"></span>
+                            <span class="resource-title">
+                                <strong>备用地址</strong>
+                                <span id="resource-secondary-address">https://music.example.com</span>
+                            </span>
+                            <span class="resource-tag">可用</span>
+                        </button>
+                    </div>
+                    <div class="login-status" id="login-status" aria-live="polite">
+                        <div class="login-status-header">
+                            <div class="login-status-title">
+                                <span class="login-indicator" aria-hidden="true"></span>
+                                <span>
+                                    <strong id="login-title">正在登录</strong>
+                                    <span id="login-detail">使用所选资源地址建立会话。</span>
+                                </span>
+                            </div>
+                            <span class="login-state-pill" id="login-state-pill">登录中</span>
+                        </div>
+                        <div class="login-progress" aria-label="登录状态">
+                            <span class="login-progress-item done" data-login-step="0"><span class="login-progress-dot"></span>验证账号</span>
+                            <span class="login-progress-item active" data-login-step="1"><span class="login-progress-dot"></span>建立会话</span>
+                            <span class="login-progress-item" data-login-step="2"><span class="login-progress-dot"></span>同步资料</span>
+                        </div>
+                        <div class="login-target">
+                            <span>资源地址</span>
+                            <strong id="login-target-address">http://192.168.1.12:8096</strong>
+                        </div>
+                    </div>
+                </section>
+            </section>
+        </section>
+    </main>
+
+    <script>
+        const protocols = Array.from(document.querySelectorAll(".protocol"));
+        const steps = Array.from(document.querySelectorAll(".step"));
+        const selectedName = document.getElementById("selected-name");
+        const serviceMark = document.getElementById("service-mark");
+        const headlineCopy = document.getElementById("headline-copy");
+        const formTitle = document.getElementById("form-title");
+        const formSubtitle = document.getElementById("form-subtitle");
+        const addressField = document.getElementById("address-field");
+        const defaultPort = document.getElementById("default-port");
+        const plexNote = document.getElementById("plex-note");
+        const metaProtocol = document.getElementById("meta-protocol");
+        const metaAddress = document.getElementById("meta-address");
+        const metaVersion = document.getElementById("meta-version");
+        const previewLogo = document.getElementById("preview-logo");
+        const resourcePanel = document.getElementById("resource-panel");
+        const resultBanner = document.getElementById("result-banner");
+        const resultText = document.getElementById("result-text");
+        const connectButton = document.getElementById("connect-button");
+        const resetButton = document.getElementById("reset-button");
+        const form = document.getElementById("connection-form");
+        const password = document.getElementById("password");
+        const togglePassword = document.getElementById("toggle-password");
+        const addressInput = document.getElementById("address");
+        const resourceTitle = document.getElementById("resource-primary-title");
+        const resourceAddress = document.getElementById("resource-primary-address");
+        const resourceSecondaryAddress = document.getElementById("resource-secondary-address");
+        const loginStatus = document.getElementById("login-status");
+        const loginTitle = document.getElementById("login-title");
+        const loginDetail = document.getElementById("login-detail");
+        const loginStatePill = document.getElementById("login-state-pill");
+        const loginTargetAddress = document.getElementById("login-target-address");
+        const loginProgressItems = Array.from(document.querySelectorAll(".login-progress-item"));
+        let loginTimers = [];
+
+        const versions = {
+            Jellyfin: "10.10.7+",
+            Subsonic: "1.16.0+",
+            Navidrome: "0.56.0+",
+            Emby: "4.1.1.0+",
+            Plex: "账号发现"
+        };
+
+        function setStep(index) {
+            steps.forEach((step, stepIndex) => {
+                step.classList.toggle("done", stepIndex < index);
+                step.classList.toggle("active", stepIndex === index);
+            });
+        }
+
+        function setLoginProgress(activeIndex) {
+            loginProgressItems.forEach((item, index) => {
+                item.classList.toggle("done", index < activeIndex);
+                item.classList.toggle("active", index === activeIndex);
+            });
+        }
+
+        function clearLoginTimers() {
+            loginTimers.forEach(timer => window.clearTimeout(timer));
+            loginTimers = [];
+        }
+
+        function resetLoginStatus() {
+            clearLoginTimers();
+            loginStatus.classList.remove("show", "success");
+            loginTitle.textContent = "正在登录";
+            loginDetail.textContent = "使用所选资源地址建立会话。";
+            loginStatePill.textContent = "登录中";
+            setLoginProgress(1);
+        }
+
+        function startLoginStatus(address) {
+            clearLoginTimers();
+            loginTargetAddress.textContent = address;
+            loginStatus.classList.add("show");
+            loginStatus.classList.remove("success");
+            loginTitle.textContent = "正在登录";
+            loginDetail.textContent = `正在使用 ${selectedName.textContent} 账号登录所选资源。`;
+            loginStatePill.textContent = "登录中";
+            setLoginProgress(1);
+            resultBanner.classList.remove("show");
+            connectButton.textContent = "登录中";
+
+            loginTimers.push(window.setTimeout(() => {
+                loginTitle.textContent = "正在同步资料";
+                loginDetail.textContent = "会话已建立，正在读取用户资料和媒体库入口。";
+                setLoginProgress(2);
+            }, 650));
+
+            loginTimers.push(window.setTimeout(() => {
+                loginStatus.classList.add("success");
+                loginTitle.textContent = "登录成功";
+                loginDetail.textContent = "账号和资源地址已确认，可以进入主页。";
+                loginStatePill.textContent = "完成";
+                setLoginProgress(3);
+                resultText.textContent = `${selectedName.textContent} 登录完成，可以进入主页。`;
+                resultBanner.classList.add("show");
+                connectButton.textContent = "确认连接";
+            }, 1450));
+        }
+
+        function applyProtocol(button) {
+            const name = button.dataset.protocol;
+            const desc = button.dataset.desc;
+            const port = button.dataset.port;
+            const logo = button.dataset.logo;
+            const isDiscover = button.dataset.kind === "discover";
+
+            protocols.forEach(item => item.classList.toggle("active", item === button));
+            selectedName.textContent = name;
+            serviceMark.textContent = name.charAt(0);
+            headlineCopy.textContent = isDiscover
+                ? "已选择 Plex，输入账号后会自动读取可用服务器。"
+                : `已选择 ${name}，输入服务地址和账号后即可读取媒体资源。`;
+            formTitle.textContent = `${name} 凭据`;
+            formSubtitle.textContent = desc;
+            addressField.hidden = isDiscover;
+            plexNote.hidden = !isDiscover;
+            defaultPort.textContent = `默认端口 ${port}`;
+            metaProtocol.textContent = name;
+            metaVersion.textContent = versions[name] || "当前版本";
+            metaAddress.textContent = isDiscover ? "自动发现" : addressInput.value.replace(/^https?:\/\//, "");
+            resourcePanel.classList.remove("show");
+            resultBanner.classList.remove("show");
+            resetLoginStatus();
+            connectButton.textContent = "连接";
+            setStep(1);
+
+            if (logo) {
+                previewLogo.src = logo;
+                previewLogo.hidden = false;
+            } else {
+                previewLogo.src = "../../../composeApp/src/commonMain/composeResources/drawable/logo_new.png";
+                previewLogo.hidden = false;
+            }
+        }
+
+        protocols.forEach(button => {
+            button.addEventListener("click", () => applyProtocol(button));
+        });
+
+        addressInput.addEventListener("input", () => {
+            metaAddress.textContent = addressInput.value.replace(/^https?:\/\//, "") || "未填写";
+            resourceAddress.textContent = addressInput.value || "http://192.168.1.12:8096";
+        });
+
+        togglePassword.addEventListener("click", () => {
+            password.type = password.type === "password" ? "text" : "password";
+        });
+
+        form.addEventListener("submit", event => {
+            event.preventDefault();
+            const active = document.querySelector(".protocol.active");
+            const name = active.dataset.protocol;
+            const isDiscover = active.dataset.kind === "discover";
+
+            connectButton.textContent = "读取中";
+            setStep(2);
+            resourcePanel.classList.add("show");
+            resultBanner.classList.remove("show");
+            resetLoginStatus();
+
+            if (isDiscover) {
+                resourceTitle.textContent = "Plex Music Library";
+                resourceAddress.textContent = "https://app.plex.tv";
+                resourceSecondaryAddress.textContent = "http://192.168.1.20:32400";
+                document.getElementById("resource-subtitle").textContent = "已读取账号下的 Plex 服务器。";
+            } else {
+                resourceTitle.textContent = "主服务器";
+                resourceAddress.textContent = addressInput.value || "http://192.168.1.12:8096";
+                resourceSecondaryAddress.textContent = "https://music.example.com";
+                document.getElementById("resource-subtitle").textContent = `已找到可连接的 ${name} 地址。`;
+            }
+
+            window.setTimeout(() => {
+                connectButton.textContent = "确认连接";
+            }, 360);
+        });
+
+        document.querySelectorAll(".resource-item").forEach(item => {
+            item.addEventListener("click", () => {
+                document.querySelectorAll(".resource-item").forEach(row => row.classList.remove("active"));
+                item.classList.add("active");
+                setStep(3);
+                const selectedAddress = item.querySelector(".resource-title span").textContent;
+                startLoginStatus(selectedAddress);
+            });
+        });
+
+        resetButton.addEventListener("click", () => {
+            resourcePanel.classList.remove("show");
+            resultBanner.classList.remove("show");
+            resetLoginStatus();
+            connectButton.textContent = "连接";
+            setStep(0);
+        });
+    </script>
+</body>
+</html>
