@@ -19,6 +19,7 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -264,7 +265,7 @@ private fun JvmConnectionNewTitleBar() {
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
             )
-            .padding(start = 18.dp),
+            .padding(start = XyTheme.dimens.outerHorizontalPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Image(
@@ -304,8 +305,11 @@ private fun JvmConnectionNewSidebar(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
             )
-            .padding(horizontal = 16.dp, vertical = 22.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+            .padding(
+                horizontal = XyTheme.dimens.outerHorizontalPadding,
+                vertical = XyTheme.dimens.innerVerticalPadding + XyTheme.dimens.outerVerticalPadding
+            ),
+        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding + XyTheme.dimens.outerVerticalPadding)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -365,9 +369,9 @@ private fun JvmConnectionNewProtocolItem(
             .background(backgroundColor)
             .border(1.dp, borderColor, shape)
             .clickable(onClick = onClick)
-            .padding(10.dp),
+            .padding(XyTheme.dimens.contentPadding),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
     ) {
         JvmConnectionNewProtocolLogo(
             painter = painterResource(dataSourceType.img),
@@ -425,7 +429,10 @@ private fun JvmConnectionNewStatusPill(
         modifier = Modifier
             .clip(CircleShape)
             .background(successColor.copy(alpha = 0.1f))
-            .padding(horizontal = 9.dp, vertical = 6.dp),
+            .padding(
+                horizontal = XyTheme.dimens.outerHorizontalPadding / 2,
+                vertical = XyTheme.dimens.innerVerticalPadding / 2
+            ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
@@ -460,8 +467,8 @@ private fun JvmConnectionNewStepPanel(
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
                 shape = RoundedCornerShape(8.dp)
             )
-            .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(7.dp)
+            .padding(XyTheme.dimens.contentPadding),
+        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
     ) {
         steps.forEachIndexed { index, text ->
             JvmConnectionNewStepItem(
@@ -495,7 +502,7 @@ private fun JvmConnectionNewStepItem(
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(9.dp)
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
     ) {
         Box(
             modifier = Modifier
@@ -553,8 +560,11 @@ private fun JvmConnectionNewMainContent(
 ) {
     Column(
         modifier = modifier
-            .padding(horizontal = 28.dp, vertical = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+            .padding(
+                horizontal = XyTheme.dimens.outerHorizontalPadding + XyTheme.dimens.contentPadding,
+                vertical = XyTheme.dimens.innerVerticalPadding + XyTheme.dimens.contentPadding
+            ),
+        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding + XyTheme.dimens.outerVerticalPadding)
     ) {
         JvmConnectionNewHeader(
             selectedDataSource = selectedDataSource,
@@ -567,29 +577,39 @@ private fun JvmConnectionNewMainContent(
 
         if (compact) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding)
             ) {
-                JvmConnectionNewFormPanel(
-                    selectedDataSource = selectedDataSource,
-                    address = address,
-                    username = username,
-                    password = password,
-                    showPassword = showPassword,
-                    onAddressChange = onAddressChange,
-                    onUsernameChange = onUsernameChange,
-                    onPasswordChange = onPasswordChange,
-                    onTogglePassword = onTogglePassword,
-                    onConnect = onConnect,
-                    onReset = onReset
-                )
-                JvmConnectionNewSummaryPanel(
-                    selectedDataSource = selectedDataSource,
-                    address = address
-                )
+                if (showResourcePanel) {
+                    JvmConnectionNewResourcePanel(
+                        selectedDataSource = selectedDataSource,
+                        address = address,
+                        selectedResourceIndex = selectedResourceIndex,
+                        onSelectResource = onSelectResource,
+                        onEditConnectionInfo = onReset
+                    )
+                } else {
+                    JvmConnectionNewFormPanel(
+                        selectedDataSource = selectedDataSource,
+                        address = address,
+                        username = username,
+                        password = password,
+                        showPassword = showPassword,
+                        onAddressChange = onAddressChange,
+                        onUsernameChange = onUsernameChange,
+                        onPasswordChange = onPasswordChange,
+                        onTogglePassword = onTogglePassword,
+                        onConnect = onConnect,
+                        onReset = onReset
+                    )
+                    JvmConnectionNewSummaryPanel(
+                        selectedDataSource = selectedDataSource,
+                        address = address
+                    )
+                }
             }
         } else {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding),
                 verticalAlignment = Alignment.Top
             ) {
                 JvmConnectionNewFormPanel(
@@ -606,21 +626,26 @@ private fun JvmConnectionNewMainContent(
                     onConnect = onConnect,
                     onReset = onReset
                 )
-                JvmConnectionNewSummaryPanel(
+                Crossfade(
+                    targetState = showResourcePanel,
                     modifier = Modifier.width(290.dp),
-                    selectedDataSource = selectedDataSource,
-                    address = address
-                )
+                    label = "connectionResourcePanel"
+                ) { resourcePanelVisible ->
+                    if (resourcePanelVisible) {
+                        JvmConnectionNewResourcePanel(
+                            selectedDataSource = selectedDataSource,
+                            address = address,
+                            selectedResourceIndex = selectedResourceIndex,
+                            onSelectResource = onSelectResource
+                        )
+                    } else {
+                        JvmConnectionNewSummaryPanel(
+                            selectedDataSource = selectedDataSource,
+                            address = address
+                        )
+                    }
+                }
             }
-        }
-
-        AnimatedVisibility(visible = showResourcePanel) {
-            JvmConnectionNewResourcePanel(
-                selectedDataSource = selectedDataSource,
-                address = address,
-                selectedResourceIndex = selectedResourceIndex,
-                onSelectResource = onSelectResource
-            )
         }
     }
 }
@@ -646,7 +671,7 @@ private fun JvmConnectionNewHeader(
     } else {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding),
             verticalAlignment = Alignment.Top
         ) {
             JvmConnectionNewHeaderText(
@@ -696,9 +721,14 @@ private fun JvmConnectionNewSelectedService(
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
                 shape = CircleShape
             )
-            .padding(start = 7.dp, end = 11.dp, top = 5.dp, bottom = 5.dp),
+            .padding(
+                start = XyTheme.dimens.outerHorizontalPadding / 2,
+                end = XyTheme.dimens.contentPadding,
+                top = XyTheme.dimens.innerVerticalPadding / 2,
+                bottom = XyTheme.dimens.innerVerticalPadding / 2
+            ),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(9.dp)
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding / 2)
     ) {
         Box(
             modifier = Modifier
@@ -1006,9 +1036,9 @@ private fun JvmConnectionNewSummaryPanel(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
                     shape = RoundedCornerShape(8.dp)
                 )
-                .padding(10.dp),
+                .padding(XyTheme.dimens.contentPadding),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
         ) {
             Box(
                 modifier = Modifier
@@ -1054,8 +1084,8 @@ private fun JvmConnectionNewMetaRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(vertical = XyTheme.dimens.outerVerticalPadding / 2),
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -1081,12 +1111,16 @@ private fun JvmConnectionNewResourcePanel(
     address: String,
     selectedResourceIndex: Int,
     onSelectResource: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    onEditConnectionInfo: (() -> Unit)? = null,
 ) {
     val resources = remember(selectedDataSource, address) {
         selectedDataSource.sampleResources(address)
     }
 
-    JvmConnectionNewPanel {
+    JvmConnectionNewPanel(
+        modifier = modifier,
+    ) {
         Text(
             text = "选择资源地址",
             color = MaterialTheme.colorScheme.onSurface,
@@ -1103,6 +1137,16 @@ private fun JvmConnectionNewResourcePanel(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall
         )
+        if (onEditConnectionInfo != null) {
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onEditConnectionInfo,
+                shape = RoundedCornerShape(8.dp),
+            ) {
+                Text(text = "修改连接信息")
+            }
+        }
         Spacer(modifier = Modifier.height(14.dp))
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -1151,9 +1195,12 @@ private fun JvmConnectionNewResourceItem(
                 shape = shape
             )
             .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 9.dp),
+            .padding(
+                horizontal = XyTheme.dimens.contentPadding,
+                vertical = XyTheme.dimens.outerVerticalPadding
+            ),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
     ) {
         Box(
             modifier = Modifier
@@ -1212,7 +1259,10 @@ private fun JvmConnectionNewSuccessBanner(
                 color = successColor.copy(alpha = 0.24f),
                 shape = RoundedCornerShape(8.dp)
             )
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(
+                horizontal = XyTheme.dimens.outerHorizontalPadding,
+                vertical = XyTheme.dimens.innerVerticalPadding
+            ),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -1233,7 +1283,7 @@ private fun JvmConnectionNewSuccessBanner(
                 style = MaterialTheme.typography.bodySmall
             )
         }
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
         Button(
             onClick = {},
             shape = RoundedCornerShape(8.dp)
@@ -1260,7 +1310,7 @@ private fun JvmConnectionNewPanel(
         )
     ) {
         Column(
-            modifier = Modifier.padding(18.dp),
+            modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
             content = content
         )
     }
@@ -1276,7 +1326,10 @@ private fun JvmConnectionNewChip(
         modifier = Modifier
             .clip(CircleShape)
             .background(backgroundColor)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(
+                horizontal = XyTheme.dimens.outerHorizontalPadding / 2,
+                vertical = XyTheme.dimens.outerVerticalPadding / 2
+            ),
         contentAlignment = Alignment.Center
     ) {
         Text(
