@@ -18,8 +18,14 @@
 
 package cn.xybbz.ui.screens
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -616,7 +622,8 @@ private fun JvmConnectionNewMainContent(
                 verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerHorizontalPadding)
             ) {
                 if (showResourcePanel) {
-                    JvmConnectionNewResourcePanel(
+                    JvmConnectionNewSidePanel(
+                        showResourcePanel = true,
                         selectedDataSource = selectedDataSource,
                         address = address,
                         selectedResourceIndex = selectedResourceIndex,
@@ -638,9 +645,13 @@ private fun JvmConnectionNewMainContent(
                         onConnect = onConnect,
                         onReset = onReset
                     )
-                    JvmConnectionNewSummaryPanel(
+                    JvmConnectionNewSidePanel(
+                        showResourcePanel = false,
                         selectedDataSource = selectedDataSource,
-                        address = address
+                        address = address,
+                        selectedResourceIndex = selectedResourceIndex,
+                        loginStage = loginStage,
+                        onSelectResource = onSelectResource
                     )
                 }
             }
@@ -663,26 +674,15 @@ private fun JvmConnectionNewMainContent(
                     onConnect = onConnect,
                     onReset = onReset
                 )
-                Crossfade(
-                    targetState = showResourcePanel,
-                    modifier = Modifier.width(290.dp),
-                    label = "connectionResourcePanel"
-                ) { resourcePanelVisible ->
-                    if (resourcePanelVisible) {
-                        JvmConnectionNewResourcePanel(
-                            selectedDataSource = selectedDataSource,
-                            address = address,
-                            selectedResourceIndex = selectedResourceIndex,
-                            loginStage = loginStage,
-                            onSelectResource = onSelectResource
-                        )
-                    } else {
-                        JvmConnectionNewSummaryPanel(
-                            selectedDataSource = selectedDataSource,
-                            address = address
-                        )
-                    }
-                }
+                JvmConnectionNewSidePanel(
+                    modifier = Modifier.weight(1f),
+                    showResourcePanel = showResourcePanel,
+                    selectedDataSource = selectedDataSource,
+                    address = address,
+                    selectedResourceIndex = selectedResourceIndex,
+                    loginStage = loginStage,
+                    onSelectResource = onSelectResource
+                )
             }
         }
     }
@@ -999,10 +999,73 @@ private fun JvmConnectionNewClearButton(
 }
 
 @Composable
-private fun JvmConnectionNewSummaryPanel(
+private fun JvmConnectionNewSidePanel(
+    showResourcePanel: Boolean,
     selectedDataSource: DataSourceType,
     address: String,
+    selectedResourceIndex: Int,
+    loginStage: JvmConnectionNewLoginStage,
+    onSelectResource: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    onEditConnectionInfo: (() -> Unit)? = null,
+) {
+    JvmConnectionNewPanel(
+        modifier = modifier,
+    ) {
+        AnimatedContent(
+            targetState = showResourcePanel,
+            modifier = Modifier.fillMaxWidth(),
+            transitionSpec = {
+                ContentTransform(
+                    targetContentEnter = fadeIn(
+                        animationSpec = tween(
+                            durationMillis = 180,
+                            easing = FastOutSlowInEasing
+                        )
+                    ),
+                    initialContentExit = fadeOut(
+                        animationSpec = tween(
+                            durationMillis = 140,
+                            easing = FastOutSlowInEasing
+                        )
+                    ),
+                    sizeTransform = SizeTransform(clip = true) { _, _ ->
+                        tween(
+                            durationMillis = 280,
+                            easing = FastOutSlowInEasing
+                        )
+                    }
+                )
+            },
+            label = "connectionSidePanel"
+        ) { resourcePanelVisible ->
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (resourcePanelVisible) {
+                    JvmConnectionNewResourceContent(
+                        selectedDataSource = selectedDataSource,
+                        address = address,
+                        selectedResourceIndex = selectedResourceIndex,
+                        loginStage = loginStage,
+                        onSelectResource = onSelectResource,
+                        onEditConnectionInfo = onEditConnectionInfo,
+                    )
+                } else {
+                    JvmConnectionNewSummaryContent(
+                        selectedDataSource = selectedDataSource,
+                        address = address,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun JvmConnectionNewSummaryContent(
+    selectedDataSource: DataSourceType,
+    address: String,
 ) {
     val accentBlockSize = XyTheme.dimens.innerHorizontalPadding +
         XyTheme.dimens.contentPadding +
@@ -1010,112 +1073,108 @@ private fun JvmConnectionNewSummaryPanel(
         XyTheme.dimens.innerVerticalPadding / 2
     val heroLogoSize = accentBlockSize + accentBlockSize
 
-    JvmConnectionNewPanel(
-        modifier = modifier,
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(150.dp)
+            .clip(RoundedCornerShape(XyTheme.dimens.corner))
+            .background(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                        Color(0xFF16A06B).copy(alpha = 0.12f)
+                    )
+                )
+            ),
+        contentAlignment = Alignment.Center
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp)
-                .clip(RoundedCornerShape(XyTheme.dimens.corner))
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                            Color(0xFF16A06B).copy(alpha = 0.12f)
-                        )
-                    )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(heroLogoSize)
-                    .clip(RoundedCornerShape(XyTheme.dimens.dialogCorner))
-                    .background(MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.78f))
-                    .border(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                        shape = RoundedCornerShape(XyTheme.dimens.dialogCorner)
-                    )
-                    .padding(XyTheme.dimens.outerHorizontalPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(XyTheme.dimens.corner)),
-                    painter = painterResource(selectedDataSource.img),
-                    contentDescription = selectedDataSource.title,
-                    contentScale = ContentScale.Crop
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(12.dp))
-        JvmConnectionNewMetaRow(label = "协议", value = selectedDataSource.title)
-        JvmConnectionNewMetaRow(
-            label = "地址",
-            value = if (selectedDataSource.ifInputUrl) {
-                address.removePrefix("http://").removePrefix("https://").ifBlank { "未填写" }
-            } else {
-                "自动发现"
-            }
-        )
-        JvmConnectionNewMetaRow(
-            label = "版本",
-            value = if (selectedDataSource.ifInputUrl) {
-                "${selectedDataSource.version}+"
-            } else {
-                "账号发现"
-            }
-        )
-        Spacer(modifier = Modifier.height(14.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(XyTheme.dimens.corner))
-                .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                .size(heroLogoSize)
+                .clip(RoundedCornerShape(XyTheme.dimens.dialogCorner))
+                .background(MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.78f))
                 .border(
                     width = 1.dp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                    shape = RoundedCornerShape(XyTheme.dimens.corner)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                    shape = RoundedCornerShape(XyTheme.dimens.dialogCorner)
                 )
-                .padding(XyTheme.dimens.contentPadding),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
+                .padding(XyTheme.dimens.outerHorizontalPadding),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
+            Image(
                 modifier = Modifier
-                    .size(accentBlockSize)
-                    .clip(RoundedCornerShape(XyTheme.dimens.corner))
-                    .background(
-                        Brush.linearGradient(
-                            listOf(
-                                MaterialTheme.colorScheme.primary,
-                                Color(0xFF16A06B)
-                            )
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(XyTheme.dimens.corner)),
+                painter = painterResource(selectedDataSource.img),
+                contentDescription = selectedDataSource.title,
+                contentScale = ContentScale.Crop
+            )
+        }
+    }
+    Spacer(modifier = Modifier.height(12.dp))
+    JvmConnectionNewMetaRow(label = "协议", value = selectedDataSource.title)
+    JvmConnectionNewMetaRow(
+        label = "地址",
+        value = if (selectedDataSource.ifInputUrl) {
+            address.removePrefix("http://").removePrefix("https://").ifBlank { "未填写" }
+        } else {
+            "自动发现"
+        }
+    )
+    JvmConnectionNewMetaRow(
+        label = "版本",
+        value = if (selectedDataSource.ifInputUrl) {
+            "${selectedDataSource.version}+"
+        } else {
+            "账号发现"
+        }
+    )
+    Spacer(modifier = Modifier.height(14.dp))
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(XyTheme.dimens.corner))
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                shape = RoundedCornerShape(XyTheme.dimens.corner)
+            )
+            .padding(XyTheme.dimens.contentPadding),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(accentBlockSize)
+                .clip(RoundedCornerShape(XyTheme.dimens.corner))
+                .background(
+                    Brush.linearGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primary,
+                            Color(0xFF16A06B)
                         )
                     )
+                )
+        )
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = "准备同步媒体库",
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.W800,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodySmall
             )
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = "准备同步媒体库",
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.W800,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Text(
-                    text = "歌曲、专辑、艺术家将在登录后读取",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
+            Text(
+                text = "歌曲、专辑、艺术家将在登录后读取",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodySmall
+            )
         }
     }
 }
@@ -1150,72 +1209,67 @@ private fun JvmConnectionNewMetaRow(
 }
 
 @Composable
-private fun JvmConnectionNewResourcePanel(
+private fun JvmConnectionNewResourceContent(
     selectedDataSource: DataSourceType,
     address: String,
     selectedResourceIndex: Int,
     loginStage: JvmConnectionNewLoginStage,
     onSelectResource: (Int) -> Unit,
-    modifier: Modifier = Modifier,
     onEditConnectionInfo: (() -> Unit)? = null,
 ) {
     val resources = remember(selectedDataSource, address) {
         selectedDataSource.sampleResources(address)
     }
 
-    JvmConnectionNewPanel(
-        modifier = modifier,
-    ) {
-        Text(
-            text = "选择资源地址",
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.W900,
-            style = MaterialTheme.typography.titleMedium
-        )
-        Spacer(modifier = Modifier.height(5.dp))
-        Text(
-            text = if (selectedDataSource.ifInputUrl) {
-                "已找到可连接的 ${selectedDataSource.title} 地址。"
-            } else {
-                "已读取账号下的 Plex 服务器。"
-            },
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall
-        )
-        if (onEditConnectionInfo != null) {
-            Spacer(modifier = Modifier.height(12.dp))
-            OutlinedButton(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = onEditConnectionInfo,
-                shape = RoundedCornerShape(XyTheme.dimens.corner),
-            ) {
-                Text(text = "修改连接信息")
-            }
-        }
-        Spacer(modifier = Modifier.height(14.dp))
-        Column(
-            verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+    Text(
+        text = "选择资源地址",
+        color = MaterialTheme.colorScheme.onSurface,
+        fontWeight = FontWeight.W900,
+        style = MaterialTheme.typography.titleMedium
+    )
+    Spacer(modifier = Modifier.height(5.dp))
+    Text(
+        text = if (selectedDataSource.ifInputUrl) {
+            "已找到可连接的 ${selectedDataSource.title} 地址。"
+        } else {
+            "已读取账号下的 Plex 服务器。"
+        },
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MaterialTheme.typography.bodySmall
+    )
+    if (onEditConnectionInfo != null) {
+        Spacer(modifier = Modifier.height(12.dp))
+        OutlinedButton(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onEditConnectionInfo,
+            shape = RoundedCornerShape(XyTheme.dimens.corner),
         ) {
-            resources.forEachIndexed { index, item ->
-                JvmConnectionNewResourceItem(
-                    title = item.title,
-                    address = item.address,
-                    tag = item.tag,
-                    selected = index == selectedResourceIndex,
-                    onClick = { onSelectResource(index) }
-                )
-            }
+            Text(text = "修改连接信息")
         }
-        AnimatedVisibility(visible = selectedResourceIndex >= 0) {
-            val selectedResource = resources.getOrNull(selectedResourceIndex)
-            Column {
-                Spacer(modifier = Modifier.height(14.dp))
-                JvmConnectionNewLoginStatusPanel(
-                    selectedDataSource = selectedDataSource,
-                    resourceAddress = selectedResource?.address.orEmpty(),
-                    stage = loginStage,
-                )
-            }
+    }
+    Spacer(modifier = Modifier.height(14.dp))
+    Column(
+        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+    ) {
+        resources.forEachIndexed { index, item ->
+            JvmConnectionNewResourceItem(
+                title = item.title,
+                address = item.address,
+                tag = item.tag,
+                selected = index == selectedResourceIndex,
+                onClick = { onSelectResource(index) }
+            )
+        }
+    }
+    AnimatedVisibility(visible = selectedResourceIndex >= 0) {
+        val selectedResource = resources.getOrNull(selectedResourceIndex)
+        Column {
+            Spacer(modifier = Modifier.height(14.dp))
+            JvmConnectionNewLoginStatusPanel(
+                selectedDataSource = selectedDataSource,
+                resourceAddress = selectedResource?.address.orEmpty(),
+                stage = loginStage,
+            )
         }
     }
 }
@@ -1604,6 +1658,31 @@ private fun DataSourceType.sampleResources(address: String): List<JvmConnectionN
                 title = "主服务器",
                 address = address.ifBlank { defaultAddress },
                 tag = "推荐"
+            ),
+            JvmConnectionNewResource(
+                title = "备用地址",
+                address = "https://music.example.com",
+                tag = "可用"
+            ),
+            JvmConnectionNewResource(
+                title = "备用地址",
+                address = "https://music.example.com",
+                tag = "可用"
+            ),
+            JvmConnectionNewResource(
+                title = "备用地址",
+                address = "https://music.example.com",
+                tag = "可用"
+            ),
+            JvmConnectionNewResource(
+                title = "备用地址",
+                address = "https://music.example.com",
+                tag = "可用"
+            ),
+            JvmConnectionNewResource(
+                title = "备用地址",
+                address = "https://music.example.com",
+                tag = "可用"
             ),
             JvmConnectionNewResource(
                 title = "备用地址",

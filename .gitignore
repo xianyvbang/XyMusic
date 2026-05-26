@@ -20,7 +20,11 @@ node_modules/
 .gradle-user-home/
 .serena/
 .agents/
+.angents/
 .codex/
+.codexm/
 .trellis/
+.claude/
+.cursor/
 Downloads/
 **/schemas/
