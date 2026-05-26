@@ -1,43 +1,21 @@
-# Repository Guidelines
-
-## Project Structure & Module Organization
-`XyMusic-KMP` is a Kotlin Multiplatform project targeting Android, iOS, and Desktop. Shared app code lives in `composeApp/src/commonMain`, with platform-specific code in `androidMain`, `iosMain`, and `jvmMain`. Reusable libraries are split into `ui`, `api`, `localdata`, `download`, `xy-database`, and `xy-platform`, each using the same KMP source-set layout. Android packaging lives in `androidApp`, the desktop launcher in `desktopApp`, and the Xcode entry point in `iosApp`.
-
-Keep new shared business logic in a library module or `composeApp/commonMain` first. Treat `build/`, crash logs, and generated outputs as disposable.
-
-## Coding Style & Naming Conventions
-Follow Kotlin defaults: 4-space indentation, no tabs, trailing commas only when they improve diffs, and concise expression bodies where readable. Use `PascalCase` for classes, objects, and composables, `camelCase` for functions and properties, and lower-case package names under `cn.xybbz.*`.
-
-Prefer shared dependencies through `gradle/libs.versions.toml` instead of hardcoded coordinates. Keep platform-specific APIs out of `commonMain`.
-
-## Testing Guidelines
-Shared tests live under `src/commonTest/kotlin` and use `kotlin.test`. Android local tests use `src/androidHostTest/kotlin`; instrumented tests use `src/androidDeviceTest/kotlin` or `androidApp/src/androidTest/java`. Name tests after the subject under test, for example `PasswordUtilsTest`, and write method names that describe behavior such as `encryptAndDecryptRoundTrip`.
-
-## Commit & Pull Request Guidelines
-Recent history uses short imperative subjects in Chinese, for example `完善播放器功能`. Keep commits focused and module-specific. Pull requests should include a brief summary, affected modules, linked issues, test commands run, and screenshots or recordings for UI changes on Android/Desktop when applicable.
-
-## Configuration Notes
-Do not commit `local.properties`, local SDK paths, or temporary logs such as `hs_err_pid*.log` and `replay_pid*.log`.
-
 <!-- TRELLIS:START -->
 # Trellis Instructions
 
 These instructions are for AI assistants working in this project.
 
-Use the `/trellis:start` command when starting a new session to:
-- Initialize your developer identity
-- Understand current project context
-- Read relevant guidelines
+This project is managed by Trellis. The working knowledge you need lives under `.trellis/`:
 
-Use `@/.trellis/` to learn:
-- Development workflow (`workflow.md`)
-- Project structure guidelines (`spec/`)
-- Developer workspace (`workspace/`)
+- `.trellis/workflow.md` — development phases, when to create tasks, skill routing
+- `.trellis/spec/` — package- and layer-scoped coding guidelines (read before writing code in a given layer)
+- `.trellis/workspace/` — per-developer journals and session traces
+- `.trellis/tasks/` — active and archived tasks (PRDs, research, jsonl context)
 
-If you're using Codex, project-scoped helpers may also live in:
-- `.agents/skills/` for reusable Trellis skills
-- `.codex/agents/` for optional custom subagents
+If a Trellis command is available on your platform (e.g. `/trellis:finish-work`, `/trellis:continue`), prefer it over manual steps. Not every platform exposes every command.
 
-Keep this managed block so 'trellis update' can refresh the instructions.
+If you're using Codex or another agent-capable tool, additional project-scoped helpers may live in:
+- `.agents/skills/` — reusable Trellis skills
+- `.codex/agents/` — optional custom subagents
+
+Managed by Trellis. Edits outside this block are preserved; edits inside may be overwritten by a future `trellis update`.
 
 <!-- TRELLIS:END -->

@@ -79,6 +79,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.common.enums.img
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.ui.theme.XyTheme
@@ -98,6 +99,7 @@ import xymusic_kmp.composeapp.generated.resources.visibility_off_24px
 
 @Composable
 fun JvmConnectionNewScreen(
+    connectionUiType: ConnectionUiType? = null,
     modifier: Modifier = Modifier,
 ) {
     val dataSourceTypes = remember {
@@ -143,7 +145,9 @@ fun JvmConnectionNewScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            JvmConnectionNewTitleBar()
+            if (connectionUiType == ConnectionUiType.FIRST_OPEN) {
+                JvmConnectionNewTitleBar()
+            }
 
             if (compact) {
                 Column(
