@@ -59,13 +59,13 @@ fun DesktopWindowTitleBar(
     val activeHitTestOwner = hitTestOwner ?: remember { DesktopInteractiveHitTestOwner() }
 
     DisposableEffect(chromeController, activeHitTestOwner) {
-        val previousOwner = chromeController.titleBarHitTestOwner
-        val previousEnabled = chromeController.isTitleBarHitTestEnabled
-        chromeController.setTitleBarHitTestOwner(activeHitTestOwner)
-        chromeController.setTitleBarHitTestEnabled(true)
+        val registration = DesktopTitleBarHitTestRegistry.register(
+            chromeController = chromeController,
+            owner = activeHitTestOwner
+        )
         onDispose {
-            chromeController.setTitleBarHitTestOwner(previousOwner)
-            chromeController.setTitleBarHitTestEnabled(previousEnabled)
+            activeHitTestOwner.clear()
+            DesktopTitleBarHitTestRegistry.unregister(chromeController, registration)
         }
     }
 
@@ -175,13 +175,13 @@ fun DesktopWindowTitleCenterBar(
     val activeHitTestOwner = hitTestOwner ?: remember { DesktopInteractiveHitTestOwner() }
 
     DisposableEffect(chromeController, activeHitTestOwner) {
-        val previousOwner = chromeController.titleBarHitTestOwner
-        val previousEnabled = chromeController.isTitleBarHitTestEnabled
-        chromeController.setTitleBarHitTestOwner(activeHitTestOwner)
-        chromeController.setTitleBarHitTestEnabled(true)
+        val registration = DesktopTitleBarHitTestRegistry.register(
+            chromeController = chromeController,
+            owner = activeHitTestOwner
+        )
         onDispose {
-            chromeController.setTitleBarHitTestOwner(previousOwner)
-            chromeController.setTitleBarHitTestEnabled(previousEnabled)
+            activeHitTestOwner.clear()
+            DesktopTitleBarHitTestRegistry.unregister(chromeController, registration)
         }
     }
 
@@ -256,5 +256,45 @@ fun DesktopWindowTitleCenterBar(
                 }
             }
         }
+    }
+}
+
+private object DesktopTitleBarHitTestRegistry {
+    data class Registration(
+        val owner: DesktopInteractiveHitTestOwner,
+    )
+
+    private val registrationsByController =
+        mutableMapOf<DesktopWindowChromeController, MutableList<Registration>>()
+
+    fun register(
+        chromeController: DesktopWindowChromeController,
+        owner: DesktopInteractiveHitTestOwner,
+    ): Registration {
+        val registration = Registration(owner)
+        registrationsByController
+            .getOrPut(chromeController) { mutableListOf() }
+            .add(registration)
+        applyTop(chromeController)
+        return registration
+    }
+
+    fun unregister(
+        chromeController: DesktopWindowChromeController,
+        registration: Registration,
+    ) {
+        val registrations = registrationsByController[chromeController] ?: return
+        registrations.remove(registration)
+        if (registrations.isEmpty()) {
+            registrationsByController.remove(chromeController)
+        }
+        applyTop(chromeController)
+    }
+
+    private fun applyTop(chromeController: DesktopWindowChromeController) {
+        // AnimatedContent 切换时标题栏会短暂并存，用栈顶 owner 避免退出页覆盖新页面热区。
+        val owner = registrationsByController[chromeController]?.lastOrNull()?.owner
+        chromeController.setTitleBarHitTestOwner(owner)
+        chromeController.setTitleBarHitTestEnabled(owner != null)
     }
 }
