@@ -1,6 +1,7 @@
 package cn.xybbz.common.utils
 
 import cn.xybbz.database.withTransaction
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 
 /**
@@ -36,7 +37,10 @@ object DatabaseUtils {
         }
     }
 
-    suspend fun clearAllDatabaseData(db: LocalDatabaseClient) {
+    suspend fun clearAllDatabaseData(
+        db: LocalDatabaseClient,
+        downloadDb: DownloadDatabaseClient,
+    ) {
         db.withTransaction {
             db.musicDao.removeAllWithReferences()
             db.albumDao.removeAllWithReferences()
@@ -56,6 +60,9 @@ object DatabaseUtils {
             db.lrcConfigDao.removeAll()
             db.proxyConfigDao.removeAll()
             db.settingsDao.remove()
+        }
+        downloadDb.withTransaction {
+            downloadDb.downloadDao.removeAll()
         }
     }
 

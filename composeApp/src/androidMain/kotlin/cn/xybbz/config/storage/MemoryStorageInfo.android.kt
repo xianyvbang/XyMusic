@@ -2,6 +2,7 @@ package cn.xybbz.config.storage
 
 import android.os.Environment
 import cn.xybbz.platform.ContextWrapper
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import java.io.File
 import java.io.IOException
@@ -14,11 +15,17 @@ import java.nio.file.attribute.BasicFileAttributes
 actual fun getMemoryStorageInfo(
     contextWrapper: ContextWrapper,
     db: LocalDatabaseClient,
+    downloadDb: DownloadDatabaseClient,
 ): MemoryStorageInfo {
     val context = contextWrapper.context
     // Room 数据库路径用于单独展示数据库大小，并在应用数据统计中排除数据库目录。
-    val databasePath = runCatching { db.openHelper.writableDatabase.path }.getOrNull().orEmpty()
-    val databaseFile = databasePath.takeIf { it.isNotBlank() }?.let(::File)
+    val databaseFiles = listOf(
+        runCatching { db.openHelper.writableDatabase.path }.getOrNull().orEmpty(),
+        runCatching { downloadDb.openHelper.writableDatabase.path }.getOrNull().orEmpty(),
+    )
+        .filter { it.isNotBlank() }
+        .flatMap(::roomDatabaseFiles)
+        .distinctBy { it.absolutePath }
 
     // Android 缓存分为内部 cacheDir 和可能存在的外部 externalCacheDir。
     val cacheSize = buildList {
@@ -40,19 +47,30 @@ actual fun getMemoryStorageInfo(
         folderSizeExcluding(
             folder = dataDir,
             excludedPrefixes = listOfNotNull(context.cacheDir.path, context.externalCacheDir?.path),
-            excludedDirectories = setOfNotNull(databaseFile?.parentFile?.absolutePath),
+            excludedDirectories = databaseFiles
+                .mapNotNull { it.parentFile?.absolutePath }
+                .toSet(),
         )
     }.getOrElse {
         0L
     }
 
-    // Android 端数据库当前只取 Room 打开的主数据库文件大小。
-    val databaseSize = databaseFile?.takeIf(File::exists)?.length() ?: 0L
+    val databaseSize = databaseFiles.sumOf(::folderSize)
 
     return MemoryStorageInfo(
         cacheSize = cacheSize,
         appDataSize = appDataSize,
         databaseSize = databaseSize,
+    )
+}
+
+private fun roomDatabaseFiles(databasePath: String): List<File> {
+    val databaseFile = File(databasePath)
+    return listOf(
+        databaseFile,
+        File("$databasePath-wal"),
+        File("$databasePath-shm"),
+        File("$databasePath-journal"),
     )
 }
 

@@ -32,6 +32,7 @@ import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.config.storage.MemoryStorageInfo
 import cn.xybbz.config.storage.clearPlatformCache
 import cn.xybbz.config.storage.getMemoryStorageInfo
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.platform.ContextWrapper
 import kotlinx.coroutines.Dispatchers
@@ -45,6 +46,7 @@ class MemoryManagementViewModel(
     private val contextWrapper: ContextWrapper,
     private val downloadCacheController: DownloadCacheCommonController,
     private val db: LocalDatabaseClient,
+    private val downloadDb: DownloadDatabaseClient,
     private val settingsManager: SettingsManager,
     private val dataSourceManager: DataSourceManager,
     private val musicController: MusicCommonController,
@@ -92,7 +94,7 @@ class MemoryManagementViewModel(
 
     private suspend fun refreshStorageInfo() {
         val storageInfo = withContext(Dispatchers.IO) {
-            getMemoryStorageInfo(contextWrapper, db)
+            getMemoryStorageInfo(contextWrapper, db, downloadDb)
         }
         updateStorageInfo(storageInfo)
     }
@@ -152,7 +154,7 @@ class MemoryManagementViewModel(
             musicController.clearPlayerList()
             withContext(Dispatchers.IO) {
                 dataSourceManager.release()
-                DatabaseUtils.clearAllDatabaseData(db)
+                DatabaseUtils.clearAllDatabaseData(db, downloadDb)
                 settingsManager.initSet()
             }
             databaseSize = "0B"

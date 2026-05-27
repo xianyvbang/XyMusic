@@ -1,6 +1,7 @@
 package cn.xybbz.config.storage
 
 import cn.xybbz.platform.ContextWrapper
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 
 /**
@@ -23,6 +24,7 @@ data class MemoryStorageInfo(
 expect fun getMemoryStorageInfo(
     contextWrapper: ContextWrapper,
     db: LocalDatabaseClient,
+    downloadDb: DownloadDatabaseClient,
 ): MemoryStorageInfo
 
 /**

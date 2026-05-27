@@ -1,6 +1,7 @@
 package cn.xybbz.config.storage
 
 import cn.xybbz.download.database.getDownloadDatabaseFiles
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.config.getLocalDatabaseFiles
 import cn.xybbz.platform.ContextWrapper
@@ -25,6 +26,7 @@ private val whitespaceRegex = Regex("\\s+")
 actual fun getMemoryStorageInfo(
     contextWrapper: ContextWrapper,
     db: LocalDatabaseClient,
+    downloadDb: DownloadDatabaseClient,
 ): MemoryStorageInfo {
     // JVM 端数据库文件位于 java.io.tmpdir，包含主文件和 Room/SQLite 可能生成的附属文件。
     val databaseFiles = getLocalDatabaseFiles() + getDownloadDatabaseFiles()

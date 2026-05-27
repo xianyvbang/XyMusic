@@ -73,6 +73,9 @@ interface XyDownloadDao {
     @Query("DELETE FROM xy_download WHERE id IN (:id)")
     suspend fun deleteById(vararg id: Long)
 
+    @Query("DELETE FROM xy_download")
+    suspend fun removeAll()
+
 
     @Query("SELECT * FROM xy_download WHERE id IN (:ids)")
     suspend fun getByIds(ids: List<Long>): List<XyDownload>
