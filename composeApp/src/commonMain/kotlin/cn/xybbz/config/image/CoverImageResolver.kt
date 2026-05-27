@@ -3,7 +3,6 @@ package cn.xybbz.config.image
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import cn.xybbz.api.TokenServer
-import cn.xybbz.api.TokenServer.baseUrl
 import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.custom.data.CustomCoverQuery
 import cn.xybbz.common.constants.Constants.HTTP
@@ -28,8 +27,9 @@ class CoverImageResolver(
 ) {
 
     fun resolveRaw(primaryUrl: String?, fallbackUrl: String? = null): CoverImageUrls {
-        val normalizedPrimaryUrl = primaryUrl.normalizeCoverUrl()
-        val normalizedFallbackUrl = fallbackUrl.normalizeCoverUrl()
+        val baseUrl = settingsManager.baseUrl.value
+        val normalizedPrimaryUrl = primaryUrl.normalizeCoverUrl(baseUrl)
+        val normalizedFallbackUrl = fallbackUrl.normalizeCoverUrl(baseUrl)
         return CoverImageUrls(
             primaryUrl = normalizedPrimaryUrl,
             fallbackUrl = normalizedFallbackUrl?.takeIf { it != normalizedPrimaryUrl }
@@ -98,8 +98,9 @@ class CoverImageResolver(
         serviceUrl: String?,
         customUrl: String?
     ): CoverImageUrls {
-        val normalizedServiceUrl = serviceUrl.normalizeCoverUrl()
-        val normalizedCustomUrl = customUrl.normalizeCoverUrl()
+        val baseUrl = settingsManager.baseUrl.value
+        val normalizedServiceUrl = serviceUrl.normalizeCoverUrl(baseUrl)
+        val normalizedCustomUrl = customUrl.normalizeCoverUrl(baseUrl)
         val ifPriorityMusicApi = settingsManager.get().ifPriorityMusicApi
 
         val primaryUrl = if (ifPriorityMusicApi) {
@@ -204,12 +205,12 @@ private fun rememberCoverImageResolver(): CoverImageResolver {
     }
 }
 
-fun String?.normalizeCoverUrl(): String? {
+fun String?.normalizeCoverUrl(baseUrl: String?): String? {
     val normalizedValue = this?.trim()?.takeIf { it.isNotBlank() } ?: return null
     val imageUrl = if (normalizedValue.isAbsoluteNetworkUrl()) {
         normalizedValue
     } else {
-        baseUrl + normalizedValue
+        baseUrl.orEmpty() + normalizedValue
     }
     val urlBuilder = URLBuilder(imageUrl)
     urlBuilder.parameters.appendAll(TokenServer.queryMap)

@@ -386,8 +386,8 @@ class MusicPlayContext(
     /**
      * 音乐播放地址更新
      */
-    fun changeMusicPlaylist(){
-        musicController.replacePlaylistItemUrl{
+    fun changeMusicPlaylist() {
+        musicController.replacePlaylistItemUrl {
             fillPlaybackUrl(it)
         }
     }
@@ -397,7 +397,7 @@ class MusicPlayContext(
      *
      * 通过上下文统一补全播放地址后再调用播放器控制器，避免外部直接传入未解析的 musicUrl。
      */
-    fun addMusicList(
+    suspend fun addMusicList(
         musicList: List<XyPlayMusic>,
         artistId: String? = null,
         isPlayer: Boolean? = null,
@@ -412,14 +412,14 @@ class MusicPlayContext(
     /**
      * 添加下一首播放。
      */
-    fun addNextPlayer(music: XyPlayMusic) {
+    suspend fun addNextPlayer(music: XyPlayMusic) {
         musicController.addNextPlayer(fillPlaybackUrl(music))
     }
 
     /**
      * 补全单首歌曲的当前播放地址信息。
      */
-    private fun fillPlaybackUrl(music: XyPlayMusic): XyPlayMusic {
+    private suspend fun fillPlaybackUrl(music: XyPlayMusic): XyPlayMusic {
         val andMusicUrlData =
             dataSourceManager.getMusicPlayUrl(music.itemId, music.plexPlayKey)
         return music.copy(
@@ -433,8 +433,10 @@ class MusicPlayContext(
     /**
      * 批量补全歌曲播放地址信息。
      */
-    private fun fillPlaybackUrl(musicList: List<XyPlayMusic>): List<XyPlayMusic> {
-        return musicList.map(::fillPlaybackUrl)
+    private suspend fun fillPlaybackUrl(musicList: List<XyPlayMusic>): List<XyPlayMusic> {
+        return musicList.map {
+            fillPlaybackUrl(it)
+        }
     }
 
     /**

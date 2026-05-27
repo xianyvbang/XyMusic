@@ -281,7 +281,7 @@ abstract class MusicCommonController : IoScoped(), KoinComponent {
     /**
      * 替换音乐播放连接
      */
-    abstract fun replacePlaylistItemUrl(updateMusicUrlFun: (XyPlayMusic) -> XyPlayMusic)
+    abstract fun replacePlaylistItemUrl(updateMusicUrlFun: suspend (XyPlayMusic) -> XyPlayMusic)
 
     /**
      * 添加音乐到列表

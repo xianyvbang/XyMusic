@@ -20,6 +20,7 @@ package cn.xybbz.config.setting
 
 import cn.xybbz.api.TokenServer
 import cn.xybbz.common.enums.AllDataEnum
+import cn.xybbz.common.utils.CoroutineScopeUtils
 import cn.xybbz.common.utils.Log
 import cn.xybbz.config.music.AudioFadeController
 import cn.xybbz.config.network.NetWorkMonitor
@@ -32,9 +33,9 @@ import cn.xybbz.localdata.enums.LanguageType
 import cn.xybbz.localdata.enums.ThemeTypeEnum
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -42,6 +43,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 
 class SettingsManager(
@@ -50,24 +52,32 @@ class SettingsManager(
     private val netWorkMonitor: NetWorkMonitor,
     private val languagePlatformManager: LanguagePlatformManager
 ) {
-    val settings: Flow<XySettings> =
+    private val scope = CoroutineScopeUtils.getIo("settings-manager")
+
+    private val settingsSource =
         db.settingsDao.selectOneDataFlow()
             .map { it ?: XySettings() }
             .distinctUntilChanged()
+
+    val settings: StateFlow<XySettings> =
+        settingsSource.stateIn(scope, SharingStarted.Eagerly, XySettings())
 
     //i18n多语言
     val languageType = settings.map {
         it.languageType ?: languagePlatformManager.getSystemLanguageType()
     }.distinctUntilChanged()
+        .stateIn(scope, SharingStarted.Eagerly, languagePlatformManager.getSystemLanguageType())
 
     //监听
     val onSettingsChangeListeners = mutableListOf<OnSettingsChangeListener>()
 
     //缓存设置
     val cacheUpperLimit = settings.map { it.cacheUpperLimit }.distinctUntilChanged()
+        .stateIn(scope, SharingStarted.Eagerly, settings.value.cacheUpperLimit)
 
     //缓存文件所在位置
     val cacheFilePath = settings.map { it.cacheFilePath }.distinctUntilChanged()
+        .stateIn(scope, SharingStarted.Eagerly, settings.value.cacheFilePath)
 
     //是否为非计费网络
     var isUnmeteredWifi: Boolean = false
@@ -76,11 +86,13 @@ class SettingsManager(
     val ifConnectionConfig = settings.map {
         it.connectionId != null && it.dataSourceType != null
     }.distinctUntilChanged()
+        .stateIn(scope, SharingStarted.Eagerly, false)
 
     //连接前缀
     val baseUrl = settings.map {
         it.connectionId?.let { db.connectionConfigDao.selectById(it).address }
     }.distinctUntilChanged()
+        .stateIn(scope, SharingStarted.Eagerly, null)
 
     //是否显示SnackBar
     private val _ifShowSnackBar = MutableStateFlow(false)
@@ -90,11 +102,13 @@ class SettingsManager(
      * 主题类型
      */
     val themeType = settings.map { it.themeType }.distinctUntilChanged()
+        .stateIn(scope, SharingStarted.Eagerly, settings.value.themeType)
 
     /**
      * 背景图片地址
      */
     val imageFilePath = settings.map { it.imageFilePath }.distinctUntilChanged()
+        .stateIn(scope, SharingStarted.Eagerly, settings.value.imageFilePath)
 
     //音频编码
     val audioBitRate = combine(
@@ -103,7 +117,7 @@ class SettingsManager(
     ) { settings, isUnmeteredWifi ->
         if (!isUnmeteredWifi) settings.mobileNetworkAudioBitRate
         else settings.wifiNetworkAudioBitRate
-    }
+    }.stateIn(scope, SharingStarted.Eagerly, settings.value.mobileNetworkAudioBitRate)
 
     //是否设置转码音质
     private val _transcodingFlow = MutableSharedFlow<TranscodingState>(0, extraBufferCapacity = 1)
@@ -126,10 +140,21 @@ class SettingsManager(
         _maxBytesFlow.value = maxBytes
     }
 
+    fun get(): XySettings {
+        return settings.value
+    }
+
+    suspend fun getLatest(): XySettings {
+        return withContext(Dispatchers.IO) {
+            db.settingsDao.selectOneData() ?: XySettings()
+        }
+    }
+
     suspend fun initSet() {
         Log.i("=====", "开始存储设置")
 
-        val connectionId = settings.first().connectionId
+        val currentSettings = getLatest()
+        val connectionId = currentSettings.connectionId
         val ifConnectionId = connectionId != null
         updateIfConnectionConfig(ifConnectionId)
         if (connectionId != null) {
@@ -137,7 +162,7 @@ class SettingsManager(
         }
 
         Log.i("api", "动态设置数据--读取配置")
-        audioFadeController.updateFadeDurationMs(settings.first().fadeDurationMs)
+        audioFadeController.updateFadeDurationMs(currentSettings.fadeDurationMs)
         netWorkMonitor.addListener(object : OnNetworkChangeListener {
             override fun onNetworkChange(isUnmeteredWifi: Boolean) {
                 this@SettingsManager.isUnmeteredWifi = isUnmeteredWifi
@@ -410,9 +435,9 @@ class SettingsManager(
     /**
      * 获得是否静态资源不转码 true:不转码,false 转码
      */
-    suspend fun getStatic(): Boolean {
-        val settings = settings.first()
-        return settings.ifTranscoding || audioBitRate.first() == 0
+    fun getStatic(): Boolean {
+        val settings = settings.value
+        return settings.ifTranscoding || audioBitRate.value == 0
     }
 
     /**

@@ -428,7 +428,7 @@ class JvmMusicController : MusicCommonController() {
      * 刷新当前远程歌曲的播放地址。
      * 转码策略或网络环境变化后，需要把业务层维护的可播地址重新解析一遍。
      */
-    override fun replacePlaylistItemUrl(updateMusicUrlFun: (XyPlayMusic) -> XyPlayMusic) {
+    override fun replacePlaylistItemUrl(updateMusicUrlFun: suspend (XyPlayMusic) -> XyPlayMusic) {
         val snapshot = playMusicList.toList()
         if (snapshot.isEmpty()) {
             return

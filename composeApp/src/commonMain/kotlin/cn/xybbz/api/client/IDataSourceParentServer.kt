@@ -1163,9 +1163,9 @@ abstract class IDataSourceParentServer(
         val musicUrl = getChildMusicUrl(
             if (static) musicId else plexPlayKey ?: musicId,
             static,
-            AudioCodecEnum.getAudioCodec(settingsManager.transcodeFormat),
+            AudioCodecEnum.getAudioCodec(settingsManager.settings.first().transcodeFormat),
             audioBitRate,
-            settingsManager.get().playSessionId
+            settingsManager.settings.first().playSessionId
         )
 
         return TranscodingAndMusicUrlData(

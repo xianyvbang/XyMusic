@@ -77,11 +77,6 @@ fun App(
         ThemeTypeEnum.LIGHT -> false
     }
 
-    LaunchedEffect(startupViewModel) {
-        // Compose 首帧可以先进入主题和启动页，初始化任务在 ViewModel 内后台推进。
-        startupViewModel.start()
-    }
-
     XyTheme(
         xyConfigs = XyConfigs(
             isDarkTheme = isDark,

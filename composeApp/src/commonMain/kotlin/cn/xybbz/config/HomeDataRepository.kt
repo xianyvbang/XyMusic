@@ -76,7 +76,6 @@ class HomeDataRepository(
 
 
     private suspend fun loadOnce() = coroutineScope {
-        Log.i("HomeDataRepository", "loadOnce1 ${TokenServer.baseUrl}")
         launch {
             _mostPlayedMusic.value = db.musicDao.selectMaximumPlayMusicExtendList(20)
         }

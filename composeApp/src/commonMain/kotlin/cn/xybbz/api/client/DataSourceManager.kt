@@ -1157,7 +1157,7 @@ open class DataSourceManager(
     /**
      * 获得播放连接
      */
-    override fun getMusicPlayUrl(
+    override suspend fun getMusicPlayUrl(
         musicId: String,
         plexPlayKey: String?
     ): TranscodingAndMusicUrlData {

@@ -86,7 +86,7 @@ class MusicController(
     }
 
 
-    override fun replacePlaylistItemUrl(updateMusicUrlFun: (XyPlayMusic) -> XyPlayMusic) {
+    override fun replacePlaylistItemUrl(updateMusicUrlFun: suspend (XyPlayMusic) -> XyPlayMusic) {
         if (originMusicList.isNotEmpty()) {
             replacePlaylist(
                 originMusicList.map {
