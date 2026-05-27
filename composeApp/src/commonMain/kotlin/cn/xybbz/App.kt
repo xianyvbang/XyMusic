@@ -23,6 +23,7 @@ import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.enums.ThemeTypeEnum
 import cn.xybbz.router.Navigator
+import cn.xybbz.router.RootNavTransition
 import cn.xybbz.router.platformNavigationConfig
 import cn.xybbz.router.rememberNavigationState
 import cn.xybbz.ui.popup.XyPopTipHost
@@ -35,6 +36,16 @@ import cn.xybbz.ui.theme.xyBackgroundBrash
 import cn.xybbz.viewmodel.StartupViewModel
 import org.koin.compose.getKoin
 import org.koin.compose.viewmodel.koinViewModel
+
+/**
+ * 启动外层可切换的三种内容。
+ * 用枚举驱动 RootNavTransition，避免把启动页/连接页/主壳强行压成 Boolean 状态。
+ */
+private enum class AppStartupContent {
+    STARTUP,
+    CONNECTION,
+    MAIN
+}
 
 @Composable
 //@Preview
@@ -71,6 +82,13 @@ fun App(
         startupViewModel.start()
     }
 
+    val startupContent = when {
+        !startupState.settingsLoaded -> AppStartupContent.STARTUP
+        !ifConnectionConfig -> AppStartupContent.CONNECTION
+        startupState.readyForContent -> AppStartupContent.MAIN
+        else -> AppStartupContent.STARTUP
+    }
+
     XyTheme(
         xyConfigs = XyConfigs(
             isDarkTheme = isDark,
@@ -91,19 +109,26 @@ fun App(
                         .padding(windowContentPadding)
                 ) {
                     // 启动阶段分三段显示：设置未加载显示启动页；无连接配置直接显示连接页；数据源服务准备好后再进入主壳。
-                    if (!startupState.settingsLoaded) {
-                        StartupScreen()
-                    } else if (!ifConnectionConfig) {
-                        // 首次打开直接渲染连接页，不创建 MainScreen/MainViewModel，避免拉起播放器等重依赖。
-                        ConnectionScreen(connectionUiType = ConnectionUiType.FIRST_OPEN)
-                    } else if (startupState.readyForContent) {
-                        MainScreen(
-                            navigationConfig = navigationConfig,
-                            navigationState = navigationState,
-                            navigator = navigator,
-                        )
-                    } else {
-                        StartupScreen()
+                    RootNavTransition(
+                        state = startupContent,
+                        enableAnimations = navigationConfig.enableAnimations
+                    ) { content ->
+                        when (content) {
+                            AppStartupContent.STARTUP -> StartupScreen()
+                            AppStartupContent.CONNECTION -> {
+                                // 首次打开直接渲染连接页，不创建 MainScreen/MainViewModel，避免拉起播放器等重依赖。
+                                ConnectionScreen(connectionUiType = ConnectionUiType.FIRST_OPEN)
+                            }
+
+                            AppStartupContent.MAIN -> {
+                                // 只有 readyForContent 后才进入 MAIN，动画切换不会提前创建主壳重依赖。
+                                MainScreen(
+                                    navigationConfig = navigationConfig,
+                                    navigationState = navigationState,
+                                    navigator = navigator,
+                                )
+                            }
+                        }
                     }
                     XyPopTipHost()
                 }
