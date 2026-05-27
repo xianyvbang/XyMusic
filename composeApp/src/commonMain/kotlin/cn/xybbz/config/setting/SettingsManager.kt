@@ -422,8 +422,8 @@ class SettingsManager(
      * 更新缓存数据目录地址
      */
     fun updateCacheFilePath(path: String) {
-/*        this._cacheFilePath.value = path
-        db.settingsDao.updateCacheFilePath*/
+//        this._cacheFilePath.value = path
+        db.settingsDao.updateCacheFilePath(path)
     }
 
     /**
