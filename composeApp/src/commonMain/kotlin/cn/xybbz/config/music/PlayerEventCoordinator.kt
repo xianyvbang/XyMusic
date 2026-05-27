@@ -206,7 +206,8 @@ class PlayerEventCoordinator(
      * 处理切歌后的推荐数据刷新与历史记录持久化。
      */
     private fun onChangeMusic(musicId: String, artistId: String?, artistName: String?) {
-        if (dataSourceManager.loginStatus !is ClientLoginInfoState.UserLoginSuccess) {
+        // 自动登录状态统一从 autoLoginState 读取，避免继续依赖已删除的 loginStatus 副本。
+        if (dataSourceManager.autoLoginState.value !is ClientLoginInfoState.UserLoginSuccess) {
             _recommendationStateFlow.value = PlayerRecommendationState()
             return
         }

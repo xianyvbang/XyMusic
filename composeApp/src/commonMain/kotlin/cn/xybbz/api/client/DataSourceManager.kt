@@ -190,10 +190,6 @@ open class DataSourceManager(
     private val _autoLoginState = MutableStateFlow<ClientLoginInfoState?>(null)
     val autoLoginState: StateFlow<ClientLoginInfoState?> = _autoLoginState.asStateFlow()
 
-    //登陆状态
-    var loginStatus by mutableStateOf<ClientLoginInfoState?>(null)
-        private set
-
     //是够登陆异常
     var ifLoginError by mutableStateOf(false)
         private set
@@ -264,7 +260,7 @@ open class DataSourceManager(
         // serverLogin 只消费 autoLogin 发出的状态；异常已经在数据源 flow 内转成 ClientLoginInfoState。
         _autoLoginRunning.value = true
         autoLogin(loginType, connectionConfig).collect { loginState ->
-            loginStatus = loginState
+            // 登录状态只写入 autoLoginState，避免 loginStatus 和 StateFlow 维护两份状态。
             _autoLoginState.value = loginState
             val loginSateInfo = getLoginSateInfo(loginState)
             errorHint = loginSateInfo.errorHint ?: Res.string.empty_info
