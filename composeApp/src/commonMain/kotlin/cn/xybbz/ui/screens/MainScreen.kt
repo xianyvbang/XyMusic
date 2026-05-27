@@ -34,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
-import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.router.Connection
@@ -42,7 +41,6 @@ import cn.xybbz.router.NavigationState
 import cn.xybbz.router.Navigator
 import cn.xybbz.router.OnDestinationChangedListener
 import cn.xybbz.router.PlatformNavigationConfig
-import cn.xybbz.router.RootNavTransition
 import cn.xybbz.router.RouterCompose
 import cn.xybbz.ui.components.AddPlaylistBottomComponent
 import cn.xybbz.ui.components.AlertDialogComponent
@@ -66,13 +64,6 @@ fun MainScreen(
 
     val coroutineScope = rememberCoroutineScope()
     val selectUiState by mainViewModel.selectControl.uiState.collectAsStateWithLifecycle()
-    val ifConnectionConfig by mainViewModel.settingsManager.ifConnectionConfig.collectAsStateWithLifecycle()
-    // 当前数据源服务对象，自动登录启动过程中会从 null 变为具体服务。
-    val dataSourceServer by mainViewModel.dataSourceManager.dataSourceServerFlow.collectAsStateWithLifecycle()
-    // 当前连接 ID 会先于服务对象写入，用于判断已有连接配置的初始化进度。
-    val currentConnectionId by mainViewModel.dataSourceManager.currentConnectionId.collectAsStateWithLifecycle()
-    // 有连接配置时，必须等数据源服务和连接 ID 都就绪，再创建标题栏/侧栏等会读取数据源的 UI。
-    val dataSourceReady = dataSourceServer != null && currentConnectionId != null
     val currentSelectUiState = rememberUpdatedState(selectUiState)
 
     DisposableEffect(navigator, mainViewModel, coroutineScope) {
@@ -145,35 +136,24 @@ fun MainScreen(
 
             AlertDialogComponent()
             BottomSheetCompose()
-
             AddPlaylistBottomComponent()
-            RootNavTransition(
-                state = !ifConnectionConfig,
-                enableAnimations = navigationConfig.enableAnimations
-            ) { bool ->
-                if (bool) {
-                    ConnectionScreen(connectionUiType = ConnectionUiType.FIRST_OPEN)
-                } else if (!dataSourceReady) {
-                    // 自动登录仍在后台准备数据源时先展示加载态，避免主界面抢先读取 DataSourceManager。
-                    LoadingCompose(modifier = Modifier.align(alignment = Alignment.Center))
-                } else {
-                    MainScreenScaffold(
-                        navigationConfig = navigationConfig,
+
+            // App.kt 已经完成启动页、首次连接页和主壳 ready 的外层分流；MainScreen 只负责主壳内部内容。
+            MainScreenScaffold(
+                navigationConfig = navigationConfig,
+                navigationState = navigationState,
+                navigator = navigator,
+                snackbarHost = {
+                    MainScreenSnackBarHost()
+                }
+            ) {
+                Box {
+                    RouterCompose(
+                        paddingValues = it,
                         navigationState = navigationState,
-                        navigator = navigator,
-                        snackbarHost = {
-                            MainScreenSnackBarHost()
-                        }
-                    ) {
-                        Box {
-                            RouterCompose(
-                                paddingValues = it,
-                                navigationState = navigationState,
-                                enableAnimations = navigationConfig.enableAnimations
-                            )
-                            LoadingCompose(modifier = Modifier.align(alignment = Alignment.Center))
-                        }
-                    }
+                        enableAnimations = navigationConfig.enableAnimations
+                    )
+                    LoadingCompose(modifier = Modifier.align(alignment = Alignment.Center))
                 }
             }
         }

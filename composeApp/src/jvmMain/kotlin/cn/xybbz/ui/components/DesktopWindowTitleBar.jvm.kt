@@ -273,12 +273,18 @@ private fun DesktopTitleActions(
     val connectionList by db.connectionConfigDao.selectAllDataFlow()
         .collectAsState(initial = emptyList())
     val noConnectionSelected = stringResource(Res.string.no_connection_selected)
-    val currentConnectionId by dataSourceManager.currentConnectionId.collectAsState()
+    val dataSourceServer by dataSourceManager.dataSourceServerFlow.collectAsState()
+    val dataSourceType = dataSourceManager.dataSourceType
+    val currentConnectionId =
+        remember(connectionList, dataSourceServer, dataSourceType) {
+            // 标题栏只通过 DataSourceManager.getConnectionId 读取当前连接，避免维护第二份连接 ID 状态。
+            dataSourceManager.getConnectionId()
+        }
     val currentDataSource =
-        remember(connectionList, currentConnectionId, dataSourceManager.dataSourceType) {
+        remember(connectionList, currentConnectionId, dataSourceType) {
             readCurrentDataSourceInfo(
                 connectionList = connectionList,
-                currentConnectionId = currentConnectionId ?: dataSourceManager.getConnectionId(),
+                currentConnectionId = currentConnectionId,
                 dataSourceManager = dataSourceManager,
                 fallbackTitle = noConnectionSelected
             )

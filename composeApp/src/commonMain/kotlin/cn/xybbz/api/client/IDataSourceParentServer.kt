@@ -155,6 +155,16 @@ abstract class IDataSourceParentServer(
         return defaultParentApiClient
     }
 
+    /**
+     * 预绑定本地连接上下文。
+     * 启动/切换阶段会先创建数据源服务，再后台自动登录；这里仅让 getConnectionId 和媒体库选择先可读。
+     * 不发送登录成功事件、不保存设置、不触发远程同步，避免把“服务可读”和“登录完成”混在一起。
+     */
+    fun bindLocalConnectionConfig(connectionConfig: ConnectionConfig) {
+        this.connectionConfig = connectionConfig
+        this.libraryIds = connectionConfig.libraryIds
+    }
+
     @OptIn(ExperimentalAtomicApi::class)
     fun resetLoginRetry() {
         loginRetryGate.store(false)

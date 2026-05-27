@@ -2,6 +2,7 @@ package cn.xybbz
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
@@ -16,11 +17,12 @@ import cn.xybbz.ui.windows.LocalDesktopWindowDecorators
 import cn.xybbz.ui.windows.LocalDesktopWindowFrameState
 import cn.xybbz.ui.windows.rememberWindowsWindowChromeController
 import cn.xybbz.ui.xy.LocalModalSideSheetContent
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 fun main() = application {
+    // Koin 只注册依赖，真正的启动初始化在 App/StartupViewModel 内异步执行。
     initKoin {}
-    // 应用启动后立即拉起本地代理服务，供封面、音频与视频流转发使用。
-    JvmReverseProxyServer.start()
 
     val handleCloseRequest = {
         // 应用退出前主动关闭代理服务，避免残留端口占用与连接资源泄漏。
@@ -41,6 +43,13 @@ fun main() = application {
             window = window,
             onCloseRequest = handleCloseRequest
         )
+
+        LaunchedEffect(Unit) {
+            // 窗口首帧先渲染，再后台拉起本地代理服务，避免代理绑定端口阻塞桌面窗口显示。
+            withContext(Dispatchers.IO) {
+                JvmReverseProxyServer.start()
+            }
+        }
 
         CompositionLocalProvider(
             // JVM 桌面端统一给通用 LazyColumn 显示右侧滚动条。

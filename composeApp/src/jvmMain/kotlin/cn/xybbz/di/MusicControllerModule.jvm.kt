@@ -2,7 +2,6 @@ package cn.xybbz.di
 
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.music.JvmMusicController
-import cn.xybbz.music.VlcBootstrap
 import cn.xybbz.platform.ContextWrapper
 import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Module
@@ -15,9 +14,7 @@ actual class MusicControllerModule {
     actual fun musicController(
         wrapper: ContextWrapper
     ): MusicCommonController {
-        // 在播放器控制器创建前先完成 VLC 运行时预热，
-        // 这样后续真正实例化 AudioPlayerComponent 时可以直接命中本地 native。
-        VlcBootstrap.ensureConfigured()
+        // 这里只创建轻量控制器对象，不做 VLC native 发现；真正播放器初始化由 StartupViewModel 后台触发。
         return JvmMusicController()
     }
 }

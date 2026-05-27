@@ -61,6 +61,7 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import io.ktor.client.HttpClient
 import io.ktor.client.network.sockets.SocketTimeoutException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -72,7 +73,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.flow.onEach
 import org.jetbrains.compose.resources.getString
 import org.koin.core.component.get
 import xymusic_kmp.composeapp.generated.resources.Res
@@ -118,14 +118,6 @@ open class DataSourceManager(
     var dataSourceType by mutableStateOf<DataSourceType?>(null)
         private set
 
-    /**
-     * 当前连接 ID 的轻量缓存。
-     * 数据源服务对象尚未完成创建时，UI 可先收集这个值，避免启动阶段访问 lateinit。
-     */
-    private val _currentConnectionId = MutableStateFlow<Long?>(null)
-    val currentConnectionId: StateFlow<Long?> = _currentConnectionId.asStateFlow()
-
-
     init {
         createScope()
     }
@@ -141,6 +133,10 @@ open class DataSourceManager(
      */
     private var dataSourceServerActive = false
 
+    /**
+     * 当前可安全读取的数据源服务对象。
+     * MainScreen 的主壳门禁只看这个值是否非空，不再等待 serverLogin 全链路完成。
+     */
     val dataSourceServerFlow = MutableStateFlow<IDataSourceParentServer?>(null)
 
     /**
@@ -180,6 +176,20 @@ open class DataSourceManager(
     var loading by mutableStateOf(false)
         private set
 
+    /**
+     * 自动登录是否正在后台执行。
+     * 启动时创建数据源服务后即可进入主壳，这个状态只用于局部 loading 或提示。
+     */
+    private val _autoLoginRunning = MutableStateFlow(false)
+    val autoLoginRunning: StateFlow<Boolean> = _autoLoginRunning.asStateFlow()
+
+    /**
+     * 自动登录最近一次状态。
+     * IDataSourceParentServer.autoLogin 内部会 catch 异常并 emit 状态，这里不再额外 catch。
+     */
+    private val _autoLoginState = MutableStateFlow<ClientLoginInfoState?>(null)
+    val autoLoginState: StateFlow<ClientLoginInfoState?> = _autoLoginState.asStateFlow()
+
     //登陆状态
     var loginStatus by mutableStateOf<ClientLoginInfoState?>(null)
         private set
@@ -211,14 +221,17 @@ open class DataSourceManager(
             //获得启用的连接信息
             val connectionConfig =
                 db.connectionConfigDao.selectById(connectionId)
-            // 先缓存连接 ID，再创建具体数据源，避免 UI 首帧同步读取时遇到未初始化对象。
-            switchDataSource(dataSourceType)
+            // 先把本地连接配置绑定到具体数据源，getConnectionId 可以直接读取同一个来源。
+            switchDataSource(dataSourceType, connectionConfig)
             for (listener in listeners) {
                 listener.autoLoginBefore(connectionConfig)
             }
-            serverLogin(LoginType.TOKEN, connectionConfig)
-            for (listener in listeners) {
-                listener.autoLoginSuccessAfter(connectionConfig)
+            scope.launch {
+                // 自动登录不再阻塞 initDataSource 返回，主壳只需要数据源服务对象先可读。
+                serverLogin(LoginType.TOKEN, connectionConfig)
+                for (listener in listeners) {
+                    listener.autoLoginSuccessAfter(connectionConfig)
+                }
             }
         }
     }
@@ -245,16 +258,20 @@ open class DataSourceManager(
         loginType: LoginType = LoginType.TOKEN,
         connectionConfig: ConnectionConfig?
     ) {
-        // 刷新登录可能在服务对象可用前触发，先保留连接 ID 给同步读取兜底。
-        _currentConnectionId.value = connectionConfig?.id ?: _currentConnectionId.value
+        // 手动刷新登录时先同步本地连接配置，避免 UI 和后续同步读取到旧连接上下文。
+        connectionConfig?.let { currentDataSourceServerOrNull()?.bindLocalConnectionConfig(it) }
         ifLoginError = false
+        // serverLogin 只消费 autoLogin 发出的状态；异常已经在数据源 flow 内转成 ClientLoginInfoState。
+        _autoLoginRunning.value = true
         autoLogin(loginType, connectionConfig).collect { loginState ->
             loginStatus = loginState
+            _autoLoginState.value = loginState
             val loginSateInfo = getLoginSateInfo(loginState)
             errorHint = loginSateInfo.errorHint ?: Res.string.empty_info
             errorMessage = loginSateInfo.errorMessage ?: ""
             ifLoginError = loginSateInfo.isError
             loading = loginSateInfo.loading
+            _autoLoginRunning.value = loginSateInfo.loading
             if (loginSateInfo.isError) {
                 MessageUtils.sendPopTipError(
                     Res.string.login_failed,
@@ -267,6 +284,7 @@ open class DataSourceManager(
                 )
             }
         }
+        _autoLoginRunning.value = false
     }
 
     /**
@@ -339,15 +357,20 @@ open class DataSourceManager(
     /**
      * 切换数据源
      * @param [dataSourceType] 数据源类型
+     * @param [connectionConfig] 本地连接配置；首次新增连接时尚未保存，所以允许为空。
      */
     fun switchDataSource(
-        dataSourceType: DataSourceType
+        dataSourceType: DataSourceType,
+        connectionConfig: ConnectionConfig? = null
     ) {
         updateDataSourceType(dataSourceType)
         Log.i("=====", "数据源开始切换")
         getDataSourceServerByType(dataSourceType, false).let {
+            // 发布服务前先绑定本地连接配置，getConnectionId 不再依赖额外缓存状态。
+            connectionConfig?.let(it::bindLocalConnectionConfig)
             dataSourceServer = it
             dataSourceServerActive = true
+            // 发布非空服务对象后，MainScreen 即可创建主壳；自动登录仍可继续后台执行。
             dataSourceServerFlow.value = it
         }
         Log.i("=====", "数据源切换完成")
@@ -374,9 +397,8 @@ open class DataSourceManager(
      */
     suspend fun changeDataSource(connectionConfig: ConnectionConfig) {
         release()
-        // 切换连接时先写入目标连接 ID，等待新数据源创建期间 UI 仍可展示当前选择。
-//        _currentConnectionId.value = connectionConfig.id
-        switchDataSource(connectionConfig.type)
+        // 切换连接时先绑定本地连接配置，等待自动登录期间 UI 仍可展示当前选择。
+        switchDataSource(connectionConfig.type, connectionConfig)
         for (listener in listeners) {
             listener.autoLoginBefore(connectionConfig)
         }
@@ -394,13 +416,8 @@ open class DataSourceManager(
         clientLoginInfoReq: ClientLoginInfoReq,
         connectionConfig: ConnectionConfig?
     ): Flow<ClientLoginInfoState> {
-        return dataSourceServer.addClientAndLogin(clientLoginInfoReq, connectionConfig).onEach { loginState ->
-            if (loginState is ClientLoginInfoState.UserLoginSuccess) {
-                // addClientAndLogin 内部会保存新连接并回写到数据源服务，这里同步给 Compose 启动门禁使用。
-                _currentConnectionId.value = dataSourceServer.getConnectionId().takeIf { it != 0L }
-                    ?: _currentConnectionId.value
-            }
-        }
+        // 新增连接成功后，具体数据源会在登录流程中写入自己的连接配置；这里不再维护第二份连接 ID。
+        return dataSourceServer.addClientAndLogin(clientLoginInfoReq, connectionConfig)
     }
 
     override suspend fun autoLogin(
@@ -437,12 +454,8 @@ open class DataSourceManager(
      * 获得连接id
      */
     override fun getConnectionId(): Long {
-        // 优先读取真实数据源；启动空窗期使用缓存连接 ID；没有配置时保持原来的 0 兜底。
-        return currentDataSourceServerOrNull()
-            ?.getConnectionId()
-            ?.takeIf { it != 0L }
-            ?: currentConnectionId.value
-            ?: 0L
+        // 连接 ID 的唯一来源是当前可用数据源服务；没有配置时保持原来的 0 兜底。
+        return currentDataSourceServerOrNull()?.getConnectionId()?.takeIf { it != 0L } ?: 0L
     }
 
     /**
@@ -1299,9 +1312,12 @@ open class DataSourceManager(
         currentDataSourceServerOrNull()?.close()
         // 释放后禁用旧服务对象，等待下一次 switchDataSource 重新发布可用服务。
         dataSourceServerActive = false
+        // 先把服务置空，主界面会退回局部 loading，避免继续读旧数据源。
         dataSourceServerFlow.value = null
         dataSourceType = null
-        _currentConnectionId.value = null
+        // 清空自动登录状态，防止下一次启动/切换复用旧状态展示。
+        _autoLoginState.value = null
+        _autoLoginRunning.value = false
     }
 
     override fun close() {
