@@ -140,10 +140,6 @@ data class XySettings @OptIn(ExperimentalUuidApi::class) constructor(
      */
     val themeType: ThemeTypeEnum = ThemeTypeEnum.SYSTEM,
     /**
-     * 是否动态颜色
-     */
-    val isDynamic: Boolean = false,
-    /**
      * 背景图片地址
      */
     val imageFilePath: String? = null,

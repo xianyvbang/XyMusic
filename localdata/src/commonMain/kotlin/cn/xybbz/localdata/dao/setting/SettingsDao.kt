@@ -53,6 +53,9 @@ interface SettingsDao {
     @Query("select * from xy_settings limit 1")
     suspend fun selectOneData(): XySettings?
 
+    @Query("select * from xy_settings limit 1")
+    fun selectOneDataFlow(): Flow<XySettings?>
+
     @Query("select doubleSpeed from xy_settings limit 1")
     fun selectDoubleSpeed(): Flow<Float?>
 

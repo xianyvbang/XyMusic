@@ -42,6 +42,7 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.common.utils.PlaylistParser
 import cn.xybbz.config.scope.IoScoped
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LoginStateData
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.ResourceData
@@ -61,7 +62,6 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import io.ktor.client.HttpClient
 import io.ktor.client.network.sockets.SocketTimeoutException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -73,6 +73,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.koin.core.component.get
 import xymusic_kmp.composeapp.generated.resources.Res
@@ -114,6 +115,8 @@ open class DataSourceManager(
     private val versionApiClient: VersionApiClient,
 ) : IDataSourceServer, IoScoped() {
 
+
+    val settingsManager: SettingsManager = get()
 
     var dataSourceType by mutableStateOf<DataSourceType?>(null)
         private set
@@ -210,26 +213,31 @@ open class DataSourceManager(
     /**
      * 初始化对象信息
      */
-    suspend fun initDataSource(dataSourceType: DataSourceType?, connectionId: Long?) {
-        Log.i("=====", "开始自动登录")
-        if (dataSourceType != null && connectionId != null) {
-            Log.i("=====", "开始自动登录中")
-            //获得启用的连接信息
-            val connectionConfig =
-                db.connectionConfigDao.selectById(connectionId)
-            // 先把本地连接配置绑定到具体数据源，getConnectionId 可以直接读取同一个来源。
-            switchDataSource(dataSourceType, connectionConfig)
-            for (listener in listeners) {
-                listener.autoLoginBefore(connectionConfig)
-            }
-            scope.launch {
-                // 自动登录不再阻塞 initDataSource 返回，主壳只需要数据源服务对象先可读。
-                serverLogin(LoginType.TOKEN, connectionConfig)
+    suspend fun initDataSource() {
+        settingsManager.settings.collect {
+            Log.i("=====", "开始自动登录")
+            val connectionId = it?.connectionId
+            val dataSourceType = it?.dataSourceType
+            if (dataSourceType != null && connectionId != null) {
+                Log.i("=====", "开始自动登录中")
+                //获得启用的连接信息
+                val connectionConfig =
+                    db.connectionConfigDao.selectById(connectionId)
+                // 先把本地连接配置绑定到具体数据源，getConnectionId 可以直接读取同一个来源。
+                switchDataSource(dataSourceType, connectionConfig)
                 for (listener in listeners) {
-                    listener.autoLoginSuccessAfter(connectionConfig)
+                    listener.autoLoginBefore(connectionConfig)
+                }
+                scope.launch {
+                    // 自动登录不再阻塞 initDataSource 返回，主壳只需要数据源服务对象先可读。
+                    serverLogin(LoginType.TOKEN, connectionConfig)
+                    for (listener in listeners) {
+                        listener.autoLoginSuccessAfter(connectionConfig)
+                    }
                 }
             }
         }
+
     }
 
     /**

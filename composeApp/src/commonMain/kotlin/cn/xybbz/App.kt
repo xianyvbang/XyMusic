@@ -18,6 +18,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.config.setting.SettingsManager
@@ -41,7 +43,7 @@ import org.koin.compose.viewmodel.koinViewModel
  * 启动外层可切换的三种内容。
  * 用枚举驱动 RootNavTransition，避免把启动页/连接页/主壳强行压成 Boolean 状态。
  */
-private enum class AppStartupContent {
+enum class AppStartupContent {
     STARTUP,
     CONNECTION,
     MAIN
@@ -52,15 +54,10 @@ private enum class AppStartupContent {
 fun App(
     windowContentPadding: PaddingValues = PaddingValues(),
 ) {
-
-    val settingsManager: SettingsManager = getKoin().get()
     // 启动状态单独由轻量 ViewModel 管理，避免首帧阶段提前创建 MainViewModel。
     val startupViewModel = koinViewModel<StartupViewModel>()
-    val startupState by startupViewModel.uiState.collectAsState()
-    // 连接配置只决定显示连接页还是主壳，不再等待自动登录完成。
-    val ifConnectionConfig by settingsManager.ifConnectionConfig.collectAsState()
-    val themeType by settingsManager.themeType.collectAsState()
-    val imageFilePath by settingsManager.imageFilePath.collectAsState()
+    // 主题读好再进入 APP, 防止黑白背景闪烁
+    val appState = startupViewModel.appState.collectAsStateWithLifecycle(null).value ?: return
     val navigationConfig = platformNavigationConfig
     val navigationState = rememberNavigationState(
         startRoute = navigationConfig.startRoute,
@@ -70,9 +67,12 @@ fun App(
     val navigator = remember(navigationState) {
         Navigator(navigationState)
     }
+    val systemInDarkTheme = isSystemInDarkTheme()
 
-    val isDark = when (themeType) {
-        ThemeTypeEnum.SYSTEM -> isSystemInDarkTheme()
+    val isDark = when (appState.themeTypeEnum) {
+        ThemeTypeEnum.SYSTEM -> {
+            systemInDarkTheme
+        }
         ThemeTypeEnum.DARK -> true
         ThemeTypeEnum.LIGHT -> false
     }
@@ -82,19 +82,12 @@ fun App(
         startupViewModel.start()
     }
 
-    val startupContent = when {
-        !startupState.settingsLoaded -> AppStartupContent.STARTUP
-        !ifConnectionConfig -> AppStartupContent.CONNECTION
-        startupState.readyForContent -> AppStartupContent.MAIN
-        else -> AppStartupContent.STARTUP
-    }
-
     XyTheme(
         xyConfigs = XyConfigs(
             isDarkTheme = isDark,
         ),
         brash = xyBackgroundBrash(
-            backgroundImageUri = imageFilePath
+            backgroundImageUri = appState.imageFilePath
         )
     ) {
         CompositionLocalProvider(LocalNavigator provides navigator) {
@@ -110,7 +103,7 @@ fun App(
                 ) {
                     // 启动阶段分三段显示：设置未加载显示启动页；无连接配置直接显示连接页；数据源服务准备好后再进入主壳。
                     RootNavTransition(
-                        state = startupContent,
+                        state = appState.mainSceneInitialPage,
                         enableAnimations = navigationConfig.enableAnimations
                     ) { content ->
                         when (content) {

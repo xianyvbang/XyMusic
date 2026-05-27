@@ -25,8 +25,8 @@ object TokenServer {
     var token: String = ""
         private set
 
-    var baseUrl: String = ""
-        private set
+    private var baseUrl: String = ""
+//        private set
 
     var queryMap: Map<String, String> = emptyMap()
         private set

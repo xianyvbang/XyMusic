@@ -32,11 +32,14 @@ import cn.xybbz.localdata.enums.LanguageType
 import cn.xybbz.localdata.enums.ThemeTypeEnum
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 class SettingsManager(
@@ -45,29 +48,37 @@ class SettingsManager(
     private val netWorkMonitor: NetWorkMonitor,
     private val languagePlatformManager: LanguagePlatformManager
 ) {
+    val settings: Flow<XySettings> =
+        db.settingsDao.selectOneDataFlow()
+            .map { it ?: XySettings() }
+            .distinctUntilChanged()
 
-    private var settings: XySettings? = null
-
-    private val _languageType = MutableStateFlow<LanguageType?>(null)
-    val languageType: StateFlow<LanguageType?> = _languageType.asStateFlow()
+    //i18n多语言
+    val languageType = settings.map {
+        it.languageType ?: languagePlatformManager.getSystemLanguageType()
+    }.distinctUntilChanged()
 
     //监听
     val onSettingsChangeListeners = mutableListOf<OnSettingsChangeListener>()
 
     //缓存设置
-    private val _cacheUpperLimit = MutableStateFlow(CacheUpperLimitEnum.Auto)
-    val cacheUpperLimit: StateFlow<CacheUpperLimitEnum> = _cacheUpperLimit.asStateFlow()
+    val cacheUpperLimit = settings.map { it.cacheUpperLimit }.distinctUntilChanged()
 
     //缓存文件所在位置
-    private val _cacheFilePath = MutableStateFlow("")
-    val cacheFilePath: StateFlow<String> = _cacheFilePath.asStateFlow()
+    val cacheFilePath = settings.map { it.cacheFilePath }.distinctUntilChanged()
 
     //是否为非计费网络
     var isUnmeteredWifi: Boolean = false
 
     //是否有连接配置
-    private val _ifConnectionConfig = MutableStateFlow(false)
-    val ifConnectionConfig: StateFlow<Boolean> = _ifConnectionConfig.asStateFlow()
+    val ifConnectionConfig = settings.map {
+        it.connectionId != null && it.dataSourceType != null
+    }.distinctUntilChanged()
+
+    //连接前缀
+    val baseUrl = settings.map {
+        it.connectionId?.let { db.connectionConfigDao.selectById(it).address }
+    }.distinctUntilChanged()
 
     //是否显示SnackBar
     private val _ifShowSnackBar = MutableStateFlow(false)
@@ -76,20 +87,12 @@ class SettingsManager(
     /**
      * 主题类型
      */
-    private val _themeType = MutableStateFlow(ThemeTypeEnum.SYSTEM)
-    val themeType: StateFlow<ThemeTypeEnum> = _themeType.asStateFlow()
-
-    /**
-     * 是否动态颜色
-     */
-    private val _isDynamic = MutableStateFlow(false)
-    val isDynamic: StateFlow<Boolean> = _isDynamic.asStateFlow()
+    val themeType = settings.map { it.themeType }.distinctUntilChanged()
 
     /**
      * 背景图片地址
      */
-    private val _imageFilePath = MutableStateFlow<String?>(null)
-    val imageFilePath: StateFlow<String?> = _imageFilePath.asStateFlow()
+    val imageFilePath = settings.map { it.imageFilePath }.distinctUntilChanged()
 
 
     //是否设置转码音质
@@ -101,12 +104,10 @@ class SettingsManager(
      * todo 这里赋值应该改为使用方法设置
      */
     private val _maxBytesFlow = MutableStateFlow(0L)
+
     // 音乐缓存上限的唯一响应式来源
     val maxBytesFlow = _maxBytesFlow.asStateFlow()
 
-    fun get(): XySettings {
-        return settings ?: XySettings()
-    }
 
     /**
      * 更新当前缓存上限字节数。
@@ -115,21 +116,13 @@ class SettingsManager(
         _maxBytesFlow.value = maxBytes
     }
 
-    suspend fun setSettingsData(): XySettings = withContext(Dispatchers.IO) {
+    suspend fun setSettingsData() {
         Log.i("=====", "开始存储设置")
-        this@SettingsManager.settings = db.settingsDao.selectOneData() ?: XySettings()
-
-
-
-        this@SettingsManager._themeType.value = this@SettingsManager.get().themeType
-        this@SettingsManager._isDynamic.value = this@SettingsManager.get().isDynamic
-        this@SettingsManager._imageFilePath.value = this@SettingsManager.get().imageFilePath
-        this@SettingsManager._cacheFilePath.value = this@SettingsManager.get().cacheFilePath
 
         val connectionId = this@SettingsManager.get().connectionId
         val ifConnectionId = connectionId != null
         updateIfConnectionConfig(ifConnectionId)
-        if (connectionId != null){
+        if (connectionId != null) {
             TokenServer.updateBaseUrl(db.connectionConfigDao.selectById(connectionId).address)
         }
 
@@ -150,7 +143,6 @@ class SettingsManager(
         })
         netWorkMonitor.start()
         this@SettingsManager.isUnmeteredWifi = netWorkMonitor.isUnmeteredWifi.value
-        get()
     }
 
     /**
@@ -634,6 +626,22 @@ class SettingsManager(
         }
     }
 
+    //更新设置
+    private suspend fun updateSettings(
+        transform: (XySettings) -> XySettings
+    ): XySettings = withContext(Dispatchers.IO) {
+        val old = db.settingsDao.selectOneData() ?: XySettings()
+        val next = transform(old)
+
+        if (old.id != AllDataEnum.All.code) {
+            db.settingsDao.update(next)
+            next
+        } else {
+            val id = db.settingsDao.save(next)
+            next.copy(id = id)
+        }
+    }
+
     /**
      * 更新缓存数据目录地址
      */
@@ -655,7 +663,7 @@ class SettingsManager(
         }
     }
 
-    fun sengTranscodingEvent(transcodingState:TranscodingState = TranscodingState.Transcoding) {
+    fun sengTranscodingEvent(transcodingState: TranscodingState = TranscodingState.Transcoding) {
         _transcodingFlow.tryEmit(transcodingState)
     }
 
@@ -680,7 +688,6 @@ class SettingsManager(
      * 更新是否存在连接设置
      */
     fun updateIfConnectionConfig(ifConnectionConfig: Boolean) {
-        this._ifConnectionConfig.value = ifConnectionConfig
         updateIfShowSnackBar(ifConnectionConfig)
     }
 

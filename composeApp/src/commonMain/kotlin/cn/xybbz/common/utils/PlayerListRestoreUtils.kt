@@ -15,8 +15,8 @@ object PlayerListRestoreUtils {
         db: LocalDatabaseClient,
         downloadDb: DownloadDatabaseClient,
         musicPlayContext: MusicPlayContext,
-        connectionId: String?
     ) {
+        val connectionId = db.settingsDao.selectOneData()?.connectionId?.toString()
         if (connectionId.isNullOrBlank()) return
         val musicList = MusicPlayAssembler.attachFilePath(
             playMusicList = db.musicDao.selectPlayQueuePlayMusicList(),
