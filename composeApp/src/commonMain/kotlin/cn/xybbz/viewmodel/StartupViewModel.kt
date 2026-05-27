@@ -60,11 +60,18 @@ class StartupViewModel(
             .map { it.connectionId != null && it.dataSourceType != null }, // 只需要读取一次
         settingsManager.settings,
         dataSourceManager.autoLoginRunning,
-        settingsManager.imageFilePath
-    ) { themeSettings, ifConnectionConfig, uiSettings, autoLoginRunning, imageFilePath ->
+        settingsManager.imageFilePath,
+        settingsManager.ifEntryPage
+    ) { arrays ->
+        val themeSettings = arrays[0]
+        val ifConnectionConfig = arrays[1] as Boolean
+        val settings = arrays[2]
+        val autoLoginRunning = arrays[3] as Boolean
+        val imageFilePath = arrays[4] as String?
+        val ifEntryPage = arrays[5] as Boolean
         StartupState(
-            themeTypeEnum = themeSettings,
-            mainSceneInitialPage = if (!ifConnectionConfig) {
+            themeTypeEnum = themeSettings as ThemeTypeEnum,
+            mainSceneInitialPage = if (!ifConnectionConfig && !ifEntryPage) {
                 AppStartupContent.CONNECTION
             } else if (autoLoginRunning) {
                 AppStartupContent.STARTUP

@@ -147,7 +147,7 @@ fun JvmConnectionScreen(
 
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
-    val ifConnectionConfig by connectionViewModel.settingsManager.ifConnectionConfig.collectAsState()
+    val ifConnectionConfig by connectionViewModel.settingsManager.ifEntryPage.collectAsState()
     var ifSelectDataSource by remember {
         mutableStateOf(ConnectionScreenType.SELECT_DATA_SOURCE)
     }

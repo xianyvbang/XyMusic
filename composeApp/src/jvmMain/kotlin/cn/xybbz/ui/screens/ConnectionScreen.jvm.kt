@@ -9,12 +9,12 @@ actual fun ConnectionScreen(
     connectionUiType: ConnectionUiType?,
     modifier: Modifier,
 ) {
-    JvmConnectionNewScreen(
-        connectionUiType = connectionUiType,
-        modifier = modifier,
-    )
-    /*JvmConnectionScreen(
+    /*JvmConnectionNewScreen(
         connectionUiType = connectionUiType,
         modifier = modifier,
     )*/
+    JvmConnectionScreen(
+        connectionUiType = connectionUiType,
+        modifier = modifier,
+    )
 }

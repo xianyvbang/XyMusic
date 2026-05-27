@@ -132,6 +132,10 @@ class SettingsManager(
     // 音乐缓存上限的唯一响应式来源
     val maxBytesFlow = _maxBytesFlow.asStateFlow()
 
+    //是否要进入页面
+    val _ifEntryPage = MutableStateFlow(false)
+    val ifEntryPage = _ifEntryPage.asStateFlow()
+
 
     /**
      * 更新当前缓存上限字节数。
@@ -160,6 +164,7 @@ class SettingsManager(
         if (connectionId != null) {
             TokenServer.updateBaseUrl(db.connectionConfigDao.selectById(connectionId).address)
         }
+        _ifEntryPage.value = ifConnectionConfig.value
 
         Log.i("api", "动态设置数据--读取配置")
         audioFadeController.updateFadeDurationMs(currentSettings.fadeDurationMs)
@@ -444,6 +449,7 @@ class SettingsManager(
      * 更新是否存在连接设置
      */
     fun updateIfConnectionConfig(ifConnectionConfig: Boolean) {
+        _ifEntryPage.value = ifConnectionConfig
         updateIfShowSnackBar(ifConnectionConfig)
     }
 
