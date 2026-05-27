@@ -1151,7 +1151,7 @@ abstract class IDataSourceParentServer(
     /**
      * 获得播放连接
      */
-    override fun getMusicPlayUrl(
+    override suspend fun getMusicPlayUrl(
         musicId: String,
         plexPlayKey: String?
     ): TranscodingAndMusicUrlData {
@@ -1163,7 +1163,7 @@ abstract class IDataSourceParentServer(
         val musicUrl = getChildMusicUrl(
             if (static) musicId else plexPlayKey ?: musicId,
             static,
-            AudioCodecEnum.getAudioCodec(settingsManager.get().transcodeFormat),
+            AudioCodecEnum.getAudioCodec(settingsManager.transcodeFormat),
             audioBitRate,
             settingsManager.get().playSessionId
         )

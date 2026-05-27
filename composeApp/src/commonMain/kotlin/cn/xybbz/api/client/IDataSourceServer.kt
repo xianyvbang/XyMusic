@@ -432,7 +432,7 @@ interface IDataSourceServer : AutoCloseable, KoinComponent {
     /**
      * 获得播放连接
      */
-    fun getMusicPlayUrl(
+    suspend fun getMusicPlayUrl(
         musicId: String,
         plexPlayKey: String?
     ): TranscodingAndMusicUrlData

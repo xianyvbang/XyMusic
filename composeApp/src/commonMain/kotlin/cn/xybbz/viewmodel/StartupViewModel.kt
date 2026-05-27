@@ -57,7 +57,7 @@ class StartupViewModel(
     val appState: Flow<StartupState?> = combine(
         settingsManager.themeType,
         settingsManager.settings.take(1)
-            .map { it?.connectionId != null && it.dataSourceType != null }, // 只需要读取一次
+            .map { it.connectionId != null && it.dataSourceType != null }, // 只需要读取一次
         settingsManager.settings,
         dataSourceManager.autoLoginRunning,
         settingsManager.imageFilePath
@@ -88,6 +88,9 @@ class StartupViewModel(
     }
 
     fun start() {
+        viewModelScope.launch {
+            settingsManager.initSet()
+        }
         // 这些是主界面可用前需要恢复的轻量配置和首页缓存。
         viewModelScope.launch {
             homeDataRepository.initData()
