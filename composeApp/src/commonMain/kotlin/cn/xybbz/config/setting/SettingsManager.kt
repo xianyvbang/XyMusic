@@ -38,7 +38,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
@@ -94,6 +96,14 @@ class SettingsManager(
      */
     val imageFilePath = settings.map { it.imageFilePath }.distinctUntilChanged()
 
+    //音频编码
+    val audioBitRate = combine(
+        settings,
+        netWorkMonitor.isUnmeteredWifi
+    ) { settings, isUnmeteredWifi ->
+        if (!isUnmeteredWifi) settings.mobileNetworkAudioBitRate
+        else settings.wifiNetworkAudioBitRate
+    }
 
     //是否设置转码音质
     private val _transcodingFlow = MutableSharedFlow<TranscodingState>(0, extraBufferCapacity = 1)
@@ -116,25 +126,18 @@ class SettingsManager(
         _maxBytesFlow.value = maxBytes
     }
 
-    suspend fun setSettingsData() {
+    suspend fun initSet() {
         Log.i("=====", "开始存储设置")
 
-        val connectionId = this@SettingsManager.get().connectionId
+        val connectionId = settings.first().connectionId
         val ifConnectionId = connectionId != null
         updateIfConnectionConfig(ifConnectionId)
         if (connectionId != null) {
             TokenServer.updateBaseUrl(db.connectionConfigDao.selectById(connectionId).address)
         }
 
-
-        if (this@SettingsManager.get().languageType != null) {
-            this@SettingsManager._languageType.value = this@SettingsManager.get().languageType
-        } else {
-            setDefaultLanguage()
-        }
-        this@SettingsManager._cacheUpperLimit.value = this@SettingsManager.get().cacheUpperLimit
         Log.i("api", "动态设置数据--读取配置")
-        audioFadeController.updateFadeDurationMs(this@SettingsManager.get().fadeDurationMs)
+        audioFadeController.updateFadeDurationMs(settings.first().fadeDurationMs)
         netWorkMonitor.addListener(object : OnNetworkChangeListener {
             override fun onNetworkChange(isUnmeteredWifi: Boolean) {
                 this@SettingsManager.isUnmeteredWifi = isUnmeteredWifi
@@ -149,32 +152,15 @@ class SettingsManager(
      * 设置是否开启边下边播
      */
     suspend fun setIfEnableEdgeDownload(ifEnableEdgeDownload: Boolean) {
-        settings = get().copy(ifEnableEdgeDownload = ifEnableEdgeDownload)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.update(
-                get()
-            )
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(ifEnableEdgeDownload = ifEnableEdgeDownload))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(ifEnableEdgeDownload = ifEnableEdgeDownload) }
     }
 
     /**
      * 设置缓存上限
      */
     suspend fun setCacheUpperLimit(cacheUpperLimit: CacheUpperLimitEnum) {
-        val oldCacheUpperLimit = this.cacheUpperLimit.value
-        this._cacheUpperLimit.value = cacheUpperLimit
-        settings = get().copy(cacheUpperLimit = cacheUpperLimit)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateCacheUpperLimit(cacheUpperLimit, get().id)
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(cacheUpperLimit = cacheUpperLimit))
-            settings = get().copy(id = settingId)
-        }
+        val oldCacheUpperLimit = settings.first().cacheUpperLimit
+        updateSettings { it.copy(cacheUpperLimit = cacheUpperLimit) }
         for (listener in onSettingsChangeListeners.toList()) {
             listener.onCacheMaxBytesChanged(
                 cacheUpperLimit,
@@ -188,51 +174,21 @@ class SettingsManager(
      * 设置桌面歌词
      */
     suspend fun setIfDesktopLyrics(ifDesktopLyrics: Int) {
-
-        settings = get().copy(ifDesktopLyrics = ifDesktopLyrics)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateIfDesktopLyrics(ifDesktopLyrics, get().id)
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(ifDesktopLyrics = ifDesktopLyrics))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(ifDesktopLyrics = ifDesktopLyrics) }
     }
 
     /**
      * 新增或更新播放速度
      */
     suspend fun saveOrUpdateDoubleSpeed(doubleSpeed: Float) {
-        settings = get().copy(doubleSpeed = doubleSpeed)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateDoubleSpeed(
-                doubleSpeed = doubleSpeed,
-                id = get().id
-            )
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(doubleSpeed = doubleSpeed))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(doubleSpeed = doubleSpeed) }
     }
 
     /**
      * 存储数据源类型
      */
     suspend fun saveConnectionId(connectionId: Long?, dataSourceType: DataSourceType?) {
-        settings = get().copy(connectionId = connectionId, dataSourceType = dataSourceType)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateConnectionId(connectionId, dataSourceType, get().id)
-        } else {
-            val settingId =
-                db.settingsDao.save(
-                    XySettings(
-                        connectionId = connectionId,
-                        dataSourceType = dataSourceType
-                    )
-                )
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(connectionId = connectionId, dataSourceType = dataSourceType) }
     }
 
 
@@ -240,36 +196,14 @@ class SettingsManager(
      * 设置是否开启所有专辑的播放历史记录
      */
     suspend fun setIfEnableAlbumHistory(ifEnableAlbumHistory: Boolean) {
-        settings = get().copy(ifEnableAlbumHistory = ifEnableAlbumHistory)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateIfEnableAlbumHistory(
-                ifEnableAlbumHistory = ifEnableAlbumHistory,
-                get().id
-            )
-
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(ifEnableAlbumHistory = ifEnableAlbumHistory))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(ifEnableAlbumHistory = ifEnableAlbumHistory) }
     }
 
     /**
      * 设置是否开启所有专辑的播放历史记录
      */
     suspend fun setIfHandleAudioFocus(ifHandleAudioFocus: Boolean) {
-        settings = get().copy(ifHandleAudioFocus = ifHandleAudioFocus)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateIfHandleAudioFocus(
-                ifHandleAudioFocus = ifHandleAudioFocus,
-                get().id
-            )
-
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(ifHandleAudioFocus = ifHandleAudioFocus))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(ifHandleAudioFocus = ifHandleAudioFocus) }
 
         for (listener in onSettingsChangeListeners.toList()) {
             listener.onHandleAudioFocusChanged(
@@ -282,18 +216,7 @@ class SettingsManager(
      * 设置是否开启所播放进度同步
      */
     suspend fun setIfEnableSyncPlayProgress(ifEnableSyncPlayProgress: Boolean) {
-        settings = get().copy(ifEnableSyncPlayProgress = ifEnableSyncPlayProgress)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateIfEnableSyncPlayProgress(
-                ifEnableSyncPlayProgress = ifEnableSyncPlayProgress,
-                get().id
-            )
-
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(ifEnableSyncPlayProgress = ifEnableSyncPlayProgress))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(ifEnableSyncPlayProgress = ifEnableSyncPlayProgress) }
     }
 
 
@@ -308,36 +231,14 @@ class SettingsManager(
      * 设置最新版本号
      */
     suspend fun setLatestVersion(version: String) {
-        settings = get().copy(latestVersion = version)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateLatestVersion(
-                latestVersion = version,
-                get().id
-            )
-
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(latestVersion = version))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(latestVersion = version) }
     }
 
     /**
      * 更新语言设置
      */
     suspend fun setLanguageTypeData(languageType: LanguageType) {
-        settings = get().copy(languageType = languageType)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateLanguageType(
-                languageType = languageType,
-                get().id
-            )
-
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(languageType = languageType))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(languageType = languageType) }
         updateLanguage(languageType)
     }
 
@@ -347,68 +248,27 @@ class SettingsManager(
      */
     fun updateLanguage(languageType: LanguageType) {
         languagePlatformManager.applyLanguage(languageType)
-        this._languageType.value = languageType
-    }
-
-    /**
-     * 设置当前默认语言
-     */
-    fun setDefaultLanguage() {
-        this._languageType.value = languagePlatformManager.getSystemLanguageType()
     }
 
     /**
      * 更新最新版本的下载地址
      */
     suspend fun setLastApkUrl(apkUrl: String) {
-        settings = get().copy(lasestApkUrl = apkUrl)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateLatestApkUrl(
-                lasestApkUrl = apkUrl,
-                get().id
-            )
-
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(lasestApkUrl = apkUrl))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(lasestApkUrl = apkUrl) }
     }
 
     /**
      * 更新最新版本的获取时间
      */
     suspend fun setLatestVersionTime(latestVersionTime: Long) {
-        settings = get().copy(latestVersionTime = latestVersionTime)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateLatestVersionTime(
-                latestVersionTime = latestVersionTime,
-                get().id
-            )
-
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(latestVersionTime = latestVersionTime))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(latestVersionTime = latestVersionTime) }
     }
 
     /**
      * 更新最大同时下载数量
      */
     suspend fun setMaxConcurrentDownloads(maxConcurrentDownloads: Int) {
-        settings = get().copy(maxConcurrentDownloads = maxConcurrentDownloads)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateMaxConcurrentDownloads(
-                maxConcurrentDownloads = maxConcurrentDownloads,
-                get().id
-            )
-
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(maxConcurrentDownloads = maxConcurrentDownloads))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(maxConcurrentDownloads = maxConcurrentDownloads) }
     }
 
     /**
@@ -416,35 +276,14 @@ class SettingsManager(
      */
     suspend fun setFadeDurationMs(fadeDurationMs: Long) {
         audioFadeController.updateFadeDurationMs(fadeDurationMs)
-        settings = get().copy(fadeDurationMs = fadeDurationMs)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateFadeDurationMs(
-                fadeDurationMs = fadeDurationMs,
-                get().id
-            )
-
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(fadeDurationMs = fadeDurationMs))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(fadeDurationMs = fadeDurationMs) }
     }
 
     /**
      * 更新资源优先使用音乐服务接口（歌词/封面）
      */
     suspend fun setIfPriorityMusicApi(ifPriorityMusicApi: Boolean) {
-        settings = get().copy(ifPriorityMusicApi = ifPriorityMusicApi)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateIfPriorityMusicApi(
-                ifPriorityMusicApi = ifPriorityMusicApi,
-                id = get().id
-            )
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(ifPriorityMusicApi = ifPriorityMusicApi))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(ifPriorityMusicApi = ifPriorityMusicApi) }
         for (listener in onSettingsChangeListeners.toList()) {
             listener.onMusicResourceConfigChanged()
         }
@@ -454,51 +293,21 @@ class SettingsManager(
      * 更新自定义歌词单曲接口地址
      */
     suspend fun setCustomLrcSingleApi(customLrcSingleApi: String) {
-        settings = get().copy(customLrcSingleApi = customLrcSingleApi)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateCustomLrcSingleApi(
-                customLrcSingleApi = customLrcSingleApi,
-                id = get().id
-            )
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(customLrcSingleApi = customLrcSingleApi))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(customLrcSingleApi = customLrcSingleApi) }
     }
 
     /**
      * 更新自定义歌词接口鉴权
      */
     suspend fun setCustomLrcApiAuth(customLrcApiAuth: String) {
-        settings = get().copy(customLrcApiAuth = customLrcApiAuth)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateCustomLrcApiAuth(
-                customLrcApiAuth = customLrcApiAuth,
-                id = get().id
-            )
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(customLrcApiAuth = customLrcApiAuth))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(customLrcApiAuth = customLrcApiAuth) }
     }
 
     /**
      * 更新自定义封面接口地址
      */
     suspend fun setCustomCoverApi(customCoverApi: String) {
-        settings = get().copy(customCoverApi = customCoverApi)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateCustomCoverApi(
-                customCoverApi = customCoverApi,
-                id = get().id
-            )
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(customCoverApi = customCoverApi))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(customCoverApi = customCoverApi) }
         for (listener in onSettingsChangeListeners.toList()) {
             listener.onMusicResourceConfigChanged()
         }
@@ -508,17 +317,8 @@ class SettingsManager(
      * 更新移动网络转码比特率
      */
     suspend fun setMobileNetworkAudioBitRate(mobileNetworkAudioBitRate: Int) {
-        settings = get().copy(mobileNetworkAudioBitRate = mobileNetworkAudioBitRate)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.update(
-                get()
-            )
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(mobileNetworkAudioBitRate = mobileNetworkAudioBitRate))
-            settings = get().copy(id = settingId)
-        }
-        if (!get().ifTranscoding)
+        val next = updateSettings { it.copy(mobileNetworkAudioBitRate = mobileNetworkAudioBitRate) }
+        if (!next.ifTranscoding)
             sengTranscodingEvent()
     }
 
@@ -526,17 +326,8 @@ class SettingsManager(
      * 更新wifi网络转码比特率
      */
     suspend fun setWifiNetworkAudioBitRate(wifiNetworkAudioBitRate: Int) {
-        settings = get().copy(wifiNetworkAudioBitRate = wifiNetworkAudioBitRate)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.update(
-                get()
-            )
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(wifiNetworkAudioBitRate = wifiNetworkAudioBitRate))
-            settings = get().copy(id = settingId)
-        }
-        if (!get().ifTranscoding)
+        val next = updateSettings { it.copy(wifiNetworkAudioBitRate = wifiNetworkAudioBitRate) }
+        if (!next.ifTranscoding)
             sengTranscodingEvent()
     }
 
@@ -544,16 +335,7 @@ class SettingsManager(
      * 更新任意网络是否转码
      */
     suspend fun setIfTranscoding(ifTranscoding: Boolean) {
-        settings = get().copy(ifTranscoding = ifTranscoding)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.update(
-                get()
-            )
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(ifTranscoding = ifTranscoding))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(ifTranscoding = ifTranscoding) }
 
         sengTranscodingEvent()
     }
@@ -562,18 +344,8 @@ class SettingsManager(
      * 更新编码格式
      */
     suspend fun setTranscodeFormat(transcodeFormat: String) {
-        settings = get().copy(transcodeFormat = transcodeFormat)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.update(
-                get()
-            )
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(transcodeFormat = transcodeFormat))
-            settings = get().copy(id = settingId)
-        }
-
-        if (!get().ifTranscoding)
+        val next = updateSettings { it.copy(transcodeFormat = transcodeFormat) }
+        if (!next.ifTranscoding)
             sengTranscodingEvent()
     }
 
@@ -582,33 +354,14 @@ class SettingsManager(
      * 更新主题颜色类型
      */
     suspend fun setThemeTypeData(themeType: ThemeTypeEnum) {
-        this._themeType.value = themeType
-        settings = get().copy(themeType = themeType)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.update(
-                get()
-            )
-
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(themeType = themeType))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(themeType = themeType) }
     }
 
     /**
      * 更新背景图片地址
      */
     suspend fun setImageFilePath(imageFilePath: String?) {
-        this._imageFilePath.value = imageFilePath
-        settings = get().copy(imageFilePath = imageFilePath)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateImageFilePath(imageFilePath, get().id)
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(imageFilePath = imageFilePath))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(imageFilePath = imageFilePath) }
     }
 
     /**
@@ -616,14 +369,7 @@ class SettingsManager(
      */
     suspend fun setJvmVolume(jvmVolume: Int) {
         val value = jvmVolume.coerceIn(0, 100)
-        settings = get().copy(jvmVolume = value)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateJvmVolume(value, get().id)
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(jvmVolume = value))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(jvmVolume = value) }
     }
 
     //更新设置
@@ -646,21 +392,15 @@ class SettingsManager(
      * 更新缓存数据目录地址
      */
     fun updateCacheFilePath(path: String) {
-        this._cacheFilePath.value = path
+/*        this._cacheFilePath.value = path
+        db.settingsDao.updateCacheFilePath*/
     }
 
     /**
      * 保存播放缓存目录。空字符串表示使用平台默认目录。
      */
     suspend fun setCacheFilePath(cacheFilePath: String) {
-        settings = get().copy(cacheFilePath = cacheFilePath)
-        if (get().id != AllDataEnum.All.code) {
-            db.settingsDao.updateCacheFilePath(cacheFilePath, get().id)
-        } else {
-            val settingId =
-                db.settingsDao.save(XySettings(cacheFilePath = cacheFilePath))
-            settings = get().copy(id = settingId)
-        }
+        updateSettings { it.copy(cacheFilePath = cacheFilePath) }
     }
 
     fun sengTranscodingEvent(transcodingState: TranscodingState = TranscodingState.Transcoding) {
@@ -668,20 +408,11 @@ class SettingsManager(
     }
 
     /**
-     * 根据网络类型获得需要转码的比特率
-     */
-    fun getAudioBitRate(): Int {
-        return if (!isUnmeteredWifi)
-            get().mobileNetworkAudioBitRate
-        else get().wifiNetworkAudioBitRate
-    }
-
-    /**
      * 获得是否静态资源不转码 true:不转码,false 转码
      */
-    fun getStatic(): Boolean {
-        val audioBitRate = getAudioBitRate()
-        return if (get().ifTranscoding) true else if (audioBitRate == 0) true else false
+    suspend fun getStatic(): Boolean {
+        val settings = settings.first()
+        return settings.ifTranscoding || audioBitRate.first() == 0
     }
 
     /**

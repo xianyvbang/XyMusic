@@ -5,6 +5,7 @@ import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 
@@ -18,6 +19,7 @@ abstract class DownloadCacheCommonController : IoScoped(), KoinComponent {
      */
     private val _allCacheSizeFlow = MutableStateFlow(0L)
     val allCacheSizeFlow = _allCacheSizeFlow.asStateFlow()
+
     /**
      * 当前缓存进度
      */
@@ -86,13 +88,13 @@ abstract class DownloadCacheCommonController : IoScoped(), KoinComponent {
      * 获得缓存key
      */
     fun getCacheKey(musicId: String): String {
-        return musicId + settingsManager.getStatic() + settingsManager.get().transcodeFormat + settingsManager.getAudioBitRate()
+        return musicId + settingsManager.getStatic() + settingsManager.get().transcodeFormat + settingsManager.audioBitRate.first()
     }
 
     /**
      * 更新当前缓存大小
      */
-    fun updateCacheSizeFlow(size: Long){
+    fun updateCacheSizeFlow(size: Long) {
         _allCacheSizeFlow.value = size
     }
 }

@@ -89,6 +89,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
@@ -1154,7 +1155,7 @@ abstract class IDataSourceParentServer(
         musicId: String,
         plexPlayKey: String?
     ): TranscodingAndMusicUrlData {
-        val audioBitRate = settingsManager.getAudioBitRate()
+        val audioBitRate = settingsManager.audioBitRate.first()
 
         val static: Boolean =
             settingsManager.getStatic()

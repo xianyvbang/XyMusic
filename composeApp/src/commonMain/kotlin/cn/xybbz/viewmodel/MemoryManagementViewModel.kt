@@ -153,7 +153,7 @@ class MemoryManagementViewModel(
             withContext(Dispatchers.IO) {
                 dataSourceManager.release()
                 DatabaseUtils.clearAllDatabaseData(db)
-                settingsManager.setSettingsData()
+                settingsManager.initSet()
             }
             databaseSize = "0B"
             refreshStorageInfo()

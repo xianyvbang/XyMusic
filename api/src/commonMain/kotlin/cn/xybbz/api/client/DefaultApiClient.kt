@@ -241,13 +241,6 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
     }
 
     /**
-     * 获得前缀地址
-     */
-    override fun getBaseUrl(): String {
-        return TokenServer.baseUrl
-    }
-
-    /**
      * 获得用户接口服务
      */
     open fun userApi(restart: Boolean = false): BaseApi = object : BaseApi {
