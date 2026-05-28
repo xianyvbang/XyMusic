@@ -5,11 +5,11 @@ import androidx.lifecycle.viewModelScope
 import cn.xybbz.AppStartupContent
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.enums.ThemeTypeEnum
-import cn.xybbz.startup.StartupInitializer
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.stateIn
 import org.koin.core.annotation.KoinViewModel
 
 /**
@@ -47,11 +47,11 @@ internal fun resolveStartupContent(
     // 已经显示过主壳后，即使刷新登录或切源出现短暂未就绪，也继续留在 MAIN。
     // 首次启动时只有 readyForContent=true 才会锁存主壳展示状态并进入 MAIN。
 
-    return if (ifEntryPage){
+    return if (ifEntryPage) {
         StartupContentDecision(
             content = AppStartupContent.MAIN,
         )
-    }else {
+    } else {
         // 没有连接配置时进入首开连接页，并重置“主壳已展示”标记。
         StartupContentDecision(
             content = AppStartupContent.CONNECTION,
@@ -61,8 +61,7 @@ internal fun resolveStartupContent(
 
 @KoinViewModel
 class StartupViewModel(
-    private val settingsManager: SettingsManager,
-    private val startupInitializer: StartupInitializer,
+    private val settingsManager: SettingsManager
 ) : ViewModel() {
 
 
@@ -70,12 +69,12 @@ class StartupViewModel(
      * App 根层订阅的启动状态。
      * 合并主题、连接配置、启动门闩和背景图，避免 UI 层直接拼多个数据源。
      */
-    val appState: Flow<StartupState?> = combine(
+    val appState: StateFlow<StartupState> = combine(
         settingsManager.themeType,
         settingsManager.ifConnectionConfig,
         settingsManager.imageFilePath,
         settingsManager.ifEntryPage
-    ) { themeSettings, ifConnectionConfig,  imageFilePath, ifEntryPage ->
+    ) { themeSettings, ifConnectionConfig, imageFilePath, ifEntryPage ->
         // 这里把设置状态和启动门闩合并成根路由决策，避免 UI 层自己拼状态。
         val startupContentDecision = resolveStartupContent(
             ifEntryPage = ifEntryPage,
@@ -86,9 +85,16 @@ class StartupViewModel(
             hasConnectionConfig = ifConnectionConfig,
             imageFilePath = imageFilePath
         )
-    }.shareIn(
+    }.stateIn(
         viewModelScope,
-        started = SharingStarted.Eagerly,
-        replay = 1,
+        SharingStarted.Eagerly,
+        StartupState(
+            settingsManager.get().themeType,
+            if (settingsManager.ifEntryPage.value) {
+                AppStartupContent.MAIN
+            } else {
+                AppStartupContent.CONNECTION
+            }, settingsManager.ifConnectionConfig.value, settingsManager.imageFilePath.value
+        )
     )
 }

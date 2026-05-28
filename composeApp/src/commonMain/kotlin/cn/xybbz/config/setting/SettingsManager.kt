@@ -51,7 +51,8 @@ class SettingsManager(
     private val db: LocalDatabaseClient,
     private val audioFadeController: AudioFadeController,
     private val netWorkMonitor: NetWorkMonitor,
-    private val languagePlatformManager: LanguagePlatformManager
+    private val languagePlatformManager: LanguagePlatformManager,
+    initialSettings: XySettings = XySettings()
 ) {
     private val scope = CoroutineScopeUtils.getIo("settings-manager")
 
@@ -61,13 +62,17 @@ class SettingsManager(
             .distinctUntilChanged()
 
     val settings: StateFlow<XySettings> =
-        settingsSource.stateIn(scope, SharingStarted.Eagerly, XySettings())
+        settingsSource.stateIn(scope, SharingStarted.Eagerly, initialSettings)
 
     //i18n多语言
     val languageType = settings.map {
         it.languageType ?: languagePlatformManager.getSystemLanguageType()
     }.distinctUntilChanged()
-        .stateIn(scope, SharingStarted.Eagerly, languagePlatformManager.getSystemLanguageType())
+        .stateIn(
+            scope,
+            SharingStarted.Eagerly,
+            settings.value.languageType ?: languagePlatformManager.getSystemLanguageType()
+        )
 
     //监听
     val onSettingsChangeListeners = mutableListOf<OnSettingsChangeListener>()
@@ -85,9 +90,9 @@ class SettingsManager(
 
     //是否有连接配置
     val ifConnectionConfig = settings.map {
-        it.connectionId != null && it.dataSourceType != null
+        it.hasConnectionConfig
     }.distinctUntilChanged()
-        .stateIn(scope, SharingStarted.Eagerly, false)
+        .stateIn(scope, SharingStarted.Eagerly, settings.value.hasConnectionConfig)
 
     //连接前缀
     val baseUrl = settings.map {
@@ -96,7 +101,7 @@ class SettingsManager(
         .stateIn(scope, SharingStarted.Eagerly, null)
 
     //是否显示SnackBar
-    private val _ifShowSnackBar = MutableStateFlow(false)
+    private val _ifShowSnackBar = MutableStateFlow(settings.value.hasConnectionConfig)
     val ifShowSnackBar: StateFlow<Boolean> = _ifShowSnackBar.asStateFlow()
 
     /**
@@ -134,7 +139,7 @@ class SettingsManager(
     val maxBytesFlow = _maxBytesFlow.asStateFlow()
 
     //是否要进入页面
-    val _ifEntryPage = MutableStateFlow(false)
+    val _ifEntryPage = MutableStateFlow(settings.value.hasConnectionConfig)
     val ifEntryPage = _ifEntryPage.asStateFlow()
 
 
@@ -160,12 +165,12 @@ class SettingsManager(
 
         val currentSettings = getLatest()
         val connectionId = currentSettings.connectionId
-        val ifConnectionId = connectionId != null
-        updateIfConnectionConfig(ifConnectionId)
+        val hasConnectionConfig = currentSettings.hasConnectionConfig
+        updateIfConnectionConfig(hasConnectionConfig)
         if (connectionId != null) {
             TokenServer.updateBaseUrl(db.connectionConfigDao.selectById(connectionId).address)
         }
-        _ifEntryPage.value = ifConnectionConfig.value
+        _ifEntryPage.value = hasConnectionConfig
 
         Log.i("api", "动态设置数据--读取配置")
         audioFadeController.updateFadeDurationMs(currentSettings.fadeDurationMs)
@@ -466,3 +471,6 @@ class SettingsManager(
     }
 
 }
+
+private val XySettings.hasConnectionConfig: Boolean
+    get() = connectionId != null && dataSourceType != null

@@ -23,6 +23,10 @@ import cn.xybbz.config.network.NetWorkMonitor
 import cn.xybbz.config.setting.LanguagePlatformManager
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.LocalDatabaseClient
+import cn.xybbz.localdata.data.setting.XySettings
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.runBlocking
 import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Singleton
@@ -39,6 +43,15 @@ class SettingsModule {
         netWorkMonitor: NetWorkMonitor,
         languagePlatformManager: LanguagePlatformManager
     ): SettingsManager {
-        return SettingsManager(db, audioFadeController, netWorkMonitor, languagePlatformManager)
+        val initialSettings = runBlocking(Dispatchers.IO) {
+            db.settingsDao.selectOneData() ?: XySettings()
+        }
+        return SettingsManager(
+            db = db,
+            audioFadeController = audioFadeController,
+            netWorkMonitor = netWorkMonitor,
+            languagePlatformManager = languagePlatformManager,
+            initialSettings = initialSettings
+        )
     }
 }

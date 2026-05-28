@@ -17,8 +17,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.common.enums.ConnectionUiType
+import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.enums.ThemeTypeEnum
 import cn.xybbz.router.Navigator
 import cn.xybbz.router.RootNavTransition
@@ -27,11 +28,12 @@ import cn.xybbz.router.rememberNavigationState
 import cn.xybbz.ui.popup.XyPopTipHost
 import cn.xybbz.ui.screens.ConnectionScreen
 import cn.xybbz.ui.screens.MainScreen
-import cn.xybbz.ui.screens.StartupScreen
 import cn.xybbz.ui.theme.XyConfigs
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.theme.xyBackgroundBrash
+import cn.xybbz.viewmodel.StartupState
 import cn.xybbz.viewmodel.StartupViewModel
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -49,9 +51,10 @@ fun App(
     windowContentPadding: PaddingValues = PaddingValues(),
 ) {
     // 启动状态单独由轻量 ViewModel 管理，避免首帧阶段提前创建 MainViewModel。
+    val settingsManager = koinInject<SettingsManager>()
     val startupViewModel = koinViewModel<StartupViewModel>()
     // 主题读好再进入 APP，防止黑白背景闪烁。
-    val appState = startupViewModel.appState.collectAsStateWithLifecycle(null).value ?: return
+    val appState = startupViewModel.appState.collectAsStateWithLifecycle().value
     val navigationConfig = platformNavigationConfig
     val navigationState = rememberNavigationState(
         startRoute = navigationConfig.startRoute,
