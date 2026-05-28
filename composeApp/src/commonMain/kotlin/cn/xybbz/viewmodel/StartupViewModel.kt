@@ -22,8 +22,11 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
@@ -38,10 +41,15 @@ data class StartupState(
     val settingsLoaded: Boolean = false,
     // 当前本地设置中是否存在连接配置，用于启动阶段选择首开连接页。
     val hasConnectionConfig: Boolean = false,
-    // 主壳放行标记：只要求设置和数据源服务可安全读取，不等待登录全链路结束。
+    // 主壳放行标记：start() 中的轻量启动加载完成后才放行，不等待登录全链路结束。
     val readyForContent: Boolean = false,
     //背景图片地址
     val imageFilePath: String? = null
+)
+
+internal data class StartupReadiness(
+    val settingsLoaded: Boolean = false,
+    val readyForContent: Boolean = false
 )
 
 internal data class StartupContentDecision(
@@ -50,10 +58,18 @@ internal data class StartupContentDecision(
 )
 
 internal fun resolveStartupContent(
+    settingsLoaded: Boolean,
     ifEntryPage: Boolean,
     readyForContent: Boolean,
     hasShownMainContent: Boolean
 ): StartupContentDecision {
+    if (!settingsLoaded) {
+        return StartupContentDecision(
+            content = AppStartupContent.STARTUP,
+            hasShownMainContent = hasShownMainContent
+        )
+    }
+
     if (!ifEntryPage) {
         return StartupContentDecision(
             content = AppStartupContent.CONNECTION,
@@ -81,27 +97,28 @@ class StartupViewModel(
 ) : ViewModel(), KoinComponent {
 
     private var hasShownMainContent = false
+    private val startupReadiness = MutableStateFlow(StartupReadiness())
 
     val appState: Flow<StartupState?> = combine(
         settingsManager.themeType,
         settingsManager.ifConnectionConfig,
-        dataSourceManager.dataSourceServerFlow,
+        startupReadiness,
         settingsManager.imageFilePath,
         settingsManager.ifEntryPage
-    ) { themeSettings, ifConnectionConfig, dataSourceServer, imageFilePath, ifEntryPage ->
-        val readyForContent = dataSourceServer != null
+    ) { themeSettings, ifConnectionConfig, readiness, imageFilePath, ifEntryPage ->
         val startupContentDecision = resolveStartupContent(
+            settingsLoaded = readiness.settingsLoaded,
             ifEntryPage = ifEntryPage,
-            readyForContent = readyForContent,
+            readyForContent = readiness.readyForContent,
             hasShownMainContent = hasShownMainContent
         )
         hasShownMainContent = startupContentDecision.hasShownMainContent
         StartupState(
             themeTypeEnum = themeSettings,
             mainSceneInitialPage = startupContentDecision.content,
-            settingsLoaded = true,
+            settingsLoaded = readiness.settingsLoaded,
             hasConnectionConfig = ifConnectionConfig,
-            readyForContent = readyForContent,
+            readyForContent = readiness.readyForContent,
             imageFilePath = imageFilePath
         )
     }.shareIn(
@@ -116,21 +133,34 @@ class StartupViewModel(
     }
 
     fun start() {
-        viewModelScope.launch {
-            settingsManager.initSet()
-        }
-        // 这些是主界面可用前需要恢复的轻量配置和首页缓存。
-        viewModelScope.launch {
-            homeDataRepository.initData()
-        }
-        viewModelScope.launch(Dispatchers.IO) {
-            proxyConfigServer.initConfig()
-        }
-        // 播放器/VLC/播放队列恢复是重依赖，独立后台执行，不能再挡住主壳显示。
-        startPlayerInitialization()
+        // 数据源设置监听是长期任务；启动门闩只等待现有连接的数据源服务首次发布。
         viewModelScope.launch {
             dataSourceManager.initDataSource()
         }
+        viewModelScope.launch {
+            settingsManager.initSet()
+            startupReadiness.value = startupReadiness.value.copy(settingsLoaded = true)
+
+            val latestSettings = settingsManager.getLatest()
+            val hasConnectionConfig =
+                latestSettings.connectionId != null && latestSettings.dataSourceType != null
+            // 这些是主界面可用前需要恢复的轻量配置和首页缓存。
+            val homeDataJob = launch {
+                homeDataRepository.initData()
+            }
+            val proxyConfigJob = launch(Dispatchers.IO) {
+                proxyConfigServer.initConfig()
+            }
+
+            homeDataJob.join()
+            proxyConfigJob.join()
+            if (hasConnectionConfig) {
+                dataSourceManager.dataSourceServerFlow.filterNotNull().first()
+            }
+            startupReadiness.value = startupReadiness.value.copy(readyForContent = true)
+        }
+        // 播放器/VLC/播放队列恢复是重依赖，独立后台执行，不能再挡住主壳显示。
+        startPlayerInitialization()
     }
 
     private fun startPlayerInitialization() {

@@ -9,8 +9,22 @@ import kotlin.test.assertTrue
 class StartupRoutePolicyTest {
 
     @Test
+    fun settingsNotLoadedRoutesToStartup() {
+        val decision = resolveStartupContent(
+            settingsLoaded = false,
+            ifEntryPage = false,
+            readyForContent = false,
+            hasShownMainContent = false
+        )
+
+        assertEquals(AppStartupContent.STARTUP, decision.content)
+        assertFalse(decision.hasShownMainContent)
+    }
+
+    @Test
     fun noConnectionRoutesToConnectionAndResetsMainLatch() {
         val decision = resolveStartupContent(
+            settingsLoaded = true,
             ifEntryPage = false,
             readyForContent = false,
             hasShownMainContent = true
@@ -21,8 +35,9 @@ class StartupRoutePolicyTest {
     }
 
     @Test
-    fun configuredAppWaitsOnStartupUntilDataSourceServiceIsPublished() {
+    fun configuredAppWaitsOnStartupUntilStartLoadingIsComplete() {
         val decision = resolveStartupContent(
+            settingsLoaded = true,
             ifEntryPage = true,
             readyForContent = false,
             hasShownMainContent = false
@@ -33,8 +48,9 @@ class StartupRoutePolicyTest {
     }
 
     @Test
-    fun publishedDataSourceServiceEntersMainAndLatchesIt() {
+    fun completedStartupLoadingEntersMainAndLatchesIt() {
         val decision = resolveStartupContent(
+            settingsLoaded = true,
             ifEntryPage = true,
             readyForContent = true,
             hasShownMainContent = false
@@ -47,6 +63,7 @@ class StartupRoutePolicyTest {
     @Test
     fun refreshLoginAfterMainHasShownStaysInMain() {
         val decision = resolveStartupContent(
+            settingsLoaded = true,
             ifEntryPage = true,
             readyForContent = false,
             hasShownMainContent = true
