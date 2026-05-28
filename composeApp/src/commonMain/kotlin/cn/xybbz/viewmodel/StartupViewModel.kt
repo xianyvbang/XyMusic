@@ -49,26 +49,32 @@ data class StartupState(
 
 /**
  * 启动门闩状态。
- * settingsLoaded 表示设置已经读取完成，可以判断首开连接页还是启动页。
- * readyForContent 表示 start() 中的轻量启动任务已经完成，可以创建主壳。
  */
 internal data class StartupReadiness(
+    // 设置已经读取完成后，才能判断是首次连接页还是继续等待启动完成。
     val settingsLoaded: Boolean = false,
+    // start() 中的轻量启动任务完成后，才允许创建 MainScreen 主壳。
     val readyForContent: Boolean = false
 )
 
 /**
  * 根内容路由决策结果。
- * 同时返回主壳是否已经显示过，用于避免刷新登录、切源过程中的短暂状态把页面拉回 STARTUP。
  */
 internal data class StartupContentDecision(
+    // 当前根页面应该显示的内容：启动页、连接页或主壳。
     val content: AppStartupContent,
+    // 主壳是否已经展示过；展示过后刷新登录不能再把根页面拉回 STARTUP。
     val hasShownMainContent: Boolean
 )
 
 /**
  * 只根据启动门闩和首开状态决定外层页面。
  * 登录刷新属于主壳内的后台行为，不能作为 STARTUP 的触发条件。
+ *
+ * @param settingsLoaded 设置是否已读取完成；未完成时不能判断连接配置，只能停留 STARTUP。
+ * @param ifEntryPage 是否允许进入主界面流程；false 表示当前没有连接配置，需要进入 CONNECTION。
+ * @param readyForContent start() 的轻量启动任务是否完成；完成后才能首次进入 MAIN。
+ * @param hasShownMainContent 当前 ViewModel 生命周期内主壳是否已经展示过，用于刷新登录时保持 MAIN。
  */
 internal fun resolveStartupContent(
     settingsLoaded: Boolean,
@@ -76,6 +82,7 @@ internal fun resolveStartupContent(
     readyForContent: Boolean,
     hasShownMainContent: Boolean
 ): StartupContentDecision {
+    // 设置未加载完成时，连接配置、主题等启动判断都还不稳定，先留在 STARTUP。
     if (!settingsLoaded) {
         return StartupContentDecision(
             content = AppStartupContent.STARTUP,
@@ -83,6 +90,7 @@ internal fun resolveStartupContent(
         )
     }
 
+    // 没有连接配置时进入首开连接页，并重置“主壳已展示”标记。
     if (!ifEntryPage) {
         return StartupContentDecision(
             content = AppStartupContent.CONNECTION,
@@ -90,6 +98,8 @@ internal fun resolveStartupContent(
         )
     }
 
+    // 已经显示过主壳后，即使刷新登录或切源出现短暂未就绪，也继续留在 MAIN。
+    // 首次启动时只有 readyForContent=true 才会锁存主壳展示状态并进入 MAIN。
     val nextHasShownMainContent = hasShownMainContent || readyForContent
     return StartupContentDecision(
         content = if (nextHasShownMainContent) {
