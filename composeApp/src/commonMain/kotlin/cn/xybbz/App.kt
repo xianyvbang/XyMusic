@@ -44,7 +44,6 @@ import org.koin.compose.viewmodel.koinViewModel
  * 用枚举驱动 RootNavTransition，避免把启动页/连接页/主壳强行压成 Boolean 状态。
  */
 enum class AppStartupContent {
-    STARTUP,
     CONNECTION,
     MAIN
 }
@@ -102,12 +101,10 @@ fun App(
                         enableAnimations = navigationConfig.enableAnimations
                     ) { content ->
                         when (content) {
-                            AppStartupContent.STARTUP -> StartupScreen()
                             AppStartupContent.CONNECTION -> {
                                 // 首次打开直接渲染连接页，不创建 MainScreen/MainViewModel，避免拉起播放器等重依赖。
                                 ConnectionScreen(connectionUiType = ConnectionUiType.FIRST_OPEN)
                             }
-
                             AppStartupContent.MAIN -> {
                                 // 只有 readyForContent 后才进入 MAIN，动画切换不会提前创建主壳重依赖。
                                 MainScreen(

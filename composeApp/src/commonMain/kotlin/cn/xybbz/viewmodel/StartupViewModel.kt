@@ -46,38 +46,26 @@ internal data class StartupContentDecision(
  * @param hasShownMainContent 当前 ViewModel 生命周期内主壳是否已经展示过，用于刷新登录时保持 MAIN。
  */
 internal fun resolveStartupContent(
-    settingsLoaded: Boolean,
     ifEntryPage: Boolean,
-    readyForContent: Boolean,
-    hasShownMainContent: Boolean
+    readyForContent: Boolean
 ): StartupContentDecision {
-    // 设置未加载完成时，连接配置、主题等启动判断都还不稳定，先留在 STARTUP。
-    if (!settingsLoaded) {
-        return StartupContentDecision(
-            content = AppStartupContent.STARTUP,
-            hasShownMainContent = hasShownMainContent
-        )
-    }
 
-    // 没有连接配置时进入首开连接页，并重置“主壳已展示”标记。
-    if (!ifEntryPage) {
-        return StartupContentDecision(
+    // 已经显示过主壳后，即使刷新登录或切源出现短暂未就绪，也继续留在 MAIN。
+    // 首次启动时只有 readyForContent=true 才会锁存主壳展示状态并进入 MAIN。
+    val nextHasShownMainContent = readyForContent
+
+    return if (ifEntryPage){
+        StartupContentDecision(
+            content = AppStartupContent.MAIN,
+            hasShownMainContent = nextHasShownMainContent
+        )
+    }else {
+        // 没有连接配置时进入首开连接页，并重置“主壳已展示”标记。
+        StartupContentDecision(
             content = AppStartupContent.CONNECTION,
             hasShownMainContent = false
         )
     }
-
-    // 已经显示过主壳后，即使刷新登录或切源出现短暂未就绪，也继续留在 MAIN。
-    // 首次启动时只有 readyForContent=true 才会锁存主壳展示状态并进入 MAIN。
-    val nextHasShownMainContent = hasShownMainContent || readyForContent
-    return StartupContentDecision(
-        content = if (nextHasShownMainContent) {
-            AppStartupContent.MAIN
-        } else {
-            AppStartupContent.STARTUP
-        },
-        hasShownMainContent = nextHasShownMainContent
-    )
 }
 
 @KoinViewModel
@@ -86,8 +74,6 @@ class StartupViewModel(
     private val startupInitializer: StartupInitializer,
 ) : ViewModel() {
 
-    // 主壳一旦展示过，后续刷新登录或数据源短暂重建都不再把根页面切回启动页。
-    private var hasShownMainContent = false
 
     val appState: Flow<StartupState?> = combine(
         settingsManager.themeType,
@@ -97,12 +83,9 @@ class StartupViewModel(
         settingsManager.ifEntryPage
     ) { themeSettings, ifConnectionConfig, readiness, imageFilePath, ifEntryPage ->
         val startupContentDecision = resolveStartupContent(
-            settingsLoaded = readiness.settingsLoaded,
             ifEntryPage = ifEntryPage,
-            readyForContent = readiness.readyForContent,
-            hasShownMainContent = hasShownMainContent
+            readyForContent = readiness.readyForContent
         )
-        hasShownMainContent = startupContentDecision.hasShownMainContent
         StartupState(
             themeTypeEnum = themeSettings,
             mainSceneInitialPage = startupContentDecision.content,
