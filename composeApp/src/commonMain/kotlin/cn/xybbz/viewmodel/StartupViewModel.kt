@@ -47,16 +47,29 @@ data class StartupState(
     val imageFilePath: String? = null
 )
 
+/**
+ * 启动门闩状态。
+ * settingsLoaded 表示设置已经读取完成，可以判断首开连接页还是启动页。
+ * readyForContent 表示 start() 中的轻量启动任务已经完成，可以创建主壳。
+ */
 internal data class StartupReadiness(
     val settingsLoaded: Boolean = false,
     val readyForContent: Boolean = false
 )
 
+/**
+ * 根内容路由决策结果。
+ * 同时返回主壳是否已经显示过，用于避免刷新登录、切源过程中的短暂状态把页面拉回 STARTUP。
+ */
 internal data class StartupContentDecision(
     val content: AppStartupContent,
     val hasShownMainContent: Boolean
 )
 
+/**
+ * 只根据启动门闩和首开状态决定外层页面。
+ * 登录刷新属于主壳内的后台行为，不能作为 STARTUP 的触发条件。
+ */
 internal fun resolveStartupContent(
     settingsLoaded: Boolean,
     ifEntryPage: Boolean,
@@ -96,7 +109,9 @@ class StartupViewModel(
     private val dataSourceManager: DataSourceManager,
 ) : ViewModel(), KoinComponent {
 
+    // 主壳一旦展示过，后续刷新登录或数据源短暂重建都不再把根页面切回启动页。
     private var hasShownMainContent = false
+    // readyForContent 由 start() 的轻量启动流程显式推进，不直接绑定登录状态。
     private val startupReadiness = MutableStateFlow(StartupReadiness())
 
     val appState: Flow<StartupState?> = combine(
@@ -141,6 +156,7 @@ class StartupViewModel(
             settingsManager.initSet()
             startupReadiness.value = startupReadiness.value.copy(settingsLoaded = true)
 
+            // 直接读取数据库最新设置，避免 StateFlow 初始值还没同步时误判连接配置。
             val latestSettings = settingsManager.getLatest()
             val hasConnectionConfig =
                 latestSettings.connectionId != null && latestSettings.dataSourceType != null
@@ -155,6 +171,7 @@ class StartupViewModel(
             homeDataJob.join()
             proxyConfigJob.join()
             if (hasConnectionConfig) {
+                // 有连接配置时，至少等数据源服务发布后再放行主壳；自动登录仍继续后台执行。
                 dataSourceManager.dataSourceServerFlow.filterNotNull().first()
             }
             startupReadiness.value = startupReadiness.value.copy(readyForContent = true)
