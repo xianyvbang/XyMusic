@@ -13,13 +13,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.compositionLocal.LocalNavigator
-import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.enums.ThemeTypeEnum
 import cn.xybbz.router.Navigator
 import cn.xybbz.router.RootNavTransition
@@ -31,9 +29,7 @@ import cn.xybbz.ui.screens.MainScreen
 import cn.xybbz.ui.theme.XyConfigs
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.theme.xyBackgroundBrash
-import cn.xybbz.viewmodel.StartupState
 import cn.xybbz.viewmodel.StartupViewModel
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -51,7 +47,6 @@ fun App(
     windowContentPadding: PaddingValues = PaddingValues(),
 ) {
     // 启动状态单独由轻量 ViewModel 管理，避免首帧阶段提前创建 MainViewModel。
-    val settingsManager = koinInject<SettingsManager>()
     val startupViewModel = koinViewModel<StartupViewModel>()
     // 主题读好再进入 APP，防止黑白背景闪烁。
     val appState = startupViewModel.appState.collectAsStateWithLifecycle().value
