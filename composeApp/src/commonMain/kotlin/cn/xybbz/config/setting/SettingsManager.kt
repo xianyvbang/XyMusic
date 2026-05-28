@@ -44,6 +44,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class SettingsManager(
@@ -422,8 +423,12 @@ class SettingsManager(
      * 更新缓存数据目录地址
      */
     fun updateCacheFilePath(path: String) {
-//        this._cacheFilePath.value = path
-        db.settingsDao.updateCacheFilePath(path)
+        scope.launch {
+            val currentSettings = getLatest()
+            if (currentSettings.cacheFilePath == path) return@launch
+
+            updateSettings { it.copy(cacheFilePath = path) }
+        }
     }
 
     /**
