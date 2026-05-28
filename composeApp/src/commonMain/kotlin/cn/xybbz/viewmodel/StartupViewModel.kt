@@ -24,9 +24,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
-import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
 import org.koin.core.component.KoinComponent
@@ -46,6 +44,34 @@ data class StartupState(
     val imageFilePath: String? = null
 )
 
+internal data class StartupContentDecision(
+    val content: AppStartupContent,
+    val hasShownMainContent: Boolean
+)
+
+internal fun resolveStartupContent(
+    ifEntryPage: Boolean,
+    readyForContent: Boolean,
+    hasShownMainContent: Boolean
+): StartupContentDecision {
+    if (!ifEntryPage) {
+        return StartupContentDecision(
+            content = AppStartupContent.CONNECTION,
+            hasShownMainContent = false
+        )
+    }
+
+    val nextHasShownMainContent = hasShownMainContent || readyForContent
+    return StartupContentDecision(
+        content = if (nextHasShownMainContent) {
+            AppStartupContent.MAIN
+        } else {
+            AppStartupContent.STARTUP
+        },
+        hasShownMainContent = nextHasShownMainContent
+    )
+}
+
 @KoinViewModel
 class StartupViewModel(
     private val homeDataRepository: HomeDataRepository,
@@ -54,33 +80,28 @@ class StartupViewModel(
     private val dataSourceManager: DataSourceManager,
 ) : ViewModel(), KoinComponent {
 
+    private var hasShownMainContent = false
+
     val appState: Flow<StartupState?> = combine(
         settingsManager.themeType,
-        settingsManager.settings.take(1)
-            .map { it.connectionId != null && it.dataSourceType != null }, // 只需要读取一次
-        settingsManager.settings,
-        dataSourceManager.autoLoginRunning,
+        settingsManager.ifConnectionConfig,
+        dataSourceManager.dataSourceServerFlow,
         settingsManager.imageFilePath,
         settingsManager.ifEntryPage
-    ) { arrays ->
-        val themeSettings = arrays[0]
-        val ifConnectionConfig = arrays[1] as Boolean
-        val settings = arrays[2]
-        val autoLoginRunning = arrays[3] as Boolean
-        val imageFilePath = arrays[4] as String?
-        val ifEntryPage = arrays[5] as Boolean
+    ) { themeSettings, ifConnectionConfig, dataSourceServer, imageFilePath, ifEntryPage ->
+        val readyForContent = dataSourceServer != null
+        val startupContentDecision = resolveStartupContent(
+            ifEntryPage = ifEntryPage,
+            readyForContent = readyForContent,
+            hasShownMainContent = hasShownMainContent
+        )
+        hasShownMainContent = startupContentDecision.hasShownMainContent
         StartupState(
-            themeTypeEnum = themeSettings as ThemeTypeEnum,
-            mainSceneInitialPage = if (!ifConnectionConfig && !ifEntryPage) {
-                AppStartupContent.CONNECTION
-            } else if (autoLoginRunning) {
-                AppStartupContent.STARTUP
-            } else {
-                AppStartupContent.MAIN
-            },
+            themeTypeEnum = themeSettings,
+            mainSceneInitialPage = startupContentDecision.content,
             settingsLoaded = true,
-            ifConnectionConfig,
-            !autoLoginRunning,
+            hasConnectionConfig = ifConnectionConfig,
+            readyForContent = readyForContent,
             imageFilePath = imageFilePath
         )
     }.shareIn(
