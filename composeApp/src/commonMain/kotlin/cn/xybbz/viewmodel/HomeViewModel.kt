@@ -51,6 +51,8 @@ import cn.xybbz.localdata.enums.PlayerModeEnum
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
 
@@ -121,36 +123,45 @@ class HomeViewModel(
     }
 
     /**
-     * 获得本地音乐数量
+     * 监听当前连接下的下载统计。
+     * 连接 ID 由 DataSourceManager 恢复本地上下文后发出，避免首页初始化时直接读取未恢复的数据源。
      */
     private fun startDownloadDataObservers() {
         // 取消之前的 Job，避免重复监听
         localMusicCountJob?.cancel()
         downloadCountJob?.cancel()
 
-        // 本地音乐数量
+        // 本地音乐数量；切换连接时 collectLatest 会自动取消旧连接的统计监听。
         localMusicCountJob = viewModelScope.launch {
-            downloadDb.downloadDao
-                .getAllMusicTasksCountFlow(
-                    notTypeData = DownloadTypes.APK.toString(),
-                    status = DownloadStatus.COMPLETED,
-                    mediaLibraryId = dataSourceManager.getConnectionId().toString()
-                )
-                .collect { count ->
-                    localCount = if (count == 0) null else count.toString()
+            dataSourceManager.connectionIdFlow
+                .filter { it != 0L }
+                .collectLatest { connectionId ->
+                    downloadDb.downloadDao
+                        .getAllMusicTasksCountFlow(
+                            notTypeData = DownloadTypes.APK.toString(),
+                            status = DownloadStatus.COMPLETED,
+                            mediaLibraryId = connectionId.toString()
+                        )
+                        .collect { count ->
+                            localCount = if (count == 0) null else count.toString()
+                        }
                 }
         }
 
-        // 下载列表数量
+        // 下载列表数量；等待有效连接 ID 后再创建数据库 Flow。
         downloadCountJob = viewModelScope.launch {
-            downloadDb.downloadDao
-                .getAllMusicTasksDownloadCountFlow(
-                    notTypeData = DownloadTypes.APK.toString(),
-                    status = listOf(DownloadStatus.QUEUED, DownloadStatus.DOWNLOADING),
-                    mediaLibraryId = dataSourceManager.getConnectionId().toString()
-                )
-                .collect { count ->
-                    downloadCount = count
+            dataSourceManager.connectionIdFlow
+                .filter { it != 0L }
+                .collectLatest { connectionId ->
+                    downloadDb.downloadDao
+                        .getAllMusicTasksDownloadCountFlow(
+                            notTypeData = DownloadTypes.APK.toString(),
+                            status = listOf(DownloadStatus.QUEUED, DownloadStatus.DOWNLOADING),
+                            mediaLibraryId = connectionId.toString()
+                        )
+                        .collect { count ->
+                            downloadCount = count
+                        }
                 }
         }
     }

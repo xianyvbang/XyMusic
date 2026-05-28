@@ -15,8 +15,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,10 +44,12 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextLarge
+import cn.xybbz.startup.DataSourceBootstrapper
 import cn.xybbz.viewmodel.HomeViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.daily_recommendations
@@ -67,8 +71,16 @@ private val HomeTopAppBarTitleHeight = 64.dp
 
 @Composable
 fun JvmHomeScreen(
-    homeViewModel: HomeViewModel = koinViewModel<HomeViewModel>()
+    // JVM 首页 ViewModel 只负责页面数据和交互，不在 init 阶段触发登录重依赖。
+    homeViewModel: HomeViewModel = koinViewModel<HomeViewModel>(),
+    // 桌面窗口首帧展示后再启动数据源链路，减少启动白屏和窗口卡顿。
+    dataSourceBootstrapper: DataSourceBootstrapper = koinInject()
 ) {
+    LaunchedEffect(dataSourceBootstrapper) {
+        // JVM 首次进入首页后再启动后置登录和播放器恢复，避免窗口首帧阶段被重依赖拖慢。
+        withFrameNanos { }
+        dataSourceBootstrapper.startAfterHomeVisible()
+    }
     val homeListState = rememberLazyListState()
     val mostPlayedMusicList by homeViewModel.homeDataRepository.mostPlayedMusic.collectAsStateWithLifecycle()
     val newestAlbumList by homeViewModel.homeDataRepository.newestAlbums.collectAsStateWithLifecycle()

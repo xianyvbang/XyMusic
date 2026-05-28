@@ -251,7 +251,8 @@ fun JvmSnackBarPlayerComponent(
                                 snackBarPlayerViewModel.selectControl.onAddPlaySelect(
                                     snackBarPlayerViewModel.musicPlayContext,
                                     snackBarPlayerViewModel.db,
-                                    snackBarPlayerViewModel.downloadDb
+                                    snackBarPlayerViewModel.downloadDb,
+                                    snackBarPlayerViewModel.dataSourceManager
                                 )
                             }
                         }

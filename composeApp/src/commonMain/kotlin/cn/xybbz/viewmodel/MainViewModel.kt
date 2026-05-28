@@ -24,9 +24,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.api.events.ReLoginEvent
-import cn.xybbz.common.enums.LoginType
 import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.common.utils.Log
 import cn.xybbz.config.music.MusicCommonController
@@ -40,11 +37,6 @@ import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.era.XyEraItem
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.PlayerModeEnum
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.koin.core.annotation.KoinViewModel
@@ -62,7 +54,6 @@ import xymusic_kmp.composeapp.generated.resources.single_loop
 class MainViewModel(
     val db: LocalDatabaseClient,
     private val musicController: MusicCommonController,
-    val dataSourceManager: DataSourceManager,
     val settingsManager: SettingsManager,
     private val playerEventCoordinator: PlayerEventCoordinator,
     val selectControl: SelectControl,
@@ -100,7 +91,6 @@ class MainViewModel(
 
     init {
         Log.i("=====", "MainViewModel初始化")
-        startLoginEventBus()
         //初始化年代数据
         initEraData()
         // 这里只监听轻量 UI 信号，不再直接订阅播放器事件总线。
@@ -271,28 +261,6 @@ class MainViewModel(
                 // 转码配置变化后，需要让当前播放列表中的地址重新替换为最新策略。
                 musicPlayContext.changeMusicPlaylist()
             }
-        }
-    }
-
-    /**
-     * 启动登陆监听重试登陆
-     */
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    fun startLoginEventBus() {
-        viewModelScope.launch {
-            dataSourceManager.dataSourceServerFlow
-                .filterNotNull()
-                .flatMapLatest { server ->
-                    server.getApiClient().eventBus.events
-                }
-                .onEach { event ->
-                    if (event is ReLoginEvent.Unauthorized) dataSourceManager.serverLogin(
-                        loginType = LoginType.API,
-                        db.connectionConfigDao.selectConnectionConfig()
-                    )
-                }
-                .launchIn(viewModelScope)
         }
     }
 

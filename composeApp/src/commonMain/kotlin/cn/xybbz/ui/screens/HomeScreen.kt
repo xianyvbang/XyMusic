@@ -50,6 +50,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -57,6 +58,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -107,11 +109,13 @@ import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyScreenTitle
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSubSmall
+import cn.xybbz.startup.DataSourceBootstrapper
 import cn.xybbz.viewmodel.HomeViewModel
 import com.github.panpf.sketch.ability.bindPauseLoadWhenScrolling
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.add_24px
@@ -173,11 +177,20 @@ expect fun HomeScreen()
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun MobileHomeScreen(
-    homeViewModel: HomeViewModel = koinViewModel<HomeViewModel>()
+    // 首页 ViewModel 负责轻量首页数据和用户操作，数据源登录不再放在它的 init 中触发。
+    homeViewModel: HomeViewModel = koinViewModel<HomeViewModel>(),
+    // 首页首帧后再调用后置启动器，避免移动端首屏阶段提前解析 DataSourceManager。
+    dataSourceBootstrapper: DataSourceBootstrapper = koinInject()
 ) {
     SideEffect {
         Log.d("=====", "HomeScreen重组一次")
     }
+    LaunchedEffect(dataSourceBootstrapper) {
+        // 等首帧真正渲染完成后，再触发数据源后置启动，避免首页壳和重依赖抢首屏。
+        withFrameNanos { }
+        dataSourceBootstrapper.startAfterHomeVisible()
+    }
+    val coroutineScope = rememberCoroutineScope()
     val mostPlayerMusicList by homeViewModel.homeDataRepository.mostPlayedMusic.collectAsStateWithLifecycle()
     val newAlbumList by homeViewModel.homeDataRepository.newestAlbums.collectAsStateWithLifecycle()
     val musicRecentlyList by homeViewModel.homeDataRepository.recentMusic.collectAsStateWithLifecycle()
@@ -234,9 +247,6 @@ internal fun MobileHomeScreen(
             homeViewModel.dataSourceManager.dataSourceType?.ifShowCount == true
         }
     }
-
-    val coroutineScope = rememberCoroutineScope()
-
     XyColumnScreen {
         TopAppBarComponent(
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),

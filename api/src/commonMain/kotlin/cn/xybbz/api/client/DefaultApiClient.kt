@@ -27,7 +27,6 @@ import cn.xybbz.api.enums.subsonic.Status
 import cn.xybbz.api.events.ReLoginEventBus
 import cn.xybbz.api.exception.ServiceException
 import cn.xybbz.api.exception.UnauthorizedException
-import cn.xybbz.api.utils.appendCustomRequestHeaders
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -39,7 +38,6 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.takeFrom
-import io.ktor.util.appendAll
 
 abstract class DefaultApiClient : ApiFactory, DownloadFactory {
 
@@ -83,19 +81,14 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
                 url {
                     if (baseUrl.isNotBlank())
                         takeFrom(baseUrl)
-                    parameters.appendAll(queryMap)
                 }
-                headers {
-                    appendCustomRequestHeaders(
-                        sourceHeaders = build(),
-                        token = token,
-                        tokenHeaderName = tokenHeaderName
-                    )
-                    appendAll(headerMap)
-                }
-
-
             }
+            installXyAuthenticatedRequest(
+                tokenProvider = { token },
+                tokenHeaderNameProvider = { tokenHeaderName },
+                queryMapProvider = { queryMap },
+                headerMapProvider = { headerMap }
+            )
             /*install(HttpRequestRetry) {
 //                maxRetries = 1
             }*/

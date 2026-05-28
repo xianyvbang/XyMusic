@@ -68,9 +68,7 @@ data class SelectUiState(
  * @date 2025/01/18
  * @constructor 创建[SelectControl]
  */
-class SelectControl(
-    private val dataSourceManager: DataSourceManager
-) {
+class SelectControl {
 
     // 选择状态的唯一响应式来源
     private val _uiState = MutableStateFlow(SelectUiState())
@@ -118,10 +116,10 @@ class SelectControl(
             ).show()
         }
 
-    // 增加选中音乐到播放列表
-    val onAddPlaySelect: suspend (MusicPlayContext, LocalDatabaseClient, DownloadDatabaseClient) -> Unit =
-        { musicPlayContext, db, downloadDb ->
-            addPlayerList(musicPlayContext, db, downloadDb)
+    // 增加选中音乐到播放列表；DataSourceManager 延后到真正执行时传入，避免构造 SelectControl 时提前创建数据源。
+    val onAddPlaySelect: suspend (MusicPlayContext, LocalDatabaseClient, DownloadDatabaseClient, DataSourceManager) -> Unit =
+        { musicPlayContext, db, downloadDb, dataSourceManager ->
+            addPlayerList(musicPlayContext, db, downloadDb, dataSourceManager)
         }
 
     // 增加选中音乐到歌单
@@ -269,11 +267,17 @@ class SelectControl(
 
     /**
      * 播放选中列表
+     *
+     * @param musicPlayContext 播放上下文，用于追加播放列表。
+     * @param db 本地音乐数据库。
+     * @param downloadDb 下载数据库，用于补齐本地文件路径。
+     * @param dataSourceManager 执行时传入的数据源管理器，用于读取当前连接 ID。
      */
     suspend fun addPlayerList(
         musicPlayContext: MusicPlayContext,
         db: LocalDatabaseClient,
-        downloadDb: DownloadDatabaseClient
+        downloadDb: DownloadDatabaseClient,
+        dataSourceManager: DataSourceManager
     ) {
         val xyMusics = MusicPlayAssembler.attachFilePath(
             playMusicList = db.musicDao.selectExtendByIds(selectMusicIdList.toList()),

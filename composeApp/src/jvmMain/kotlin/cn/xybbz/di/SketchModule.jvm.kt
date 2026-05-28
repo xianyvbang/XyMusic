@@ -1,6 +1,5 @@
 package cn.xybbz.di
 
-import cn.xybbz.api.client.DataSourceManager
 import com.github.panpf.sketch.PlatformContext
 import com.github.panpf.sketch.Sketch
 import com.github.panpf.sketch.fetch.KtorHttpUriFetcher
@@ -12,18 +11,18 @@ import com.github.panpf.sketch.util.Logger
 import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
-import org.koin.mp.KoinPlatform
 
 @Module
 @Configuration
 actual class SketchModule {
     @Single
-    actual fun sketch(dataSourceManager: DataSourceManager): Sketch {
+    actual fun sketch(): Sketch {
         return Sketch.Builder(PlatformContext.INSTANCE).apply {
             logger(level = Logger.Level.Debug)
             addIgnoreFetcherProvider(KtorHttpUriFetcherProvider::class)
             addComponents {
-                val httpStack = KtorStack(createSketchHttpClient(dataSourceManager))
+                // Sketch 在首页首帧前就可能创建，不能依赖延后恢复的数据源 HttpClient。
+                val httpStack = KtorStack(createSketchHttpClient())
                 addFetcher(KtorHttpUriFetcher.Factory(httpStack))
                 addInterceptor(PauseLoadWhenScrollingInterceptor())
             }
