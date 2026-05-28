@@ -90,28 +90,22 @@ fun App(
                         .fillMaxSize()
                         .padding(windowContentPadding)
                 ) {
-                    if (appState.mainSceneInitialPage == null) {
-                        // 启动加载页只负责过渡，不再占用根路由枚举。
-                        StartupScreen()
-                    } else {
-                        // 启动阶段只保留连接页和主壳两种根内容，避免把初始化状态混进路由层。
-                        RootNavTransition(
-                            state = appState.mainSceneInitialPage,
-                            enableAnimations = navigationConfig.enableAnimations
-                        ) { content ->
-                            when (content) {
-                                AppStartupContent.CONNECTION -> {
-                                    // 首次打开直接渲染连接页，不创建 MainScreen/MainViewModel，避免拉起播放器等重依赖。
-                                    ConnectionScreen(connectionUiType = ConnectionUiType.FIRST_OPEN)
-                                }
-                                AppStartupContent.MAIN -> {
-                                    // 只有 readyForContent 后才进入 MAIN，动画切换不会提前创建主壳重依赖。
-                                    MainScreen(
-                                        navigationConfig = navigationConfig,
-                                        navigationState = navigationState,
-                                        navigator = navigator,
-                                    )
-                                }
+                    RootNavTransition(
+                        state = appState.mainSceneInitialPage,
+                        enableAnimations = navigationConfig.enableAnimations
+                    ) { content ->
+                        when (content) {
+                            AppStartupContent.CONNECTION -> {
+                                // 首次打开直接渲染连接页，不创建 MainScreen/MainViewModel，避免拉起播放器等重依赖。
+                                ConnectionScreen(connectionUiType = ConnectionUiType.FIRST_OPEN)
+                            }
+                            else -> {
+                                // 只有 readyForContent 后才进入 MAIN，动画切换不会提前创建主壳重依赖。
+                                MainScreen(
+                                    navigationConfig = navigationConfig,
+                                    navigationState = navigationState,
+                                    navigator = navigator,
+                                )
                             }
                         }
                     }

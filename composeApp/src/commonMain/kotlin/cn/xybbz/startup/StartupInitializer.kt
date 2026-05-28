@@ -37,25 +37,11 @@ class StartupInitializer(
     private val _readiness = MutableStateFlow(StartupReadiness())
 
     /**
-     * 启动门闩的只读状态，供 StartupViewModel 决定外层显示启动加载页、连接页还是主壳。
-     */
-    internal val readiness: StateFlow<StartupReadiness> = _readiness.asStateFlow()
-
-    /**
-     * 防止 Koin 启动流程或平台入口重复调用 start()。
-     */
-    private var started = false
-
-    /**
      * 启动轻量初始化任务。
      *
      * @param coroutineScope 应用级协程作用域，任务会在 IO 调度器中执行。
      */
     fun start(coroutineScope: CoroutineScope) {
-        if (started) {
-            return
-        }
-        started = true
 
         coroutineScope.launch(Dispatchers.IO) {
             settingsManager.initSet()
