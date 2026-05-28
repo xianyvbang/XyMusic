@@ -7,14 +7,13 @@ import org.koin.dsl.includes
 import org.koin.plugin.module.dsl.startKoin
 
 /**
- * 只负责启动 Koin 和注册依赖。
- * 应用数据初始化、播放器初始化、自动登录等有耗时风险的流程统一交给 StartupViewModel 后台推进。
+ * 启动 Koin、注册依赖，并在 Koin 可用后拉起应用级后台初始化。
  */
 fun initKoin(config: KoinAppDeclaration? = null): KoinApplication {
     return startKoin<StartKoinApp> {
         includes(config)
         modules(
         )
-    }
+    }.startCommonKoinModule()
 }
 
