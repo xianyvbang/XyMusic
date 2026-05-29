@@ -68,11 +68,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -90,13 +89,17 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cn.xybbz.common.enums.ConnectionUiType
 import cn.xybbz.common.enums.img
+import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopWindowControls
 import cn.xybbz.ui.windows.desktopWindowDragArea
 import cn.xybbz.ui.xy.XyEdit
-import kotlinx.coroutines.delay
+import cn.xybbz.viewmodel.ConnectionViewModel
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.cancel_24px
 import xymusic_kmp.composeapp.generated.resources.check_24px
@@ -111,52 +114,39 @@ import xymusic_kmp.composeapp.generated.resources.visibility_off_24px
 fun JvmConnectionNewScreen(
     connectionUiType: ConnectionUiType? = null,
     modifier: Modifier = Modifier,
+    // 连接业务统一由 ViewModel 承担，默认走 Koin 注入，测试时可传入替身实例。
+    connectionViewModel: ConnectionViewModel = koinViewModel<ConnectionViewModel>(),
 ) {
+    val navigator = LocalNavigator.current
+    // 成功后的收尾入口复用旧连接页配置：首次配置进入主页，添加连接返回上一页。
+    val ifEntryPage by connectionViewModel.settingsManager.ifEntryPage.collectAsState()
     val dataSourceTypes = remember {
         DataSourceType.entries.filter { it.ifShow }
     }
-    var selectedDataSource by remember {
-        mutableStateOf(dataSourceTypes.firstOrNull() ?: DataSourceType.JELLYFIN)
+    // 当前协议直接读取 ViewModel；初始化完成前用第一个可展示协议兜底保证 UI 可绘制。
+    val selectedDataSource = connectionViewModel.dataSourceType
+        ?: dataSourceTypes.firstOrNull()
+        ?: DataSourceType.JELLYFIN
+    // 资源面板显隐由 ViewModel 统一计算，页面只负责按状态渲染。
+    val showResourcePanel = connectionViewModel.showResourcePanel
+    // 当前资源选择下标直接来自 ViewModel，候选地址和 Plex 资源共用这一份选择状态。
+    val selectedResourceIndex = connectionViewModel.selectUrlIndex
+    // 新页面只需要把 ViewModel 的加载/成功状态映射成视觉阶段，不参与真实登录流程。
+    val loginStage = when {
+        connectionViewModel.isLoginSuccess -> JvmConnectionNewLoginStage.Success
+        connectionViewModel.loading -> JvmConnectionNewLoginStage.LoggingIn
+        else -> JvmConnectionNewLoginStage.Idle
     }
-    var address by remember(selectedDataSource) {
-        mutableStateOf(selectedDataSource.defaultAddress)
-    }
-    var username by remember(selectedDataSource) {
-        mutableStateOf("admin")
-    }
-    var password by remember(selectedDataSource) {
-        mutableStateOf("password")
-    }
+    val connectionReady = connectionViewModel.isLoginSuccess
+
+    // 密码显隐只影响本页输入框表现，属于纯 UI 状态，不进入连接业务层。
     var showPassword by remember {
         mutableStateOf(false)
     }
-    var showResourcePanel by remember {
-        mutableStateOf(false)
-    }
-    var selectedResourceIndex by remember {
-        mutableIntStateOf(-1)
-    }
-    var loginStage by remember {
-        mutableStateOf(JvmConnectionNewLoginStage.Idle)
-    }
-    val connectionReady by remember(showResourcePanel, selectedResourceIndex, loginStage) {
-        derivedStateOf {
-            showResourcePanel &&
-                selectedResourceIndex >= 0 &&
-                loginStage == JvmConnectionNewLoginStage.Success
-        }
-    }
 
-    LaunchedEffect(selectedDataSource, address, selectedResourceIndex) {
-        if (selectedResourceIndex < 0) {
-            loginStage = JvmConnectionNewLoginStage.Idle
-            return@LaunchedEffect
-        }
-        loginStage = JvmConnectionNewLoginStage.LoggingIn
-        delay(650)
-        loginStage = JvmConnectionNewLoginStage.Syncing
-        delay(800)
-        loginStage = JvmConnectionNewLoginStage.Success
+    LaunchedEffect(dataSourceTypes) {
+        // 首次进入时保证有默认协议，选择规则由 ViewModel 维护。
+        connectionViewModel.ensureDefaultDataSource(dataSourceTypes)
     }
 
     BoxWithConstraints(
@@ -189,44 +179,51 @@ fun JvmConnectionNewScreen(
                         dataSourceTypes = dataSourceTypes,
                         selectedDataSource = selectedDataSource,
                         activeStep = when {
-                            selectedResourceIndex >= 0 -> 3
+                            connectionViewModel.loading || connectionViewModel.isLoginSuccess -> 3
                             showResourcePanel -> 2
                             else -> 1
                         },
+                        statusText = connectionUiType.connectionStatusText(),
                         onSelectDataSource = {
-                            selectedDataSource = it
-                            showResourcePanel = false
-                            selectedResourceIndex = -1
-                            loginStage = JvmConnectionNewLoginStage.Idle
+                            connectionViewModel.selectDataSource(it)
                         }
                     )
                     JvmConnectionNewMainContent(
                         modifier = Modifier.fillMaxWidth(),
                         compact = true,
                         selectedDataSource = selectedDataSource,
-                        address = address,
-                        username = username,
-                        password = password,
+                        address = connectionViewModel.address,
+                        username = connectionViewModel.username,
+                        password = connectionViewModel.password,
                         showPassword = showPassword,
                         showResourcePanel = showResourcePanel,
                         selectedResourceIndex = selectedResourceIndex,
                         loginStage = loginStage,
                         connectionReady = connectionReady,
-                        onAddressChange = { address = it },
-                        onUsernameChange = { username = it },
-                        onPasswordChange = { password = it },
+                        resourceLoading = connectionViewModel.resourceLoading,
+                        resourceError = connectionViewModel.isResourceLoginError,
+                        loginLoading = connectionViewModel.loading,
+                        loginError = connectionViewModel.isLoginError,
+                        errorMessage = connectionViewModel.errorMessage,
+                        errorHint = stringResource(connectionViewModel.errorHint),
+                        tmpAddressList = connectionViewModel.tmpAddressList,
+                        tmpPlexInfo = connectionViewModel.tmpPlexInfo,
+                        selectedResourceAddress = connectionViewModel.tmpAddress,
+                        onAddressChange = connectionViewModel::setAddressData,
+                        onUsernameChange = connectionViewModel::setUserNameData,
+                        onPasswordChange = connectionViewModel::setPasswordData,
                         onTogglePassword = { showPassword = !showPassword },
-                        onConnect = {
-                            showResourcePanel = true
-                            selectedResourceIndex = -1
-                            loginStage = JvmConnectionNewLoginStage.Idle
-                        },
-                        onReset = {
-                            showResourcePanel = false
-                            selectedResourceIndex = -1
-                            loginStage = JvmConnectionNewLoginStage.Idle
-                        },
-                        onSelectResource = { selectedResourceIndex = it }
+                        // 连接、重置和资源选择都委托给 ViewModel，页面不承载业务分支。
+                        onConnect = connectionViewModel::connect,
+                        onReset = connectionViewModel::resetConnectionInput,
+                        onSelectResource = connectionViewModel::selectResourceAndLogin,
+                        onEnter = {
+                            if (!ifEntryPage) {
+                                connectionViewModel.updateIfConnectionConfig()
+                            } else {
+                                navigator.goBack()
+                            }
+                        }
                     )
                 }
             } else {
@@ -241,15 +238,13 @@ fun JvmConnectionNewScreen(
                         dataSourceTypes = dataSourceTypes,
                         selectedDataSource = selectedDataSource,
                         activeStep = when {
-                            selectedResourceIndex >= 0 -> 3
+                            connectionViewModel.loading || connectionViewModel.isLoginSuccess -> 3
                             showResourcePanel -> 2
                             else -> 1
                         },
+                        statusText = connectionUiType.connectionStatusText(),
                         onSelectDataSource = {
-                            selectedDataSource = it
-                            showResourcePanel = false
-                            selectedResourceIndex = -1
-                            loginStage = JvmConnectionNewLoginStage.Idle
+                            connectionViewModel.selectDataSource(it)
                         }
                     )
                     JvmConnectionNewMainContent(
@@ -259,29 +254,38 @@ fun JvmConnectionNewScreen(
                             .verticalScroll(rememberScrollState()),
                         compact = false,
                         selectedDataSource = selectedDataSource,
-                        address = address,
-                        username = username,
-                        password = password,
+                        address = connectionViewModel.address,
+                        username = connectionViewModel.username,
+                        password = connectionViewModel.password,
                         showPassword = showPassword,
                         showResourcePanel = showResourcePanel,
                         selectedResourceIndex = selectedResourceIndex,
                         loginStage = loginStage,
                         connectionReady = connectionReady,
-                        onAddressChange = { address = it },
-                        onUsernameChange = { username = it },
-                        onPasswordChange = { password = it },
+                        resourceLoading = connectionViewModel.resourceLoading,
+                        resourceError = connectionViewModel.isResourceLoginError,
+                        loginLoading = connectionViewModel.loading,
+                        loginError = connectionViewModel.isLoginError,
+                        errorMessage = connectionViewModel.errorMessage,
+                        errorHint = stringResource(connectionViewModel.errorHint),
+                        tmpAddressList = connectionViewModel.tmpAddressList,
+                        tmpPlexInfo = connectionViewModel.tmpPlexInfo,
+                        selectedResourceAddress = connectionViewModel.tmpAddress,
+                        onAddressChange = connectionViewModel::setAddressData,
+                        onUsernameChange = connectionViewModel::setUserNameData,
+                        onPasswordChange = connectionViewModel::setPasswordData,
                         onTogglePassword = { showPassword = !showPassword },
-                        onConnect = {
-                            showResourcePanel = true
-                            selectedResourceIndex = -1
-                            loginStage = JvmConnectionNewLoginStage.Idle
-                        },
-                        onReset = {
-                            showResourcePanel = false
-                            selectedResourceIndex = -1
-                            loginStage = JvmConnectionNewLoginStage.Idle
-                        },
-                        onSelectResource = { selectedResourceIndex = it }
+                        // 连接、重置和资源选择都委托给 ViewModel，页面不承载业务分支。
+                        onConnect = connectionViewModel::connect,
+                        onReset = connectionViewModel::resetConnectionInput,
+                        onSelectResource = connectionViewModel::selectResourceAndLogin,
+                        onEnter = {
+                            if (!ifEntryPage) {
+                                connectionViewModel.updateIfConnectionConfig()
+                            } else {
+                                navigator.goBack()
+                            }
+                        }
                     )
                 }
             }
@@ -332,6 +336,7 @@ private fun JvmConnectionNewSidebar(
     dataSourceTypes: List<DataSourceType>,
     selectedDataSource: DataSourceType,
     activeStep: Int,
+    statusText: String,
     onSelectDataSource: (DataSourceType) -> Unit,
 ) {
     Column(
@@ -358,7 +363,7 @@ private fun JvmConnectionNewSidebar(
                 fontWeight = FontWeight.W900,
                 style = MaterialTheme.typography.titleMedium,
             )
-            JvmConnectionNewStatusPill(text = "首次打开")
+            JvmConnectionNewStatusPill(text = statusText)
         }
 
         Column(
@@ -592,6 +597,15 @@ private fun JvmConnectionNewMainContent(
     selectedResourceIndex: Int,
     loginStage: JvmConnectionNewLoginStage,
     connectionReady: Boolean,
+    resourceLoading: Boolean,
+    resourceError: Boolean,
+    loginLoading: Boolean,
+    loginError: Boolean,
+    errorMessage: String,
+    errorHint: String,
+    tmpAddressList: List<String>,
+    tmpPlexInfo: List<ResourceData>,
+    selectedResourceAddress: String,
     onAddressChange: (String) -> Unit,
     onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
@@ -599,7 +613,9 @@ private fun JvmConnectionNewMainContent(
     onConnect: () -> Unit,
     onReset: () -> Unit,
     onSelectResource: (Int) -> Unit,
+    onEnter: () -> Unit,
 ) {
+    // MainContent 只接收 ViewModel 已经整理好的状态，用来分发给左右面板和成功横幅。
     Column(
         modifier = modifier
             .padding(
@@ -613,8 +629,12 @@ private fun JvmConnectionNewMainContent(
             compact = compact
         )
 
+        // 登录成功后展示真实收尾按钮，按钮动作由上层根据入口类型处理。
         AnimatedVisibility(visible = connectionReady) {
-            JvmConnectionNewSuccessBanner(selectedDataSource = selectedDataSource)
+            JvmConnectionNewSuccessBanner(
+                selectedDataSource = selectedDataSource,
+                onEnter = onEnter
+            )
         }
 
         if (compact) {
@@ -628,6 +648,16 @@ private fun JvmConnectionNewMainContent(
                         address = address,
                         selectedResourceIndex = selectedResourceIndex,
                         loginStage = loginStage,
+                        resourceLoading = resourceLoading,
+                        resourceError = resourceError,
+                        loginLoading = loginLoading,
+                        loginError = loginError,
+                        errorMessage = errorMessage,
+                        errorHint = errorHint,
+                        tmpAddressList = tmpAddressList,
+                        tmpPlexInfo = tmpPlexInfo,
+                        selectedResourceAddress = selectedResourceAddress,
+                        connectionReady = connectionReady,
                         onSelectResource = onSelectResource,
                         onEditConnectionInfo = onReset
                     )
@@ -651,6 +681,16 @@ private fun JvmConnectionNewMainContent(
                         address = address,
                         selectedResourceIndex = selectedResourceIndex,
                         loginStage = loginStage,
+                        resourceLoading = resourceLoading,
+                        resourceError = resourceError,
+                        loginLoading = loginLoading,
+                        loginError = loginError,
+                        errorMessage = errorMessage,
+                        errorHint = errorHint,
+                        tmpAddressList = tmpAddressList,
+                        tmpPlexInfo = tmpPlexInfo,
+                        selectedResourceAddress = selectedResourceAddress,
+                        connectionReady = connectionReady,
                         onSelectResource = onSelectResource
                     )
                 }
@@ -681,6 +721,16 @@ private fun JvmConnectionNewMainContent(
                     address = address,
                     selectedResourceIndex = selectedResourceIndex,
                     loginStage = loginStage,
+                    resourceLoading = resourceLoading,
+                    resourceError = resourceError,
+                    loginLoading = loginLoading,
+                    loginError = loginError,
+                    errorMessage = errorMessage,
+                    errorHint = errorHint,
+                    tmpAddressList = tmpAddressList,
+                    tmpPlexInfo = tmpPlexInfo,
+                    selectedResourceAddress = selectedResourceAddress,
+                    connectionReady = connectionReady,
                     onSelectResource = onSelectResource
                 )
             }
@@ -1005,10 +1055,21 @@ private fun JvmConnectionNewSidePanel(
     address: String,
     selectedResourceIndex: Int,
     loginStage: JvmConnectionNewLoginStage,
+    resourceLoading: Boolean,
+    resourceError: Boolean,
+    loginLoading: Boolean,
+    loginError: Boolean,
+    errorMessage: String,
+    errorHint: String,
+    tmpAddressList: List<String>,
+    tmpPlexInfo: List<ResourceData>,
+    selectedResourceAddress: String,
+    connectionReady: Boolean,
     onSelectResource: (Int) -> Unit,
     modifier: Modifier = Modifier,
     onEditConnectionInfo: (() -> Unit)? = null,
 ) {
+    // 侧栏卡片根据 ViewModel 的 showResourcePanel 切换预览或真实资源/登录状态。
     JvmConnectionNewPanel(
         modifier = modifier,
     ) {
@@ -1048,6 +1109,16 @@ private fun JvmConnectionNewSidePanel(
                         address = address,
                         selectedResourceIndex = selectedResourceIndex,
                         loginStage = loginStage,
+                        resourceLoading = resourceLoading,
+                        resourceError = resourceError,
+                        loginLoading = loginLoading,
+                        loginError = loginError,
+                        errorMessage = errorMessage,
+                        errorHint = errorHint,
+                        tmpAddressList = tmpAddressList,
+                        tmpPlexInfo = tmpPlexInfo,
+                        selectedResourceAddress = selectedResourceAddress,
+                        connectionReady = connectionReady,
                         onSelectResource = onSelectResource,
                         onEditConnectionInfo = onEditConnectionInfo,
                     )
@@ -1214,13 +1285,20 @@ private fun JvmConnectionNewResourceContent(
     address: String,
     selectedResourceIndex: Int,
     loginStage: JvmConnectionNewLoginStage,
+    resourceLoading: Boolean,
+    resourceError: Boolean,
+    loginLoading: Boolean,
+    loginError: Boolean,
+    errorMessage: String,
+    errorHint: String,
+    tmpAddressList: List<String>,
+    tmpPlexInfo: List<ResourceData>,
+    selectedResourceAddress: String,
+    connectionReady: Boolean,
     onSelectResource: (Int) -> Unit,
     onEditConnectionInfo: (() -> Unit)? = null,
 ) {
-    val resources = remember(selectedDataSource, address) {
-        selectedDataSource.sampleResources(address)
-    }
-
+    // 资源内容只渲染 ViewModel 暴露的真实候选地址、Plex 资源和错误状态。
     Text(
         text = "选择资源地址",
         color = MaterialTheme.colorScheme.onSurface,
@@ -1248,28 +1326,75 @@ private fun JvmConnectionNewResourceContent(
         }
     }
     Spacer(modifier = Modifier.height(14.dp))
-    Column(
-        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
-    ) {
-        resources.forEachIndexed { index, item ->
-            JvmConnectionNewResourceItem(
-                title = item.title,
-                address = item.address,
-                tag = item.tag,
-                selected = index == selectedResourceIndex,
-                onClick = { onSelectResource(index) }
-            )
+
+    // 状态优先级由业务流程决定：加载和登录结果优先，其次才展示可选择资源。
+    when {
+        resourceLoading -> {
+            JvmConnectionNewLoadingPanel(text = "正在读取可用资源")
         }
-    }
-    AnimatedVisibility(visible = selectedResourceIndex >= 0) {
-        val selectedResource = resources.getOrNull(selectedResourceIndex)
-        Column {
-            Spacer(modifier = Modifier.height(14.dp))
+
+        loginLoading || connectionReady -> {
+            // 点击资源后 ViewModel 会立即开始登录，因此这里展示登录进度或成功状态。
             JvmConnectionNewLoginStatusPanel(
                 selectedDataSource = selectedDataSource,
-                resourceAddress = selectedResource?.address.orEmpty(),
+                resourceAddress = selectedResourceAddress.ifBlank { address },
                 stage = loginStage,
             )
+        }
+
+        resourceError -> {
+            JvmConnectionNewErrorPanel(
+                title = "资源读取失败",
+                errorHint = errorHint,
+                errorMessage = errorMessage
+            )
+        }
+
+        loginError -> {
+            JvmConnectionNewErrorPanel(
+                title = "登录失败",
+                errorHint = errorHint,
+                errorMessage = errorMessage
+            )
+        }
+
+        tmpPlexInfo.isNotEmpty() -> {
+            // Plex 等账号发现型协议会展示真实资源列表。
+            Column(
+                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+            ) {
+                tmpPlexInfo.forEachIndexed { index, item ->
+                    JvmConnectionNewResourceItem(
+                        title = item.name,
+                        address = item.addressUrl,
+                        tag = item.product.ifBlank { "可用" },
+                        selected = index == selectedResourceIndex,
+                        onClick = { onSelectResource(index) }
+                    )
+                }
+            }
+        }
+
+        tmpAddressList.isNotEmpty() -> {
+            // URL 输入型协议在地址不完整时会由 ViewModel 生成候选连接地址。
+            Column(
+                verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+            ) {
+                tmpAddressList.forEachIndexed { index, item ->
+                    JvmConnectionNewResourceItem(
+                        title = if (index == 0) "推荐地址" else "候选地址",
+                        address = item,
+                        tag = if (index == 0) "推荐" else "可选",
+                        selected = index == selectedResourceIndex,
+                        onClick = { onSelectResource(index) }
+                    )
+                }
+            }
+        }
+
+        else -> {
+            // 资源请求已触发但没有可展示数据时，保留面板并给出空态。
+            JvmConnectionNewEmptyResourcePanel()
         }
     }
 }
@@ -1355,6 +1480,92 @@ private fun JvmConnectionNewResourceItem(
 }
 
 @Composable
+private fun JvmConnectionNewLoadingPanel(
+    text: String,
+) {
+    // 资源加载和登录加载共用轻量状态面板，文案由调用处按业务阶段传入。
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(XyTheme.dimens.corner))
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                shape = RoundedCornerShape(XyTheme.dimens.corner)
+            )
+            .padding(XyTheme.dimens.contentPadding),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(28.dp),
+            color = MaterialTheme.colorScheme.primary,
+            strokeWidth = 3.dp
+        )
+        Text(
+            text = text,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.W800,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+@Composable
+private fun JvmConnectionNewErrorPanel(
+    title: String,
+    errorHint: String,
+    errorMessage: String,
+) {
+    // 错误内容完全来自 ViewModel，页面只负责组合标题、提示和后端返回的详细信息。
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(XyTheme.dimens.corner))
+            .background(Color(0xFFB3261E).copy(alpha = 0.08f))
+            .border(
+                width = 1.dp,
+                color = Color(0xFFB3261E).copy(alpha = 0.24f),
+                shape = RoundedCornerShape(XyTheme.dimens.corner)
+            )
+            .padding(XyTheme.dimens.contentPadding),
+        verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
+    ) {
+        Text(
+            text = title,
+            color = Color(0xFFB3261E),
+            fontWeight = FontWeight.W900,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            text = errorHint,
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodySmall
+        )
+        if (errorMessage.isNotBlank()) {
+            Text(
+                text = errorMessage,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+    }
+}
+
+@Composable
+private fun JvmConnectionNewEmptyResourcePanel() {
+    // ViewModel 已请求资源面板但暂无候选数据时，保留面板避免视觉状态跳回表单。
+    Text(
+        text = "等待连接信息提交后读取资源。",
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MaterialTheme.typography.bodySmall
+    )
+}
+
+@Composable
 private fun JvmConnectionNewLoginStatusPanel(
     selectedDataSource: DataSourceType,
     resourceAddress: String,
@@ -1371,19 +1582,16 @@ private fun JvmConnectionNewLoginStatusPanel(
     val activeIndex = when (activeStage) {
         JvmConnectionNewLoginStage.Idle,
         JvmConnectionNewLoginStage.LoggingIn -> 1
-        JvmConnectionNewLoginStage.Syncing -> 2
         JvmConnectionNewLoginStage.Success -> 3
     }
     val title = when (activeStage) {
         JvmConnectionNewLoginStage.Idle,
         JvmConnectionNewLoginStage.LoggingIn -> "正在登录"
-        JvmConnectionNewLoginStage.Syncing -> "正在同步资料"
         JvmConnectionNewLoginStage.Success -> "登录成功"
     }
     val detail = when (activeStage) {
         JvmConnectionNewLoginStage.Idle,
         JvmConnectionNewLoginStage.LoggingIn -> "正在使用 ${selectedDataSource.title} 账号登录所选资源。"
-        JvmConnectionNewLoginStage.Syncing -> "会话已建立，正在读取用户资料和媒体库入口。"
         JvmConnectionNewLoginStage.Success -> "账号和资源地址已确认，可以进入主页。"
     }
 
@@ -1439,7 +1647,7 @@ private fun JvmConnectionNewLoginStatusPanel(
                 )
             }
             JvmConnectionNewChip(
-                text = if (isSuccess) "完成" else if (activeStage == JvmConnectionNewLoginStage.Syncing) "同步中" else "登录中",
+                text = if (isSuccess) "完成" else "登录中",
                 color = if (isSuccess) successColor else MaterialTheme.colorScheme.primary,
                 backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest
             )
@@ -1462,7 +1670,7 @@ private fun JvmConnectionNewLoginStatusPanel(
 
         JvmConnectionNewMetaRow(
             label = "资源地址",
-            value = resourceAddress.ifBlank { selectedDataSource.defaultAddress.ifBlank { "自动发现" } }
+            value = resourceAddress.ifBlank { "自动发现" }
         )
     }
 }
@@ -1546,7 +1754,9 @@ private fun JvmConnectionNewLoginProgressItem(
 @Composable
 private fun JvmConnectionNewSuccessBanner(
     selectedDataSource: DataSourceType,
+    onEnter: () -> Unit,
 ) {
+    // 成功横幅只出现于 ViewModel 登录成功后，进入主页/返回上一页由 onEnter 统一收尾。
     val successColor = Color(0xFF16824A)
     Row(
         modifier = Modifier
@@ -1584,7 +1794,7 @@ private fun JvmConnectionNewSuccessBanner(
         }
         Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
         Button(
-            onClick = {},
+            onClick = onEnter,
             shape = RoundedCornerShape(XyTheme.dimens.corner)
         ) {
             Text(text = "进入主页")
@@ -1642,79 +1852,15 @@ private fun JvmConnectionNewChip(
     }
 }
 
-private val DataSourceType.defaultAddress: String
-    get() = when (this) {
-        DataSourceType.JELLYFIN -> "http://192.168.1.12:8096"
-        DataSourceType.SUBSONIC -> "http://192.168.1.12:4040"
-        DataSourceType.NAVIDROME -> "http://192.168.1.12:4533"
-        DataSourceType.EMBY -> "http://192.168.1.12:8096"
-        DataSourceType.PLEX -> ""
-    }
-
-private fun DataSourceType.sampleResources(address: String): List<JvmConnectionNewResource> {
-    return if (ifInputUrl) {
-        listOf(
-            JvmConnectionNewResource(
-                title = "主服务器",
-                address = address.ifBlank { defaultAddress },
-                tag = "推荐"
-            ),
-            JvmConnectionNewResource(
-                title = "备用地址",
-                address = "https://music.example.com",
-                tag = "可用"
-            ),
-            JvmConnectionNewResource(
-                title = "备用地址",
-                address = "https://music.example.com",
-                tag = "可用"
-            ),
-            JvmConnectionNewResource(
-                title = "备用地址",
-                address = "https://music.example.com",
-                tag = "可用"
-            ),
-            JvmConnectionNewResource(
-                title = "备用地址",
-                address = "https://music.example.com",
-                tag = "可用"
-            ),
-            JvmConnectionNewResource(
-                title = "备用地址",
-                address = "https://music.example.com",
-                tag = "可用"
-            ),
-            JvmConnectionNewResource(
-                title = "备用地址",
-                address = "https://music.example.com",
-                tag = "可用"
-            )
-        )
-    } else {
-        listOf(
-            JvmConnectionNewResource(
-                title = "Plex Music Library",
-                address = "https://app.plex.tv",
-                tag = "推荐"
-            ),
-            JvmConnectionNewResource(
-                title = "Home Server",
-                address = "http://192.168.1.20:32400",
-                tag = "可用"
-            )
-        )
-    }
-}
-
 private enum class JvmConnectionNewLoginStage {
     Idle,
     LoggingIn,
-    Syncing,
     Success,
 }
 
-private data class JvmConnectionNewResource(
-    val title: String,
-    val address: String,
-    val tag: String,
-)
+private fun ConnectionUiType?.connectionStatusText(): String = when (this) {
+    // 侧栏状态文案跟随入口类型，避免添加连接时仍显示“首次打开”。
+    ConnectionUiType.FIRST_OPEN -> "首次打开"
+    ConnectionUiType.ADD_CONNECTION -> "添加连接"
+    null -> "服务器连接"
+}
