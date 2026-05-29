@@ -23,7 +23,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -112,6 +111,7 @@ actual fun MainScreenScaffold(
     val newPlaylist = stringResource(Res.string.new_playlist)
     val noPlaylistsText = stringResource(Res.string.no_playlists)
     val songsCountSuffix = stringResource(Res.string.songs_count_suffix)
+    val loginErrorHint = stringResource(dataSourceManager.errorHint)
     var playlistName by remember { mutableStateOf("") }
     var showLoginErrorSheet by remember { mutableStateOf(false) }
     val sidebarListState = rememberLazyListState()
@@ -251,9 +251,10 @@ actual fun MainScreenScaffold(
                                     end = XyTheme.dimens.outerVerticalPadding,
                                     bottom = XyTheme.dimens.snackBarPlayerHeight +
                                             XyTheme.dimens.outerVerticalPadding
-                                ),
+                            ),
                             loginLoading = loginLoading,
                             loginFailed = loginFailed,
+                            errorHint = loginErrorHint,
                             onErrorClick = {
                                 showLoginErrorSheet = true
                             }
@@ -284,6 +285,7 @@ private fun DesktopLoginStatusFloatingAction(
     modifier: Modifier = Modifier,
     loginLoading: Boolean,
     loginFailed: Boolean,
+    errorHint: String,
     onErrorClick: () -> Unit,
 ) {
     if (!loginLoading && !loginFailed) {
@@ -292,6 +294,7 @@ private fun DesktopLoginStatusFloatingAction(
 
     val loggingInText = stringResource(Res.string.logging_in)
     val loginFailedText = stringResource(Res.string.login_failed)
+    val errorInteractionSource = remember { MutableInteractionSource() }
 
     Surface(
         modifier = modifier
@@ -329,22 +332,42 @@ private fun DesktopLoginStatusFloatingAction(
                 )
             }
         } else {
-            Box(
-                modifier = Modifier
-                    .height(DesktopLoginStatusActionHeight)
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center,
-            ) {
-                DesktopTooltipBox(tooltip = loginFailedText) {
-                    IconButton(
-                        onClick = onErrorClick,
-                        modifier = Modifier.size(DesktopLoginStatusErrorButtonSize),
-                    ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.warning_24px),
-                            contentDescription = loginFailedText,
-                            tint = Color.Red,
+            DesktopTooltipBox(tooltip = loginFailedText) {
+                Row(
+                    modifier = Modifier
+                        .height(DesktopLoginStatusActionHeight)
+                        .fillMaxWidth()
+                        .jvmHoverDebounceClickable(
+                            interactionSource = errorInteractionSource,
+                            indication = null,
+                            onClick = onErrorClick
                         )
+                        .padding(horizontal = XyTheme.dimens.contentPadding),
+                    horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.innerVerticalPadding),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.warning_24px),
+                        contentDescription = loginFailedText,
+                        modifier = Modifier.size(DesktopLoginStatusErrorButtonSize),
+                        tint = Color.Red,
+                    )
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        XyTextSubSmall(
+                            text = loginFailedText,
+                            color = Color.Red,
+                            maxLines = 1,
+                        )
+                        if (errorHint.isNotBlank()) {
+                            XyTextSubSmall(
+                                text = errorHint,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                            )
+                        }
                     }
                 }
             }
@@ -364,7 +387,7 @@ private fun DesktopLoginErrorSideSheet(
         sheetMaxWidth = 480.dp,
         containerColor = MaterialTheme.colorScheme.surface,
         animationDurationMillis = DesktopLoginStatusSheetAnimationMillis,
-        useDialog = true,
+        useDialog = false,
         onIfDisplay = { show },
         onClose = { onClose() },
         titleText = stringResource(Res.string.login_exception_info),
