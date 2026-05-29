@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextButton
@@ -312,11 +311,12 @@ private fun LazyListScope.homeAlbumSection(
     albumList: List<XyAlbum>,
     onOpenAlbum: (XyAlbum) -> Unit,
 ) {
-    if (albumList.isEmpty()) {
+    val albumSnapshot = albumList.toList()
+    if (albumSnapshot.isEmpty()) {
         return
     }
 
-    val rowCount = minOf(HomeAlbumRowCount, albumList.size)
+    val rowCount = minOf(HomeAlbumRowCount, albumSnapshot.size)
 
     item(key = "${sectionKey}_header") {
         JvmHomeDesktopSectionHeader(title = title)
@@ -340,10 +340,11 @@ private fun LazyListScope.homeAlbumSection(
             horizontalArrangement = Arrangement.spacedBy(gridSpacing),
             verticalArrangement = Arrangement.spacedBy(gridSpacing),
         ) {
-            itemsIndexed(
-                items = albumList,
-                key = { index, album -> "${sectionKey}_${album.itemId}_$index" },
-            ) { _, album ->
+            items(
+                count = albumSnapshot.size,
+                key = { index -> "${sectionKey}_${albumSnapshot[index].itemId}_$index" },
+            ) { index ->
+                val album = albumSnapshot[index]
                 MusicAlbumCardComponent(
                     album = album,
                     imageSize = MusicCardImageSize,
