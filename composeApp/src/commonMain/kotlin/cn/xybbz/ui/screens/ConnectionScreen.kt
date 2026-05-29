@@ -418,6 +418,10 @@ internal fun MobileConnectionScreen(
                                     Button(
                                         modifier = Modifier.width(width = 150.dp),
                                         onClick = {
+                                            if (!connectionViewModel.hasSelectedResource) {
+                                                MessageUtils.sendPopTipError("请选择资源地址")
+                                                return@Button
+                                            }
                                             coroutineScope.launch {
 
                                                 connectionViewModel.setSelectInfoIndexData(

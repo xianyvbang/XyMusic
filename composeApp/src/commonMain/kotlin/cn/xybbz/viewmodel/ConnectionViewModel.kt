@@ -90,8 +90,11 @@ class ConnectionViewModel(
     var tmpAddress by mutableStateOf("")
         private set
 
-    var selectUrlIndex by mutableIntStateOf(0)
+    var selectUrlIndex by mutableIntStateOf(UNSELECTED_RESOURCE_INDEX)
         private set
+
+    val hasSelectedResource: Boolean
+        get() = selectUrlIndex != UNSELECTED_RESOURCE_INDEX && tmpAddress.isNotBlank()
 
     //加载状态
     var loading by mutableStateOf(false)
@@ -233,12 +236,15 @@ class ConnectionViewModel(
      */
     fun selectResourceAndLogin(index: Int) {
         resourcePanelRequested = true
-        if (tmpPlexInfo.isNotEmpty()) {
+        val resourceSelected = if (tmpPlexInfo.isNotEmpty()) {
             // Plex 资源列表使用资源索引设置服务器信息和临时登录地址。
             setSelectInfoIndexData(index)
         } else {
             // URL 候选列表使用地址索引设置临时登录地址。
             setSelectUrlIndexData(index)
+        }
+        if (!resourceSelected) {
+            return
         }
         viewModelScope.launch {
             inputAddress()
@@ -256,6 +262,9 @@ class ConnectionViewModel(
         }
 
         if (username.isBlank()) {
+            return
+        }
+        if (tmpAddress.isBlank()) {
             return
         }
         loading = true
@@ -326,7 +335,7 @@ class ConnectionViewModel(
         address = ""
         username = ""
         password = ""
-        updateSelectUrlIndexZero()
+        clearResourceSelection()
         clearLoginStatus()
         clearResourceLoginStatus()
     }
@@ -349,7 +358,7 @@ class ConnectionViewModel(
     fun createTmpAddress() {
         clearLoginStatus()
         clearResourceLoginStatus()
-        updateSelectUrlIndexZero()
+        clearResourceSelection()
         if (!address.isAbsoluteNetworkUrl()) {
             options.forEach {
                 val url = "${it}$address"
@@ -374,7 +383,6 @@ class ConnectionViewModel(
                 }
             }
         }
-        setSelectUrlIndexData(0)
     }
 
     /**
@@ -394,28 +402,34 @@ class ConnectionViewModel(
     /**
      * 设置选择的Url的Index
      */
-    fun setSelectUrlIndexData(selectUrlIndex: Int) {
+    fun setSelectUrlIndexData(selectUrlIndex: Int): Boolean {
+        if (selectUrlIndex !in tmpAddressList.indices) {
+            return false
+        }
         this.selectUrlIndex = selectUrlIndex
-        if (tmpAddressList.isNotEmpty())
-            tmpAddress = tmpAddressList[selectUrlIndex]
+        tmpAddress = tmpAddressList[selectUrlIndex]
+        plexInfo = null
+        return true
     }
 
     /**
      * 设置
      */
-    fun setSelectInfoIndexData(selectInfoIndex: Int) {
-        this.selectUrlIndex = selectInfoIndex
-        if (tmpPlexInfo.isNotEmpty()) {
-            plexInfo = tmpPlexInfo[selectInfoIndex]
-            tmpAddress = tmpPlexInfo[selectInfoIndex].addressUrl
+    fun setSelectInfoIndexData(selectInfoIndex: Int): Boolean {
+        if (selectInfoIndex !in tmpPlexInfo.indices) {
+            return false
         }
+        this.selectUrlIndex = selectInfoIndex
+        plexInfo = tmpPlexInfo[selectInfoIndex]
+        tmpAddress = tmpPlexInfo[selectInfoIndex].addressUrl
+        return true
     }
 
     /**
-     * 设置选择地址的index为0
+     * 清空资源选择。
      */
-    private fun updateSelectUrlIndexZero() {
-        this.selectUrlIndex = 0
+    private fun clearResourceSelection() {
+        this.selectUrlIndex = UNSELECTED_RESOURCE_INDEX
         plexInfo = null
         tmpAddress = ""
         tmpPlexInfo = emptyList()
@@ -453,7 +467,7 @@ class ConnectionViewModel(
         Log.i("ConnectionScreen", "读取资源")
         clearResourceLoginStatus()
         updateResourceLoading(true)
-        updateSelectUrlIndexZero()
+        clearResourceSelection()
         val dataSourceTypeTmp = dataSourceType
         if (dataSourceTypeTmp != null) {
             val tmpDataSourceParentServer =
@@ -467,7 +481,7 @@ class ConnectionViewModel(
                     clientVersion = ""
                 )
             try {
-                val resources = tmpDataSourceParentServer?.getResources(clientLoginInfoReq)
+                val resources = tmpDataSourceParentServer.getResources(clientLoginInfoReq)
                 if (!resources.isNullOrEmpty())
                     tmpPlexInfo = resources
             } catch (e: Exception) {
@@ -501,6 +515,7 @@ class ConnectionViewModel(
     }
 
     private companion object {
+        const val UNSELECTED_RESOURCE_INDEX = -1
         val INVISIBLE_CHAR_REGEX = Regex("[\\u200B-\\u200D\\uFEFF]")
     }
 }
