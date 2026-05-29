@@ -41,6 +41,7 @@ import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.OperationTipUtils
 import cn.xybbz.common.utils.PlaylistParser
+import cn.xybbz.config.info.shouldShowLoginMessageTips
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.entity.data.LoginStateData
@@ -375,6 +376,9 @@ open class DataSourceManager(
                 ifLoginError = loginSateInfo.isError
                 loading = loginSateInfo.loading
                 _autoLoginRunning.value = loginSateInfo.loading
+                if (!shouldShowLoginMessageTips()) {
+                    return@collect
+                }
                 if (loginSateInfo.isError) {
                     MessageUtils.sendPopTipError(
                         Res.string.login_failed,

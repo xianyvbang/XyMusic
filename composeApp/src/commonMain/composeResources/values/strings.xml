@@ -135,7 +135,7 @@
     <string name="username_cannot_be_empty">用户名不能为空</string>
     <string name="connect">连接</string>
     <string name="reselect">重新选择</string>
-    <string name="logging_in">登录中…</string>
+    <string name="logging_in">正在连接服务器</string>
     <string name="login_failed">登录失败</string>
     <string name="reconnect">重新连接</string>
     <string name="connection_successful">连接成功</string>

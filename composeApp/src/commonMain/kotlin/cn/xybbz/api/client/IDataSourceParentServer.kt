@@ -42,6 +42,7 @@ import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.PasswordUtils
 import cn.xybbz.config.info.getPlatformInfo
+import cn.xybbz.config.info.shouldShowLoginMessageTips
 import cn.xybbz.config.scope.IoScoped
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.database.withTransaction
@@ -189,9 +190,11 @@ abstract class IDataSourceParentServer(
         clientLoginInfoReq: ClientLoginInfoReq,
         connectionConfig: ConnectionConfig?
     ): Flow<ClientLoginInfoState> {
-        val popTipHint = MessageUtils.sendPopTipHint(
-            Res.string.logging_in
-        )
+        val popTipHint = if (shouldShowLoginMessageTips()) {
+            MessageUtils.sendPopTipHint(Res.string.logging_in)
+        } else {
+            null
+        }
         resetLoginRetry()
         return flow {
             Log.i("=====", "输入的地址: ${clientLoginInfoReq.address}")
@@ -278,11 +281,11 @@ abstract class IDataSourceParentServer(
                 ifForceLogin = false
             )
             this@IDataSourceParentServer.connectionConfig = tmpConfig
-            popTipHint.dismiss()
+            popTipHint?.dismiss()
             emitAll(loginAfter(tmpConfig))
         }.flowOn(Dispatchers.IO).catch {
             it.printStackTrace()
-            popTipHint.dismiss()
+            popTipHint?.dismiss()
             sendLoginCompleted(LoginStateType.FAILURE)
             when (it) {
                 is SocketTimeoutException -> {
@@ -323,7 +326,9 @@ abstract class IDataSourceParentServer(
             }
             if (!ifTmpObject()) {
                 connection(connectionConfig.copy(id = connectionId), connectionConfig.id != 0L)
-                MessageUtils.sendDismiss()
+                if (shouldShowLoginMessageTips()) {
+                    MessageUtils.sendDismiss()
+                }
             }
 
             emit(ClientLoginInfoState.UserLoginSuccess)

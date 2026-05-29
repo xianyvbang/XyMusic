@@ -3,8 +3,6 @@ package cn.xybbz.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,10 +19,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -87,7 +87,8 @@ import xymusic_kmp.composeapp.generated.resources.warning_24px
 
 val jvmRouterMenuWidth = 220.dp
 
-private val DesktopLoginStatusActionHeight = 44.dp
+private val DesktopLoginStatusActionHeight = 72.dp
+private val DesktopLoginStatusErrorButtonSize = 44.dp
 private val DesktopLoginStatusSheetMaxHeight = 400.dp
 private const val DesktopLoginStatusSheetAnimationMillis = 220
 
@@ -293,40 +294,58 @@ private fun DesktopLoginStatusFloatingAction(
     val loginFailedText = stringResource(Res.string.login_failed)
 
     Surface(
-        modifier = modifier.widthIn(max = jvmRouterMenuWidth),
+        modifier = modifier
+            .fillMaxWidth()
+            .widthIn(max = jvmRouterMenuWidth),
         shape = RoundedCornerShape(XyTheme.dimens.corner),
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         tonalElevation = 6.dp,
         shadowElevation = 8.dp,
     ) {
         if (loginLoading) {
-            XyRow(
+            Column(
                 modifier = Modifier
                     .height(DesktopLoginStatusActionHeight)
-                    .padding(horizontal = XyTheme.dimens.contentPadding),
-                horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.innerVerticalPadding),
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = XyTheme.dimens.contentPadding,
+                        vertical = XyTheme.dimens.outerVerticalPadding
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
             ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(18.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.primary,
-                )
                 XyTextSubSmall(
                     text = loggingInText,
                     color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                )
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = XyTheme.dimens.innerVerticalPadding)
+                        .height(4.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                 )
             }
         } else {
-            DesktopTooltipBox(tooltip = loginFailedText) {
-                IconButton(
-                    onClick = onErrorClick,
-                    modifier = Modifier.size(DesktopLoginStatusActionHeight),
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.warning_24px),
-                        contentDescription = loginFailedText,
-                        tint = Color.Red,
-                    )
+            Box(
+                modifier = Modifier
+                    .height(DesktopLoginStatusActionHeight)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center,
+            ) {
+                DesktopTooltipBox(tooltip = loginFailedText) {
+                    IconButton(
+                        onClick = onErrorClick,
+                        modifier = Modifier.size(DesktopLoginStatusErrorButtonSize),
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.warning_24px),
+                            contentDescription = loginFailedText,
+                            tint = Color.Red,
+                        )
+                    }
                 }
             }
         }
