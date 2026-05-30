@@ -74,6 +74,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.compositionLocal.LocalMainViewModel
@@ -128,6 +129,7 @@ private val JvmSnackBarVolumePopupHeight = 188.dp
 private val JvmSnackBarVolumeSliderWidth = 24.dp
 private val JvmSnackBarVolumeSliderHeight = 128.dp
 private val JvmSnackBarVolumePopupGap = 12.dp
+private val JvmSnackBarProgressTimeFontSize = 14.sp
 private val JvmSnackBarVolumePopupOffsetX =
     (JvmSnackBarVolumePopupWidth - JvmSnackBarIconButtonSize) / -2
 private const val JvmSnackBarVolumeSliderBarWidth = 5f
@@ -428,6 +430,7 @@ private fun JvmSnackBarControlSection(
             barHeight = 3f,
             thumbRadius = 4f,
             timeTextStyle = MaterialTheme.typography.labelSmall.copy(
+                fontSize = JvmSnackBarProgressTimeFontSize,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         )

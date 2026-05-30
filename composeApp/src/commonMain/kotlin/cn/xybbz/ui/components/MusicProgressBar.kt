@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -62,6 +63,7 @@ fun MusicProgressBar(
 ) {
 
     val progress by playProgress(totalTime, progressStateFlow)
+    val timeLabelTextStyle = timeTextStyle.copy(fontFamily = FontFamily.Monospace)
 
 
     Column(
@@ -76,11 +78,11 @@ fun MusicProgressBar(
         ) {
             BasicText(
                 text = formatTime(currentTime),
-                style = timeTextStyle
+                style = timeLabelTextStyle
             )
             BasicText(
                 text = formatTime(totalTime),
-                style = timeTextStyle
+                style = timeLabelTextStyle
             )
         }
 
@@ -116,10 +118,11 @@ fun MusicProgressBarHorizontal(
     backgroundBarColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
     barHeight: Float = 4f,
     thumbRadius: Float = 6f,
-    timeTextStyle: TextStyle = TextStyle(fontSize = 12.sp, color = Color.Gray),
+    timeTextStyle: TextStyle = TextStyle(fontSize = 13.sp, color = Color.Gray),
 ) {
 
     val progress by playProgress(totalTime, progressStateFlow)
+    val timeLabelTextStyle = timeTextStyle.copy(fontFamily = FontFamily.Monospace)
 
     Row(
         modifier = modifier
@@ -131,7 +134,7 @@ fun MusicProgressBarHorizontal(
         BasicText(
             text = formatTime(currentTime),
             modifier = Modifier.width(MusicProgressBarTimeLabelWidth),
-            style = timeTextStyle.copy(textAlign = TextAlign.End)
+            style = timeLabelTextStyle.copy(textAlign = TextAlign.End)
         )
         XySmallSlider(
             modifier = Modifier.weight(1f),
@@ -147,7 +150,7 @@ fun MusicProgressBarHorizontal(
         BasicText(
             text = formatTime(totalTime),
             modifier = Modifier.width(MusicProgressBarTimeLabelWidth),
-            style = timeTextStyle.copy(textAlign = TextAlign.Start)
+            style = timeLabelTextStyle.copy(textAlign = TextAlign.Start)
         )
     }
 }
