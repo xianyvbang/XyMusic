@@ -96,6 +96,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
+import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.entity.data.ext.joinToString
@@ -124,6 +125,7 @@ import xymusic_kmp.composeapp.generated.resources.close_player_screen
 import xymusic_kmp.composeapp.generated.resources.confirm
 import xymusic_kmp.composeapp.generated.resources.forward_offset
 import xymusic_kmp.composeapp.generated.resources.keyboard_arrow_down_24px
+import xymusic_kmp.composeapp.generated.resources.offset
 import xymusic_kmp.composeapp.generated.resources.recommend
 import xymusic_kmp.composeapp.generated.resources.reset
 import xymusic_kmp.composeapp.generated.resources.song_tab
@@ -304,6 +306,7 @@ fun JvmMusicPlayerScreen(
     }
     val forwardOffsetText = stringResource(Res.string.forward_offset)
     val backwardOffsetText = stringResource(Res.string.backward_offset)
+    val offsetText = stringResource(Res.string.offset)
     val resetText = stringResource(Res.string.reset)
     val confirmText = stringResource(Res.string.confirm)
     val artistLabel = remember(musicDetail.artists) {
@@ -557,6 +560,17 @@ fun JvmMusicPlayerScreen(
                                                         },
                                                         itemDataList = {
                                                             listOf(
+                                                                // 顶部只读展示当前预览偏移，右键菜单保持打开时会随预览值实时刷新。
+                                                                MenuItemDefaultData(
+                                                                    title = "$offsetText: ${
+                                                                        formatJvmLyricsOffsetSeconds(
+                                                                            musicPlayerViewModel.lyricsPreviewOffsetMs
+                                                                        )
+                                                                    }",
+                                                                    enabled = false,
+                                                                    dismissOnClick = false,
+                                                                    onClick = {}
+                                                                ),
                                                                 MenuItemDefaultData(
                                                                     title = forwardOffsetText,
                                                                     onClick = {
@@ -737,6 +751,16 @@ private fun Modifier.jvmPlayerTitleBarHitTarget(
 
 private fun XyPlayMusic.artistLabel(): String {
     return artists?.joinToString().takeUnless { it.isNullOrBlank() } ?: "Artist"
+}
+
+// 右键菜单需要显式展示正负号，方便用户判断歌词相对播放进度的调整方向。
+private fun formatJvmLyricsOffsetSeconds(offsetMs: Long): String {
+    if (offsetMs == 0L) return "0s"
+
+    // 保留整数秒的 .0，例如 +1.0s / -1.0s，避免偏移展示精度前后不一致。
+    val secondsText = offsetMs.toSecondMs().toString()
+    val sign = if (offsetMs > 0) "+" else ""
+    return "${sign}${secondsText}s"
 }
 
 @Composable

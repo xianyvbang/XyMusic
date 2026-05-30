@@ -47,7 +47,8 @@ data class JvmRightClickDropdownMenuObject(
     val dismissOnItemClick: Boolean = true,
     val itemHeight: Dp? = jvmRightClickDropdownMenuItemHeight,
     val onCloseRequest: (() -> Unit)? = null,
-    val itemDataList: List<MenuItemDefaultData>,
+    // 菜单打开后仍按最新状态生成条目，用于歌词偏移预览这类需要即时刷新的菜单内容。
+    val itemDataList: () -> List<MenuItemDefaultData>,
 )
 
 /**
@@ -67,7 +68,7 @@ fun JvmRightClickDropdownMenuComponent(modifier: Modifier = Modifier) {
                     onIfShowMenu = { true },
                     onSetIfShowMenu = { if (!it) menuObject.close() },
                     containerColor = menuObject.containerColor,
-                    itemDataList = menuObject.itemDataList.map { item ->
+                    itemDataList = menuObject.itemDataList().map { item ->
                         item.withDismissBehavior(menuObject)
                     },
                     contentPadding = PaddingValues(
@@ -178,7 +179,7 @@ fun Modifier.jvmRightClickDropdownMenu(
                         dismissOnItemClick = currentDismissOnItemClick,
                         itemHeight = currentItemHeight,
                         onCloseRequest = currentOnCloseRequest,
-                        itemDataList = currentItemDataList(),
+                        itemDataList = { currentItemDataList() },
                     ).show()
                 }
             }
