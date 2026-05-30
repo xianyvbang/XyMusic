@@ -235,7 +235,7 @@ class LrcServer(
      * 获取歌词偏移配置，没有则返回默认配置。
      */
     fun getLrcConfig(itemId: String): XyLrcConfig {
-        return lrcConfig ?: XyLrcConfig(
+        return lrcConfig?.takeIf { it.itemId == itemId } ?: XyLrcConfig(
             itemId = itemId,
             lrcOffsetMs = 0L,
             connectionId = dataSourceManager.getConnectionId()
@@ -251,7 +251,7 @@ class LrcServer(
         _lrcStateFlow.update {
             it.copy(lrcConfig = updatedConfig)
         }
-        if (config.id != AllDataEnum.All.code) {
+        if (config.id == AllDataEnum.All.code) {
             val xyLrcConfig = XyLrcConfig(
                 itemId = itemId,
                 lrcOffsetMs = offsetMs,
@@ -263,7 +263,7 @@ class LrcServer(
                 it.copy(lrcConfig = xyLrcConfig.copy(id = id))
             }
         } else {
-            db.lrcConfigDao.update(config)
+            db.lrcConfigDao.update(updatedConfig)
         }
     }
 

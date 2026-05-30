@@ -206,7 +206,7 @@ fun MusicPlayerScreen(
     val musicInfo by musicPlayerViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
     val coverRefreshVersion by musicPlayerViewModel.musicController.coverRefreshVersionFlow.collectAsStateWithLifecycle()
     val originMusicList by musicPlayerViewModel.musicController.originMusicListFlow.collectAsStateWithLifecycle()
-    val lrcState by musicPlayerViewModel.lrcServer.lrcStateFlow.collectAsStateWithLifecycle()
+    val lrcState by musicPlayerViewModel.lrcStateFlow.collectAsStateWithLifecycle()
     val favoriteList by musicPlayerViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val coverUrls = rememberPlayMusicCoverUrls(
         musicDetail,
@@ -322,9 +322,7 @@ fun MusicPlayerScreen(
                             LrcViewNewCompose(
                                 listState = lrcListState,
                                 onSetLrcOffset = { offsetMs ->
-                                    coroutineScope.launch {
-                                        musicPlayerViewModel.lrcServer.updateLrcConfig(offsetMs)
-                                    }
+                                    musicPlayerViewModel.updateLyricsOffset(offsetMs)
                                 }
                             )
                         }

@@ -68,7 +68,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -99,7 +98,6 @@ import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
-import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.ui.components.lrc.LrcViewNewCompose
@@ -115,7 +113,6 @@ import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import cn.xybbz.viewmodel.MusicPlayerViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -279,6 +276,7 @@ fun JvmMusicPlayerScreen(
     val coverRefreshVersion by musicPlayerViewModel.musicController.coverRefreshVersionFlow.collectAsStateWithLifecycle()
     val state by musicPlayerViewModel.musicController.stateFlow.collectAsStateWithLifecycle()
     val originMusicList by musicPlayerViewModel.musicController.originMusicListFlow.collectAsStateWithLifecycle()
+    val lrcState by musicPlayerViewModel.lrcStateFlow.collectAsStateWithLifecycle()
     val favoriteList by musicPlayerViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val coverUrls = rememberPlayMusicCoverUrls(
         musicDetail,
@@ -304,20 +302,10 @@ fun JvmMusicPlayerScreen(
     val desktopTabs = remember {
         listOf(Res.string.song_tab, Res.string.recommend)
     }
-    var lyricsPreviewOffsetMs by remember(musicDetail.itemId) {
-        mutableLongStateOf(0L)
-    }
     val forwardOffsetText = stringResource(Res.string.forward_offset)
     val backwardOffsetText = stringResource(Res.string.backward_offset)
     val resetText = stringResource(Res.string.reset)
     val confirmText = stringResource(Res.string.confirm)
-    val mockLyricsEntries = remember(
-        musicDetail.itemId,
-        musicDetail.name,
-        musicDetail.artists
-    ) {
-        buildJvmMockLyricsEntries(musicDetail)
-    }
     val artistLabel = remember(musicDetail.artists) {
         musicDetail.artistLabel()
     }
@@ -328,12 +316,6 @@ fun JvmMusicPlayerScreen(
     val coverRotation = remember {
         Animatable(0f)
     }
-    val mockLyricsLoopDuration = remember(mockLyricsEntries) {
-        (mockLyricsEntries.lastOrNull()?.startTime ?: 0L) + 3_000L
-    }
-    var mockLyricsCurrentTimeMillis by remember(musicDetail.itemId) {
-        mutableLongStateOf(0L)
-    }
     val showSharedCoverOverlay =
         sharedCoverSourceBoundsOnScreen != null &&
                 playerRootBoundsOnScreen != null &&
@@ -341,19 +323,15 @@ fun JvmMusicPlayerScreen(
                 sharedCoverProgress > 0f &&
                 sharedCoverProgress < 1f
 
-    fun persistedLyricsOffsetMs(): Long {
-        // TODO 接入真实歌词配置后，从 lrcServer 读取并返回已保存的歌词偏移量。
-        return 0L
-    }
-
-    fun resetLyricsPreviewOffset() {
-        lyricsPreviewOffsetMs = persistedLyricsOffsetMs()
-    }
-
     LaunchedEffect(musicDetail.itemId) {
         dismissJvmRightClickDropdownMenus()
-        resetLyricsPreviewOffset()
+        musicPlayerViewModel.resetLyricsPreviewOffset(musicDetail.itemId)
         coverRotation.snapTo(0f)
+    }
+    LaunchedEffect(musicDetail.itemId, lrcState.lrcConfig?.itemId, lrcState.lrcConfig?.lrcOffsetMs) {
+        if (lrcState.lrcConfig?.itemId == musicDetail.itemId) {
+            musicPlayerViewModel.resetLyricsPreviewOffset(musicDetail.itemId)
+        }
     }
     LaunchedEffect(Unit) {
         musicBottomMenuViewModel.refreshVolume()
@@ -373,14 +351,6 @@ fun JvmMusicPlayerScreen(
                     easing = LinearEasing
                 )
             )
-        }
-    }
-    LaunchedEffect(musicDetail.itemId, mockLyricsLoopDuration) {
-        mockLyricsCurrentTimeMillis = 0L
-        while (true) {
-            delay(90L)
-            mockLyricsCurrentTimeMillis =
-                (mockLyricsCurrentTimeMillis + 90L) % mockLyricsLoopDuration
         }
     }
     val content: @Composable () -> Unit = {
@@ -572,32 +542,46 @@ fun JvmMusicPlayerScreen(
                                                     .fillMaxHeight()
                                                     .jvmRightClickDropdownMenu(
                                                         dismissOnItemClick = false,
-                                                        onShowRequest = { resetLyricsPreviewOffset() },
-                                                        onCloseRequest = { resetLyricsPreviewOffset() },
+                                                        onShowRequest = {
+                                                            musicPlayerViewModel.resetLyricsPreviewOffset(
+                                                                musicDetail.itemId
+                                                            )
+                                                        },
+                                                        onCloseRequest = {
+                                                            musicPlayerViewModel.resetLyricsPreviewOffset(
+                                                                musicDetail.itemId
+                                                            )
+                                                        },
                                                         itemDataList = {
                                                             listOf(
                                                                 MenuItemDefaultData(
                                                                     title = forwardOffsetText,
                                                                     onClick = {
-                                                                        lyricsPreviewOffsetMs += 500L
+                                                                        musicPlayerViewModel.adjustLyricsPreviewOffset(
+                                                                            500L
+                                                                        )
                                                                     }
                                                                 ),
                                                                 MenuItemDefaultData(
                                                                     title = backwardOffsetText,
                                                                     onClick = {
-                                                                        lyricsPreviewOffsetMs -= 500L
+                                                                        musicPlayerViewModel.adjustLyricsPreviewOffset(
+                                                                            -500L
+                                                                        )
                                                                     }
                                                                 ),
                                                                 MenuItemDefaultData(
                                                                     title = resetText,
                                                                     onClick = {
-                                                                        lyricsPreviewOffsetMs = 0L
+                                                                        musicPlayerViewModel.resetLyricsPreviewOffsetToZero()
                                                                     }
                                                                 ),
                                                                 MenuItemDefaultData(
                                                                     title = confirmText,
                                                                     onClick = {
-                                                                        // TODO 接入真实歌词配置后，在这里持久化 lyricsPreviewOffsetMs 到 lrcServer。
+                                                                        musicPlayerViewModel.confirmLyricsPreviewOffset(
+                                                                            musicDetail.itemId
+                                                                        )
                                                                         dismissJvmRightClickDropdownMenus()
                                                                     }
                                                                 )
@@ -619,14 +603,17 @@ fun JvmMusicPlayerScreen(
                                                     LrcViewNewCompose(
                                                         modifier = Modifier.fillMaxSize(),
                                                         listState = lrcListState,
-                                                        externalOffsetMillis = lyricsPreviewOffsetMs,
+                                                        externalOffsetMillis = musicPlayerViewModel.lyricsPreviewOffsetMs,
                                                         currentLineTopInset = JvmMusicPlayerLyricsItemHeight,
                                                         highlightScaleEnabled = false,
+                                                        showConfigButton = false,
                                                         primaryFontSize = JvmMusicPlayerLyricsFontSize,
-                                                        previewEntries = mockLyricsEntries,
-                                                        previewCurrentTimeMillis = mockLyricsCurrentTimeMillis,
-                                                        // TODO 接入真实歌词数据后，移除 previewEntries / previewCurrentTimeMillis，改回真实歌词流。
-                                                        onSetLrcOffset = { }
+                                                        onSetLrcOffset = { offsetMs ->
+                                                            musicPlayerViewModel.updateLyricsOffset(
+                                                                offsetMs,
+                                                                musicDetail.itemId
+                                                            )
+                                                        }
                                                     )
                                                 }
                                             }
@@ -747,41 +734,6 @@ private fun Modifier.jvmPlayerTitleBarHitTarget(
     target: JvmMusicPlayerTitleBarHitTarget,
 ): Modifier = onGloballyPositioned { coordinates ->
     owner.updateBounds(target.id, coordinates.boundsInWindow())
-}
-
-private fun buildJvmMockLyricsEntries(musicDetail: XyPlayMusic): List<LrcEntryData> {
-    return listOf(
-        LrcEntryData(
-            startTime = 0L,
-            text = "桌面播放器歌词区域正在使用模拟数据",
-            secondText = "Mock lyrics are showing in the JVM player for now"
-        ),
-        LrcEntryData(
-            startTime = 2_200L,
-            text = musicDetail.name,
-            secondText = musicDetail.artistLabel()
-        ),
-        LrcEntryData(
-            startTime = 4_600L,
-            text = "这里先验证排版、滚动和高亮节奏",
-            secondText = "We are validating layout, scrolling, and highlight rhythm"
-        ),
-        LrcEntryData(
-            startTime = 7_100L,
-            text = "真实歌词接口稍后再接入",
-            secondText = "Real lyric data will be wired in later"
-        ),
-        LrcEntryData(
-            startTime = 9_600L,
-            text = "右键菜单里的偏移预览仍然可以先体验",
-            secondText = "Offset preview in the context menu still works"
-        ),
-        LrcEntryData(
-            startTime = 12_200L,
-            text = "接入真实数据时，把这里替换回正式歌词组件即可",
-            secondText = "Swap this mock block back to the real lyrics component later"
-        )
-    )
 }
 
 private fun XyPlayMusic.artistLabel(): String {
