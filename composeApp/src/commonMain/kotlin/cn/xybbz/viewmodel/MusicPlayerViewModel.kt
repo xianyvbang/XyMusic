@@ -60,21 +60,45 @@ class MusicPlayerViewModel (
 
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
 
+    /**
+     * 播放页可观察的真实歌词列表。
+     *
+     * 外层播放器页面通过 ViewModel 读取歌词数据，避免 UI 直接散落访问 [LrcServer]。
+     */
     val lrcEntryListFlow: StateFlow<List<LrcEntryData>> = lrcServer.lcrEntryListFlow
 
+    /**
+     * 歌词显示状态，包含当前高亮歌词、所属歌曲和偏移配置。
+     */
     val lrcStateFlow: StateFlow<LrcState> = lrcServer.lrcStateFlow
 
+    /**
+     * JVM 播放页右键菜单使用的临时偏移预览值。
+     *
+     * 该值只影响当前歌词滚动预览，用户点击确认前不会写入数据库。
+     */
     var lyricsPreviewOffsetMs by mutableLongStateOf(0L)
         private set
 
+    /**
+     * 暴露播放进度流，供歌词相关逻辑按毫秒计算当前行。
+     */
     fun getProgressStateFlow(): Flow<Long> {
         return musicController.progressStateFlow
     }
 
+    /**
+     * 跳转到指定播放位置，主要用于点击歌词行后定位播放进度。
+     */
     fun seekTo(millSeconds: Long) {
         musicController.seekTo(millSeconds)
     }
 
+    /**
+     * 读取指定歌曲已保存的歌词偏移。
+     *
+     * 只复用 itemId 匹配的缓存配置，避免切歌瞬间把上一首歌的偏移带到当前歌曲。
+     */
     fun getLyricsOffsetMs(itemId: String): Long {
         return lrcServer.lrcConfig
             ?.takeIf { it.itemId == itemId }
@@ -82,22 +106,39 @@ class MusicPlayerViewModel (
             ?: 0L
     }
 
+    /**
+     * 将右键菜单的预览偏移恢复为当前歌曲已保存的偏移。
+     */
     fun resetLyricsPreviewOffset(itemId: String) {
         lyricsPreviewOffsetMs = getLyricsOffsetMs(itemId)
     }
 
+    /**
+     * 按增量调整预览偏移，正数增加 offsetMs，负数减少 offsetMs。
+     */
     fun adjustLyricsPreviewOffset(deltaMs: Long) {
         lyricsPreviewOffsetMs += deltaMs
     }
 
+    /**
+     * 将预览偏移归零，但不立即持久化。
+     */
     fun resetLyricsPreviewOffsetToZero() {
         lyricsPreviewOffsetMs = 0L
     }
 
+    /**
+     * 确认当前预览偏移，并写入当前歌曲的歌词配置。
+     */
     fun confirmLyricsPreviewOffset(itemId: String = lrcServer.itemId) {
         updateLyricsOffset(lyricsPreviewOffsetMs, itemId)
     }
 
+    /**
+     * 保存歌词偏移配置。
+     *
+     * 只有待保存歌曲和 [LrcServer] 当前歌词所属歌曲一致时才写入，防止异步切歌期间误写。
+     */
     fun updateLyricsOffset(offsetMs: Long, itemId: String = lrcServer.itemId) {
         if (itemId.isBlank() || lrcServer.itemId != itemId) {
             return

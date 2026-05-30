@@ -322,6 +322,7 @@ fun MusicPlayerScreen(
                             LrcViewNewCompose(
                                 listState = lrcListState,
                                 onSetLrcOffset = { offsetMs ->
+                                    // 歌词偏移保存统一收口到播放器 ViewModel，避免页面直接写 LrcServer。
                                     musicPlayerViewModel.updateLyricsOffset(offsetMs)
                                 }
                             )

@@ -325,10 +325,12 @@ fun JvmMusicPlayerScreen(
 
     LaunchedEffect(musicDetail.itemId) {
         dismissJvmRightClickDropdownMenus()
+        // 切歌时先用当前歌曲已保存的偏移初始化右键菜单预览值。
         musicPlayerViewModel.resetLyricsPreviewOffset(musicDetail.itemId)
         coverRotation.snapTo(0f)
     }
     LaunchedEffect(musicDetail.itemId, lrcState.lrcConfig?.itemId, lrcState.lrcConfig?.lrcOffsetMs) {
+        // 歌词配置可能在真实歌词加载完成后才进入状态流，匹配当前歌曲后再同步预览值。
         if (lrcState.lrcConfig?.itemId == musicDetail.itemId) {
             musicPlayerViewModel.resetLyricsPreviewOffset(musicDetail.itemId)
         }
@@ -540,6 +542,7 @@ fun JvmMusicPlayerScreen(
                                                 modifier = Modifier
                                                     .widthIn(max = JvmMusicPlayerLyricsMaxWidth)
                                                     .fillMaxHeight()
+                                                    // 桌面端用右键菜单承载歌词偏移预览和确认，避免修改通用歌词组件。
                                                     .jvmRightClickDropdownMenu(
                                                         dismissOnItemClick = false,
                                                         onShowRequest = {
@@ -579,6 +582,7 @@ fun JvmMusicPlayerScreen(
                                                                 MenuItemDefaultData(
                                                                     title = confirmText,
                                                                     onClick = {
+                                                                        // 只有确认后才把预览偏移写回歌词配置。
                                                                         musicPlayerViewModel.confirmLyricsPreviewOffset(
                                                                             musicDetail.itemId
                                                                         )
@@ -603,6 +607,7 @@ fun JvmMusicPlayerScreen(
                                                     LrcViewNewCompose(
                                                         modifier = Modifier.fillMaxSize(),
                                                         listState = lrcListState,
+                                                        // 不再传入 mock 数据，歌词组件按自身逻辑读取真实 LrcServer 数据。
                                                         externalOffsetMillis = musicPlayerViewModel.lyricsPreviewOffsetMs,
                                                         currentLineTopInset = JvmMusicPlayerLyricsItemHeight,
                                                         highlightScaleEnabled = false,

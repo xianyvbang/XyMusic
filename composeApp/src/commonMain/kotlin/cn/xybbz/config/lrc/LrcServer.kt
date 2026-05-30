@@ -235,6 +235,7 @@ class LrcServer(
      * 获取歌词偏移配置，没有则返回默认配置。
      */
     fun getLrcConfig(itemId: String): XyLrcConfig {
+        // 只复用同一首歌的缓存配置，防止切歌时把上一首歌的偏移带入当前歌曲。
         return lrcConfig?.takeIf { it.itemId == itemId } ?: XyLrcConfig(
             itemId = itemId,
             lrcOffsetMs = 0L,
@@ -251,6 +252,7 @@ class LrcServer(
         _lrcStateFlow.update {
             it.copy(lrcConfig = updatedConfig)
         }
+        // id 为默认值 0 表示数据库里还没有记录，先插入；已有 id 则更新新的偏移值。
         if (config.id == AllDataEnum.All.code) {
             val xyLrcConfig = XyLrcConfig(
                 itemId = itemId,
