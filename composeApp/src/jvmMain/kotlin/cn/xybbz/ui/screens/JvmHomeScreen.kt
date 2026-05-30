@@ -16,7 +16,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -119,6 +121,7 @@ fun JvmHomeScreen(
         state = homeListState,
         contentPadding = PaddingValues(),
     ) {
+        homeTopAnchor()
         // 让 LazyListScope 同时拥有 HomeMusicSectionScope 的上下文，下面可直接调用统一封装后的 homeMusicSection。
         with(homeMusicSectionScope) {
             var hasPreviousSection = false
@@ -212,6 +215,12 @@ fun JvmHomeScreen(
                 )
             }
         }
+    }
+}
+
+private fun LazyListScope.homeTopAnchor() {
+    item(key = "home_top_anchor") {
+        Spacer(modifier = Modifier.height(1.dp))
     }
 }
 
