@@ -115,7 +115,7 @@ import xymusic_kmp.composeapp.generated.resources.restart_alt_24px
 @Composable
 fun LrcViewNewCompose(
     modifier: Modifier = Modifier,
-    onSetLrcOffset: (Long) -> Unit,
+    onSetLrcOffset: ((Long) -> Unit)? = null,
     showConfigButton: Boolean = true,
     externalOffsetMillis: Long? = null,
     currentLineTopInset: Dp? = null,
@@ -379,9 +379,7 @@ fun LrcViewNewCompose(
                     onTmpOffsetMillis = { tmpOffsetMs },
                     onFabMenuExpanded = { fabMenuExpanded },
                     onSetFabMenuExpanded = { fabMenuExpanded = it },
-                    onSetLrcOffset = {
-                        onSetLrcOffset(it)
-                    },
+                    onSetLrcOffset = onSetLrcOffset,
                     onSetTmpLrcOffset = { offset ->
                         tmpOffsetMs = offset
                     })
@@ -576,40 +574,40 @@ fun KaraokeLyricLineNew(
 @Composable
 private fun LrcConfigComponent(
     modifier: Modifier = Modifier,
-    onTmpOffsetMillis: () -> Long,
-    onFabMenuExpanded: () -> Boolean,
-    onSetFabMenuExpanded: (Boolean) -> Unit,
-    onSetLrcOffset: (Long) -> Unit,
-    onSetTmpLrcOffset: (Long) -> Unit
+    onTmpOffsetMillis: (() -> Long)? = null,
+    onFabMenuExpanded: (() -> Boolean)? = null,
+    onSetFabMenuExpanded: ((Boolean) -> Unit)? = null,
+    onSetLrcOffset: ((Long) -> Unit)? = null,
+    onSetTmpLrcOffset: ((Long) -> Unit)? = null
 ) {
 
     var offsetMillis by remember {
-        mutableStateOf(onTmpOffsetMillis())
+        mutableStateOf(onTmpOffsetMillis?.invoke() ?: 0L)
     }
 
     val items =
         listOf(
             LrcConfigData(Res.drawable.add_24px, stringResource(Res.string.forward_offset)) {
                 offsetMillis += 500
-                onSetTmpLrcOffset(offsetMillis)
+                onSetTmpLrcOffset?.invoke(offsetMillis)
             },
             LrcConfigData(Res.drawable.remove_24px, stringResource(Res.string.backward_offset)) {
                 offsetMillis -= 500
-                onSetTmpLrcOffset(offsetMillis)
+                onSetTmpLrcOffset?.invoke(offsetMillis)
             },
             LrcConfigData(Res.drawable.restart_alt_24px, stringResource(Res.string.reset)) {
                 offsetMillis = 0
-                onSetTmpLrcOffset(offsetMillis)
+                onSetTmpLrcOffset?.invoke(offsetMillis)
             },
             LrcConfigData(Res.drawable.check_24px, stringResource(Res.string.confirm)) {
-                onSetLrcOffset(offsetMillis)
-                onSetFabMenuExpanded(false)
+                onSetLrcOffset?.invoke(offsetMillis)
+                onSetFabMenuExpanded?.invoke(false)
             }
         )
 
 
     AnimatedVisibility(
-        visible = onFabMenuExpanded(),
+        visible = onFabMenuExpanded?.invoke() == true,
         label = "lrcConfigScreen",
         modifier = modifier.padding(end = XyTheme.dimens.outerHorizontalPadding)
     ) {

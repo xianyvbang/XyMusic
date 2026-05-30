@@ -612,13 +612,7 @@ fun JvmMusicPlayerScreen(
                                                         currentLineTopInset = JvmMusicPlayerLyricsItemHeight,
                                                         highlightScaleEnabled = false,
                                                         showConfigButton = false,
-                                                        primaryFontSize = JvmMusicPlayerLyricsFontSize,
-                                                        onSetLrcOffset = { offsetMs ->
-                                                            musicPlayerViewModel.updateLyricsOffset(
-                                                                offsetMs,
-                                                                musicDetail.itemId
-                                                            )
-                                                        }
+                                                        primaryFontSize = JvmMusicPlayerLyricsFontSize
                                                     )
                                                 }
                                             }
