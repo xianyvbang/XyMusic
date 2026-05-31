@@ -137,6 +137,23 @@ class LrcServer(
     }
 
     /**
+     * 为当前播放歌曲加载歌词。
+     *
+     * 文件内嵌歌词优先；没有内嵌歌词时，再走音乐服务/自定义接口兜底。
+     */
+    fun loadLyricsForCurrentMusic(embeddedLyrics: List<LrcEntryData>?) {
+        // 切歌时先清掉上一首歌词，避免播放页在新歌词返回前显示旧内容。
+        clear()
+        if (!embeddedLyrics.isNullOrEmpty()) {
+            // 文件内嵌歌词优先级最高，读取成功后不再发起网络歌词兜底。
+            createLrcList(embeddedLyrics, LrcDataType.FILE)
+            return
+        }
+        // 没有可用内嵌歌词时，复用原有音乐服务/自定义接口加载流程。
+        getMusicLyricList()
+    }
+
+    /**
      * 获得音乐歌词信息
      */
     private suspend fun getMusicLyricListByMusicService(itemId: String): List<LrcEntryData>? {

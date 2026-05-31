@@ -34,6 +34,10 @@ class CustomMediaApiClient : ApiFactory {
 
     private val logger = KotlinLogging.logger {}
 
+    init {
+        createHttpClient("", false)
+    }
+
     /**
      * 从自定义歌词 API 获取歌词文本
      * 策略：只使用单曲接口获取歌词文本。
@@ -126,6 +130,8 @@ class CustomMediaApiClient : ApiFactory {
      * 清空数据
      */
     override fun release() {
-        httpClient.close()
+        if (this::httpClient.isInitialized) {
+            httpClient.close()
+        }
     }
 }

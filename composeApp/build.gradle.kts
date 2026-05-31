@@ -114,6 +114,8 @@ kotlin {
             implementation(libs.kotlin.ktor.server.core)
             implementation(libs.kotlin.ktor.server.netty)
             implementation(libs.jvm.vlcj)
+            // JVM 本地音频标签读取，用于桌面端解析内嵌歌词。
+            implementation(libs.jvm.jaudiotagger)
             //拼音相关
             implementation(libs.tinypinyin)
         }

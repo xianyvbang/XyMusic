@@ -9,6 +9,7 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerModeEnum
 import cn.xybbz.proxy.JvmReverseProxyServer
+import cn.xybbz.startup.startJvmLyrics
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory
 import uk.co.caprica.vlcj.log.LogEventListener
 import uk.co.caprica.vlcj.log.LogLevel
@@ -231,6 +232,8 @@ class JvmMusicController : MusicCommonController() {
      */
     override fun initController(onRestorePlaylists: (MusicCommonController.() -> Unit)?) {
         ensureMediaPlayer()
+        // JVM 没有 Android MediaServer 的 metadata 回调，这里启动桌面专属歌词监听链路。
+        startJvmLyrics(this)
         onRestorePlaylists?.invoke(this)
     }
 

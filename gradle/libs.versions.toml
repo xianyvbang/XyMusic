@@ -46,6 +46,8 @@ sketch = "4.4.0-beta02"
 work = "2.11.1"
 accompanist = "0.37.3"
 vlcj = "4.8.3"
+# JVM 音频标签读取库，用于桌面端解析本地文件内嵌歌词。
+jaudiotagger = "3.0.1"
 
 
 
@@ -146,6 +148,8 @@ accompanist-permissions = { module = "com.google.accompanist:accompanist-permiss
 
 # jvm 媒体播放器
 jvm-vlcj = { module = "uk.co.caprica:vlcj", version.ref = "vlcj" }
+# JVM 本地音频标签读取，用于读取 FieldKey.LYRICS。
+jvm-jaudiotagger = { module = "net.jthink:jaudiotagger", version.ref = "jaudiotagger" }
 
 
 [plugins]

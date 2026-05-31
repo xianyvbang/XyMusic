@@ -31,6 +31,7 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.router.DailyRecommend
 import cn.xybbz.router.Navigator
+import cn.xybbz.startup.DataSourceBootstrapper
 import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.components.JvmHorizontalScrollbarBottomPadding
 import cn.xybbz.ui.components.JvmLazyHorizontalGridComponent
@@ -45,7 +46,6 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextLarge
-import cn.xybbz.startup.DataSourceBootstrapper
 import cn.xybbz.viewmodel.HomeViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
