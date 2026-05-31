@@ -283,6 +283,12 @@ fun LrcViewNewCompose(
                         state = listState,
                         modifier = Modifier
                             .fillMaxSize()
+                            .lyricsPointerDragScroll(
+                                listState = listState,
+                                onDragStateChanged = { dragging ->
+                                    isDragState.value = dragging
+                                }
+                            )
                             .detectDragState { dragging ->
                                 isDragState.value = dragging
                             },

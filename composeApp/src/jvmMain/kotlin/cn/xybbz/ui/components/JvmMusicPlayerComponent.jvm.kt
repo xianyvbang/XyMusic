@@ -622,6 +622,10 @@ fun JvmMusicPlayerScreen(
                                                     modifier = Modifier
                                                         .fillMaxWidth()
                                                         .weight(1f)
+                                                        .jvmPlayerInteractiveHitTarget(
+                                                            titleBarHitTestOwner,
+                                                            JvmMusicPlayerHitTarget.Lyrics
+                                                        )
                                                 ) {
                                                     LrcViewNewCompose(
                                                         modifier = Modifier.fillMaxSize(),
@@ -746,10 +750,21 @@ private sealed class JvmMusicPlayerTitleBarHitTarget(val id: String) {
     data class Tab(private val index: Int) : JvmMusicPlayerTitleBarHitTarget("Tab$index")
 }
 
+private sealed class JvmMusicPlayerHitTarget(val id: String) {
+    data object Lyrics : JvmMusicPlayerHitTarget("Lyrics")
+}
+
 // 将控件窗口坐标同步给原生命中测试层，命中这些区域时不触发窗口拖拽。
 private fun Modifier.jvmPlayerTitleBarHitTarget(
     owner: DesktopInteractiveHitTestOwner,
     target: JvmMusicPlayerTitleBarHitTarget,
+): Modifier = onGloballyPositioned { coordinates ->
+    owner.updateBounds(target.id, coordinates.boundsInWindow())
+}
+
+private fun Modifier.jvmPlayerInteractiveHitTarget(
+    owner: DesktopInteractiveHitTestOwner,
+    target: JvmMusicPlayerHitTarget,
 ): Modifier = onGloballyPositioned { coordinates ->
     owner.updateBounds(target.id, coordinates.boundsInWindow())
 }
