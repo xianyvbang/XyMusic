@@ -37,7 +37,7 @@ fun main() = application {
         resizable = true,
         title = "XyMusic-KMP",
         state = windowState,
-
+        alwaysOnTop = true,
         ) {
         val chromeController = rememberWindowsWindowChromeController(
             window = window,
