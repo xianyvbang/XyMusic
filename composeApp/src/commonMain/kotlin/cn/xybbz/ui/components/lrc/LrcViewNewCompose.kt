@@ -183,18 +183,11 @@ fun LrcViewNewCompose(
         var currentTimeMillis by remember {
             mutableLongStateOf(0L)
         }
-        val derivedIndex by remember {
-            derivedStateOf {
-                listState.firstVisibleItemIndex
-            }
-        }
-
-
         // 监听滑动中的当前位置
-        LaunchedEffect(derivedIndex) {
-            snapshotFlow { derivedIndex }
-                .collect { index ->
-                    dragLineIndex = if (isDragState.value) {
+        LaunchedEffect(listState) {
+            snapshotFlow { listState.firstVisibleItemIndex to isDragState.value }
+                .collect { (index, scrollingLyrics) ->
+                    dragLineIndex = if (scrollingLyrics) {
                         index
                     } else {
                         0
