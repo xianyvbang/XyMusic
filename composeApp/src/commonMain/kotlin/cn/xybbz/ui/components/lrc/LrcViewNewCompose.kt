@@ -113,6 +113,7 @@ import xymusic_kmp.composeapp.generated.resources.reset
 import xymusic_kmp.composeapp.generated.resources.restart_alt_24px
 
 private val LrcLineVerticalSpacing = 12.dp
+private val LrcDragGuideVerticalPadding = 8.dp
 private const val LrcBottomFadeLineCount = 2f
 private const val LrcTopFadeLineCount = 0.5f
 
@@ -172,6 +173,9 @@ fun LrcViewNewCompose(
         } else {
             (maxHeight - currentLineTopInset).coerceAtLeast(0.dp)
         }
+        val dragLineAnchorOffsetPx = with(density) {
+            (topContentPadding + LrcDragGuideVerticalPadding).roundToPx()
+        }
         //获取歌词列表
 
         // 记录拖到哪一行
@@ -184,8 +188,10 @@ fun LrcViewNewCompose(
             mutableLongStateOf(0L)
         }
         // 监听滑动中的当前位置
-        LaunchedEffect(listState) {
-            snapshotFlow { listState.firstVisibleItemIndex to isDragState.value }
+        LaunchedEffect(listState, dragLineAnchorOffsetPx) {
+            snapshotFlow {
+                listState.lyricLineIndexAtGuideLine(dragLineAnchorOffsetPx) to isDragState.value
+            }
                 .collect { (index, scrollingLyrics) ->
                     dragLineIndex = if (scrollingLyrics) {
                         index
@@ -363,7 +369,7 @@ fun LrcViewNewCompose(
                                     .padding(top = currentLineTopInset)
                             }
                         )
-                        .padding(vertical = 8.dp)
+                        .padding(vertical = LrcDragGuideVerticalPadding)
 
                 ) {
                     HorizontalDivider(
@@ -450,6 +456,23 @@ private fun LrcEdgeFadeOverlay(
                 )
         )
     }
+}
+
+private fun LazyListState.lyricLineIndexAtGuideLine(guideLineOffsetPx: Int): Int {
+    val visibleItems = layoutInfo.visibleItemsInfo
+    if (visibleItems.isEmpty()) return firstVisibleItemIndex
+
+    val hitItem = visibleItems.firstOrNull { item ->
+        guideLineOffsetPx in item.offset until item.offset + item.size
+    }
+    if (hitItem != null) return hitItem.index
+
+    val nextItem = visibleItems.firstOrNull { item ->
+        guideLineOffsetPx < item.offset
+    }
+    if (nextItem != null) return nextItem.index
+
+    return visibleItems.last().index
 }
 
 @Composable
