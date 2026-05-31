@@ -69,8 +69,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
@@ -110,6 +112,9 @@ import xymusic_kmp.composeapp.generated.resources.remove_24px
 import xymusic_kmp.composeapp.generated.resources.reset
 import xymusic_kmp.composeapp.generated.resources.restart_alt_24px
 
+private val LrcLineVerticalSpacing = 12.dp
+private const val LrcBottomFadeLineCount = 2f
+private const val LrcTopFadeLineCount = 0.5f
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -136,6 +141,12 @@ fun LrcViewNewCompose(
     val lcrEntryList = previewEntries ?: realLcrEntryList
     val coroutineScope = rememberCoroutineScope()
     val usePreviewLyrics = previewEntries != null && previewCurrentTimeMillis != null
+    val density = LocalDensity.current
+    val lyricLineHeight = with(density) {
+        (primaryFontSize.value + 8f).sp.toDp() + LrcLineVerticalSpacing
+    }
+    val topFadeHeight = lyricLineHeight * LrcTopFadeLineCount
+    val bottomFadeHeight = lyricLineHeight * LrcBottomFadeLineCount
 
     var tmpOffsetMs by remember(lrcState.lrcConfig?.lrcOffsetMs) {
         mutableStateOf(lrcState.lrcConfig?.lrcOffsetMs ?: 0L)
@@ -275,7 +286,7 @@ fun LrcViewNewCompose(
                             .detectDragState { dragging ->
                                 isDragState.value = dragging
                             },
-                        verticalArrangement = Arrangement.spacedBy(0.dp),
+                        verticalArrangement = Arrangement.spacedBy(LrcLineVerticalSpacing),
                         horizontalAlignment = horizontalAlignment,
                         contentPadding = PaddingValues(
                             top = topContentPadding,
@@ -319,6 +330,10 @@ fun LrcViewNewCompose(
                         }
                     }
 
+                    LrcEdgeFadeOverlay(
+                        topFadeHeight = topFadeHeight,
+                        bottomFadeHeight = bottomFadeHeight,
+                    )
 
                 } else {
                     Box(
@@ -396,6 +411,45 @@ fun LrcViewNewCompose(
                     })
             }
         }
+    }
+}
+
+@Composable
+private fun LrcEdgeFadeOverlay(
+    topFadeHeight: Dp,
+    bottomFadeHeight: Dp,
+) {
+    val backgroundColor = MaterialTheme.colorScheme.background
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Spacer(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .height(topFadeHeight)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            backgroundColor,
+                            backgroundColor.copy(alpha = 0f)
+                        )
+                    )
+                )
+        )
+        Spacer(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(bottomFadeHeight)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            backgroundColor.copy(alpha = 0f),
+                            backgroundColor
+                        )
+                    )
+                )
+        )
     }
 }
 
