@@ -133,8 +133,8 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import cn.xybbz.ui.xy.XyIconButton as IconButton
 
-internal val JvmMusicPlayerSharedCoverTargetSize = 650.dp
-private val JvmMusicPlayerSharedCoverDisplayMaxSize = 650.dp
+internal val JvmMusicPlayerSharedCoverTargetSize = 720.dp
+private val JvmMusicPlayerSharedCoverDisplayMaxSize = 720.dp
 private const val JvmMusicPlayerSharedCoverDurationMillis = 520
 private const val JvmMusicPlayerDialogEnterDurationMillis = 260
 private const val JvmMusicPlayerCoverRotationDurationMillis = 18_000
@@ -142,6 +142,8 @@ private const val JvmMusicPlayerCoverRotationReadyProgress = 0.999f
 
 //private val JvmMusicPlayerPrimaryPageMaxWidth = 1320.dp
 private const val JvmMusicPlayerPrimaryPageGapWeight = 0.18f
+private const val JvmMusicPlayerCoverWidthRatio = 0.84f
+private const val JvmMusicPlayerCoverHeightRatio = 0.72f
 private val JvmMusicPlayerLyricsMaxWidth = 480.dp
 
 // JVM 播放页歌词使用略小的主歌词字号，避免桌面布局里文字显得过大。
@@ -484,7 +486,10 @@ fun JvmMusicPlayerScreen(
                                     val coverColumnWidth =
                                         maxWidth * (1f / (2f + JvmMusicPlayerPrimaryPageGapWeight))
                                     val coverSize =
-                                        minOf(coverColumnWidth * 0.76f, maxHeight * 0.6f)
+                                        minOf(
+                                            coverColumnWidth * JvmMusicPlayerCoverWidthRatio,
+                                            maxHeight * JvmMusicPlayerCoverHeightRatio
+                                        )
                                             .coerceAtMost(JvmMusicPlayerSharedCoverDisplayMaxSize)
                                     val primaryPageSideInset =
                                         (coverColumnWidth - coverSize).coerceAtLeast(0.dp)
