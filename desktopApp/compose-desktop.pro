@@ -7,6 +7,13 @@
 -keep class com.sun.jna.** { *; }
 -keep class * implements com.sun.jna.** { *; }
 
+# ---------------------------- FileKit JVM ------------------------------ #
+-keep class io.github.vinceglb.filekit.dialogs.platform.windows.jna.** { *; }
+-keep class org.freedesktop.dbus.** { *; }
+-keep class org.freedesktop.portal.** { *; }
+-dontwarn org.freedesktop.dbus.**
+-dontwarn org.freedesktop.portal.**
+
 # ---------------------- Desktop Hit Test Reflection -------------------- #
 -keep class androidx.compose.foundation.HoverableNode { *; }
 -keep class androidx.compose.foundation.gestures.ScrollableNode { *; }

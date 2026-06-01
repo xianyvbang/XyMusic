@@ -15,6 +15,8 @@ kotlin {
         implementation(compose.desktop.currentOs)
         implementation(libs.compose.material3)
         implementation(libs.compose.components.resources)
+        // 桌面入口负责初始化 FileKit，并向 composeApp 注入原生弹窗 parent window。
+        implementation(libs.filekit.dialogs)
         implementation(libs.kotlinx.coroutinesSwing)
         implementation(libs.kotlin.ktor.apache)
         implementation(project.dependencies.platform(libs.koin.bom))
@@ -42,6 +44,10 @@ compose.desktop {
             packageName = "cn.xybbz"
             packageVersion = "1.0.0"
             appResourcesRootDir.set(project.layout.projectDirectory.dir("resources"))
+            linux {
+                // FileKit 的 Linux 原生文件选择器依赖该 JDK 模块访问系统认证/用户信息。
+                modules("jdk.security.auth")
+            }
         }
     }
 }

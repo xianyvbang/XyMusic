@@ -2,6 +2,7 @@ package cn.xybbz.ui.windows
 
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.awt.ComposeWindow
 
 /**
  * 桌面窗口控制状态。
@@ -16,6 +17,13 @@ val LocalDesktopWindowFrameState =
  */
 val LocalDesktopWindowDecorators =
     compositionLocalOf<DesktopWindowDecorators> { error("DesktopWindowDecorators not provided") }
+
+/**
+ * 桌面主窗口引用。
+ * JVM 原生系统弹窗用它作为 parent，确保弹窗显示在应用窗口前方。
+ */
+val LocalDesktopParentWindow =
+    compositionLocalOf<ComposeWindow?> { null }
 
 /**
  * 桌面原生窗口控制器。

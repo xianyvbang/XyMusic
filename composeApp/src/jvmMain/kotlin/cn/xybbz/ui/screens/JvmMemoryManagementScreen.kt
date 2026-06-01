@@ -46,6 +46,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,9 +66,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cn.xybbz.common.constants.Constants
+import cn.xybbz.common.utils.Log
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.TopAppBarComponent
+import cn.xybbz.ui.components.rememberJvmFileKitDialogSettings
 import cn.xybbz.ui.components.show
+import cn.xybbz.ui.components.toExistingPlatformDirectoryOrNull
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
@@ -77,6 +82,10 @@ import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.MemoryManagementViewModel
+import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.absolutePath
+import io.github.vinceglb.filekit.dialogs.openDirectoryPicker
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
@@ -95,7 +104,6 @@ import xymusic_kmp.composeapp.generated.resources.restore_default
 import xymusic_kmp.composeapp.generated.resources.storage_management
 import xymusic_kmp.composeapp.generated.resources.warning
 import java.io.File
-import javax.swing.JFileChooser
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -114,6 +122,10 @@ fun JvmMemoryManagementScreen(
     val databaseDataTitle = stringResource(Res.string.database_data)
     val essentialDataTitle = stringResource(Res.string.essential_data)
     val cachePathTitle = stringResource(Res.string.cache_path)
+    // 缓存目录选择器是 suspend API，点击按钮后通过页面协程启动。
+    val coroutineScope = rememberCoroutineScope()
+    // 缓存目录选择器绑定桌面主窗口，避免系统弹窗出现在应用窗口后方。
+    val cacheDirectoryDialogSettings = rememberJvmFileKitDialogSettings("选择缓存路径")
     val chartSegments = listOf(
         JvmStorageChartSegment(
             title = audioCacheTitle,
@@ -180,8 +192,16 @@ fun JvmMemoryManagementScreen(
                                 title = cachePathTitle,
                                 cachePath = memoryManagementViewModel.musicCachePath,
                                 isDefaultPath = memoryManagementViewModel.isDefaultMusicCachePath,
-                                onChoosePath = { selectedPath ->
-                                    memoryManagementViewModel.changeMusicCacheDirectory(selectedPath)
+                                onChoosePath = {
+                                    coroutineScope.launch {
+                                        // 用户点击“调整”后打开系统目录选择器，取消选择时不修改缓存路径。
+                                        chooseJvmCacheDirectory(
+                                            currentPath = memoryManagementViewModel.musicCachePath,
+                                            dialogSettings = cacheDirectoryDialogSettings,
+                                        )?.let { selectedPath ->
+                                            memoryManagementViewModel.changeMusicCacheDirectory(selectedPath)
+                                        }
+                                    }
                                 },
                                 onRestoreDefault = {
                                     memoryManagementViewModel.restoreDefaultMusicCacheDirectory()
@@ -324,11 +344,20 @@ fun JvmMemoryManagementItem(
     }
 }
 
+/**
+ * 显示 JVM 缓存路径管理弹窗。
+ *
+ * @param title 弹窗标题。
+ * @param cachePath 当前缓存目录路径。
+ * @param isDefaultPath 当前路径是否为默认路径。
+ * @param onChoosePath 点击调整路径时执行的动作。
+ * @param onRestoreDefault 点击恢复默认路径时执行的动作。
+ */
 private fun showJvmCachePathDialog(
     title: String,
     cachePath: String,
     isDefaultPath: Boolean,
-    onChoosePath: (String) -> Unit,
+    onChoosePath: () -> Unit,
     onRestoreDefault: () -> Unit,
 ) {
     AlertDialogObject(
@@ -342,7 +371,7 @@ private fun showJvmCachePathDialog(
             )
         },
         onDismissRequest = {
-            chooseJvmCacheDirectory(cachePath)?.let(onChoosePath)
+            onChoosePath()
         },
         onConfirmation = onRestoreDefault,
         dismissText = Res.string.adjust,
@@ -351,26 +380,41 @@ private fun showJvmCachePathDialog(
     ).show()
 }
 
-private fun chooseJvmCacheDirectory(currentPath: String): String? {
+/**
+ * 打开 JVM 系统目录选择器选择播放缓存目录。
+ *
+ * @param currentPath 当前缓存目录路径，存在时作为系统选择器初始目录。
+ * @param dialogSettings FileKit 弹窗配置，包含标题和主窗口 parent。
+ * @return 用户选择的目录绝对路径；取消或打开失败时返回 null。
+ */
+private suspend fun chooseJvmCacheDirectory(
+    currentPath: String,
+    dialogSettings: io.github.vinceglb.filekit.dialogs.FileKitDialogSettings,
+): String? {
+    // 优先定位到当前缓存目录；当前目录无效时回退到音乐目录或用户主目录。
     val initialDirectory = currentPath
         .takeIf { it.isNotBlank() }
         ?.let(::File)
-        ?.takeIf { it.exists() && it.isDirectory }
+        ?.toExistingPlatformDirectoryOrNull()
         ?: defaultJvmCacheDirectoryChooserDirectory()
+            .toExistingPlatformDirectoryOrNull()
 
-    val chooser = JFileChooser(initialDirectory).apply {
-        dialogTitle = "选择缓存路径"
-        fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
-        isAcceptAllFileFilterUsed = false
-    }
-
-    return if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-        chooser.selectedFile?.absolutePath
-    } else {
-        null
-    }
+    // 原生目录选择器异常只记录日志，避免存储管理页因为平台弹窗失败而崩溃。
+    return runCatching {
+        FileKit.openDirectoryPicker(
+            directory = initialDirectory,
+            dialogSettings = dialogSettings,
+        )?.absolutePath()
+    }.onFailure { error ->
+        Log.e(Constants.LOG_ERROR_PREFIX, "打开缓存目录选择器失败", error)
+    }.getOrNull()
 }
 
+/**
+ * 获取缓存目录选择器的默认目录。
+ *
+ * @return 优先返回用户音乐目录，不存在时回退到用户主目录。
+ */
 private fun defaultJvmCacheDirectoryChooserDirectory(): File {
     val userHome = File(System.getProperty("user.home") ?: ".")
     val musicDir = File(userHome, "Music")
