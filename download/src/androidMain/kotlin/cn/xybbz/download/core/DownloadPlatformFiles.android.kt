@@ -2,101 +2,72 @@ package cn.xybbz.download.core
 
 import android.os.Environment
 import cn.xybbz.download.enums.DownloadStatus
-import cn.xybbz.download.utils.FileUtil
+import cn.xybbz.download.utils.ensureDirectoryWithFileKit
+import cn.xybbz.download.utils.resolvePublicDownloadsSubdirectory
 import cn.xybbz.platform.ContextWrapper
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.exhausted
 import io.ktor.utils.io.readAvailable
-import okhttp3.internal.platform.PlatformRegistry.applicationContext
 import java.io.File
 import java.io.RandomAccessFile
 
-// Android 端继续沿用本地文件系统实现，把 commonMain 需要的行为补齐成 actual。
-internal actual object DownloadPlatformFiles {
-    actual fun defaultDownloadDirectory(contextWrapper: ContextWrapper): String {
-        val context = contextWrapper.context
-        val publicDownloadsSubdirectory = FileUtil.resolvePublicDownloadsSubdirectory(contextWrapper)
-        return (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            ?.let { File(it, publicDownloadsSubdirectory) }
-            ?: File(context.filesDir, "downloads")).absolutePath
-    }
+internal actual fun platformDefaultDownloadDirectoryPath(contextWrapper: ContextWrapper): String {
+    val context = contextWrapper.context
+    val publicDownloadsSubdirectory = resolvePublicDownloadsSubdirectory(contextWrapper)
+    return (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        ?.let { File(it, publicDownloadsSubdirectory) }
+        ?: File(context.filesDir, "downloads")).absolutePath
+}
 
-    actual fun createTempDownloadFilePath(contextWrapper: ContextWrapper): String {
+internal actual fun createPlatformTempDownloadFilePath(contextWrapper: ContextWrapper): String {
+    val directory = File(contextWrapper.context.cacheDir, "xy-downloads")
+    // 父目录创建统一走 FileKit，平台层只负责 Android 临时文件命名。
+    ensureDirectoryWithFileKit(directory.absolutePath)
+    return File.createTempFile("download_", ".tmp", directory).absolutePath
+}
 
-        val directory = File(contextWrapper.context.cacheDir, "xy-downloads")
-//        val directory = File(System.getProperty("java.io.tmpdir"), "xy-downloads")
-        if (!directory.exists()) {
-            directory.mkdirs()
-        }
-        return File.createTempFile("download_", ".tmp", directory).absolutePath
-    }
+@Suppress("BlockingMethodInNonBlockingContext")
+internal actual suspend fun writeResponseToPlatformFile(
+    path: String,
+    startOffset: Long,
+    source: ByteReadChannel,
+    onChunkWritten: suspend (currentBytes: Long) -> DownloadStatus,
+): DownloadWriteResult {
+    val targetFile = File(path)
+    targetFile.parentFile?.absolutePath?.let(::ensureDirectoryWithFileKit)
+    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+    var currentBytes = startOffset
 
-    actual fun fileLength(path: String): Long {
-        if (path.isBlank()) {
-            return 0L
-        }
-        val file = File(path)
-        return if (file.exists()) file.length() else 0L
-    }
+    // 调用方已经通过 flowOn(Dispatchers.IO) 保证这段阻塞文件 IO 运行在 IO 线程池。
+    RandomAccessFile(targetFile, "rw").use { output ->
+        // 断点续传必须裁剪旧尾部并 seek 到断点，FileKit sink 不能替代这类随机写入。
+        output.setLength(startOffset)
+        output.seek(startOffset)
 
-    actual fun deleteFile(path: String): Boolean {
-        if (path.isBlank()) {
-            return false
-        }
-        val file = File(path)
-        return file.exists() && file.delete()
-    }
+        while (!source.exhausted()) {
+            val bytesRead = source.readAvailable(buffer, 0, buffer.size)
+            if (bytesRead == -1) {
+                break
+            }
+            if (bytesRead == 0) {
+                continue
+            }
 
-    actual fun deleteFileIfEmpty(path: String): Boolean {
-        if (path.isBlank()) {
-            return false
-        }
-        val file = File(path)
-        return file.exists() && file.length() == 0L && file.delete()
-    }
+            output.write(buffer, 0, bytesRead)
+            currentBytes += bytesRead
 
-    @Suppress("BlockingMethodInNonBlockingContext")
-    actual suspend fun writeResponseToFile(
-        path: String,
-        startOffset: Long,
-        source: ByteReadChannel,
-        onChunkWritten: suspend (currentBytes: Long) -> DownloadStatus,
-    ): DownloadWriteResult {
-        val targetFile = File(path)
-        targetFile.parentFile?.mkdirs()
-        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-        var currentBytes = startOffset
+            // 每个分片写完都把控制权还给上层，便于暂停/取消即时生效。
+            when (onChunkWritten(currentBytes)) {
+                DownloadStatus.PAUSED ->
+                    return DownloadWriteResult(DownloadStatus.PAUSED, currentBytes)
 
-        // 调用方已经通过 flowOn(Dispatchers.IO) 保证这段阻塞文件 IO 运行在 IO 线程池。
-        RandomAccessFile(targetFile, "rw").use { output ->
-            // 从断点位置继续写，保持和旧 Android 下载逻辑一致。
-            // 写入前先裁剪到断点位置，避免旧临时文件尾部残留破坏最终媒体文件。
-            output.setLength(startOffset)
-            output.seek(startOffset)
-            while (!source.exhausted()) {
-                val bytesRead = source.readAvailable(buffer, 0, buffer.size)
-                if (bytesRead == -1) {
-                    break
-                }
-                if (bytesRead == 0) {
-                    continue
-                }
+                DownloadStatus.CANCEL ->
+                    return DownloadWriteResult(DownloadStatus.CANCEL, currentBytes)
 
-                output.write(buffer, 0, bytesRead)
-                currentBytes += bytesRead
-
-                // 每个分片写完都把控制权还给上层，便于暂停/取消即时生效。
-                when (onChunkWritten(currentBytes)) {
-                    DownloadStatus.PAUSED ->
-                        return DownloadWriteResult(DownloadStatus.PAUSED, currentBytes)
-
-                    DownloadStatus.CANCEL ->
-                        return DownloadWriteResult(DownloadStatus.CANCEL, currentBytes)
-
-                    else -> Unit
-                }
+                else -> Unit
             }
         }
-        return DownloadWriteResult(DownloadStatus.COMPLETED, currentBytes)
     }
+
+    return DownloadWriteResult(DownloadStatus.COMPLETED, currentBytes)
 }

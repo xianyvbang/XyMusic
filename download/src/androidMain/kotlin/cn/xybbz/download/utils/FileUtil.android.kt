@@ -6,127 +6,85 @@ import android.os.Environment
 import android.provider.MediaStore
 import androidx.annotation.RequiresApi
 import cn.xybbz.platform.ContextWrapper
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.io.File
-import java.io.FileInputStream
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.copyTo
+import io.github.vinceglb.filekit.delete
 import java.io.IOException
 
-// Android 端保留真实文件系统能力，包括占位文件预留和公开下载目录迁移。
-actual object FileUtil {
-    actual suspend fun reserveAvailableFileName(
-        directory: String,
-        fileName: String,
-    ): String = withContext(Dispatchers.IO) {
-        val targetDir = File(directory)
-        if (!targetDir.exists() && !targetDir.mkdirs()) {
-            throw IOException("Failed to create target directory: ${targetDir.absolutePath}")
-        }
+// Android 公开 Downloads 需要 MediaStore，普通文件移动仍复用 commonMain 的 FileKit 工具。
+internal actual suspend fun moveToPublicDirectoryWithFileKit(
+    contextWrapper: ContextWrapper?,
+    sourcePath: String,
+    finalPath: String,
+    fileName: String,
+): String {
+    val context = contextWrapper ?: throw IllegalStateException(
+        "Android moveToPublicDirectory requires ContextWrapper."
+    )
 
-        val tmpFileName = fileName.removePrefix(".")
-        val originalFile = File(targetDir, tmpFileName)
-        if (!originalFile.exists()) {
-            originalFile.createNewFile()
-            return@withContext tmpFileName
-        }
+    // 预留文件名时创建的占位文件只用于抢名，正式写入前要清理掉。
+    val placeholderPath = finalPath.substringBeforeLast('/', missingDelimiterValue = "")
+        .takeIf { it.isNotBlank() }
+        ?.let { directory -> "$directory/$fileName" }
+    placeholderPath?.let { deleteFileIfEmptyWithFileKit(it) }
 
-        val nameWithoutExtension = tmpFileName.substringBeforeLast('.')
-        val extension = tmpFileName.substringAfterLast('.', "")
-        for (counter in 1..999) {
-            val newFileName = if (extension.isNotEmpty()) {
-                "${nameWithoutExtension}($counter).$extension"
-            } else {
-                "${nameWithoutExtension}($counter)"
-            }
-
-            val newFile = File(targetDir, newFileName)
-            if (!newFile.exists()) {
-                newFile.createNewFile()
-                return@withContext newFileName
-            }
-        }
-
-        throw IOException("Failed to find an available filename for '$fileName' after 999 attempts.")
-    }
-
-    actual suspend fun moveToPublicDirectory(
-        contextWrapper: ContextWrapper?,
-        sourcePath: String,
-        finalPath: String,
-        fileName: String,
-    ): String = withContext(Dispatchers.IO) {
-        val sourceFile = File(sourcePath)
-        val placeholderFile = File(File(finalPath).parent ?: "", fileName)
-        if (placeholderFile.exists()) {
-            placeholderFile.delete()
-        }
-
-        contextWrapper ?: throw IllegalStateException(
-            "Android moveToPublicDirectory requires ContextWrapper."
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        copyToPublicDownloads(
+            contextWrapper = context,
+            sourcePath = sourcePath,
+            displayName = fileName,
         )
+    } else {
+        moveFileWithFileKit(
+            sourcePath = sourcePath,
+            finalPath = finalPath,
+        )
+    }
+}
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            copyToPublicDownloads(contextWrapper, sourceFile, fileName)
-        } else {
-            moveToPublicLegacy(sourceFile, finalPath)
-        }
+/**
+ * Android 10+ 使用 MediaStore 写入公开下载目录，让系统文件管理器能立即看到下载结果。
+ */
+@RequiresApi(Build.VERSION_CODES.Q)
+private suspend fun copyToPublicDownloads(
+    contextWrapper: ContextWrapper,
+    sourcePath: String,
+    displayName: String,
+): String {
+    val publicDownloadsSubdirectory = resolvePublicDownloadsSubdirectory(contextWrapper)
+    val contentResolver = contextWrapper.context.contentResolver
+    val contentValues = ContentValues().apply {
+        put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+        put(
+            MediaStore.MediaColumns.RELATIVE_PATH,
+            "${Environment.DIRECTORY_DOWNLOADS}/$publicDownloadsSubdirectory",
+        )
     }
 
-    /**
-     * Android 10+ 使用 MediaStore 将文件复制到公开下载目录。
-     */
-    @RequiresApi(Build.VERSION_CODES.Q)
-    private fun copyToPublicDownloads(
-        contextWrapper: ContextWrapper,
-        sourceFile: File,
-        displayName: String,
-    ): String {
-        val publicDownloadsSubdirectory = resolvePublicDownloadsSubdirectory(contextWrapper)
-        val contentResolver = contextWrapper.context.contentResolver
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
-            put(
-                MediaStore.MediaColumns.RELATIVE_PATH,
-                "${Environment.DIRECTORY_DOWNLOADS}/$publicDownloadsSubdirectory",
-            )
-        }
+    val uri = contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+        ?: throw IOException("Failed to create new MediaStore entry.")
 
-        val uri = contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
-            ?: throw IOException("Failed to create new MediaStore entry.")
-
-        contentResolver.openOutputStream(uri)?.use { outputStream ->
-            FileInputStream(sourceFile).use { inputStream ->
-                inputStream.copyTo(outputStream)
-            }
-        }
-        sourceFile.delete()
+    try {
+        PlatformFile(sourcePath).copyTo(PlatformFile(uri))
+        PlatformFile(sourcePath).delete(mustExist = false)
         return displayName
+    } catch (throwable: Throwable) {
+        // MediaStore 目标写入失败时删除半成品记录，避免系统下载目录出现坏文件。
+        contentResolver.delete(uri, null, null)
+        throw throwable
     }
+}
 
-    fun resolvePublicDownloadsSubdirectory(contextWrapper: ContextWrapper): String {
-        val context = contextWrapper.context
-        val appName = context.packageManager
-            .getApplicationLabel(context.applicationInfo)
-            .toString()
-            .trim()
+// 公开下载目录子目录使用应用显示名，和旧实现保持一致。
+internal fun resolvePublicDownloadsSubdirectory(contextWrapper: ContextWrapper): String {
+    val context = contextWrapper.context
+    val appName = context.packageManager
+        .getApplicationLabel(context.applicationInfo)
+        .toString()
+        .trim()
 
-        return appName
-            .ifBlank { context.packageName }
-            .replace('/', '_')
-            .replace('\\', '_')
-    }
-
-    /**
-     * Android 9 及以下直接使用 File API 移动到目标路径。
-     */
-    private fun moveToPublicLegacy(sourceFile: File, finalPath: String): String {
-        val finalFile = File(finalPath)
-        finalFile.parentFile?.mkdirs()
-
-        if (!sourceFile.renameTo(finalFile)) {
-            sourceFile.copyTo(finalFile, overwrite = true)
-            sourceFile.delete()
-        }
-        return finalFile.absolutePath
-    }
+    return appName
+        .ifBlank { context.packageName }
+        .replace('/', '_')
+        .replace('\\', '_')
 }

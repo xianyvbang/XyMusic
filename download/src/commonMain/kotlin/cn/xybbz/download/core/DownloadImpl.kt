@@ -130,7 +130,9 @@ class DownloadImpl(
                     "Failed to prepare download for ${request.url}: ${e.message}",
                     e,
                 )
-                tempFilePath?.let(DownloadPlatformFiles::deleteFile)
+                if (tempFilePath != null) {
+                    DownloadPlatformFiles.deleteFile(tempFilePath)
+                }
                 val time = Clock.System.now().toEpochMilliseconds()
 
                 failTasks.add(

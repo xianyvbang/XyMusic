@@ -79,6 +79,8 @@ kotlin {
                 implementation(libs.kotlin.ktor.json)
                 implementation(libs.androidx.room.runtime)
                 implementation(libs.androidx.sqlite.bundled)
+                // 普通文件复制、移动、删除和目录创建统一使用 FileKit 的 KMP 文件 API。
+                implementation(libs.filekit.core)
                 //work 后台调度-定时任务
                 implementation(project(path = ":xy-database"))
                 implementation(project(path = ":xy-platform"))

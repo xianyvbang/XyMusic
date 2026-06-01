@@ -327,7 +327,7 @@ class DownloadDispatcherImpl(
         }
     }
 
-    private fun cleanupTaskFiles(task: XyDownload) {
+    private suspend fun cleanupTaskFiles(task: XyDownload) {
         try {
             // 临时文件始终删掉；最终文件只清理 0 字节占位文件，避免误删正常结果。
             DownloadPlatformFiles.deleteFile(task.tempFilePath)

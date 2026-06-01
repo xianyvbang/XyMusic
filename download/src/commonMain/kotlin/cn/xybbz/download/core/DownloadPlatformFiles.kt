@@ -1,6 +1,9 @@
 package cn.xybbz.download.core
 
 import cn.xybbz.download.enums.DownloadStatus
+import cn.xybbz.download.utils.deleteFileIfEmptyWithFileKit
+import cn.xybbz.download.utils.deleteFileWithFileKit
+import cn.xybbz.download.utils.fileLengthWithFileKit
 import cn.xybbz.platform.ContextWrapper
 import io.ktor.utils.io.ByteReadChannel
 
@@ -10,16 +13,20 @@ internal data class DownloadWriteResult(
     val totalBytesWritten: Long,
 )
 
-internal expect object DownloadPlatformFiles {
+internal object DownloadPlatformFiles {
     // 解析平台默认下载目录。
-    fun defaultDownloadDirectory(contextWrapper: ContextWrapper): String
+    fun defaultDownloadDirectory(contextWrapper: ContextWrapper): String =
+        platformDefaultDownloadDirectoryPath(contextWrapper)
 
     // 创建下载使用的临时文件路径。
-    fun createTempDownloadFilePath(contextWrapper: ContextWrapper): String
+    fun createTempDownloadFilePath(contextWrapper: ContextWrapper): String =
+        createPlatformTempDownloadFilePath(contextWrapper)
 
-    fun fileLength(path: String): Long
-    fun deleteFile(path: String): Boolean
-    fun deleteFileIfEmpty(path: String): Boolean
+    fun fileLength(path: String): Long = fileLengthWithFileKit(path)
+
+    suspend fun deleteFile(path: String): Boolean = deleteFileWithFileKit(path)
+
+    suspend fun deleteFileIfEmpty(path: String): Boolean = deleteFileIfEmptyWithFileKit(path)
 
     // 将网络响应持续写入文件，并在每个分片后回调上层决定是否继续。
     suspend fun writeResponseToFile(
@@ -27,5 +34,25 @@ internal expect object DownloadPlatformFiles {
         startOffset: Long,
         source: ByteReadChannel,
         onChunkWritten: suspend (currentBytes: Long) -> DownloadStatus,
-    ): DownloadWriteResult
+    ): DownloadWriteResult =
+        writeResponseToPlatformFile(
+            path = path,
+            startOffset = startOffset,
+            source = source,
+            onChunkWritten = onChunkWritten,
+        )
 }
+
+// 默认下载目录依赖平台上下文，只返回路径，目录创建由 commonMain 统一交给 FileKit。
+internal expect fun platformDefaultDownloadDirectoryPath(contextWrapper: ContextWrapper): String
+
+// 临时文件创建需要平台生成唯一文件名，但父目录创建统一通过 FileKit 处理。
+internal expect fun createPlatformTempDownloadFilePath(contextWrapper: ContextWrapper): String
+
+// 断点续传需要 seek/setLength，FileKit sink 不能安全替代，仍由平台层实现随机写入。
+internal expect suspend fun writeResponseToPlatformFile(
+    path: String,
+    startOffset: Long,
+    source: ByteReadChannel,
+    onChunkWritten: suspend (currentBytes: Long) -> DownloadStatus,
+): DownloadWriteResult
