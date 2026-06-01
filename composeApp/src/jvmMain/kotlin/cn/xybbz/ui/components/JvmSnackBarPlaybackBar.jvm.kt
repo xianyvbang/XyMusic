@@ -82,7 +82,7 @@ import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.PlayerModeEnum
-import cn.xybbz.ui.ext.debounceClickable
+import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopInteractiveHitTestOwner
 import cn.xybbz.ui.xy.XyColumn
@@ -177,7 +177,7 @@ internal fun JvmSnackBarPlaybackBar(
         )
     )
     val openPlayerModifier = if (onShowPlayer != null) {
-        Modifier.debounceClickable(
+        Modifier.jvmHoverDebounceClickable(
             interactionSource = remember { MutableInteractionSource() },
             indication = null
         ) {

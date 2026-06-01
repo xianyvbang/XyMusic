@@ -30,7 +30,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -92,6 +91,7 @@ import cn.xybbz.common.enums.img
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.entity.data.ResourceData
 import cn.xybbz.localdata.enums.DataSourceType
+import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopWindowControls
 import cn.xybbz.ui.windows.desktopWindowDragArea
@@ -409,7 +409,7 @@ private fun JvmConnectionNewProtocolItem(
             .clip(shape)
             .background(backgroundColor)
             .border(1.dp, borderColor, shape)
-            .clickable(onClick = onClick)
+            .jvmHoverDebounceClickable(onClick = onClick)
             .padding(XyTheme.dimens.contentPadding),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding)
@@ -938,7 +938,10 @@ private fun JvmConnectionNewFormPanel(
                     PasswordVisualTransformation()
                 },
                 actionContent = {
-                    IconButton(onClick = onTogglePassword) {
+                    IconButton(
+                        modifier = Modifier.jvmHoverDebounceClickable(),
+                        onClick = onTogglePassword,
+                    ) {
                         Icon(
                             painter = painterResource(
                                 if (showPassword) {
@@ -971,6 +974,7 @@ private fun JvmConnectionNewFormPanel(
                 horizontalArrangement = Arrangement.End
             ) {
                 OutlinedButton(
+                    modifier = Modifier.jvmHoverDebounceClickable(),
                     onClick = onReset,
                     shape = RoundedCornerShape(XyTheme.dimens.corner),
                     colors = ButtonDefaults.outlinedButtonColors(
@@ -981,6 +985,7 @@ private fun JvmConnectionNewFormPanel(
                 }
                 Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
                 Button(
+                    modifier = Modifier.jvmHoverDebounceClickable(),
                     onClick = onConnect,
                     shape = RoundedCornerShape(XyTheme.dimens.corner)
                 ) {
@@ -1039,7 +1044,10 @@ private fun JvmConnectionNewInputField(
 private fun JvmConnectionNewClearButton(
     onClick: () -> Unit,
 ) {
-    IconButton(onClick = onClick) {
+    IconButton(
+        modifier = Modifier.jvmHoverDebounceClickable(),
+        onClick = onClick,
+    ) {
         Icon(
             painter = painterResource(Res.drawable.cancel_24px),
             contentDescription = null,
@@ -1318,7 +1326,9 @@ private fun JvmConnectionNewResourceContent(
     if (onEditConnectionInfo != null) {
         Spacer(modifier = Modifier.height(12.dp))
         OutlinedButton(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .jvmHoverDebounceClickable(),
             onClick = onEditConnectionInfo,
             shape = RoundedCornerShape(XyTheme.dimens.corner),
         ) {
@@ -1429,7 +1439,7 @@ private fun JvmConnectionNewResourceItem(
                 },
                 shape = shape
             )
-            .clickable(onClick = onClick)
+            .jvmHoverDebounceClickable(onClick = onClick)
             .padding(
                 horizontal = XyTheme.dimens.contentPadding,
                 vertical = XyTheme.dimens.outerVerticalPadding
@@ -1794,6 +1804,7 @@ private fun JvmConnectionNewSuccessBanner(
         }
         Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
         Button(
+            modifier = Modifier.jvmHoverDebounceClickable(),
             onClick = onEnter,
             shape = RoundedCornerShape(XyTheme.dimens.corner)
         ) {

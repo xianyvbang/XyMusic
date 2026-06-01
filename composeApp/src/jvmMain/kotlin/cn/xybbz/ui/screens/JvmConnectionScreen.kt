@@ -76,7 +76,7 @@ import cn.xybbz.localdata.enums.DataSourceType
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.ext.composeClick
-import cn.xybbz.ui.ext.debounceClickable
+import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopWindowControls
 import cn.xybbz.ui.windows.desktopWindowDragArea
@@ -302,7 +302,9 @@ fun JvmConnectionScreen(
                         item {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Button(
-                                    modifier = Modifier.width(width = 150.dp),
+                                    modifier = Modifier
+                                        .width(width = 150.dp)
+                                        .jvmHoverDebounceClickable(),
                                     onClick = {
                                         if (connectionViewModel.dataSourceType?.ifInputUrl == false) {
                                             if (connectionViewModel.ifInputAccount()) {
@@ -338,7 +340,9 @@ fun JvmConnectionScreen(
                                     Text(text = stringResource(Res.string.connect))
                                 }
                                 Button(
-                                    modifier = Modifier.width(width = 150.dp),
+                                    modifier = Modifier
+                                        .width(width = 150.dp)
+                                        .jvmHoverDebounceClickable(),
                                     onClick = {
                                         ifSelectDataSource = ConnectionScreenType.SELECT_DATA_SOURCE
                                     }
@@ -425,7 +429,9 @@ fun JvmConnectionScreen(
                             Column {
                                 if (!connectionViewModel.isResourceLoginError && !connectionViewModel.resourceLoading) {
                                     Button(
-                                        modifier = Modifier.width(width = 150.dp),
+                                        modifier = Modifier
+                                            .width(width = 150.dp)
+                                            .jvmHoverDebounceClickable(),
                                         onClick = {
                                             if (!connectionViewModel.hasSelectedResource) {
                                                 MessageUtils.sendPopTipError("请选择资源地址")
@@ -448,7 +454,9 @@ fun JvmConnectionScreen(
                                 }
 
                                 Button(
-                                    modifier = Modifier.width(width = 150.dp),
+                                    modifier = Modifier
+                                        .width(width = 150.dp)
+                                        .jvmHoverDebounceClickable(),
                                     onClick = {
                                         ifSelectDataSource = ConnectionScreenType.INPUT_DATA
                                     }) {
@@ -478,7 +486,9 @@ fun JvmConnectionScreen(
                                 }
                                 item {
                                     Button(
-                                        modifier = Modifier.width(width = 150.dp),
+                                        modifier = Modifier
+                                            .width(width = 150.dp)
+                                            .jvmHoverDebounceClickable(),
                                         onClick = {
                                             ifSelectDataSource =
                                                 if (connectionViewModel.isHttpStartAndPortEnd()) {
@@ -508,7 +518,9 @@ fun JvmConnectionScreen(
                                 }
                                 item {
                                     Button(
-                                        modifier = Modifier.width(width = 150.dp),
+                                        modifier = Modifier
+                                            .width(width = 150.dp)
+                                            .jvmHoverDebounceClickable(),
                                         onClick = {
                                             if (!ifConnectionConfig) {
                                                 connectionViewModel.updateIfConnectionConfig()
@@ -541,7 +553,7 @@ fun JvmPlexResourceItem(
     XyRow(
         modifier = modifier
             .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .debounceClickable { onClick?.invoke() },
+            .jvmHoverDebounceClickable { onClick?.invoke() },
     ) {
         Column(
             modifier = Modifier

@@ -30,8 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.PointerIcon
-import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.input.ImeAction
@@ -50,7 +48,7 @@ import cn.xybbz.router.Download
 import cn.xybbz.router.Navigator
 import cn.xybbz.router.Search
 import cn.xybbz.router.Setting
-import cn.xybbz.ui.ext.debounceClickable
+import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.popup.XyDropdownMenu
 import cn.xybbz.ui.screens.jvmRouterMenuWidth
@@ -238,14 +236,14 @@ private fun DesktopSearchField(
                     modifier = Modifier
                         .size(28.dp)
                         .clip(RoundedCornerShape(XyTheme.dimens.corner))
-                        .debounceClickable { onValueChange("") },
+                        .jvmHoverDebounceClickable { onValueChange("") },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.cancel_24px),
                         contentDescription = stringResource(Res.string.clear),
                         tint = colors.foregroundVariant,
-                        modifier = Modifier.size(18.dp).pointerHoverIcon(PointerIcon.Hand)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
@@ -302,7 +300,7 @@ private fun DesktopTitleActions(
                     .height(XyTheme.dimens.itemHeight * .8f)
                     .desktopTitleBarHitTarget(hitTestOwner, "ConnectionMenu")
                     .clip(RoundedCornerShape(XyTheme.dimens.corner))
-                    .debounceClickable { ifShowConnectionMenu = true }
+                    .jvmHoverDebounceClickable { ifShowConnectionMenu = true }
                     .padding(
                         horizontal = XyTheme.dimens.innerHorizontalPadding,
                         vertical = XyTheme.dimens.innerVerticalPadding
@@ -324,7 +322,7 @@ private fun DesktopTitleActions(
                     tint = colors.foreground,
                     modifier = Modifier
                         .size(18.dp)
-                        .debounceClickable { ifShowConnectionMenu = true }
+                        .jvmHoverDebounceClickable { ifShowConnectionMenu = true }
                 )
             }
             XyDropdownMenu(
@@ -482,7 +480,7 @@ private fun DesktopToolbarIconButton(
                     color = borderColor,
                     shape = RoundedCornerShape(XyTheme.dimens.corner)
                 )
-                .debounceClickable(enabled = enabled, onClick = onClick),
+                .jvmHoverDebounceClickable(enabled = enabled, onClick = onClick),
             contentAlignment = Alignment.Center
         ) {
             Icon(

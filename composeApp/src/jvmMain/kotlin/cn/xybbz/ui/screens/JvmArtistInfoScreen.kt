@@ -100,6 +100,7 @@ import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.common.UiConstants.MusicCardImageSize
 import cn.xybbz.ui.ext.debounceClickable
+import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopTooltipIconButton
 import cn.xybbz.ui.xy.LazyColumnParentComponent
@@ -681,7 +682,7 @@ private fun JvmArtistMusicListOperation(
     XyRow(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.background)
-            .debounceClickable(
+            .jvmHoverDebounceClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
             ) {

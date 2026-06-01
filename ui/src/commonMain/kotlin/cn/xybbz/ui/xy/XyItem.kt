@@ -78,6 +78,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.debounceClickable
+import cn.xybbz.ui.ext.platformHoverClickable
 import cn.xybbz.ui.theme.XyTheme
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -264,12 +265,22 @@ fun ItemTrailingArrowRight(
     onClick: (() -> Unit)? = null,
     trailingContent: @Composable (() -> Unit)? = null,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+
     ListItem(
         colors = ListItemDefaults.colors(containerColor = backgroundColor),
         modifier = modifier
             .height(XyTheme.dimens.itemHeight)
             .fillMaxWidth()
-            .debounceClickable(enabled = enabled) {
+            .platformHoverClickable(
+                interactionSource = interactionSource,
+                enabled = enabled,
+            )
+            .debounceClickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled,
+            ) {
                 onClick?.invoke()
             },
         shadowElevation = shadowElevation,
@@ -388,10 +399,20 @@ fun XyItemIcon(
     middleContent: @Composable (() -> Unit)? = null,
     onClick: (() -> Unit)? = null,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+
     XyRow(
         modifier = modifier
             .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .debounceClickable(enabled = enabled) { onClick?.invoke() },
+            .platformHoverClickable(
+                interactionSource = interactionSource,
+                enabled = enabled,
+            )
+            .debounceClickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled,
+            ) { onClick?.invoke() },
         horizontalArrangement = Arrangement.Start,
         paddingValues = PaddingValues(
             vertical = XyTheme.dimens.innerVerticalPadding
@@ -445,11 +466,20 @@ fun XyItemIconSelect(
     onIfSelected: () -> Boolean = { false },
     onClick: () -> Unit,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
 
     XyRow(
         modifier = modifier
             .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .debounceClickable(enabled = enabled) { onClick.invoke() },
+            .platformHoverClickable(
+                interactionSource = interactionSource,
+                enabled = enabled,
+            )
+            .debounceClickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled,
+            ) { onClick.invoke() },
         paddingValues = PaddingValues(
             vertical = XyTheme.dimens.innerVerticalPadding
         )
@@ -510,13 +540,23 @@ fun XyItemSwitcher(
         vertical = XyTheme.dimens.outerVerticalPadding
     )
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+
     Row(
         modifier = Modifier
             .then(modifier)
             .fillMaxWidth()
             .heightIn(min = XyTheme.dimens.itemHeight)
             .alpha(if (enabled) 1f else 0.5f)
-            .debounceClickable(enabled = enabled) {
+            .platformHoverClickable(
+                interactionSource = interactionSource,
+                enabled = enabled,
+            )
+            .debounceClickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled,
+            ) {
                 onChange(!state)
             }
             .padding(
@@ -552,10 +592,20 @@ fun XyItemLabel(
     enabled: Boolean = true,
     iconColor: Color? = null
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(XyTheme.dimens.corner))
-            .debounceClickable(enabled = enabled) {
+            .platformHoverClickable(
+                interactionSource = interactionSource,
+                enabled = enabled,
+            )
+            .debounceClickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled,
+            ) {
                 onClick.invoke()
             },
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -686,12 +736,22 @@ fun XyItemRadioButton(
     ),
     onClick: () -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = modifier
             .fillMaxWidth()
-            .debounceClickable(enabled = enabled) {
+            .platformHoverClickable(
+                interactionSource = interactionSource,
+                enabled = enabled,
+            )
+            .debounceClickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled,
+            ) {
                 onClick()
             }
             .padding(
@@ -712,6 +772,10 @@ fun XyItemRadioButton(
             },
             enabled = enabled,
             modifier = Modifier
+                .platformHoverClickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    enabled = enabled,
+                )
                 .semantics {
                     contentDescription = text
                 }

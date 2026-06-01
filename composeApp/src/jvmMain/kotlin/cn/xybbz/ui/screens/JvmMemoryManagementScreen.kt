@@ -68,6 +68,7 @@ import androidx.compose.ui.unit.sp
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.show
+import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.RoundedSurfaceColumn
@@ -290,6 +291,7 @@ fun JvmMemoryManagementItem(
                     )
                     onPathClick?.let { pathClick ->
                         TextButton(
+                            modifier = Modifier.jvmHoverDebounceClickable(),
                             onClick = pathClick,
                         ) {
                             Text(

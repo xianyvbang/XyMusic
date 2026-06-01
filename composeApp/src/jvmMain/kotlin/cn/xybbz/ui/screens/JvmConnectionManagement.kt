@@ -58,7 +58,7 @@ import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.ext.composeClick
-import cn.xybbz.ui.ext.debounceClickable
+import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopTooltipIconButton
 import cn.xybbz.ui.xy.XyColumnScreen
@@ -154,7 +154,7 @@ fun JvmConnectionManagement(
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .debounceClickable {
+                        .jvmHoverDebounceClickable {
                             if (!isCurrentConnection) {
                                 connectionManagementViewModel.changeDataSource(connectionConfig)
                             }

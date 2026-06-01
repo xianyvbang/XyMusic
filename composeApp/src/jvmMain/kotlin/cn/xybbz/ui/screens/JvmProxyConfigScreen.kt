@@ -31,6 +31,7 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.ui.components.JvmLazyListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
+import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyEdit
@@ -64,11 +65,14 @@ fun JvmProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = koinViewMo
                 )
             },
             actions = {
-                TextButton(onClick = {
-                    coroutineScope.launch {
-                        proxyConfigViewModel.saveConfig()
-                    }
-                }) {
+                TextButton(
+                    modifier = Modifier.jvmHoverDebounceClickable(),
+                    onClick = {
+                        coroutineScope.launch {
+                            proxyConfigViewModel.saveConfig()
+                        }
+                    },
+                ) {
                     Text(stringResource(Res.string.save))
                 }
             }
@@ -126,6 +130,7 @@ fun JvmProxyConfigScreen(proxyConfigViewModel: ProxyConfigViewModel = koinViewMo
                                     Spacer(modifier = Modifier.width(12.dp))
                                 }
                                 TextButton(
+                                    modifier = Modifier.jvmHoverDebounceClickable(),
                                     onClick = {
                                         proxyConfigViewModel.testProxyConfig()
                                     }

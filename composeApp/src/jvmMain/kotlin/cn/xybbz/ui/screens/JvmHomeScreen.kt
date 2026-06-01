@@ -42,6 +42,7 @@ import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
+import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
@@ -134,7 +135,9 @@ fun JvmHomeScreen(
                     alignTitleWithTopAppBar = true,
                     headerAction = {
                         TextButton(
-                            modifier = Modifier.padding(XyTheme.dimens.outerHorizontalPadding),
+                            modifier = Modifier
+                                .padding(XyTheme.dimens.outerHorizontalPadding)
+                                .jvmHoverDebounceClickable(),
                             onClick = { navigator.navigate(DailyRecommend) },
                             contentPadding = PaddingValues(0.dp)
                         ) {

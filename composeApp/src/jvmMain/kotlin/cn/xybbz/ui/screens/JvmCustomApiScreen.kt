@@ -52,6 +52,7 @@ import cn.xybbz.ui.components.MusicSettingSwitchItemComponent
 import cn.xybbz.ui.components.SettingItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
+import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.XyColumn
@@ -92,9 +93,12 @@ fun JvmCustomApiScreen(
                 )
             },
             actions = {
-                TextButton(onClick = {
-                    customLyricsViewModel.saveSettings()
-                }) {
+                TextButton(
+                    modifier = Modifier.jvmHoverDebounceClickable(),
+                    onClick = {
+                        customLyricsViewModel.saveSettings()
+                    },
+                ) {
                     Text(stringResource(Res.string.save))
                 }
             }

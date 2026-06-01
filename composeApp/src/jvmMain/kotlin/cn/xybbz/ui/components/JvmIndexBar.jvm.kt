@@ -1,8 +1,6 @@
 package cn.xybbz.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -31,6 +29,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 
 private val JvmIndexBarWidth = 36.dp
 private val JvmIndexBarItemHeight = 20.dp
@@ -168,8 +167,7 @@ private fun JvmIndexBarItem(
         modifier = Modifier
             .width(JvmIndexBarWidth)
             .height(JvmIndexBarItemHeight)
-            .hoverable(interactionSource = interactionSource)
-            .clickable(
+            .jvmHoverDebounceClickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick,

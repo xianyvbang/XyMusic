@@ -102,6 +102,7 @@ import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.ui.components.lrc.LrcViewNewCompose
+import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopInteractiveHitTestOwner
@@ -431,10 +432,12 @@ fun JvmMusicPlayerScreen(
                         ) {
                             desktopTabs.forEachIndexed { index, item ->
                                 TextButton(
-                                    modifier = Modifier.jvmPlayerTitleBarHitTarget(
-                                        hitTestOwner,
-                                        JvmMusicPlayerTitleBarHitTarget.Tab(index)
-                                    ),
+                                    modifier = Modifier
+                                        .jvmPlayerTitleBarHitTarget(
+                                            hitTestOwner,
+                                            JvmMusicPlayerTitleBarHitTarget.Tab(index)
+                                        )
+                                        .jvmHoverDebounceClickable(),
                                     onClick = {
                                         coroutineScope
                                             .launch {

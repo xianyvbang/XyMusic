@@ -40,6 +40,7 @@ import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.components.rememberBackgroundImagePicker
 import cn.xybbz.ui.ext.composeClick
+import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyNoData
@@ -98,15 +99,22 @@ fun JvmSetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageV
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.End
                     ) {
-                        TextButton(onClick = composeClick() {
-                            imagePicker.pickImage()
-                        }) {
+                        TextButton(
+                            modifier = Modifier.jvmHoverDebounceClickable(),
+                            onClick = composeClick() {
+                                imagePicker.pickImage()
+                            },
+                        ) {
                             Text(text = stringResource(Res.string.select_image))
                         }
 
-                        TextButton(onClick = composeClick() {
-                            setBackgroundImageViewModel.updateBackgroundImagePath(null)
-                        }, enabled = ifSelectImage) {
+                        TextButton(
+                            modifier = Modifier.jvmHoverDebounceClickable(enabled = ifSelectImage),
+                            onClick = composeClick() {
+                                setBackgroundImageViewModel.updateBackgroundImagePath(null)
+                            },
+                            enabled = ifSelectImage,
+                        ) {
                             Text(text = stringResource(Res.string.clear_image))
                         }
                     }

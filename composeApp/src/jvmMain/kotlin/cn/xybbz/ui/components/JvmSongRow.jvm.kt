@@ -29,8 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.PointerIcon
-import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -45,7 +43,7 @@ import cn.xybbz.config.image.rememberMusicCoverUrls
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.ext.composeClick
-import cn.xybbz.ui.ext.debounceClickable
+import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.popup.MenuItemDefaultData
 import cn.xybbz.ui.screens.desktopColors
 import cn.xybbz.ui.theme.XyTheme
@@ -189,11 +187,11 @@ internal fun SongRow(
             modifier = Modifier
                 .height(XyTheme.dimens.itemHeight)
                 .background(rowBackgroundColor)
-                .debounceClickable(
+                .jvmHoverDebounceClickable(
                     interactionSource = interactionSource,
+                    indication = null,
                     onClick = onClick
-                )
-                .pointerHoverIcon(PointerIcon.Hand),
+                ),
             paddingValues = PaddingValues(
                 horizontal = XyTheme.dimens.innerHorizontalPadding,
                 vertical = XyTheme.dimens.outerVerticalPadding + XyTheme.dimens.outerVerticalPadding / 2
@@ -484,7 +482,6 @@ private fun SongFavoriteCell(
         FavoriteIconButton(
             isFavorite = isFavorite,
             onClick = onClick,
-            modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
             iconModifier = Modifier.size(SongTableDefaults.actionIconSize),
             favoriteTint = songFavoriteTint,
             normalTint = desktopColors.textSecondary,
@@ -507,7 +504,7 @@ private fun SongSelectionCell(
         RadioButton(
             selected = isSelected,
             onClick = onClick,
-            modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
+            modifier = Modifier.jvmHoverDebounceClickable(),
         )
     }
 }
@@ -577,8 +574,7 @@ private fun HoverActionIcon(
         tooltip = tooltip,
         onClick = composeClick { onClick() },
         enabled = enabled,
-        modifier = Modifier.size(SongTableDefaults.actionButtonSize)
-            .pointerHoverIcon(PointerIcon.Hand),
+        modifier = Modifier.size(SongTableDefaults.actionButtonSize),
     ) {
         Icon(
             painter = painterResource(iconRes),

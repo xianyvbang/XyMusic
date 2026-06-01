@@ -90,6 +90,7 @@ import cn.xybbz.common.utils.LrcUtils.getIndex
 import cn.xybbz.entity.data.LrcConfigData
 import cn.xybbz.entity.data.LrcEntryData
 import cn.xybbz.ui.ext.debounceClickable
+import cn.xybbz.ui.ext.platformHoverClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyTextSubSmall
@@ -484,6 +485,7 @@ fun KaraokeLyricLineNew(
     onClick: () -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
+    val interactionSource = remember { MutableInteractionSource() }
     val defaultPrimaryFontSize = primaryFontSize.value
     val highlightPrimaryFontSize =
         if (highlightScaleEnabled) defaultPrimaryFontSize + 4f else defaultPrimaryFontSize
@@ -522,8 +524,9 @@ fun KaraokeLyricLineNew(
         modifier = Modifier
             .fillMaxWidth()
 //            .heightIn(XyTheme.dimens.itemHeight)
+            .platformHoverClickable(interactionSource = interactionSource)
             .debounceClickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = interactionSource,
                 indication = null
             ) { onClick() },
         backgroundColor = Color.Transparent,
@@ -561,6 +564,7 @@ fun KaraokeLyricLineNew(
     onClick: () -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
+    val interactionSource = remember { MutableInteractionSource() }
     val highlightIndex = line.wordTimings.indexOfLast { it <= currentTimeMillis }
     val nextWordTime = line.wordTimings.getOrNull(highlightIndex + 1) ?: Long.MAX_VALUE
     val currentWordTime = line.wordTimings.getOrNull(highlightIndex) ?: Long.MAX_VALUE
@@ -586,8 +590,9 @@ fun KaraokeLyricLineNew(
         modifier = Modifier
             .fillMaxWidth()
 //            .heightIn(XyTheme.dimens.itemHeight)
+            .platformHoverClickable(interactionSource = interactionSource)
             .debounceClickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = interactionSource,
                 indication = null
             ) { onClick() },
         backgroundColor = Color.Transparent,

@@ -19,7 +19,6 @@
 package cn.xybbz.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -54,8 +53,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.PointerIcon
-import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -80,6 +77,7 @@ import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.ext.composeClick
+import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyText
@@ -333,8 +331,7 @@ private fun JvmLocalDownloadTabButton(
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(4.dp))
-            .clickable(onClick = onClick)
-            .pointerHoverIcon(PointerIcon.Hand)
+            .jvmHoverDebounceClickable(onClick = onClick)
             .padding(horizontal = 2.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -366,8 +363,7 @@ private fun JvmDownloadToolbarButton(
             .height(JvmDownloadToolbarButtonHeight)
             .clip(RoundedCornerShape(JvmDownloadToolbarButtonHeight / 2))
             .background(desktopColors.bgHover.copy(alpha = 0.86f))
-            .clickable(onClick = onClick)
-            .pointerHoverIcon(PointerIcon.Hand)
+            .jvmHoverDebounceClickable(onClick = onClick)
             .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -430,6 +426,10 @@ private fun JvmDownloadTableRow(
             .fillMaxWidth()
             .clip(RoundedCornerShape(XyTheme.dimens.outerVerticalPadding / 2))
             .background(rowBackgroundColor)
+            .jvmHoverDebounceClickable(
+                interactionSource = interactionSource,
+                indication = null,
+            )
             .combinedClickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -622,8 +622,7 @@ private fun JvmDownloadActionButton(
 ) {
     IconButton(
         modifier = Modifier
-            .size(JvmDownloadActionButtonSize)
-            .pointerHoverIcon(PointerIcon.Hand),
+            .size(JvmDownloadActionButtonSize),
         onClick = composeClick { onClick() },
     ) {
         Icon(

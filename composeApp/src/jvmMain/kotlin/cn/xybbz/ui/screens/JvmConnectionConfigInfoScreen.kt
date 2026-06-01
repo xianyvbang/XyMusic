@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import cn.xybbz.ui.components.JvmLazyListComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
+import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyText
@@ -98,7 +99,10 @@ fun JvmConnectionConfigInfoScreen(
                 )
             },
             actions = {
-                TextButton(onClick = saveConnection) {
+                TextButton(
+                    modifier = Modifier.jvmHoverDebounceClickable(),
+                    onClick = saveConnection,
+                ) {
                     Text(text = stringResource(Res.string.save))
                 }
             }
@@ -238,4 +242,3 @@ private fun JvmConnectionFormRow(
         }
     }
 }
-
