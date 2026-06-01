@@ -394,18 +394,25 @@ class NavidromeDatasourceServer(
         albumId: String,
         dataType: MusicDataTypeEnum
     ): XyAlbum {
-        val queryResult = navidromeApiClient.itemApi().getAlbum(albumId)
-        var album = convertToAlbum(queryResult)
+        var album: XyAlbum
+        if (dataType == MusicDataTypeEnum.ALBUM){
+            val queryResult = navidromeApiClient.itemApi().getAlbum(albumId)
+            album = convertToAlbum(queryResult)
 
-        try {
-            val albumInfo = navidromeApiClient.itemApi().getAlbumInfo2(albumId)
-            val albumInfo2ID3 = albumInfo.subsonicResponse.albumInfo
-            album = album.copy(
-                pic = albumInfo2ID3?.smallImageUrl ?: albumInfo2ID3?.largeImageUrl ?: ""
-            )
-        } catch (e: Exception) {
-            Log.e(Constants.LOG_ERROR_PREFIX, "获取专辑信息失败", e)
+            try {
+                val albumInfo = navidromeApiClient.itemApi().getAlbumInfo2(albumId)
+                val albumInfo2ID3 = albumInfo.subsonicResponse.albumInfo
+                album = album.copy(
+                    pic = albumInfo2ID3?.smallImageUrl ?: albumInfo2ID3?.largeImageUrl ?: ""
+                )
+            } catch (e: Exception) {
+                Log.e(Constants.LOG_ERROR_PREFIX, "获取专辑信息失败", e)
+            }
+        }else {
+            val playlist = navidromeApiClient.playlistsApi().getPlaylist(albumId)
+            album = convertToPlaylist(playlist)
         }
+
 
 
         return album

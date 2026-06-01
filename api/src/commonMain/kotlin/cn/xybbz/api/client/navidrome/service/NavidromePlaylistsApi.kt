@@ -124,4 +124,9 @@ class NavidromePlaylistsApi(private val httpClient: HttpClient) : BaseApi {
             }
         }.toFullResponse()
     }
+
+    suspend fun getPlaylist(playlistId: String): PlaylistItemData {
+        return httpClient.get("/api/playlist/$playlistId") {
+        }.body()
+    }
 }
