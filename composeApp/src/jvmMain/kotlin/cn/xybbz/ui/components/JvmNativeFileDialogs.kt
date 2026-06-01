@@ -14,7 +14,7 @@ import java.io.File
  * @return 带有主窗口 parent 的 FileKit 弹窗配置，避免弹窗落到应用窗口后面。
  */
 @Composable
-internal fun rememberJvmFileKitDialogSettings(title: String): FileKitDialogSettings {
+internal actual fun rememberFileKitDialogSettings(title: String): FileKitDialogSettings {
     // FileKit 的 JVM 原生弹窗需要主窗口引用才能正确绑定层级。
     val parentWindow = LocalDesktopParentWindow.current
 
@@ -25,6 +25,10 @@ internal fun rememberJvmFileKitDialogSettings(title: String): FileKitDialogSetti
         )
     }
 }
+
+@Composable
+internal fun rememberJvmFileKitDialogSettings(title: String): FileKitDialogSettings =
+    rememberFileKitDialogSettings(title)
 
 /**
  * 将存在的本地目录转换成 FileKit 平台文件。

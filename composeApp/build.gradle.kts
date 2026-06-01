@@ -39,7 +39,6 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
-            implementation(libs.androidx.documentfile)
             implementation(libs.accompanist.permissions)
             implementation(libs.kotlin.ktor.android)
             implementation(libs.koin.android)
@@ -87,6 +86,8 @@ kotlin {
             implementation(libs.cryptography.core)
             implementation(libs.cryptography.provider.optimal)
             implementation(libs.cryptography.random)
+            // FileKit 统一承接跨平台文件选择、保存和普通文件读写。
+            implementation(libs.filekit.dialogs)
 
             implementation(libs.sketch.compose)
             implementation(libs.sketch.compose.ext)
@@ -113,8 +114,6 @@ kotlin {
             implementation(libs.kotlin.ktor.apache)
             implementation(libs.kotlin.ktor.server.core)
             implementation(libs.kotlin.ktor.server.netty)
-            // JVM 端使用 FileKit 打开系统原生文件、目录和保存弹窗。
-            implementation(libs.filekit.dialogs)
             implementation(libs.jvm.vlcj)
             // JVM 本地音频标签读取，用于桌面端解析内嵌歌词。
             implementation(libs.jvm.jaudiotagger)

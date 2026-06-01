@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,7 +22,16 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyTextSubSmall
+import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.openFilePicker
+import io.github.vinceglb.filekit.dialogs.openFileSaver
+import io.github.vinceglb.filekit.name
+import io.github.vinceglb.filekit.readString
+import io.github.vinceglb.filekit.writeString
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.stringResource
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.export_playlist
@@ -48,10 +60,70 @@ internal interface PlaylistFileHandler {
 }
 
 @Composable
-internal expect fun rememberPlaylistFileHandler(
+internal fun rememberPlaylistFileHandler(
     onImportResult: (PlaylistImportData?) -> Unit,
     onExportResult: (Boolean) -> Unit
-): PlaylistFileHandler
+): PlaylistFileHandler {
+    val currentImportResult by rememberUpdatedState(onImportResult)
+    val currentExportResult by rememberUpdatedState(onExportResult)
+    val coroutineScope = rememberCoroutineScope()
+    val importDialogSettings = rememberFileKitDialogSettings("导入歌单")
+    val exportDialogSettings = rememberFileKitDialogSettings("导出歌单")
+
+    return remember(coroutineScope, importDialogSettings, exportDialogSettings) {
+        object : PlaylistFileHandler {
+            override fun importPlaylist() {
+                coroutineScope.launch {
+                    val selectedFile = runCatching {
+                        FileKit.openFilePicker(
+                            type = FileKitType.File("txt", "m3u8"),
+                            dialogSettings = importDialogSettings
+                        )
+                    }.onFailure { error ->
+                        Log.e(Constants.LOG_ERROR_PREFIX, "打开导入歌单文件选择器失败", error)
+                    }.getOrNull() ?: return@launch
+
+                    val importData = runCatching {
+                        withContext(Dispatchers.IO) {
+                            PlaylistImportData(
+                                fileName = selectedFile.name,
+                                lines = selectedFile.readString().lineSequence().map(String::trim).toList()
+                            )
+                        }
+                    }.onFailure { error ->
+                        Log.e(Constants.LOG_ERROR_PREFIX, "读取导入歌单文件失败", error)
+                    }.getOrNull()
+
+                    currentImportResult(importData)
+                }
+            }
+
+            override fun exportPlaylist(request: PlaylistExportRequest) {
+                coroutineScope.launch {
+                    val extension = request.fileType.code.removePrefix(".")
+                    val chosenFile = runCatching {
+                        FileKit.openFileSaver(
+                            suggestedName = request.fileName.removeSuffixIgnoreCase(request.fileType.code),
+                            defaultExtension = extension,
+                            allowedExtensions = setOf(extension),
+                            dialogSettings = exportDialogSettings
+                        )
+                    }.onFailure { error ->
+                        Log.e(Constants.LOG_ERROR_PREFIX, "打开导出歌单文件选择器失败", error)
+                    }.getOrNull() ?: return@launch
+
+                    val success = runCatching {
+                        chosenFile.writeString(request.content)
+                    }.onFailure { error ->
+                        Log.e(Constants.LOG_ERROR_PREFIX, "导出歌单失败", error)
+                    }.isSuccess
+
+                    currentExportResult(success)
+                }
+            }
+        }
+    }
+}
 
 /**
  * 获得导出文件弹窗对象
@@ -229,4 +301,12 @@ private fun resolvePlaylistName(fileName: String?, fallback: String): String {
         .orEmpty()
 
     return rawName.ifBlank { fallback }
+}
+
+private fun String.removeSuffixIgnoreCase(suffix: String): String {
+    return if (endsWith(suffix, ignoreCase = true)) {
+        dropLast(suffix.length)
+    } else {
+        this
+    }
 }
