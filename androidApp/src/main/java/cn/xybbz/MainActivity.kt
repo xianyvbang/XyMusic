@@ -5,9 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import cn.xybbz.di.initKoin
 import io.github.vinceglb.filekit.FileKit
-import org.koin.android.ext.koin.androidContext
+import io.github.vinceglb.filekit.dialogs.init
 
 // this part should be configured only once in the app to use native android logging
 object Static {

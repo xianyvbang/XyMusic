@@ -5,10 +5,10 @@ import androidx.core.net.toUri
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DataSpec
-import cn.xybbz.api.TokenServer.baseUrl
 
 class XyDefaultDataSourceFactory(
     private val delegate: DataSource.Factory,
+    private val baseUrlProvider: () -> String? = { null },
     private val downloadDirectoryProvider: () -> String? = { null }
 ) : DataSource.Factory {
     @OptIn(UnstableApi::class)
@@ -20,7 +20,7 @@ class XyDefaultDataSourceFactory(
                 val originalUri = dataSpec.uri
 
                 val newUri = if (originalUri.scheme == null && !isLocalUri(originalUri.toString())) {
-                    (baseUrl + originalUri.toString()).toUri()
+                    (baseUrlProvider().orEmpty() + originalUri.toString()).toUri()
                 } else {
                     originalUri
                 }

@@ -151,7 +151,7 @@ internal fun MobileConnectionScreen(
 
     val navigator = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
-    val ifConnectionConfig by connectionViewModel.settingsManager.ifConnectionConfig.collectAsState()
+    val ifEntryPage by connectionViewModel.settingsManager.ifEntryPage.collectAsState()
     var ifSelectDataSource by remember {
         mutableStateOf(ConnectionScreenType.SELECT_DATA_SOURCE)
     }
@@ -501,7 +501,7 @@ internal fun MobileConnectionScreen(
                                     Button(
                                         modifier = Modifier.width(width = 150.dp),
                                         onClick = {
-                                            if (!ifConnectionConfig) {
+                                            if (!ifEntryPage) {
                                                 connectionViewModel.updateIfConnectionConfig()
                                             } else {
                                                 navigator.goBack()

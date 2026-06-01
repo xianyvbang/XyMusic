@@ -27,6 +27,7 @@ kotlin {
         implementation(libs.koin.android)
         //启动页面
         implementation(libs.androidx.core.splashscreen)
+        implementation(libs.filekit.dialogs)
     }
 }
 android {

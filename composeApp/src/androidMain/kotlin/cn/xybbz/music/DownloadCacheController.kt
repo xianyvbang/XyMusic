@@ -101,6 +101,7 @@ class DownloadCacheController(
         )
         upstreamDataSourceFactory = XyDefaultDataSourceFactory(
             factory,
+            baseUrlProvider = { settingsManager.baseUrl.value },
             downloadDirectoryProvider = { xyDownloaderManager.config.finalDirectory }
         )
         cacheDataSourceFactory = CacheDataSource.Factory()

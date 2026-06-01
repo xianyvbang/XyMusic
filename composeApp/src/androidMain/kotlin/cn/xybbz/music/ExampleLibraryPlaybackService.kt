@@ -306,6 +306,7 @@ class ExampleLibraryPlaybackService : MediaSessionService(), KoinComponent {
                                 this,
                                 OkHttpDataSource.Factory(imageApiClient.okhttpClientFunction())
                             ),
+                            baseUrlProvider = { settingsManager.baseUrl.value },
                             downloadDirectoryProvider = { xyDownloaderManager.config.finalDirectory }
                         )
 

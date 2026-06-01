@@ -52,6 +52,7 @@ import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.enums.MusicPlayTypeEnum
 import cn.xybbz.localdata.enums.PlayerModeEnum
 import com.google.common.util.concurrent.ListenableFuture
+import kotlinx.coroutines.launch
 import org.koin.core.component.get
 
 
@@ -88,49 +89,58 @@ class MusicController(
 
     override fun replacePlaylistItemUrl(updateMusicUrlFun: suspend (XyPlayMusic) -> XyPlayMusic) {
         if (originMusicList.isNotEmpty()) {
-            replacePlaylist(
-                originMusicList.map {
+            scope.launch {
+                val updatedMusicList = originMusicList.map {
                     updateMusicUrlFun(it)
                 }
-            )
+                replacePlaylist(updatedMusicList)
 
-            if (state == PlayStateEnum.Pause) {
-                mediaController?.stop()
-                mediaController?.replaceMediaItems(
-                    0, originMusicList.size,
-                    originMusicList.map {
-                        musicSetMediaItem(it)
+                if (state == PlayStateEnum.Pause) {
+                    val mediaItemList = updatedMusicList.map { musicSetMediaItem(it) }
+                    withMediaControllerOnApplicationThread {
+                        stop()
+                        replaceMediaItems(0, updatedMusicList.size, mediaItemList)
+                        prepare()
+                        pause()
                     }
-                )
-                mediaController?.prepare()
-                mediaController?.pause()
-            } else {
-                musicInfo?.let {
-                    updateCurrentMusic(updateMusicUrlFun(
-                        it
-                    ))
-                }
+                } else {
+                    musicInfo?.let {
+                        updateCurrentMusic(
+                            updateMusicUrlFun(
+                                it
+                            )
+                        )
+                    }
 
-                val (left, right) = splitListExcludeIndex(originMusicList, curOriginIndex)
-                if (left.isNotEmpty()) {
-                    val leftItem = left.map { item ->
-                        musicSetMediaItem(item)
+                    val currentIndex = curOriginIndex
+                    if (currentIndex !in updatedMusicList.indices) {
+                        return@launch
                     }
-                    mediaController?.replaceMediaItems(0, curOriginIndex, leftItem)
-                }
 
-                if (right.isNotEmpty()) {
-                    val rightItem = right.map { item ->
-                        musicSetMediaItem(item)
+                    val (left, right) = splitListExcludeIndex(updatedMusicList, currentIndex)
+                    if (left.isNotEmpty()) {
+                        val leftItem = left.map { item ->
+                            musicSetMediaItem(item)
+                        }
+                        withMediaControllerOnApplicationThread {
+                            replaceMediaItems(0, currentIndex, leftItem)
+                        }
                     }
-                    mediaController?.replaceMediaItems(
-                        curOriginIndex + 1,
-                        originMusicList.size,
-                        rightItem
-                    )
+
+                    if (right.isNotEmpty()) {
+                        val rightItem = right.map { item ->
+                            musicSetMediaItem(item)
+                        }
+                        withMediaControllerOnApplicationThread {
+                            replaceMediaItems(
+                                currentIndex + 1,
+                                updatedMusicList.size,
+                                rightItem
+                            )
+                        }
+                    }
                 }
             }
-
         }
     }
 
