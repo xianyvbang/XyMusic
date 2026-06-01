@@ -29,10 +29,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import cn.xybbz.compositionLocal.LocalNavigator
@@ -43,7 +41,6 @@ import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
-import cn.xybbz.ui.xy.XyNoData
 import cn.xybbz.viewmodel.SetBackgroundImageViewModel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -64,11 +61,7 @@ import cn.xybbz.ui.xy.XyIconButton as IconButton
 fun JvmSetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageViewModel = koinViewModel<SetBackgroundImageViewModel>()) {
     val imageFilePath by setBackgroundImageViewModel.settingsManager.imageFilePath.collectAsState()
 
-    val ifSelectImage by remember {
-        derivedStateOf {
-            !imageFilePath.isNullOrBlank()
-        }
-    }
+    val ifSelectImage = !imageFilePath.isNullOrBlank()
     val navigator = LocalNavigator.current
     val imagePicker = rememberBackgroundImagePicker(
         onImagePicked = setBackgroundImageViewModel::updateBackgroundImagePath
@@ -126,11 +119,7 @@ fun JvmSetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageV
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                if (!ifSelectImage) {
-                    XyNoData()
-                } else {
-                    Text(text = imageFilePath.orEmpty())
-                }
+                BackgroundImagePreview(imageFilePath = imageFilePath)
                 Spacer(
                     modifier = Modifier.height(XyTheme.dimens.snackBarPlayerHeight)
                 )

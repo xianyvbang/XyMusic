@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.dp
 import cn.xybbz.common.enums.toResStringInt
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.enums.ThemeTypeEnum
-import cn.xybbz.router.SetBackgroundImage
 import cn.xybbz.ui.components.SettingItemComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
@@ -102,11 +101,11 @@ fun InterfaceSettingScreen(
                 SettingRoundedSurfaceColumn {
                     SettingItemComponent(
                         title = stringResource(Res.string.background_image_setting),
+                        enabled = false,
                         trailingContent = {
 
-                        }) {
-                        navigator.navigate(SetBackgroundImage)
-                    }
+                        },
+                    )
 
 
                     SettingItemComponent(

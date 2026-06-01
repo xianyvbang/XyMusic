@@ -18,23 +18,32 @@
 
 package cn.xybbz.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
@@ -42,6 +51,7 @@ import cn.xybbz.ui.components.rememberBackgroundImagePicker
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
+import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyNoData
 import cn.xybbz.viewmodel.SetBackgroundImageViewModel
 import org.jetbrains.compose.resources.painterResource
@@ -49,6 +59,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.arrow_back_24px
+import xymusic_kmp.composeapp.generated.resources.background_image
 import xymusic_kmp.composeapp.generated.resources.background_image_setting
 import xymusic_kmp.composeapp.generated.resources.clear_image
 import xymusic_kmp.composeapp.generated.resources.return_interface_settings
@@ -63,11 +74,7 @@ import cn.xybbz.ui.xy.XyIconButton as IconButton
 fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageViewModel = koinViewModel<SetBackgroundImageViewModel>()) {
     val imageFilePath by setBackgroundImageViewModel.settingsManager.imageFilePath.collectAsState()
 
-    val ifSelectImage by remember {
-        derivedStateOf {
-            !imageFilePath.isNullOrBlank()
-        }
-    }
+    val ifSelectImage = !imageFilePath.isNullOrBlank()
     val navigator = LocalNavigator.current
     val imagePicker = rememberBackgroundImagePicker(
         onImagePicked = setBackgroundImageViewModel::updateBackgroundImagePath
@@ -118,11 +125,7 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                if (!ifSelectImage) {
-                    XyNoData()
-                } else {
-                    Text(text = imageFilePath.orEmpty())
-                }
+                BackgroundImagePreview(imageFilePath = imageFilePath)
                 Spacer(
                     modifier = Modifier.height(XyTheme.dimens.snackBarPlayerHeight)
                 )
@@ -133,3 +136,32 @@ fun SetBackgroundImageScreen(setBackgroundImageViewModel: SetBackgroundImageView
 
 }
 
+@Composable
+internal fun BackgroundImagePreview(
+    imageFilePath: String?,
+    modifier: Modifier = Modifier,
+) {
+    val ifSelectImage = !imageFilePath.isNullOrBlank()
+
+    Box(
+        modifier = modifier
+            .padding(XyTheme.dimens.outerHorizontalPadding)
+            .fillMaxWidth()
+            .widthIn(max = 960.dp)
+            .aspectRatio(16f / 9f)
+            .clip(RoundedCornerShape(XyTheme.dimens.corner))
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (!ifSelectImage) {
+            XyNoData()
+        } else {
+            XyImage(
+                modifier = Modifier.matchParentSize(),
+                model = imageFilePath,
+                contentScale = ContentScale.Crop,
+                contentDescription = stringResource(Res.string.background_image),
+            )
+        }
+    }
+}

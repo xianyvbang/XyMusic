@@ -1,9 +1,7 @@
 package cn.xybbz.router
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
@@ -35,25 +33,16 @@ import cn.xybbz.ui.screens.JvmMemoryManagementScreen
 import cn.xybbz.ui.screens.JvmMusicScreen
 import cn.xybbz.ui.screens.JvmProxyConfigScreen
 import cn.xybbz.ui.screens.JvmSearchScreen
+import cn.xybbz.ui.screens.JvmSetBackgroundImageScreen
 import cn.xybbz.ui.screens.JvmSettingScreen
 import cn.xybbz.ui.screens.JvmStreamingQualityScreen
 import cn.xybbz.ui.screens.ProxyConfigScreen
 import cn.xybbz.ui.screens.SelectLibraryScreen
-import cn.xybbz.ui.screens.SetBackgroundImageScreen
 import cn.xybbz.ui.screens.StreamingQualityScreen
-import cn.xybbz.ui.xy.XyImage
-import org.jetbrains.compose.resources.stringResource
-import xymusic_kmp.composeapp.generated.resources.Res
-import xymusic_kmp.composeapp.generated.resources.background_image
 
 private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.desktopNode(noinline content: @Composable (T) -> Unit) {
     entry<T> {
         Box {
-            XyImage(
-                modifier = Modifier.fillMaxSize(),
-                model = null,
-                contentDescription = stringResource(Res.string.background_image),
-            )
             content(it)
         }
     }
@@ -93,7 +82,7 @@ private val jvmDesktopEntryProvider2 = entryProvider {
     desktopNode<DailyRecommend> { JvmDailyRecommendScreen() }
     desktopNode<Download> { JvmDownloadScreen() }
     desktopNode<Local> { JvmLocalScreen() }
-    desktopNode<SetBackgroundImage> { SetBackgroundImageScreen() }
+    desktopNode<SetBackgroundImage> { JvmSetBackgroundImageScreen() }
     desktopNode<ProxyConfig> { JvmProxyConfigScreen() }
     desktopNode<StreamingQuality> { JvmStreamingQualityScreen() }
     desktopNode<CustomApi> { JvmCustomApiScreen() }

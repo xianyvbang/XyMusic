@@ -91,7 +91,11 @@ fun XyRow(
 @Composable
 fun XyColumnScreen(
     modifier: Modifier = Modifier,
-    background: Color = MaterialTheme.colorScheme.background,
+    background: Color = if (XyTheme.brash.backgroundImageUri.isNullOrBlank()) {
+        MaterialTheme.colorScheme.background
+    } else {
+        Color.Transparent
+    },
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(

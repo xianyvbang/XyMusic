@@ -63,6 +63,7 @@ import cn.xybbz.ui.xy.LazyColumnNotComponent
 import cn.xybbz.ui.xy.ModalSideSheetExtendComponent
 import cn.xybbz.ui.xy.XyEdit
 import cn.xybbz.ui.xy.XyIconButton
+import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSubSmall
@@ -74,6 +75,7 @@ import org.koin.compose.getKoin
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.add_24px
+import xymusic_kmp.composeapp.generated.resources.background_image
 import xymusic_kmp.composeapp.generated.resources.create_playlist
 import xymusic_kmp.composeapp.generated.resources.logging_in
 import xymusic_kmp.composeapp.generated.resources.login_exception_info
@@ -125,9 +127,19 @@ actual fun MainScreenScaffold(
     }
 
     Box(modifier = modifier) {
+        XyImage(
+            modifier = Modifier.fillMaxSize(),
+            model = XyTheme.brash.backgroundImageUri,
+            contentDescription = stringResource(Res.string.background_image),
+        )
         Scaffold(
             modifier = Modifier.fillMaxSize(),
-            snackbarHost = snackbarHost
+            snackbarHost = snackbarHost,
+            containerColor = if (XyTheme.brash.backgroundImageUri.isNullOrBlank()) {
+                MaterialTheme.colorScheme.background
+            } else {
+                Color.Transparent
+            },
         ) { paddingValues ->
             Column(modifier = Modifier.fillMaxSize()) {
                 DesktopWindowTitleBar(navigator = navigator)
