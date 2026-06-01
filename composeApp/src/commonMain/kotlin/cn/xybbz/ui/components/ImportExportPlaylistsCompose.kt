@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,10 +24,9 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyTextSubSmall
-import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.dialogs.FileKitType
-import io.github.vinceglb.filekit.dialogs.openFilePicker
-import io.github.vinceglb.filekit.dialogs.openFileSaver
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
 import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.readString
 import io.github.vinceglb.filekit.writeString
@@ -69,56 +70,75 @@ internal fun rememberPlaylistFileHandler(
     val coroutineScope = rememberCoroutineScope()
     val importDialogSettings = rememberFileKitDialogSettings("导入歌单")
     val exportDialogSettings = rememberFileKitDialogSettings("导出歌单")
+    var pendingExportRequest by remember { mutableStateOf<PlaylistExportRequest?>(null) }
 
-    return remember(coroutineScope, importDialogSettings, exportDialogSettings) {
+    val importLauncher = rememberFilePickerLauncher(
+        type = FileKitType.File("txt", "m3u8"),
+        dialogSettings = importDialogSettings
+    ) { selectedFile ->
+        if (selectedFile == null) {
+            return@rememberFilePickerLauncher
+        }
+
+        coroutineScope.launch {
+            val importData = runCatching {
+                withContext(Dispatchers.IO) {
+                    PlaylistImportData(
+                        fileName = selectedFile.name,
+                        lines = selectedFile.readString().lineSequence().map(String::trim).toList()
+                    )
+                }
+            }.onFailure { error ->
+                Log.e(Constants.LOG_ERROR_PREFIX, "读取导入歌单文件失败", error)
+            }.getOrNull()
+
+            currentImportResult(importData)
+        }
+    }
+    val exportLauncher = rememberFileSaverLauncher(
+        dialogSettings = exportDialogSettings
+    ) { chosenFile ->
+        val request = pendingExportRequest
+        pendingExportRequest = null
+
+        if (request == null || chosenFile == null) {
+            return@rememberFileSaverLauncher
+        }
+
+        coroutineScope.launch {
+            val success = runCatching {
+                chosenFile.writeString(request.content)
+            }.onFailure { error ->
+                Log.e(Constants.LOG_ERROR_PREFIX, "导出歌单失败", error)
+            }.isSuccess
+
+            currentExportResult(success)
+        }
+    }
+
+    return remember(importLauncher, exportLauncher) {
         object : PlaylistFileHandler {
             override fun importPlaylist() {
-                coroutineScope.launch {
-                    val selectedFile = runCatching {
-                        FileKit.openFilePicker(
-                            type = FileKitType.File("txt", "m3u8"),
-                            dialogSettings = importDialogSettings
-                        )
-                    }.onFailure { error ->
-                        Log.e(Constants.LOG_ERROR_PREFIX, "打开导入歌单文件选择器失败", error)
-                    }.getOrNull() ?: return@launch
-
-                    val importData = runCatching {
-                        withContext(Dispatchers.IO) {
-                            PlaylistImportData(
-                                fileName = selectedFile.name,
-                                lines = selectedFile.readString().lineSequence().map(String::trim).toList()
-                            )
-                        }
-                    }.onFailure { error ->
-                        Log.e(Constants.LOG_ERROR_PREFIX, "读取导入歌单文件失败", error)
-                    }.getOrNull()
-
-                    currentImportResult(importData)
+                runCatching {
+                    importLauncher.launch()
+                }.onFailure { error ->
+                    Log.e(Constants.LOG_ERROR_PREFIX, "打开导入歌单文件选择器失败", error)
                 }
             }
 
             override fun exportPlaylist(request: PlaylistExportRequest) {
-                coroutineScope.launch {
-                    val extension = request.fileType.code.removePrefix(".")
-                    val chosenFile = runCatching {
-                        FileKit.openFileSaver(
-                            suggestedName = request.fileName.removeSuffixIgnoreCase(request.fileType.code),
-                            defaultExtension = extension,
-                            allowedExtensions = setOf(extension),
-                            dialogSettings = exportDialogSettings
-                        )
-                    }.onFailure { error ->
-                        Log.e(Constants.LOG_ERROR_PREFIX, "打开导出歌单文件选择器失败", error)
-                    }.getOrNull() ?: return@launch
+                val extension = request.fileType.code.removePrefix(".")
+                pendingExportRequest = request
 
-                    val success = runCatching {
-                        chosenFile.writeString(request.content)
-                    }.onFailure { error ->
-                        Log.e(Constants.LOG_ERROR_PREFIX, "导出歌单失败", error)
-                    }.isSuccess
-
-                    currentExportResult(success)
+                runCatching {
+                    exportLauncher.launch(
+                        suggestedName = request.fileName.removeSuffixIgnoreCase(request.fileType.code),
+                        defaultExtension = extension,
+                        allowedExtensions = setOf(extension)
+                    )
+                }.onFailure { error ->
+                    pendingExportRequest = null
+                    Log.e(Constants.LOG_ERROR_PREFIX, "打开导出歌单文件选择器失败", error)
                 }
             }
         }

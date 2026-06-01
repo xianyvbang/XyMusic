@@ -16,7 +16,7 @@ kotlin {
         implementation(libs.compose.material3)
         implementation(libs.compose.components.resources)
         // 桌面入口负责初始化 FileKit，并向 composeApp 注入原生弹窗 parent window。
-        implementation(libs.filekit.dialogs)
+        implementation(libs.filekit.dialogs.compose)
         implementation(libs.kotlinx.coroutinesSwing)
         implementation(libs.kotlin.ktor.apache)
         implementation(project.dependencies.platform(libs.koin.bom))

@@ -48,7 +48,7 @@ accompanist = "0.37.3"
 vlcj = "4.8.3"
 # JVM 音频标签读取库，用于桌面端解析本地文件内嵌歌词。
 jaudiotagger = "3.0.1"
-# JVM 原生文件选择器库版本。
+# FileKit 文件选择器库版本。
 filekit = "0.14.1"
 
 
@@ -153,9 +153,10 @@ jvm-vlcj = { module = "uk.co.caprica:vlcj", version.ref = "vlcj" }
 # JVM 本地音频标签读取，用于读取 FieldKey.LYRICS。
 jvm-jaudiotagger = { module = "net.jthink:jaudiotagger", version.ref = "jaudiotagger" }
 
-# JVM 原生文件/目录选择器。
+# FileKit 文件/目录选择器。
 filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekit" }
 filekit-dialogs = { module = "io.github.vinceglb:filekit-dialogs", version.ref = "filekit" }
+filekit-dialogs-compose = { module = "io.github.vinceglb:filekit-dialogs-compose", version.ref = "filekit" }
 
 
 [plugins]

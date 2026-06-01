@@ -86,8 +86,8 @@ kotlin {
             implementation(libs.cryptography.core)
             implementation(libs.cryptography.provider.optimal)
             implementation(libs.cryptography.random)
-            // FileKit 统一承接跨平台文件选择、保存和普通文件读写。
-            implementation(libs.filekit.dialogs)
+            // FileKit Compose 变体统一承接跨平台文件选择、保存和普通文件读写。
+            implementation(libs.filekit.dialogs.compose)
 
             implementation(libs.sketch.compose)
             implementation(libs.sketch.compose.ext)
