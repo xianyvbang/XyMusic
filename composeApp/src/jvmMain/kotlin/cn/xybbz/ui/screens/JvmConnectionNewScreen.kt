@@ -27,7 +27,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -54,17 +53,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -78,12 +74,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cn.xybbz.common.enums.ConnectionUiType
@@ -95,7 +89,13 @@ import cn.xybbz.ui.ext.jvmHoverDebounceClickable
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.windows.DesktopWindowControls
 import cn.xybbz.ui.windows.desktopWindowDragArea
+import cn.xybbz.ui.xy.XyButton
 import cn.xybbz.ui.xy.XyEdit
+import cn.xybbz.ui.xy.XyIconButton
+import cn.xybbz.ui.xy.XySmallImage
+import cn.xybbz.ui.xy.XyText
+import cn.xybbz.ui.xy.XyTextLarge
+import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.viewmodel.ConnectionViewModel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -308,22 +308,20 @@ private fun JvmConnectionNewTitleBar() {
             .padding(start = XyTheme.dimens.outerHorizontalPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Image(
+        XySmallImage(
             modifier = Modifier
-                .size(XyTheme.dimens.outerHorizontalPadding + XyTheme.dimens.contentPadding)
-                .clip(RoundedCornerShape(XyTheme.dimens.corner / 2)),
-            painter = painterResource(Res.drawable.logo_new),
+                .size(XyTheme.dimens.outerHorizontalPadding + XyTheme.dimens.contentPadding),
+            model = painterResource(Res.drawable.logo_new),
             contentDescription = null,
-            contentScale = ContentScale.Crop
+            shape = RoundedCornerShape(XyTheme.dimens.corner / 2)
         )
         Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
-        Text(
+        XyText(
             text = "XyMusic",
             modifier = Modifier.weight(1f),
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.W900,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.titleMedium,
         )
         DesktopWindowControls()
@@ -357,7 +355,7 @@ private fun JvmConnectionNewSidebar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
+            XyText(
                 text = "服务器连接",
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.W900,
@@ -421,19 +419,17 @@ private fun JvmConnectionNewProtocolItem(
         Column(
             modifier = Modifier.weight(1f)
         ) {
-            Text(
+            XyText(
                 text = dataSourceType.title,
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.W800,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodyMedium,
             )
-            Text(
+            XyTextSub(
                 text = dataSourceType.describe,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodySmall,
             )
         }
@@ -457,11 +453,11 @@ private fun JvmConnectionNewProtocolLogo(
         shape = RoundedCornerShape(XyTheme.dimens.corner),
         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.08f),
     ) {
-        Image(
+        XySmallImage(
             modifier = Modifier.fillMaxSize(),
-            painter = painter,
+            model = painter,
             contentDescription = contentDescription,
-            contentScale = ContentScale.Crop
+            shape = RoundedCornerShape(XyTheme.dimens.corner)
         )
     }
 }
@@ -488,7 +484,7 @@ private fun JvmConnectionNewStatusPill(
                 .clip(CircleShape)
                 .background(successColor)
         )
-        Text(
+        XyText(
             text = text,
             color = successColor,
             fontWeight = FontWeight.W700,
@@ -565,7 +561,7 @@ private fun JvmConnectionNewStepItem(
                     tint = Color.White
                 )
             } else {
-                Text(
+                XyText(
                     text = number.toString(),
                     color = if (active) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.W800,
@@ -573,12 +569,11 @@ private fun JvmConnectionNewStepItem(
                 )
             }
         }
-        Text(
+        XyText(
             text = text,
             color = textColor,
             fontWeight = if (done || active) FontWeight.W700 else FontWeight.Normal,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.bodySmall,
         )
     }
@@ -779,19 +774,20 @@ private fun JvmConnectionNewHeaderText(
     Column(
         modifier = modifier
     ) {
-        Text(
+        XyTextLarge(
             text = "连接到媒体服务器",
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.W900,
             style = MaterialTheme.typography.headlineLarge,
         )
         Spacer(modifier = Modifier.height(9.dp))
-        Text(
+        XyTextSub(
             text = titleCopy,
             modifier = Modifier.widthIn(max = 640.dp),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.35,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.35
+            ),
         )
     }
 }
@@ -825,19 +821,18 @@ private fun JvmConnectionNewSelectedService(
                 .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
-            Text(
+            XyText(
                 text = dataSourceType.title.first().toString(),
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.W900,
                 style = MaterialTheme.typography.labelSmall
             )
         }
-        Text(
+        XyText(
             text = dataSourceType.title,
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.W800,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.bodySmall
         )
     }
@@ -861,14 +856,14 @@ private fun JvmConnectionNewFormPanel(
     JvmConnectionNewPanel(
         modifier = modifier,
     ) {
-        Text(
+        XyText(
             text = "${selectedDataSource.title} 凭据",
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.W900,
             style = MaterialTheme.typography.titleMedium
         )
         Spacer(modifier = Modifier.height(5.dp))
-        Text(
+        XyTextSub(
             text = selectedDataSource.describe,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall
@@ -938,8 +933,7 @@ private fun JvmConnectionNewFormPanel(
                     PasswordVisualTransformation()
                 },
                 actionContent = {
-                    IconButton(
-                        modifier = Modifier.jvmHoverDebounceClickable(),
+                    XyIconButton(
                         onClick = onTogglePassword,
                     ) {
                         Icon(
@@ -981,16 +975,18 @@ private fun JvmConnectionNewFormPanel(
                         contentColor = MaterialTheme.colorScheme.onSurface
                     )
                 ) {
-                    Text(text = "重新选择")
+                    XyText(
+                        text = "重新选择",
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Normal,
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
                 Spacer(modifier = Modifier.width(XyTheme.dimens.contentPadding))
-                Button(
-                    modifier = Modifier.jvmHoverDebounceClickable(),
+                XyButton(
                     onClick = onConnect,
-                    shape = RoundedCornerShape(XyTheme.dimens.corner)
-                ) {
-                    Text(text = "连接")
-                }
+                    text = "连接"
+                )
             }
         }
     }
@@ -1010,7 +1006,7 @@ private fun JvmConnectionNewInputField(
     Column(
         verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
     ) {
-        Text(
+        XyText(
             text = label,
 //            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.W800,
@@ -1044,8 +1040,7 @@ private fun JvmConnectionNewInputField(
 private fun JvmConnectionNewClearButton(
     onClick: () -> Unit,
 ) {
-    IconButton(
-        modifier = Modifier.jvmHoverDebounceClickable(),
+    XyIconButton(
         onClick = onClick,
     ) {
         Icon(
@@ -1180,13 +1175,12 @@ private fun JvmConnectionNewSummaryContent(
                 .padding(XyTheme.dimens.outerHorizontalPadding),
             contentAlignment = Alignment.Center
         ) {
-            Image(
+            XySmallImage(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(XyTheme.dimens.corner)),
-                painter = painterResource(selectedDataSource.img),
+                    .fillMaxSize(),
+                model = painterResource(selectedDataSource.img),
                 contentDescription = selectedDataSource.title,
-                contentScale = ContentScale.Crop
+                shape = RoundedCornerShape(XyTheme.dimens.corner)
             )
         }
     }
@@ -1239,19 +1233,17 @@ private fun JvmConnectionNewSummaryContent(
         Column(
             modifier = Modifier.weight(1f)
         ) {
-            Text(
+            XyText(
                 text = "准备同步媒体库",
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.W800,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodySmall
             )
-            Text(
+            XyTextSub(
                 text = "歌曲、专辑、艺术家将在登录后读取",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodySmall
             )
         }
@@ -1270,18 +1262,17 @@ private fun JvmConnectionNewMetaRow(
         horizontalArrangement = Arrangement.spacedBy(XyTheme.dimens.contentPadding),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
+        XyTextSub(
             text = label,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall
         )
-        Text(
+        XyText(
             text = value,
             modifier = Modifier.weight(1f),
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.W800,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.bodySmall
         )
     }
@@ -1307,14 +1298,14 @@ private fun JvmConnectionNewResourceContent(
     onEditConnectionInfo: (() -> Unit)? = null,
 ) {
     // 资源内容只渲染 ViewModel 暴露的真实候选地址、Plex 资源和错误状态。
-    Text(
+    XyText(
         text = "选择资源地址",
         color = MaterialTheme.colorScheme.onSurface,
         fontWeight = FontWeight.W900,
         style = MaterialTheme.typography.titleMedium
     )
     Spacer(modifier = Modifier.height(5.dp))
-    Text(
+    XyTextSub(
         text = if (selectedDataSource.ifInputUrl) {
             "已找到可连接的 ${selectedDataSource.title} 地址。"
         } else {
@@ -1332,7 +1323,11 @@ private fun JvmConnectionNewResourceContent(
             onClick = onEditConnectionInfo,
             shape = RoundedCornerShape(XyTheme.dimens.corner),
         ) {
-            Text(text = "修改连接信息")
+            XyText(
+                text = "修改连接信息",
+                fontWeight = FontWeight.Normal,
+                style = MaterialTheme.typography.labelLarge
+            )
         }
     }
     Spacer(modifier = Modifier.height(14.dp))
@@ -1465,19 +1460,17 @@ private fun JvmConnectionNewResourceItem(
         Column(
             modifier = Modifier.weight(1f)
         ) {
-            Text(
+            XyText(
                 text = title,
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.W800,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodyMedium
             )
-            Text(
+            XyTextSub(
                 text = address,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodySmall
             )
         }
@@ -1513,7 +1506,7 @@ private fun JvmConnectionNewLoadingPanel(
             color = MaterialTheme.colorScheme.primary,
             strokeWidth = 3.dp
         )
-        Text(
+        XyText(
             text = text,
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.W800,
@@ -1542,23 +1535,22 @@ private fun JvmConnectionNewErrorPanel(
             .padding(XyTheme.dimens.contentPadding),
         verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
     ) {
-        Text(
+        XyText(
             text = title,
             color = Color(0xFFB3261E),
             fontWeight = FontWeight.W900,
             style = MaterialTheme.typography.bodyMedium
         )
-        Text(
+        XyTextSub(
             text = errorHint,
             color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.bodySmall
         )
         if (errorMessage.isNotBlank()) {
-            Text(
+            XyTextSub(
                 text = errorMessage,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 3,
-                overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodySmall
             )
         }
@@ -1568,7 +1560,7 @@ private fun JvmConnectionNewErrorPanel(
 @Composable
 private fun JvmConnectionNewEmptyResourcePanel() {
     // ViewModel 已请求资源面板但暂无候选数据时，保留面板避免视觉状态跳回表单。
-    Text(
+    XyTextSub(
         text = "等待连接信息提交后读取资源。",
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         style = MaterialTheme.typography.bodySmall
@@ -1640,19 +1632,17 @@ private fun JvmConnectionNewLoginStatusPanel(
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                Text(
+                XyText(
                     text = title,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.W900,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodyMedium
                 )
-                Text(
+                XyTextSub(
                     text = detail,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -1750,12 +1740,11 @@ private fun JvmConnectionNewLoginProgressItem(
                 .clip(CircleShape)
                 .background(color.copy(alpha = if (done || active) 1f else 0.55f))
         )
-        Text(
+        XyText(
             text = text,
             color = color,
             fontWeight = FontWeight.W800,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.labelSmall
         )
     }
@@ -1788,28 +1777,24 @@ private fun JvmConnectionNewSuccessBanner(
         Column(
             modifier = Modifier.weight(1f)
         ) {
-            Text(
+            XyText(
                 text = "连接成功",
                 color = successColor,
                 fontWeight = FontWeight.W900,
                 style = MaterialTheme.typography.bodyMedium
             )
-            Text(
+            XyTextSub(
                 text = "${selectedDataSource.title} 登录完成，可以进入主页。",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodySmall
             )
         }
         Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
-        Button(
-            modifier = Modifier.jvmHoverDebounceClickable(),
+        XyButton(
             onClick = onEnter,
-            shape = RoundedCornerShape(XyTheme.dimens.corner)
-        ) {
-            Text(text = "进入主页")
-        }
+            text = "进入主页",
+        )
     }
 }
 
@@ -1852,12 +1837,11 @@ private fun JvmConnectionNewChip(
             ),
         contentAlignment = Alignment.Center
     ) {
-        Text(
+        XyText(
             text = text,
             color = color,
             fontWeight = FontWeight.W700,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.labelSmall,
         )
     }
