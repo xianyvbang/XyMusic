@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
+import cn.xybbz.config.image.rememberRawCoverUrls
 import cn.xybbz.localdata.data.genre.XyGenre
 
 /**
@@ -19,12 +20,15 @@ fun MusicGenreCardComponent(
     shape: Shape = CardDefaults.shape,
     onRouter: (String) -> Unit,
 ) {
+    val coverUrls = rememberRawCoverUrls(genre?.pic)
+
     JvmMusicCardComponent(
         modifier = modifier,
         id = genre?.itemId ?: "",
         name = genre?.name ?: "",
         imageSize = imageSize,
-        model = genre?.pic,
+        model = coverUrls.primaryUrl,
+        backModel = coverUrls.fallbackUrl,
         enabled = enabled,
         shape = shape,
         onRouter = onRouter,

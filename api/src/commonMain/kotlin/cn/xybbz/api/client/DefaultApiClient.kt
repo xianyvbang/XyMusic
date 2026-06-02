@@ -175,10 +175,11 @@ abstract class DefaultApiClient : ApiFactory, DownloadFactory {
 
         //todo 有待观察
         if (!ifTmp) {
-            TokenServer.clearAllData()
-            TokenServer.setTokenData(token)
-            TokenServer.setQueryMapData(queryMap)
-            TokenServer.setHeaderMapData(headerMap)
+            TokenServer.setAuthenticatedRequestData(
+                token = token,
+                queryMap = queryMap,
+                headerMap = headerMap
+            )
         }
     }
 

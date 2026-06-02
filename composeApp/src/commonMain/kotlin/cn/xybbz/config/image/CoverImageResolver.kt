@@ -3,6 +3,7 @@ package cn.xybbz.config.image
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
+import cn.xybbz.api.AuthenticatedRequestState
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.custom.CustomMediaApiClient
 import cn.xybbz.api.client.custom.data.CustomCoverQuery
@@ -154,9 +155,12 @@ interface CoverImageEntryPoint {
 fun rememberMusicCoverUrls(music: XyMusic?): CoverImageUrls {
     val resolver = rememberCoverImageResolver()
     val baseUrl = currentCoverImageBaseUrl(resolver)
+    val authState = currentCoverImageAuthState()
     val artists = music?.artists?.joinToString("/")
-    return remember(music?.itemId, music?.pic, music?.name, music?.albumName, artists, baseUrl) {
-        resolver.resolveMusic(music)
+    return remember(music?.itemId, music?.pic, music?.name, music?.albumName, artists, baseUrl, authState) {
+        resolver.resolveWhenAuthReady(authState.ready) {
+            resolveMusic(music)
+        }
     }
 }
 
@@ -164,9 +168,12 @@ fun rememberMusicCoverUrls(music: XyMusic?): CoverImageUrls {
 fun rememberPlayMusicCoverUrls(music: XyPlayMusic?, refreshKey: Any? = null): CoverImageUrls {
     val resolver = rememberCoverImageResolver()
     val baseUrl = currentCoverImageBaseUrl(resolver)
+    val authState = currentCoverImageAuthState()
     val artists = music?.artists?.joinToString("/")
-    return remember(music?.itemId, music?.pic, music?.name, artists, baseUrl, refreshKey) {
-        resolver.resolveMusic(music)
+    return remember(music?.itemId, music?.pic, music?.name, artists, baseUrl, authState, refreshKey) {
+        resolver.resolveWhenAuthReady(authState.ready) {
+            resolveMusic(music)
+        }
     }
 }
 
@@ -174,8 +181,11 @@ fun rememberPlayMusicCoverUrls(music: XyPlayMusic?, refreshKey: Any? = null): Co
 fun rememberAlbumCoverUrls(album: XyAlbum?, albumPic: String? = null): CoverImageUrls {
     val resolver = rememberCoverImageResolver()
     val baseUrl = currentCoverImageBaseUrl(resolver)
-    return remember(album?.itemId, albumPic ?: album?.pic, album?.name, album?.artists, baseUrl) {
-        resolver.resolveAlbum(album)
+    val authState = currentCoverImageAuthState()
+    return remember(album?.itemId, albumPic ?: album?.pic, album?.name, album?.artists, baseUrl, authState) {
+        resolver.resolveWhenAuthReady(authState.ready) {
+            resolveAlbum(album)
+        }
     }
 }
 
@@ -183,8 +193,11 @@ fun rememberAlbumCoverUrls(album: XyAlbum?, albumPic: String? = null): CoverImag
 fun rememberArtistCoverUrls(artist: XyArtist?): CoverImageUrls {
     val resolver = rememberCoverImageResolver()
     val baseUrl = currentCoverImageBaseUrl(resolver)
-    return remember(artist?.artistId, artist?.pic, artist?.name, baseUrl) {
-        resolver.resolveArtist(artist)
+    val authState = currentCoverImageAuthState()
+    return remember(artist?.artistId, artist?.pic, artist?.name, baseUrl, authState) {
+        resolver.resolveWhenAuthReady(authState.ready) {
+            resolveArtist(artist)
+        }
     }
 }
 
@@ -192,8 +205,11 @@ fun rememberArtistCoverUrls(artist: XyArtist?): CoverImageUrls {
 fun rememberArtistBackdropCoverUrls(artist: XyArtist?): CoverImageUrls {
     val resolver = rememberCoverImageResolver()
     val baseUrl = currentCoverImageBaseUrl(resolver)
-    return remember(artist?.artistId, artist?.backdrop, artist?.name, baseUrl) {
-        resolver.resolveArtistBackdrop(artist)
+    val authState = currentCoverImageAuthState()
+    return remember(artist?.artistId, artist?.backdrop, artist?.name, baseUrl, authState) {
+        resolver.resolveWhenAuthReady(authState.ready) {
+            resolveArtistBackdrop(artist)
+        }
     }
 }
 
@@ -201,14 +217,23 @@ fun rememberArtistBackdropCoverUrls(artist: XyArtist?): CoverImageUrls {
 fun rememberRawCoverUrls(primaryUrl: String?, fallbackUrl: String? = null): CoverImageUrls {
     val resolver = rememberCoverImageResolver()
     val baseUrl = currentCoverImageBaseUrl(resolver)
-    return remember(primaryUrl, fallbackUrl, baseUrl) {
-        resolver.resolveRaw(primaryUrl, fallbackUrl)
+    val authState = currentCoverImageAuthState()
+    return remember(primaryUrl, fallbackUrl, baseUrl, authState) {
+        resolver.resolveWhenAuthReady(authState.ready) {
+            resolveRaw(primaryUrl, fallbackUrl)
+        }
     }
 }
 
 @Composable
 private fun currentCoverImageBaseUrl(resolver: CoverImageResolver): String? {
     return resolver.baseUrlFlow.collectAsState().value
+}
+
+@Composable
+private fun currentCoverImageAuthState(): AuthenticatedRequestState {
+    // 认证参数未就绪时只显示占位图；参数变化时通过 version 触发封面 URL 重算。
+    return TokenServer.authenticatedRequestStateFlow.collectAsState().value
 }
 
 @Composable
@@ -234,4 +259,16 @@ fun String?.normalizeCoverUrl(baseUrl: String?): String? {
 fun String.isAbsoluteNetworkUrl(): Boolean {
     return startsWith(HTTP, ignoreCase = true) ||
             startsWith(HTTPS, ignoreCase = true)
+}
+
+private fun CoverImageResolver.resolveWhenAuthReady(
+    authReady: Boolean,
+    resolve: CoverImageResolver.() -> CoverImageUrls
+): CoverImageUrls {
+    return if (authReady) {
+        resolve()
+    } else {
+        // 返回空模型让 XyImage 保持占位图，避免启动期带空 query/header 抢先加载失败。
+        CoverImageUrls(primaryUrl = null, fallbackUrl = null)
+    }
 }

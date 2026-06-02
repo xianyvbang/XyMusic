@@ -49,6 +49,7 @@ import cn.xybbz.common.constants.Constants
 import cn.xybbz.config.image.rememberAlbumCoverUrls
 import cn.xybbz.config.image.rememberArtistCoverUrls
 import cn.xybbz.config.image.rememberMusicCoverUrls
+import cn.xybbz.config.image.rememberRawCoverUrls
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.album.XyAlbum
 import cn.xybbz.localdata.data.artist.XyArtist
@@ -166,7 +167,7 @@ fun MusicAlbumCardComponent(
         name = album?.name ?: "",
         artistName = album?.artists ?: stringResource(Constants.UNKNOWN_ARTIST),
         imageSize = imageSize,
-        model = coverUrls.primaryUrl ?: imageUrl,
+        model = coverUrls.primaryUrl,
         backModel = coverUrls.fallbackUrl,
         enabled = enabled,
         shape = shape,
@@ -232,7 +233,7 @@ fun MusicMusicCardComponent(
         artistName = music?.artists?.joinToString()
             ?: stringResource(Res.string.unknown_artist),
         imageSize = imageSize,
-        model = coverUrls.primaryUrl ?: imageUrl,
+        model = coverUrls.primaryUrl,
         backModel = coverUrls.fallbackUrl,
         shape = shape,
         onRouter = onRouter
@@ -253,13 +254,15 @@ fun MusicGenreCardComponent(
     val genre by remember {
         mutableStateOf(onItem())
     }
+    val coverUrls = rememberRawCoverUrls(genre.pic)
 
     MusicCardComponent(
         modifier = modifier,
         id = genre.itemId,
         name = genre.name,
         imageSize = imageSize,
-        model = genre.pic,
+        model = coverUrls.primaryUrl,
+        backModel = coverUrls.fallbackUrl,
         enabled = enabled,
         shape = shape,
         onRouter = onRouter

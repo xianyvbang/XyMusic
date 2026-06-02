@@ -19,6 +19,20 @@
 package cn.xybbz.api
 
 import cn.xybbz.api.constants.ApiConstants
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+/**
+ * 公共认证请求状态。
+ *
+ * @property ready 图片等依赖公共认证参数的请求是否可以开始。
+ * @property version token/query/header/baseUrl 变化后的版本号，用于触发封面 URL 重新计算。
+ */
+data class AuthenticatedRequestState(
+    val ready: Boolean = false,
+    val version: Int = 0
+)
 
 object TokenServer {
 
@@ -37,29 +51,95 @@ object TokenServer {
     var tokenHeaderName = ApiConstants.AUTHORIZATION
         private set
 
+    /**
+     * 当前公共认证请求状态。
+     * 图片加载门禁和认证参数刷新都从这里订阅，避免 ready/version 分散维护。
+     */
+    private val _authenticatedRequestStateFlow = MutableStateFlow(AuthenticatedRequestState())
+    val authenticatedRequestStateFlow: StateFlow<AuthenticatedRequestState> =
+        _authenticatedRequestStateFlow.asStateFlow()
+
     fun setTokenData(token: String) {
+        if (TokenServer.token == token) return
         TokenServer.token = token
+        notifyAuthChanged()
     }
 
     fun setQueryMapData(queryMap: Map<String, String>) {
+        if (TokenServer.queryMap == queryMap) return
         TokenServer.queryMap = queryMap
+        notifyAuthChanged()
     }
 
     fun setHeaderMapData(headerMap: Map<String, String>) {
+        if (TokenServer.headerMap == headerMap) return
         TokenServer.headerMap = headerMap
+        notifyAuthChanged()
+    }
+
+    /**
+     * 一次性写入当前连接的公共认证参数。
+     * 这里批量更新，避免先清空再逐项写入期间触发图片提前加载。
+     */
+    fun setAuthenticatedRequestData(
+        token: String,
+        queryMap: Map<String, String>,
+        headerMap: Map<String, String>
+    ) {
+        val ifAuthDataChanged =
+            TokenServer.token != token ||
+                    TokenServer.queryMap != queryMap ||
+                    TokenServer.headerMap != headerMap
+        val ifReadyChanged = !_authenticatedRequestStateFlow.value.ready
+
+        if (!ifAuthDataChanged && !ifReadyChanged) {
+            return
+        }
+
+        if (ifAuthDataChanged) {
+            TokenServer.token = token
+            TokenServer.queryMap = queryMap
+            TokenServer.headerMap = headerMap
+        }
+        notifyAuthChanged(ready = true)
     }
 
     fun clearAllData() {
-        setTokenData("")
-        setQueryMapData(emptyMap())
-        setHeaderMapData(emptyMap())
+        // 清空连接态时先关闭图片加载门禁，防止旧封面请求继续使用过期认证参数。
+        val ifAuthDataChanged =
+            token.isNotBlank() ||
+                    queryMap.isNotEmpty() ||
+                    headerMap.isNotEmpty()
+        val ifReadyChanged = _authenticatedRequestStateFlow.value.ready
+
+        if (!ifAuthDataChanged && !ifReadyChanged) {
+            return
+        }
+
+        token = ""
+        queryMap = emptyMap()
+        headerMap = emptyMap()
+        notifyAuthChanged(ready = false)
     }
 
     fun updateTokenHeaderName(tokenHeaderName: String) {
+        if (this.tokenHeaderName == tokenHeaderName) return
         this.tokenHeaderName = tokenHeaderName
+        notifyAuthChanged()
     }
 
     fun updateBaseUrl(baseUrl: String) {
+        if (this.baseUrl == baseUrl) return
         this.baseUrl = baseUrl
+        notifyAuthChanged()
+    }
+
+    private fun notifyAuthChanged(ready: Boolean = _authenticatedRequestStateFlow.value.ready) {
+        // 版本号只作为 Compose remember 的刷新 key 使用，不参与业务请求参数。
+        val currentState = _authenticatedRequestStateFlow.value
+        _authenticatedRequestStateFlow.value = currentState.copy(
+            ready = ready,
+            version = currentState.version + 1
+        )
     }
 }

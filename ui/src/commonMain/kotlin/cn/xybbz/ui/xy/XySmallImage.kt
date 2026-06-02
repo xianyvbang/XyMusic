@@ -168,15 +168,15 @@ fun XyImage(
             )
         }
         else -> {
-            error?.let {
-                Image(
-                    modifier = Modifier.then(modifier),
-                    painter = painterResource(error),
-                    contentDescription = contentDescription,
-                    alpha = alpha,
-                    contentScale = contentScale
-                )
-            }
+            // model 为空时显示占位图，用于认证信息未就绪前延迟网络图片加载。
+            val placeholderResource = fallback ?: error ?: placeholder ?: Res.drawable.default_placeholder
+            Image(
+                modifier = Modifier.then(modifier),
+                painter = painterResource(placeholderResource),
+                contentDescription = contentDescription,
+                alpha = alpha,
+                contentScale = contentScale
+            )
 
 //            Res.drawable.music_xy_placeholder_foreground
 

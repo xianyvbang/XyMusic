@@ -63,6 +63,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.api.converter.jsonSerializer
 import cn.xybbz.common.utils.formatBytes
 import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.config.image.rememberRawCoverUrls
 import cn.xybbz.download.database.data.XyDownload
 import cn.xybbz.download.enums.DownloadStatus
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
@@ -502,6 +503,8 @@ private fun JvmDownloadTitleCell(task: XyDownload) {
 
 @Composable
 private fun JvmDownloadCover(coverUrl: String?) {
+    val coverUrls = rememberRawCoverUrls(coverUrl)
+
     Box(
         modifier = Modifier
             .size(JvmDownloadCoverSize)
@@ -526,7 +529,8 @@ private fun JvmDownloadCover(coverUrl: String?) {
         } else {
             XyImage(
                 modifier = Modifier.matchParentSize(),
-                model = coverUrl,
+                model = coverUrls.primaryUrl,
+                backModel = coverUrls.fallbackUrl,
                 contentDescription = null,
             )
         }

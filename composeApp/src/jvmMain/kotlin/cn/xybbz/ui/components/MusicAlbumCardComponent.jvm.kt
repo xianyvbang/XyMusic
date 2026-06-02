@@ -31,7 +31,7 @@ fun MusicAlbumCardComponent(
         name = album?.name ?: "",
         artistName = album?.artists ?: stringResource(Constants.UNKNOWN_ARTIST),
         imageSize = imageSize,
-        model = coverUrls.primaryUrl ?: imageUrl,
+        model = coverUrls.primaryUrl,
         backModel = coverUrls.fallbackUrl,
         enabled = enabled,
         shape = shape,
