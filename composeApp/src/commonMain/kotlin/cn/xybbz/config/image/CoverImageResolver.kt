@@ -147,10 +147,6 @@ class CoverImageResolver(
     }
 }
 
-interface CoverImageEntryPoint {
-    fun coverImageResolver(): CoverImageResolver
-}
-
 @Composable
 fun rememberMusicCoverUrls(music: XyMusic?): CoverImageUrls {
     val resolver = rememberCoverImageResolver()
