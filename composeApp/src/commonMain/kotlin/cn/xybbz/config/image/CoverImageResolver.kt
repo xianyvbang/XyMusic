@@ -1,6 +1,7 @@
 package cn.xybbz.config.image
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import cn.xybbz.api.TokenServer
 import cn.xybbz.api.client.custom.CustomMediaApiClient
@@ -14,6 +15,7 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import io.ktor.http.URLBuilder
 import io.ktor.util.appendAll
+import kotlinx.coroutines.flow.StateFlow
 import org.koin.compose.koinInject
 
 data class CoverImageUrls(
@@ -25,6 +27,7 @@ class CoverImageResolver(
     private val settingsManager: SettingsManager,
     private val customMediaApiClient: CustomMediaApiClient
 ) {
+    val baseUrlFlow: StateFlow<String?> = settingsManager.baseUrl
 
     fun resolveRaw(primaryUrl: String?, fallbackUrl: String? = null): CoverImageUrls {
         val baseUrl = settingsManager.baseUrl.value
@@ -150,8 +153,9 @@ interface CoverImageEntryPoint {
 @Composable
 fun rememberMusicCoverUrls(music: XyMusic?): CoverImageUrls {
     val resolver = rememberCoverImageResolver()
+    val baseUrl = currentCoverImageBaseUrl(resolver)
     val artists = music?.artists?.joinToString("/")
-    return remember(music?.itemId, music?.pic, music?.name, music?.albumName, artists) {
+    return remember(music?.itemId, music?.pic, music?.name, music?.albumName, artists, baseUrl) {
         resolver.resolveMusic(music)
     }
 }
@@ -159,16 +163,18 @@ fun rememberMusicCoverUrls(music: XyMusic?): CoverImageUrls {
 @Composable
 fun rememberPlayMusicCoverUrls(music: XyPlayMusic?, refreshKey: Any? = null): CoverImageUrls {
     val resolver = rememberCoverImageResolver()
+    val baseUrl = currentCoverImageBaseUrl(resolver)
     val artists = music?.artists?.joinToString("/")
-    return remember(music?.itemId, music?.pic, music?.name, artists, refreshKey) {
+    return remember(music?.itemId, music?.pic, music?.name, artists, baseUrl, refreshKey) {
         resolver.resolveMusic(music)
     }
 }
 
 @Composable
-fun rememberAlbumCoverUrls(album: XyAlbum?,albumPic:String? = null): CoverImageUrls {
+fun rememberAlbumCoverUrls(album: XyAlbum?, albumPic: String? = null): CoverImageUrls {
     val resolver = rememberCoverImageResolver()
-    return remember(album?.itemId, albumPic?:album?.pic, album?.name, album?.artists) {
+    val baseUrl = currentCoverImageBaseUrl(resolver)
+    return remember(album?.itemId, albumPic ?: album?.pic, album?.name, album?.artists, baseUrl) {
         resolver.resolveAlbum(album)
     }
 }
@@ -176,7 +182,8 @@ fun rememberAlbumCoverUrls(album: XyAlbum?,albumPic:String? = null): CoverImageU
 @Composable
 fun rememberArtistCoverUrls(artist: XyArtist?): CoverImageUrls {
     val resolver = rememberCoverImageResolver()
-    return remember(artist?.artistId, artist?.pic, artist?.name) {
+    val baseUrl = currentCoverImageBaseUrl(resolver)
+    return remember(artist?.artistId, artist?.pic, artist?.name, baseUrl) {
         resolver.resolveArtist(artist)
     }
 }
@@ -184,7 +191,8 @@ fun rememberArtistCoverUrls(artist: XyArtist?): CoverImageUrls {
 @Composable
 fun rememberArtistBackdropCoverUrls(artist: XyArtist?): CoverImageUrls {
     val resolver = rememberCoverImageResolver()
-    return remember(artist?.artistId, artist?.backdrop, artist?.name) {
+    val baseUrl = currentCoverImageBaseUrl(resolver)
+    return remember(artist?.artistId, artist?.backdrop, artist?.name, baseUrl) {
         resolver.resolveArtistBackdrop(artist)
     }
 }
@@ -192,9 +200,15 @@ fun rememberArtistBackdropCoverUrls(artist: XyArtist?): CoverImageUrls {
 @Composable
 fun rememberRawCoverUrls(primaryUrl: String?, fallbackUrl: String? = null): CoverImageUrls {
     val resolver = rememberCoverImageResolver()
-    return remember(primaryUrl, fallbackUrl) {
+    val baseUrl = currentCoverImageBaseUrl(resolver)
+    return remember(primaryUrl, fallbackUrl, baseUrl) {
         resolver.resolveRaw(primaryUrl, fallbackUrl)
     }
+}
+
+@Composable
+private fun currentCoverImageBaseUrl(resolver: CoverImageResolver): String? {
+    return resolver.baseUrlFlow.collectAsState().value
 }
 
 @Composable

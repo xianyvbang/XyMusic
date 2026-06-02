@@ -95,9 +95,9 @@ class SettingsManager(
         .stateIn(scope, SharingStarted.Eagerly, settings.value.hasConnectionConfig)
 
     //连接前缀
-    val baseUrl = settings.map {
-        it.connectionId?.let { db.connectionConfigDao.selectById(it).address }
-    }.distinctUntilChanged()
+    val baseUrl = db.connectionConfigDao.selectConnectionConfigFlow()
+        .map { it?.address }
+        .distinctUntilChanged()
         .stateIn(scope, SharingStarted.Eagerly, null)
 
     //是否显示SnackBar

@@ -31,7 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.ui.components.SettingItemComponent
@@ -66,7 +66,7 @@ fun JvmAboutScreen(
 ) {
     val functionNotImplemented = stringResource(Res.string.function_not_implemented)
     val noOfficialWebsiteYet = stringResource(Res.string.no_official_website_yet)
-    val logoSize = (128 * LocalDensity.current.fontScale).dp
+    val logoSize = with(LocalDensity.current) { 128.sp.toDp() }
 
     XyColumnScreen(
         modifier = Modifier

@@ -131,28 +131,26 @@ class ConnectionConfigInfoViewModel(
     /**
      * 更新用户密码,并且判断是否需要重新登录
      */
-    fun updateConnectionConfig() {
-        this.connectionConfig?.let { config ->
-            saveAddress()
-            saveName()
-            viewModelScope.launch {
-                //更新密码
-                val encryptAES = PasswordUtils.encryptAES(password)
-                val config = config.copy(
-                    currentPassword = encryptAES.aesData,
-                    iv = encryptAES.aesIv,
-                    key = encryptAES.aesKey,
-                    name = connectionName,
-                    username = username,
-                    address = address,
-                    ifForceLogin = (ifPasswordChange || ifUsernameChange || ifAddressChange) && getConnectionId() != connectionId
-                )
-                connectionConfig = config
-                dataSourceManager.updateConnectionConfig(
-                    config
-                )
-            }
+    suspend fun updateConnectionConfig(): Boolean {
+        val currentConfig = connectionConfig ?: return false
+        if (!saveAddress() || !saveName()) {
+            return false
         }
+
+        //更新密码
+        val encryptAES = PasswordUtils.encryptAES(password)
+        val updatedConfig = currentConfig.copy(
+            currentPassword = encryptAES.aesData,
+            iv = encryptAES.aesIv,
+            key = encryptAES.aesKey,
+            name = connectionName,
+            username = username,
+            address = address,
+            ifForceLogin = (ifPasswordChange || ifUsernameChange || ifAddressChange) && getConnectionId() != connectionId
+        )
+        connectionConfig = updatedConfig
+        dataSourceManager.updateConnectionConfig(updatedConfig)
+        return true
     }
 
     fun restartLogin() {
@@ -172,21 +170,23 @@ class ConnectionConfigInfoViewModel(
     /**
      * 更新地址信息
      */
-    fun saveAddress() {
+    fun saveAddress(): Boolean {
         if (address.isBlank()) {
             MessageUtils.sendPopTip(Res.string.connection_address_cannot_be_empty)
-            return
+            return false
         }
+        return true
     }
 
     /**
      * 更新名称
      */
-    fun saveName() {
+    fun saveName(): Boolean {
         if (connectionName.isBlank()) {
             MessageUtils.sendPopTip(Res.string.alias_cannot_be_empty)
-            return
+            return false
         }
+        return true
     }
 
     fun getConnectionId(): Long {

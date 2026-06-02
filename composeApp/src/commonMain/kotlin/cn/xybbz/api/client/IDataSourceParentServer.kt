@@ -483,6 +483,9 @@ abstract class IDataSourceParentServer(
      */
     override suspend fun updateConnectionConfig(connectionConfig: ConnectionConfig) {
         db.connectionConfigDao.update(connectionConfig)
+        if (connectionConfig.id == getConnectionId()) {
+            bindLocalConnectionConfig(connectionConfig)
+        }
     }
 
     /**

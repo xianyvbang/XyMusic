@@ -75,9 +75,9 @@ fun JvmConnectionConfigInfoScreen(
     val saveConnection = {
         coroutineScope.launch {
             //修改连接设置
-            connectionConfigInfoViewModel.updateConnectionConfig()
-        }.invokeOnCompletion {
-            connectionConfigInfoViewModel.restartLogin()
+            if (connectionConfigInfoViewModel.updateConnectionConfig()) {
+                connectionConfigInfoViewModel.restartLogin()
+            }
         }
         Unit
     }

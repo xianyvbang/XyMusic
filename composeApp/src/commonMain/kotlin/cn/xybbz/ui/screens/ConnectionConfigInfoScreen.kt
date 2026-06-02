@@ -105,9 +105,9 @@ fun ConnectionConfigInfoScreen(
                 XyButton(onClick = {
                     coroutineScope.launch {
                         //修改连接设置
-                        connectionConfigInfoViewModel.updateConnectionConfig()
-                    }.invokeOnCompletion {
-                        connectionConfigInfoViewModel.restartLogin()
+                        if (connectionConfigInfoViewModel.updateConnectionConfig()) {
+                            connectionConfigInfoViewModel.restartLogin()
+                        }
                     }
                 }, text = stringResource(Res.string.save))
             }
