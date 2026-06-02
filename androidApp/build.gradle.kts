@@ -32,11 +32,7 @@ kotlin {
 }
 android {
     namespace = "cn.xybbz"
-    compileSdk {
-        version = release(libs.versions.android.compileSdk.get().toInt()) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "cn.xybbz"
