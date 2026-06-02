@@ -292,6 +292,7 @@
 
     <string name="playlist_export_failed">歌单导出失败</string>
     <string name="playlist_info_empty">歌单信息为空</string>
+    <string name="exporting_playlist">正在导出…</string>
     <string name="playlist_export_success">歌单导出成功</string>
     <string name="please_select_export_format">请选择导出歌单的格式</string>
     <string name="unknown_playlist">未知歌单</string>

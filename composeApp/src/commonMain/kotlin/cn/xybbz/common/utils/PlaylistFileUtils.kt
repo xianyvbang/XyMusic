@@ -39,15 +39,23 @@ object PlaylistFileUtils {
         playlistId: String
     ): PlaylistParser.Playlist? {
 
-        val playlist =
-            dataSourceManager.selectAlbumInfoById(playlistId, MusicDataTypeEnum.PLAYLIST)
-        val musicListResponse =
-            dataSourceManager.getRemoteServerMusicListByAlbumOrPlaylist(
-                startIndex = 0,
-                pageSize = Constants.PAGE_SIZE_ALL,
-                parentId = playlistId,
-                dataType = MusicDataTypeEnum.PLAYLIST
-            )
+        val exportData = runCatching {
+            val playlist =
+                dataSourceManager.selectAlbumInfoById(playlistId, MusicDataTypeEnum.PLAYLIST)
+            val musicListResponse =
+                dataSourceManager.getRemoteServerMusicListByAlbumOrPlaylist(
+                    startIndex = 0,
+                    pageSize = Constants.PAGE_SIZE_ALL,
+                    parentId = playlistId,
+                    dataType = MusicDataTypeEnum.PLAYLIST
+                )
+            playlist to musicListResponse
+        }.onFailure { error ->
+            Log.e(Constants.LOG_ERROR_PREFIX, "获取导出歌单数据失败", error)
+            MessageUtils.sendPopTipError(Res.string.playlist_export_failed)
+        }.getOrNull() ?: return null
+
+        val (playlist, musicListResponse) = exportData
         //获取数据并组装数据
         return if (playlist == null) {
             MessageUtils.sendPopTipError(Res.string.playlist_export_failed)
