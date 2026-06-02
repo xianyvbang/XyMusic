@@ -320,8 +320,10 @@ fun JvmAlbumInfoScreen(
                                             )
                                         },
                                         onClick = getExportPlaylistsAlertDialogObject(
-                                            onPlayTrackList = {
-                                                albumInfoViewModel.exportPlaylist()
+                                            coroutineScope = coroutineScope,
+                                            playlistName = albumInfoViewModel.xyAlbumInfoData?.name,
+                                            onPlayTrackList = { exportFailedTip ->
+                                                albumInfoViewModel.exportPlaylist(exportFailedTip)
                                             },
                                             onClick = {
                                                 ifShowMenu = false

@@ -22,6 +22,7 @@ import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
+import kotlinx.coroutines.CancellationException
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.playlist_export_failed
 
@@ -33,10 +34,12 @@ object PlaylistFileUtils {
     /**
      * 创建json数据,导出歌单
      * @param [playlistId] 播放列表ID
+     * @param [exportFailedTip] 业务层已知文件名和格式时传入的失败提示
      */
     suspend fun createTrackList(
         dataSourceManager: DataSourceManager,
-        playlistId: String
+        playlistId: String,
+        exportFailedTip: String? = null
     ): PlaylistParser.Playlist? {
 
         val exportData = runCatching {
@@ -51,14 +54,17 @@ object PlaylistFileUtils {
                 )
             playlist to musicListResponse
         }.onFailure { error ->
+            if (error is CancellationException) {
+                throw error
+            }
             Log.e(Constants.LOG_ERROR_PREFIX, "获取导出歌单数据失败", error)
-            MessageUtils.sendPopTipError(Res.string.playlist_export_failed)
+            sendExportFailedTip(exportFailedTip)
         }.getOrNull() ?: return null
 
         val (playlist, musicListResponse) = exportData
         //获取数据并组装数据
         return if (playlist == null) {
-            MessageUtils.sendPopTipError(Res.string.playlist_export_failed)
+            sendExportFailedTip(exportFailedTip)
             null
         } else {
             val musicTrackList = musicListResponse.items?.map {
@@ -69,6 +75,17 @@ object PlaylistFileUtils {
                 )
             } ?: emptyList()
             PlaylistParser.Playlist(musicTrackList, playlist.name)
+        }
+    }
+
+    /**
+     * 发送导出失败提示,优先使用带文件名和格式的动态文案。
+     */
+    private fun sendExportFailedTip(exportFailedTip: String?) {
+        if (exportFailedTip.isNullOrBlank()) {
+            MessageUtils.sendPopTipError(Res.string.playlist_export_failed)
+        } else {
+            MessageUtils.sendPopTipError(exportFailedTip)
         }
     }
 }

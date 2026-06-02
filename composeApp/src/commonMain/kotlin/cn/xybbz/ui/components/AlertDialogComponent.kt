@@ -107,7 +107,7 @@ fun AlertDialogComponent() {
                 clipSize = XyTheme.dimens.dialogCorner,
                 modifier = Modifier
                     .clip(RoundedCornerShape(XyTheme.dimens.corner)),
-                backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest
+                backgroundColor = MaterialTheme.colorScheme.surface
             ) {
                 XyItemOutSpacer()
                 it.title?.let { title ->
@@ -135,8 +135,8 @@ fun AlertDialogComponent() {
                                 },
                                 text = stringResource(it.dismissText),
                                 enabled = it.dismissEnabled,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest
+                                color = MaterialTheme.colorScheme.onSurface,
+                                backgroundColor = MaterialTheme.colorScheme.surfaceContainerHigh
                             )
                             Spacer(modifier = Modifier.width(XyTheme.dimens.outerHorizontalPadding))
                         }

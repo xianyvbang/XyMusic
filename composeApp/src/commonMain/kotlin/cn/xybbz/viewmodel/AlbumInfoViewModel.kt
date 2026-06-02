@@ -218,10 +218,11 @@ class AlbumInfoViewModel(
     /**
      * 导出歌单
      */
-    suspend fun exportPlaylist(): PlaylistParser.Playlist? {
+    suspend fun exportPlaylist(exportFailedTip: String? = null): PlaylistParser.Playlist? {
         return PlaylistFileUtils.createTrackList(
             dataSourceManager = dataSourceManager,
-            playlistId = itemId
+            playlistId = itemId,
+            exportFailedTip = exportFailedTip
         )
     }
 
