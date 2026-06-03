@@ -7,7 +7,8 @@ import androidx.compose.foundation.HorizontalScrollbar
 import androidx.compose.foundation.LocalScrollbarStyle
 import androidx.compose.foundation.ScrollbarStyle
 import androidx.compose.foundation.VerticalScrollbar
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,6 +16,8 @@ import androidx.compose.foundation.v2.ScrollbarAdapter
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -31,9 +34,12 @@ fun SidebarVerticalScrollbar(
     modifier: Modifier = Modifier,
     adapter: ScrollbarAdapter,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isDragged by interactionSource.collectIsDraggedAsState()
+
     JvmScrollbarStyleProvider {
         AnimatedVisibility(
-            visible = visible,
+            visible = visible || isDragged,
             enter = fadeIn(),
             exit = fadeOut(),
             modifier = modifier.padding(bottom = XyTheme.dimens.snackBarPlayerHeight)
@@ -42,11 +48,11 @@ fun SidebarVerticalScrollbar(
             VerticalScrollbar(
                 modifier = Modifier.fillMaxHeight(),
                 adapter = adapter,
+                interactionSource = interactionSource,
             )
         }
     }
 }
-
 
 @Composable
 fun JvmHorizontalScrollbar(
@@ -54,9 +60,12 @@ fun JvmHorizontalScrollbar(
     modifier: Modifier = Modifier,
     adapter: ScrollbarAdapter,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isDragged by interactionSource.collectIsDraggedAsState()
+
     JvmScrollbarStyleProvider {
         AnimatedVisibility(
-            visible = visible,
+            visible = visible || isDragged,
             enter = fadeIn(),
             exit = fadeOut(),
             modifier = modifier,
@@ -64,6 +73,7 @@ fun JvmHorizontalScrollbar(
             HorizontalScrollbar(
                 modifier = Modifier.fillMaxWidth(),
                 adapter = adapter,
+                interactionSource = interactionSource,
             )
         }
     }
