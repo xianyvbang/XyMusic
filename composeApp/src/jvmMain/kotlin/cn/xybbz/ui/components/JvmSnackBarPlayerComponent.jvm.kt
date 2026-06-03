@@ -339,10 +339,7 @@ fun JvmSnackBarPlayerComponent(
                         musicListState = true
                     },
                     onToggleFavorite = { playMusic ->
-                        snackBarPlayerViewModel.toggleFavorite(
-                            itemId = playMusic.itemId,
-                            ifFavorite = playMusic.itemId in favoriteSet
-                        )
+                        snackBarPlayerViewModel.musicController.invokingOnFavorite(playMusic.itemId)
                     },
                     onShowMusicInfo = { playMusic ->
                         snackBarPlayerViewModel.loadMusicInfo(playMusic.itemId)?.let { musicInfo ->

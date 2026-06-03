@@ -93,8 +93,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cn.xybbz.api.client.FavoriteCoordinator
-import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.DateUtil.toSecondMs
 import cn.xybbz.compositionLocal.LocalMainViewModel
@@ -685,13 +683,7 @@ fun JvmMusicPlayerScreen(
                                 }
                             },
                             onToggleFavorite = { playMusic ->
-                                FavoriteCoordinator.setFavoriteData(
-                                    dataSourceManager = musicPlayerViewModel.dataSourceManager,
-                                    type = MusicTypeEnum.MUSIC,
-                                    itemId = playMusic.itemId,
-                                    ifFavorite = playMusic.itemId in favoriteList,
-                                    musicController = musicPlayerViewModel.musicController
-                                )
+                                musicPlayerViewModel.musicController.invokingOnFavorite(playMusic.itemId)
                             },
                             onShowMusicInfo = { playMusic ->
                                 musicPlayerViewModel.dataSourceManager.selectMusicInfoById(playMusic.itemId)

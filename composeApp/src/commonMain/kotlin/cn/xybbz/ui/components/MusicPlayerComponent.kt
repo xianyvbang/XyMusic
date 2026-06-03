@@ -71,9 +71,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.api.client.FavoriteCoordinator
-import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
@@ -383,7 +380,6 @@ fun MusicPlayerScreen(
 
                         FavoriteMusicIconComponent(
                             musicDetail = musicDetail,
-                            dataSourceManager = musicPlayerViewModel.dataSourceManager,
                             musicController = musicPlayerViewModel.musicController,
                             onFavoriteMusicIdSet = { favoriteList }
                         )
@@ -594,24 +590,13 @@ fun PlayerStateComponent(
 @Composable
 private fun FavoriteMusicIconComponent(
     musicDetail: XyPlayMusic,
-    dataSourceManager: DataSourceManager,
     musicController: MusicCommonController,
     onFavoriteMusicIdSet: () -> List<String>
 ) {
-    val coroutineScope = rememberCoroutineScope()
-
     FavoriteIconButton(
         isFavorite = musicDetail.itemId in onFavoriteMusicIdSet(),
         onClick = {
-            coroutineScope.launch {
-                FavoriteCoordinator.setFavoriteData(
-                    dataSourceManager = dataSourceManager,
-                    type = MusicTypeEnum.MUSIC,
-                    itemId = musicDetail.itemId,
-                    ifFavorite = musicDetail.itemId in onFavoriteMusicIdSet(),
-                    musicController = musicController
-                )
-            }
+            musicController.invokingOnFavorite(musicDetail.itemId)
         },
         iconModifier = Modifier.size(60.dp),
     )

@@ -26,11 +26,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cn.xybbz.api.client.DataSourceManager
-import cn.xybbz.api.client.FavoriteCoordinator
 import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.enums.DownloadTypes
-import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
@@ -164,21 +162,6 @@ class MusicBottomMenuViewModel(
             endTime = skipTime.endTime
         )
     }
-
-    suspend fun setFavoriteMusic(
-        itemId: String,
-        ifFavorite: Boolean
-    ): Boolean {
-        val favoriteMusic = FavoriteCoordinator.setFavoriteData(
-            dataSourceManager = dataSourceManager,
-            type = MusicTypeEnum.MUSIC,
-            itemId = itemId,
-            ifFavorite = ifFavorite,
-            musicController = musicController
-        )
-        return favoriteMusic
-    }
-
 
     /**
      * 根据专辑id获得跳过片头和片尾

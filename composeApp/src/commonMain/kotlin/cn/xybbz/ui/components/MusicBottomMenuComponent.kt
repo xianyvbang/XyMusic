@@ -322,10 +322,7 @@ fun MusicBottomMenuComponent(
                         trailingOnClick = {
                             coroutineScope.launch {
                                 sheetState.hide()
-                                musicBottomMenuViewModel.setFavoriteMusic(
-                                    itemId = music.itemId,
-                                    ifFavorite = favoriteState
-                                )
+                                musicBottomMenuViewModel.musicController.invokingOnFavorite(music.itemId)
                             }.invokeOnCompletion {
                                 ifShowBottom = false
 
