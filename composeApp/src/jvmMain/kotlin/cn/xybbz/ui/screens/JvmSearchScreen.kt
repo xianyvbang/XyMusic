@@ -60,6 +60,7 @@ import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
+import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import cn.xybbz.viewmodel.SearchViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -82,7 +83,8 @@ private val SearchMusicTableColumns = SongTableColumns(
 @Composable
 fun JvmSearchScreen(
     searchQuery: String = "",
-    searchViewModel: SearchViewModel = koinViewModel<SearchViewModel>()
+    searchViewModel: SearchViewModel = koinViewModel<SearchViewModel>(),
+    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
 ) {
     val favoriteList by searchViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val routeSearchQuery = searchQuery.trim()
@@ -124,9 +126,11 @@ fun JvmSearchScreen(
             musicList = searchViewModel.musicList,
             albumList = searchViewModel.albumList,
             artistList = searchViewModel.artistList,
+            artistInfoList = musicBottomMenuViewModel.xyArtists,
             onAddMusic = {
                 searchViewModel.addMusic(it)
             },
+            onLoadArtistInfos = musicBottomMenuViewModel::getArtistInfos,
             onLoadingState = {
                 searchViewModel.isSearchLoad
             },
@@ -147,7 +151,9 @@ fun JvmSearchResultScreen(
     musicList: List<XyMusic>,
     albumList: List<XyAlbum>,
     artistList: List<XyArtist>,
+    artistInfoList: List<XyArtist>,
     onAddMusic: (XyMusic) -> Unit,
+    onLoadArtistInfos: (List<String>) -> Unit,
     onLoadingState: () -> Boolean,
     onFavoriteList: () -> List<String>,
     currentPlayingMusicIdFlow: Flow<String?>,
@@ -157,7 +163,10 @@ fun JvmSearchResultScreen(
     val navigator = LocalNavigator.current
 
     // 搜索结果中的艺术家卡片和歌曲行艺术家入口统一走这里。
-    val artistClickHandler = rememberMusicArtistClickHandler()
+    val artistClickHandler = rememberMusicArtistClickHandler(
+        artistList = artistInfoList,
+        onLoadArtistInfos = onLoadArtistInfos,
+    )
 
     val lazyListState = rememberLazyListState()
 

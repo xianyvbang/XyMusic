@@ -36,6 +36,7 @@ import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.DailyRecommendViewModel
+import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -52,11 +53,15 @@ private val JvmDailyRecommendMusicTableColumns = SongTableColumns(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JvmDailyRecommendScreen(
-    dailyRecommendViewModel: DailyRecommendViewModel = koinViewModel<DailyRecommendViewModel>()
+    dailyRecommendViewModel: DailyRecommendViewModel = koinViewModel<DailyRecommendViewModel>(),
+    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
 ) {
 
     val navigator = LocalNavigator.current
-    val artistClickHandler = rememberMusicArtistClickHandler()
+    val artistClickHandler = rememberMusicArtistClickHandler(
+        artistList = musicBottomMenuViewModel.xyArtists,
+        onLoadArtistInfos = musicBottomMenuViewModel::getArtistInfos,
+    )
     val favoriteList by dailyRecommendViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val currentPlayingMusicIdFlow = remember(dailyRecommendViewModel) {
         dailyRecommendViewModel.musicController.musicInfoFlow.map { musicInfo ->

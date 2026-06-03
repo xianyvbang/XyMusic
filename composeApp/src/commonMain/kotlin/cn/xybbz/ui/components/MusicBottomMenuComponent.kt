@@ -251,7 +251,8 @@ fun MusicBottomMenuComponent(
 
         // 统一处理艺术家点击：多艺术家弹选择列表，单艺术家直接进入详情页。
         val artistClickHandler = rememberMusicArtistClickHandler(
-            musicBottomMenuViewModel = musicBottomMenuViewModel,
+            artistList = musicBottomMenuViewModel.xyArtists,
+            onLoadArtistInfos = musicBottomMenuViewModel::getArtistInfos,
             onBeforeOpen = {
                 sheetState.hide()
             },

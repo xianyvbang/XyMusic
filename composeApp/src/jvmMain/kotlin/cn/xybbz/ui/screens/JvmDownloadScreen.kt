@@ -87,6 +87,7 @@ import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.DownloadViewModel
 import cn.xybbz.viewmodel.LocalViewModel
+import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -134,11 +135,13 @@ internal enum class JvmLocalDownloadTab {
 fun JvmDownloadScreen(
     downloadViewModel: DownloadViewModel = koinViewModel<DownloadViewModel>(),
     localViewModel: LocalViewModel = koinViewModel<LocalViewModel>(),
+    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
 ) {
     JvmLocalDownloadScreen(
         initialTab = JvmLocalDownloadTab.Downloading,
         downloadViewModel = downloadViewModel,
         localViewModel = localViewModel,
+        musicBottomMenuViewModel = musicBottomMenuViewModel,
     )
 }
 
@@ -147,9 +150,13 @@ internal fun JvmLocalDownloadScreen(
     initialTab: JvmLocalDownloadTab,
     downloadViewModel: DownloadViewModel = koinViewModel<DownloadViewModel>(),
     localViewModel: LocalViewModel = koinViewModel<LocalViewModel>(),
+    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
 ) {
     val navigator = LocalNavigator.current
-    val artistClickHandler = rememberMusicArtistClickHandler()
+    val artistClickHandler = rememberMusicArtistClickHandler(
+        artistList = musicBottomMenuViewModel.xyArtists,
+        onLoadArtistInfos = musicBottomMenuViewModel::getArtistInfos,
+    )
     val allDownloadTasks by downloadViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
     val localSongs by localViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
     val favoriteSet by localViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())

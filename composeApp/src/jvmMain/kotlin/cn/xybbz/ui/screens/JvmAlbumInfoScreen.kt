@@ -111,6 +111,7 @@ import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.AlbumInfoViewModel
+import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -180,7 +181,8 @@ fun JvmAlbumInfoScreen(
             itemId,
             dataType
         )
-    }
+    },
+    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
 ) {
 
     SideEffect {
@@ -192,7 +194,10 @@ fun JvmAlbumInfoScreen(
     val navigator = LocalNavigator.current
 
     // 专辑头部的艺术家文本点击使用统一处理器，兼容多个专辑艺术家。
-    val artistClickHandler = rememberMusicArtistClickHandler()
+    val artistClickHandler = rememberMusicArtistClickHandler(
+        artistList = musicBottomMenuViewModel.xyArtists,
+        onLoadArtistInfos = musicBottomMenuViewModel::getArtistInfos,
+    )
     val isSticking by remember(lazyListState) { lazyListState.isSticking(1) }
 
     val favoriteSet by albumInfoViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())

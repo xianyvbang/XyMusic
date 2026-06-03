@@ -39,6 +39,7 @@ import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.FavoriteViewModel
+import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -60,12 +61,16 @@ private val JvmFavoriteMusicTableColumns = SongTableColumns(
 @Composable
 fun JvmFavoriteScreen(
     favoriteViewModel: FavoriteViewModel = koinViewModel<FavoriteViewModel>(),
+    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
 ) {
     val favoriteMusicListPage =
         favoriteViewModel.favoriteMusicList.collectAsLazyPagingItems()
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
-    val artistClickHandler = rememberMusicArtistClickHandler()
+    val artistClickHandler = rememberMusicArtistClickHandler(
+        artistList = musicBottomMenuViewModel.xyArtists,
+        onLoadArtistInfos = musicBottomMenuViewModel::getArtistInfos,
+    )
     val favoriteList by favoriteViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val currentPlayingMusicIdFlow = remember(favoriteViewModel) {
         favoriteViewModel.musicController.musicInfoFlow.map { musicInfo ->

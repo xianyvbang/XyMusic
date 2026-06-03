@@ -12,12 +12,11 @@ import cn.xybbz.common.constants.Constants.SLASH_DELIMITER
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.data.album.XyAlbum
+import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.router.ArtistInfo
-import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import kotlinx.coroutines.launch
-import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * 统一处理“打开艺术家”的点击行为。
@@ -88,14 +87,16 @@ class MusicArtistClickHandler internal constructor(
 /**
  * 记住一个通用的艺术家点击处理器，并在需要时托管多艺术家选择弹窗。
  *
- * @param musicBottomMenuViewModel 复用底部菜单 ViewModel 中的艺术家查询能力。
+ * @param artistList 多艺术家选择弹窗展示的艺术家信息列表。
+ * @param onLoadArtistInfos 加载多艺术家完整信息的方法。
  * @param onBeforeOpen 打开艺术家前执行的动作，通常用于先隐藏当前菜单。
  * @param onBeforeSingleArtistNavigate 单艺术家直接跳转前执行的动作，通常用于关闭播放器弹层。
  * @param onAfterOpen 打开流程结束后的动作，通常用于收起当前 UI 状态。
  */
 @Composable
 fun rememberMusicArtistClickHandler(
-    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
+    artistList: List<XyArtist>,
+    onLoadArtistInfos: (List<String>) -> Unit,
     onBeforeOpen: suspend () -> Unit = {},
     onBeforeSingleArtistNavigate: suspend () -> Unit = {},
     onAfterOpen: () -> Unit = {},
@@ -107,6 +108,7 @@ fun rememberMusicArtistClickHandler(
     val currentOnBeforeOpen = rememberUpdatedState(onBeforeOpen)
     val currentOnBeforeSingleArtistNavigate = rememberUpdatedState(onBeforeSingleArtistNavigate)
     val currentOnAfterOpen = rememberUpdatedState(onAfterOpen)
+    val currentOnLoadArtistInfos = rememberUpdatedState(onLoadArtistInfos)
 
     /**
      * 是否展示多艺术家选择弹窗。
@@ -119,7 +121,7 @@ fun rememberMusicArtistClickHandler(
 
     // 多艺术家弹窗在处理器内部托管，调用方只需要调用 openArtists 系列方法。
     ArtistItemListBottomSheet(
-        artistList = musicBottomMenuViewModel.xyArtists,
+        artistList = artistList,
         onIfShowArtistList = { ifShowArtistList },
         onSetShowArtistList = { ifShowArtistList = it },
     )
@@ -127,7 +129,6 @@ fun rememberMusicArtistClickHandler(
     val openArtists = remember(
         navigator,
         coroutineScope,
-        musicBottomMenuViewModel,
     ) {
         openArtists@{ artistIds: List<String>?, artists: List<String>? ->
             // 先把 id 和名称对齐成路由数据，过滤掉空 id，避免无效跳转。
@@ -141,7 +142,7 @@ fun rememberMusicArtistClickHandler(
                 if (artistRoutes.size > 1) {
                     // 多艺术家：展示选择弹窗，并查询每个艺术家的完整信息用于卡片展示。
                     ifShowArtistList = true
-                    musicBottomMenuViewModel.getArtistInfos(artistRoutes.map { it.artistId })
+                    currentOnLoadArtistInfos.value(artistRoutes.map { it.artistId })
                 } else {
                     // 单艺术家：无需弹窗，直接关闭相关 UI 后进入艺术家详情页。
                     currentOnBeforeSingleArtistNavigate.value()

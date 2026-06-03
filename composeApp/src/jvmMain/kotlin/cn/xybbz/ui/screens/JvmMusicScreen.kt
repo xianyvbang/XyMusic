@@ -48,6 +48,7 @@ import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.xy.XyColumnScreen
+import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import cn.xybbz.viewmodel.MusicViewModel
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -74,12 +75,16 @@ private val JvmMusicTableColumns = SongTableColumns(
 @Composable
 fun JvmMusicScreen(
     musicViewModel: MusicViewModel = koinViewModel<MusicViewModel>(),
+    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
 ) {
 
     val coroutineScope = rememberCoroutineScope()
     val mainViewModel = LocalMainViewModel.current
     val navigator = LocalNavigator.current
-    val artistClickHandler = rememberMusicArtistClickHandler()
+    val artistClickHandler = rememberMusicArtistClickHandler(
+        artistList = musicBottomMenuViewModel.xyArtists,
+        onLoadArtistInfos = musicBottomMenuViewModel::getArtistInfos,
+    )
     val homeMusicPager = musicViewModel.listPage.collectAsLazyPagingItems()
     val favoriteSet by musicViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val sortBy by musicViewModel.sortBy.collectAsStateWithLifecycle()

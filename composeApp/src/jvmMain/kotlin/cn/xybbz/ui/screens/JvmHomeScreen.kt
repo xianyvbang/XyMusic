@@ -48,6 +48,7 @@ import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextLarge
 import cn.xybbz.viewmodel.HomeViewModel
+import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.stringResource
@@ -75,6 +76,7 @@ private val HomeTopAppBarTitleHeight = 64.dp
 fun JvmHomeScreen(
     // JVM 首页 ViewModel 只负责页面数据和交互，不在 init 阶段触发登录重依赖。
     homeViewModel: HomeViewModel = koinViewModel<HomeViewModel>(),
+    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
     // 桌面窗口首帧展示后再启动数据源链路，减少启动白屏和窗口卡顿。
     dataSourceBootstrapper: DataSourceBootstrapper = koinInject()
 ) {
@@ -99,7 +101,10 @@ fun JvmHomeScreen(
     }
 
     // 首页歌曲表格里的艺术家文本和右键菜单共用同一套打开逻辑。
-    val artistClickHandler = rememberMusicArtistClickHandler()
+    val artistClickHandler = rememberMusicArtistClickHandler(
+        artistList = musicBottomMenuViewModel.xyArtists,
+        onLoadArtistInfos = musicBottomMenuViewModel::getArtistInfos,
+    )
     val dailyRecommendations = stringResource(Res.string.daily_recommendations)
     val latestAlbums = stringResource(Res.string.latest_albums)
     val recentlyPlayedMusic = stringResource(Res.string.recently_played_music)
