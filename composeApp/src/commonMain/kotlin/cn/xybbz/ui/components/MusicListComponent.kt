@@ -71,6 +71,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.compositionLocal.LocalMainViewModel
+import cn.xybbz.compositionLocal.LocalPlayerChromeState
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
@@ -105,13 +106,14 @@ fun MusicListComponent(
         skipPartiallyExpanded = true
     )
 
-    val mainViewModel = LocalMainViewModel.current
+    // 播放列表弹层关闭时恢复迷你播放条标题跑马灯。
+    val playerChromeState = LocalPlayerChromeState.current
     val state by musicController.stateFlow.collectAsStateWithLifecycle()
     val isPlaying = state == PlayStateEnum.Playing || state == PlayStateEnum.Loading
     MusicBottomMenuPlatformSheet(
         onIfDisplay = { musicListState },
         onClose = {
-            mainViewModel.putIterations(1)
+            playerChromeState.putMarqueeIterations(1)
             onSetState(false)
         },
         bottomSheetState = sheetState,

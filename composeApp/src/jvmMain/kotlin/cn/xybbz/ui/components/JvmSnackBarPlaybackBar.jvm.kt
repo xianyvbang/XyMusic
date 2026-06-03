@@ -78,6 +78,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.compositionLocal.LocalMainViewModel
+import cn.xybbz.compositionLocal.LocalPlayerChromeState
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.localdata.data.music.XyPlayMusic
@@ -167,7 +168,8 @@ internal fun JvmSnackBarPlaybackBar(
     onToggleFavorite: suspend (XyPlayMusic) -> Unit,
     onShowMusicInfo: suspend (XyPlayMusic) -> Unit
 ) {
-    val mainViewModel = LocalMainViewModel.current
+    // 桌面播放条标题读取共享的跑马灯次数。
+    val playerChromeState = LocalPlayerChromeState.current
     val coroutineScope = rememberCoroutineScope()
     val currentMusic by musicController.musicInfoFlow.collectAsStateWithLifecycle()
     val originMusicList by musicController.originMusicListFlow.collectAsStateWithLifecycle()
@@ -226,7 +228,7 @@ internal fun JvmSnackBarPlaybackBar(
                         text = snackBarTitle,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.basicMarquee(iterations = mainViewModel.iterations)
+                        modifier = Modifier.basicMarquee(iterations = playerChromeState.marqueeIterations)
                     )
                 },
                 supportingContent = {

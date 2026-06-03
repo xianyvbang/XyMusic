@@ -58,8 +58,8 @@ import cn.xybbz.common.utils.DateUtil.toSecondMsString
 import cn.xybbz.common.utils.Log
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.shareMusicResource
-import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.compositionLocal.LocalPlayerChromeState
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
@@ -172,7 +172,7 @@ fun MusicBottomMenuComponent(
     onAlbumRouter: (String) -> Unit,
     onPlayerSheetClose: () -> Unit
 ) {
-    val mainViewModel = LocalMainViewModel.current
+    val playerChromeState = LocalPlayerChromeState.current
 
     val navigator = LocalNavigator.current
     val sheetState = rememberModalBottomSheetState(
@@ -308,7 +308,7 @@ fun MusicBottomMenuComponent(
                     ifShowBottom = false
                     music.dismiss()
                 }.invokeOnCompletion {
-                    mainViewModel.putIterations(1)
+                    playerChromeState.putMarqueeIterations(1)
                 }
             }
         ) {
@@ -640,7 +640,7 @@ fun TimerComponent(
     onIfPlayEndClose: () -> Boolean,
     onSetIfPlayEndClose: (Boolean) -> Unit
 ) {
-    val mainViewModel = LocalMainViewModel.current
+    val playerChromeState = LocalPlayerChromeState.current
     val sheetTimer = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
@@ -701,7 +701,7 @@ fun TimerComponent(
         dragHandle = null,
         onIfDisplay = onIfTimer,
         onClose = {
-            mainViewModel.putIterations(1)
+            playerChromeState.putMarqueeIterations(1)
             onSetIfTimer(it)
         },
         titleText = timerClose,
@@ -864,7 +864,7 @@ private fun DoubleSpeedComponent(
     onDoubleSpeed: () -> Float,
     onSetDoubleSpeed: suspend (Float) -> Unit,
 ) {
-    val mainViewModel = LocalMainViewModel.current
+    val playerChromeState = LocalPlayerChromeState.current
     val coroutineScope = rememberCoroutineScope()
     val sheetDoubleSpeed = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -882,7 +882,7 @@ private fun DoubleSpeedComponent(
         dragHandle = null,
         onClose = {
             onSetIfDoubleSpeed(false)
-            mainViewModel.putIterations(1)
+            playerChromeState.putMarqueeIterations(1)
         },
         titleText = stringResource(Res.string.double_speed),
         titleTailContent = {
@@ -958,7 +958,7 @@ private fun SkipBeginningAndEndComponent(
 
     val coroutineScope = rememberCoroutineScope()
 
-    val mainViewModel = LocalMainViewModel.current
+    val playerChromeState = LocalPlayerChromeState.current
     var skipTime by remember {
         mutableStateOf(SkipTime(connectionId = 0))
     }
@@ -984,7 +984,7 @@ private fun SkipBeginningAndEndComponent(
         onIfDisplay = onIfShowHeadAndTail,
         onClose = {
             onSetIfShowHeadAndTail(it)
-            mainViewModel.putIterations(1)
+            playerChromeState.putMarqueeIterations(1)
         },
         dragHandle = null,
         titleText = stringResource(Res.string.skip_head_tail),
@@ -1080,7 +1080,7 @@ fun MusicInfoBottomComponent(
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = false
     )
-    val mainViewModel = LocalMainViewModel.current
+    val playerChromeState = LocalPlayerChromeState.current
 
     MusicBottomMenuPlatformSheet(
         modifier = modifier,
@@ -1089,7 +1089,7 @@ fun MusicInfoBottomComponent(
         dragHandle = null,
         onClose = {
             onSetShowMusicInfo(false)
-            mainViewModel.putIterations(1)
+            playerChromeState.putMarqueeIterations(1)
         },
         titleText = stringResource(Res.string.song_info)
     ) {
@@ -1194,7 +1194,7 @@ fun ArtistItemListBottomSheet(
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = false
     )
-    val mainViewModel = LocalMainViewModel.current
+    val playerChromeState = LocalPlayerChromeState.current
     val navHostController = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -1205,7 +1205,7 @@ fun ArtistItemListBottomSheet(
         dragHandle = null,
         onClose = {
             onSetShowArtistList(false)
-            mainViewModel.putIterations(1)
+            playerChromeState.putMarqueeIterations(1)
         },
         titleText = stringResource(Res.string.artist_list_title)
     ) {

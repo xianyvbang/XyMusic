@@ -9,12 +9,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.compositionLocal.LocalMainViewModel
+import cn.xybbz.compositionLocal.LocalPlayerChromeState
 import cn.xybbz.ui.components.JvmSnackBarPlayerComponent
 import cn.xybbz.ui.theme.XyTheme
 
 @Composable
 internal actual fun MainScreenSnackBarHost(modifier: Modifier) {
     val mainViewModel = LocalMainViewModel.current
+    // 控制桌面端完整播放器页的打开状态。
+    val playerChromeState = LocalPlayerChromeState.current
     val ifShowSnackBar by mainViewModel.settingsManager.ifShowSnackBar.collectAsStateWithLifecycle()
 
     Box(
@@ -28,7 +31,7 @@ internal actual fun MainScreenSnackBarHost(modifier: Modifier) {
             Column {
                 JvmSnackBarPlayerComponent(
                     onClick = {
-                        mainViewModel.putSheetState(true)
+                        playerChromeState.showPlayerSheet()
                     }
                 )
             }

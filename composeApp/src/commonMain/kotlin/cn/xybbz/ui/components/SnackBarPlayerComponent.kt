@@ -75,6 +75,7 @@ import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.common.utils.ResourcesUtils.readPaletteColor
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.compositionLocal.LocalPlayerChromeState
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.extension.playProgress
@@ -121,6 +122,8 @@ fun SnackBarPlayerComponent(
     onClick: () -> Unit
 ) {
     val mainViewModel = LocalMainViewModel.current
+    // 迷你播放条共享播放器外壳状态，用于打开/关闭完整播放器和控制标题跑马灯。
+    val playerChromeState = LocalPlayerChromeState.current
     val navigator = LocalNavigator.current
     var musicListState by remember {
         mutableStateOf(false)
@@ -162,8 +165,8 @@ fun SnackBarPlayerComponent(
             coroutineScope.launch {
                 playerSheetState.hide()
             }.invokeOnCompletion {
-                mainViewModel.putIterations(1)
-                mainViewModel.putSheetState(false)
+                playerChromeState.putMarqueeIterations(1)
+                playerChromeState.hidePlayerSheet()
             }
         })
 
@@ -203,7 +206,7 @@ fun SnackBarPlayerComponent(
             try {
                 snackBarPlayerViewModel.musicController.removeItem(it)
                 if (originMusicList.isEmpty()) {
-                    mainViewModel.putSheetState(false)
+                    playerChromeState.hidePlayerSheet()
                     coroutineScope.launch {
                         mainViewModel.db.playerDao.removeByDatasource()
                     }
@@ -459,7 +462,8 @@ fun RowScope.HorizontalPagerSnackBar(
             }
         }
 
-        val mainViewModel = LocalMainViewModel.current
+        // 歌曲标题区域读取共享的跑马灯次数。
+        val playerChromeState = LocalPlayerChromeState.current
 
         val intState = remember {
             derivedStateOf {
@@ -496,7 +500,7 @@ fun RowScope.HorizontalPagerSnackBar(
                         Log.d("Pager", "向左滑动 <-")
                     }
 
-                    mainViewModel.putIterations(1)
+                    playerChromeState.putMarqueeIterations(1)
                 }
             }
 
@@ -547,7 +551,7 @@ fun RowScope.HorizontalPagerSnackBar(
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp)
                     .basicMarquee(
-                        iterations = mainViewModel.iterations
+                        iterations = playerChromeState.marqueeIterations
                     ),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.W700,

@@ -95,7 +95,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.common.utils.DateUtil.toSecondMs
-import cn.xybbz.compositionLocal.LocalMainViewModel
+import cn.xybbz.compositionLocal.LocalPlayerChromeState
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.entity.data.ext.joinToString
 import cn.xybbz.localdata.data.music.XyPlayMusic
@@ -163,7 +163,8 @@ fun JvmMusicPlayerComponent(
     onRefreshVolume: () -> Unit,
     onSetState: (Boolean) -> Unit
 ) {
-    val mainViewModel = LocalMainViewModel.current
+    // 桌面完整播放器页通过播放器外壳状态控制弹层显隐和关闭后的标题跑马灯。
+    val playerChromeState = LocalPlayerChromeState.current
     val playerHitTestOwner = remember { DesktopInteractiveHitTestOwner() }
     val coroutineScope = rememberCoroutineScope()
     val desktopTabs = remember {
@@ -173,7 +174,7 @@ fun JvmMusicPlayerComponent(
         MutableTransitionState(false)
     }
     val sharedCoverProgress by animateFloatAsState(
-        targetValue = if (mainViewModel.sheetState) 1f else 0f,
+        targetValue = if (playerChromeState.isPlayerSheetVisible) 1f else 0f,
         animationSpec = tween(
             durationMillis = JvmMusicPlayerSharedCoverDurationMillis,
             easing = LinearEasing
@@ -186,14 +187,14 @@ fun JvmMusicPlayerComponent(
         }
     val listState = rememberLazyListState()
     val similarPopularListState = rememberLazyListState()
-    LaunchedEffect(mainViewModel.sheetState) {
-        overlayVisibleState.targetState = mainViewModel.sheetState
+    LaunchedEffect(playerChromeState.isPlayerSheetVisible) {
+        overlayVisibleState.targetState = playerChromeState.isPlayerSheetVisible
     }
     if (overlayVisibleState.currentState || overlayVisibleState.targetState) {
         Dialog(
             onDismissRequest = {
-                mainViewModel.putIterations(1)
-                mainViewModel.putSheetState(false)
+                playerChromeState.putMarqueeIterations(1)
+                playerChromeState.hidePlayerSheet()
             },
             properties = DialogProperties(
                 dismissOnBackPress = true,
@@ -239,8 +240,8 @@ fun JvmMusicPlayerComponent(
                                         sheetStateR.hide()
                                     }
                                 }.invokeOnCompletion {
-                                    mainViewModel.putIterations(1)
-                                    mainViewModel.putSheetState(false)
+                                    playerChromeState.putMarqueeIterations(1)
+                                    playerChromeState.hidePlayerSheet()
                                 }
                             },
                             onSetState = onSetState,

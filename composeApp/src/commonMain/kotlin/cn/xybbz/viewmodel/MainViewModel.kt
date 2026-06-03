@@ -19,7 +19,6 @@
 package cn.xybbz.viewmodel
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -93,53 +92,11 @@ class MainViewModel(
         Log.i("=====", "MainViewModel初始化")
         //初始化年代数据
         initEraData()
-        // 这里只监听轻量 UI 信号，不再直接订阅播放器事件总线。
-        initSongChangeObserver()
         //初始化版本信息获取
         initGetVersionInfo()
         //设置转码监听
         initTranscodeListener()
     }
-
-    /**
-     * 监听切歌事件并重置页面表现状态。
-     */
-    private fun initSongChangeObserver() {
-        viewModelScope.launch {
-            songChangeEvents.collect {
-                // 切歌后重置跑马灯次数，这属于页面表现层逻辑，仍放在 ViewModel 中处理。
-                putIterations(0)
-            }
-        }
-    }
-
-    /**
-     * 滚动次数
-     */
-    var iterations by mutableIntStateOf(1)
-        private set
-
-    /**
-     * 更新歌词或标题区域的滚动次数。
-     */
-    fun putIterations(iterations: Int) {
-        this.iterations = iterations
-    }
-
-
-    /**
-     * 音乐播放页面是否显示
-     */
-    var sheetState by mutableStateOf(false)
-        private set
-
-    /**
-     * 更新播放器页显示状态。
-     */
-    fun putSheetState(sheetState: Boolean) {
-        this.sheetState = sheetState
-    }
-
 
     //region 音乐循环类型
     val iconList by mutableStateOf(

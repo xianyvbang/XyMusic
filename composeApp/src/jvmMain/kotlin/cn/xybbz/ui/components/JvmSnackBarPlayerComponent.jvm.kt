@@ -50,6 +50,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.compositionLocal.LocalPlayerChromeState
 import cn.xybbz.config.volume.VolumeServer
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -86,6 +87,8 @@ fun JvmSnackBarPlayerComponent(
     onClick: () -> Unit
 ) {
     val mainViewModel = LocalMainViewModel.current
+    // 桌面迷你播放条共享播放器外壳状态，用于打开/关闭完整播放器。
+    val playerChromeState = LocalPlayerChromeState.current
     val navigator = LocalNavigator.current
     val volumeServer = koinInject<VolumeServer>()
     var sharedCoverSourceBoundsOnScreen by remember {
@@ -154,8 +157,8 @@ fun JvmSnackBarPlayerComponent(
             coroutineScope.launch {
                 playerSheetState.hide()
             }.invokeOnCompletion {
-                mainViewModel.putIterations(1)
-                mainViewModel.putSheetState(false)
+                playerChromeState.putMarqueeIterations(1)
+                playerChromeState.hidePlayerSheet()
             }
         })
 
@@ -202,7 +205,7 @@ fun JvmSnackBarPlayerComponent(
             try {
                 snackBarPlayerViewModel.musicController.removeItem(it)
                 if (originMusicList.isEmpty()) {
-                    mainViewModel.putSheetState(false)
+                    playerChromeState.hidePlayerSheet()
                     coroutineScope.launch {
                         mainViewModel.db.playerDao.removeByDatasource()
                     }

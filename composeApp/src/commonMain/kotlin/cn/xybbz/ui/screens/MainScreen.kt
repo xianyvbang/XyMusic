@@ -25,10 +25,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +37,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
 import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalMainViewModel
+import cn.xybbz.compositionLocal.LocalPlayerChromeState
 import cn.xybbz.router.Connection
 import cn.xybbz.router.NavigationState
 import cn.xybbz.router.Navigator
@@ -47,6 +49,7 @@ import cn.xybbz.ui.components.AlertDialogComponent
 import cn.xybbz.ui.components.BottomSheetCompose
 import cn.xybbz.ui.components.LifecycleEffect
 import cn.xybbz.ui.components.LoadingCompose
+import cn.xybbz.ui.state.rememberPlayerChromeState
 import cn.xybbz.viewmodel.MainViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -63,8 +66,17 @@ fun MainScreen(
 ) {
 
     val coroutineScope = rememberCoroutineScope()
+    // 播放器外壳状态由主壳持有，供迷你播放条和完整播放器共享。
+    val playerChromeState = rememberPlayerChromeState()
     val selectUiState by mainViewModel.selectControl.uiState.collectAsStateWithLifecycle()
     val currentSelectUiState = rememberUpdatedState(selectUiState)
+
+    // 切歌后重置标题跑马灯次数，这属于页面表现逻辑，不再放在 MainViewModel 内部处理。
+    LaunchedEffect(mainViewModel, playerChromeState) {
+        mainViewModel.songChangeEvents.collect {
+            playerChromeState.putMarqueeIterations(0)
+        }
+    }
 
     DisposableEffect(navigator, mainViewModel, coroutineScope) {
         val snackbarListener = object : OnDestinationChangedListener {
@@ -103,8 +115,12 @@ fun MainScreen(
 
     CompositionLocalProvider(
         LocalMainViewModel provides mainViewModel,
+        // 下发播放器外壳状态，播放器相关组件通过 LocalPlayerChromeState 读写页面表现状态。
+        LocalPlayerChromeState provides playerChromeState,
     ) {
         val mainViewModel = LocalMainViewModel.current
+        // 当前主壳下共享的播放器外壳状态。
+        val playerChromeState = LocalPlayerChromeState.current
 
         Box(modifier = modifier) {
             //todo putDataSourceState 这个属性应该放在全局的object类里,不是放在mainViewModel里
@@ -115,15 +131,15 @@ fun MainScreen(
                 },
                 onStart = {
                     Log.i("=====", "创建")
-                    mainViewModel.putIterations(1)
+                    playerChromeState.putMarqueeIterations(1)
                 }, onDestroy = {
                     Log.i("=====", "onDestroy")
-                    mainViewModel.putIterations(0)
+                    playerChromeState.putMarqueeIterations(0)
 //                mainViewModel.clearRemoteCurrent()
                 }, onStop = {
                     //后台
                     Log.i("=====", "创建1")
-                    mainViewModel.putIterations(0)
+                    playerChromeState.putMarqueeIterations(0)
                 }, onPause = {
                     //后台
                     Log.i("=====", "创建2")

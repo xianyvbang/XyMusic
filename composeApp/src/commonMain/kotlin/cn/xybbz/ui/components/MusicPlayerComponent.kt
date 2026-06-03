@@ -73,6 +73,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.common.enums.PlayStateEnum
 import cn.xybbz.compositionLocal.LocalMainViewModel
+import cn.xybbz.compositionLocal.LocalPlayerChromeState
 import cn.xybbz.config.image.rememberPlayMusicCoverUrls
 import cn.xybbz.config.music.MusicCommonController
 import cn.xybbz.entity.data.ext.joinToString
@@ -121,7 +122,8 @@ fun MusicPlayerComponent(
     backNext: () -> Unit,
     onSetState: (Boolean) -> Unit
 ) {
-    val mainViewModel = LocalMainViewModel.current
+    // 完整播放器页通过播放器外壳状态控制显隐和关闭后的标题跑马灯。
+    val playerChromeState = LocalPlayerChromeState.current
     val coroutineScope = rememberCoroutineScope()
     /*  val sheetStateR = rememberModalBottomSheetState(
           skipPartiallyExpanded = true
@@ -150,10 +152,10 @@ fun MusicPlayerComponent(
     ModalBottomSheetExtendFillMaxSizeComponent(
         modifier = Modifier.nestedScroll(bottomSheetScrollConnection),
         bottomSheetState = sheetStateR,
-        onIfDisplay = { mainViewModel.sheetState },
+        onIfDisplay = { playerChromeState.isPlayerSheetVisible },
         onClose = {
-            mainViewModel.putIterations(1)
-            mainViewModel.putSheetState(false)
+            playerChromeState.putMarqueeIterations(1)
+            playerChromeState.hidePlayerSheet()
         },
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = { WindowInsets.captionBar },
@@ -165,8 +167,8 @@ fun MusicPlayerComponent(
                 coroutineScope.launch {
                     sheetStateR.hide()
                 }.invokeOnCompletion {
-                    mainViewModel.putIterations(1)
-                    mainViewModel.putSheetState(false)
+                    playerChromeState.putMarqueeIterations(1)
+                    playerChromeState.hidePlayerSheet()
                 }
             },
             onSeekToNext = toNext,
