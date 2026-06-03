@@ -6,6 +6,7 @@ package cn.xybbz.ui.windows
  */
 data class DesktopWindowFrameState(
     val isMaximized: Boolean,
+    val isFocused: Boolean,
     val onMinimize: () -> Unit,
     val onToggleMaximize: () -> Unit,
     val onClose: () -> Unit,
@@ -13,6 +14,7 @@ data class DesktopWindowFrameState(
     companion object {
         val None = DesktopWindowFrameState(
             isMaximized = false,
+            isFocused = false,
             onMinimize = {},
             onToggleMaximize = {},
             onClose = {},

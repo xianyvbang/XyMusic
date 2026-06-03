@@ -63,6 +63,7 @@ import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import io.ktor.client.HttpClient
 import io.ktor.client.network.sockets.SocketTimeoutException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -120,6 +121,7 @@ open class DataSourceManager(
     companion object {
         private const val ARTIST_POPULAR_CACHE_TTL_MS = 24L * 60L * 60L * 1000L
         private const val SIMILAR_MUSIC_CACHE_TTL_MS = 6L * 60L * 60L * 1000L
+        private const val ACTIVE_RELOGIN_INTERVAL_MS = 5L * 60L * 1000L
     }
 
 
@@ -247,11 +249,51 @@ open class DataSourceManager(
     var errorMessage by mutableStateOf("")
         private set
 
+    private var appInactiveAtMs: Long? = null
+    private var activeReloginJob: Job? = null
+
 
     /**
      * 事件监听
      */
     private val listeners = mutableListOf<OnDatasourceListener>()
+
+    /**
+     * 标记应用进入非活跃状态。
+     *
+     * 该时间戳只作为重新活跃时是否需要刷新登录的门禁，不代表网络登录状态。
+     */
+    fun markAppInactive() {
+        appInactiveAtMs = Clock.System.now().toEpochMilliseconds()
+    }
+
+    /**
+     * 应用重新活跃时按间隔触发一次重登录。
+     *
+     * 平台层只负责上报活跃状态；连接存在性、并发保护和登录入口都在这里统一处理。
+     */
+    fun requestReloginOnAppActive() {
+        val inactiveAt = appInactiveAtMs ?: return
+        val now = Clock.System.now().toEpochMilliseconds()
+        val inactiveDurationMs = now - inactiveAt
+        appInactiveAtMs = null
+        if (inactiveDurationMs < ACTIVE_RELOGIN_INTERVAL_MS) {
+            return
+        }
+        if (loading || _autoLoginRunning.value || activeReloginJob?.isActive == true) {
+            return
+        }
+        if (currentDataSourceServerOrNull() == null || getConnectionId() == 0L) {
+            return
+        }
+        activeReloginJob = scope.launch {
+            if (loading || _autoLoginRunning.value || currentDataSourceServerOrNull() == null) {
+                return@launch
+            }
+            val connectionConfig = db.connectionConfigDao.selectConnectionConfig() ?: return@launch
+            serverLogin(LoginType.API, connectionConfig)
+        }
+    }
 
     /**
      * 兼容旧入口的数据源初始化方法。
@@ -1502,6 +1544,8 @@ open class DataSourceManager(
      * 切换连接或关闭管理器时调用，避免旧连接状态继续影响后续页面。
      */
     fun release() {
+        activeReloginJob?.cancel()
+        activeReloginJob = null
         val dataSourceServer = currentDataSourceServerOrNull()
         // 先把服务置空，主界面会退回局部 loading，避免继续读旧数据源。
         _dataSourceServerFlow.value = null
@@ -1512,6 +1556,7 @@ open class DataSourceManager(
         // 清空自动登录状态，防止下一次启动/切换复用旧状态展示。
         _autoLoginState.value = null
         _autoLoginRunning.value = false
+        appInactiveAtMs = null
     }
 
     override fun close() {

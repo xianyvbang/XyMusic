@@ -2,7 +2,12 @@ package cn.xybbz
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
@@ -21,6 +26,8 @@ import cn.xybbz.ui.xy.LocalModalSideSheetContent
 import io.github.vinceglb.filekit.FileKit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.awt.event.WindowEvent
+import java.awt.event.WindowFocusListener
 
 /**
  * JVM 桌面端应用入口。
@@ -52,6 +59,26 @@ fun main() {
                 window = window,
                 onCloseRequest = handleCloseRequest
             )
+            var isWindowFocused by remember(window) {
+                mutableStateOf(window.isFocused)
+            }
+
+            DisposableEffect(window) {
+                val focusListener = object : WindowFocusListener {
+                    override fun windowGainedFocus(event: WindowEvent) {
+                        isWindowFocused = true
+                    }
+
+                    override fun windowLostFocus(event: WindowEvent) {
+                        isWindowFocused = false
+                    }
+                }
+                window.addWindowFocusListener(focusListener)
+                isWindowFocused = window.isFocused
+                onDispose {
+                    window.removeWindowFocusListener(focusListener)
+                }
+            }
 
             LaunchedEffect(Unit) {
                 // 窗口首帧先渲染，再后台拉起本地代理服务，避免代理绑定端口阻塞桌面窗口显示。
@@ -80,6 +107,7 @@ fun main() {
                 // 窗口控制行为同样从桌面入口下发，标题栏 UI 只消费状态与回调。
                 LocalDesktopWindowFrameState provides DesktopWindowFrameState(
                     isMaximized = chromeController.isMaximized,
+                    isFocused = isWindowFocused,
                     onMinimize = {
                         chromeController.minimize()
                     },
