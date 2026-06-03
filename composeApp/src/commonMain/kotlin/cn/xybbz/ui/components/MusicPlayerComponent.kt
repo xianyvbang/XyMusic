@@ -154,6 +154,7 @@ fun MusicPlayerComponent(
         bottomSheetState = sheetStateR,
         onIfDisplay = { playerChromeState.isPlayerSheetVisible },
         onClose = {
+            // 下滑或外部关闭完整播放器时恢复迷你播放条标题滚动，并同步隐藏共享播放器页状态。
             playerChromeState.putMarqueeIterations(1)
             playerChromeState.hidePlayerSheet()
         },
@@ -167,6 +168,7 @@ fun MusicPlayerComponent(
                 coroutineScope.launch {
                     sheetStateR.hide()
                 }.invokeOnCompletion {
+                    // 点击播放器内关闭按钮后恢复迷你播放条标题滚动，并同步隐藏共享播放器页状态。
                     playerChromeState.putMarqueeIterations(1)
                     playerChromeState.hidePlayerSheet()
                 }

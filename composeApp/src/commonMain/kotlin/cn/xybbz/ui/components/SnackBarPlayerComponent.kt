@@ -57,6 +57,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -165,6 +166,7 @@ fun SnackBarPlayerComponent(
             coroutineScope.launch {
                 playerSheetState.hide()
             }.invokeOnCompletion {
+                // 底部菜单关闭完整播放器后恢复迷你播放条标题滚动。
                 playerChromeState.putMarqueeIterations(1)
                 playerChromeState.hidePlayerSheet()
             }
@@ -206,6 +208,7 @@ fun SnackBarPlayerComponent(
             try {
                 snackBarPlayerViewModel.musicController.removeItem(it)
                 if (originMusicList.isEmpty()) {
+                    // 播放列表为空时关闭完整播放器，避免展示没有歌曲的播放器页。
                     playerChromeState.hidePlayerSheet()
                     coroutineScope.launch {
                         mainViewModel.db.playerDao.removeByDatasource()
@@ -500,6 +503,7 @@ fun RowScope.HorizontalPagerSnackBar(
                         Log.d("Pager", "向左滑动 <-")
                     }
 
+                    // 通过迷你播放条滑动切歌后，让标题跑马灯重新滚动一次。
                     playerChromeState.putMarqueeIterations(1)
                 }
             }
@@ -545,20 +549,25 @@ fun RowScope.HorizontalPagerSnackBar(
                     }
                 }
             }
-            Text(
-                text = if (originMusicList.isNotEmpty()) originMusicList[index].name else "",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 15.dp)
-                    .basicMarquee(
-                        iterations = playerChromeState.marqueeIterations
-                    ),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.W700,
-                lineHeight = 17.38.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Visible
-            )
+            val titleMusicId = originMusicList.getOrNull(index)?.itemId
+            // 歌曲变化时重建标题节点，让 basicMarquee 的内部滚动状态自然重新开始。
+            key(titleMusicId) {
+                Text(
+                    text = if (originMusicList.isNotEmpty()) originMusicList[index].name else "",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 15.dp)
+                        .basicMarquee(
+                            // 跑马灯次数由播放器外壳状态统一控制，弹层关闭等 UI 行为会更新它。
+                            iterations = playerChromeState.marqueeIterations
+                        ),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.W700,
+                    lineHeight = 17.38.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Visible
+                )
+            }
 
         }
     } else {

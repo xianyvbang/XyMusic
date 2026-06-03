@@ -31,6 +31,7 @@ internal actual fun MainScreenSnackBarHost(modifier: Modifier) {
             Column {
                 JvmSnackBarPlayerComponent(
                     onClick = {
+                        // 点击桌面迷你播放条时显示完整播放器页面。
                         playerChromeState.showPlayerSheet()
                     }
                 )

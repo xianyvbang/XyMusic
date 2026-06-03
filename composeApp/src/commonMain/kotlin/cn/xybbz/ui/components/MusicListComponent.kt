@@ -113,6 +113,7 @@ fun MusicListComponent(
     MusicBottomMenuPlatformSheet(
         onIfDisplay = { musicListState },
         onClose = {
+            // 关闭播放列表后恢复迷你播放条标题滚动一次。
             playerChromeState.putMarqueeIterations(1)
             onSetState(false)
         },

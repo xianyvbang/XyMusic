@@ -54,6 +54,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -184,6 +185,7 @@ internal fun JvmSnackBarPlaybackBar(
             indication = null
         ) {
             if (currentMusic != null) {
+                // 点击桌面播放条歌曲信息区域时打开完整播放器页面。
                 onShowPlayer()
             }
         }
@@ -224,12 +226,16 @@ internal fun JvmSnackBarPlaybackBar(
                     null
                 },
                 headlineContent = {
-                    XyText(
-                        text = snackBarTitle,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.basicMarquee(iterations = playerChromeState.marqueeIterations)
-                    )
+                    // 歌曲变化时重建标题节点，让 basicMarquee 的内部滚动状态自然重新开始。
+                    key(currentMusic?.itemId) {
+                        XyText(
+                            text = snackBarTitle,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            // 跑马灯次数由播放器外壳状态统一控制，保证桌面悬浮播放条和完整播放器一致。
+                            modifier = Modifier.basicMarquee(iterations = playerChromeState.marqueeIterations)
+                        )
+                    }
                 },
                 supportingContent = {
                     Row(

@@ -157,6 +157,7 @@ fun JvmSnackBarPlayerComponent(
             coroutineScope.launch {
                 playerSheetState.hide()
             }.invokeOnCompletion {
+                // 底部菜单关闭桌面完整播放器后恢复迷你播放条标题滚动。
                 playerChromeState.putMarqueeIterations(1)
                 playerChromeState.hidePlayerSheet()
             }
@@ -205,6 +206,7 @@ fun JvmSnackBarPlayerComponent(
             try {
                 snackBarPlayerViewModel.musicController.removeItem(it)
                 if (originMusicList.isEmpty()) {
+                    // 播放列表为空时关闭桌面完整播放器，避免展示没有歌曲的播放器页。
                     playerChromeState.hidePlayerSheet()
                     coroutineScope.launch {
                         mainViewModel.db.playerDao.removeByDatasource()

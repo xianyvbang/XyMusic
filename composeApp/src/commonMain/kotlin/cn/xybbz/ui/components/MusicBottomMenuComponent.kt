@@ -172,6 +172,7 @@ fun MusicBottomMenuComponent(
     onAlbumRouter: (String) -> Unit,
     onPlayerSheetClose: () -> Unit
 ) {
+    // 底部菜单关闭后需要恢复迷你播放条标题跑马灯，状态由播放器外壳统一持有。
     val playerChromeState = LocalPlayerChromeState.current
 
     val navigator = LocalNavigator.current
@@ -308,6 +309,7 @@ fun MusicBottomMenuComponent(
                     ifShowBottom = false
                     music.dismiss()
                 }.invokeOnCompletion {
+                    // 关闭底部菜单后允许迷你播放条标题重新滚动一次。
                     playerChromeState.putMarqueeIterations(1)
                 }
             }
@@ -640,6 +642,7 @@ fun TimerComponent(
     onIfPlayEndClose: () -> Boolean,
     onSetIfPlayEndClose: (Boolean) -> Unit
 ) {
+    // 定时关闭弹层关闭后需要恢复迷你播放条标题跑马灯。
     val playerChromeState = LocalPlayerChromeState.current
     val sheetTimer = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -701,6 +704,7 @@ fun TimerComponent(
         dragHandle = null,
         onIfDisplay = onIfTimer,
         onClose = {
+            // 关闭定时弹层时恢复迷你播放条标题滚动。
             playerChromeState.putMarqueeIterations(1)
             onSetIfTimer(it)
         },
@@ -864,6 +868,7 @@ private fun DoubleSpeedComponent(
     onDoubleSpeed: () -> Float,
     onSetDoubleSpeed: suspend (Float) -> Unit,
 ) {
+    // 倍速弹层关闭后需要恢复迷你播放条标题跑马灯。
     val playerChromeState = LocalPlayerChromeState.current
     val coroutineScope = rememberCoroutineScope()
     val sheetDoubleSpeed = rememberModalBottomSheetState(
@@ -882,6 +887,7 @@ private fun DoubleSpeedComponent(
         dragHandle = null,
         onClose = {
             onSetIfDoubleSpeed(false)
+            // 关闭倍速弹层时恢复迷你播放条标题滚动。
             playerChromeState.putMarqueeIterations(1)
         },
         titleText = stringResource(Res.string.double_speed),
@@ -958,6 +964,7 @@ private fun SkipBeginningAndEndComponent(
 
     val coroutineScope = rememberCoroutineScope()
 
+    // 跳过头尾弹层关闭后需要恢复迷你播放条标题跑马灯。
     val playerChromeState = LocalPlayerChromeState.current
     var skipTime by remember {
         mutableStateOf(SkipTime(connectionId = 0))
@@ -984,6 +991,7 @@ private fun SkipBeginningAndEndComponent(
         onIfDisplay = onIfShowHeadAndTail,
         onClose = {
             onSetIfShowHeadAndTail(it)
+            // 关闭跳过头尾弹层时恢复迷你播放条标题滚动。
             playerChromeState.putMarqueeIterations(1)
         },
         dragHandle = null,
@@ -1080,6 +1088,7 @@ fun MusicInfoBottomComponent(
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = false
     )
+    // 音乐信息弹层关闭后需要恢复迷你播放条标题跑马灯。
     val playerChromeState = LocalPlayerChromeState.current
 
     MusicBottomMenuPlatformSheet(
@@ -1089,6 +1098,7 @@ fun MusicInfoBottomComponent(
         dragHandle = null,
         onClose = {
             onSetShowMusicInfo(false)
+            // 关闭音乐信息弹层时恢复迷你播放条标题滚动。
             playerChromeState.putMarqueeIterations(1)
         },
         titleText = stringResource(Res.string.song_info)
@@ -1194,6 +1204,7 @@ fun ArtistItemListBottomSheet(
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = false
     )
+    // 艺术家列表弹层关闭后需要恢复迷你播放条标题跑马灯。
     val playerChromeState = LocalPlayerChromeState.current
     val navHostController = LocalNavigator.current
     val coroutineScope = rememberCoroutineScope()
@@ -1205,6 +1216,7 @@ fun ArtistItemListBottomSheet(
         dragHandle = null,
         onClose = {
             onSetShowArtistList(false)
+            // 关闭艺术家列表弹层时恢复迷你播放条标题滚动。
             playerChromeState.putMarqueeIterations(1)
         },
         titleText = stringResource(Res.string.artist_list_title)

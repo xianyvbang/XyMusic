@@ -23,6 +23,7 @@ internal fun SharedMainScreenSnackBarHost(modifier: Modifier = Modifier) {
         Column(modifier = modifier) {
             SnackBarPlayerComponent(
                 onClick = {
+                    // 点击迷你播放条时显示完整播放器页面。
                     playerChromeState.showPlayerSheet()
                 }
             )

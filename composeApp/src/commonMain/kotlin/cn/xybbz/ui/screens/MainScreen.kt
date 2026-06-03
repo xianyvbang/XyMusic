@@ -25,7 +25,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -70,13 +69,6 @@ fun MainScreen(
     val playerChromeState = rememberPlayerChromeState()
     val selectUiState by mainViewModel.selectControl.uiState.collectAsStateWithLifecycle()
     val currentSelectUiState = rememberUpdatedState(selectUiState)
-
-    // 切歌后重置标题跑马灯次数，这属于页面表现逻辑，不再放在 MainViewModel 内部处理。
-    LaunchedEffect(mainViewModel, playerChromeState) {
-        mainViewModel.songChangeEvents.collect {
-            playerChromeState.putMarqueeIterations(0)
-        }
-    }
 
     DisposableEffect(navigator, mainViewModel, coroutineScope) {
         val snackbarListener = object : OnDestinationChangedListener {
@@ -131,14 +123,17 @@ fun MainScreen(
                 },
                 onStart = {
                     Log.i("=====", "创建")
+                    // 主壳进入前台时允许迷你播放条标题重新滚动一次。
                     playerChromeState.putMarqueeIterations(1)
                 }, onDestroy = {
                     Log.i("=====", "onDestroy")
+                    // 主壳销毁时停止迷你播放条标题跑马灯，避免后台继续触发页面表现状态。
                     playerChromeState.putMarqueeIterations(0)
 //                mainViewModel.clearRemoteCurrent()
                 }, onStop = {
                     //后台
                     Log.i("=====", "创建1")
+                    // 主壳进入后台时暂停迷你播放条标题跑马灯。
                     playerChromeState.putMarqueeIterations(0)
                 }, onPause = {
                     //后台

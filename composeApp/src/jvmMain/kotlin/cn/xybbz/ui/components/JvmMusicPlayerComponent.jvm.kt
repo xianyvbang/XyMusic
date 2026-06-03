@@ -173,6 +173,7 @@ fun JvmMusicPlayerComponent(
     val overlayVisibleState = remember {
         MutableTransitionState(false)
     }
+    // 共享封面动画进度跟随完整播放器显隐状态变化。
     val sharedCoverProgress by animateFloatAsState(
         targetValue = if (playerChromeState.isPlayerSheetVisible) 1f else 0f,
         animationSpec = tween(
@@ -187,12 +188,14 @@ fun JvmMusicPlayerComponent(
         }
     val listState = rememberLazyListState()
     val similarPopularListState = rememberLazyListState()
+    // 桌面 Dialog 通过过渡状态保留退场动画，不直接在隐藏时移除节点。
     LaunchedEffect(playerChromeState.isPlayerSheetVisible) {
         overlayVisibleState.targetState = playerChromeState.isPlayerSheetVisible
     }
     if (overlayVisibleState.currentState || overlayVisibleState.targetState) {
         Dialog(
             onDismissRequest = {
+                // 系统关闭 Dialog 时恢复迷你播放条标题滚动，并同步隐藏完整播放器。
                 playerChromeState.putMarqueeIterations(1)
                 playerChromeState.hidePlayerSheet()
             },
@@ -240,6 +243,7 @@ fun JvmMusicPlayerComponent(
                                         sheetStateR.hide()
                                     }
                                 }.invokeOnCompletion {
+                                    // 点击桌面播放器内关闭按钮后恢复迷你播放条标题滚动，并同步隐藏完整播放器。
                                     playerChromeState.putMarqueeIterations(1)
                                     playerChromeState.hidePlayerSheet()
                                 }
