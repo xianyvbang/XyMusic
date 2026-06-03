@@ -58,15 +58,20 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
+import java.security.SecureRandom
+import java.util.Base64
 
 /**
  * JVM 端本地反向代理服务。
- * 该服务固定监听 localhost:19180，并将请求按原始方法、头信息与请求体转发到目标地址。
+ * 该服务固定监听 127.0.0.1:19180，并将应用内携带访问令牌的请求按原始方法、头信息与请求体转发到目标地址。
  */
 object JvmReverseProxyServer : KoinComponent {
 
-    private const val PROXY_HOST = "localhost"
+    private const val PROXY_HOST = "127.0.0.1"
     private const val PROXY_PORT = 19180
+    private const val ACCESS_TOKEN_PARAMETER = "xy_proxy_token"
+    private const val ACCESS_TOKEN_BYTES = 32
     /**
      * 缓存未完成时，每次 HTTP Range 响应最多承诺给播放器的字节窗口。
      */
@@ -112,6 +117,7 @@ object JvmReverseProxyServer : KoinComponent {
     )
 
     private val logger = KotlinLogging.logger("JvmReverseProxyServer")
+    private val accessToken: String = generateAccessToken()
 
     @Volatile
     private var proxyEngine: EmbeddedServer<*, *>? = null
@@ -182,14 +188,14 @@ object JvmReverseProxyServer : KoinComponent {
         }
 
         val encodedUrl = URLEncoder.encode(targetUrl, StandardCharsets.UTF_8)
-        return "http://$PROXY_HOST:$PROXY_PORT/proxy?url=$encodedUrl"
+        return localProxyUrl("/proxy?url=$encodedUrl")
     }
 
     /**
      * 将缓存会话包装为本地播放地址。
      */
     fun wrapCachePlaybackUrl(sessionId: Long): String {
-        return "http://$PROXY_HOST:$PROXY_PORT/cache-play?id=$sessionId"
+        return localProxyUrl("/cache-play?id=$sessionId")
     }
 
     /**
@@ -229,7 +235,7 @@ object JvmReverseProxyServer : KoinComponent {
         val encodedUrl = URLEncoder.encode(resourceUrl, StandardCharsets.UTF_8)
         // 使用短标记减少 playlist 重写后的 URL 长度。
         val cacheFlag = if (cacheable) "1" else "0"
-        return "http://$PROXY_HOST:$PROXY_PORT/hls-play?id=$sessionId&type=$type&cache=$cacheFlag&url=$encodedUrl"
+        return localProxyUrl("/hls-play?id=$sessionId&type=$type&cache=$cacheFlag&url=$encodedUrl")
     }
 
     /**
@@ -282,6 +288,10 @@ object JvmReverseProxyServer : KoinComponent {
      * 整个响应链路均采用流式转发，避免将完整视频或大文件读入内存。
      */
     private suspend fun handleProxy(call: ApplicationCall) {
+        if (!authorizeLocalProxyRequest(call)) {
+            return
+        }
+
         val targetUrl = validateTargetUrl(call.request.queryParameters["url"])
         if (targetUrl == null) {
             call.respondText(
@@ -386,6 +396,10 @@ object JvmReverseProxyServer : KoinComponent {
         call: ApplicationCall,
         responseBody: Boolean,
     ) {
+        if (!authorizeLocalProxyRequest(call)) {
+            return
+        }
+
         val sessionId = call.request.queryParameters["id"]?.toLongOrNull()
         if (sessionId == null) {
             call.respondText(
@@ -551,6 +565,10 @@ object JvmReverseProxyServer : KoinComponent {
         call: ApplicationCall,
         responseBody: Boolean,
     ) {
+        if (!authorizeLocalProxyRequest(call)) {
+            return
+        }
+
         // 本地代理 URL 必须包含会话 id、资源原始 URL 和资源类型。
         val sessionId = call.request.queryParameters["id"]?.toLongOrNull()
         val resourceUrl = call.request.queryParameters["url"]
@@ -678,6 +696,41 @@ object JvmReverseProxyServer : KoinComponent {
             return null
         }
         return rawUrl
+    }
+
+    private suspend fun authorizeLocalProxyRequest(call: ApplicationCall): Boolean {
+        if (isValidAccessToken(call.request.queryParameters[ACCESS_TOKEN_PARAMETER])) {
+            return true
+        }
+
+        call.respondText(
+            text = "本地代理访问令牌无效。",
+            status = HttpStatusCode.Forbidden,
+        )
+        return false
+    }
+
+    private fun localProxyUrl(pathAndQuery: String): String {
+        val separator = if ('?' in pathAndQuery) "&" else "?"
+        return "http://$PROXY_HOST:$PROXY_PORT$pathAndQuery$separator$ACCESS_TOKEN_PARAMETER=$accessToken"
+    }
+
+    internal fun isValidAccessToken(token: String?): Boolean {
+        if (token == null) {
+            return false
+        }
+        return MessageDigest.isEqual(
+            token.toByteArray(StandardCharsets.UTF_8),
+            accessToken.toByteArray(StandardCharsets.UTF_8),
+        )
+    }
+
+    private fun generateAccessToken(): String {
+        val bytes = ByteArray(ACCESS_TOKEN_BYTES)
+        SecureRandom().nextBytes(bytes)
+        return Base64.getUrlEncoder()
+            .withoutPadding()
+            .encodeToString(bytes)
     }
 
     /**
