@@ -71,20 +71,6 @@ class MainViewModel(
     // 播放列表下一页加载状态
     val ifNextPageNumListFlow = musicPlayContext.ifNextPageNumListFlow
 
-    /**
-     * 播放页展示的相似歌曲列表。
-     * 数据由 PlayerEventCoordinator 维护，这里只做只读暴露。
-     */
-    val similarMusicList: List<XyMusic>
-        get() = recommendationStateFlow.value.similarMusicList
-
-    /**
-     * 播放页展示的热门歌曲列表。
-     * 数据由 PlayerEventCoordinator 维护，这里只做只读暴露。
-     */
-    val popularMusicList: List<XyMusic>
-        get() = recommendationStateFlow.value.popularMusicList
-
 
     init {
         Log.i("=====", "MainViewModel初始化")

@@ -49,17 +49,6 @@ class PlayerEventCoordinator(
     private val _recommendationStateFlow = MutableStateFlow(PlayerRecommendationState())
     val recommendationStateFlow = _recommendationStateFlow.asStateFlow()
 
-    /**
-     * 当前歌曲的相似歌曲，供 UI 直接读取展示。
-     */
-    val similarMusicList: List<XyMusic>
-        get() = recommendationStateFlow.value.similarMusicList
-
-    /**
-     * 当前歌曲所属歌手的热门歌曲，供 UI 直接读取展示。
-     */
-    val popularMusicList: List<XyMusic>
-        get() = recommendationStateFlow.value.popularMusicList
 
     // 播放器业务事件监听任务
     private var observeJob: Job? = null
