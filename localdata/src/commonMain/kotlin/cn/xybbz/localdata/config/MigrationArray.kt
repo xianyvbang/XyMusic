@@ -54,3 +54,41 @@ val Migration_5_6 = object : Migration(5, 6) {
         connection.execSQL("ALTER TABLE xy_settings ADD COLUMN cacheFilePath TEXT NOT NULL DEFAULT ''")
     }
 }
+
+val Migration_6_7 = object : Migration(6, 7) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS ArtistPopularMusic (
+                artistKey TEXT NOT NULL,
+                musicId TEXT NOT NULL,
+                connectionId INTEGER NOT NULL,
+                `index` INTEGER NOT NULL,
+                cachedAt INTEGER NOT NULL,
+                PRIMARY KEY(artistKey, musicId, connectionId)
+            )
+            """.trimIndent()
+        )
+        connection.execSQL("CREATE INDEX IF NOT EXISTS index_ArtistPopularMusic_artistKey ON ArtistPopularMusic(artistKey)")
+        connection.execSQL("CREATE INDEX IF NOT EXISTS index_ArtistPopularMusic_musicId ON ArtistPopularMusic(musicId)")
+        connection.execSQL("CREATE INDEX IF NOT EXISTS index_ArtistPopularMusic_connectionId ON ArtistPopularMusic(connectionId)")
+        connection.execSQL("CREATE INDEX IF NOT EXISTS index_ArtistPopularMusic_connectionId_artistKey_cachedAt ON ArtistPopularMusic(connectionId, artistKey, cachedAt)")
+
+        connection.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS SimilarMusic (
+                sourceMusicId TEXT NOT NULL,
+                musicId TEXT NOT NULL,
+                connectionId INTEGER NOT NULL,
+                `index` INTEGER NOT NULL,
+                cachedAt INTEGER NOT NULL,
+                PRIMARY KEY(sourceMusicId, musicId, connectionId)
+            )
+            """.trimIndent()
+        )
+        connection.execSQL("CREATE INDEX IF NOT EXISTS index_SimilarMusic_sourceMusicId ON SimilarMusic(sourceMusicId)")
+        connection.execSQL("CREATE INDEX IF NOT EXISTS index_SimilarMusic_musicId ON SimilarMusic(musicId)")
+        connection.execSQL("CREATE INDEX IF NOT EXISTS index_SimilarMusic_connectionId ON SimilarMusic(connectionId)")
+        connection.execSQL("CREATE INDEX IF NOT EXISTS index_SimilarMusic_connectionId_sourceMusicId_cachedAt ON SimilarMusic(connectionId, sourceMusicId, cachedAt)")
+    }
+}

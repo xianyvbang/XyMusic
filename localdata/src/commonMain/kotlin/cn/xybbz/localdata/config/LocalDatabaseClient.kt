@@ -56,6 +56,7 @@ import cn.xybbz.localdata.data.genre.XyGenre
 import cn.xybbz.localdata.data.library.XyLibrary
 import cn.xybbz.localdata.data.lrc.XyLrcConfig
 import cn.xybbz.localdata.data.music.AlbumMusic
+import cn.xybbz.localdata.data.music.ArtistPopularMusic
 import cn.xybbz.localdata.data.music.ArtistMusic
 import cn.xybbz.localdata.data.music.FavoriteMusic
 import cn.xybbz.localdata.data.music.HomeMusic
@@ -64,6 +65,7 @@ import cn.xybbz.localdata.data.music.NewestMusic
 import cn.xybbz.localdata.data.music.PlayHistoryMusic
 import cn.xybbz.localdata.data.music.PlayQueueMusic
 import cn.xybbz.localdata.data.music.PlaylistMusic
+import cn.xybbz.localdata.data.music.SimilarMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.player.XyPlayer
 import cn.xybbz.localdata.data.progress.EnableProgress
@@ -77,7 +79,7 @@ import cn.xybbz.localdata.data.setting.XySettings
 
 
 @Database(
-    version = 6,
+    version = 7,
     entities = [XyMusic::class, XyAlbum::class, XySettings::class, SkipTime::class,
         RemoteCurrent::class, SearchHistory::class, Progress::class, XyArtist::class,
         EnableProgress::class, XyLibrary::class, XyPlayer::class, ConnectionConfig::class,
@@ -87,7 +89,7 @@ import cn.xybbz.localdata.data.setting.XySettings
         PlaylistMusic::class, PlayQueueMusic::class, XyDataCount::class, PlayHistoryAlbum::class,
         MaximumPlayAlbum::class, FavoriteAlbum::class, FavoriteArtist::class,
         XyDailyRecommendHistory::class, XyProxyConfig::class,
-        XyLrcConfig::class],
+        XyLrcConfig::class, ArtistPopularMusic::class, SimilarMusic::class],
     exportSchema = true
 )
 @ConstructedBy(AppDatabaseConstructor::class)

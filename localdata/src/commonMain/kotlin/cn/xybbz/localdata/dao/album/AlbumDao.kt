@@ -151,6 +151,8 @@ interface AlbumDao {
 
             MusicDataTypeEnum.PLAYLIST -> {}
             MusicDataTypeEnum.RECOMMEND -> {}
+            MusicDataTypeEnum.ARTIST_POPULAR -> {}
+            MusicDataTypeEnum.SIMILAR_MUSIC -> {}
         }
 
     }
@@ -293,6 +295,8 @@ interface AlbumDao {
             }
             MusicDataTypeEnum.PLAYLIST -> {}
             MusicDataTypeEnum.RECOMMEND -> {}
+            MusicDataTypeEnum.ARTIST_POPULAR -> {}
+            MusicDataTypeEnum.SIMILAR_MUSIC -> {}
         }
         removeByNotQuote()
     }

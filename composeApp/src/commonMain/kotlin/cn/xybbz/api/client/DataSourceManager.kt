@@ -77,6 +77,7 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.koin.core.component.get
+import kotlin.time.Clock
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.add_music_to_playlist_failed
 import xymusic_kmp.composeapp.generated.resources.add_music_to_playlist_success
@@ -115,6 +116,11 @@ open class DataSourceManager(
     private val db: LocalDatabaseClient,
     private val versionApiClient: VersionApiClient,
 ) : IDataSourceServer, IoScoped() {
+
+    companion object {
+        private const val ARTIST_POPULAR_CACHE_TTL_MS = 24L * 60L * 60L * 1000L
+        private const val SIMILAR_MUSIC_CACHE_TTL_MS = 6L * 60L * 60L * 1000L
+    }
 
 
     /**
@@ -1157,12 +1163,39 @@ open class DataSourceManager(
         artistId: String?,
         artistName: String?
     ): List<XyMusic> {
+        val artistKey = artistId.orEmpty().ifBlank { artistName.orEmpty() }
+        val connectionId = getConnectionId()
+        if (artistKey.isBlank() || connectionId == 0L) {
+            return getArtistPopularMusicListRemotely(artistId, artistName) ?: emptyList()
+        }
+
+        val cached = db.musicDao.selectArtistPopularMusicList(artistKey, connectionId)
+        val cachedAt = db.musicDao.selectArtistPopularMusicCachedAt(artistKey, connectionId)
+        if (cached.isNotEmpty() && !isCacheExpired(cachedAt, ARTIST_POPULAR_CACHE_TTL_MS)) {
+            return cached
+        }
+
+        val remote = getArtistPopularMusicListRemotely(artistId, artistName) ?: return cached
+        return remote.also {
+            db.musicDao.saveBatch(
+                data = it,
+                dataType = MusicDataTypeEnum.ARTIST_POPULAR,
+                connectionId = connectionId,
+                artistId = artistKey
+            )
+        }
+    }
+
+    private suspend fun getArtistPopularMusicListRemotely(
+        artistId: String?,
+        artistName: String?
+    ): List<XyMusic>? {
         return try {
-            requireDataSourceServer().getArtistPopularMusicList(artistId, artistName)
+            requireDataSourceServer().getArtistPopularMusicList(artistId, artistName) ?: emptyList()
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得歌手热门歌曲列表失败", e)
             null
-        } ?: emptyList()
+        }
     }
 
     /**
@@ -1325,12 +1358,42 @@ open class DataSourceManager(
      * 获得相似歌曲列表
      */
     override suspend fun getSimilarMusicList(musicId: String): List<XyMusic> {
+        val connectionId = getConnectionId()
+        if (musicId.isBlank() || connectionId == 0L) {
+            return getSimilarMusicListRemotely(musicId) ?: emptyList()
+        }
+
+        val cached = db.musicDao.selectSimilarMusicList(musicId, connectionId)
+        val cachedAt = db.musicDao.selectSimilarMusicCachedAt(musicId, connectionId)
+        if (cached.isNotEmpty() && !isCacheExpired(cachedAt, SIMILAR_MUSIC_CACHE_TTL_MS)) {
+            return cached
+        }
+
+        val remote = getSimilarMusicListRemotely(musicId) ?: return cached
+        return remote.also {
+            db.musicDao.saveBatch(
+                data = it,
+                dataType = MusicDataTypeEnum.SIMILAR_MUSIC,
+                connectionId = connectionId,
+                sourceMusicId = musicId
+            )
+        }
+    }
+
+    private suspend fun getSimilarMusicListRemotely(musicId: String): List<XyMusic>? {
         return try {
             requireDataSourceServer().getSimilarMusicList(musicId) ?: emptyList()
         } catch (e: Exception) {
             Log.e(Constants.LOG_ERROR_PREFIX, "获得相似歌曲列表失败", e)
-            emptyList()
+            null
         }
+    }
+
+    private fun isCacheExpired(cachedAt: Long?, ttlMs: Long): Boolean {
+        if (cachedAt == null) {
+            return true
+        }
+        return Clock.System.now().toEpochMilliseconds() - cachedAt >= ttlMs
     }
 
     /**

@@ -26,6 +26,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import cn.xybbz.localdata.data.music.AlbumMusic
+import cn.xybbz.localdata.data.music.ArtistPopularMusic
 import cn.xybbz.localdata.data.music.ArtistMusic
 import cn.xybbz.localdata.data.music.FavoriteMusic
 import cn.xybbz.localdata.data.music.HomeMusic
@@ -34,6 +35,7 @@ import cn.xybbz.localdata.data.music.NewestMusic
 import cn.xybbz.localdata.data.music.PlayHistoryMusic
 import cn.xybbz.localdata.data.music.PlayQueueMusic
 import cn.xybbz.localdata.data.music.PlaylistMusic
+import cn.xybbz.localdata.data.music.SimilarMusic
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.music.XyPlayMusic
 import cn.xybbz.localdata.data.recommend.XyDailyRecommendHistory
@@ -70,7 +72,8 @@ interface XyMusicDao {
         connectionId: Long,
         artistId: String? = null,
         playlistId: String? = null,
-        mediaLibraryId: String? = null
+        mediaLibraryId: String? = null,
+        sourceMusicId: String? = null
     ) {
         saveDataBatch(data)
         when (dataType) {
@@ -216,6 +219,38 @@ interface XyMusicDao {
                     )
                 })
             }
+
+            MusicDataTypeEnum.ARTIST_POPULAR -> {
+                artistId?.takeIf { it.isNotBlank() }?.let { artistKey ->
+                    val now = Clock.System.now().toEpochMilliseconds()
+                    removeArtistPopularMusic(artistKey, connectionId)
+                    saveArtistPopularMusic(data.mapIndexed { index, item ->
+                        ArtistPopularMusic(
+                            artistKey = artistKey,
+                            musicId = item.itemId,
+                            connectionId = connectionId,
+                            index = index,
+                            cachedAt = now
+                        )
+                    })
+                }
+            }
+
+            MusicDataTypeEnum.SIMILAR_MUSIC -> {
+                sourceMusicId?.takeIf { it.isNotBlank() }?.let { sourceId ->
+                    val now = Clock.System.now().toEpochMilliseconds()
+                    removeSimilarMusic(sourceId, connectionId)
+                    saveSimilarMusic(data.mapIndexed { index, item ->
+                        SimilarMusic(
+                            sourceMusicId = sourceId,
+                            musicId = item.itemId,
+                            connectionId = connectionId,
+                            index = index,
+                            cachedAt = now
+                        )
+                    })
+                }
+            }
         }
     }
 
@@ -250,6 +285,12 @@ interface XyMusicDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveRecommendedMusic(data: List<XyDailyRecommendHistory>)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveArtistPopularMusic(data: List<ArtistPopularMusic>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveSimilarMusic(data: List<SimilarMusic>)
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun save(data: XyMusic): Long
 
@@ -271,6 +312,8 @@ interface XyMusicDao {
         removeNewestMusicAll()
         removePlaylistMusicAll()
         removeRecommendedMusicAll()
+        removeArtistPopularMusicAll()
+        removeSimilarMusicAll()
         removeAll()
     }
 
@@ -286,6 +329,8 @@ interface XyMusicDao {
         removeNewestMusicByConnectionId(connectionId)
         removePlaylistMusicByConnectionId(connectionId)
         removeRecommendedMusicByConnectionId(connectionId)
+        removeArtistPopularMusicByConnectionId(connectionId)
+        removeSimilarMusicByConnectionId(connectionId)
         removeMusicByConnectionId(connectionId)
     }
 
@@ -350,6 +395,18 @@ interface XyMusicDao {
                     removeRecommendedMusicByItems(itemIds)
                 } else {
                     removeRecommendedMusic()
+                }
+            }
+
+            MusicDataTypeEnum.ARTIST_POPULAR -> {
+                artistId?.let { artistKey ->
+                    removeArtistPopularMusic(artistKey)
+                }
+            }
+
+            MusicDataTypeEnum.SIMILAR_MUSIC -> {
+                itemIds?.firstOrNull()?.let { sourceMusicId ->
+                    removeSimilarMusic(sourceMusicId)
                 }
             }
         }
@@ -429,6 +486,42 @@ interface XyMusicDao {
 
     @Query(
         """
+        delete from ArtistPopularMusic
+        where artistKey = :artistKey
+        and connectionId = (select connectionId from xy_settings)
+    """
+    )
+    suspend fun removeArtistPopularMusic(artistKey: String)
+
+    @Query(
+        """
+        delete from ArtistPopularMusic
+        where artistKey = :artistKey
+        and connectionId = :connectionId
+    """
+    )
+    suspend fun removeArtistPopularMusic(artistKey: String, connectionId: Long)
+
+    @Query(
+        """
+        delete from SimilarMusic
+        where sourceMusicId = :sourceMusicId
+        and connectionId = (select connectionId from xy_settings)
+    """
+    )
+    suspend fun removeSimilarMusic(sourceMusicId: String)
+
+    @Query(
+        """
+        delete from SimilarMusic
+        where sourceMusicId = :sourceMusicId
+        and connectionId = :connectionId
+    """
+    )
+    suspend fun removeSimilarMusic(sourceMusicId: String, connectionId: Long)
+
+    @Query(
+        """
         delete from xy_daily_recommend_history
         where songId in (:itemIds)
         and connectionId = (select connectionId from xy_settings)
@@ -500,6 +593,18 @@ interface XyMusicDao {
     @Query("delete from xy_daily_recommend_history where connectionId = :connectionId")
     suspend fun removeRecommendedMusicByConnectionId(connectionId: Long)
 
+    @Query("delete from artistpopularmusic")
+    suspend fun removeArtistPopularMusicAll()
+
+    @Query("delete from artistpopularmusic where connectionId = :connectionId")
+    suspend fun removeArtistPopularMusicByConnectionId(connectionId: Long)
+
+    @Query("delete from similarmusic")
+    suspend fun removeSimilarMusicAll()
+
+    @Query("delete from similarmusic where connectionId = :connectionId")
+    suspend fun removeSimilarMusicByConnectionId(connectionId: Long)
+
     @Query("delete from xy_music where connectionId = :connectionId")
     suspend fun removeMusicByConnectionId(connectionId: Long)
 
@@ -520,6 +625,8 @@ interface XyMusicDao {
           AND itemId NOT IN (SELECT musicId FROM playhistorymusic)
           AND itemId NOT IN (SELECT musicId FROM playqueuemusic)
           AND itemId NOT IN (SELECT songId FROM xy_daily_recommend_history)
+          AND itemId NOT IN (SELECT musicId FROM artistpopularmusic)
+          AND itemId NOT IN (SELECT musicId FROM similarmusic)
     """
     )
     suspend fun removeByNotQuote()
@@ -683,6 +790,14 @@ interface XyMusicDao {
             }
 
             MusicDataTypeEnum.RECOMMEND -> {
+                flow {}
+            }
+
+            MusicDataTypeEnum.ARTIST_POPULAR -> {
+                flow {}
+            }
+
+            MusicDataTypeEnum.SIMILAR_MUSIC -> {
                 flow {}
             }
         }
@@ -858,6 +973,60 @@ interface XyMusicDao {
     suspend fun selectRecommendedMusicExtendList(
         limit: Int
     ): List<XyMusic>
+
+    @Query(
+        """
+        select mi.* from artistpopularmusic apm
+        inner join xy_music mi on apm.musicId = mi.itemId
+        where apm.artistKey = :artistKey
+        and apm.connectionId = :connectionId
+        and mi.connectionId = :connectionId
+        order by apm.`index`, apm.musicId
+    """
+    )
+    suspend fun selectArtistPopularMusicList(
+        artistKey: String,
+        connectionId: Long
+    ): List<XyMusic>
+
+    @Query(
+        """
+        select min(cachedAt) from artistpopularmusic
+        where artistKey = :artistKey
+        and connectionId = :connectionId
+    """
+    )
+    suspend fun selectArtistPopularMusicCachedAt(
+        artistKey: String,
+        connectionId: Long
+    ): Long?
+
+    @Query(
+        """
+        select mi.* from similarmusic sm
+        inner join xy_music mi on sm.musicId = mi.itemId
+        where sm.sourceMusicId = :sourceMusicId
+        and sm.connectionId = :connectionId
+        and mi.connectionId = :connectionId
+        order by sm.`index`, sm.musicId
+    """
+    )
+    suspend fun selectSimilarMusicList(
+        sourceMusicId: String,
+        connectionId: Long
+    ): List<XyMusic>
+
+    @Query(
+        """
+        select min(cachedAt) from similarmusic
+        where sourceMusicId = :sourceMusicId
+        and connectionId = :connectionId
+    """
+    )
+    suspend fun selectSimilarMusicCachedAt(
+        sourceMusicId: String,
+        connectionId: Long
+    ): Long?
 
 
     /**

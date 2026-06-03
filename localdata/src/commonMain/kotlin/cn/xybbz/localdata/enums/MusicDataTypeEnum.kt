@@ -72,5 +72,17 @@ enum class MusicDataTypeEnum(val message: String) {
      * 推荐音乐
      */
     @SerialName("recommend")
-    RECOMMEND("推荐音乐")
+    RECOMMEND("推荐音乐"),
+
+    /**
+     * 歌手热门歌曲
+     */
+    @SerialName("artist_popular")
+    ARTIST_POPULAR("歌手热门歌曲"),
+
+    /**
+     * 相似歌曲
+     */
+    @SerialName("similar_music")
+    SIMILAR_MUSIC("相似歌曲")
 }
