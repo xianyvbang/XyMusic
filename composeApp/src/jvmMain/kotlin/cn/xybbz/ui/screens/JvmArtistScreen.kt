@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.enums.MusicTypeEnum
 import cn.xybbz.ui.components.FavoriteIconButton
 import cn.xybbz.ui.components.JvmIndexBar
@@ -18,12 +19,13 @@ import cn.xybbz.ui.components.JvmVerticalGridListComponent
 import cn.xybbz.ui.components.MusicArtistCardComponent
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
+import cn.xybbz.ui.components.rememberMusicArtistInfoLoader
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.ArtistViewModel
-import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.artist
@@ -37,7 +39,7 @@ import xymusic_kmp.composeapp.generated.resources.get_favorite_artists
 @Composable
 fun JvmArtistScreen(
     artistViewModel: ArtistViewModel = koinViewModel<ArtistViewModel>(),
-    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
+    dataSourceManager: DataSourceManager = koinInject(),
 ) {
     val artistListPaging =
         artistViewModel.artistList.collectAsLazyPagingItems()
@@ -47,9 +49,10 @@ fun JvmArtistScreen(
     val coroutineScope = rememberCoroutineScope()
 
     // 艺术家列表卡片点击也使用统一处理器，后续逻辑变化只需要改一处。
+    val artistInfoLoader = rememberMusicArtistInfoLoader(dataSourceManager)
     val artistClickHandler = rememberMusicArtistClickHandler(
-        artistList = musicBottomMenuViewModel.xyArtists,
-        onLoadArtistInfos = musicBottomMenuViewModel::getArtistInfos,
+        artistList = artistInfoLoader.artistList,
+        onLoadArtistInfos = artistInfoLoader.loadArtistInfos,
     )
 
     XyColumnScreen {

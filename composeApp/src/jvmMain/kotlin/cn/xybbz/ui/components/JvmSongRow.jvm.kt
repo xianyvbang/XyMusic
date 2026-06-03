@@ -37,10 +37,15 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.assembler.MusicPlayAssembler
 import cn.xybbz.common.utils.DateUtil
 import cn.xybbz.common.utils.MessageUtils
+import cn.xybbz.config.music.MusicPlayContext
 import cn.xybbz.config.image.rememberMusicCoverUrls
+import cn.xybbz.download.database.DownloadDatabaseClient
 import cn.xybbz.entity.data.ext.joinToString
+import cn.xybbz.localdata.config.LocalDatabaseClient
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.ui.ext.composeClick
 import cn.xybbz.ui.ext.jvmHoverDebounceClickable
@@ -52,7 +57,6 @@ import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
-import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import cn.xybbz.viewmodel.SidebarPlaylistViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -61,6 +65,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.add_to_next_play_success
@@ -280,7 +285,10 @@ private fun rememberSongRowContextMenuItems(
     onOpenArtist: () -> Unit,
     showViewArtistMenuItem: Boolean,
     showViewAlbumMenuItem: Boolean,
-    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
+    dataSourceManager: DataSourceManager = koinInject(),
+    musicPlayContext: MusicPlayContext = koinInject(),
+    db: LocalDatabaseClient = koinInject(),
+    downloadDb: DownloadDatabaseClient = koinInject(),
     sidebarPlaylistViewModel: SidebarPlaylistViewModel = koinViewModel<SidebarPlaylistViewModel>(),
 ): List<MenuItemDefaultData> {
     val coroutineScope = rememberCoroutineScope()
@@ -317,7 +325,14 @@ private fun rememberSongRowContextMenuItems(
             title = stringResource(Res.string.play_next),
             iconRes = Res.drawable.playlist_play_24px,
             onClick = {
-                musicBottomMenuViewModel.addNextPlayer(music.itemId)
+                coroutineScope.launch {
+                    val playMusic = MusicPlayAssembler.attachFilePath(
+                        playMusic = db.musicDao.selectExtendById(music.itemId),
+                        downloadDb = downloadDb,
+                        mediaLibraryId = dataSourceManager.getConnectionId().toString(),
+                    )
+                    playMusic?.let { musicPlayContext.addNextPlayer(it) }
+                }
                 MessageUtils.sendPopTip(addToNextPlaySuccess)
             },
         ),
@@ -333,7 +348,7 @@ private fun rememberSongRowContextMenuItems(
                     showLeadingIcon = false,
                     onClick = {
                         coroutineScope.launch {
-                            musicBottomMenuViewModel.dataSourceManager.saveMusicPlaylist(
+                            dataSourceManager.saveMusicPlaylist(
                                 playlistId = playlist.itemId,
                                 musicIds = listOf(music.itemId),
                             )

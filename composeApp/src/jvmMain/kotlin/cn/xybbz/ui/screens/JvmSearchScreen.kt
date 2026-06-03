@@ -40,6 +40,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.config.music.MusicCommonController
@@ -54,17 +55,18 @@ import cn.xybbz.ui.components.MusicArtistCardComponent
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.TopAppBarTitle
+import cn.xybbz.ui.components.rememberMusicArtistInfoLoader
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
-import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import cn.xybbz.viewmodel.SearchViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.album
@@ -84,10 +86,11 @@ private val SearchMusicTableColumns = SongTableColumns(
 fun JvmSearchScreen(
     searchQuery: String = "",
     searchViewModel: SearchViewModel = koinViewModel<SearchViewModel>(),
-    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
+    dataSourceManager: DataSourceManager = koinInject(),
 ) {
     val favoriteList by searchViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val routeSearchQuery = searchQuery.trim()
+    val artistInfoLoader = rememberMusicArtistInfoLoader(dataSourceManager)
     val currentPlayingMusicIdFlow = remember(searchViewModel) {
         searchViewModel.musicController.musicInfoFlow.map { musicInfo ->
             musicInfo?.itemId
@@ -126,11 +129,11 @@ fun JvmSearchScreen(
             musicList = searchViewModel.musicList,
             albumList = searchViewModel.albumList,
             artistList = searchViewModel.artistList,
-            artistInfoList = musicBottomMenuViewModel.xyArtists,
+            artistInfoList = artistInfoLoader.artistList,
             onAddMusic = {
                 searchViewModel.addMusic(it)
             },
-            onLoadArtistInfos = musicBottomMenuViewModel::getArtistInfos,
+            onLoadArtistInfos = artistInfoLoader.loadArtistInfos,
             onLoadingState = {
                 searchViewModel.isSearchLoad
             },

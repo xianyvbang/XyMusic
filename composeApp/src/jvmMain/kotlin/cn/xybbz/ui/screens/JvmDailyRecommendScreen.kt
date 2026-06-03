@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -31,14 +32,15 @@ import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
+import cn.xybbz.ui.components.rememberMusicArtistInfoLoader
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.DailyRecommendViewModel
-import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.daily_recommendations
@@ -54,13 +56,14 @@ private val JvmDailyRecommendMusicTableColumns = SongTableColumns(
 @Composable
 fun JvmDailyRecommendScreen(
     dailyRecommendViewModel: DailyRecommendViewModel = koinViewModel<DailyRecommendViewModel>(),
-    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
+    dataSourceManager: DataSourceManager = koinInject(),
 ) {
 
     val navigator = LocalNavigator.current
+    val artistInfoLoader = rememberMusicArtistInfoLoader(dataSourceManager)
     val artistClickHandler = rememberMusicArtistClickHandler(
-        artistList = musicBottomMenuViewModel.xyArtists,
-        onLoadArtistInfos = musicBottomMenuViewModel::getArtistInfos,
+        artistList = artistInfoLoader.artistList,
+        onLoadArtistInfos = artistInfoLoader.loadArtistInfos,
     )
     val favoriteList by dailyRecommendViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val currentPlayingMusicIdFlow = remember(dailyRecommendViewModel) {

@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.api.converter.jsonSerializer
 import cn.xybbz.common.utils.formatBytes
 import cn.xybbz.compositionLocal.LocalNavigator
@@ -74,6 +75,7 @@ import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.components.AlertDialogObject
 import cn.xybbz.ui.components.ScreenLazyColumn
 import cn.xybbz.ui.components.SongTableColumns
+import cn.xybbz.ui.components.rememberMusicArtistInfoLoader
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
@@ -87,11 +89,11 @@ import cn.xybbz.ui.xy.XyTextSub
 import cn.xybbz.ui.xy.XyTextSubSmall
 import cn.xybbz.viewmodel.DownloadViewModel
 import cn.xybbz.viewmodel.LocalViewModel
-import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.cancel_download
@@ -135,13 +137,11 @@ internal enum class JvmLocalDownloadTab {
 fun JvmDownloadScreen(
     downloadViewModel: DownloadViewModel = koinViewModel<DownloadViewModel>(),
     localViewModel: LocalViewModel = koinViewModel<LocalViewModel>(),
-    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
 ) {
     JvmLocalDownloadScreen(
         initialTab = JvmLocalDownloadTab.Downloading,
         downloadViewModel = downloadViewModel,
         localViewModel = localViewModel,
-        musicBottomMenuViewModel = musicBottomMenuViewModel,
     )
 }
 
@@ -150,12 +150,13 @@ internal fun JvmLocalDownloadScreen(
     initialTab: JvmLocalDownloadTab,
     downloadViewModel: DownloadViewModel = koinViewModel<DownloadViewModel>(),
     localViewModel: LocalViewModel = koinViewModel<LocalViewModel>(),
-    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
+    dataSourceManager: DataSourceManager = koinInject(),
 ) {
     val navigator = LocalNavigator.current
+    val artistInfoLoader = rememberMusicArtistInfoLoader(dataSourceManager)
     val artistClickHandler = rememberMusicArtistClickHandler(
-        artistList = musicBottomMenuViewModel.xyArtists,
-        onLoadArtistInfos = musicBottomMenuViewModel::getArtistInfos,
+        artistList = artistInfoLoader.artistList,
+        onLoadArtistInfos = artistInfoLoader.loadArtistInfos,
     )
     val allDownloadTasks by downloadViewModel.musicDownloadInfo.collectAsStateWithLifecycle()
     val localSongs by localViewModel.musicDownloadInfo.collectAsStateWithLifecycle()

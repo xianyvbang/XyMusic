@@ -36,6 +36,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -49,15 +50,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cn.xybbz.common.utils.MessageUtils
 import cn.xybbz.compositionLocal.LocalMainViewModel
 import cn.xybbz.compositionLocal.LocalNavigator
+import cn.xybbz.config.volume.VolumeServer
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.router.AlbumInfo
 import cn.xybbz.ui.theme.XyTheme
-import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import cn.xybbz.viewmodel.SnackBarPlayerViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.add_to_playlist
@@ -81,11 +83,11 @@ import cn.xybbz.ui.xy.XyIconButton as IconButton
 fun JvmSnackBarPlayerComponent(
     modifier: Modifier = Modifier,
     snackBarPlayerViewModel: SnackBarPlayerViewModel = koinViewModel<SnackBarPlayerViewModel>(),
-    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
     onClick: () -> Unit
 ) {
     val mainViewModel = LocalMainViewModel.current
     val navigator = LocalNavigator.current
+    val volumeServer = koinInject<VolumeServer>()
     var sharedCoverSourceBoundsOnScreen by remember {
         mutableStateOf<Rect?>(null)
     }
@@ -98,7 +100,19 @@ fun JvmSnackBarPlayerComponent(
     var showMusicInfo by remember {
         mutableStateOf(false)
     }
+    var volumeValue by remember {
+        mutableFloatStateOf(0f)
+    }
     val coroutineScope = rememberCoroutineScope()
+    val refreshVolume = {
+        volumeValue = volumeServer.getStreamVolume().toFloat() / volumeServer.getMaxVolume()
+    }
+    val onVolumeChanged: (Float) -> Unit = { value ->
+        coroutineScope.launch {
+            volumeServer.updateVolume((value * 100).toInt())
+            volumeValue = value
+        }
+    }
     val selectUiState by snackBarPlayerViewModel.selectControl.uiState.collectAsStateWithLifecycle()
     val musicInfo by snackBarPlayerViewModel.musicController.musicInfoFlow.collectAsStateWithLifecycle()
     val picByte by snackBarPlayerViewModel.musicController.picByteFlow.collectAsStateWithLifecycle()
@@ -129,8 +143,8 @@ fun JvmSnackBarPlayerComponent(
 
     val pleaseSelect = stringResource(Res.string.please_select)
 
-    LaunchedEffect(Unit) {
-        musicBottomMenuViewModel.refreshVolume()
+    LaunchedEffect(volumeServer) {
+        refreshVolume()
     }
 
     MusicBottomMenuComponent(
@@ -160,9 +174,9 @@ fun JvmSnackBarPlayerComponent(
             picByte,
             sharedCoverSourceBoundsOnScreen = sharedCoverSourceBoundsOnScreen,
             sheetStateR = playerSheetState,
-            volumeValue = musicBottomMenuViewModel.volumeValue,
-            onVolumeChanged = musicBottomMenuViewModel::updateVolume,
-            onRefreshVolume = musicBottomMenuViewModel::refreshVolume,
+            volumeValue = volumeValue,
+            onVolumeChanged = onVolumeChanged,
+            onRefreshVolume = refreshVolume,
             onSetState = { musicListState = it }
         )
     }
@@ -330,8 +344,8 @@ fun JvmSnackBarPlayerComponent(
                 JvmSnackBarPlaybackBar(
                     modifier = modifier,
                     musicController = snackBarPlayerViewModel.musicController,
-                    volume = musicBottomMenuViewModel.volumeValue,
-                    onVolumeChanged = musicBottomMenuViewModel::updateVolume,
+                    volume = volumeValue,
+                    onVolumeChanged = onVolumeChanged,
                     favoriteSet = favoriteSet,
                     cacheProgress = cacheScheduleData,
                     onSharedCoverBoundsChanged = {

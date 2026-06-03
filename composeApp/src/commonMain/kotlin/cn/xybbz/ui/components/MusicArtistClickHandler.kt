@@ -7,8 +7,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import cn.xybbz.api.client.DataSourceManager
+import cn.xybbz.common.constants.Constants
 import cn.xybbz.common.constants.Constants.ARTIST_DELIMITER_SEMICOLON
 import cn.xybbz.common.constants.Constants.SLASH_DELIMITER
+import cn.xybbz.common.utils.Log
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.localdata.common.LocalConstants
 import cn.xybbz.localdata.data.album.XyAlbum
@@ -163,6 +166,44 @@ fun rememberMusicArtistClickHandler(
 
     return remember(openArtists) {
         MusicArtistClickHandler(openArtists)
+    }
+}
+
+/**
+ * 艺术家信息加载状态。
+ *
+ * 供 Screen 层把多艺术家弹窗需要的数据以属性形式传给 [rememberMusicArtistClickHandler]，
+ * 避免组件为了加载弹窗数据依赖特定 ViewModel。
+ */
+class MusicArtistInfoLoaderState(
+    val artistList: List<XyArtist>,
+    val loadArtistInfos: (List<String>) -> Unit,
+)
+
+@Composable
+fun rememberMusicArtistInfoLoader(
+    dataSourceManager: DataSourceManager,
+): MusicArtistInfoLoaderState {
+    val coroutineScope = rememberCoroutineScope()
+    var artistList by remember { mutableStateOf<List<XyArtist>>(emptyList()) }
+    val loadArtistInfos = remember(dataSourceManager, coroutineScope) {
+        { artistIds: List<String> ->
+            coroutineScope.launch {
+                try {
+                    artistList = dataSourceManager.selectArtistInfoByIds(artistIds)
+                } catch (e: Exception) {
+                    Log.e(Constants.LOG_ERROR_PREFIX, "获得艺术家信息失败", e)
+                }
+            }
+            Unit
+        }
+    }
+
+    return remember(artistList, loadArtistInfos) {
+        MusicArtistInfoLoaderState(
+            artistList = artistList,
+            loadArtistInfos = loadArtistInfos,
+        )
     }
 }
 

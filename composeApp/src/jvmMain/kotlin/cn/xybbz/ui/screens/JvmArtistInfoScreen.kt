@@ -95,6 +95,7 @@ import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.XySelectAllComponent
 import cn.xybbz.ui.components.jvmLazyColumnBottomComponent
+import cn.xybbz.ui.components.rememberMusicArtistInfoLoader
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
@@ -109,7 +110,6 @@ import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyImage
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.viewmodel.ArtistInfoViewModel
-import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -157,7 +157,6 @@ fun JvmArtistInfoScreen(
             artistName
         )
     },
-    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
 ) {
     val musicPage =
         artistInfoViewModel.musicList.collectAsLazyPagingItems()
@@ -178,9 +177,10 @@ fun JvmArtistInfoScreen(
     val navigator = LocalNavigator.current
 
     // 相似艺术家列表复用统一的艺术家打开逻辑。
+    val artistInfoLoader = rememberMusicArtistInfoLoader(artistInfoViewModel.dataSourceManager)
     val artistClickHandler = rememberMusicArtistClickHandler(
-        artistList = musicBottomMenuViewModel.xyArtists,
-        onLoadArtistInfos = musicBottomMenuViewModel::getArtistInfos,
+        artistList = artistInfoLoader.artistList,
+        onLoadArtistInfos = artistInfoLoader.loadArtistInfos,
     )
     val lazyListState = rememberLazyListState()
     val isSticking by remember(lazyListState) { lazyListState.isSticking(1) }

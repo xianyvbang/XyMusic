@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
+import cn.xybbz.api.client.DataSourceManager
 import cn.xybbz.compositionLocal.LocalNavigator
 import cn.xybbz.entity.data.music.OnMusicPlayParameter
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
@@ -34,15 +35,16 @@ import cn.xybbz.ui.components.JvmLazyListComponent
 import cn.xybbz.ui.components.SongTableColumns
 import cn.xybbz.ui.components.TopAppBarComponent
 import cn.xybbz.ui.components.TopAppBarTitle
+import cn.xybbz.ui.components.rememberMusicArtistInfoLoader
 import cn.xybbz.ui.components.rememberMusicArtistClickHandler
 import cn.xybbz.ui.components.show
 import cn.xybbz.ui.components.songTableItems
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.FavoriteViewModel
-import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import xymusic_kmp.composeapp.generated.resources.Res
 import xymusic_kmp.composeapp.generated.resources.my_favorites
@@ -61,15 +63,16 @@ private val JvmFavoriteMusicTableColumns = SongTableColumns(
 @Composable
 fun JvmFavoriteScreen(
     favoriteViewModel: FavoriteViewModel = koinViewModel<FavoriteViewModel>(),
-    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
+    dataSourceManager: DataSourceManager = koinInject(),
 ) {
     val favoriteMusicListPage =
         favoriteViewModel.favoriteMusicList.collectAsLazyPagingItems()
     val coroutineScope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
+    val artistInfoLoader = rememberMusicArtistInfoLoader(dataSourceManager)
     val artistClickHandler = rememberMusicArtistClickHandler(
-        artistList = musicBottomMenuViewModel.xyArtists,
-        onLoadArtistInfos = musicBottomMenuViewModel::getArtistInfos,
+        artistList = artistInfoLoader.artistList,
+        onLoadArtistInfos = artistInfoLoader.loadArtistInfos,
     )
     val favoriteList by favoriteViewModel.favoriteSet.collectAsStateWithLifecycle(emptyList())
     val currentPlayingMusicIdFlow = remember(favoriteViewModel) {
