@@ -252,8 +252,9 @@ class ConnectionViewModel(
     }
 
     suspend fun inputAddress() {
-        address = normalizeInputText(address)
+        address = normalizeServiceAddress(address)
         username = normalizeInputText(username)
+        tmpAddress = normalizeServiceAddress(tmpAddress)
 
         val tmpDatasource = dataSourceType ?: return
 
@@ -309,7 +310,7 @@ class ConnectionViewModel(
     }
 
     fun setAddressData(address: String) {
-        this.address = normalizeInputText(address)
+        this.address = normalizeServiceAddress(address)
     }
 
     fun setUserNameData(username: String) {
@@ -359,6 +360,7 @@ class ConnectionViewModel(
         clearLoginStatus()
         clearResourceLoginStatus()
         clearResourceSelection()
+        address = normalizeServiceAddress(address)
         if (!address.isAbsoluteNetworkUrl()) {
             options.forEach {
                 val url = "${it}$address"
@@ -440,7 +442,7 @@ class ConnectionViewModel(
      * 设置临时地址
      */
     fun setTmpAddressData(address: String) {
-        tmpAddress = address
+        tmpAddress = normalizeServiceAddress(address)
     }
 
     /**
@@ -512,6 +514,10 @@ class ConnectionViewModel(
 
     private fun normalizeInputText(value: String): String {
         return value.replace(INVISIBLE_CHAR_REGEX, "").trim()
+    }
+
+    private fun normalizeServiceAddress(value: String): String {
+        return normalizeInputText(value).trimEnd('/')
     }
 
     private companion object {
