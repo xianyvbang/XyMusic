@@ -88,7 +88,6 @@ import cn.xybbz.ui.windows.DesktopInteractiveHitTestOwner
 import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyRow
 import cn.xybbz.ui.xy.XyText
-import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -146,7 +145,7 @@ private const val JvmSnackBarVolumeSliderThumbRadius = 6f
  * 2. 中间展示播放模式、上下曲、播放暂停、音量和进度条。
  * 3. 右侧保留播放列表入口，避免和主控制区混在一起。
  *
- * 调用方只需要传入当前播放控制器、音量控制 ViewModel，以及各业务行为回调，
+ * 调用方只需要传入当前播放控制器、音量状态，以及各业务行为回调，
  * 就可以复用统一的桌面端播放栏视觉和交互。
  *
  * 通过 `showCover` 可以控制左侧是否显示封面图，方便完整播放器页在已有大封面时复用同一套底栏。
@@ -155,7 +154,8 @@ private const val JvmSnackBarVolumeSliderThumbRadius = 6f
 internal fun JvmSnackBarPlaybackBar(
     modifier: Modifier = Modifier,
     musicController: MusicCommonController,
-    musicBottomMenuViewModel: MusicBottomMenuViewModel,
+    volume: Float,
+    onVolumeChanged: (Float) -> Unit,
     favoriteSet: List<String>,
     sharedCoverRequestSize: IntSize,
     showCover: Boolean = true,
@@ -269,7 +269,8 @@ internal fun JvmSnackBarPlaybackBar(
                     .width(sectionWidth)
                     .widthIn(max = JvmSnackBarControlMaxWidth),
                 musicController = musicController,
-                musicBottomMenuViewModel = musicBottomMenuViewModel,
+                volume = volume,
+                onVolumeChanged = onVolumeChanged,
                 cacheProgress = cacheProgress,
                 desktopDragHitTestOwner = desktopDragHitTestOwner
             )
@@ -304,7 +305,8 @@ internal fun JvmSnackBarPlaybackBar(
 private fun JvmSnackBarControlSection(
     modifier: Modifier,
     musicController: MusicCommonController,
-    musicBottomMenuViewModel: MusicBottomMenuViewModel,
+    volume: Float,
+    onVolumeChanged: (Float) -> Unit,
     cacheProgress: Float,
     desktopDragHitTestOwner: DesktopInteractiveHitTestOwner?
 ) {
@@ -406,9 +408,9 @@ private fun JvmSnackBarControlSection(
 
                 JvmSnackBarVolumePopup(
                     expanded = showVolumePopup,
-                    volume = musicBottomMenuViewModel.volumeValue,
+                    volume = volume,
                     onDismissRequest = { showVolumePopup = false },
-                    onVolumeChanged = musicBottomMenuViewModel::updateVolume
+                    onVolumeChanged = onVolumeChanged
                 )
             }
         }

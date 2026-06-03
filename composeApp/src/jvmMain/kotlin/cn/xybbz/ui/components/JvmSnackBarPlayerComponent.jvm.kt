@@ -160,6 +160,9 @@ fun JvmSnackBarPlayerComponent(
             picByte,
             sharedCoverSourceBoundsOnScreen = sharedCoverSourceBoundsOnScreen,
             sheetStateR = playerSheetState,
+            volumeValue = musicBottomMenuViewModel.volumeValue,
+            onVolumeChanged = musicBottomMenuViewModel::updateVolume,
+            onRefreshVolume = musicBottomMenuViewModel::refreshVolume,
             onSetState = { musicListState = it }
         )
     }
@@ -327,7 +330,8 @@ fun JvmSnackBarPlayerComponent(
                 JvmSnackBarPlaybackBar(
                     modifier = modifier,
                     musicController = snackBarPlayerViewModel.musicController,
-                    musicBottomMenuViewModel = musicBottomMenuViewModel,
+                    volume = musicBottomMenuViewModel.volumeValue,
+                    onVolumeChanged = musicBottomMenuViewModel::updateVolume,
                     favoriteSet = favoriteSet,
                     cacheProgress = cacheScheduleData,
                     onSharedCoverBoundsChanged = {

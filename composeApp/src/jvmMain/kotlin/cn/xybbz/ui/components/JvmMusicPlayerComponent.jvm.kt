@@ -111,7 +111,6 @@ import cn.xybbz.ui.xy.XyColumn
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.ui.xy.XyText
 import cn.xybbz.ui.xy.XyTextSub
-import cn.xybbz.viewmodel.MusicBottomMenuViewModel
 import cn.xybbz.viewmodel.MusicPlayerViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -159,6 +158,9 @@ fun JvmMusicPlayerComponent(
     picByte: ByteArray? = null,
     sharedCoverSourceBoundsOnScreen: Rect? = null,
     sheetStateR: SheetState,
+    volumeValue: Float,
+    onVolumeChanged: (Float) -> Unit,
+    onRefreshVolume: () -> Unit,
     onSetState: (Boolean) -> Unit
 ) {
     val mainViewModel = LocalMainViewModel.current
@@ -228,6 +230,9 @@ fun JvmMusicPlayerComponent(
                             picByte = picByte,
                             sharedCoverSourceBoundsOnScreen = sharedCoverSourceBoundsOnScreen,
                             sharedCoverProgress = sharedCoverProgress,
+                            volumeValue = volumeValue,
+                            onVolumeChanged = onVolumeChanged,
+                            onRefreshVolume = onRefreshVolume,
                             onCloseSheet = {
                                 coroutineScope.launch {
                                     runCatching {
@@ -262,10 +267,12 @@ fun JvmMusicPlayerComponent(
 fun JvmMusicPlayerScreen(
     musicDetail: XyPlayMusic,
     picByte: ByteArray? = null,
-    musicBottomMenuViewModel: MusicBottomMenuViewModel = koinViewModel<MusicBottomMenuViewModel>(),
     musicPlayerViewModel: MusicPlayerViewModel = koinViewModel<MusicPlayerViewModel>(),
     sharedCoverSourceBoundsOnScreen: Rect? = null,
     sharedCoverProgress: Float = 1f,
+    volumeValue: Float,
+    onVolumeChanged: (Float) -> Unit,
+    onRefreshVolume: () -> Unit,
     onCloseSheet: () -> Unit,
     onSetState: (Boolean) -> Unit,
     lrcListState: LazyListState = rememberLazyListState(),
@@ -340,7 +347,7 @@ fun JvmMusicPlayerScreen(
         }
     }
     LaunchedEffect(Unit) {
-        musicBottomMenuViewModel.refreshVolume()
+        onRefreshVolume()
     }
     LaunchedEffect(shouldRotateCover, musicDetail.itemId) {
         if (!shouldRotateCover) return@LaunchedEffect
@@ -671,7 +678,8 @@ fun JvmMusicPlayerScreen(
                                 .fillMaxWidth()
                                 .height(XyTheme.dimens.snackBarPlayerHeight),
                             musicController = musicPlayerViewModel.musicController,
-                            musicBottomMenuViewModel = musicBottomMenuViewModel,
+                            volume = volumeValue,
+                            onVolumeChanged = onVolumeChanged,
                             favoriteSet = favoriteList,
                             sharedCoverRequestSize = sharedCoverRequestSize,
                             showCover = false,
