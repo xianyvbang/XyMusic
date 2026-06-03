@@ -7,6 +7,7 @@ import cn.xybbz.config.music.PlaybackProgressReporter
 import cn.xybbz.config.music.PlayerEventCoordinator
 import cn.xybbz.config.setting.SettingsManager
 import cn.xybbz.localdata.config.LocalDatabaseClient
+import cn.xybbz.ui.state.PlayerChromeState
 import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
@@ -22,7 +23,8 @@ class PlayerEventCoordinatorModule {
         dataSourceManager: DataSourceManager,
         settingsManager: SettingsManager,
         musicPlayContext: MusicPlayContext,
-        playbackProgressReporter: PlaybackProgressReporter
+        playbackProgressReporter: PlaybackProgressReporter,
+        playerChromeState: PlayerChromeState
     ): PlayerEventCoordinator {
         return PlayerEventCoordinator(
             db,
@@ -30,7 +32,8 @@ class PlayerEventCoordinatorModule {
             dataSourceManager,
             settingsManager,
             musicPlayContext,
-            playbackProgressReporter
+            playbackProgressReporter,
+            playerChromeState
         )
     }
 }

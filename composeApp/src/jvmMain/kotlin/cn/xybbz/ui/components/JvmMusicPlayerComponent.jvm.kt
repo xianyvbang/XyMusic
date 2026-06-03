@@ -165,6 +165,8 @@ fun JvmMusicPlayerComponent(
 ) {
     // 桌面完整播放器页通过播放器外壳状态控制弹层显隐和关闭后的标题跑马灯。
     val playerChromeState = LocalPlayerChromeState.current
+    // 收集完整播放器页显隐状态，驱动桌面弹层和共享封面动画。
+    val isPlayerSheetVisible by playerChromeState.isPlayerSheetVisibleFlow.collectAsStateWithLifecycle()
     val playerHitTestOwner = remember { DesktopInteractiveHitTestOwner() }
     val coroutineScope = rememberCoroutineScope()
     val desktopTabs = remember {
@@ -175,7 +177,7 @@ fun JvmMusicPlayerComponent(
     }
     // 共享封面动画进度跟随完整播放器显隐状态变化。
     val sharedCoverProgress by animateFloatAsState(
-        targetValue = if (playerChromeState.isPlayerSheetVisible) 1f else 0f,
+        targetValue = if (isPlayerSheetVisible) 1f else 0f,
         animationSpec = tween(
             durationMillis = JvmMusicPlayerSharedCoverDurationMillis,
             easing = LinearEasing
@@ -189,8 +191,8 @@ fun JvmMusicPlayerComponent(
     val listState = rememberLazyListState()
     val similarPopularListState = rememberLazyListState()
     // 桌面 Dialog 通过过渡状态保留退场动画，不直接在隐藏时移除节点。
-    LaunchedEffect(playerChromeState.isPlayerSheetVisible) {
-        overlayVisibleState.targetState = playerChromeState.isPlayerSheetVisible
+    LaunchedEffect(isPlayerSheetVisible) {
+        overlayVisibleState.targetState = isPlayerSheetVisible
     }
     if (overlayVisibleState.currentState || overlayVisibleState.targetState) {
         Dialog(

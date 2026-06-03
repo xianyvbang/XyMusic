@@ -14,10 +14,9 @@ import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.player.XyPlayer
 import cn.xybbz.localdata.enums.MusicDataTypeEnum
 import cn.xybbz.localdata.enums.PlayerModeEnum
+import cn.xybbz.ui.state.PlayerChromeState
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -42,7 +41,8 @@ class PlayerEventCoordinator(
     private val dataSourceManager: DataSourceManager,
     private val settingsManager: SettingsManager,
     private val musicPlayContext: MusicPlayContext,
-    private val playbackProgressReporter: PlaybackProgressReporter
+    private val playbackProgressReporter: PlaybackProgressReporter,
+    private val playerChromeState: PlayerChromeState
 ) : IoScoped() {
 
     // 推荐歌曲状态的唯一响应式来源
@@ -60,12 +60,6 @@ class PlayerEventCoordinator(
      */
     val popularMusicList: List<XyMusic>
         get() = recommendationStateFlow.value.popularMusicList
-
-    /**
-     * 轻量切歌事件，供 UI 感知“歌曲已变化”。
-     */
-    private val _songChangeEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val songChangeEvents = _songChangeEvents.asSharedFlow()
 
     // 播放器业务事件监听任务
     private var observeJob: Job? = null
@@ -206,6 +200,9 @@ class PlayerEventCoordinator(
      * 处理切歌后的推荐数据刷新与历史记录持久化。
      */
     private fun onChangeMusic(musicId: String, artistId: String?, artistName: String?) {
+        // 切歌事件源处直接重置迷你播放条标题跑马灯，避免 UI 层额外监听播放业务事件。
+        playerChromeState.putMarqueeIterations(0)
+
         // 自动登录状态统一从 autoLoginState 读取，避免继续依赖已删除的 loginStatus 副本。
         if (dataSourceManager.autoLoginState.value !is ClientLoginInfoState.UserLoginSuccess) {
             _recommendationStateFlow.value = PlayerRecommendationState()
@@ -231,8 +228,6 @@ class PlayerEventCoordinator(
             }
         }
         scope.launch {
-            // 通知 UI 层当前歌曲已切换，例如重置跑马灯等页面状态。
-            _songChangeEvents.emit(Unit)
             db.withTransaction {
                 db.musicDao.updateByPlayedCount(musicId)
                 val recordMusic = db.musicDao.selectById(musicId)

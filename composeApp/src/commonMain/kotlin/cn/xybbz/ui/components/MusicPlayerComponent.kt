@@ -124,6 +124,8 @@ fun MusicPlayerComponent(
 ) {
     // 完整播放器页通过播放器外壳状态控制显隐和关闭后的标题跑马灯。
     val playerChromeState = LocalPlayerChromeState.current
+    // 收集完整播放器页显隐状态，供底部弹层同步显示或隐藏。
+    val isPlayerSheetVisible by playerChromeState.isPlayerSheetVisibleFlow.collectAsStateWithLifecycle()
     val coroutineScope = rememberCoroutineScope()
     /*  val sheetStateR = rememberModalBottomSheetState(
           skipPartiallyExpanded = true
@@ -152,7 +154,7 @@ fun MusicPlayerComponent(
     ModalBottomSheetExtendFillMaxSizeComponent(
         modifier = Modifier.nestedScroll(bottomSheetScrollConnection),
         bottomSheetState = sheetStateR,
-        onIfDisplay = { playerChromeState.isPlayerSheetVisible },
+        onIfDisplay = { isPlayerSheetVisible },
         onClose = {
             // 下滑或外部关闭完整播放器时恢复迷你播放条标题滚动，并同步隐藏共享播放器页状态。
             playerChromeState.putMarqueeIterations(1)

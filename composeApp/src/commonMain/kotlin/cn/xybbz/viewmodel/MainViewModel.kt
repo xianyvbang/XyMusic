@@ -68,8 +68,6 @@ class MainViewModel(
     val favoriteSet = db.musicDao.selectFavoriteListFlow()
     // 播放页推荐歌曲状态，直接透传协调器中的同一份状态源
     val recommendationStateFlow = playerEventCoordinator.recommendationStateFlow
-    // 切歌事件，直接透传协调器中的同一份事件流
-    val songChangeEvents = playerEventCoordinator.songChangeEvents
     // 播放列表下一页加载状态
     val ifNextPageNumListFlow = musicPlayContext.ifNextPageNumListFlow
 

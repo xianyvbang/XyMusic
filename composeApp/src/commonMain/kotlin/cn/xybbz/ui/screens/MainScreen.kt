@@ -48,10 +48,11 @@ import cn.xybbz.ui.components.AlertDialogComponent
 import cn.xybbz.ui.components.BottomSheetCompose
 import cn.xybbz.ui.components.LifecycleEffect
 import cn.xybbz.ui.components.LoadingCompose
-import cn.xybbz.ui.state.rememberPlayerChromeState
+import cn.xybbz.ui.state.PlayerChromeState
 import cn.xybbz.viewmodel.MainViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 
@@ -65,8 +66,8 @@ fun MainScreen(
 ) {
 
     val coroutineScope = rememberCoroutineScope()
-    // 播放器外壳状态由主壳持有，供迷你播放条和完整播放器共享。
-    val playerChromeState = rememberPlayerChromeState()
+    // 播放器外壳状态由 Koin 单例持有，主壳只负责下发给播放器相关组件。
+    val playerChromeState = koinInject<PlayerChromeState>()
     val selectUiState by mainViewModel.selectControl.uiState.collectAsStateWithLifecycle()
     val currentSelectUiState = rememberUpdatedState(selectUiState)
 

@@ -54,7 +54,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -171,6 +170,7 @@ internal fun JvmSnackBarPlaybackBar(
 ) {
     // 桌面播放条标题读取共享的跑马灯次数。
     val playerChromeState = LocalPlayerChromeState.current
+    val marqueeIterations by playerChromeState.marqueeIterationsFlow.collectAsStateWithLifecycle()
     val coroutineScope = rememberCoroutineScope()
     val currentMusic by musicController.musicInfoFlow.collectAsStateWithLifecycle()
     val originMusicList by musicController.originMusicListFlow.collectAsStateWithLifecycle()
@@ -226,16 +226,13 @@ internal fun JvmSnackBarPlaybackBar(
                     null
                 },
                 headlineContent = {
-                    // 歌曲变化时重建标题节点，让 basicMarquee 的内部滚动状态自然重新开始。
-                    key(currentMusic?.itemId) {
-                        XyText(
-                            text = snackBarTitle,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            // 跑马灯次数由播放器外壳状态统一控制，保证桌面悬浮播放条和完整播放器一致。
-                            modifier = Modifier.basicMarquee(iterations = playerChromeState.marqueeIterations)
-                        )
-                    }
+                    XyText(
+                        text = snackBarTitle,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        // 跑马灯次数由播放器外壳状态统一控制，切歌逻辑和弹层关闭都会更新它。
+                        modifier = Modifier.basicMarquee(iterations = marqueeIterations)
+                    )
                 },
                 supportingContent = {
                     Row(

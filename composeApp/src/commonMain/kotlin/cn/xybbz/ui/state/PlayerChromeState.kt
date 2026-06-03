@@ -1,55 +1,54 @@
 package cn.xybbz.ui.state
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import org.koin.core.annotation.Single
 
 /**
  * 播放器外壳状态。
  *
- * 只保存播放器页显隐、标题跑马灯次数这类页面表现状态，避免把纯 UI 状态放进 MainViewModel。
+ * 通过 Koin 单例保存播放器页显隐、标题跑马灯次数这类页面表现状态，避免把纯 UI 状态放进 MainViewModel。
  */
+@Single
 class PlayerChromeState {
+    /**
+     * 迷你播放条标题跑马灯滚动次数的内部可变数据源。
+     */
+    private val _marqueeIterationsFlow = MutableStateFlow(1)
+
     /**
      * 迷你播放条标题的跑马灯滚动次数。
      */
-    var marqueeIterations by mutableIntStateOf(1)
-        private set
+    val marqueeIterationsFlow = _marqueeIterationsFlow.asStateFlow()
+
+    /**
+     * 完整播放器页面显隐状态的内部可变数据源。
+     */
+    private val _isPlayerSheetVisibleFlow = MutableStateFlow(false)
 
     /**
      * 完整播放器页面是否显示。
      */
-    var isPlayerSheetVisible by mutableStateOf(false)
-        private set
+    val isPlayerSheetVisibleFlow = _isPlayerSheetVisibleFlow.asStateFlow()
 
     /**
      * 更新迷你播放条标题的跑马灯滚动次数。
      */
     fun putMarqueeIterations(iterations: Int) {
-        marqueeIterations = iterations
+        _marqueeIterationsFlow.value = iterations
     }
 
     /**
      * 显示完整播放器页面。
      */
     fun showPlayerSheet() {
-        isPlayerSheetVisible = true
+        _isPlayerSheetVisibleFlow.value = true
     }
 
     /**
      * 隐藏完整播放器页面。
      */
     fun hidePlayerSheet() {
-        isPlayerSheetVisible = false
+        _isPlayerSheetVisibleFlow.value = false
     }
 }
-
-/**
- * 创建并记住播放器外壳状态。
- */
-@Composable
-fun rememberPlayerChromeState(): PlayerChromeState =
-    remember { PlayerChromeState() }
