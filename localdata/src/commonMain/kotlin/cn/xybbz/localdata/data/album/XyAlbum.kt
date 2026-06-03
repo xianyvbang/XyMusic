@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import java.time.Instant
+import kotlin.time.Clock
 
 @Entity(
     tableName = "xy_album",
@@ -64,7 +64,7 @@ data class XyAlbum(
     /**
      * 创建时间
      */
-    val createTime: Long = Instant.now().toEpochMilli(),
+    val createTime: Long = Clock.System.now().toEpochMilliseconds(),
 ) {
     constructor(
         itemId: String = "",
@@ -78,7 +78,7 @@ data class XyAlbum(
         premiereDate: Long? = null,
         ifPlaylist: Boolean,
         musicCount: Long,
-        createTime: Long = Instant.now().toEpochMilli()
+        createTime: Long = Clock.System.now().toEpochMilliseconds()
     ) : this(
         itemId = itemId,
         pic = pic,

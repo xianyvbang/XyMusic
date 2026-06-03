@@ -3,7 +3,7 @@ package cn.xybbz.localdata.data.search
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import java.time.Instant
+import kotlin.time.Clock
 
 /**
  * 搜索历史
@@ -27,5 +27,5 @@ data class SearchHistory(
     /**
      * 搜索时间
      */
-    val createTime: Long = Instant.now().toEpochMilli()
+    val createTime: Long = Clock.System.now().toEpochMilliseconds()
 )

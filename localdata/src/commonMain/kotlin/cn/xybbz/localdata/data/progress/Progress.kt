@@ -3,7 +3,7 @@ package cn.xybbz.localdata.data.progress
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import java.time.Instant
+import kotlin.time.Clock
 
 /**
  * 播放历史进度,只存储有声小说类型的,每个有声小说只有一条,只存储最新的那一条
@@ -30,5 +30,5 @@ data class Progress(
      * 连接id
      */
     val connectionId: Long,
-    val createTime: Long = Instant.now().toEpochMilli()
+    val createTime: Long = Clock.System.now().toEpochMilliseconds()
 )
