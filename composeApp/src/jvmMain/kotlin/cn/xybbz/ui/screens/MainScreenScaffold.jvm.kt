@@ -119,6 +119,7 @@ actual fun MainScreenScaffold(
     val sidebarListState = rememberLazyListState()
     val loginLoading = dataSourceManager.loading || autoLoginRunning
     val loginFailed = dataSourceManager.ifLoginError
+    val sidebarColors = DesktopSidebarColors.current
 
     LaunchedEffect(loginLoading, loginFailed) {
         if (loginLoading || !loginFailed) {
@@ -154,10 +155,13 @@ actual fun MainScreenScaffold(
                         modifier = Modifier
                             .width(jvmRouterMenuWidth)
                             .fillMaxSize()
+                            .background(sidebarColors.background)
                             .padding(end = XyTheme.dimens.contentPadding)
                     ) {
                         LazyColumnNotComponent(
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(sidebarColors.panelBackground),
                             state = sidebarListState,
                             contentPadding = PaddingValues(
                                 start = XyTheme.dimens.outerVerticalPadding,
@@ -175,6 +179,7 @@ actual fun MainScreenScaffold(
                                     selected = (navigator.state.backStacks[navigator.state.topLevelRoute]
                                         ?.lastOrNull()
                                         ?: navigator.state.topLevelRoute) == item.route,
+                                    colors = sidebarColors,
                                     onClick = {
                                         if (item.route == navigationConfig.startRoute) {
                                             navigator.navigateToRoot(item.route)
@@ -233,6 +238,12 @@ actual fun MainScreenScaffold(
                                 }
                             } else {
                                 items(playlists, key = { item -> item.itemId }) { playlist ->
+                                    val currentRoute = navigator.state.backStacks[navigator.state.topLevelRoute]
+                                        ?.lastOrNull()
+                                        ?: navigator.state.topLevelRoute
+                                    val selectedPlaylist = currentRoute is AlbumInfo &&
+                                            currentRoute.itemId == playlist.itemId &&
+                                            currentRoute.dataType == MusicDataTypeEnum.PLAYLIST
                                     MusicPlaylistItemComponent(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -240,7 +251,11 @@ actual fun MainScreenScaffold(
                                         name = playlist.name,
                                         subordination = "${playlist.musicCount}${songsCountSuffix}",
                                         imgUrl = playlist.pic,
-                                        backgroundColor = Color.Transparent,
+                                        backgroundColor = if (selectedPlaylist) {
+                                            sidebarColors.playlistSelectedBackground
+                                        } else {
+                                            Color.Transparent
+                                        },
                                         brush = null,
                                         onClick = {
                                             navigator.navigate(
@@ -436,12 +451,13 @@ private fun DesktopLoginErrorSideSheet(
 private fun DesktopNavigationItem(
     item: JvmTopRouterData,
     selected: Boolean,
+    colors: DesktopSidebarColors,
     onClick: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
     val backgroundColor = if (selected || hovered) {
-        MaterialTheme.colorScheme.surfaceContainerLowest
+        colors.navigationSelectedBackground
     } else {
         Color.Transparent
     }
@@ -469,5 +485,41 @@ private fun DesktopNavigationItem(
             color = contentColor,
             style = MaterialTheme.typography.bodyLarge,
         )
+    }
+}
+
+/**
+ * JVM 左侧栏使用的颜色集合。
+ *
+ * 暗色主题保持桌面 HTML 原型的侧栏层级；浅色主题从 MaterialTheme 派生，
+ * 避免为了一个桌面专属区域改动全局 ColorScheme。
+ */
+private data class DesktopSidebarColors(
+    val background: Color,
+    val panelBackground: Color,
+    val navigationSelectedBackground: Color,
+    val playlistSelectedBackground: Color,
+) {
+    companion object {
+        val current: DesktopSidebarColors
+            @Composable
+            get() {
+                val colorScheme = MaterialTheme.colorScheme
+                return if (XyTheme.configs.isDarkTheme) {
+                    DesktopSidebarColors(
+                        background = Color(0xFF111111),
+                        panelBackground = Color(0xFF242424),
+                        navigationSelectedBackground = Color(0xFF363636),
+                        playlistSelectedBackground = Color.White.copy(alpha = 0.05f),
+                    )
+                } else {
+                    DesktopSidebarColors(
+                        background = colorScheme.background,
+                        panelBackground = colorScheme.surfaceContainerLowest,
+                        navigationSelectedBackground = colorScheme.primary.copy(alpha = 0.10f),
+                        playlistSelectedBackground = colorScheme.primary.copy(alpha = 0.08f),
+                    )
+                }
+            }
     }
 }
