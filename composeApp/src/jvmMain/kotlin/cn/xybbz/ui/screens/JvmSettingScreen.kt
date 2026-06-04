@@ -43,7 +43,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -80,8 +79,6 @@ import cn.xybbz.router.MemoryManagement
 import cn.xybbz.router.ProxyConfig
 import cn.xybbz.router.StreamingQuality
 import cn.xybbz.ui.components.JvmLazyListComponent
-import cn.xybbz.ui.components.TopAppBarComponent
-import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.SettingsViewModel
@@ -131,7 +128,7 @@ private val JvmSettingIconSize = 32.dp
 /**
  * 设置页面
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun JvmSettingScreen(
     settingsViewModel: SettingsViewModel = koinViewModel<SettingsViewModel>()
@@ -152,20 +149,12 @@ fun JvmSettingScreen(
     val dataSourceLabel = settings.dataSourceType?.title ?: "未连接"
 
     XyColumnScreen {
-        TopAppBarComponent(
-            title = {
-                TopAppBarTitle(
-                    title = stringResource(Res.string.settings)
-                )
-            }
-        )
-
         JvmLazyListComponent(
             modifier = Modifier.fillMaxSize(),
             pagingItems = null,
             contentPadding = PaddingValues(
                 horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
-                vertical = XyTheme.dimens.innerVerticalPadding + XyTheme.dimens.outerVerticalPadding * 2
+//                vertical = XyTheme.dimens.innerVerticalPadding + XyTheme.dimens.outerVerticalPadding * 2
             ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
@@ -236,7 +225,7 @@ fun JvmSettingScreen(
                                 JvmSettingNavigationRow(
                                     icon = Res.drawable.music_note_24px,
                                     title = stringResource(Res.string.online_music_quality),
-                                    description = "选择 JVM 端在线音频品质与转码格式。",
+                                    description = "选择桌面端在线音频品质与转码格式。",
                                     value = "$selectedQuality · ${settings.transcodeFormat.uppercase()}",
                                     onClick = {
                                         navigator.navigate(StreamingQuality)
@@ -441,11 +430,6 @@ private fun JvmSettingHeader(
                 .weight(1f),
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
         ) {
-            Text(
-                text = "桌面端设置",
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.primary
-            )
             Text(
                 text = stringResource(Res.string.settings),
                 style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),

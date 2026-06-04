@@ -42,7 +42,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -64,8 +63,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.xybbz.common.enums.TranscodeAudioBitRateType
 import cn.xybbz.ui.components.JvmLazyListComponent
-import cn.xybbz.ui.components.TopAppBarComponent
-import cn.xybbz.ui.components.TopAppBarTitle
 import cn.xybbz.ui.theme.XyTheme
 import cn.xybbz.ui.xy.XyColumnScreen
 import cn.xybbz.viewmodel.StreamingQualityViewModel
@@ -83,7 +80,7 @@ private val QualityOptionHeight = 176.dp
 private val FormatOptionWidth = 220.dp
 private val FormatOptionHeight = 164.dp
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun JvmStreamingQualityScreen(
     streamingQualityViewModel: StreamingQualityViewModel = koinViewModel<StreamingQualityViewModel>(),
@@ -99,19 +96,12 @@ fun JvmStreamingQualityScreen(
         ?: streamingQualityViewModel.transcodeFormat.uppercase()
 
     XyColumnScreen {
-        TopAppBarComponent(
-            title = {
-                TopAppBarTitle(
-                    title = pageTitle
-                )
-            })
-
         JvmLazyListComponent(
             modifier = Modifier.fillMaxSize(),
             pagingItems = null,
             contentPadding = PaddingValues(
                 horizontal = XyTheme.dimens.outerHorizontalPadding * 2,
-                vertical = XyTheme.dimens.innerVerticalPadding + XyTheme.dimens.outerVerticalPadding * 2
+//                vertical = XyTheme.dimens.innerVerticalPadding + XyTheme.dimens.outerVerticalPadding * 2
             ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding * 2),
@@ -162,7 +152,7 @@ fun JvmStreamingQualityScreen(
                         }
 
                         JvmStreamingQualityNote(
-                            text = "选择任一品质后，JVM 端会继续同时更新 Wi-Fi 与移动网络两套码率设置。"
+                            text = "选择任一品质后，桌面端会继续同时更新 Wi-Fi 与移动网络两套码率设置。"
                         )
                     }
 
@@ -229,17 +219,12 @@ private fun JvmStreamingQualityHeader(
             verticalArrangement = Arrangement.spacedBy(XyTheme.dimens.outerVerticalPadding)
         ) {
             Text(
-                text = "桌面端设置",
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
                 text = title,
                 style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "选择桌面端播放时使用的在线音频品质和服务端转码格式。当前 JVM 端使用一组播放品质设置，并同步应用到 Wi-Fi 与移动网络。",
+                text = "选择桌面端播放时使用的在线音频品质和服务端转码格式。当前桌面端使用一组播放品质设置，并同步应用到 Wi-Fi 与移动网络。",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 22.sp
