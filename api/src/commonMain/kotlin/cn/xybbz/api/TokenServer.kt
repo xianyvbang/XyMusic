@@ -36,6 +36,14 @@ data class AuthenticatedRequestState(
 
 object TokenServer {
 
+    private val requiredQueryKeys = setOf("u", "t", "s", "v", "c", "f")
+    private val authenticatedHeaderNames = setOf(
+        ApiConstants.AUTHORIZATION,
+        ApiConstants.NAVIDROME_AUTHORIZATION,
+        ApiConstants.EMBY_AUTHORIZATION,
+        ApiConstants.PLEX_AUTHORIZATION
+    )
+
     var token: String = ""
         private set
 
@@ -60,21 +68,45 @@ object TokenServer {
         _authenticatedRequestStateFlow.asStateFlow()
 
     fun setTokenData(token: String) {
-        if (TokenServer.token == token) return
-        TokenServer.token = token
-        notifyAuthChanged()
+        val authenticatedToken = token.takeIf { it.isAuthenticatedTokenValue() } ?: ""
+        val ready = hasAuthenticatedRequestData(authenticatedToken, queryMap, headerMap)
+        val ifAuthDataChanged = TokenServer.token != authenticatedToken
+        val ifReadyChanged = _authenticatedRequestStateFlow.value.ready != ready
+
+        if (!ifAuthDataChanged && !ifReadyChanged) return
+
+        if (ifAuthDataChanged) {
+            TokenServer.token = authenticatedToken
+        }
+        notifyAuthChanged(ready = ready)
     }
 
     fun setQueryMapData(queryMap: Map<String, String>) {
-        if (TokenServer.queryMap == queryMap) return
-        TokenServer.queryMap = queryMap
-        notifyAuthChanged()
+        val validQueryMap = queryMap.filterNotBlankValues()
+        val ready = hasAuthenticatedRequestData(token, validQueryMap, headerMap)
+        val ifAuthDataChanged = TokenServer.queryMap != validQueryMap
+        val ifReadyChanged = _authenticatedRequestStateFlow.value.ready != ready
+
+        if (!ifAuthDataChanged && !ifReadyChanged) return
+
+        if (ifAuthDataChanged) {
+            TokenServer.queryMap = validQueryMap
+        }
+        notifyAuthChanged(ready = ready)
     }
 
     fun setHeaderMapData(headerMap: Map<String, String>) {
-        if (TokenServer.headerMap == headerMap) return
-        TokenServer.headerMap = headerMap
-        notifyAuthChanged()
+        val validHeaderMap = headerMap.filterNotBlankValues()
+        val ready = hasAuthenticatedRequestData(token, queryMap, validHeaderMap)
+        val ifAuthDataChanged = TokenServer.headerMap != validHeaderMap
+        val ifReadyChanged = _authenticatedRequestStateFlow.value.ready != ready
+
+        if (!ifAuthDataChanged && !ifReadyChanged) return
+
+        if (ifAuthDataChanged) {
+            TokenServer.headerMap = validHeaderMap
+        }
+        notifyAuthChanged(ready = ready)
     }
 
     /**
@@ -86,22 +118,26 @@ object TokenServer {
         queryMap: Map<String, String>,
         headerMap: Map<String, String>
     ) {
+        val validToken = token.takeIf { it.isAuthenticatedTokenValue() } ?: ""
+        val validQueryMap = queryMap.filterNotBlankValues()
+        val validHeaderMap = headerMap.filterNotBlankValues()
+        val ready = hasAuthenticatedRequestData(validToken, validQueryMap, validHeaderMap)
         val ifAuthDataChanged =
-            TokenServer.token != token ||
-                    TokenServer.queryMap != queryMap ||
-                    TokenServer.headerMap != headerMap
-        val ifReadyChanged = !_authenticatedRequestStateFlow.value.ready
+            TokenServer.token != validToken ||
+                    TokenServer.queryMap != validQueryMap ||
+                    TokenServer.headerMap != validHeaderMap
+        val ifReadyChanged = _authenticatedRequestStateFlow.value.ready != ready
 
         if (!ifAuthDataChanged && !ifReadyChanged) {
             return
         }
 
         if (ifAuthDataChanged) {
-            TokenServer.token = token
-            TokenServer.queryMap = queryMap
-            TokenServer.headerMap = headerMap
+            TokenServer.token = validToken
+            TokenServer.queryMap = validQueryMap
+            TokenServer.headerMap = validHeaderMap
         }
-        notifyAuthChanged(ready = true)
+        notifyAuthChanged(ready = ready)
     }
 
     fun clearAllData() {
@@ -141,5 +177,51 @@ object TokenServer {
             ready = ready,
             version = currentState.version + 1
         )
+    }
+
+    private fun hasAuthenticatedRequestData(
+        token: String,
+        queryMap: Map<String, String>,
+        headerMap: Map<String, String>
+    ): Boolean {
+        return token.isNotBlank() ||
+                hasCompleteSubsonicQuery(queryMap) ||
+                hasAuthenticatedHeader(headerMap)
+    }
+
+    private fun hasCompleteSubsonicQuery(queryMap: Map<String, String>): Boolean {
+        return requiredQueryKeys.all { key -> queryMap[key]?.isNotBlank() == true }
+    }
+
+    private fun hasAuthenticatedHeader(headerMap: Map<String, String>): Boolean {
+        return headerMap.any { (key, value) ->
+            key in authenticatedHeaderNames && value.isAuthenticatedTokenValue()
+        }
+    }
+
+    private fun Map<String, String>.filterNotBlankValues(): Map<String, String> {
+        return filterValues { it.isUsefulRequestValue() }
+    }
+
+    private fun String.isUsefulRequestValue(): Boolean {
+        val value = trim()
+        return value.isNotBlank() && value != "null" && value != "Bearer null"
+    }
+
+    private fun String.isAuthenticatedTokenValue(): Boolean {
+        val value = trim()
+        if (!value.isUsefulRequestValue()) {
+            return false
+        }
+        if (value.startsWith("Bearer", ignoreCase = true)) {
+            return value.substringAfter("Bearer", "").trim().isUsefulRequestValue()
+        }
+        if (
+            value.startsWith(ApiConstants.AUTHORIZATION_SCHEME, ignoreCase = true) ||
+            value.startsWith(ApiConstants.EMBY_AUTHORIZATION_SCHEME, ignoreCase = true)
+        ) {
+            return Regex("""\bToken="[^"]+"""").containsMatchIn(value)
+        }
+        return true
     }
 }

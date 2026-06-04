@@ -106,6 +106,8 @@ fun JvmSearchScreen(
                 )
             )
             searchViewModel.onSearch(routeSearchQuery)
+        } else {
+            searchViewModel.updateSearchInput(TextFieldValue())
         }
     }
 

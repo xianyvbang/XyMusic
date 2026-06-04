@@ -43,6 +43,8 @@ import cn.xybbz.localdata.data.artist.XyArtist
 import cn.xybbz.localdata.data.music.XyMusic
 import cn.xybbz.localdata.data.search.SearchHistory
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.KoinViewModel
 
@@ -95,6 +97,9 @@ class SearchViewModel(
     var ifShowSearchResult by mutableStateOf(false)
         private set
 
+    private var searchJob: Job? = null
+    private var searchRequestVersion = 0
+
 
     init {
         getSearchHistoryData()
@@ -123,26 +128,49 @@ class SearchViewModel(
     fun onSearch(
         searchQuery: String,
     ) {
-        if (searchQuery.isNotBlank()) {
-            ifShowSearchResult = true
-            isSearchLoad = true
-            viewModelScope.launch {
-                try {
-                    val searchData = dataSourceManager.searchAll(searchQuery)
-                    musicList = searchData.musics ?: emptyList()
-                    albumList = searchData.albums ?: emptyList()
-                    artistList = searchData.artists ?: emptyList()
-                    saveSearchHistory(
-                        SearchHistory(
-                            searchQuery = searchQuery,
-                            connectionId = dataSourceManager.getConnectionId()
-                        )
+        val trimmedSearchQuery = searchQuery.trim()
+        searchRequestVersion += 1
+        val requestVersion = searchRequestVersion
+        searchJob?.cancel()
+
+        if (trimmedSearchQuery.isBlank()) {
+            ifShowSearchResult = false
+            isSearchLoad = false
+            clearSearchResults()
+            return
+        }
+
+        clearSearchResults()
+        ifShowSearchResult = true
+        isSearchLoad = true
+        val job = viewModelScope.launch {
+            try {
+                val searchData = dataSourceManager.searchAll(trimmedSearchQuery)
+                if (requestVersion != searchRequestVersion) {
+                    return@launch
+                }
+                musicList = searchData.musics ?: emptyList()
+                albumList = searchData.albums ?: emptyList()
+                artistList = searchData.artists ?: emptyList()
+                saveSearchHistory(
+                    SearchHistory(
+                        searchQuery = trimmedSearchQuery,
+                        connectionId = dataSourceManager.getConnectionId()
                     )
-                } catch (e: Exception) {
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (requestVersion == searchRequestVersion) {
                     Log.e(Constants.LOG_ERROR_PREFIX, "搜索失败: ${e.message}", e)
                 }
-            }.invokeOnCompletion {
+            }
+        }
+        searchJob = job
+        job.invokeOnCompletion {
+            if (requestVersion == searchRequestVersion) {
                 isSearchLoad = false
+                searchJob = null
             }
         }
     }
@@ -192,8 +220,14 @@ class SearchViewModel(
      * 更新是否显示搜索结果
      */
     fun updateIfShowSearchResult(ifShowSearchResult: Boolean) {
-        Log.i("=====", "数据调用1")
         this.ifShowSearchResult = ifShowSearchResult
+        if (!ifShowSearchResult) {
+            searchRequestVersion += 1
+            searchJob?.cancel()
+            searchJob = null
+            isSearchLoad = false
+            clearSearchResults()
+        }
     }
 
     /**
@@ -201,5 +235,14 @@ class SearchViewModel(
      */
     fun updateSearchInput(textFieldValue: TextFieldValue){
         this.textFieldValue = textFieldValue
+        if (textFieldValue.text.isBlank()) {
+            updateIfShowSearchResult(false)
+        }
+    }
+
+    private fun clearSearchResults() {
+        musicList = emptyList()
+        albumList = emptyList()
+        artistList = emptyList()
     }
 }
